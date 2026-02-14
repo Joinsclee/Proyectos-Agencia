@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es" style="overflow-x: hidden;">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro Comunidad - Sistema CRECE | Andrés Giraldo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:wght@400;700&family=Playfair+Display:ital,wght@1,700;1,800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-purple: #613174;
+            --secondary-green: #37ca37;
+            --accent-yellow: #f2ca04;
+        }
+
+        body {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            color: #1a1a1a;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        /* Forzar ancho completo de secciones - solución para GoHighLevel */
+        section {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        /* Mantener el contenido centrado dentro de las secciones */
+        section>div {
+            max-width: 100%;
+        }
+
+        header {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        footer {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        .font-tilt {
+            font-family: 'Tilt Warp', cursive;
+        }
+
+        .font-elegant {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-weight: 700;
+            font-size: 1.25em;
+            display: inline-block;
+            color: var(--primary-purple);
+        }
+
+        .bg-purple-gradient {
+            background: linear-gradient(135deg, #613174 0%, #4d265c 100%);
+        }
+
+        .btn-main {
+            background-color: var(--primary-purple);
+            transition: all 0.3s ease;
+            animation: pulse-shadow 2s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-main:hover::before {
+            left: 100%;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(158, 86, 189, 0.5);
+            animation: none;
+        }
+
+        @keyframes pulse-shadow {
+
+            0%,
+            100% {
+                box-shadow: 0 8px 20px rgba(158, 86, 189, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 8px 25px rgba(158, 86, 189, 0.5);
+            }
+        }
+
+        .vsl-container {
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Estilos del Modal */
+        #registration-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        #registration-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            height: 90vh;
+            max-height: 750px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .btn-yellow {
+            position: relative;
+            overflow: hidden;
+            animation: pulse-shadow-yellow 2.5s ease-in-out infinite;
+        }
+
+        .btn-yellow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-yellow:hover::before {
+            left: 100%;
+        }
+
+        .btn-yellow:hover {
+            animation: none;
+            box-shadow: 0 20px 40px rgba(242, 202, 4, 0.4) !important;
+        }
+
+        @keyframes pulse-shadow-yellow {
+
+            0%,
+            100% {
+                box-shadow: 0 10px 25px rgba(242, 202, 4, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 10px 30px rgba(242, 202, 4, 0.5);
+            }
+        }
+
+        /* Optimizaciones para móviles */
+        @media (max-width: 768px) {
+
+            /* Reducir sombras en móviles para mejor rendimiento */
+            @keyframes pulse-shadow {
+
+                0%,
+                100% {
+                    box-shadow: 0 5px 15px rgba(158, 86, 189, 0.3);
+                }
+
+                50% {
+                    box-shadow: 0 5px 20px rgba(158, 86, 189, 0.4);
+                }
+            }
+
+            @keyframes pulse-shadow-yellow {
+
+                0%,
+                100% {
+                    box-shadow: 0 5px 15px rgba(242, 202, 4, 0.3);
+                }
+
+                50% {
+                    box-shadow: 0 5px 20px rgba(242, 202, 4, 0.4);
+                }
+            }
+
+            .btn-main:hover {
+                transform: translateY(-2px) scale(1.01);
+                box-shadow: 0 10px 25px rgba(158, 86, 189, 0.4);
+            }
+
+            .btn-yellow:hover {
+                box-shadow: 0 10px 25px rgba(242, 202, 4, 0.4) !important;
+            }
+
+            /* Mejorar interacción táctil en móviles */
+            .btn-main:active,
+            .btn-yellow:active {
+                transform: scale(0.98);
+            }
+
+            /* Ajustar modal para móviles */
+            .modal-content {
+                height: 95vh;
+                max-height: none;
+                border-radius: 16px;
+            }
+
+            #registration-modal {
+                padding: 0.5rem;
+            }
+
+            /* Ajustar tamaño de check icons en móviles */
+            .check-icon {
+                width: 20px;
+                height: 20px;
+                font-size: 10px;
+                flex-shrink: 0;
+            }
+        }
+
+        /* Optimización para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .modal-content {
+                border-radius: 12px;
+            }
+
+            #registration-modal {
+                padding: 0.25rem;
+            }
+        }
+
+        /* Deshabilitar animaciones automáticas si el usuario prefiere menos movimiento */
+        @media (prefers-reduced-motion: reduce) {
+
+            .btn-main,
+            .btn-yellow {
+                animation: none;
+            }
+
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Estilos adicionales para romper contenedores de GoHighLevel */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Asegurar que los max-width containers no interfieran */
+        .max-w-4xl,
+        .max-w-6xl {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        @media (min-width: 768px) {
+
+            .max-w-4xl,
+            .max-w-6xl {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+        }
+
+        /* Prevenir scroll horizontal */
+        html,
+        body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Forzar que el modal mantenga su posición */
+        #registration-modal {
+            width: 100vw;
+            height: 100vh;
+            left: 0;
+            right: 0;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body class="bg-white">
+
+    <!-- Modal para el Formulario -->
+    <div id="registration-modal">
+        <div class="modal-content flex flex-col">
+            <button onclick="closeModal()"
+                class="absolute top-4 right-4 z-50 bg-white border rounded-full p-2 shadow-lg hover:bg-gray-100 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="flex-1 overflow-auto bg-white pt-2">
+                <iframe src="https://link.elsistemacrece.com/widget/form/wJlJDmpPBrrmH8zDbBy3"
+                    style="width:100%;height:100%;border:none;" id="inline-wJlJDmpPBrrmH8zDbBy3"
+                    data-layout="{'id':'INLINE'}" data-trigger-type="alwaysShow" data-trigger-value=""
+                    data-activation-type="alwaysActivated" data-activation-value=""
+                    data-form-name="Form Registro Comunidad (1. Funnel Captación(Taller Crece))" data-height="645"
+                    data-layout-iframe-id="inline-wJlJDmpPBrrmH8zDbBy3" data-form-id="wJlJDmpPBrrmH8zDbBy3"
+                    title="Form Registro Comunidad (1. Funnel Captación(Taller Crece))"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logo Section -->
+    <header class="bg-white py-6 md:py-10">
+        <div class="max-w-6xl mx-auto px-4 flex justify-center text-center">
+            <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png"
+                alt="Logo Sistema CRECE" class="h-10 md:h-12 w-auto object-contain">
+        </div>
+    </header>
+
+    <!-- Hero Section Principal -->
+    <section class="pb-16 md:pb-24 bg-white">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <div class="mb-10 md:mb-12">
+                <h1
+                    class="font-tilt text-2xl sm:text-3xl md:text-4xl lg:text-5xl uppercase leading-tight mb-6 tracking-tight text-black">
+                    CREA TU PRIMERA <span class="font-elegant lowercase">ruta de inversión</span><br
+                        class="hidden md:block">
+                    Y DESCUBRE EL PODER DE LAS OPORTUNIDADES CON EL <span class="font-elegant lowercase">sistema
+                        crece</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-[#613174] font-medium px-4 leading-snug">
+                    Sin importar tu experiencia o punto de partida.
+                </p>
+            </div>
+
+            <div class="vsl-container mb-12">
+                <video controls playsinline controlsList="nodownload" oncontextmenu="return false;"
+                    poster="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/68f2ad594ec833fd4f08996e.png">
+                    <source
+                        src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/688c3527baf2af1c98a128b6.mp4"
+                        type="video/mp4">
+                    Tu navegador no soporta la reproducción de video.
+                </video>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="px-2">
+                <p
+                    class="text-lg md:text-2xl font-bold text-gray-800 mb-8 italic leading-tight max-w-2xl mx-auto text-center">
+                    Empieza a construir tu patrimonio con propósito y estrategia
+                </p>
+                <button onclick="openModal()"
+                    class="btn-main text-white font-bold px-8 py-4 md:px-12 md:py-5 rounded-2xl text-lg md:text-2xl uppercase shadow-2xl hover:scale-[1.02] active:scale-95 transition-all w-full md:w-auto tracking-wide">
+                    REGISTRARME
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Transforma Section -->
+    <section class="py-12 md:py-16 bg-gray-50 border-t border-b">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white p-6 md:p-10 lg:p-12 rounded-2xl md:rounded-3xl shadow-lg border border-gray-100">
+                <h2 class="text-xl md:text-3xl font-bold mb-10 text-center leading-tight text-black">
+                    <span class="font-elegant">Transforma</span> tus conocimientos, mentalidad y habilidades:
+                </h2>
+
+                <ul class="space-y-4 md:space-y-6 max-w-2xl mx-auto">
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed"><strong>Aprende la <span
+                                    class="font-elegant lowercase">habilidad</span> clave
+                                del
+                                Inversionista CRECE:</strong> identificar oportunidades.</p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed"><strong>Conoce los 3 <span
+                                    class="font-elegant lowercase">modelos</span> de
+                                inversión</strong> del sistema CRECE para generar rentabilidad.</p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed"><strong>Descubre los 7 <span
+                                    class="font-elegant lowercase">errores</span>
+                                comunes que frenan</strong> a nuevos inversionistas.</p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed"><strong>Piensa y <span
+                                    class="font-elegant lowercase">actúa</span></strong>
+                            como un
+                            inversionista estratégico.</p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed"><strong>Analiza las <span
+                                    class="font-elegant lowercase">oportunidades</span>
+                                de
+                                manera fácil,</strong> con el simulador CRECE.</p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed"><strong>Sé parte de una <span
+                                    class="font-elegant lowercase">comunidad</span>
+                                de inversionistas</strong> que comparten tus mismos intereses.</p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Inclusion Boxes -->
+    <section class="py-12 md:py-16 lg:py-20 bg-white text-center">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="font-tilt text-2xl md:text-4xl uppercase tracking-tight text-black text-center px-2 mb-12">
+                INGRESA A LA <span class="font-elegant lowercase">comunidad</span> DE INVERSIÓN INMOBILIARIA <span
+                    class="font-elegant lowercase">crece</span></h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 text-center">
+                <div
+                    class="bg-white p-6 md:p-8 lg:p-10 rounded-2xl border-2 border-var(--primary-purple) flex flex-col items-center shadow-sm">
+                    <h3
+                        class="font-tilt text-2xl md:text-3xl font-bold mb-6 uppercase text-black leading-none tracking-tighter text-center">
+                        <span class="font-elegant lowercase">Taller</span><br>DE INVERSIÓN CRECE
+                    </h3>
+                    <p class="text-gray-700 text-sm md:text-base font-medium leading-snug">Descubre las 7 claves para
+                        invertir con estrategia en bienes raíces.</p>
+                </div>
+                <div
+                    class="bg-white p-6 md:p-8 lg:p-10 rounded-2xl border-2 border-var(--primary-purple) flex flex-col items-center shadow-sm">
+                    <h3
+                        class="font-tilt text-2xl md:text-3xl font-bold mb-6 uppercase text-black leading-none tracking-tighter text-center">
+                        <span class="font-elegant lowercase">Masterclass</span><br>CRECE
+                    </h3>
+                    <p class="text-gray-700 text-sm md:text-base font-medium leading-snug">Profundiza en el sistema de
+                        inversión y el poder de las oportunidades.</p>
+                </div>
+                <div
+                    class="bg-white p-8 md:p-10 rounded-2xl border-2 border-var(--primary-purple) flex flex-col items-center shadow-sm text-center">
+                    <h3
+                        class="font-tilt text-2xl md:text-3xl font-bold mb-6 uppercase text-black leading-none tracking-tighter text-center">
+                        <span class="font-elegant lowercase">Simulador</span><br>DE INVERSIONES CRECE
+                    </h3>
+                    <p class="text-gray-700 text-sm md:text-base font-medium leading-snug">Analiza de manera práctica
+                        los números de tu inversión.</p>
+                </div>
+            </div>
+
+            <div class="mt-12 px-4">
+                <p class="text-base md:text-lg text-gray-800 font-bold max-w-2xl mx-auto leading-relaxed text-center">
+                    Además accede a <span class="font-elegant">llamadas</span> mensuales conmigo, <br
+                        class="hidden md:block"> para reforzar tus
+                    conocimientos y resolver consultas.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Listas Calificativas (Fondo Púrpura) -->
+    <section class="py-12 md:py-16 lg:py-20 bg-purple-gradient text-white">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 lg:gap-16 text-left">
+                <!-- Es para ti -->
+                <div>
+                    <h3 class="font-tilt text-2xl md:text-3xl font-bold mb-10 text-white uppercase tracking-tight">
+                        Esta comunidad <span class="font-elegant"
+                            style="color: white; border-bottom: 2px solid #f2ca04;">es</span> para ti si...</h3>
+                    <ul class="space-y-4 md:space-y-6">
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-white/90 leading-snug font-light text-sm md:text-base">Sabes el poder que
+                                tiene la <span class="font-elegant" style="color: white; font-size: 1.1em;">inversión en
+                                    bienes raíces</span>, pero no sabes como empezar.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-white/90 leading-snug font-light text-sm md:text-base">Quieres aprender a
+                                encontrar <span class="font-elegant"
+                                    style="color: white; font-size: 1.1em;">oportunidades</span> de Inversión <span
+                                    class="font-elegant" style="color: white; font-size: 1.1em;">rentables</span>, sin
+                                dejar de hacer lo que haces.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-white/90 leading-snug font-light text-sm md:text-base">Ya intentaste otras
+                                opciones de <span class="font-elegant"
+                                    style="color: white; font-size: 1.1em;">inversión</span>, de negocios y quieres ir
+                                por una vía más segura y estable.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-white/90 leading-snug font-light text-sm md:text-base">Quieres empezar a
+                                invertir en <span class="font-elegant" style="color: white; font-size: 1.1em;">bienes
+                                    raíces</span> y necesitas un mentor con experiencia real.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-white/90 leading-snug font-light text-sm md:text-base">Quieres aprender un
+                                <span class="font-elegant" style="color: white; font-size: 1.1em;">sistema de
+                                    inversión</span> que se adapta a tu punto de partida.
+                            </p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-white/90 leading-snug font-light text-sm md:text-base">Vives en el <span
+                                    class="font-elegant" style="color: white; font-size: 1.1em;">extranjero</span>,
+                                quieres invertir en tu país y no sabes cómo hacerlo.</p>
+                        </li>
+                    </ul>
+                </div>
+                <!-- No es para ti -->
+                <div class="pt-8 md:pt-0">
+                    <h3 class="font-tilt text-2xl md:text-3xl font-bold mb-10 text-white uppercase tracking-tight">
+                        Esta comunidad <span class="font-elegant"
+                            style="color: #ef4444; border-bottom: 2px solid white;">no es</span> para ti si...</h3>
+                    <ul class="space-y-4 md:space-y-6">
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-white/80 leading-snug font-light text-sm md:text-base">Buscas <span
+                                    class="font-elegant" style="color: #ef4444; font-size: 1.1em;">resultados
+                                    rápido</span> y sin esfuerzo. Sin entender el proceso ni desarrollar estrategia.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-white/80 leading-snug font-light text-sm md:text-base"><span
+                                    class="font-elegant" style="color: #ef4444; font-size: 1.1em;">No estás
+                                    comprometido</span> con mejorar tu realidad financiera.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-white/80 leading-snug font-light text-sm md:text-base">Te gusta solo la
+                                teoría <span class="font-elegant" style="color: #ef4444; font-size: 1.1em;">sin pasar a
+                                    la acción</span>. Aquí llevaremos a la práctica cada aprendizaje adquirido.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-white/80 leading-snug font-light text-sm md:text-base text-left">Crees que ya
+                                <span class="font-elegant" style="color: #ef4444; font-size: 1.1em;">lo sabes
+                                    todo</span> y no estás dispuesto a cuestionar o adaptar tu forma de pensar.
+                            </p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-white/80 leading-snug font-light text-sm md:text-base text-left">Esperas una
+                                <span class="font-elegant" style="color: #ef4444; font-size: 1.1em;">fórmula
+                                    mágica</span>, en vez de diseñar y trabajar tu propia estrategia con guía.
+                            </p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bio Section -->
+    <section class="py-12 md:py-16 lg:py-20 bg-white overflow-hidden">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2
+                class="text-center font-tilt text-3xl md:text-4xl font-bold mb-16 uppercase tracking-tighter text-black">
+                ¿QUIÉN TE <span class="font-elegant">GUÍA</span> Y POR QUÉ PUEDES CONFIAR?</h2>
+            <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+                <div class="w-full max-w-sm lg:w-2/5">
+                    <div class="relative group">
+                        <div
+                            class="absolute -inset-4 bg-purple-100 rounded-3xl transform -rotate-3 transition group-hover:rotate-0">
+                        </div>
+                        <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/686c48d02039a06fe1d76efc.jpeg"
+                            alt="Andrés Giraldo" class="relative rounded-2xl shadow-2xl w-full object-cover">
+                    </div>
+                </div>
+                <div class="w-full lg:w-3/5 font-inter text-left mt-8 lg:mt-0">
+                    <h3 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 text-black">Hola, <span
+                            class="font-elegant">Soy
+                            Andrés Giraldo</span></h3>
+                    <div class="space-y-5 text-gray-700 leading-relaxed text-base md:text-lg font-light">
+                        <p
+                            class="font-bold text-black italic text-lg md:text-xl border-l-4 border-[#9e56bd] pl-6 leading-tight">
+                            "No nací siendo inversionista, me forjó la vida... y un terremoto."</p>
+                        <p>A los <strong>23 años</strong>, perdí casi todo cuando el terremoto del Eje Cafetero destruyó
+                            gran parte de mi ciudad, el negocio familiar y la <span class="font-elegant"
+                                style="font-size: 1.1em;">estabilidad</span> de mi hogar. Desde ese día
+                            decidí reconstruirme, aprendiendo a <span class="font-elegant"
+                                style="font-size: 1.1em;">invertir en bienes raíces</span> paso a paso,
+                            incluso sin acudir a bancos, sin fórmulas mágicas y adaptado a nuestra realidad.</p>
+                        <p>Durante más de <strong>15 años</strong> he estudiado, invertido en inmuebles y he acompañado
+                            a otros a hacerlo.</p>
+                        <p>Hoy, mi propósito es enseñar a las personas a <span class="font-elegant"
+                                style="font-size: 1.1em;">detectar oportunidades</span> rentables con claridad,
+                            para que tomen decisiones informadas y construyan patrimonio desde donde están.</p>
+                        <p>Soy creador del <span class="font-elegant" style="font-size: 1.1em;">Sistema de Inversión
+                                Inmobiliaria CRECE</span>, una metodología
+                            práctica, humana y comprobada.</p>
+
+                        <!-- Cierre de la biografía integrado y sutil -->
+                        <div class="mt-8 pt-4">
+                            <p class="text-black font-semibold text-base md:text-lg leading-relaxed">
+                                Te acompañaré en este taller, para que empieces a invertir con propósito, criterio y
+                                estrategia.
+                            </p>
+                            <p class="text-[#613174] font-bold text-lg md:text-xl mt-2 tracking-tight uppercase">
+                                <span class="font-elegant">Te veo adentro.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section
+        class="py-12 md:py-16 lg:py-20 bg-purple-gradient text-white text-center relative overflow-hidden text-center">
+        <div class="max-w-4xl mx-auto px-4 relative z-10 text-center">
+            <h2
+                class="text-2xl md:text-4xl lg:text-5xl font-tilt font-bold mb-8 md:mb-10 lg:mb-12 uppercase leading-tight tracking-tight px-4 text-center">
+                El primer paso de <span class="font-elegant" style="color: #f2ca04;">tu ruta</span> como inversionista,
+                <br class="hidden md:block"> empieza aquí
+            </h2>
+            <button onclick="openModal()"
+                class="btn-yellow inline-block bg-[#f2ca04] text-black font-bold px-10 py-5 md:px-14 md:py-6 rounded-2xl text-lg md:text-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl uppercase tracking-wider">
+                Registrarme <span class="font-elegant"
+                    style="color: black; font-size: 0.9em; text-transform: uppercase;">GRATIS</span><br>en la Comunidad
+            </button>
+        </div>
+        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 bg-[#191A1F] text-white">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-[10px] md:text-sm text-gray-400 leading-relaxed mb-8 max-w-5xl mx-auto">
+                DESCARGO DE RESPONSABILIDAD: Los testimonios, herramientas y ejemplos presentados en este sitio web son
+                experiencias reales, pero no garantizan resultados similares para todos los estudiantes. La información
+                aquí presentada es solo de carácter educativo y formativo. La inversión inmobiliaria conlleva riesgos.
+                CRECE SYSTEM LLC y Andrés Giraldo no proporcionan asesoría financiera, legal o contable. Este sitio no
+                es parte del sitio web de Facebook™ o Facebook™ Inc. Además, este sitio NO está respaldado por Facebook™
+                de ninguna manera. FACEBOOK™ es una marca registrada de FACEBOOK™, Inc. El uso de este sitio web está
+                sujeto a nuestros <a href="Terminos.html" class="underline hover:text-white transition-colors">Términos
+                    y Condiciones</a> y <a href="PoliticaPrivacidad.html"
+                    class="underline hover:text-white transition-colors">Política de Privacidad</a>.
+            </p>
+            <p class="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-medium">
+                &copy; 2026 ANDRÉS GIRALDO. All rights reserved. (+ términos, condiciones + política de uso compartidas
+                por Andrés)
+            </p>
+        </div>
+    </footer>
+
+    <!-- Form Script -->
+    <script src="https://link.elsistemacrece.com/js/form_embed.js"></script>
+    <script>
+        const modal = document.getElementById('registration-modal');
+        function openModal() { modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal() { modal.classList.remove('active'); document.body.style.overflow = 'auto'; }
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+    </script>
+
+</body>
+
+</html>

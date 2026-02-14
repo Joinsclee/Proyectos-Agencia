@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiencia VIP | The Click Boss</title>
+    
+    <!-- Fuentes: Playfair Display (Títulos) y Raleway (Cuerpo) - Estilo Liz Pinto + Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lzGold: '#e7b93f',
+                        lzGoldLight: '#f5d88a',
+                        lzDark: '#2b2b2b',
+                        lzGrey: '#7a7a7a',
+                        lzGreyDark: '#52525b',
+                        lzLightBg: '#f9f9f9',
+                        lzBlack: '#000000',
+                        lzBeige: '#f5f1e8',
+                        lzTeal: '#1B3E59',
+                    },
+                    fontFamily: {
+                        sans: ['Raleway', 'sans-serif'],
+                        heading: ['Playfair Display', 'serif'],
+                    },
+                    boxShadow: {
+                        'lz-soft': '0 10px 40px rgba(0,0,0,0.06)',
+                        'lz-medium': '0 15px 50px rgba(0,0,0,0.08)',
+                        'lz-strong': '0 20px 60px rgba(0,0,0,0.12)',
+                        'lz-gold': '0 8px 25px rgba(231,185,63,0.15)',
+                        'vip': '0 25px 50px -12px rgba(231, 185, 63, 0.25)',
+                    },
+                    letterSpacing: {
+                        'extra-wide': '0.15em',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Estilos Globales */
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        body {
+            color: #333;
+            line-height: 1.7;
+            overflow-x: hidden;
+            font-family: 'Raleway', sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Playfair Display', serif;
+            color: #000;
+            font-weight: 400; /* Peso ligero elegante */
+            line-height: 1.2;
+        }
+
+        /* Subrayado estilo Liz Pinto - Línea recta simple - Mejorado para móviles */
+        .underline-lz {
+            background-image: linear-gradient(to top, #e7b93f 0%, #e7b93f 2px, transparent 2px, transparent 100%);
+            background-position: 0 calc(100% - 4px);
+            background-repeat: repeat-x;
+            display: inline;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+
+        /* Botones Premium */
+        .btn-liz {
+            background-color: #2b2b2b;
+            color: #fff;
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-liz:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .btn-gold {
+            background: #e7b93f;
+            color: #000;
+        }
+
+        .btn-gold:hover {
+            background: #f5d88a;
+            box-shadow: 0 15px 40px rgba(231,185,63,0.3);
+        }
+
+        /* Botón Secundario (Outline) */
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .btn-outline:hover {
+            border-color: #fff;
+            color: #fff;
+            background-color: rgba(255,255,255,0.05);
+            transform: translateY(-2px);
+        }
+
+
+        /* Badges */
+        .badge-lz {
+            background: linear-gradient(135deg, rgba(231,185,63,0.1) 0%, rgba(245,216,138,0.15) 100%);
+            border: 1px solid rgba(231,185,63,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .badge-lz:hover {
+            background: linear-gradient(135deg, rgba(231,185,63,0.15) 0%, rgba(245,216,138,0.2) 100%);
+            border-color: rgba(231,185,63,0.3);
+        }
+
+        /* Secciones con fondos sutiles */
+        .section-beige {
+            background: linear-gradient(180deg, #f9f9f9 0%, #f5f1e8 100%);
+        }
+
+        /* Force Full Width */
+        .force-full-width {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        /* Video player */
+        .video-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .video-container:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .video-overlay {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Iconos VIP */
+        .vip-icon-container {
+            width: 48px;
+            height: 48px;
+            background: #e7b93f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(231, 185, 63, 0.3);
+            color: #000;
+            font-size: 20px;
+        }
+
+        /* Checkmarks VIP */
+        .check-icon-large {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            background: #e7b93f;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(231, 185, 63, 0.2);
+            margin-top: 4px;
+        }
+
+        .check-icon-large i { font-size: 12px; color: white; }
+
+        /* Text Gold */
+        .text-gradient-gold {
+            color: #e7b93f;
+        }
+
+        /* Separador decorativo */
+        .separator-lz {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, #e7b93f 50%, transparent 100%);
+            opacity: 0.3;
+        }
+
+        /* Animación Pulse */
+        @keyframes pulse-premium {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(231, 185, 63, 0.5); transform: scale(1); }
+            50% { box-shadow: 0 0 0 15px rgba(231, 185, 63, 0); transform: scale(1.02); }
+        }
+        .btn-pulse { animation: pulse-premium 2.5s ease-in-out infinite; }
+
+        /* Carrusel de Testimonios */
+        .testimonials-carousel-container {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .testimonials-track {
+            display: flex;
+            gap: 24px;
+            animation: scroll-testimonials 60s linear infinite;
+            width: fit-content;
+        }
+
+        .testimonials-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes scroll-testimonials {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .testimonial-card {
+            flex-shrink: 0;
+            width: 450px;
+            height: 550px;
+            background: #fff;
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(231, 185, 63, 0.1);
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(231, 185, 63, 0.2);
+            border-color: rgba(231, 185, 63, 0.3);
+        }
+
+        .testimonial-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            background: #fff;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .testimonial-card {
+                width: 350px;
+                height: 450px;
+            }
+
+            .testimonials-track {
+                gap: 16px;
+                animation-duration: 40s;
+            }
+        }
+
+        /* Iframe del botón responsive */
+        .btn-iframe-responsive {
+            width: 100%;
+            max-width: 900px;
+            height: 150px;
+            border: none;
+            border-radius: 5px;
+            display: block;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        /* En pantallas grandes (desktop), extender el iframe */
+        @media (min-width: 769px) {
+            .btn-iframe-responsive {
+                min-width: 700px;
+                height: 100px;
+            }
+        }
+
+    </style>
+</head>
+<body class="bg-white flex flex-col min-h-screen">
+
+    <!-- HEADER / LOGO (Estilo oscuro Liz Pinto) -->
+    <header class="py-3 md:py-4 bg-lzDark border-b border-lzGreyDark force-full-width">
+        <div class="max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between">
+            <!-- Logo a la izquierda -->
+            <div class="w-[260px] md:w-[380px]">
+                <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/69691988c7d9b505d00a5d1c.png" alt="The Click Boss" class="w-full h-auto">
+            </div>
+
+            <!-- Botón VIP a la derecha -->
+            <a href="https://go.lizpinto.net/checkout-vip" class="btn-liz btn-gold py-3 px-4 md:py-4 md:px-6 rounded-full text-xs md:text-sm font-bold uppercase tracking-wide whitespace-nowrap hover:shadow-lz-gold transition-all group">
+                Quiero ser VIP <i class="fa-solid fa-crown ml-2 group-hover:-translate-y-1 transition-transform inline-block"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- HERO SECTION VIP con fondo oscuro estilo Liz Pinto -->
+    <section class="px-6 pb-16 pt-4 md:pt-6 bg-lzDark force-full-width">
+        <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-1">
+
+            <h1 class="font-heading font-normal text-3xl md:text-5xl lg:text-6xl mb-0 uppercase leading-tight text-white">
+                Vive el evento completo. <br class="hidden md:block"> <span class="underline-lz">No solo asistas. Aplícalo.</span>
+            </h1>
+
+        </div>
+
+        <div class="flex flex-col items-center">
+            <!-- FECHA Y HORA DEL EVENTO -->
+            <div class="inline-flex items-center justify-center gap-2 text-lzGold font-sans font-semibold text-base md:text-lg mb-1">
+                <i class="fa-solid fa-calendar-check text-lg"></i>
+                <span>2 al 6 de Febrero • 12:00 PM (Hora Panamá)</span>
+            </div>
+
+            <!-- VSL VIP -->
+            <div class="video-container relative w-full aspect-video bg-black mb-6 max-w-3xl border-4 border-lzGold/20">
+                <div style="padding:56.25% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1154180912?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;loop=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" referrerpolicy="strict-origin-when-cross-origin" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="VSL VIP"></iframe></div>
+            </div>
+
+            <!-- Botón Principal VIP con Corona -->
+            <a href="https://go.lizpinto.net/checkout-vip" class="inline-block btn-liz btn-gold py-6 px-8 md:px-14 rounded-full text-lg md:text-xl shadow-lz-strong hover:shadow-lz-gold transform transition-all w-full md:w-auto mb-4 group uppercase leading-tight btn-pulse">
+                    Quiero La Experiencia VIP<i class="fa-solid fa-crown ml-2 group-hover:-translate-y-1 transition-transform inline-block text-lg"></i>
+            </a>
+            <div class="flex flex-wrap justify-center gap-6 text-sm text-lzGrey mb-6 font-sans">
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-chalkboard-user text-lzGold mr-2"></i> Talleres
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-video text-lzGold mr-2"></i> Grabaciones
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-users text-lzGold mr-2"></i> Más acompañamiento
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-folder-open text-lzGold mr-2"></i> Recursos
+                    </span>
+
+            </div>
+                <!-- CTA SECTION -->
+            <div class="text-center w-full max-w-3xl mx-auto mb-0">
+                 <p class="text-lg md:text-xl text-white mb-2 mx-auto font-sans max-w-3xl leading-relaxed text-center">
+                    <strong>La experiencia VIP es más acompañamiento, más recursos y más práctica.</strong> <br>
+                    Para entender juntos qué corregir, dejar de improvisar y tomar mejores decisiones.
+                </p>
+            <div class="w-full rounded-none overflow-visible flex justify-center items-center my-0 px-2 md:px-4">
+                <!-- Botón "No gracias" -->
+                 <iframe
+                    src="https://link.cleesaas.com/widget/form/pcF1lzn4WOTM1OzJoxNZ"
+                    class="btn-iframe-responsive"
+                    id="inline-pcF1lzn4WOTM1OzJoxNZ"
+                    data-layout="{'id':'INLINE'}"
+                    data-trigger-type="alwaysShow"
+                    data-trigger-value=""
+                    data-activation-type="alwaysActivated"
+                    data-activation-value=""
+                    data-deactivation-type="neverDeactivate"
+                    data-deactivation-value=""
+                    data-form-name="1. Botón No Quiero VIP"
+                    data-height="150"
+                    data-layout-iframe-id="inline-pcF1lzn4WOTM1OzJoxNZ"
+                    data-form-id="pcF1lzn4WOTM1OzJoxNZ"
+                    title="1. Botón No Quiero VIP"
+                        >
+                </iframe>
+
+            </div>
+
+                <!-- FECHAS DEL EVENTO -->
+                <div class="mt-2">
+                    <!-- 2 Columnas: Clases y Talleres -->
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Clases -->
+                        <div class="flex flex-col items-center">
+                            <p class="text-white font-bold text-lg mb-3 flex items-center">
+                                <i class="fa-solid fa-calendar-days text-lzGold mr-3 text-xl"></i>
+                                Las 3 Clases en Vivo:
+                            </p>
+                            <ul class="text-white font-sans text-base space-y-2 text-left">
+                                <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Lunes 2 de Febrero</li>
+                                <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Miércoles 4 de Febrero</li>
+                                <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Viernes 6 de Febrero</li>
+                            </ul>
+                        </div>
+
+                        <!-- Talleres VIP -->
+                        <div class="flex flex-col items-center">
+                            <p class="text-white font-bold text-lg mb-3 flex items-center">
+                                <i class="fa-solid fa-crown text-lzGold mr-3 text-xl"></i>
+                                Talleres Exclusivos VIP:
+                            </p>
+                            <ul class="text-lzGold font-sans text-base space-y-2 font-semibold text-left">
+                                <li><i class="fa-solid fa-star text-lzGold text-xs mr-2"></i>Martes 3 de Febrero</li>
+                                <li><i class="fa-solid fa-star text-lzGold text-xs mr-2"></i>Jueves 5 de Febrero</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- HORARIOS POR PAÍS -->
+                    <div class="text-center">
+                        <p class="text-lzGold font-bold text-sm mb-3 flex items-center justify-center">
+                            <i class="fa-solid fa-clock mr-2"></i>
+                            Horario de las clases y talleres:
+                        </p>
+                        <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-white font-sans text-sm">
+                            <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>México: 11:00 AM</span>
+                            <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Panamá: 12:00 PM</span>
+                            <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>USA (Los Ángeles): 9:00 AM</span>
+                            <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Argentina: 2:00 PM</span>
+                            <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>España: 6:00 PM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </section>
+
+    <!-- ¿QUÉ CAMBIA CUANDO ERES VIP? (Fondo Gris Expandido) -->
+    <section class="section-beige py-24 px-6 border-y border-gray-100 force-full-width">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="font-heading font-normal text-3xl md:text-5xl uppercase mb-10">
+                    ¿Qué cambia cuando eres <span class="text-gradient-gold font-medium">VIP</span>?
+                </h2>
+            </div>
+
+            <div class="max-w-3xl mx-auto">
+                <ul class="space-y-6 mb-12 font-sans">
+                    <li class="flex items-start">
+                        <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                        <span class="text-lzDark text-lg leading-relaxed">Llegas mejor <strong>preparado</strong>, no en frío</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                        <span class="text-lzDark text-lg leading-relaxed">Aprovechas cada clase con <strong>más claridad y foco</strong></span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                        <span class="text-lzDark text-lg leading-relaxed">Tienes espacios adicionales para <strong>profundizar en la práctica y hacer tus preguntas</strong></span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                        <span class="text-lzDark text-lg leading-relaxed"><strong>Accedes a las grabaciones</strong> y no dependes solo del "<strong>en vivo</strong>" para aprender</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                        <span class="text-lzDark text-lg leading-relaxed">Cuentas con <strong>recursos prácticos</strong> para aplicar lo visto</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                        <span class="text-lzDark text-lg leading-relaxed">Te sientes más seguro al <strong>tomar decisiones</strong> durante y después del evento</span>
+                    </li>
+                </ul>
+
+                <!-- Bloque de Cierre -->
+                <div class="bg-white p-10 rounded-none shadow-lz-medium border-t-4 border-lzGold text-center">
+                    <p class="text-xl text-lzDark font-medium mb-6 font-sans">
+                        Cuando hay acompañamiento,<br>
+                        el avance es <span class="font-bold">más rápido y más consciente.</span>
+                    </p>
+                    <p class="text-lzGold font-bold font-sans text-2xl uppercase">
+                        VIP no es estatus.<br>
+                        <span class="text-lzDark text-lg font-sans font-bold mt-2 block">Es compromiso con tu proceso y con hacerlo bien.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ¿QUÉ INCLUYE? (Lista Detallada) -->
+    <section class="py-24 px-6 max-w-5xl mx-auto">
+        <h2 class="font-heading font-normal text-3xl md:text-4xl text-center mb-10 uppercase">
+            ¿Qué incluye la <span class="text-gradient-gold font-medium">Experiencia VIP</span>?
+        </h2>
+
+        <ul class="space-y-6 max-w-4xl mx-auto mb-16 font-sans">
+            <li class="flex items-start">
+                <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                <div>
+                    <span class="text-lzDark text-lg leading-relaxed"><strong>Las 3 clases en vivo del evento</strong>, donde trabajamos el orden y la estructura del negocio fotográfico</span>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                <div>
+                    <span class="text-lzDark text-lg leading-relaxed"><strong>2 talleres exclusivos en vivo con Liz</strong>, enfocados en profundizar, bajar a tierra y aplicar lo visto en las clases</span>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                <div>
+                    <span class="text-lzDark text-lg leading-relaxed"><strong>Espacios de preguntas y respuestas</strong>, para resolver dudas reales de tu negocio y no quedarte con preguntas en el aire</span>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                <div>
+                    <span class="text-lzDark text-lg leading-relaxed"><strong>Recursos prácticos de apoyo</strong> (plantillas, guías y/o workbooks) que acompañan las clases y talleres</span>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                <div>
+                    <span class="text-lzDark text-lg leading-relaxed"><strong>Una fase previa de preparación</strong>, con contenidos que elevan tu nivel de claridad antes de que empiece el evento</span>
+                </div>
+            </li>
+            <li class="flex items-start">
+                <i class="fa-solid fa-check text-lzGold text-xl mt-1 mr-4 flex-shrink-0"></i>
+                <div>
+                    <span class="text-lzDark text-lg leading-relaxed"><strong>Grabaciones de las clases y talleres</strong>, para que no dependas únicamente del horario en vivo y puedas revisar con calma</span>
+                </div>
+            </li>
+        </ul>
+
+        <div class="text-center">
+            <p class="font-heading font-medium text-2xl text-lzDark max-w-3xl mx-auto leading-relaxed">
+                El objetivo no es que consumas más información.<br>
+                Es que <strong>apliques mejor y tomes decisiones con más seguridad.</strong>
+            </p>
+        </div>
+    </section>
+
+    <!-- COMPARATIVA FREE VS VIP (Tabla Visual - FORCE FULL WIDTH) -->
+    <section class="bg-lzDark text-white py-24 px-6 force-full-width">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="font-heading font-normal text-3xl md:text-4xl text-center mb-16 uppercase text-white">Elige cómo quieres vivir este evento</h2>
+            
+            <div class="grid md:grid-cols-2 gap-10 items-stretch">
+                <!-- Opción VIP -->
+                <div class="bg-white text-lzDark rounded-none p-8 flex flex-col shadow-2xl relative transform md:scale-105 border-4 border-lzGold z-10">
+                    <div class="absolute top-0 right-0 bg-lzGold text-black text-xs font-bold px-4 py-1 uppercase tracking-wider shadow-sm font-sans">Recomendado</div>
+
+                    <h3 class="font-heading font-black text-2xl mb-2 text-lzBlack uppercase">Experiencia VIP</h3>
+                    <p class="text-sm mb-8 text-lzGold font-bold uppercase tracking-wider">(Evento Completo)</p>
+
+                    <ul class="space-y-4 text-sm flex-grow mb-10 font-medium font-sans">
+                        <li class="flex items-start"><i class="fa-solid fa-check text-lzGold mr-3 mt-1"></i> Todo lo del registro a las clases</li>
+                        <li class="flex items-start bg-lzGold/10 p-2 rounded -mx-2"><i class="fa-solid fa-check text-lzGold mr-3 mt-1"></i> <strong>2 talleres exclusivos en vivo con Liz</strong></li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-lzGold mr-3 mt-1"></i> Espacios adicionales de preguntas y respuestas</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-lzGold mr-3 mt-1"></i> Recursos de apoyo (plantillas / workbooks / guías)</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-lzGold mr-3 mt-1"></i> Preparación previa antes del evento</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-lzGold mr-3 mt-1"></i> Grabaciones de clases y talleres</li>
+                        <li class="flex items-start"><i class="fa-solid fa-check text-lzGold mr-3 mt-1"></i> Comunidad WhatsApp VIP (comunicación y recursos VIP)</li>
+                    </ul>
+
+                    <a href="https://go.lizpinto.net/checkout-vip" class="block w-full text-center btn-liz btn-gold py-5 rounded-full uppercase transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1 btn-pulse font-bold">
+                        Quiero la Experiencia VIP <i class="fa-solid fa-crown ml-2 group-hover:-translate-y-1 transition-transform inline-block text-lg"></i>
+                    </a>
+                </div>
+
+                <!-- Opción Free -->
+                <div class="bg-white/5 border border-white/10 rounded-none p-8 flex flex-col backdrop-blur-sm transition-transform hover:bg-white/10">
+                    <h3 class="font-heading font-bold text-xl mb-2 text-gray-300">Registro a las 3 clases</h3>
+                    <p class="text-sm mb-8 text-gray-400 font-bold uppercase tracking-wider">(En vivo)</p>
+
+                    <ul class="space-y-4 text-sm flex-grow mb-8 font-sans">
+                        <li class="flex items-start opacity-90"><i class="fa-solid fa-check text-gray-400 mr-3 mt-1"></i> Acceso a las 3 clases en vivo</li>
+                        <li class="flex items-start opacity-90"><i class="fa-solid fa-check text-gray-400 mr-3 mt-1"></i> Comunidad WhatsApp General (avisos + links)</li>
+                        <li class="flex items-start opacity-90"><i class="fa-solid fa-check text-gray-400 mr-3 mt-1"></i> Recordatorios y logística del evento</li>
+                        <li class="flex items-start opacity-70"><i class="fa-solid fa-xmark text-gray-500 mr-3 mt-1 text-base"></i> Sin grabaciones (solo en vivo)</li>
+                        <li class="flex items-start opacity-70"><i class="fa-solid fa-xmark text-gray-500 mr-3 mt-1 text-base"></i> Sin talleres exclusivos</li>
+                        <li class="flex items-start opacity-70"><i class="fa-solid fa-xmark text-gray-500 mr-3 mt-1 text-base"></i> Sin recursos adicionales</li>
+                    </ul>
+
+                    <!-- Botón "Prefiero solo el registro..." -->
+                    <a href="https://go.lizpinto.net/gracias-evento" class="inline-block btn-liz btn-outline text-center py-4 px-6 rounded-full uppercase tracking-wide transition-all mt-auto text-xs md:text-sm font-bold opacity-80 hover:opacity-100 hover:bg-white/5 hover:border-white/40">
+                        Prefiero solo el registro a las 3 clases
+                    </a>
+                </div>
+            </div>
+
+            <p class="text-center mt-16 text-xl opacity-80 max-w-2xl mx-auto font-sans leading-relaxed">
+                Si vas a reservar esta semana para tu negocio,<br>
+                la Experiencia VIP es la forma de <strong>aprovecharla al máximo.</strong>
+            </p>
+        </div>
+    </section>
+
+    <!-- PARA TI / NO PARA TI -->
+    <section class="bg-white py-24 px-6">
+        <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
+            <!-- Columna SI -->
+            <div>
+                <h3 class="font-heading font-normal text-3xl mb-10 uppercase flex items-center">
+                    <i class="fa-solid fa-circle-check text-lzGold mr-4 text-4xl"></i>
+                    El acceso VIP es para ti si:
+                </h3>
+                <ul class="space-y-6 font-sans">
+                    <li class="flex items-start gap-4 group">
+                        <div class="check-icon-large ">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            Ya decidiste asistir al evento y quieres aprovecharlo de verdad.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-4 group">
+                        <div class="check-icon-large ">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            No quieres quedarte solo con ideas, sino aplicar.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-4 group">
+                        <div class="check-icon-large ">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            Te sirve tener acompañamiento y espacios para preguntar.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-4 group">
+                        <div class="check-icon-large ">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            Quieres llegar preparado y no improvisar.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-4 group">
+                        <div class="check-icon-large ">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            Valoras tener grabaciones y recursos para trabajar después.
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Columna NO -->
+            <div>
+                <h3 class="font-heading font-normal text-3xl mb-10 uppercase flex items-center text-gray-500">
+                    <i class="fa-solid fa-circle-xmark text-lzGreyDark mr-4 text-4xl"></i>
+                    NO es para ti si:
+                </h3>
+                <ul class="space-y-6 font-sans opacity-70">
+                    <li class="flex items-start gap-4">
+                        <i class="fa-solid fa-circle-xmark text-lzGreyDark text-2xl mt-1"></i>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            Solo quieres mirar las clases sin involucrarte.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <i class="fa-solid fa-circle-xmark text-lzGreyDark text-2xl mt-1"></i>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            No te interesa profundizar ni aplicar.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <i class="fa-solid fa-circle-xmark text-lzGreyDark text-2xl mt-1"></i>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            Prefieres resolver todo solo y sin guía.
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-4">
+                        <i class="fa-solid fa-circle-xmark text-lzGreyDark text-2xl mt-1"></i>
+                        <span class="text-lzDark font-semibold text-lg leading-tight pt-1">
+                            No quieres invertir en tu proceso.
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN TESTIMONIOS (Carrusel Horizontal) -->
+    <section class="py-24 px-6 bg-white overflow-hidden force-full-width">
+        <div class="max-w-6xl mx-auto text-center mb-16">
+            <h2 class="font-heading font-normal text-3xl md:text-4xl uppercase mb-6">
+                Lo que dicen quienes ya <span class="text-gradient-gold font-medium">tomaron acción</span>
+            </h2>
+            <p class="text-lzDark text-lg max-w-2xl mx-auto font-sans">
+                Fotógrafos que decidieron comprometerse con su proceso y transformar su negocio.
+            </p>
+        </div>
+
+        <!-- Carrusel Infinito -->
+        <div class="testimonials-carousel-container relative">
+            <div class="testimonials-track">
+                <!-- Primera serie de testimonios -->
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1ed7c3625fc39073b.png" alt="Testimonio 1" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e102f1be0b01a08711.png" alt="Testimonio 2" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e184e90b92e2398838.png" alt="Testimonio 3" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1b19add8fd68624df.png" alt="Testimonio 4" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e12847c470f130dfd4.png" alt="Testimonio 5" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e12847c4751130dfd5.png" alt="Testimonio 6" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1b19add12a28624de.png" alt="Testimonio 7" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1f43f8aef023a941d.png" alt="Testimonio 8" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e184e90b784939883d.png" alt="Testimonio 9" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1b19add66d28624e6.png" alt="Testimonio 10" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1eaddec77b08136ab.png" alt="Testimonio 11" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a1e4b305e618293e84.png" alt="Testimonio 12" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a24d18c5cb08148685.png" alt="Testimonio 13" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a102f1be1ff624eb3b.png" alt="Testimonio 14" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a24156527310198ce8.png" alt="Testimonio 15" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a2e2d75b123720f5d5.png" alt="Testimonio 16" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a1b9e85c32ddf9c26b.png" alt="Testimonio 17" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a2e4b305b152293ea9.png" alt="Testimonio 18" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a1e4b3057ae0293e83.png" alt="Testimonio 19" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a24d18c535c0148684.png" alt="Testimonio 20" class="testimonial-image">
+                </div>
+
+                <!-- Segunda serie (duplicado para scroll infinito) -->
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1ed7c3625fc39073b.png" alt="Testimonio 1" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e102f1be0b01a08711.png" alt="Testimonio 2" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e184e90b92e2398838.png" alt="Testimonio 3" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1b19add8fd68624df.png" alt="Testimonio 4" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e12847c470f130dfd4.png" alt="Testimonio 5" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e12847c4751130dfd5.png" alt="Testimonio 6" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1b19add12a28624de.png" alt="Testimonio 7" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1f43f8aef023a941d.png" alt="Testimonio 8" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e184e90b784939883d.png" alt="Testimonio 9" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1b19add66d28624e6.png" alt="Testimonio 10" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696904e1eaddec77b08136ab.png" alt="Testimonio 11" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a1e4b305e618293e84.png" alt="Testimonio 12" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a24d18c5cb08148685.png" alt="Testimonio 13" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a102f1be1ff624eb3b.png" alt="Testimonio 14" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a24156527310198ce8.png" alt="Testimonio 15" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a2e2d75b123720f5d5.png" alt="Testimonio 16" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a1b9e85c32ddf9c26b.png" alt="Testimonio 17" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a2e4b305b152293ea9.png" alt="Testimonio 18" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a1e4b3057ae0293e83.png" alt="Testimonio 19" class="testimonial-image">
+                </div>
+                <div class="testimonial-card">
+                    <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/696691a24d18c535c0148684.png" alt="Testimonio 20" class="testimonial-image">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MENSAJE EMOCIONAL DE LIZ (Force Full Width) -->
+    <section class="py-24 px-6 section-beige force-full-width">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="w-40 h-40 rounded-full overflow-hidden mx-auto mb-8 border-4 border-white shadow-lz-medium">
+                <img src="https://lizpinto.net/wp-content/uploads/2025/08/LizPintoTCB-600x600.jpg" alt="Liz Pinto" class="w-full h-full object-cover">
+            </div>
+
+            <h2 class="font-heading font-medium text-3xl md:text-3xl text-lzDark mb-10 leading-tight">
+                Sé lo frustrante que es hacerlo bien <br>
+                y aun así sentir que tu negocio no avanza como debería.
+            </h2>
+
+            <p class="text-xl md:text-2xl text-lzDark max-w-3xl mx-auto leading-relaxed font-sans font-light">
+                La experiencia VIP no es más contenido.<br>
+                Es acompañamiento real, práctica guiada y recursos concretos,<br>
+                para que esta semana no se quede en intención <br>
+                y realmente marque un antes y un después.
+            </p>
+        </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="py-28 px-6 bg-white text-center">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="font-heading font-normal text-4xl md:text-2xl mb-10 uppercase leading-tight">
+                Si ya decidiste dedicarle tiempo a tu negocio,<br>
+                hazlo con el apoyo y la claridad que necesitas.
+            </h2>
+
+            <a href="https://go.lizpinto.net/checkout-vip" class="inline-block btn-liz btn-gold py-6 px-12 rounded-full text-xl shadow-lz-strong hover:shadow-lz-gold transform transition-all mb-10 group uppercase btn-pulse">
+                Accede ahora a la experiencia VIP del evento <i class="fa-solid fa-arrow-right ml-3 group-hover:translate-x-2 transition-transform inline-block"></i>
+            </a>
+
+            <div class="flex flex-wrap justify-center gap-6 text-sm text-lzGrey mb-6 font-sans">
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-chalkboard-user text-lzGold mr-2"></i> Talleres
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-video text-lzGold mr-2"></i> Grabaciones
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-users text-lzGold mr-2"></i> Más acompañamiento
+                    </span>
+                    <span class="flex items-center">
+                        <i class="fa-solid fa-folder-open text-lzGold mr-2"></i> Recursos
+                    </span>
+
+            </div>
+
+            <p class="text-lzDark text-xl max-w-2xl mx-auto font-sans leading-relaxed mb-12">
+                Esta opción es para fotógrafos que no quieren seguir estancados <br>
+                y están listos para <strong>avanzar con foco y seguridad.</strong>
+            </p>
+
+            <!-- FECHAS DEL EVENTO -->
+            <div class="mt-8">
+                <!-- 2 Columnas: Clases y Talleres -->
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <!-- Clases -->
+                    <div class="flex flex-col items-center">
+                        <p class="text-lzDark font-bold text-lg mb-3 flex items-center">
+                            <i class="fa-solid fa-calendar-days text-lzGold mr-3 text-xl"></i>
+                            Las 3 Clases en Vivo:
+                        </p>
+                        <ul class="text-lzDark font-sans text-base space-y-2 text-left">
+                            <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Lunes 2 de Febrero</li>
+                            <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Miércoles 4 de Febrero</li>
+                            <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Viernes 6 de Febrero</li>
+                        </ul>
+                    </div>
+
+                    <!-- Talleres VIP -->
+                    <div class="flex flex-col items-center">
+                        <p class="text-lzDark font-bold text-lg mb-3 flex items-center">
+                            <i class="fa-solid fa-crown text-lzGold mr-3 text-xl"></i>
+                            Talleres Exclusivos VIP:
+                        </p>
+                        <ul class="text-lzGold font-sans text-base space-y-2 font-bold text-left">
+                            <li><i class="fa-solid fa-star text-lzGold text-xs mr-2"></i>Martes 3 de Febrero</li>
+                            <li><i class="fa-solid fa-star text-lzGold text-xs mr-2"></i>Jueves 5 de Febrero</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- HORARIOS POR PAÍS -->
+                <div class="text-center">
+                    <p class="text-lzGold font-bold text-sm mb-3 flex items-center justify-center">
+                        <i class="fa-solid fa-clock mr-2"></i>
+                        Horario de las clases y talleres:
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-lzDark font-sans text-sm">
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>México: 11:00 AM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Panamá: 12:00 PM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>USA (Los Ángeles): 9:00 AM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Argentina: 2:00 PM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>España: 6:00 PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-10 bg-lzDark text-white text-center text-sm force-full-width font-sans">
+        <p class="mb-4">© 2026 Liz Pinto - Fotógrafa profesional y Cursos de fotografía.</p>
+        <div class="mt-4 text-gray-400 space-x-6">
+            <a href="#" class="hover:text-lzGold transition-colors">Términos y condiciones</a>
+            <a href="#" class="hover:text-lzGold transition-colors">Políticas de Privacidad</a>
+        </div>
+    </footer>
+
+    <!-- Script para Vimeo -->
+    <script src="https://player.vimeo.com/api/player.js"></script>
+    <script src="https://link.cleesaas.com/js/form_embed.js"></script>
+
+</body>
+</html>

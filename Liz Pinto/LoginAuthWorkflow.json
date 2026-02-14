@@ -1,0 +1,178 @@
+{
+    "name": "Login Auth Workflow",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "auth-user",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "id": "webhook-auth-trigger",
+            "name": "Webhook Auth",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                -400,
+                220
+            ],
+            "webhookId": "auth-user-webhook"
+        },
+        {
+            "parameters": {
+                "operation": "getAll",
+                "tableId": "users",
+                "returnAll": false,
+                "limit": 1,
+                "matchType": "allFilters",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "email",
+                            "condition": "eq",
+                            "keyValue": "={{ $json.body.email }}"
+                        },
+                        {
+                            "keyName": "username",
+                            "condition": "eq",
+                            "keyValue": "={{ $json.body.username }}"
+                        }
+                    ]
+                }
+            },
+            "id": "buscar-usuario-supabase",
+            "name": "Buscar Usuario en Supabase",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                -160,
+                220
+            ],
+            "alwaysOutputData": true,
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose"
+                    },
+                    "conditions": [
+                        {
+                            "id": "usuario-existe-condition",
+                            "leftValue": "={{ $json.id }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "exists",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "if-usuario-existe",
+            "name": "Usuario Existe?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                80,
+                220
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ {\n  \"success\": true,\n  \"user\": {\n    \"id\": $json.id,\n    \"email\": $json.email,\n    \"username\": $json.username,\n    \"created_at\": $json.created_at\n  },\n  \"message\": \"Login exitoso\"\n} }}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "id": "respuesta-login-exitoso",
+            "name": "Respuesta Login Exitoso",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                320,
+                120
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ {\n  \"success\": false,\n  \"message\": \"Usuario no encontrado o credenciales incorrectas\"\n} }}",
+                "options": {
+                    "responseCode": 401
+                }
+            },
+            "id": "respuesta-login-fallido",
+            "name": "Respuesta Login Fallido",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                320,
+                320
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook Auth": {
+            "main": [
+                [
+                    {
+                        "node": "Buscar Usuario en Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Buscar Usuario en Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Usuario Existe?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Usuario Existe?": {
+            "main": [
+                [
+                    {
+                        "node": "Respuesta Login Exitoso",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Respuesta Login Fallido",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "staticData": null,
+    "tags": [],
+    "triggerCount": 1,
+    "updatedAt": "2026-02-06T00:00:00.000Z",
+    "versionId": "1"
+}

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área de Acceso VIP - The Click Boss</title>
+
+    <!-- Fuentes: Playfair Display (Títulos) y Raleway (Cuerpo) - Estilo Liz Pinto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Raleway', 'sans-serif'],
+                        heading: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        lzGold: '#e7b93f',
+                        lzGoldLight: '#f5d88a',
+                        lzDark: '#2b2b2b',
+                        lzGrey: '#7a7a7a',
+                        lzGreyDark: '#4a4a4a',
+                        lzLightBg: '#f9f9f9',
+                        lzBlack: '#1a1a1a',
+                        lzBeige: '#f5f1e8',
+                    },
+                    boxShadow: {
+                        'lz-soft': '0 10px 40px rgba(0,0,0,0.06)',
+                        'lz-medium': '0 15px 50px rgba(0,0,0,0.08)',
+                        'lz-strong': '0 20px 60px rgba(0,0,0,0.12)',
+                        'lz-gold': '0 8px 25px rgba(231,185,63,0.15)',
+                    },
+                    letterSpacing: {
+                        'extra-wide': '0.15em',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            color: #333;
+            line-height: 1.7;
+            overflow-x: hidden;
+            font-family: 'Raleway', sans-serif;
+            background-color: #ffffff;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Playfair Display', serif;
+            color: #000;
+            font-weight: 400;
+            line-height: 1.2;
+        }
+
+        .full-width-breakout {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        /* TARJETAS DE CLASES Y TALLERES */
+        .day-card {
+            background: #ffffff;
+            border: 2px solid #e7b93f;
+            border-radius: 0;
+            padding: 28px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(231, 185, 63, 0.15);
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .day-card.clase {
+            border-color: #e7b93f;
+            background: linear-gradient(to bottom right, #ffffff, #fefdfb);
+        }
+
+        .day-card.taller {
+            border-color: #e7b93f;
+            background: linear-gradient(135deg, #f5f1e8 0%, #ffffff 100%);
+        }
+
+        .day-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(231, 185, 63, 0.25);
+            border-color: #d4a01e;
+        }
+
+        .day-card.locked {
+            background: #fafafa;
+            border-color: #e2e8f0;
+            opacity: 0.85;
+            cursor: not-allowed;
+        }
+
+        .lock-icon {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #e7b93f;
+            transition: all 0.3s ease;
+            z-index: 10;
+            font-size: 28px;
+        }
+
+        .day-card.unlocked .lock-icon {
+            color: #ffffff;
+            transform: scale(1.1);
+            background: #e7b93f;
+            padding: 12px;
+            border-radius: 50%;
+        }
+
+        .day-card.locked .lock-icon {
+            color: #cbd5e1;
+        }
+
+        /* BOTÓN DE RECURSOS */
+        .resource-btn {
+            width: 100%;
+            padding: 16px;
+            border-radius: 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            border: 2px solid transparent;
+            font-family: 'Raleway', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .resource-btn.unlocked-btn {
+            background-color: #e7b93f;
+            border-color: #e7b93f;
+            color: #2b2b2b;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(231, 185, 63, 0.2);
+        }
+
+        .resource-btn.unlocked-btn:hover {
+            background-color: #d4a01e;
+            border-color: #d4a01e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 185, 63, 0.3);
+        }
+
+        .resource-btn.locked-btn {
+            background-color: #f5f1e8;
+            border-color: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        /* Badge de etiqueta */
+        .card-badge {
+            display: inline-block;
+            background: #e7b93f;
+            color: #2b2b2b;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 4px 12px;
+            border-radius: 0;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .card-badge.taller-badge {
+            background: #2b2b2b;
+            color: #e7b93f;
+        }
+
+        /* CALENDARIO CON ESTILO LIZ PINTO */
+        .static-border-card {
+            border-radius: 0;
+            position: relative;
+            background: #ffffff;
+            padding: 16px;
+            border: 3px solid #e7b93f;
+            box-shadow: 0 0 0 6px rgba(231, 185, 63, 0.08);
+        }
+
+        .calendar-day-active {
+            background-color: #f5f1e8;
+            color: #2b2b2b;
+            border: 2px solid #e7b93f;
+            border-radius: 0;
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .calendar-day-active:hover {
+            background-color: #ffffff;
+            border-color: #d4a01e;
+            transform: scale(1.1);
+            z-index: 20;
+            box-shadow: 0 10px 20px rgba(231, 185, 63, 0.2);
+        }
+
+        .calendar-day-active::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            background-color: #e7b93f;
+            border-radius: 50%;
+        }
+
+        /* Día especial para talleres VIP */
+        .calendar-day-special {
+            background-color: #2b2b2b;
+            color: #e7b93f;
+            border: 2px solid #2b2b2b;
+            border-radius: 0;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(43, 43, 43, 0.3);
+            font-weight: 700;
+        }
+
+        .calendar-day-special:hover {
+            transform: scale(1.1);
+            background-color: #1a1a1a;
+            border-color: #1a1a1a;
+            z-index: 20;
+            box-shadow: 0 15px 30px rgba(231, 185, 63, 0.4);
+        }
+
+        /* TOOLTIP */
+        .calendar-tooltip {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            color: #2b2b2b;
+            border: 2px solid #e7b93f;
+            border-radius: 0;
+            padding: 12px 16px;
+            min-width: 200px;
+            width: max-content;
+            max-width: 250px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(231, 185, 63, 0.2);
+            pointer-events: none;
+            font-size: 0.875rem;
+        }
+
+        .calendar-day-wrapper:hover .calendar-tooltip,
+        .calendar-day-special:hover .calendar-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0;
+            background-color: #f5f1e8;
+            color: #2b2b2b;
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 1px solid #e7b93f;
+        }
+
+        .nav-btn:hover {
+            background-color: #e7b93f;
+            color: #fff;
+        }
+
+        .underline-lz {
+            position: relative;
+            display: inline-block;
+        }
+
+        .underline-lz::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -4px;
+            width: 100%;
+            height: 3px;
+            background: #e7b93f;
+        }
+
+        .glow-gold {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(231, 185, 63, 0.08) 0%, rgba(255, 255, 255, 0) 70%);
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f5f1e8;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e7b93f;
+            border-radius: 0;
+        }
+    </style>
+</head>
+
+<body class="antialiased bg-white">
+
+    <!-- HEADER / LOGO -->
+    <header class="py-5 md:py-7 text-center bg-lzDark border-b border-lzGreyDark full-width-breakout">
+        <div class="inline-block w-full max-w-[240px] md:max-w-sm px-6">
+            <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/69653f00f8a93b584f0124df.png"
+                alt="The Click Boss" class="w-full h-auto">
+        </div>
+    </header>
+
+    <!-- HERO SECTION con fondo oscuro estilo Liz Pinto + VSL -->
+    <section class="px-6 pb-16 pt-12 md:pt-16 bg-lzDark full-width-breakout">
+        <div class="max-w-5xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1
+                    class="font-heading text-4xl md:text-6xl font-normal tracking-tight mb-6 leading-tight uppercase text-white">
+                    Bienvenido al área <br class="md:hidden" /> <span class="underline-lz">VIP del Evento</span>
+                </h1>
+                <p class="text-white text-lg md:text-xl font-light max-w-3xl mx-auto font-sans">
+                    Aquí encontrarás todas las clases, talleres exclusivos y recursos para aprovechar al máximo esta
+                    experiencia.
+                </p>
+            </div>
+
+            <!-- VSL Container -->
+            <div class="flex flex-col items-center">
+                <div
+                    class="relative w-full aspect-video bg-black mb-10 max-w-3xl shadow-lz-strong border-4 border-lzGold/20">
+                    <div style="padding:56.25% 0 0 0;position:relative;">
+                        <iframe
+                            src="https://player.vimeo.com/video/1154180912?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;loop=1"
+                            frameborder="0"
+                            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;" title="VSL VIP">
+                        </iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CLASES Y TALLERES (Grid) - Fondo Beige -->
+    <section id="clases-talleres" class="py-24 px-6 full-width-breakout" style="background: #f5f1e8;">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="font-heading text-3xl md:text-5xl font-normal mb-4 uppercase">
+                    Las 3 Clases + 2 Talleres <span class="text-lzGold">VIP</span>
+                </h2>
+                <p class="text-lzBlack font-medium text-lg font-sans">Del 2 al 6 de Febrero</p>
+            </div>
+
+            <!-- Grid de Clases y Talleres -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                <!-- CLASE 1 - Lunes 2 de Febrero -->
+                <div class="flex flex-col">
+                    <div class="day-card clase locked" data-unlock-date="2026-02-02" data-video-url="#"
+                        data-resource-url="#">
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <span class="card-badge">CLASE 1</span>
+                                <div class="text-lzGold font-sans font-bold text-sm">Lunes 2 Feb</div>
+                            </div>
+                            <h4 class="font-heading font-medium text-xl text-lzDark leading-tight">
+                                Por qué no estás atrayendo clientes
+                            </h4>
+                            <p class="text-sm text-lzBlack font-sans">Identifica el problema real detrás del
+                                estancamiento</p>
+                        </div>
+                        <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                    <button class="resource-btn locked-btn" disabled>
+                        <i class="fa-solid fa-download"></i> Acceder a Recursos
+                    </button>
+                </div>
+
+                <!-- TALLER 1 VIP - Martes 3 de Febrero -->
+                <div class="flex flex-col">
+                    <div class="day-card taller locked" data-unlock-date="2026-02-03" data-video-url="#"
+                        data-resource-url="#">
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <span class="card-badge taller-badge">
+                                    <i class="fa-solid fa-crown mr-1"></i> TALLER VIP 1
+                                </span>
+                                <div class="text-lzGold font-sans font-bold text-sm">Martes 3 Feb</div>
+                            </div>
+                            <h4 class="font-heading font-medium text-xl text-lzDark leading-tight">
+                                Aplicando lo aprendido en práctica
+                            </h4>
+                            <p class="text-sm text-lzBlack font-sans">Profundiza y baja a tierra lo visto en la Clase 1
+                            </p>
+                        </div>
+                        <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                    <button class="resource-btn locked-btn" disabled>
+                        <i class="fa-solid fa-download"></i> Acceder a Recursos
+                    </button>
+                </div>
+
+                <!-- CLASE 2 - Miércoles 4 de Febrero -->
+                <div class="flex flex-col">
+                    <div class="day-card clase locked" data-unlock-date="2026-02-04" data-video-url="#"
+                        data-resource-url="#">
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <span class="card-badge">CLASE 2</span>
+                                <div class="text-lzGold font-sans font-bold text-sm">Miércoles 4 Feb</div>
+                            </div>
+                            <h4 class="font-heading font-medium text-xl text-lzDark leading-tight">
+                                El mapa real para vivir de la fotografía
+                            </h4>
+                            <p class="text-sm text-lzBlack font-sans">El orden lógico del negocio fotográfico</p>
+                        </div>
+                        <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                    <button class="resource-btn locked-btn" disabled>
+                        <i class="fa-solid fa-download"></i> Acceder a Recursos
+                    </button>
+                </div>
+
+                <!-- TALLER 2 VIP - Jueves 5 de Febrero -->
+                <div class="flex flex-col">
+                    <div class="day-card taller locked" data-unlock-date="2026-02-05" data-video-url="#"
+                        data-resource-url="#">
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <span class="card-badge taller-badge">
+                                    <i class="fa-solid fa-crown mr-1"></i> TALLER VIP 2
+                                </span>
+                                <div class="text-lzGold font-sans font-bold text-sm">Jueves 5 Feb</div>
+                            </div>
+                            <h4 class="font-heading font-medium text-xl text-lzDark leading-tight">
+                                Tu hoja de ruta personalizada
+                            </h4>
+                            <p class="text-sm text-lzBlack font-sans">Q&A y planificación de tu siguiente paso</p>
+                        </div>
+                        <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                    <button class="resource-btn locked-btn" disabled>
+                        <i class="fa-solid fa-download"></i> Acceder a Recursos
+                    </button>
+                </div>
+
+                <!-- CLASE 3 - Viernes 6 de Febrero -->
+                <div class="flex flex-col">
+                    <div class="day-card clase locked" data-unlock-date="2026-02-06" data-video-url="#"
+                        data-resource-url="#">
+
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-start">
+                                <span class="card-badge">CLASE 3</span>
+                                <div class="text-lzGold font-sans font-bold text-sm">Viernes 6 Feb</div>
+                            </div>
+                            <h4 class="font-heading font-medium text-xl text-lzDark leading-tight">
+                                Qué hacer para no volver a estancarte
+                            </h4>
+                            <p class="text-sm text-lzBlack font-sans">Estructura y acompañamiento para el futuro</p>
+                        </div>
+                        <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                    <button class="resource-btn locked-btn" disabled>
+                        <i class="fa-solid fa-download"></i> Acceder a Recursos
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Nota Importante -->
+            <div class="mt-16 max-w-3xl mx-auto">
+                <div class="bg-white border-2 border-lzGold/30 p-8 text-center shadow-lz-soft">
+                    <div class="flex items-center justify-center gap-3 mb-4">
+                        <i class="fa-solid fa-circle-info text-lzGold text-2xl"></i>
+                        <h3 class="font-heading text-2xl font-medium text-lzDark uppercase">Importante</h3>
+                    </div>
+                    <p class="text-lzDark text-lg font-sans leading-relaxed">
+                        Las clases y talleres se desbloquearán automáticamente en sus respectivas fechas. <br>
+                        <strong>Como VIP, tendrás acceso a todas las grabaciones.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CALENDARIO INTERACTIVO - Fondo Blanco -->
+    <section id="calendario" class="py-24 px-6 bg-white">
+        <div class="max-w-2xl mx-auto static-border-card shadow-lz-medium">
+            <div class="bg-white p-6 sm:p-10">
+
+                <!-- TITULO SECCIÓN CALENDARIO -->
+                <div class="text-center mb-10">
+                    <h3 class="font-heading text-2xl sm:text-3xl font-medium text-lzDark mb-3 uppercase">Agenda estas
+                        fechas</h3>
+                    <p class="text-lzBlack font-medium text-base sm:text-lg font-sans">Del 2 al 6 de Febrero 2026</p>
+                </div>
+
+                <div class="flex items-center justify-between mb-8">
+                    <!-- Flecha izquierda -->
+                    <button id="prev-month" class="nav-btn" style="visibility: hidden;">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+
+                    <div class="text-center">
+                        <h3 id="calendar-month-title"
+                            class="font-heading text-lzDark font-medium text-2xl sm:text-3xl uppercase">Febrero 2026
+                        </h3>
+                        <p id="calendar-subtitle" class="text-lzBlack text-sm sm:text-base mt-1 font-sans">La semana de
+                            transformación</p>
+                    </div>
+
+                    <!-- Flecha derecha -->
+                    <button id="next-month" class="nav-btn" style="visibility: hidden;">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Header Días -->
+                <div
+                    class="grid grid-cols-7 gap-2 sm:gap-3 text-center text-xs sm:text-sm text-lzGrey font-bold uppercase tracking-wider mb-6 font-sans">
+                    <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span><span>Do</span>
+                </div>
+
+                <!-- Grid Días Dinámico -->
+                <div id="calendar-grid"
+                    class="grid grid-cols-7 gap-2 sm:gap-3 text-center text-sm sm:text-base font-bold">
+                    <!-- El JS llenará esto -->
+                </div>
+
+                <!-- Botón de Reserva Dinámico -->
+                <div class="mt-8 relative z-10 w-full flex justify-center">
+                    <a id="reserve-btn" href="#" target="_blank"
+                        class="resource-btn unlocked-btn shadow-lz-gold hidden hover:scale-[1.02] transition-transform duration-300 w-full max-w-md mx-auto no-underline">
+                        <i class="fa-regular fa-calendar-check text-xl"></i> <span id="reserve-btn-text"
+                            class="text-base sm:text-lg">AGENDAR CLASE</span>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer
+        class="full-width-breakout py-10 bg-lzDark text-white text-center text-sm font-sans border-t border-lzGreyDark">
+        <p class="mb-4">© 2026 Liz Pinto - Fotógrafa profesional y Cursos de fotografía.</p>
+        <div class="mt-4 text-gray-400 space-x-6">
+            <a href="#" class="hover:text-lzGold transition-colors">Términos y condiciones</a>
+            <a href="#" class="hover:text-lzGold transition-colors">Políticas de Privacidad</a>
+        </div>
+    </footer>
+
+    <!-- Vimeo Player Script -->
+    <script src="https://player.vimeo.com/api/player.js"></script>
+
+    <script>
+        // --- SISTEMA DE DESBLOQUEO DE TARJETAS ---
+        function getCurrentDate() {
+            return new Date(); // En producción usa la fecha real
+        }
+
+        function parseUnlockDate(dateStr) {
+            return new Date(dateStr + 'T00:00:00');
+        }
+
+        function updateCardStates() {
+            const wrappers = document.querySelectorAll('#clases-talleres .grid > div');
+            const now = getCurrentDate();
+
+            wrappers.forEach(wrapper => {
+                const card = wrapper.querySelector('.day-card');
+                const btn = wrapper.querySelector('.resource-btn');
+
+                if (card && card.dataset.unlockDate) {
+                    const unlockDate = parseUnlockDate(card.dataset.unlockDate);
+
+                    if (now >= unlockDate) {
+                        // Desbloquear Tarjeta
+                        card.classList.remove('locked');
+                        card.classList.add('unlocked');
+
+                        // Cambiar icono a Play
+                        const iconContainer = card.querySelector('.lock-icon');
+                        if (iconContainer) {
+                            iconContainer.innerHTML = '<i class="fa-solid fa-play"></i>';
+                        }
+
+                        // Hacer clickeable la tarjeta
+                        if (card.dataset.videoUrl && card.dataset.videoUrl !== '#') {
+                            card.addEventListener('click', () => {
+                                window.open(card.dataset.videoUrl, '_blank');
+                            });
+                        }
+
+                        // Desbloquear Botón de Recursos
+                        if (btn) {
+                            btn.classList.remove('locked-btn');
+                            btn.classList.add('unlocked-btn');
+                            btn.removeAttribute('disabled');
+
+                            // Lógica para abrir el link de recursos si existe
+                            if (card.dataset.resourceUrl && card.dataset.resourceUrl !== '#') {
+                                btn.onclick = (e) => {
+                                    e.stopPropagation();
+                                    window.open(card.dataset.resourceUrl, '_blank');
+                                };
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- CALENDARIO DINÁMICO ---
+        const eventsData = {
+            '2026-1-2': {
+                title: 'CLASE 1: Por qué no estás atrayendo clientes',
+                type: 'clase',
+                desc: 'Identifica el problema real detrás del estancamiento en tu negocio fotográfico.'
+            },
+            '2026-1-3': {
+                title: 'TALLER VIP 1: Aplicando lo aprendido en práctica',
+                type: 'taller',
+                desc: 'Profundiza y baja a tierra lo visto en la Clase 1 con ejercicios prácticos.'
+            },
+            '2026-1-4': {
+                title: 'CLASE 2: El mapa real para vivir de la fotografía',
+                type: 'clase',
+                desc: 'El orden lógico del negocio fotográfico y cómo escalar.'
+            },
+            '2026-1-5': {
+                title: 'TALLER VIP 2: Tu hoja de ruta personalizada',
+                type: 'taller',
+                desc: 'Q&A y planificación de tu siguiente paso como fotógrafo.'
+            },
+            '2026-1-6': {
+                title: 'CLASE 3: Qué hacer para no volver a estancarte',
+                type: 'clase',
+                desc: 'Estructura y acompañamiento para el futuro de tu negocio.'
+            }
+        };
+
+        function generateGoogleCalendarLink(title, dateStr) {
+            // dateStr format: YYYY-M-D (donde M=1 es Febrero)
+            const parts = dateStr.split('-');
+            const year = parts[0];
+            const monthIdx = parseInt(parts[1]);
+            // Google Calendar necesita el mes en formato 01-12. 
+            // Si nuestro dateStr usa 1 para Febrero, entonces necesitamos '02'.
+            const month = (monthIdx + 1).toString().padStart(2, '0');
+            const day = parts[2].padStart(2, '0');
+
+            // Hora del evento: 12:00 PM Hora Panamá (UTC-5) -> 17:00 UTC
+            // Usamos formato UTC (Z) para que Google Calendar ajuste automáticamente a la zona horaria del usuario
+            const start = `${year}${month}${day}T170000Z`;
+            const end = `${year}${month}${day}T183000Z`; // Duración estimada: 1h 30m
+
+            const details = encodeURIComponent(eventsData[dateStr]?.desc || 'Accede a tu área VIP para ver el evento.');
+            const text = encodeURIComponent(title);
+
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${start}/${end}&details=${details}`;
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid');
+            const month = 1; // Febrero (0 = Enero, 1 = Febrero)
+            const year = 2026;
+
+            grid.innerHTML = '';
+
+            // Febrero 2026 empieza en Domingo. Ajuste para Lunes=0
+            const firstDay = new Date(year, month, 1).getDay();
+            let startDayIndex = (firstDay === 0 ? 6 : firstDay - 1);
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Rellenar espacios vacíos
+            for (let i = 0; i < startDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "p-2 sm:p-3";
+                grid.appendChild(emptyCell);
+            }
+
+            // Rellenar días
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${year}-${month}-${day}`;
+                const event = eventsData[dateKey];
+
+                let dayWrapper;
+
+                if (event) {
+                    // Es un día de evento: Crear Link
+                    dayWrapper = document.createElement('a');
+                    dayWrapper.href = generateGoogleCalendarLink(event.title, dateKey);
+                    dayWrapper.target = "_blank";
+                    // Agregamos 'block' para que ocupe el espacio y mantenga estilos
+                    dayWrapper.className = "calendar-day-wrapper relative group block";
+
+                    if (event.type === 'taller') {
+                        // Talleres VIP (estilo especial)
+                        dayWrapper.innerHTML = `
+                            <div class="p-2 sm:p-3 calendar-day-special text-sm sm:text-base">${day}</div>
+                            <div class="calendar-tooltip">
+                                <div class="text-xs font-black text-lzGold uppercase mb-1 text-center font-sans">
+                                    <i class="fa-solid fa-crown mr-1"></i> TALLER VIP
+                                </div>
+                                <div class="text-sm font-bold leading-tight text-lzDark text-center font-sans">${event.title.split(':')[1]}</div>
+                            </div>
+                        `;
+                    } else {
+                        // Clases (estilo normal)
+                        dayWrapper.innerHTML = `
+                            <div class="p-2 sm:p-3 calendar-day-active text-sm sm:text-base">${day}</div>
+                            <div class="calendar-tooltip">
+                                <div class="text-xs font-black text-lzGold uppercase mb-1 text-center font-sans">${event.title.split(':')[0]}</div>
+                                <div class="text-sm font-bold leading-tight text-lzDark text-center font-sans">${event.title.split(':')[1]}</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Días normales
+                    dayWrapper = document.createElement('div');
+                    dayWrapper.className = "calendar-day-wrapper relative group";
+                    dayWrapper.innerHTML = `<div class="p-2 sm:p-3 text-gray-300 text-sm sm:text-base">${day}</div>`;
+                }
+
+                grid.appendChild(dayWrapper);
+            }
+        }
+
+        function updateReserveButton() {
+            const btn = document.getElementById('reserve-btn');
+            const btnText = document.getElementById('reserve-btn-text');
+            const now = getCurrentDate();
+
+            // Fechas de eventos ordenadas (días de Febrero)
+            const eventDates = [2, 3, 4, 5, 6];
+            const month = 1; // Febrero (0-index)
+            const year = 2026;
+
+            // Encontrar el próximo evento
+            let nextEventDay = null;
+
+            for (let day of eventDates) {
+                const eventDate = new Date(year, month, day);
+                // Consideramos el día del evento como "el día actual de reserva" hasta que pase (fin del día)
+                eventDate.setHours(23, 59, 59, 999);
+
+                if (now <= eventDate) {
+                    nextEventDay = day;
+                    break;
+                }
+            }
+
+            if (nextEventDay) {
+                const dateKey = `${year}-${month}-${nextEventDay}`;
+                const event = eventsData[dateKey];
+
+                if (event && btn) {
+                    btn.href = generateGoogleCalendarLink(event.title, dateKey);
+
+                    // Formato corto para el botón
+                    const dayName = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'][new Date(year, month, nextEventDay).getDay()];
+                    let eventLabel = "";
+                    if (event.type === 'taller') {
+                        eventLabel = "TALLER VIP " + (event.title.includes("VIP 1") ? "1" : "2");
+                    } else {
+                        eventLabel = "CLASE " + (nextEventDay === 2 ? '1' : (nextEventDay === 4 ? '2' : '3'));
+                    }
+
+                    btnText.innerText = `AGENDAR ${eventLabel} (${dayName} ${nextEventDay})`;
+                    btn.classList.remove('hidden');
+                }
+            } else {
+                // Ya pasaron todos los eventos
+                if (btn) {
+                    btn.href = "#";
+                    btnText.innerText = "EVENTOS FINALIZADOS";
+                    btn.classList.add('locked-btn');
+                    btn.classList.remove('unlocked-btn');
+                    btn.removeAttribute('target');
+                    btn.classList.remove('hidden');
+                    btn.style.cursor = 'default';
+                }
+            }
+        }
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCardStates();
+            renderCalendar();
+            updateReserveButton();
+        });
+    </script>
+</body>
+
+</html>

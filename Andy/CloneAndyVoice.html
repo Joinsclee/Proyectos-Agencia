@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clonar Voz de Andy - ElevenLabs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --pastel-yellow: #fdfd96;
+            --black: #000000;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #18181b, #000);
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 1.5rem;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 40px rgba(253, 253, 150, 0.3);
+        }
+
+        .title {
+            color: var(--pastel-yellow);
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #a1a1aa;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            background: rgba(39, 39, 42, 0.6);
+            border: 1px solid #3f3f46;
+            border-radius: 1rem;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .step-number {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            margin-right: 12px;
+        }
+
+        .step-title {
+            color: var(--pastel-yellow);
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .label {
+            display: block;
+            color: var(--pastel-yellow);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .input {
+            width: 100%;
+            background: rgba(39, 39, 42, 0.6);
+            border: 1px solid #3f3f46;
+            border-radius: 0.75rem;
+            padding: 12px 16px;
+            color: #f5f5f5;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input:focus {
+            border-color: var(--pastel-yellow);
+            box-shadow: 0 0 15px rgba(253, 253, 150, 0.2);
+        }
+
+        .file-upload {
+            border: 2px dashed #3f3f46;
+            border-radius: 1rem;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(39, 39, 42, 0.3);
+        }
+
+        .file-upload:hover {
+            border-color: var(--pastel-yellow);
+            background: rgba(253, 253, 150, 0.05);
+        }
+
+        .file-upload.dragover {
+            border-color: var(--pastel-yellow);
+            background: rgba(253, 253, 150, 0.1);
+        }
+
+        .btn {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            border: none;
+            border-radius: 1rem;
+            padding: 14px 28px;
+            font-weight: 900;
+            font-size: 14px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(253, 253, 150, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            background: rgba(39, 39, 42, 0.8);
+            border: 1px solid #3f3f46;
+            border-radius: 0.5rem;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-name {
+            color: #f5f5f5;
+            font-size: 13px;
+        }
+
+        .file-size {
+            color: #71717a;
+            font-size: 11px;
+        }
+
+        .remove-file {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 4px 12px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .remove-file:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+            padding: 15px;
+            border-radius: 1rem;
+            margin-top: 15px;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 15px;
+            border-radius: 1rem;
+            margin-top: 15px;
+        }
+
+        .info-box {
+            background: rgba(253, 253, 150, 0.05);
+            border: 1px solid rgba(253, 253, 150, 0.2);
+            border-radius: 0.75rem;
+            padding: 12px 15px;
+            font-size: 12px;
+            color: #a1a1aa;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(253, 253, 150, 0.3);
+            border-top: 3px solid var(--pastel-yellow);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .voice-id-display {
+            background: rgba(39, 39, 42, 0.6);
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 0.75rem;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            color: var(--pastel-yellow);
+            word-break: break-all;
+            text-align: center;
+        }
+
+        .copy-btn {
+            background: rgba(253, 253, 150, 0.1);
+            border: 1px solid var(--pastel-yellow);
+            color: var(--pastel-yellow);
+            padding: 8px 16px;
+            border-radius: 0.5rem;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(253, 253, 150, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="title">🎙️ Clonar Voz de Andy</div>
+            <div class="subtitle">Herramienta para clonar la voz de Andy usando ElevenLabs API</div>
+
+            <!-- PASO 1: API KEY -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">1</span>
+                    Ingresa tu API Key de ElevenLabs
+                </div>
+                <div class="input-group">
+                    <label class="label" for="apiKey">API Key</label>
+                    <input
+                        type="password"
+                        id="apiKey"
+                        class="input"
+                        placeholder="sk_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                    >
+                    <div class="info-box">
+                        📌 Encuentra tu API Key en:
+                        <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" style="color: var(--pastel-yellow);">
+                            elevenlabs.io/app/settings/api-keys
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PASO 2: INFORMACIÓN DE LA VOZ -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">2</span>
+                    Información de la Voz
+                </div>
+                <div class="input-group">
+                    <label class="label" for="voiceName">Nombre de la Voz</label>
+                    <input
+                        type="text"
+                        id="voiceName"
+                        class="input"
+                        value="Andy - Ovejas Voladoras"
+                        placeholder="Ej: Andy - Ovejas Voladoras"
+                    >
+                </div>
+                <div class="input-group">
+                    <label class="label" for="voiceDescription">Descripción (Opcional)</label>
+                    <input
+                        type="text"
+                        id="voiceDescription"
+                        class="input"
+                        value="Voz de Andy para el chat de soporte de la comunidad Ovejas Voladoras"
+                        placeholder="Descripción de la voz..."
+                    >
+                </div>
+            </div>
+
+            <!-- PASO 3: SUBIR ARCHIVOS -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">3</span>
+                    Subir Audio de Andy
+                </div>
+
+                <div class="file-upload" id="fileUploadZone">
+                    <svg xmlns="http://www.w3.org/2000/svg" style="width: 48px; height: 48px; margin: 0 auto 15px; color: var(--pastel-yellow);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <div style="color: var(--pastel-yellow); font-weight: 700; margin-bottom: 8px;">
+                        Arrastra archivos aquí o haz clic para seleccionar
+                    </div>
+                    <div style="color: #71717a; font-size: 12px;">
+                        Formatos: MP3, WAV, M4A, FLAC (máx. 10MB por archivo)
+                    </div>
+                    <input type="file" id="fileInput" accept="audio/*" multiple style="display: none;">
+                </div>
+
+                <div id="fileList" class="file-list" style="display: none;"></div>
+
+                <div class="info-box">
+                    💡 <strong>Consejos para mejor calidad:</strong><br>
+                    • Usa 1-5 minutos de audio (mínimo 30 segundos)<br>
+                    • Audio claro, sin ruido de fondo<br>
+                    • Solo la voz de Andy, sin música ni otras voces<br>
+                    • Variedad de tonos y emociones
+                </div>
+            </div>
+
+            <!-- PASO 4: CONFIGURACIÓN AVANZADA (OPCIONAL) -->
+            <div class="step">
+                <div class="step-title">
+                    <span class="step-number">4</span>
+                    Configuración Avanzada (Opcional)
+                </div>
+                <div class="input-group">
+                    <label class="label">Características de la Voz</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <select id="voiceAge" class="input">
+                                <option value="">Edad (Auto)</option>
+                                <option value="young">Joven (18-30)</option>
+                                <option value="middle_aged" selected>Adulto (30-50)</option>
+                                <option value="old">Mayor (50+)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="voiceGender" class="input">
+                                <option value="">Género (Auto)</option>
+                                <option value="male" selected>Masculino</option>
+                                <option value="female">Femenino</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="label">Tipo de Uso</label>
+                    <select id="voiceUseCase" class="input">
+                        <option value="conversational" selected>Conversacional (Chat)</option>
+                        <option value="narration">Narración</option>
+                        <option value="characters">Personaje</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- BOTÓN CLONAR -->
+            <button id="cloneBtn" class="btn" disabled>
+                🎙️ Clonar Voz de Andy
+            </button>
+
+            <!-- RESULTADO -->
+            <div id="result" style="display: none;"></div>
+        </div>
+
+        <!-- INSTRUCCIONES -->
+        <div class="card">
+            <h3 style="color: var(--pastel-yellow); font-size: 18px; font-weight: 700; margin-bottom: 15px;">
+                📖 Instrucciones
+            </h3>
+            <ol style="color: #a1a1aa; font-size: 13px; line-height: 1.8; padding-left: 20px;">
+                <li>Obtén tu API Key desde <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" style="color: var(--pastel-yellow);">ElevenLabs</a></li>
+                <li>Ingresa la API Key en el campo del Paso 1</li>
+                <li>Personaliza el nombre y descripción de la voz (Paso 2)</li>
+                <li>Arrastra o selecciona los archivos de audio de Andy (Paso 3)</li>
+                <li>Opcionalmente ajusta la configuración avanzada (Paso 4)</li>
+                <li>Haz clic en "Clonar Voz de Andy"</li>
+                <li>Espera 30-60 segundos mientras se procesa</li>
+                <li>Copia el <strong>Voice ID</strong> generado</li>
+                <li>Úsalo en ChatSoporte.html para integrar la voz</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Referencias a elementos
+        const apiKeyInput = document.getElementById('apiKey');
+        const voiceNameInput = document.getElementById('voiceName');
+        const voiceDescInput = document.getElementById('voiceDescription');
+        const fileUploadZone = document.getElementById('fileUploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const cloneBtn = document.getElementById('cloneBtn');
+        const result = document.getElementById('result');
+        const voiceAge = document.getElementById('voiceAge');
+        const voiceGender = document.getElementById('voiceGender');
+        const voiceUseCase = document.getElementById('voiceUseCase');
+
+        let selectedFiles = [];
+
+        // Habilitar botón cuando hay API key y archivos
+        function checkFormValidity() {
+            const hasApiKey = apiKeyInput.value.trim().length > 0;
+            const hasFiles = selectedFiles.length > 0;
+            cloneBtn.disabled = !(hasApiKey && hasFiles);
+        }
+
+        apiKeyInput.addEventListener('input', checkFormValidity);
+
+        // Drag and drop
+        fileUploadZone.addEventListener('click', () => fileInput.click());
+
+        fileUploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadZone.classList.add('dragover');
+        });
+
+        fileUploadZone.addEventListener('dragleave', () => {
+            fileUploadZone.classList.remove('dragover');
+        });
+
+        fileUploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadZone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('audio/'));
+            addFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            addFiles(files);
+        });
+
+        function addFiles(files) {
+            selectedFiles = [...selectedFiles, ...files];
+            renderFileList();
+            checkFormValidity();
+        }
+
+        function renderFileList() {
+            if (selectedFiles.length === 0) {
+                fileList.style.display = 'none';
+                return;
+            }
+
+            fileList.style.display = 'block';
+            fileList.innerHTML = '<div style="color: var(--pastel-yellow); font-weight: 700; font-size: 12px; margin-bottom: 10px; text-transform: uppercase;">Archivos Seleccionados:</div>';
+
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="file-name">📁 ${file.name}</div>
+                        <div class="file-size">${formatFileSize(file.size)}</div>
+                    </div>
+                    <button class="remove-file" onclick="removeFile(${index})">Eliminar</button>
+                `;
+                fileList.appendChild(item);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            renderFileList();
+            checkFormValidity();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Clonar voz
+        cloneBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            const voiceName = voiceNameInput.value.trim() || 'Andy';
+            const voiceDesc = voiceDescInput.value.trim() || 'Voz clonada de Andy';
+
+            if (!apiKey) {
+                showError('Por favor ingresa tu API Key');
+                return;
+            }
+
+            if (selectedFiles.length === 0) {
+                showError('Por favor selecciona al menos un archivo de audio');
+                return;
+            }
+
+            cloneBtn.disabled = true;
+            cloneBtn.textContent = '⏳ Clonando voz...';
+            result.style.display = 'block';
+            result.innerHTML = '<div class="spinner"></div><div style="text-align: center; color: #a1a1aa; margin-top: 15px;">Procesando audio... Esto puede tomar 30-60 segundos</div>';
+
+            try {
+                // Crear FormData
+                const formData = new FormData();
+                formData.append('name', voiceName);
+                formData.append('description', voiceDesc);
+
+                // Agregar archivos
+                selectedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+
+                // Agregar labels (metadatos)
+                const labels = {};
+                if (voiceAge.value) labels.age = voiceAge.value;
+                if (voiceGender.value) labels.gender = voiceGender.value;
+                if (voiceUseCase.value) labels.use_case = voiceUseCase.value;
+                labels.accent = 'spanish';
+
+                if (Object.keys(labels).length > 0) {
+                    formData.append('labels', JSON.stringify(labels));
+                }
+
+                // Llamar a la API de ElevenLabs
+                const response = await fetch('https://api.elevenlabs.io/v1/voices/add', {
+                    method: 'POST',
+                    headers: {
+                        'xi-api-key': apiKey
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail?.message || `Error ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Mostrar éxito con Voice ID
+                showSuccess(data.voice_id, voiceName);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message || 'Error al clonar la voz. Verifica tu API Key y los archivos de audio.');
+            } finally {
+                cloneBtn.disabled = false;
+                cloneBtn.textContent = '🎙️ Clonar Voz de Andy';
+            }
+        });
+
+        function showSuccess(voiceId, voiceName) {
+            result.innerHTML = `
+                <div class="success">
+                    <div style="font-size: 48px; text-align: center; margin-bottom: 15px;">✅</div>
+                    <div style="font-weight: 700; font-size: 18px; text-align: center; margin-bottom: 10px;">
+                        ¡Voz clonada exitosamente!
+                    </div>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        La voz "${voiceName}" ha sido creada en ElevenLabs
+                    </div>
+                    <div style="color: #a1a1aa; font-size: 12px; margin-bottom: 10px; text-align: center;">
+                        <strong>Voice ID:</strong> (Copia este ID para usarlo en ChatSoporte.html)
+                    </div>
+                    <div class="voice-id-display" id="voiceIdDisplay">${voiceId}</div>
+                    <div style="text-align: center;">
+                        <button class="copy-btn" onclick="copyVoiceId('${voiceId}')">
+                            📋 Copiar Voice ID
+                        </button>
+                    </div>
+                    <div class="info-box" style="margin-top: 20px;">
+                        🎯 <strong>Próximo paso:</strong> Guarda este Voice ID y úsalo en ChatSoporte.html para que Andy hable con su propia voz.
+                    </div>
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            result.style.display = 'block';
+            result.innerHTML = `
+                <div class="error">
+                    <div style="font-size: 32px; text-align: center; margin-bottom: 10px;">❌</div>
+                    <div style="font-weight: 700; text-align: center; margin-bottom: 8px;">Error</div>
+                    <div style="text-align: center;">${message}</div>
+                </div>
+            `;
+        }
+
+        function copyVoiceId(voiceId) {
+            navigator.clipboard.writeText(voiceId).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copiado!';
+                btn.style.background = 'rgba(34, 197, 94, 0.2)';
+                btn.style.borderColor = '#86efac';
+                btn.style.color = '#86efac';
+
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                alert('Error al copiar. Selecciona y copia manualmente el Voice ID.');
+            });
+        }
+
+        // Hacer accesible globalmente
+        window.removeFile = removeFile;
+        window.copyVoiceId = copyVoiceId;
+    </script>
+</body>
+</html>

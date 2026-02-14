@@ -1,0 +1,130 @@
+    {
+        "nodes": [
+            {
+                "parameters": {
+                    "httpMethod": "POST",
+                    "path": "login-chat-user",
+                    "responseMode": "responseNode",
+                    "options": {}
+                },
+                "id": "db69fd3f-e656-4aa2-81f2-422536f17515",
+                "name": "Webhook: Login",
+                "type": "n8n-nodes-base.webhook",
+                "typeVersion": 2,
+                "position": [
+                    -224,
+                    -80
+                ],
+                "webhookId": "login-chat-user"
+            },
+            {
+                "parameters": {
+                    "operation": "getAll",
+                    "tableId": "chat_users",
+                    "returnAll": true,
+                    "matchType": "allFilters",
+                    "filters": {
+                        "conditions": [
+                            {
+                                "keyName": "email",
+                                "condition": "eq",
+                                "keyValue": "={{ $json.body.email }}"
+                            }
+                        ]
+                    }
+                },
+                "id": "423b4043-b134-4577-b74c-0fca31dd9d78",
+                "name": "Supabase: Get User",
+                "type": "n8n-nodes-base.supabase",
+                "typeVersion": 1,
+                "position": [
+                    0,
+                    -80
+                ],
+                "alwaysOutputData": true,
+                "credentials": {
+                    "supabaseApi": {
+                        "id": "PX8sWeiQmD5S34A8",
+                        "name": "Andy Database"
+                    }
+                }
+            },
+            {
+                "parameters": {
+                    "jsCode": "// Validar credenciales\nconst webhookData = $('Webhook: Login').first().json;\nconst email = webhookData.body?.email?.toLowerCase().trim();\nconst password = webhookData.body?.password;\n\nconsole.log('===== LOGIN - VALIDACIÓN =====');\nconsole.log('Email:', email);\n\n// Validar que llegaron los datos\nif (!email || !password) {\n  return [{\n    json: {\n      success: false,\n      error: 'missing_data',\n      message: 'Email y contraseña son requeridos'\n    }\n  }];\n}\n\n// Verificar si existe el usuario\nconst users = $input.all();\n\nif (users.length === 0 || !users[0].json.email) {\n  console.log('❌ Usuario no encontrado');\n  return [{\n    json: {\n      success: false,\n      error: 'invalid_credentials',\n      message: 'Email o contraseña incorrectos'\n    }\n  }];\n}\n\nconst user = users[0].json;\nconsole.log('Usuario encontrado:', user.email);\n\n// Verificar si está activo\nif (!user.is_active) {\n  console.log('❌ Usuario inactivo');\n  return [{\n    json: {\n      success: false,\n      error: 'inactive_user',\n      message: 'Tu cuenta está inactiva. Contacta a soporte.'\n    }\n  }];\n}\n\n// Hash de la contraseña ingresada (MISMO ALGORITMO QUE EN REGISTRO)\nfunction hashPassword(password, salt) {\n  let hash = 0;\n  const combined = password + salt;\n  \n  for (let i = 0; i < combined.length; i++) {\n    const char = combined.charCodeAt(i);\n    hash = ((hash << 5) - hash) + char;\n    hash = hash & hash;\n  }\n  \n  const hashStr = Math.abs(hash).toString(36) + \n                  combined.length.toString(36) + \n                  Date.now().toString(36);\n  \n  let finalHash = '';\n  for (let i = 0; i < hashStr.length; i++) {\n    const code = hashStr.charCodeAt(i);\n    finalHash += (code * 31 % 36).toString(36);\n  }\n  \n  return finalHash;\n}\n\nconst inputPasswordHash = hashPassword(password, email);\nconsole.log('Hash generado para comparación');\n\n// Comparar hashes\nif (inputPasswordHash !== user.password_hash) {\n  console.log('❌ Contraseña incorrecta');\n  return [{\n    json: {\n      success: false,\n      error: 'invalid_credentials',\n      message: 'Email o contraseña incorrectos'\n    }\n  }];\n}\n\nconsole.log('✅ Credenciales válidas');\n\nreturn [{\n  json: {\n    success: true,\n    message: `¡Bienvenido de vuelta ${user.full_name}!`,\n    data: {\n      email: user.email,\n      name: user.full_name\n    }\n  }\n}];"
+                },
+                "id": "d84d85ca-5797-41e5-ad9a-2da0b523de67",
+                "name": "Validate Credentials",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    224,
+                    -80
+                ]
+            },
+            {
+                "parameters": {
+                    "respondWith": "json",
+                    "responseBody": "={{ $json }}",
+                    "options": {
+                        "responseHeaders": {
+                            "entries": [
+                                {
+                                    "name": "Access-Control-Allow-Origin",
+                                    "value": "*"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "id": "72107dc3-e7fa-4c2f-b454-9a26cfee08cc",
+                "name": "Respond",
+                "type": "n8n-nodes-base.respondToWebhook",
+                "typeVersion": 1,
+                "position": [
+                    448,
+                    -80
+                ]
+            }
+        ],
+        "connections": {
+            "Webhook: Login": {
+                "main": [
+                    [
+                        {
+                            "node": "Supabase: Get User",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Supabase: Get User": {
+                "main": [
+                    [
+                        {
+                            "node": "Validate Credentials",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            },
+            "Validate Credentials": {
+                "main": [
+                    [
+                        {
+                            "node": "Respond",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
+            }
+        },
+        "pinData": {},
+        "meta": {
+            "templateCredsSetupCompleted": true,
+            "instanceId": "0b6a7c6fa1c998524bca6de2ef568a5067c2f2437e2fe53b57c06b9c950424d9"
+        }
+    }

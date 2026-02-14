@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Factory | Ovejas Voladoras</title>
+    <!-- Montserrat -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --pastel-yellow: #fdfd96;
+            --pastel-yellow-glow: rgba(253, 253, 150, 0.4);
+            --black: #050505;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--black);
+            color: white;
+        }
+
+        .prose strong {
+            color: white;
+        }
+
+        .prose h2,
+        .prose h3 {
+            color: white;
+            font-weight: 800;
+        }
+
+        /* Thumbnail styles */
+        .thumbnail {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .thumbnail:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .thumbnail.active {
+            border-color: rgba(253, 253, 150, 0.6);
+            box-shadow: 0 0 0 2px rgba(253, 253, 150, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #262626;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--pastel-yellow);
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 640px) {
+            .hover\:scale-\[1\.02\]:hover {
+                transform: none;
+            }
+
+            .hover\:scale-105:hover {
+                transform: scale(1.02);
+            }
+        }
+
+        /* Ensure images don't overflow on mobile */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Modal Styles - Premium Edition with Yellow Theme */
+        .form-modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(5, 5, 5, 0.7);
+            backdrop-filter: blur(16px) saturate(120%);
+            -webkit-backdrop-filter: blur(16px) saturate(120%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .form-modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+
+        .form-modal-content {
+            background: linear-gradient(145deg, #000000 0%, #0a0a0a 100%);
+            margin: auto;
+            padding: 0;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 720px;
+            max-height: 90vh;
+            animation: formModalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow:
+                0 0 0 1px rgba(253, 253, 150, 0.15),
+                0 8px 32px rgba(0, 0, 0, 0.6),
+                0 16px 48px rgba(253, 253, 150, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .form-modal-content::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg,
+                    rgba(253, 253, 150, 0.6) 0%,
+                    rgba(253, 253, 150, 0.3) 25%,
+                    rgba(253, 253, 150, 0.4) 50%,
+                    rgba(232, 232, 122, 0.5) 75%,
+                    rgba(253, 253, 150, 0.6) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: yellowBorderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes yellowBorderGlow {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                filter: brightness(1);
+            }
+
+            50% {
+                opacity: 1;
+                filter: brightness(1.3);
+            }
+        }
+
+        @keyframes formModalSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-40px) scale(0.95);
+                filter: blur(8px);
+            }
+
+            60% {
+                transform: translateY(5px) scale(1.01);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .form-modal-header {
+            background: linear-gradient(135deg, #fdfd96 0%, #e8e87a 50%, #fdfd96 100%);
+            background-size: 200% 100%;
+            padding: 24px 28px;
+            border-radius: 22px 22px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 4px 12px rgba(253, 253, 150, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .form-modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.3),
+                    transparent);
+            animation: yellowShimmer 3s infinite;
+        }
+
+        @keyframes yellowShimmer {
+            0% {
+                left: -100%;
+            }
+
+            50%,
+            100% {
+                left: 100%;
+            }
+        }
+
+        .form-modal-header h3 {
+            margin: 0;
+            color: #050505;
+            font-size: 1.5rem;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+            letter-spacing: -0.02em;
+        }
+
+        .close-form-modal {
+            color: #050505;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+            line-height: 1;
+        }
+
+        .close-form-modal:hover,
+        .close-form-modal:focus {
+            background-color: rgba(0, 0, 0, 0.25);
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-modal-body {
+            padding: 0;
+            overflow-y: auto;
+            max-height: calc(90vh - 96px);
+            position: relative;
+            background: #000000;
+            border-radius: 0 0 22px 22px;
+        }
+
+        .form-modal-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(253, 253, 150, 0.3) 50%,
+                    transparent);
+        }
+
+        .form-modal-body iframe {
+            width: 100%;
+            height: 420px;
+            border: none;
+            display: block;
+            border-radius: 0 0 22px 22px;
+        }
+
+        /* Scrollbar amarillo premium para el modal */
+        .form-modal-body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .form-modal-body::-webkit-scrollbar-track {
+            background: linear-gradient(180deg, #0a0a0a 0%, #141414 100%);
+            border-radius: 5px;
+            margin: 8px 0;
+            border: 1px solid rgba(253, 253, 150, 0.1);
+        }
+
+        .form-modal-body::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #ffff9d 0%, #fdfd96 50%, #e8e87a 100%);
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            box-shadow:
+                0 0 10px rgba(253, 253, 150, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .form-modal-body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #ffffaa 0%, #ffff9d 50%, #fdfd96 100%);
+            box-shadow:
+                0 0 15px rgba(253, 253, 150, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        /* Efecto de resplandor sutil en el modal */
+        @keyframes yellowPulseGlow {
+
+            0%,
+            100% {
+                filter: drop-shadow(0 0 12px rgba(253, 253, 150, 0.06));
+            }
+
+            50% {
+                filter: drop-shadow(0 0 18px rgba(253, 253, 150, 0.1));
+            }
+        }
+
+        .form-modal-content {
+            animation: formModalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), yellowPulseGlow 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+    <div class="min-h-screen relative">
+        <!-- Background Glow -->
+        <div class="fixed inset-0 overflow-hidden pointer-events-none">
+            <div
+                class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-[#fdfd96]/20 to-transparent blur-[100px]">
+            </div>
+        </div>
+
+        <div class="relative max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-12 sm:pb-16">
+            <div class="flex flex-col lg:flex-row gap-6 lg:gap-8">
+                <!-- Main Content -->
+                <div class="flex-1">
+                    <!-- Gallery Section -->
+                    <div class="mb-6">
+                        <div class="mb-4">
+                            <div class="relative group mb-3">
+                                <div
+                                    class="relative aspect-video rounded-2xl border border-white/10 overflow-hidden bg-black cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-[#fdfd96]/20 flex items-center justify-center">
+                                    <img id="mainImage"
+                                        src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860aa41dfc02e57cc8d189.png"
+                                        alt="Ovejas Voladoras Masterclass" class="w-full h-full object-contain">
+                                </div>
+                            </div>
+                            <!-- Thumbnails -->
+                            <div class="flex gap-2 overflow-x-auto pb-2">
+                                <div class="thumbnail relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 cursor-pointer transition-all bg-black flex items-center justify-center"
+                                    data-image="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860aa40a7fd14838ba82b5.png"
+                                    data-fit="contain">
+                                    <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860aa40a7fd14838ba82b5.png"
+                                        class="object-contain w-full h-full">
+                                </div>
+                                <div class="thumbnail active relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 cursor-pointer transition-all bg-black flex items-center justify-center"
+                                    data-image="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860aa41dfc02e57cc8d189.png"
+                                    data-fit="contain">
+                                    <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860aa41dfc02e57cc8d189.png"
+                                        class="object-contain w-full h-full">
+                                </div>
+                                <div class="thumbnail relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 cursor-pointer transition-all bg-black flex items-center justify-center"
+                                    data-image="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860aa53fae0aa9112d03d3.png"
+                                    data-fit="contain">
+                                    <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860aa53fae0aa9112d03d3.png"
+                                        class="object-contain w-full h-full">
+                                </div>
+                                <div class="thumbnail relative flex-shrink-0 w-20 h-14 rounded-lg overflow-hidden border-2 cursor-pointer transition-all bg-black flex items-center justify-center"
+                                    data-image="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860db8c5d12b6e2fdb5ad8.png"
+                                    data-fit="contain">
+                                    <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/69860db8c5d12b6e2fdb5ad8.png"
+                                        class="object-contain w-full h-full">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Community Meta Info -->
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-6 mb-4 text-xs sm:text-sm text-white/60">
+                        <span class="flex items-center gap-2">
+                            <span class="w-2 h-2 bg-[#fdfd96] rounded-full animate-pulse"></span>
+                            <span class="whitespace-nowrap">Cerrado hasta nuevo aviso</span>
+                        </span>
+                        <span class="whitespace-nowrap">50k+ miembros</span>
+                        <span class="whitespace-nowrap">By Andy</span>
+                    </div>
+
+                    <!-- Body Content -->
+                    <div class="prose prose-invert max-w-none mb-8">
+                        <h2 class="text-lg sm:text-xl font-bold text-white mb-4">El combo está completo.</h2>
+                        <p class="text-white/70 mb-4">Ovejas Voladoras cerró sus puertas.</p>
+                        <p class="text-white/70 mb-4">No porque no queramos a más personas aquí, sino porque esta
+                            comunidad no se construye por cantidad. Se construye por decisión.</p>
+                        <p class="text-white/70 mb-4">Aquí nadie entra por impulso.</p>
+                        <p class="text-white/70 mb-4">Aquí se entra cuando algo adentro ya no te deja seguir igual.</p>
+
+                        <p class="text-white/70 mb-4">Si estás leyendo esto, probablemente lo conoces bien:</p>
+                        <blockquote class="border-l-4 border-[#fdfd96] pl-4 italic text-white/60 mb-6">esa sensación de
+                            que podrías estar haciendo algo más tuyo, más vivo, más coherente con quien eres… pero
+                            todavía no sabes exactamente cómo.</blockquote>
+
+                        <p class="text-white/70 mb-4">Ovejas Voladoras no es un atajo ni una promesa rápida.</p>
+                        <p class="text-white/70 mb-4">Es un lugar para trabajar de verdad en eso que quieres convertir
+                            en proyecto, en ingreso y en estilo de vida.</p>
+
+                        <p class="text-white/70 mb-4">No va a ser fácil.<br>No va a ser inmediato.</p>
+                        <p class="text-white/70 mb-6">Y no todo el mundo está dispuesto a atravesar ese proceso.</p>
+
+                        <p class="text-white/70 mb-4">Pero no vas a estar solo.<br>Y, sobre todo, no vas a estar
+                            perdido.</p>
+
+                        <p class="text-white/70 mb-6">Aquí se trabaja con claridad, con dirección y con una comunidad de
+                            personas que también decidieron dejar de posponer lo que saben que quieren construir.</p>
+
+                        <h3 class="text-lg font-bold text-white mb-3">Si quieres estar en la próxima apertura, deja tus
+                            datos abajo.</h3>
+                        <p class="text-white/70 mb-4">No como quien se anota por curiosidad, sino como quien reconoce
+                            que ya no quiere seguir mirando desde afuera.</p>
+
+                        <p class="text-white/70 mb-4">Este espacio no es para víctimas ni para espectadores.</p>
+                        <p class="text-white/70 mb-4">Es para personas que están listas para hacerse cargo de lo que
+                            quieren crear.</p>
+
+                        <blockquote class="border-l-4 border-[#fdfd96] pl-4 italic text-white/60 mb-6">Que no sea el
+                            miedo quien decida por ti otra vez.</blockquote>
+                    </div>
+
+                    <!-- CTA Button -->
+                    <button onclick="openFormModal()"
+                        class="inline-flex items-center justify-center w-full md:w-auto px-6 sm:px-8 py-4 bg-gradient-to-r from-[#fdfd96] to-[#e8e87a] hover:from-[#ffff9d] hover:to-[#efef81] text-black font-bold text-base sm:text-lg rounded-xl transition-all transform hover:scale-105 cursor-pointer"
+                        style="box-shadow: 0 0 40px rgba(253, 253, 150, 0.4);">
+                        <span class="text-center">ENTRAR A LA LISTA DE ESPERA</span>
+                    </button>
+                </div>
+
+                <!-- Sidebar -->
+                <aside class="w-full lg:w-80 flex-shrink-0">
+                    <div class="sticky top-8 space-y-4">
+                        <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                            <div class="aspect-video relative overflow-hidden">
+                                <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/6985b82d1dfc020e43bc2241.png"
+                                    alt="Ovejas Voladoras" class="w-full h-full object-cover">
+                            </div>
+                            <div class="p-4 text-center">
+                                <h3
+                                    class="font-black text-2xl text-[#fdfd96] uppercase tracking-tighter drop-shadow-lg">
+                                    Ovejas Voladoras</h3>
+                                <p class="text-[12px] leading-tight text-white mt-3 uppercase tracking-tight font-bold">
+                                    CONVIERTE TU CONOCIMIENTO EN UN NEGOCIO EDUCATIVO CON PROPÓSITO Y LIBERTAD
+                                    <span
+                                        class="block text-[11px] text-white/70 mt-1.5 lowercase italic font-medium">(Incluso
+                                        si hoy no sabes para qué eres bueno)</span>
+                                </p>
+
+                                <div class="flex justify-center gap-4 mt-4 text-center">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-white">50k+</div>
+                                        <div class="text-[10px] uppercase tracking-wider text-white/50">Miembros</div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-white">59</div>
+                                        <div class="text-[10px] uppercase tracking-wider text-white/50">Online</div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-white">3</div>
+                                        <div class="text-[10px] uppercase tracking-wider text-white/50">Admins</div>
+                                    </div>
+                                </div>
+
+                                <button onclick="openFormModal()"
+                                    class="block w-full mt-4 px-4 py-3 bg-gradient-to-r from-[#fdfd96] to-[#e8e87a] hover:from-[#ffff9d] hover:to-[#efef81] text-black font-bold rounded-lg transition-all text-center cursor-pointer">
+                                    ENTRAR A LA LISTA
+                                </button>
+
+                                <div class="mt-4 text-center px-2">
+                                    <p class="text-[10px] text-white/40 leading-relaxed italic">
+                                        Esta lista no garantiza un lugar. Evaluaremos cada caso antes de la próxima
+                                        apertura.
+                                        Ovejas Voladoras es una comunidad con estándares. No es para todos. Y está bien.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Footer -->
+            <footer class="text-center mt-16 pt-8 border-t border-white/5">
+                <p class="text-sm text-white/40 font-medium tracking-wide mb-4">Ovejas Voladoras © 2026</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Form Modal -->
+    <div id="formModal" class="form-modal">
+        <div class="form-modal-content">
+            <div class="form-modal-header">
+                <h3 class="font-sans">Lista de espera</h3>
+                <button class="close-form-modal" onclick="closeFormModal()">&times;</button>
+            </div>
+            <div class="form-modal-body">
+                <iframe src="https://link.cleesaas.com/widget/form/g68yc02TBBhFHKyBGWyN"
+                    style="width:100%;height:100%;border:none;border-radius:3px" id="inline-g68yc02TBBhFHKyBGWyN"
+                    data-layout="{'id':'INLINE'}" data-trigger-type="alwaysShow" data-trigger-value=""
+                    data-activation-type="alwaysActivated" data-activation-value=""
+                    data-deactivation-type="neverDeactivate" data-deactivation-value=""
+                    data-form-name="Form Lista de espera: OVEJAS VOLADORAS " data-height="881"
+                    data-layout-iframe-id="inline-g68yc02TBBhFHKyBGWyN" data-form-id="g68yc02TBBhFHKyBGWyN"
+                    title="Form Lista de espera: OVEJAS VOLADORAS ">
+                </iframe>
+                <script src="https://link.cleesaas.com/js/form_embed.js"></script>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black/95 z-50 hidden items-center justify-center p-2 sm:p-4">
+        <button id="closeModal"
+            class="absolute top-2 right-2 sm:top-4 sm:right-4 text-white/80 hover:text-white transition-colors z-10 p-2 rounded-lg hover:bg-white/10">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                class="sm:w-8 sm:h-8">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="w-full h-full flex items-center justify-center">
+            <img id="modalImage" src="" alt="Vista ampliada" class="max-w-full max-h-full object-contain">
+        </div>
+    </div>
+
+    <script>
+        // Gallery functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const mainImage = document.getElementById('mainImage');
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            const imageModal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            const closeModal = document.getElementById('closeModal');
+
+            // Thumbnail click handler
+            thumbnails.forEach(thumbnail => {
+                thumbnail.addEventListener('click', function () {
+                    // Get the image URL and fit type from data attributes
+                    const imageUrl = this.getAttribute('data-image');
+                    const fitType = this.getAttribute('data-fit') || 'cover';
+
+                    // Update main image
+                    mainImage.src = imageUrl;
+
+                    // Update object-fit class
+                    mainImage.className = 'w-full h-full object-' + fitType;
+
+                    // Remove active class from all thumbnails
+                    thumbnails.forEach(thumb => thumb.classList.remove('active'));
+
+                    // Add active class to clicked thumbnail
+                    this.classList.add('active');
+                });
+            });
+
+            // Main image click - open modal
+            mainImage.addEventListener('click', function () {
+                modalImage.src = this.src;
+                imageModal.classList.remove('hidden');
+                imageModal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
+            });
+
+            // Close modal button
+            closeModal.addEventListener('click', function () {
+                imageModal.classList.add('hidden');
+                imageModal.classList.remove('flex');
+                document.body.style.overflow = '';
+            });
+
+            // Close modal when clicking outside the image
+            imageModal.addEventListener('click', function (e) {
+                if (e.target === imageModal) {
+                    imageModal.classList.add('hidden');
+                    imageModal.classList.remove('flex');
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Close modal with ESC key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && !imageModal.classList.contains('hidden')) {
+                    imageModal.classList.add('hidden');
+                    imageModal.classList.remove('flex');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
+
+        // Form Modal Control Functions
+        function openFormModal() {
+            const modal = document.getElementById('formModal');
+            const iframe = document.getElementById('inline-g68yc02TBBhFHKyBGWyN');
+
+            // Forzar recarga del iframe para asegurar que el color blanco se aplique siempre
+            if (iframe) {
+                const currentSrc = iframe.src.split('?')[0];
+                iframe.src = currentSrc + '?v=' + new Date().getTime();
+            }
+
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFormModal() {
+            const modal = document.getElementById('formModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        // Cerrar modal al hacer clic fuera del contenido
+        window.addEventListener('click', function (event) {
+            const modal = document.getElementById('formModal');
+            if (event.target === modal) {
+                closeFormModal();
+            }
+        });
+
+        // Cerrar modal con la tecla ESC
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('formModal');
+                if (modal.classList.contains('show')) {
+                    closeFormModal();
+                }
+            }
+        });
+    </script>
+
+    <!-- Script del formulario -->
+    <script src="https://link.cleesaas.com/js/form_embed.js"></script>
+</body>
+
+</html>

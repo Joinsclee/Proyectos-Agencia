@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asesor Legal CRECE - Chat</title>
+
+    <!-- Fonts: Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <!-- Librerías para procesar archivos -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+            background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.03), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.03), transparent 40%);
+            min-height: 100vh;
+        }
+
+        .chat-widget-container {
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            height: 700px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+            padding: 28px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.05) 100%);
+            pointer-events: none;
+        }
+
+        .chat-header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .chat-header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            background: #fafbfc;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            animation: messageSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(15px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message.bot {
+            text-align: left;
+        }
+
+        .message-content {
+            display: inline-block;
+            max-width: 70%;
+            padding: 16px 20px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.6;
+            text-align: left;
+            font-size: 15px;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+            color: white;
+            border-bottom-right-radius: 6px;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        /* Estilos para contenido Markdown */
+        .message-content h1,
+        .message-content h2,
+        .message-content h3 {
+            margin-top: 18px;
+            margin-bottom: 12px;
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        .message.user .message-content h1,
+        .message.user .message-content h2,
+        .message.user .message-content h3 {
+            color: white;
+        }
+
+        .message-content h1 {
+            font-size: 22px;
+        }
+
+        .message-content h2 {
+            font-size: 19px;
+        }
+
+        .message-content h3 {
+            font-size: 17px;
+        }
+
+        .message-content p {
+            margin-bottom: 12px;
+            line-height: 1.7;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+        }
+
+        .message-content ol,
+        .message-content ul {
+            margin: 16px 0;
+            padding-left: 24px;
+        }
+
+        .message-content ol li,
+        .message-content ul li {
+            margin-bottom: 10px;
+            line-height: 1.7;
+        }
+
+        .message-content code {
+            background: rgba(0, 0, 0, 0.06);
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            color: #e74c3c;
+        }
+
+        .message.user .message-content code {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .message-content pre {
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 16px 0;
+            border: 1px solid #e5e7eb;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+            color: #24292e;
+        }
+
+        .message-content blockquote {
+            border-left: 4px solid #0f172a;
+            padding-left: 16px;
+            margin: 16px 0;
+            color: #6b7280;
+            font-style: italic;
+        }
+
+        .message-content a {
+            color: #0f172a;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.3);
+            transition: border-color 0.2s;
+        }
+
+        .message-content a:hover {
+            border-bottom-color: #0f172a;
+        }
+
+        .typing-indicator {
+            display: none;
+            text-align: left;
+            margin-bottom: 24px;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-dots {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 18px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #0f172a;
+            animation: typingDot 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingDot {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+
+        .chat-input-area {
+            background: white;
+            padding: 20px 24px 24px 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .file-status {
+            display: none;
+            margin-bottom: 12px;
+            padding: 12px 16px;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            font-size: 13px;
+            color: #0369a1;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .file-status.active {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-status .file-name {
+            font-weight: 600;
+            margin-right: 12px;
+            flex: 1;
+        }
+
+        .file-status .remove-file {
+            background: none;
+            border: none;
+            color: #0369a1;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .file-status .remove-file:hover {
+            background: rgba(3, 105, 161, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 16px;
+            padding: 6px 6px 6px 16px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #94a3b8;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.02);
+        }
+
+        #messageInput {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 0;
+            font-size: 15px;
+            font-family: inherit;
+            color: #1f2937;
+            outline: none;
+        }
+
+        #messageInput::placeholder {
+            color: #9ca3af;
+        }
+
+        .attach-button {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .attach-button:hover {
+            background: rgba(15, 23, 42, 0.1);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .attach-button:active {
+            transform: scale(0.95);
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #sendButton {
+            background-color: #0f172a;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.25);
+        }
+
+        #sendButton:hover:not(:disabled) {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        #sendButton:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        #sendButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #6b7280;
+            padding: 60px 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .welcome-message h2 {
+            color: #1f2937;
+            margin-bottom: 16px;
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-message p {
+            line-height: 1.7;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+
+        .error-message,
+        .processing-message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .error-message.active,
+        .processing-message.active {
+            display: block;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .processing-message {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        /* Scrollbar personalizado */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chat-widget-container {
+                padding: 0;
+            }
+
+            .chat-container {
+                height: 600px;
+                border-radius: 16px;
+            }
+
+            .chat-header {
+                padding: 24px 20px;
+            }
+
+            .chat-header h1 {
+                font-size: 22px;
+            }
+
+            .chat-messages {
+                padding: 20px;
+            }
+
+            .message-content {
+                max-width: 85%;
+                font-size: 14px;
+            }
+
+            .welcome-message {
+                padding: 40px 20px;
+            }
+
+            #sendButton {
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header Image -->
+    <div style="width: 100%; display: flex; justify-content: center; padding: 32px 0 20px 0;">
+        <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png"
+            alt="Aura Logo" style="height: 80px; object-fit: contain;">
+    </div>
+
+    <div class="chat-widget-container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-header-content">
+                    <h1>Asesor Legal CRECE</h1>
+                    <p>Tu experto virtual en derecho inmobiliario colombiano disponible 24/7</p>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="welcome-message">
+                    <h2>¡Bienvenido!</h2>
+                    <p>Soy tu asistente virtual especializado en derecho inmobiliario y comercial en Colombia.</p>
+                    <p style="margin-top: 24px; font-size: 14px; color: #9ca3af;">Escribe tu consulta o adjunta un
+                        documento para comenzar</p>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div class="error-message" id="errorMessage"></div>
+                <div class="processing-message" id="processingMessage"></div>
+
+                <div class="file-status" id="fileStatus">
+                    <span class="file-name" id="fileName"></span>
+                    <button class="remove-file" onclick="removeFile()" title="Eliminar archivo">✕</button>
+                </div>
+
+                <div class="input-wrapper">
+                    <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.txt" onchange="handleFileSelect(event)">
+                    <button class="attach-button" onclick="document.getElementById('fileInput').click()"
+                        title="Adjuntar archivo">
+                        📎
+                    </button>
+                    <input type="text" id="messageInput" placeholder="Escribe tu consulta legal..."
+                        onkeypress="handleKeyPress(event)">
+                    <button id="sendButton" onclick="sendMessage()">Enviar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚙️ CONFIGURACIÓN - Actualiza esta URL con tu webhook de n8n
+        const WEBHOOK_URL = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/00948f10-1132-4463-82da-b3ae51ab4d73';
+
+        // Configurar PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Configurar marked.js
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false
+        });
+
+        // Variables globales
+        let isProcessing = false;
+        let currentFile = null;
+        let extractedFileContent = '';
+
+        // Manejar selección de archivo
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        // Procesar archivo
+        async function handleFile(file) {
+            // Validar tamaño (10MB máx)
+            const maxSize = 10 * 1024 * 1024;
+            if (file.size > maxSize) {
+                showError('⚠️ El archivo es demasiado grande. Máximo 10MB.');
+                return;
+            }
+
+            // Validar extensión
+            const extension = file.name.split('.').pop().toLowerCase();
+            const validExtensions = ['pdf', 'doc', 'docx', 'txt'];
+
+            if (!validExtensions.includes(extension)) {
+                showError('⚠️ Formato no soportado. Solo PDF, DOC, DOCX, TXT.');
+                return;
+            }
+
+            currentFile = file;
+
+            // Mostrar archivo seleccionado
+            document.getElementById('fileName').textContent = `📄 ${file.name} (${formatFileSize(file.size)})`;
+            document.getElementById('fileStatus').classList.add('active');
+
+            // Mostrar procesamiento
+            showProcessing('📄 Procesando archivo...');
+
+            try {
+                // Extraer texto
+                if (extension === 'pdf') {
+                    extractedFileContent = await extractTextFromPDF(file);
+                } else if (extension === 'doc' || extension === 'docx') {
+                    extractedFileContent = await extractTextFromWord(file);
+                } else if (extension === 'txt') {
+                    extractedFileContent = await extractTextFromTxt(file);
+                }
+
+                hideProcessing();
+                showProcessing(`✅ Archivo procesado correctamente`);
+
+                setTimeout(() => {
+                    hideProcessing();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error al procesar archivo:', error);
+                hideProcessing();
+                showError('❌ Error al procesar el archivo. Intenta con otro.');
+                removeFile();
+            }
+        }
+
+        // Extraer texto de PDF
+        async function extractTextFromPDF(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+
+            const totalPages = pdf.numPages;
+
+            // Límite de 40 páginas para evitar timeouts
+            const maxPages = 40;
+            const pagesToProcess = Math.min(totalPages, maxPages);
+
+            if (totalPages > maxPages) {
+                showProcessing(`⚠️ El PDF tiene ${totalPages} páginas. Se procesarán las primeras ${maxPages} páginas.`);
+            }
+
+            let fullText = '';
+
+            for (let i = 1; i <= pagesToProcess; i++) {
+                // Mostrar progreso
+                showProcessing(`📄 Procesando página ${i} de ${pagesToProcess}...`);
+
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += `\n--- Página ${i} ---\n${pageText}\n`;
+
+                // Pequeña pausa cada 10 páginas para no saturar
+                if (i % 10 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+
+            // Advertencia si el texto es muy largo
+            if (fullText.length > 50000) {
+                showProcessing(`⚠️ El documento es muy extenso (${Math.round(fullText.length / 1000)}k caracteres). Puede tardar en procesar.`);
+            }
+
+            return fullText.trim();
+        }
+
+        // Extraer texto de Word
+        async function extractTextFromWord(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+            return result.value;
+        }
+
+        // Extraer texto de TXT
+        async function extractTextFromTxt(file) {
+            return await file.text();
+        }
+
+        // Remover archivo
+        function removeFile() {
+            currentFile = null;
+            extractedFileContent = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileStatus').classList.remove('active');
+        }
+
+        // Formatear tamaño
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Mostrar procesamiento
+        function showProcessing(message) {
+            const processingDiv = document.getElementById('processingMessage');
+            processingDiv.textContent = message;
+            processingDiv.classList.add('active');
+        }
+
+        // Ocultar procesamiento
+        function hideProcessing() {
+            document.getElementById('processingMessage').classList.remove('active');
+        }
+
+        // Manejar Enter
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Procesar formato n8n
+        function processN8nFormat(text) {
+            let processedText = text.replace(/\\n/g, '\n');
+            return marked.parse(processedText);
+        }
+
+        // Agregar mensaje
+        function addMessage(text, type, isMarkdown = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const welcomeMsg = messagesContainer.querySelector('.welcome-message');
+
+            if (welcomeMsg) {
+                welcomeMsg.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            if (type === 'bot' && isMarkdown) {
+                contentDiv.innerHTML = processN8nFormat(text);
+            } else {
+                contentDiv.textContent = text;
+            }
+
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
+
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Mostrar typing
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').classList.add('active');
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Ocultar typing
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').classList.remove('active');
+        }
+
+        // Mostrar error
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('active');
+
+            setTimeout(() => {
+                errorDiv.classList.remove('active');
+            }, 5000);
+        }
+
+        // Enviar mensaje
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                showError('⚠️ Por favor escribe una consulta antes de enviar.');
+                return;
+            }
+
+            if (isProcessing) {
+                return;
+            }
+
+            isProcessing = true;
+            sendButton.disabled = true;
+            messageInput.disabled = true;
+
+            let userMessage = message;
+            if (currentFile) {
+                userMessage += ` 📎 ${currentFile.name}`;
+            }
+            addMessage(userMessage, 'user', false);
+
+            messageInput.value = '';
+            showTypingIndicator();
+
+            try {
+                const payload = {
+                    pregunta: message,
+                    documentos_adicionales: extractedFileContent || ''
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                hideTypingIndicator();
+
+                if (data.output) {
+                    addMessage(data.output, 'bot', true);
+                } else if (data.respuesta_asesor) {
+                    addMessage(data.respuesta_asesor, 'bot', true);
+                } else if (data.respuesta_final) {
+                    addMessage(data.respuesta_final, 'bot', true);
+                } else if (data.message) {
+                    addMessage(data.message, 'bot', true);
+                } else {
+                    console.error('No se encontró respuesta en:', data);
+                    addMessage('He recibido tu consulta correctamente.', 'bot', false);
+                }
+
+                removeFile();
+
+            } catch (error) {
+                console.error('Error:', error);
+                hideTypingIndicator();
+                showError('❌ Error al conectar. Intenta de nuevo.');
+                addMessage('Lo siento, hubo un problema técnico. Intenta de nuevo.', 'bot', false);
+            } finally {
+                isProcessing = false;
+                sendButton.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        // Auto-focus
+        window.addEventListener('load', () => {
+            document.getElementById('messageInput').focus();
+        });
+    </script>
+</body>
+
+</html>

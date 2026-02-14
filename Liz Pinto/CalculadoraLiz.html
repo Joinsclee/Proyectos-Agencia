@@ -1,0 +1,3697 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Paquetes - The Camera Business</title>
+
+    <!-- Fuentes: Playfair Display (Títulos) y Raleway (Cuerpo) - Estilo Liz Pinto -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        html {
+            overflow-x: hidden;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        :root {
+            /* Colores Liz Pinto */
+            --lzGold: #e7b93f;
+            --lzGoldLight: #f5d88a;
+            --lzGoldDark: #d4a01e;
+            --lzDark: #2b2b2b;
+            --lzGrey: #7a7a7a;
+            --lzGreyDark: #4a4a4a;
+            --lzLightBg: #f9f9f9;
+            --lzBlack: #1a1a1a;
+            --lzBeige: #f5f1e8;
+            --lzChocolate: #8B6F47;
+
+            /* Colores funcionales (mantenidos para compatibilidad) */
+            --primary: #e7b93f;
+            --primary-dark: #d4a01e;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --warning: #f59e0b;
+            --warning-bg: #fef3c7;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: linear-gradient(135deg, var(--lzDark) 0%, var(--lzBlack) 100%);
+            padding: 0;
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Hacer imágenes responsive por defecto */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Clase para expandir elementos a todo el ancho */
+        .full-width-section {
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Playfair Display', serif;
+            color: var(--lzBlack);
+            font-weight: 400;
+            line-height: 1.2;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: var(--lzBlack);
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .header p {
+            color: var(--lzGrey);
+            font-size: 16px;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .section {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .section-title h2 {
+            color: var(--lzBlack);
+            font-size: 24px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .section-title .badge {
+            background: var(--lzGold);
+            color: var(--lzDark);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: 'Raleway', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .packages-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            align-items: start;
+        }
+
+        .package-card {
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .package-card:hover {
+            border-color: var(--lzGold);
+            box-shadow: 0 8px 24px rgba(231, 185, 63, 0.15);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        .package-card.active {
+            border-color: var(--lzGold);
+            background: rgba(231, 185, 63, 0.02);
+        }
+
+        .package-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .package-number {
+            background: var(--lzGold);
+            color: var(--lzDark);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--lzGreyDark);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            background: var(--lzLightBg);
+            font-family: 'Raleway', sans-serif;
+            color: #333;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--lzGold);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(231, 185, 63, 0.1);
+        }
+
+        .form-input.currency {
+            padding-left: 32px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Raleway', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .btn-primary {
+            background: var(--lzGold);
+            color: var(--lzDark);
+        }
+
+        .btn-primary:hover {
+            background: var(--lzGoldDark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(231, 185, 63, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        .btn-danger {
+            background: var(--lzGreyDark);
+            color: var(--white);
+            padding: 8px 16px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-danger:hover {
+            background: var(--lzDark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(43, 43, 43, 0.3);
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        .costs-section {
+            background: var(--gray-50);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .cost-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .cost-item select {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--white);
+        }
+
+        .cost-item input {
+            width: 140px;
+            padding: 10px 12px;
+            padding-left: 28px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .cost-item-wrapper {
+            position: relative;
+            width: 140px;
+        }
+
+        .results-box {
+            background: linear-gradient(135deg, var(--gray-50) 0%, var(--white) 100%);
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            color: var(--gray-600);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .result-value {
+            color: var(--gray-900);
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .result-highlight {
+            background: var(--lzGold);
+            color: var(--lzDark);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .result-highlight .label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .result-highlight .value {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .profitability-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .profitability-badge.high {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .profitability-badge.medium {
+            background: var(--warning-bg);
+            color: #92400e;
+        }
+
+        .profitability-badge.low {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .profitability-badge .icon {
+            font-size: 18px;
+        }
+
+        .projection-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
+        .projection-results {
+            background: var(--gray-50);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .projection-result-item {
+            background: var(--white);
+            border: 2px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .projection-result-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.1);
+        }
+
+        .projection-result-item.best {
+            border-color: var(--lzGold);
+            background: linear-gradient(135deg, var(--white) 0%, var(--lzLightBg) 100%);
+        }
+
+        .projection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .projection-title {
+            font-weight: 700;
+            color: var(--gray-900);
+            font-size: 16px;
+        }
+
+        .projection-badge {
+            background: var(--lzGold);
+            color: var(--lzDark);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .projection-mix {
+            display: grid;
+            gap: 8px;
+        }
+
+        .mix-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--gray-50);
+            border-radius: 6px;
+        }
+
+        .mix-package-name {
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 14px;
+        }
+
+        .mix-quantity {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .projection-total {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-label {
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        .total-value {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--lzGold);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray-400);
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            color: var(--gray-500);
+        }
+
+        .add-package-btn {
+            width: 100%;
+            padding: 20px;
+            border: 2px dashed var(--gray-300);
+            background: var(--gray-50);
+            border-radius: 12px;
+            color: var(--gray-500);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 15px;
+        }
+
+        .add-package-btn:hover {
+            border-color: var(--lzGold);
+            color: var(--lzGold);
+            background: rgba(231, 185, 63, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            color: var(--white);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: help;
+            margin-left: 6px;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background: var(--gray-900);
+            color: var(--white);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 400;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 8px;
+        }
+
+        .subsection {
+            background: var(--gray-50);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table thead {
+            background: var(--gray-100);
+        }
+
+        .data-table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--gray-700);
+            border-bottom: 2px solid var(--gray-200);
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--gray-200);
+            transition: background 0.2s;
+        }
+
+        .data-table tbody tr:hover:not(.empty-row) {
+            background: var(--gray-50);
+        }
+
+        .data-table td {
+            padding: 12px 16px;
+            color: var(--gray-700);
+        }
+
+        .data-table tfoot {
+            background: var(--gray-100);
+            font-weight: 700;
+        }
+
+        .data-table tfoot td {
+            padding: 16px;
+            color: var(--gray-900);
+            font-size: 15px;
+        }
+
+        .table-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .table-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .table-input.currency-input {
+            padding-left: 24px;
+        }
+
+        .table-currency-wrapper {
+            position: relative;
+        }
+
+        .table-currency-symbol {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .btn-icon {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-icon:hover {
+            background: var(--danger-bg);
+        }
+
+        .calculated-value {
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .calculated-value.positive {
+            color: var(--lzGold);
+        }
+
+        .calculated-value.negative {
+            color: var(--gray-700);
+        }
+
+        .percentage-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .percentage-badge.high {
+            background: var(--lzGoldLight);
+            color: var(--lzDark);
+        }
+
+        .percentage-badge.medium {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .percentage-badge.low {
+            background: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+
+            .packages-grid {
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            }
+
+            /* Header responsive en tablets */
+            header img {
+                height: 180px !important;
+            }
+
+            #userPanel > div {
+                padding: 0 15px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            /* Header responsive */
+            header img {
+                height: 150px !important;
+                max-width: 100% !important;
+            }
+
+            /* User panel responsive */
+            #userPanel {
+                padding: 10px 0 !important;
+            }
+
+            #userPanel > div {
+                flex-direction: column !important;
+                gap: 12px !important;
+                padding: 0 15px !important;
+            }
+
+            #userPanel > div > div:first-child {
+                width: 100%;
+            }
+
+            #userPanel > div > div:last-child {
+                width: 100%;
+                justify-content: space-between !important;
+            }
+
+            #userPanel button {
+                flex: 1;
+                font-size: 12px !important;
+                padding: 8px 12px !important;
+            }
+
+            .header {
+                padding: 20px;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+
+            .section {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+
+            .section-title h2 {
+                font-size: 20px;
+            }
+
+            .packages-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .package-card {
+                padding: 16px;
+            }
+
+            /* Mejorar package-header en tablets */
+            .package-header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .package-header button {
+                flex: 1;
+                min-width: 100px;
+            }
+
+            /* Responsive Tables as Cards */
+            .data-table,
+            .data-table thead,
+            .data-table tbody,
+            .data-table th,
+            .data-table td,
+            .data-table tr {
+                display: block;
+            }
+
+            .data-table thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+
+            .data-table tr {
+                margin-bottom: 15px;
+                border: 1px solid var(--gray-200);
+                border-radius: 8px;
+                padding: 10px;
+                background: var(--gray-50);
+            }
+
+            .data-table td {
+                border: none;
+                position: relative;
+                padding-left: 50% !important;
+                text-align: right;
+                min-height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-end;
+            }
+
+            .data-table td:before {
+                position: absolute;
+                left: 12px;
+                width: 45%;
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: 700;
+                color: var(--lzBlack);
+                content: attr(data-label);
+            }
+
+            .data-table td .table-input,
+            .data-table td .table-currency-wrapper {
+                width: 100% !important;
+            }
+
+            .data-table tfoot tr {
+                border: 2px solid var(--lzGold);
+                background: var(--lzBeige);
+            }
+
+            .data-table tfoot td {
+                padding-left: 12px !important;
+                justify-content: space-between;
+                text-align: right;
+            }
+
+            .data-table tfoot td:before {
+                position: static;
+                width: auto;
+            }
+
+            /* Mejorar header de costos en móviles */
+            .costs-section > div:first-child {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 10px !important;
+            }
+
+            .costs-section > div:first-child button {
+                width: 100%;
+            }
+
+            .cost-item {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .cost-item select,
+            .cost-item-wrapper,
+            .cost-item input {
+                width: 100% !important;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .projection-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .projection-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .result-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .result-value {
+                font-size: 16px;
+            }
+
+            .subsection {
+                padding: 12px;
+            }
+
+            /* Cotización responsive */
+            .quote-preview {
+                padding: 20px !important;
+            }
+
+            #quotePrintArea {
+                padding: 20px 15px !important;
+            }
+
+            .quote-header {
+                padding: 20px 15px !important;
+                flex-direction: column;
+                text-align: center !important;
+            }
+
+            .quote-info h4 {
+                font-size: 18px !important;
+            }
+
+            /* Hacer scrollable la tabla de cotización en móviles */
+            #quotePrintArea {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .quote-table {
+                min-width: 500px;
+            }
+
+            .quote-table th,
+            .quote-table td {
+                padding: 8px !important;
+                font-size: 13px !important;
+            }
+
+            .quote-total {
+                padding: 15px !important;
+            }
+
+            .total-label {
+                font-size: 14px !important;
+            }
+
+            .total-amount {
+                font-size: 24px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+
+            /* Logo más pequeño en móviles */
+            header img {
+                height: 100px !important;
+                max-width: 100% !important;
+            }
+
+            /* User panel más compacto */
+            #userPanel {
+                padding: 8px 0 !important;
+            }
+
+            #userPanel > div {
+                padding: 0 10px !important;
+            }
+
+            .user-avatar {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 14px !important;
+            }
+
+            .user-name {
+                font-size: 13px !important;
+            }
+
+            #syncStatus {
+                font-size: 10px !important;
+            }
+
+            #userPanel button {
+                font-size: 11px !important;
+                padding: 6px 10px !important;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .section {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .modal-content {
+                max-width: 95%;
+            }
+
+            .modal-footer {
+                flex-direction: column;
+            }
+
+            .modal-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .result-highlight .value {
+                font-size: 24px;
+            }
+
+            /* Login overlay responsive */
+            .login-card {
+                padding: 20px 20px 25px 20px !important;
+                max-width: 95% !important;
+            }
+
+            .login-logo {
+                max-width: 100px !important;
+                max-height: 60px !important;
+                margin-top: 0 !important;
+                margin-bottom: 10px !important;
+            }
+
+            .login-title {
+                font-size: 19px !important;
+                margin-bottom: 5px !important;
+            }
+
+            .login-subtitle {
+                font-size: 12px !important;
+                margin-bottom: 15px !important;
+            }
+
+            /* Mejorar section-title en móviles muy pequeños */
+            .section-title {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .section-title h2 {
+                font-size: 18px;
+            }
+
+            .section-title .badge {
+                font-size: 11px;
+                padding: 3px 10px;
+            }
+
+            /* Mejorar botones de acción en tarjetas de paquetes */
+            .package-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .package-actions button {
+                width: 100%;
+            }
+
+            /* Asegurar que las tablas no desborden */
+            .data-table {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Mejorar inputs en móviles */
+            .form-input,
+            .table-input,
+            select {
+                font-size: 16px !important; /* Prevenir zoom en iOS */
+            }
+
+            /* Mejorar cost-items */
+            .cost-item-actions {
+                justify-content: center;
+                margin-top: 8px;
+            }
+
+            /* Mejorar package-header en móviles */
+            .package-header {
+                flex-wrap: wrap;
+            }
+
+            .package-title {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            /* Mejorar results-box */
+            .results-box {
+                padding: 12px;
+            }
+
+            /* Mejorar action buttons row */
+            .action-buttons-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .action-buttons-row button {
+                width: 100%;
+            }
+
+            /* Mejorar botones del package-header en móviles pequeños */
+            .package-header {
+                gap: 8px;
+            }
+
+            .package-header button {
+                font-size: 12px;
+                padding: 8px 10px;
+                min-width: 80px;
+            }
+
+            .package-number {
+                width: 28px !important;
+                height: 28px !important;
+                font-size: 12px !important;
+            }
+
+            /* Mejorar espaciado de costos */
+            .costs-section {
+                padding: 12px;
+            }
+
+            /* Mejorar tabla de cotización en móviles pequeños */
+            .quote-table {
+                font-size: 12px !important;
+            }
+
+            .quote-table th,
+            .quote-table td {
+                padding: 6px !important;
+                font-size: 11px !important;
+            }
+
+            /* Mejorar add-package-btn en móviles pequeños */
+            .add-package-btn {
+                padding: 15px;
+                font-size: 14px;
+            }
+        }
+
+        .alert {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .alert-info {
+            background: rgba(231, 185, 63, 0.1);
+            border: 1px solid var(--lzGold);
+            color: var(--lzGreyDark);
+        }
+
+        .alert-warning {
+            background: rgba(231, 185, 63, 0.15);
+            border: 1px solid var(--lzGoldDark);
+            color: var(--lzDark);
+        }
+
+        .alert-icon {
+            font-size: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--lzBlack) 0%, var(--lzDark) 100%);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #fbbf24 0%, #d97706 100%);
+        }
+
+        .progress-fill.danger {
+            background: linear-gradient(90deg, #f87171 0%, #dc2626 100%);
+        }
+
+        .progress-fill.success {
+            background: linear-gradient(90deg, #34d399 0%, #059669 100%);
+        }
+
+        /* ============================================
+           MODAL ESTILO LIZ PINTO
+           ============================================ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            padding: 16px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 24px 24px 16px;
+            border-bottom: 2px solid var(--lzGold);
+        }
+
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 22px;
+            color: var(--lzBlack);
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .modal-body {
+            padding: 24px;
+            font-family: 'Raleway', sans-serif;
+            color: var(--lzGreyDark);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            padding: 16px 24px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-family: 'Raleway', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .modal-btn-cancel {
+            background: var(--gray-200);
+            color: var(--lzGreyDark);
+        }
+
+        .modal-btn-cancel:hover {
+            background: var(--gray-300);
+            transform: translateY(-1px);
+        }
+
+        .modal-btn-delete {
+            background: var(--lzDark);
+            color: white;
+        }
+
+        .modal-btn-delete:hover {
+            background: var(--lzBlack);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(43, 43, 43, 0.3);
+        }
+
+        /* ============================================
+           DISEÑO DE COTIZACIÓN (IMPRESIÓN)
+           ============================================ */
+        @media print {
+            @page {
+                margin: 25mm 20mm;
+                /* top/bottom: 25mm, left/right: 20mm */
+            }
+
+            body>*:not(.container),
+            .no-print,
+            header,
+            .header,
+            .section-title,
+            .alert,
+            .btn,
+            .projection-inputs,
+            .form-group,
+            .extras-selection-grid,
+            #quoteNotes,
+            .subsection,
+            #projectionResults,
+            .section:not(.quote-section) {
+                display: none !important;
+            }
+
+            body,
+            .container,
+            .section.quote-section,
+            #quotePreview,
+            #quotePrintArea {
+                display: block !important;
+                visibility: visible !important;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .container {
+                max-width: 100% !important;
+            }
+
+            .section.quote-section>*:not(#quotePreview) {
+                display: none !important;
+            }
+
+            #quotePreview {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .quote-header {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+
+        .quote-preview {
+            background: white;
+            border: 1px solid var(--gray-200);
+            border-radius: 12px;
+            padding: 40px;
+            margin-top: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+
+        .quote-header {
+            background: var(--lzBlack);
+            color: white;
+            padding: 35px 40px;
+            margin: 0 0 30px 0;
+            /* Eliminados márgenes negativos */
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 3px solid var(--lzGold);
+        }
+
+        .quote-logo {
+            max-height: 60px;
+            display: none;
+            /* Ocultar logo en cotización */
+        }
+
+        #quotePrintArea {
+            padding: 40px 50px;
+            /* Márgenes laterales más amplios */
+        }
+
+        .quote-info h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            margin: 0;
+            color: var(--lzGold) !important;
+        }
+
+        .quote-info p {
+            margin: 5px 0 0 0;
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-size: 14px;
+        }
+
+        .quote-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .quote-table th {
+            text-align: left;
+            padding: 12px;
+            background: var(--lzLightBg);
+            border-bottom: 2px solid var(--gray-200);
+        }
+
+        .quote-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .quote-total {
+            margin-top: 30px;
+            text-align: right;
+            padding-top: 20px;
+            border-top: 2px solid var(--lzGold);
+        }
+
+        .quote-total .total-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--lzGrey);
+        }
+
+        .quote-total .total-amount {
+            font-size: 32px;
+            font-family: 'Playfair Display', serif;
+            color: var(--lzBlack);
+            font-weight: 700;
+        }
+
+        .extras-selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+            background: var(--gray-50);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .extra-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .extra-checkbox-item input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--lzGold);
+        }
+
+        /* login-overlay */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, var(--lzDark) 0%, var(--lzBlack) 100%);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 450px;
+            padding: 25px 40px 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--lzGold);
+            text-align: center;
+        }
+
+        .login-logo {
+            max-width: 120px;
+            max-height: 70px;
+            object-fit: contain;
+            margin-bottom: 12px;
+            margin-top: 0;
+        }
+
+        .login-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            color: var(--lzBlack);
+            margin-bottom: 6px;
+            margin-top: 0;
+        }
+
+        .login-subtitle {
+            font-size: 13px;
+            color: var(--lzGrey);
+            margin-bottom: 18px;
+            line-height: 1.4;
+        }
+
+        .login-form .form-group {
+            text-align: left;
+            margin-bottom: 15px;
+        }
+
+        .login-form .form-group:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .user-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--lzBeige);
+            padding: 12px 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--lzGold);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--lzGold);
+            color: var(--lzDark);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: var(--lzBlack);
+            font-size: 14px;
+        }
+
+        /* Estilos para userPanel en el header (fondo oscuro) */
+        header .user-name {
+            color: white !important;
+        }
+
+        .sync-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sync-badge.synced {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .sync-badge.pending {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        /* Estilos para sync-badge en el header (fondo oscuro) */
+        header .sync-badge {
+            background: rgba(255, 255, 255, 0.1) !important;
+            color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        header .sync-badge.synced {
+            background: rgba(46, 213, 115, 0.2) !important;
+            color: #2ed573 !important;
+        }
+
+        header .sync-badge.pending {
+            background: rgba(255, 159, 67, 0.2) !important;
+            color: #ffa502 !important;
+        }
+
+        .sync-spinner {
+            width: 12px;
+            height: 12px;
+            border: 2px solid currentColor;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+    <!-- html2pdf Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+
+<body>
+    <!-- HEADER / LOGO (Estilo oscuro Liz Pinto) -->
+    <!-- HEADER / LOGO (Estilo oscuro Liz Pinto) -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-card">
+            <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/698605dec5d12bd80dd9dac4.png"
+                alt="Logo" class="login-logo">
+            <h2 class="login-title">Acceso a la Calculadora</h2>
+            <p class="login-subtitle">Ingresa con tus datos de la comunidad para ver y guardar tus paquetes.</p>
+
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label class="form-label">Nombre de Usuario (exacto)</label>
+                    <input type="text" id="loginUsername" class="form-input" placeholder="Ej: Liz Pinto" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Correo Electrónico</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="tu@correo.com" required>
+                </div>
+                <div id="loginError" class="alert alert-warning hidden"
+                    style="margin-top: 10px; padding: 10px; font-size: 13px;">
+                    Datos incorrectos. Por favor verifica tu información.
+                </div>
+                <button type="submit" id="loginSubmitBtn" class="btn btn-primary"
+                    style="width: 100%; justify-content: center; margin-top: 10px;">
+                    <span>Entrar a mi Cuenta</span>
+                </button>
+            </form>
+            <p style="margin-top: 20px; font-size: 12px; color: var(--lzGrey);">
+                * Solo usuarios activos de la comunidad tienen acceso.
+            </p>
+        </div>
+    </div>
+
+    <header class="bg-lzDark border-b border-lzGreyDark full-width-section" style="margin: 0 0 20px 0; overflow: visible;">
+        <!-- Barra superior con usuario -->
+        <div id="userPanel" class="hidden"
+            style="background: rgba(255,255,255,0.05); padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); width: 100%;">
+            <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="user-avatar" id="userAvatarLogo" style="width: 36px; height: 36px; font-size: 16px;">U</div>
+                    <div style="display: flex; flex-direction: column;">
+                        <span class="user-name" id="displayUserName"
+                            style="color: white; font-weight: 500; font-size: 14px;">Bienvenido</span>
+                        <div id="syncStatus" class="sync-badge synced" style="font-size: 12px; margin-top: 2px;">
+                            <span class="sync-icon">✅</span>
+                            <span id="syncText">Paquetes Guardados</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-secondary btn-small" onclick="handleLogout()"
+                        style="background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); font-size: 13px; padding: 6px 14px;">
+                        Cerrar Sesión
+                    </button>
+                    <button id="saveCloudBtn" class="btn btn-primary btn-small" onclick="saveToCloud()"
+                        style="font-size: 13px; padding: 6px 14px;">
+                        <span>💾 Guardar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Logo central -->
+        <div
+            style="display: flex; justify-content: center; align-items: center; padding: 16px 20px; width: 100%;">
+            <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/6986053d2dd9853d527daf52.png"
+                alt="The Click Boss" style="height: 250px; width: auto; max-width: 100%;">
+        </div>
+    </header>
+
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <h1>Calculadora de Paquetes Rentables</h1>
+            <p>Define tus paquetes, costos y descubre cuánto necesitas vender para alcanzar tus metas</p>
+        </div>
+
+        <!-- Sección de Paquetes -->
+        <div class="section">
+            <div class="section-title">
+                <h2>Mis Paquetes de Servicio</h2>
+                <span class="badge" id="packageCount">0 de 9</span>
+            </div>
+
+            <div class="alert alert-info">
+                <span class="alert-icon"></span>
+                <div>
+                    <strong>Tip:</strong> Asegúrate de mantener una rentabilidad mínima del 30% en cada paquete para
+                    cubrir los gastos del negocio y generar ganancias.
+                </div>
+            </div>
+
+            <div class="packages-grid" id="packagesContainer">
+                <!-- Los paquetes se agregarán dinámicamente aquí -->
+            </div>
+
+            <button class="add-package-btn" id="addPackageBtn" onclick="addPackage()">
+                <span style="font-size: 24px;">+</span>
+                <span>Agregar Nuevo Paquete</span>
+            </button>
+        </div>
+
+        <!-- Sección de Productos y Servicios Adicionales -->
+        <div class="section">
+            <div class="section-title">
+                <h2>Productos y Servicios Adicionales</h2>
+            </div>
+
+            <div class="alert alert-info">
+                <span class="alert-icon"></span>
+                <div>
+                    <strong>Tip:</strong> Define aquí los productos extras que puedes ofrecer a tus clientes. Esto te
+                    ayudará a cotizar servicios adicionales rápidamente.
+                </div>
+            </div>
+
+            <!-- Tabla de Productos/Servicios -->
+            <div class="subsection">
+                <h3 style="color: var(--gray-900); margin-bottom: 16px; font-size: 18px;">
+                    Catálogo de Productos/Servicios
+                </h3>
+
+                <div class="table-container">
+                    <table class="data-table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>Producto / Servicio</th>
+                                <th style="width: 150px;">Costo</th>
+                                <th style="width: 150px;">Precio Venta</th>
+                                <th style="width: 150px;">Ganancia</th>
+                                <th style="width: 120px;">% Ganancia</th>
+                                <th style="width: 80px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <tr class="empty-row">
+                                <td colspan="6" style="text-align: center; color: var(--gray-400); padding: 40px;">
+                                    No hay productos agregados. Click en "Agregar Producto" para comenzar.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn btn-primary btn-small" onclick="addProductRow()" style="margin-top: 12px;">
+                    + Agregar Producto/Servicio
+                </button>
+            </div>
+
+            <!-- Tabla de Viáticos -->
+            <div class="subsection" style="margin-top: 40px;">
+                <h3 style="color: var(--gray-900); margin-bottom: 16px; font-size: 18px;">
+                    Tabla de Viáticos
+                </h3>
+
+                <div class="table-container">
+                    <table class="data-table" id="viaticosTable">
+                        <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th style="width: 200px;">Costo</th>
+                                <th style="width: 80px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="viaticosTableBody">
+                            <tr class="empty-row">
+                                <td colspan="3" style="text-align: center; color: var(--gray-400); padding: 40px;">
+                                    No hay viáticos agregados. Click en "Agregar Viático" para comenzar.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <button class="btn btn-primary btn-small" onclick="addViaticoRow()" style="margin-top: 12px;">
+                    + Agregar Viático
+                </button>
+            </div>
+
+            <!-- Tabla de Paquete de Entrega - OCULTA (no es estándar, solo para premium) -->
+            <div class="subsection" style="margin-top: 40px; display: none;">
+                <h3 style="color: var(--gray-900); margin-bottom: 16px; font-size: 18px;">
+                    Paquete de Entrega (Sesiones)
+                </h3>
+
+                <div class="table-container">
+                    <table class="data-table" id="deliveryTable">
+                        <thead>
+                            <tr>
+                                <th>Item del Paquete</th>
+                                <th style="width: 200px;">Costo</th>
+                                <th style="width: 80px;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deliveryTableBody">
+                            <tr class="empty-row">
+                                <td colspan="3" style="text-align: center; color: var(--gray-400); padding: 40px;">
+                                    No hay items agregados. Click en "Agregar Item" para comenzar.
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td><strong>TOTAL PAQUETE DE ENTREGA</strong></td>
+                                <td><strong id="deliveryTotal">$0.00</strong></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <button class="btn btn-primary btn-small" onclick="addDeliveryRow()" style="margin-top: 12px;">
+                    + Agregar Item al Paquete
+                </button>
+            </div>
+        </div>
+
+        <!-- Sección de Meta de Ingresos -->
+        <div class="section">
+            <div class="section-title">
+                <h2>Calculadora de Meta de Ingresos</h2>
+            </div>
+
+            <div class="projection-inputs">
+                <div class="form-group">
+                    <label class="form-label">
+                        ¿Cuánto dinero quieres generar?
+                        <span class="tooltip" data-tooltip="Meta total de ingresos que deseas alcanzar">i</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="number" class="form-input currency" id="targetIncome" placeholder="1500.00"
+                            step="0.01" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        ¿En cuánto tiempo?
+                        <span class="tooltip" data-tooltip="Plazo para alcanzar tu meta">i</span>
+                    </label>
+                    <select class="form-input" id="timePeriod">
+                        <option value="7">1 Semana (7 días)</option>
+                        <option value="14">2 Semanas (14 días)</option>
+                        <option value="30" selected>1 Mes (30 días)</option>
+                        <option value="60">2 Meses (60 días)</option>
+                        <option value="90">3 Meses (90 días)</option>
+                        <option value="180">6 Meses (180 días)</option>
+                        <option value="365">1 Año (365 días)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        ¿Horas <span id="hoursPeriodLabel">mensuales</span> para el negocio?
+                        <span class="tooltip" id="hoursTooltip"
+                            data-tooltip="Máximo de horas disponibles en este periodo">i</span>
+                    </label>
+                    <input type="number" class="form-input" id="monthlyHours" value="80" step="1" min="1" max="720">
+                    <p id="hoursAdvice" style="font-size: 11px; color: var(--lzGrey); margin-top: 4px;">Top sugerido:
+                        720h (periodo completo)</p>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="calculateProjection()"
+                style="width: 100%; padding: 16px; font-size: 16px; text-align: center; justify-content: center;">
+                <span>Calcular Plan de Ventas</span>
+            </button>
+
+            <div id="projectionResults" style="margin-top: 30px;">
+                <!-- Los resultados se mostrarán aquí -->
+            </div>
+        </div>
+
+        <!-- GENERADOR DE COTIZACIÓN [NUEVO] -->
+        <div class="section quote-section">
+            <div class="section-title no-print">
+                <h2>Generador de Cotización Profesional</h2>
+                <span class="badge">Nuevo</span>
+            </div>
+
+            <div class="alert alert-info no-print">
+                <span class="alert-icon">📄</span>
+                <div>
+                    Combina uno de tus paquetes con servicios adicionales para generar una cotización lista para
+                    entregar.
+                </div>
+            </div>
+
+            <div class="no-print">
+                <div class="projection-inputs">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del Cliente</label>
+                        <input type="text" class="form-input" id="clientName" placeholder="Ej: Maria García">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Selecciona el Paquete</label>
+                        <select class="form-input" id="quotePackageSelect">
+                            <option value="">-- Primero crea un paquete --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Productos/Servicios Adicionales</label>
+                    <div id="quoteExtrasContainer" class="extras-selection-grid">
+                        <!-- Checkboxes de extras dinámicos -->
+                        <p style="color: var(--lzGrey); font-style: italic; font-size: 13px;">No hay productos en el
+                            catálogo adicional.</p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notas Adicionales (Opcional)</label>
+                    <textarea class="form-input" id="quoteNotes" rows="3"
+                        placeholder="Ej: Incluye 2 cambios de vestuario adicionales..."></textarea>
+                </div>
+
+                <button class="btn btn-primary" onclick="generateQuote()"
+                    style="width: 100%; padding: 16px; font-size: 16px; text-align: center; justify-content: center; margin-top: 20px;">
+                    <span>✨ Generar Vista Previa de Cotización</span>
+                </button>
+            </div>
+
+            <!-- Previsualización -->
+            <div id="quotePreview" class="quote-preview">
+                <div id="quotePrintArea">
+                    <div class="quote-header">
+                        <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/6960a2f60597dff0f40f24be.png"
+                            alt="Logo" class="quote-logo">
+                        <div class="quote-info" style="text-align: center; flex: 1;">
+                            <h4>Cotización de Servicio</h4>
+                            <p id="previewDate" style="color: var(--lzGrey); font-size: 14px;"></p>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <p
+                            style="color: var(--lzGrey); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                            Preparado para:</p>
+                        <h3 id="previewClient"
+                            style="font-family: 'Playfair Display', serif; font-size: 24px; color: var(--lzBlack);">
+                        </h3>
+                    </div>
+
+                    <table class="quote-table">
+                        <thead>
+                            <tr>
+                                <th>Descripción del Servicio</th>
+                                <th style="text-align: right; width: 150px;">Inversión</th>
+                            </tr>
+                        </thead>
+                        <tbody id="previewTableBody">
+                        </tbody>
+                    </table>
+
+                    <div class="quote-total">
+                        <span class="total-label">Inversión Total:</span><br>
+                        <span class="total-amount" id="previewTotal"></span>
+                    </div>
+
+                    <div id="previewIncludedContainer"
+                        style="margin-top: 40px; border-top: 1px solid var(--gray-100); padding-top: 30px;">
+                        <h4
+                            style="font-family: 'Playfair Display', serif; font-size: 20px; color: var(--lzBlack); margin-bottom: 15px;">
+                            Este paquete incluye:
+                        </h4>
+                        <ul id="previewIncludedList"
+                            style="list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; color: var(--lzGreyDark); font-size: 14px;">
+                        </ul>
+                    </div>
+
+                    <div id="previewNotesContainer" style="margin-top: 30px; display: none;">
+                        <p
+                            style="color: var(--lzGrey); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                            Notas / Observaciones:</p>
+                        <p id="previewNotes"
+                            style="font-size: 14px; line-height: 1.6; color: var(--lzGreyDark); white-space: pre-wrap;">
+                        </p>
+                    </div>
+
+                    <div style="margin-top: 50px; font-size: 12px; color: var(--lzGrey); line-height: 1.5;">
+                        <p><strong>Nota:</strong> Esta cotización tiene una validez de 15 días. Los precios están
+                            sujetos a cambios según disponibilidad de fechas.</p>
+                    </div>
+                </div>
+
+                <div class="no-print" style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                    <button class="btn btn-secondary"
+                        onclick="document.getElementById('quotePreview').style.display='none'">
+                        Cerrar Previa
+                    </button>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        🖨️ Imprimir Cotización
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportToPDF(this)"
+                        style="background: var(--lzGold); color: var(--lzBlack); border: none;">
+                        ⬇️ Descargar PDF Directo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación Estilo Liz Pinto -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Confirmar Acción</h3>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">¿Estás seguro de realizar esta acción?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancelar</button>
+                <button class="modal-btn modal-btn-delete" id="modalConfirmBtn">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN DE N8N Y SUPABASE
+        // ============================================
+        const WEBHOOK_AUTH = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/auth-user'; // Webhook para Login
+        const WEBHOOK_SYNC = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/sync-data'; // Webhook para Guardar/Cargar Datos
+
+        // Variables de sesión
+        let currentUser = null;
+        let isSyncing = false;
+        let hasUnsavedChanges = false;
+
+        // Variables globales originales
+        let packages = [];
+        let packageCounter = 0;
+        let products = [];
+        let viaticos = [];
+        let deliveryItems = [];
+
+        // ============================================
+        // LÓGICA DE AUTENTICACIÓN
+        // ============================================
+
+        async function handleLogin(e) {
+            if (e) e.preventDefault();
+
+            const username = document.getElementById('loginUsername').value.trim();
+            const email = document.getElementById('loginEmail').value.trim();
+            const submitBtn = document.getElementById('loginSubmitBtn');
+            const errorDiv = document.getElementById('loginError');
+
+            if (!username || !email) return;
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="sync-spinner"></div> <span>Verificando...</span>';
+            errorDiv.classList.add('hidden');
+
+            try {
+                const response = await fetch(WEBHOOK_AUTH, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'login',
+                        username: username,
+                        email: email
+                    })
+                });
+
+                const data = await response.json();
+                const result = Array.isArray(data) ? data[0] : data;
+
+                if (result.success) {
+                    currentUser = { username, email };
+                    localStorage.setItem('lizCalc_user', JSON.stringify(currentUser));
+
+                    // Guardar credenciales para autocompletar en futuros logins
+                    localStorage.setItem('lizCalc_rememberedCredentials', JSON.stringify({ username, email }));
+
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    document.getElementById('userPanel').classList.remove('hidden');
+                    document.getElementById('displayUserName').textContent = `Hola, ${username}`;
+                    document.getElementById('userAvatarLogo').textContent = username.charAt(0).toUpperCase();
+
+                    // Cargar datos del usuario
+                    await loadFromCloud();
+                } else {
+                    errorDiv.textContent = result.message || 'Datos incorrectos o usuario no autorizado.';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error en login:', error);
+                errorDiv.textContent = 'Error de conexión. Intenta de nuevo.';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Entrar a mi Cuenta</span>';
+            }
+        }
+
+        function handleLogout() {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                localStorage.removeItem('lizCalc_user');
+                location.reload();
+            }
+        }
+
+        function checkSession() {
+            const savedUser = localStorage.getItem('lizCalc_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('userPanel').classList.remove('hidden');
+                document.getElementById('displayUserName').textContent = `Hola, ${currentUser.username}`;
+                document.getElementById('userAvatarLogo').textContent = currentUser.username.charAt(0).toUpperCase();
+                loadFromCloud();
+            } else {
+                // Autocompletar campos de login si hay datos guardados (aunque no haya sesión activa)
+                loadRememberedCredentials();
+            }
+        }
+
+        function loadRememberedCredentials() {
+            const rememberedCredentials = localStorage.getItem('lizCalc_rememberedCredentials');
+            if (rememberedCredentials) {
+                try {
+                    const credentials = JSON.parse(rememberedCredentials);
+                    const usernameInput = document.getElementById('loginUsername');
+                    const emailInput = document.getElementById('loginEmail');
+
+                    if (usernameInput && credentials.username) {
+                        usernameInput.value = credentials.username;
+                    }
+                    if (emailInput && credentials.email) {
+                        emailInput.value = credentials.email;
+                    }
+                } catch (error) {
+                    console.error('Error al cargar credenciales recordadas:', error);
+                }
+            }
+        }
+
+        // ============================================
+        // LÓGICA DE SINCRONIZACIÓN (NUBE)
+        // ============================================
+
+        async function saveToCloud() {
+            if (!currentUser || isSyncing) return;
+
+            const saveBtn = document.getElementById('saveCloudBtn');
+            const syncStatus = document.getElementById('syncStatus');
+            const syncText = document.getElementById('syncText');
+
+            isSyncing = true;
+            saveBtn.disabled = true;
+            syncStatus.className = 'sync-badge pending';
+            syncText.innerHTML = '<div class="sync-spinner"></div> Guardando...';
+
+            const payload = {
+                action: 'save',
+                email: currentUser.email,
+                username: currentUser.username,
+                data: {
+                    packages,
+                    packageCounter,
+                    products,
+                    viaticos,
+                    deliveryItems,
+                    targetIncome: document.getElementById('targetIncome').value,
+                    timePeriod: document.getElementById('timePeriod').value,
+                    monthlyHours: document.getElementById('monthlyHours').value
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch(WEBHOOK_SYNC, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    syncStatus.className = 'sync-badge synced';
+                    syncText.textContent = 'Paquetes Guardados';
+                    hasUnsavedChanges = false;
+                    showToast('✅ Cambios guardados en tu cuenta');
+                } else {
+                    throw new Error('Error al guardar');
+                }
+            } catch (error) {
+                console.error('Error al guardar:', error);
+                syncText.textContent = 'Error al guardar';
+                showToast('❌ Error al conectar con la nube');
+            } finally {
+                isSyncing = false;
+                saveBtn.disabled = false;
+            }
+        }
+
+        async function loadFromCloud() {
+            if (!currentUser) return;
+
+            const syncStatus = document.getElementById('syncStatus');
+            const syncText = document.getElementById('syncText');
+
+            try {
+                const response = await fetch(WEBHOOK_SYNC, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'load',
+                        email: currentUser.email
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const result = Array.isArray(data) ? data[0] : data;
+
+                    if (result && result.data) {
+                        const cloudData = result.data;
+
+                        // Asignar variables globales
+                        packages = cloudData.packages || [];
+                        packageCounter = cloudData.packageCounter || 0;
+                        products = cloudData.products || [];
+                        viaticos = cloudData.viaticos || [];
+                        deliveryItems = cloudData.deliveryItems || [];
+
+                        // Cargar valores de inputs
+                        if (cloudData.targetIncome) document.getElementById('targetIncome').value = cloudData.targetIncome;
+                        if (cloudData.timePeriod) document.getElementById('timePeriod').value = cloudData.timePeriod;
+                        if (cloudData.monthlyHours) document.getElementById('monthlyHours').value = cloudData.monthlyHours;
+
+                        // Re-renderizar todo
+                        renderPackages();
+                        updatePackageCount();
+                        renderProductsTable();
+                        renderViaticosTable();
+                        renderDeliveryTable();
+                        updateQuotePackageSelect(); // Actualizar selector de cotización
+
+                        syncStatus.className = 'sync-badge synced';
+                        syncText.textContent = 'Datos cargados';
+                    } else {
+                        // No hay datos guardados (primera vez)
+                        syncStatus.className = 'sync-badge';
+                        syncText.textContent = 'Sin datos guardados';
+                    }
+                } else if (response.status === 404) {
+                    // Usuario sin datos guardados (primera vez)
+                    syncStatus.className = 'sync-badge';
+                    syncText.textContent = 'Sin datos guardados';
+                } else {
+                    throw new Error('Error al cargar');
+                }
+            } catch (error) {
+                console.error('Error al cargar:', error);
+                syncStatus.className = 'sync-badge';
+                syncText.textContent = 'Listo para usar';
+            }
+        }
+
+        function showToast(message) {
+            // Un alert simple pero útil
+            console.log(message);
+            // Podríamos crear un toast real, pero por ahora usemos consola y el syncStatus
+        }
+
+        function markUnsaved() {
+            if (!hasUnsavedChanges && currentUser) {
+                hasUnsavedChanges = true;
+                const syncStatus = document.getElementById('syncStatus');
+                const syncText = document.getElementById('syncText');
+                syncStatus.className = 'sync-badge pending';
+                syncText.textContent = 'Cambios sin guardar';
+            }
+        }
+
+        // ============================================
+        // FUNCIONES DE MODAL
+        // ============================================
+
+        let modalCallback = null;
+
+        function showModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirmModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            // Guardar callback
+            modalCallback = onConfirm;
+
+            // Mostrar modal
+            modal.classList.add('active');
+
+            // Agregar event listener temporal al botón de confirmar
+            confirmBtn.onclick = function () {
+                if (modalCallback) {
+                    modalCallback();
+                }
+                closeModal();
+            };
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('active');
+            modalCallback = null;
+        }
+
+        // Cerrar modal al hacer clic fuera de él
+        document.addEventListener('click', function (e) {
+            const modal = document.getElementById('confirmModal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Cerrar modal con tecla ESC
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Opciones predefinidas para Productos/Servicios
+        const productOptions = [
+            'Álbum de fotos para bodas',
+            'Álbum de fotos para sesiones',
+            'Edición básica de fotos',
+            'Alquiler de vestuario',
+            'Retoques',
+            'Scouting',
+            'Style Link',
+            'Edición de foto extra',
+            'Libro de firmas',
+            'Hora extra',
+            'Cambio de locación'
+        ];
+
+        // Opciones predefinidas para Paquete de Entrega
+        const deliveryOptions = [
+            'Bolsa (tote)',
+            'Termo',
+            'Libreta',
+            'Chocolates',
+            'Folder',
+            'T-shirt',
+            'Sobre, etiqueta y cinta'
+        ];
+
+        // ============================================
+        // FUNCIONES PARA TABLA DE PRODUCTOS/SERVICIOS
+        // ============================================
+
+        function addProductRow() {
+            const productId = `product_${Date.now()}`;
+            products.push({
+                id: productId,
+                name: '',
+                cost: 0,
+                salePrice: 0,
+                profit: 0,
+                profitPercentage: 0,
+                isCustomName: false
+            });
+            renderProductsTable();
+            markUnsaved();
+        }
+
+        function renderProductsTable() {
+            const tbody = document.getElementById('productsTableBody');
+
+            if (products.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="empty-row">
+                        <td colspan="6" style="text-align: center; color: var(--gray-400); padding: 40px;">
+                            No hay productos agregados. Click en "Agregar Producto" para comenzar.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => {
+                const profitClass = product.profit >= 0 ? 'positive' : 'negative';
+                const percentageClass = product.profitPercentage >= 30 ? 'high' :
+                    product.profitPercentage >= 20 ? 'medium' : 'low';
+
+                const isCustom = product.isCustomName;
+
+                return `
+                    <tr>
+                        <td data-label="Producto / Servicio">
+                            ${!isCustom ? `
+                                <select 
+                                    class="table-input" 
+                                    onchange="handleProductNameChange('${product.id}', this.value)"
+                                >
+                                    <option value="">Selecciona un producto...</option>
+                                    ${productOptions.map(option => `
+                                        <option value="${option}" ${product.name === option ? 'selected' : ''}>
+                                            ${option}
+                                        </option>
+                                    `).join('')}
+                                    <option value="__custom__" ${isCustom ? 'selected' : ''}>Otro (personalizado)</option>
+                                </select>
+                            ` : `
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input 
+                                        type="text" 
+                                        class="table-input" 
+                                        value="${product.name}"
+                                        onchange="updateProduct('${product.id}', 'name', this.value)"
+                                        placeholder="Nombre del producto"
+                                        style="flex: 1;"
+                                    >
+                                    <button 
+                                        class="btn btn-secondary btn-small" 
+                                        onclick="resetProductToSelect('${product.id}')"
+                                        style="white-space: nowrap; padding: 8px 12px;"
+                                    >
+                                        ↩ Volver a lista
+                                    </button>
+                                </div>
+                            `}
+                        </td>
+                        <td data-label="Costo">
+                            <div class="table-currency-wrapper">
+                                <span class="table-currency-symbol">$</span>
+                                <input 
+                                    type="number" 
+                                    class="table-input currency-input" 
+                                    value="${product.cost}"
+                                    onchange="updateProduct('${product.id}', 'cost', parseFloat(this.value) || 0)"
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                >
+                            </div>
+                        </td>
+                        <td data-label="Precio Venta">
+                            <div class="table-currency-wrapper">
+                                <span class="table-currency-symbol">$</span>
+                                <input 
+                                    type="number" 
+                                    class="table-input currency-input" 
+                                    value="${product.salePrice}"
+                                    onchange="updateProduct('${product.id}', 'salePrice', parseFloat(this.value) || 0)"
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                >
+                            </div>
+                        </td>
+                        <td data-label="Ganancia">
+                            <span class="calculated-value ${profitClass}">$${product.profit.toFixed(2)}</span>
+                        </td>
+                        <td data-label="% Ganancia">
+                            <span class="percentage-badge ${percentageClass}">
+                                ${product.profitPercentage.toFixed(1)}%
+                            </span>
+                        </td>
+                        <td data-label="Acción" style="text-align: center;">
+                            <button class="btn-icon" onclick="removeProduct('${product.id}'); event.stopPropagation();" title="Eliminar">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function handleProductNameChange(productId, value) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            if (value === '__custom__') {
+                product.isCustomName = true;
+                product.name = '';
+            } else {
+                product.isCustomName = false;
+                product.name = value;
+            }
+
+            renderProductsTable();
+            markUnsaved();
+        }
+
+        function resetProductToSelect(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            product.isCustomName = false;
+            product.name = '';
+            renderProductsTable();
+            markUnsaved();
+        }
+
+        function updateProduct(productId, field, value) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            product[field] = value;
+
+            // Recalcular ganancia y porcentaje
+            product.profit = product.salePrice - product.cost;
+            product.profitPercentage = product.cost > 0 ? (product.profit / product.cost) * 100 : 0;
+
+            renderProductsTable();
+            markUnsaved();
+        }
+
+        function removeProduct(productId) {
+            showModal(
+                'Eliminar Producto/Servicio',
+                '¿Estás seguro de que deseas eliminar este producto/servicio?',
+                function () {
+                    products = products.filter(p => p.id !== productId);
+                    renderProductsTable();
+                    markUnsaved();
+                }
+            );
+        }
+
+        // ============================================
+        // FUNCIONES PARA TABLA DE VIÁTICOS
+        // ============================================
+
+        function addViaticoRow() {
+            const viaticoId = `viatico_${Date.now()}`;
+            viaticos.push({
+                id: viaticoId,
+                service: '',
+                cost: 0
+            });
+            renderViaticosTable();
+            markUnsaved();
+        }
+
+        function renderViaticosTable() {
+            const tbody = document.getElementById('viaticosTableBody');
+
+            if (viaticos.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="empty-row">
+                        <td colspan="3" style="text-align: center; color: var(--gray-400); padding: 40px;">
+                            No hay viáticos agregados. Click en "Agregar Viático" para comenzar.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = viaticos.map(viatico => `
+                <tr>
+                    <td data-label="Servicio">
+                        <input 
+                            type="text" 
+                            class="table-input" 
+                            value="${viatico.service}"
+                            onchange="updateViatico('${viatico.id}', 'service', this.value)"
+                            placeholder="Ej: Transporte a locación"
+                        >
+                    </td>
+                    <td data-label="Costo">
+                        <div class="table-currency-wrapper">
+                            <span class="table-currency-symbol">$</span>
+                            <input 
+                                type="number" 
+                                class="table-input currency-input" 
+                                value="${viatico.cost}"
+                                onchange="updateViatico('${viatico.id}', 'cost', parseFloat(this.value) || 0)"
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0"
+                            >
+                        </div>
+                    </td>
+                    <td data-label="Acción" style="text-align: center;">
+                        <button class="btn-icon" onclick="removeViatico('${viatico.id}'); event.stopPropagation();" title="Eliminar">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateViatico(viaticoId, field, value) {
+            const viatico = viaticos.find(v => v.id === viaticoId);
+            if (!viatico) return;
+            viatico[field] = value;
+            renderViaticosTable();
+            markUnsaved();
+        }
+
+        function removeViatico(viaticoId) {
+            showModal(
+                'Eliminar Viático',
+                '¿Estás seguro de que deseas eliminar este viático?',
+                function () {
+                    viaticos = viaticos.filter(v => v.id !== viaticoId);
+                    renderViaticosTable();
+                    markUnsaved();
+                }
+            );
+        }
+
+        // ============================================
+        // FUNCIONES PARA TABLA DE PAQUETE DE ENTREGA
+        // ============================================
+
+        function addDeliveryRow() {
+            const itemId = `delivery_${Date.now()}`;
+            deliveryItems.push({
+                id: itemId,
+                item: '',
+                cost: 0,
+                isCustomItem: false
+            });
+            renderDeliveryTable();
+            markUnsaved();
+        }
+
+        function renderDeliveryTable() {
+            const tbody = document.getElementById('deliveryTableBody');
+
+            if (deliveryItems.length === 0) {
+                tbody.innerHTML = `
+                    <tr class="empty-row">
+                        <td colspan="3" style="text-align: center; color: var(--gray-400); padding: 40px;">
+                            No hay items agregados. Click en "Agregar Item" para comenzar.
+                        </td>
+                    </tr>
+                `;
+                updateDeliveryTotal();
+                return;
+            }
+
+            tbody.innerHTML = deliveryItems.map(item => {
+                const isCustom = item.isCustomItem;
+
+                return `
+                    <tr>
+                        <td data-label="Item del Paquete">
+                            ${!isCustom ? `
+                                <select 
+                                    class="table-input" 
+                                    onchange="handleDeliveryItemChange('${item.id}', this.value)"
+                                >
+                                    <option value="">Selecciona un item...</option>
+                                    ${deliveryOptions.map(option => `
+                                        <option value="${option}" ${item.item === option ? 'selected' : ''}>
+                                            ${option}
+                                        </option>
+                                    `).join('')}
+                                    <option value="__custom__" ${isCustom ? 'selected' : ''}>Otro (personalizado)</option>
+                                </select>
+                            ` : `
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <input 
+                                        type="text" 
+                                        class="table-input" 
+                                        value="${item.item}"
+                                        onchange="updateDeliveryItem('${item.id}', 'item', this.value)"
+                                        placeholder="Nombre del item"
+                                        style="flex: 1;"
+                                    >
+                                    <button 
+                                        class="btn btn-secondary btn-small" 
+                                        onclick="resetDeliveryToSelect('${item.id}')"
+                                        style="white-space: nowrap; padding: 8px 12px;"
+                                    >
+                                        ↩ Volver a lista
+                                    </button>
+                                </div>
+                            `}
+                        </td>
+                        <td data-label="Costo">
+                            <div class="table-currency-wrapper">
+                                <span class="table-currency-symbol">$</span>
+                                <input 
+                                    type="number" 
+                                    class="table-input currency-input" 
+                                    value="${item.cost}"
+                                    onchange="updateDeliveryItem('${item.id}', 'cost', parseFloat(this.value) || 0)"
+                                    placeholder="0.00"
+                                    step="0.01"
+                                    min="0"
+                                >
+                            </div>
+                        </td>
+                        <td data-label="Acción" style="text-align: center;">
+                            <button class="btn-icon" onclick="removeDeliveryItem('${item.id}'); event.stopPropagation();" title="Eliminar">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            updateDeliveryTotal();
+        }
+
+        function handleDeliveryItemChange(itemId, value) {
+            const item = deliveryItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            if (value === '__custom__') {
+                item.isCustomItem = true;
+                item.item = '';
+            } else {
+                item.isCustomItem = false;
+                item.item = value;
+            }
+
+            renderDeliveryTable();
+        }
+
+        function resetDeliveryToSelect(itemId) {
+            const item = deliveryItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            item.isCustomItem = false;
+            item.item = '';
+            renderDeliveryTable();
+        }
+
+        function updateDeliveryItem(itemId, field, value) {
+            const item = deliveryItems.find(i => i.id === itemId);
+            if (!item) return;
+            item[field] = value;
+            renderDeliveryTable();
+            markUnsaved();
+        }
+
+        function removeDeliveryItem(itemId) {
+            showModal(
+                'Eliminar Item',
+                '¿Estás seguro de que deseas eliminar este item del paquete de entrega?',
+                function () {
+                    deliveryItems = deliveryItems.filter(i => i.id !== itemId);
+                    renderDeliveryTable();
+                    markUnsaved();
+                }
+            );
+        }
+
+        function updateDeliveryTotal() {
+            const total = deliveryItems.reduce((sum, item) => sum + (item.cost || 0), 0);
+            const totalElement = document.getElementById('deliveryTotal');
+            if (totalElement) {
+                totalElement.textContent = `$${total.toFixed(2)}`;
+            }
+        }
+
+        // ============================================
+        // FUNCIONES ORIGINALES DE PAQUETES
+        // ============================================
+
+        // Variables globales
+
+        // Lista de costos/variables disponibles
+        const availableCosts = [
+            { id: 'fotografo_hora', name: 'Fotógrafo por hora', defaultValue: 0 },
+            { id: 'reunion_creativa', name: 'Reunión creativa / Moodboard', defaultValue: 0 },
+            { id: 'asesoria_vestuario', name: 'Asesoría de vestuario', defaultValue: 0 },
+            { id: 'scouting_locacion', name: 'Scouting de locación', defaultValue: 0 },
+            { id: 'asistentes_iluminacion', name: 'Asistentes de iluminación', defaultValue: 0 },
+            { id: 'pruebas_fotos', name: 'Pruebas de fotos / Selección', defaultValue: 0 },
+            { id: 'edicion_fotos', name: 'Edición de fotos', defaultValue: 0 },
+            { id: 'maquillista', name: 'Maquillista profesional', defaultValue: 0 },
+            { id: 'props_decoracion', name: 'Props / Decoración', defaultValue: 0 },
+            { id: 'locacion_pagada', name: 'Locación pagada', defaultValue: 0 },
+            { id: 'segundo_fotografo', name: 'Segundo fotógrafo', defaultValue: 0 },
+            { id: 'photobook', name: 'Photobook / Álbum', defaultValue: 0 },
+            { id: 'paquete_entrega', name: 'Paquete de entrega (bolsa, termo, etc.)', defaultValue: 0 },
+            { id: 'transporte', name: 'Transporte / Viáticos', defaultValue: 0 },
+            { id: 'vestuario_extra', name: 'Vestuario / Cambios extra', defaultValue: 0 }
+        ];
+
+        // Función para agregar un nuevo paquete
+        function addPackage() {
+            if (packages.length >= 9) {
+                alert('Has alcanzado el máximo de 9 paquetes');
+                return;
+            }
+
+            packageCounter++;
+            const packageId = `package_${packageCounter}`;
+
+            const packageData = {
+                id: packageId,
+                name: `Paquete ${packageCounter}`,
+                costs: [],
+                salePrice: 0,
+                totalCosts: 0,
+                netProfit: 0,
+                profitability: 0
+            };
+
+            packages.push(packageData);
+            renderPackages();
+            updatePackageCount();
+            markUnsaved();
+        }
+
+        // Función para renderizar todos los paquetes
+        function renderPackages() {
+            const container = document.getElementById('packagesContainer');
+            container.innerHTML = '';
+
+            packages.forEach((pkg, index) => {
+                const packageCard = createPackageCard(pkg, index);
+                container.appendChild(packageCard);
+            });
+
+            // Mostrar/ocultar botón de agregar paquete
+            const addBtn = document.getElementById('addPackageBtn');
+            addBtn.style.display = packages.length >= 9 ? 'none' : 'flex';
+        }
+
+        // Función para crear la tarjeta de un paquete
+        function createPackageCard(pkg, index) {
+            const card = document.createElement('div');
+            card.className = 'package-card active';
+            card.innerHTML = `
+                <div class="package-header">
+                    <div class="package-number">${index + 1}</div>
+                    <button class="btn btn-danger" onclick="removePackage('${pkg.id}')">
+                        Eliminar
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="duplicatePackage('${pkg.id}')" style="margin-right: 8px;">
+                        Copiar
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Nombre del Paquete</label>
+                    <input 
+                        type="text" 
+                        class="form-input" 
+                        value="${pkg.name}"
+                        onchange="updatePackageName('${pkg.id}', this.value)"
+                        placeholder="Ej: Quinceañera Premium"
+                    >
+                </div>
+
+                <div class="costs-section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <strong style="color: var(--gray-700); font-size: 14px;">Costos del Paquete</strong>
+                        <button class="btn btn-secondary btn-small" onclick="addCostItem('${pkg.id}')">
+                            + Agregar Costo
+                        </button>
+                    </div>
+                    <div id="costs_${pkg.id}">
+                        ${pkg.costs.length === 0 ? '<p style="text-align: center; color: var(--gray-400); padding: 20px;">No hay costos agregados</p>' : ''}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Precio de Venta</label>
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input 
+                            type="number" 
+                            class="form-input currency" 
+                            value="${pkg.salePrice}"
+                            onchange="updateSalePrice('${pkg.id}', this.value)"
+                            placeholder="0.00"
+                            step="0.01"
+                            min="0"
+                        >
+                    </div>
+                </div>
+
+                <div class="results-box" id="results_${pkg.id}">
+                    <div class="result-row">
+                        <span class="result-label">Total Costos:</span>
+                        <span class="result-value">$${pkg.totalCosts.toFixed(2)}</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Precio Venta:</span>
+                        <span class="result-value">$${pkg.salePrice.toFixed(2)}</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Ganancia Neta:</span>
+                        <span class="result-value" style="color: ${pkg.netProfit >= 0 ? 'var(--lzGold)' : 'var(--gray-500)'}">
+                            $${pkg.netProfit.toFixed(2)}
+                        </span>
+                    </div>
+                    <div class="result-highlight">
+                        <div class="label">RENTABILIDAD</div>
+                        <div class="value">${pkg.profitability.toFixed(1)}%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill ${getProfitabilityClass(pkg.profitability)}" 
+                                 style="width: ${Math.min(pkg.profitability, 100)}%"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; text-align: center;">
+                        ${getProfitabilityBadge(pkg.profitability)}
+                    </div>
+                </div>
+            `;
+
+            // Renderizar costos existentes
+            setTimeout(() => {
+                renderCosts(pkg.id);
+            }, 0);
+
+            return card;
+        }
+
+        // Función para agregar un item de costo
+        function addCostItem(packageId) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            pkg.costs.push({
+                id: `cost_${Date.now()}`,
+                type: '',
+                value: 0,
+                quantity: 1,
+                unitCost: 0
+            });
+
+            renderCosts(packageId);
+        }
+
+        // Función para renderizar los costos de un paquete
+        function renderCosts(packageId) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            const container = document.getElementById(`costs_${packageId}`);
+            if (!container) return;
+
+            if (pkg.costs.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray-400); padding: 20px;">No hay costos agregados</p>';
+                return;
+            }
+
+            container.innerHTML = pkg.costs.map((cost, idx) => {
+                const usedCosts = pkg.costs.map(c => c.type).filter(t => t !== cost.type);
+                const availableOptions = availableCosts.filter(ac => !usedCosts.includes(ac.id) || ac.id === cost.type);
+
+                const isCalculated = cost.type === 'fotografo_hora' || cost.type === 'edicion_fotos';
+
+                return `
+                    <div class="cost-item" style="flex-wrap: wrap; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid var(--gray-200); margin-bottom: 20px; align-items: flex-end; gap: 15px;">
+                        <div style="flex: 2; min-width: 200px; display: flex; flex-direction: column;">
+                            <label style="font-size: 10px; color: var(--lzGrey); margin-bottom: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Categoría de Costo</label>
+                            <select class="table-input" onchange="updateCostType('${packageId}', '${cost.id}', this.value)" style="width: 100%; height: 42px;">
+                                <option value="">Selecciona un costo...</option>
+                                ${availableOptions.map(ac => `
+                                    <option value="${ac.id}" ${cost.type === ac.id ? 'selected' : ''}>
+                                        ${ac.id === 'fotografo_hora' ? 'Horas por sesión' : ac.name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        
+                        ${isCalculated ? `
+                            <div style="display: flex; gap: 12px; flex: 3; min-width: 280px; align-items: flex-end;">
+                                <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+                                    <label style="font-size: 10px; color: var(--lzGrey); margin-bottom: 8px; font-weight: 700; text-align: center; width: 100%;">CANTIDAD</label>
+                                    <div class="input-wrapper" style="width: 100%;">
+                                        <input 
+                                            type="number" 
+                                            class="table-input"
+                                            value="${cost.quantity}"
+                                            onchange="updateCostQuantity('${packageId}', '${cost.id}', this.value)"
+                                            placeholder="0"
+                                            min="1"
+                                            style="text-align: center; width: 100%; height: 42px;"
+                                        >
+                                    </div>
+                                </div>
+                                <div style="flex: 2; display: flex; flex-direction: column; align-items: center;">
+                                    <label style="font-size: 10px; color: var(--lzGrey); margin-bottom: 8px; font-weight: 700; text-align: center; width: 100%;">COSTO UNITARIO</label>
+                                    <div class="cost-item-wrapper" style="width: 100%;">
+                                        <span class="currency-symbol">$</span>
+                                        <input 
+                                            type="number" 
+                                            class="table-input"
+                                            value="${cost.unitCost}"
+                                            onchange="updateCostUnitValue('${packageId}', '${cost.id}', this.value)"
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                            style="text-align: center; width: 100%; height: 42px;"
+                                        >
+                                    </div>
+                                </div>
+                                <div style="flex: 1.5; padding-bottom: 12px; font-weight: 700; color: var(--lzGold); font-size: 16px; white-space: nowrap; text-align: left;">
+                                    = $${(cost.quantity * cost.unitCost).toFixed(2)}
+                                </div>
+                            </div>
+                        ` : `
+                            <div style="flex: 1; min-width: 150px; display: flex; flex-direction: column; align-items: center;">
+                                <label style="font-size: 10px; color: var(--lzGrey); margin-bottom: 8px; font-weight: 700; text-align: center; width: 100%;">COSTO TOTAL</label>
+                                <div class="cost-item-wrapper" style="width: 100%;">
+                                    <span class="currency-symbol">$</span>
+                                    <input 
+                                        type="number" 
+                                        class="table-input"
+                                        value="${cost.value}"
+                                        onchange="updateCostValue('${packageId}', '${cost.id}', this.value)"
+                                        placeholder="0.00"
+                                        step="0.01"
+                                        min="0"
+                                        style="text-align: center; width: 100%; height: 42px;"
+                                        ${!cost.type ? 'disabled' : ''}
+                                    >
+                                </div>
+                            </div>
+                        `}
+                        
+                        <div style="display: flex; align-items: center; padding-bottom: 2px;">
+                            <button class="btn btn-danger btn-small" onclick="removeCost('${packageId}', '${cost.id}'); event.stopPropagation();" title="Eliminar" style="padding: 0; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1;">
+                                ✕
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updatePackageName(packageId, name) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (pkg) {
+                pkg.name = name;
+                markUnsaved();
+            }
+        }
+
+        // Actualizar tipo de costo
+        function updateCostType(packageId, costId, type) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            const cost = pkg.costs.find(c => c.id === costId);
+            if (!cost) return;
+
+            cost.type = type;
+
+            // Si es un tipo calculado, inicializar valores
+            if (type === 'fotografo_hora' || type === 'edicion_fotos') {
+                cost.quantity = 1;
+                cost.unitCost = cost.value || 0;
+            }
+
+            renderCosts(packageId);
+            calculatePackage(packageId);
+        }
+
+        // Actualizar cantidad de costo
+        function updateCostQuantity(packageId, costId, quantity) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            const cost = pkg.costs.find(c => c.id === costId);
+            if (!cost) return;
+
+            cost.quantity = parseFloat(quantity) || 1;
+            cost.value = cost.quantity * cost.unitCost;
+            calculatePackage(packageId);
+        }
+
+        // Actualizar valor unitario de costo
+        function updateCostUnitValue(packageId, costId, value) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            const cost = pkg.costs.find(c => c.id === costId);
+            if (!cost) return;
+
+            cost.unitCost = parseFloat(value) || 0;
+            cost.value = cost.quantity * cost.unitCost;
+            calculatePackage(packageId);
+        }
+
+        // Actualizar valor de costo
+        function updateCostValue(packageId, costId, value) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            const cost = pkg.costs.find(c => c.id === costId);
+            if (!cost) return;
+
+            cost.value = parseFloat(value) || 0;
+            calculatePackage(packageId);
+        }
+
+        // Eliminar un costo
+        function removeCost(packageId, costId) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            pkg.costs = pkg.costs.filter(c => c.id !== costId);
+            renderCosts(packageId);
+            calculatePackage(packageId);
+        }
+
+        // Actualizar precio de venta
+        function updateSalePrice(packageId, price) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            pkg.salePrice = parseFloat(price) || 0;
+            calculatePackage(packageId);
+        }
+
+        function calculatePackage(packageId) {
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            // Calcular total de costos
+            pkg.totalCosts = pkg.costs.reduce((sum, cost) => sum + (cost.value || 0), 0);
+
+            // Calcular ganancia neta
+            pkg.netProfit = pkg.salePrice - pkg.totalCosts;
+
+            // Calcular rentabilidad
+            pkg.profitability = pkg.totalCosts > 0 ? (pkg.netProfit / pkg.totalCosts) * 100 : 0;
+
+            // Re-renderizar el paquete
+            renderPackages();
+            markUnsaved();
+        }
+
+        function removePackage(packageId) {
+            showModal(
+                'Eliminar Paquete',
+                '¿Estás seguro de que deseas eliminar este paquete? Esta acción no se puede deshacer.',
+                function () {
+                    packages = packages.filter(p => p.id !== packageId);
+                    renderPackages();
+                    updatePackageCount();
+                    markUnsaved();
+                }
+            );
+        }
+
+        // Duplicar un paquete
+        function duplicatePackage(packageId) {
+            if (packages.length >= 9) {
+                alert('Has alcanzado el máximo de 9 paquetes');
+                return;
+            }
+
+            const pkg = packages.find(p => p.id === packageId);
+            if (!pkg) return;
+
+            packageCounter++;
+            const newPkg = JSON.parse(JSON.stringify(pkg)); // Clonación profunda
+            newPkg.id = `package_${packageCounter}`;
+            newPkg.name = `${pkg.name} (Copia)`;
+
+            packages.push(newPkg);
+            renderPackages();
+            updatePackageCount();
+            markUnsaved();
+        }
+
+        // Actualizar contador de paquetes
+        function updatePackageCount() {
+            document.getElementById('packageCount').textContent = `${packages.length} de 9`;
+        }
+
+        // Obtener clase de rentabilidad para barra de progreso
+        function getProfitabilityClass(profitability) {
+            if (profitability >= 30) return 'success';
+            if (profitability >= 15) return 'warning';
+            return 'danger';
+        }
+
+        // Obtener badge de rentabilidad
+        function getProfitabilityBadge(profitability) {
+            if (profitability >= 30) {
+                return `
+                    <span class="profitability-badge high">
+                        <span class="icon">✅</span>
+                        <span>Rentabilidad Saludable</span>
+                    </span>
+                `;
+            } else if (profitability >= 15) {
+                return `
+                    <span class="profitability-badge medium">
+                        <span class="icon">⚠️</span>
+                        <span>Rentabilidad Media</span>
+                    </span>
+                `;
+            } else if (profitability > 0) {
+                return `
+                    <span class="profitability-badge low">
+                        <span class="icon">🔻</span>
+                        <span>Rentabilidad Baja</span>
+                    </span>
+                `;
+            } else {
+                return `
+                    <span class="profitability-badge low">
+                        <span class="icon">❌</span>
+                        <span>Pérdida de Dinero</span>
+                    </span>
+                `;
+            }
+        }
+
+        // Calcular proyección de ventas
+        function calculateProjection() {
+            const targetIncome = parseFloat(document.getElementById('targetIncome').value) || 0;
+            const timePeriod = parseInt(document.getElementById('timePeriod').value);
+
+            if (targetIncome <= 0) {
+                alert('Por favor, ingresa una meta de ingresos válida');
+                return;
+            }
+
+            if (packages.length === 0) {
+                alert('Primero debes crear al menos un paquete');
+                return;
+            }
+
+            // Filtrar paquetes válidos (con ganancia positiva)
+            const validPackages = packages.filter(p => p.netProfit > 0);
+
+            if (validPackages.length === 0) {
+                alert('Ninguno de tus paquetes tiene ganancia positiva. Ajusta tus precios o costos.');
+                return;
+            }
+
+            // Generar diferentes escenarios de venta
+            const scenarios = generateScenarios(validPackages, targetIncome);
+
+            // Renderizar resultados
+            renderProjectionResults(scenarios, targetIncome, timePeriod);
+        }
+
+        // Generar escenarios de venta
+        function generateScenarios(validPackages, targetIncome) {
+            const scenarios = [];
+
+            // Escenario 1: Solo el paquete más rentable
+            const mostProfitable = validPackages.reduce((max, p) =>
+                p.netProfit > max.netProfit ? p : max
+            );
+
+            const quantityMostProfitable = Math.ceil(targetIncome / mostProfitable.netProfit);
+            scenarios.push({
+                name: 'Enfoque en Mayor Ganancia',
+                packages: [{
+                    package: mostProfitable,
+                    quantity: quantityMostProfitable
+                }],
+                total: quantityMostProfitable * mostProfitable.netProfit,
+                isBest: false
+            });
+
+            // Escenario 2: Mix balanceado (si hay más de un paquete)
+            if (validPackages.length > 1) {
+                const mix = [];
+                let remaining = targetIncome;
+                const sortedByProfit = [...validPackages].sort((a, b) => b.netProfit - a.netProfit);
+
+                sortedByProfit.forEach((pkg, idx) => {
+                    if (remaining > 0) {
+                        const quantity = Math.floor(remaining / pkg.netProfit / sortedByProfit.length);
+                        if (quantity > 0) {
+                            mix.push({ package: pkg, quantity });
+                            remaining -= quantity * pkg.netProfit;
+                        }
+                    }
+                });
+
+                // Agregar las ventas restantes al paquete más rentable
+                if (remaining > 0) {
+                    const additionalQty = Math.ceil(remaining / mostProfitable.netProfit);
+                    const existingItem = mix.find(m => m.package.id === mostProfitable.id);
+                    if (existingItem) {
+                        existingItem.quantity += additionalQty;
+                    } else {
+                        mix.push({ package: mostProfitable, quantity: additionalQty });
+                    }
+                }
+
+                const mixTotal = mix.reduce((sum, item) => sum + (item.quantity * item.package.netProfit), 0);
+                scenarios.push({
+                    name: 'Mix Balanceado',
+                    packages: mix,
+                    total: mixTotal,
+                    isBest: true
+                });
+            }
+
+            // Escenario 3: Cada paquete individual (si hay varios)
+            if (validPackages.length > 2) {
+                validPackages.forEach(pkg => {
+                    if (pkg.id !== mostProfitable.id) {
+                        const quantity = Math.ceil(targetIncome / pkg.netProfit);
+                        scenarios.push({
+                            name: `Solo ${pkg.name} `,
+                            packages: [{ package: pkg, quantity }],
+                            total: quantity * pkg.netProfit,
+                            isBest: false
+                        });
+                    }
+                });
+            }
+
+            return scenarios;
+        }
+
+        // Renderizar resultados de proyección
+        function renderProjectionResults(scenarios, targetIncome, timePeriod) {
+            const container = document.getElementById('projectionResults');
+
+            if (scenarios.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" >
+                        <div class="empty-state-icon"></div>
+                        <div class="empty-state-text">No se pudieron generar escenarios de venta</div>
+                    </div>
+                    `;
+                return;
+            }
+
+            const periodText = getPeriodText(timePeriod);
+            const capacityHours = parseFloat(document.getElementById('monthlyHours').value) || 0;
+
+            container.innerHTML = `
+                <div class="alert alert-info">
+                    <span class="alert-icon">ℹ️</span>
+                    <div>
+                        <strong>Meta:</strong> Generar $${targetIncome.toFixed(2)} en ${periodText}
+                        <br>
+                        <small>Capacidad de trabajo definida: ${capacityHours} horas para este periodo</small>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom: 20px; color: var(--gray-900);">Escenarios de Venta Recomendados</h3>
+
+                <div class="projection-results">
+                    ${scenarios.map(scenario => `
+                        <div class="projection-result-item ${scenario.isBest ? 'best' : ''}">
+                            <div class="projection-header">
+                                <span class="projection-title">${scenario.name}</span>
+                                ${scenario.isBest ? '<span class="projection-badge">Recomendado</span>' : ''}
+                            </div>
+
+                            <div class="projection-mix">
+                                ${scenario.packages.map(item => `
+                                    <div class="mix-item">
+                                        <span class="mix-package-name">${item.package.name}</span>
+                                        <span class="mix-quantity">${item.quantity} ${item.quantity === 1 ? 'venta' : 'ventas'}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            <div class="projection-total">
+                                <span class="total-label">Total Generado:</span>
+                                <span class="total-value">$${scenario.total.toFixed(2)}</span>
+                            </div>
+
+                            ${scenario.total > targetIncome ? `
+                                <div style="margin-top: 12px; padding: 12px; background: var(--lzGoldLight); border-radius: 6px; text-align: center; color: var(--lzDark); font-weight: 600; font-size: 13px;">
+                                    Superas tu meta por $${(scenario.total - targetIncome).toFixed(2)}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border-radius: 12px; color: white;">
+                    <h4 style="margin-bottom: 12px;">Consejo Profesional</h4>
+                    <p style="opacity: 0.95; line-height: 1.6;">
+                        El escenario recomendado combina varios paquetes para diversificar tus ventas. 
+                        Esto reduce el riesgo y te permite atender diferentes tipos de clientes.
+                    </p>
+                </div>
+            `;
+        }
+
+        // Obtener texto del período
+        function getPeriodText(days) {
+            if (days === 7) return '1 semana';
+            if (days === 14) return '2 semanas';
+            if (days === 30) return '1 mes';
+            if (days === 60) return '2 meses';
+            if (days === 90) return '3 meses';
+            if (days === 180) return '6 meses';
+            if (days === 365) return '1 año';
+            return `${days} días`;
+        }
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('Calculadora de Paquetes inicializada');
+
+            // Inicializar sesión
+            checkSession();
+
+            // Listener para formulario de login
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleLogin);
+            }
+
+            // Sincronizar listas inicialmente
+            updateQuoteSinks();
+
+            // Listener para actualizar etiquetas de horas dinámicamente
+            document.getElementById('timePeriod').addEventListener('change', function (e) {
+                const text = e.target.options[e.target.selectedIndex].text;
+                const hoursLabel = document.getElementById('hoursPeriodLabel');
+                const hoursAdvice = document.getElementById('hoursAdvice');
+
+                // Extraer el nombre del periodo (ej: "1 Semana", "1 Mes")
+                const periodName = text.split('(')[0].trim().toLowerCase();
+                hoursLabel.textContent = `para este periodo (${periodName})`;
+                hoursAdvice.textContent = `Top sugerido: Máximo de horas en ${periodName}`;
+                markUnsaved();
+            });
+
+            // Listeners para inputs de meta de ingresos
+            document.getElementById('targetIncome').addEventListener('input', markUnsaved);
+            document.getElementById('monthlyHours').addEventListener('input', markUnsaved);
+        });
+
+        // ============================================
+        // LÓGICA DEL GENERADOR DE COTIZACIONES
+        // ============================================
+
+        // Función para actualizar los selectores/checks del generador al cambiar datos
+        function updateQuoteSinks() {
+            // 1. Sincronizar selector de paquetes
+            const pkgSelect = document.getElementById('quotePackageSelect');
+            const currentValue = pkgSelect.value;
+
+            pkgSelect.innerHTML = '<option value="">-- Selecciona un paquete --</option>';
+            packages.forEach(pkg => {
+                const option = document.createElement('option');
+                option.value = pkg.id;
+                option.textContent = pkg.name || `Paquete ${pkg.id} `;
+                if (pkg.id === currentValue) option.selected = true;
+                pkgSelect.appendChild(option);
+            });
+
+            // 2. Sincronizar lista de productos adicionales
+            const extrasContainer = document.getElementById('quoteExtrasContainer');
+            if (products.length === 0) {
+                extrasContainer.innerHTML = '<p style="color: var(--lzGrey); font-style: italic; font-size: 13px;">No hay productos en el catálogo adicional.</p>';
+            } else {
+                extrasContainer.innerHTML = products.map(prod => `
+                    <label class="extra-checkbox-item">
+                        <input type="checkbox" class="quote-extra-check" data-id="${prod.id}" data-name="${prod.name}" data-price="${prod.salePrice}">
+                        <span>${prod.name || 'Sin nombre'} ($${prod.salePrice.toFixed(2)})</span>
+                    </label>
+                `).join('');
+            }
+        }
+
+        function generateQuote() {
+            const clientName = document.getElementById('clientName').value;
+            const packageId = document.getElementById('quotePackageSelect').value;
+            const notes = document.getElementById('quoteNotes').value;
+
+            if (!clientName) {
+                alert('Por favor ingresa el nombre del cliente');
+                return;
+            }
+            if (!packageId) {
+                alert('Por favor selecciona un paquete base');
+                return;
+            }
+
+            const pkg = packages.find(p => p.id === packageId);
+            const selectedExtras = Array.from(document.querySelectorAll('.quote-extra-check:checked')).map(cb => ({
+                name: cb.dataset.name,
+                price: parseFloat(cb.dataset.price)
+            }));
+
+            // Llenar vista previa
+            document.getElementById('previewClient').textContent = clientName;
+            document.getElementById('previewDate').textContent = new Date().toLocaleDateString('es-ES', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            // Notas
+            const notesContainer = document.getElementById('previewNotesContainer');
+            if (notes.trim()) {
+                document.getElementById('previewNotes').textContent = notes;
+                notesContainer.style.display = 'block';
+            } else {
+                notesContainer.style.display = 'none';
+            }
+
+            const tbody = document.getElementById('previewTableBody');
+            let total = pkg.salePrice;
+
+            let html = `
+                <tr>
+                    <td><strong>${pkg.name}</strong><br><small style="color: gray;">Paquete fotográfico base</small></td>
+                    <td style="text-align: right;">$${pkg.salePrice.toFixed(2)}</td>
+                </tr>
+                `;
+
+            selectedExtras.forEach(extra => {
+                total += extra.price;
+                html += `
+                <tr>
+                        <td>${extra.name}</td>
+                        <td style="text-align: right;">$${extra.price.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+            document.getElementById('previewTotal').textContent = `$${total.toFixed(2)} `;
+
+            // Llenar "Qué incluye"
+            const includedList = document.getElementById('previewIncludedList');
+            if (pkg.costs && pkg.costs.length > 0) {
+                includedList.innerHTML = pkg.costs.map(cost => {
+                    const costInfo = availableCosts.find(ac => ac.id === cost.type);
+                    let name = costInfo ? (cost.type === 'fotografo_hora' ? 'Horas de sesión fotográfica' : costInfo.name) : 'Servicio personalizado';
+
+                    if (cost.type === 'fotografo_hora') {
+                        return `<li>✨ ${cost.quantity} ${name}</li> `;
+                    } else if (cost.type === 'edicion_fotos') {
+                        return `<li>✨ ${cost.quantity} Fotos editadas con retoque profesional</li> `;
+                    }
+                    return `<li>✨ ${name}</li>`;
+                }).join('');
+                document.getElementById('previewIncludedContainer').style.display = 'block';
+            } else {
+                document.getElementById('previewIncludedContainer').style.display = 'none';
+            }
+
+            // Mostrar previsualización
+            document.getElementById('quotePreview').style.display = 'block';
+            document.getElementById('quotePreview').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Interceptar funciones de renderizado para sincronizar generador
+        const originalRenderPackages = renderPackages;
+        renderPackages = function () {
+            originalRenderPackages();
+            updateQuoteSinks();
+        };
+
+        const originalRenderProductsTable = renderProductsTable;
+        renderProductsTable = function () {
+            originalRenderProductsTable();
+            updateQuoteSinks();
+        };
+
+        // Función para exportar a PDF directo
+        function exportToPDF(btnElement) {
+            const element = document.getElementById('quotePrintArea');
+            const clientName = document.getElementById('clientName').value || 'Cliente';
+
+            const opt = {
+                margin: [10, 15, 10, 15], // Márgenes: top, right, bottom, left en mm
+                filename: `Cotizacion_${clientName.replace(/\s+/g, '_')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    scrollY: 0,
+                    scrollX: 0
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Mostrar feedback de carga
+            const btn = btnElement || event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⌛ Generando PDF...';
+            btn.disabled = true;
+
+            // Asegurarse de que el elemento esté visible antes de capturar
+            const preview = document.getElementById('quotePreview');
+            const originalDisplay = preview.style.display;
+            preview.style.display = 'block';
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                preview.style.display = originalDisplay;
+            }).catch(err => {
+                console.error('Error al generar PDF:', err);
+                alert('Hubo un error al generar el PDF. Por favor intenta de nuevo.');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                preview.style.display = originalDisplay;
+            });
+        }
+    </script>
+</body>
+
+</html>

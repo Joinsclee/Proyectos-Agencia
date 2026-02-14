@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <title>Tu Copiloto de Vuelo - Ovejas Voladoras</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --pastel-yellow: #fdfd96;
+            --crude: #f5f5f5;
+            --soft-grey: #0a0a0a;
+            --black: #000000;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--black);
+            color: var(--crude);
+            scroll-behavior: smooth;
+            overflow: hidden;
+        }
+
+        /* UTILIDADES BRANDING */
+        .rounded-pill {
+            border-radius: 4rem;
+        }
+
+        .text-pastel-yellow {
+            color: var(--pastel-yellow);
+        }
+
+        .bg-pastel-yellow {
+            background-color: var(--pastel-yellow);
+        }
+
+        /* CONTENEDOR PRINCIPAL */
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        /* ===================================
+           PANTALLA DE LOGIN
+        =================================== */
+        .login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .login-card {
+            background: linear-gradient(145deg, #18181b, #000);
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 2rem;
+            padding: 40px 30px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 0 40px rgba(253, 253, 150, 0.3);
+            animation: loginPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes loginPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 40px rgba(253, 253, 150, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 50px rgba(253, 253, 150, 0.5);
+            }
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            filter: drop-shadow(0 4px 12px rgba(253, 253, 150, 0.3));
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--pastel-yellow);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: #71717a;
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--pastel-yellow);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-input {
+            background: rgba(39, 39, 42, 0.6);
+            border: 1px solid #3f3f46;
+            border-radius: 1rem;
+            padding: 14px 18px;
+            color: var(--crude);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--pastel-yellow);
+            box-shadow: 0 0 15px rgba(253, 253, 150, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: #71717a;
+        }
+
+        /* TOGGLE PASSWORD */
+        .password-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-container .form-input {
+            width: 100%;
+            padding-right: 45px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #71717a;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: var(--pastel-yellow);
+        }
+
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .login-button {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            border: none;
+            border-radius: 1.5rem;
+            padding: 15px 30px;
+            font-weight: 900;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-button:hover:not(:disabled) {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(253, 253, 150, 0.4);
+        }
+
+        .login-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .login-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(253, 253, 150, 0.05);
+            border: 1px solid rgba(253, 253, 150, 0.2);
+            border-radius: 1rem;
+            font-size: 12px;
+            color: #a1a1aa;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .login-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 12px 15px;
+            border-radius: 1rem;
+            font-size: 12px;
+            text-align: center;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        /* ===================================
+           ESTILOS REGISTRO / MODAL
+        =================================== */
+        .register-prompt {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(63, 63, 70, 0.5);
+            text-align: center;
+        }
+
+        .register-prompt p {
+            font-size: 13px;
+            color: #71717a;
+            margin-bottom: 12px;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--pastel-yellow);
+            border: 1px solid var(--pastel-yellow);
+            border-radius: 1.5rem;
+            padding: 10px 20px;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(253, 253, 150, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: linear-gradient(145deg, #18181b, #000);
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 2rem;
+            padding: 35px;
+            max-width: 450px;
+            width: 100%;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: #71717a;
+            cursor: pointer;
+            font-size: 24px;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: var(--pastel-yellow);
+        }
+
+        /* POPUP RESPUESTA */
+        .response-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #18181b;
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 1.5rem;
+            padding: 30px;
+            text-align: center;
+            z-index: 3000;
+            display: none;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .response-popup.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* ===================================
+           PANTALLA DE CHAT (ORIGINAL)
+        =================================== */
+        .chat-screen {
+            display: none;
+            height: 100%;
+            flex-direction: column;
+        }
+
+        .chat-screen.active {
+            display: flex;
+        }
+
+        .chat-header {
+            background: linear-gradient(145deg, #18181b, #000);
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 2rem;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(253, 253, 150, 0.3);
+            animation: headerPulse 3s ease-in-out infinite;
+            position: relative;
+        }
+
+        @keyframes headerPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(253, 253, 150, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(253, 253, 150, 0.5);
+            }
+        }
+
+        .logout-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 0.75rem;
+            padding: 10px 18px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(4px);
+        }
+
+        .logout-button.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .logout-button:hover {
+            background: rgba(239, 68, 68, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+        }
+
+        /* ===================================
+           BOTÓN DE MICRÓFONO (VOICE INPUT)
+        =================================== */
+        .mic-button {
+            background: transparent;
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .mic-button:hover:not(:disabled) {
+            background: rgba(253, 253, 150, 0.1);
+            transform: scale(1.05);
+        }
+
+        .mic-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .mic-button.listening {
+            background: var(--pastel-yellow);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .mic-button.listening svg {
+            color: var(--black);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(253, 253, 150, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 15px rgba(253, 253, 150, 0);
+            }
+        }
+
+        .mic-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--pastel-yellow);
+        }
+
+        .listening-indicator {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 10px;
+            background: rgba(253, 253, 150, 0.95);
+            color: var(--black);
+            padding: 8px 16px;
+            border-radius: 1rem;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .listening-indicator.active {
+            display: block;
+        }
+
+        .listening-indicator::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(253, 253, 150, 0.95);
+        }
+
+        .messages-container {
+            flex: 1;
+            /* Combina color de fondo con imagen + modo blend para simular opacidad sutil */
+            background-color: rgba(24, 24, 27, 0.6);
+            background-image: url('https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/6978fc96480ea481a3ca64a5.png');
+
+            border: 1px solid #27272a;
+            border-radius: 1.5rem;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 0;
+
+            /* Propiedades de fondo fijo al contenedor */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: 50% auto;
+            background-attachment: scroll;
+            /* Fijo respecto al contenedor */
+            background-blend-mode: overlay;
+            /* Mezcla la imagen con el fondo oscuro para 'apagarla' */
+        }
+
+        /* Asegurar que los mensajes estén por encima de la marca de agua */
+        .message,
+        .welcome-message,
+        .error-message {
+            position: relative;
+            z-index: 1;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: rgba(39, 39, 42, 0.3);
+            border-radius: 10px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: var(--pastel-yellow);
+            border-radius: 10px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: #fff;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 1.2rem;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            font-weight: 600;
+            border-bottom-right-radius: 0.3rem;
+        }
+
+        .message.assistant .message-content {
+            background: rgba(39, 39, 42, 0.8);
+            color: var(--crude);
+            border: 1px solid #3f3f46;
+            border-bottom-left-radius: 0.3rem;
+        }
+
+        .message-content h1,
+        .message-content h2,
+        .message-content h3 {
+            font-weight: bold;
+            margin: 10px 0 5px;
+            color: var(--pastel-yellow);
+        }
+
+        .message-content ul,
+        .message-content ol {
+            padding-left: 20px;
+            margin: 5px 0;
+            list-style-type: disc;
+        }
+
+        .message-content ol {
+            list-style-type: decimal;
+        }
+
+        .message-content strong {
+            color: var(--pastel-yellow);
+            font-weight: 700;
+        }
+
+        .message-content p {
+            margin-bottom: 8px;
+        }
+
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content a {
+            color: var(--pastel-yellow);
+            text-decoration: underline;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 14px;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .message.user .message-avatar {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            margin-left: 10px;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(145deg, #3f3f46, #27272a);
+            color: var(--pastel-yellow);
+            margin-right: 10px;
+            border: 1px solid var(--pastel-yellow);
+            padding: 4px;
+        }
+
+        .input-container {
+            background: linear-gradient(145deg, #18181b, #000);
+            border: 2px solid #27272a;
+            border-radius: 2rem;
+            padding: 15px 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .input-container:focus-within {
+            border-color: var(--pastel-yellow);
+            box-shadow: 0 0 25px rgba(253, 253, 150, 0.3);
+        }
+
+        #messageInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--crude);
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            font-weight: 400;
+            padding: 8px;
+        }
+
+        #messageInput::placeholder {
+            color: #71717a;
+        }
+
+        #sendButton {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            border: none;
+            border-radius: 1.5rem;
+            padding: 12px 24px;
+            font-weight: 900;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(253, 253, 150, 0.4);
+        }
+
+        #sendButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 18px;
+            background: rgba(39, 39, 42, 0.8);
+            border: 1px solid #3f3f46;
+            border-radius: 1.2rem;
+            width: fit-content;
+            border-bottom-left-radius: 0.3rem;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pastel-yellow);
+            animation: typingBounce 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #71717a;
+            font-size: 14px;
+        }
+
+        .welcome-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 12px rgba(253, 253, 150, 0.3));
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 10px 15px;
+            border-radius: 0.75rem;
+            font-size: 12px;
+            margin-top: 10px;
+            text-align: center;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 10px;
+            }
+
+            .login-card,
+            .modal-card {
+                padding: 30px 20px;
+                max-width: 95%;
+                /* Maximizar ancho en móviles */
+            }
+
+            .chat-header {
+                padding: 15px 20px;
+            }
+
+            .logout-button {
+                top: 15px;
+                right: 15px;
+                font-size: 10px;
+                padding: 8px 12px;
+                background: rgba(239, 68, 68, 0.25);
+                /* Un poco más visible en móvil */
+            }
+
+            .message-content {
+                max-width: 85%;
+                font-size: 13px;
+            }
+
+            #sendButton {
+                padding: 10px 20px;
+                font-size: 11px;
+            }
+
+            /* Ajustes para evitar zoom en iOS */
+            .form-input,
+            #messageInput {
+                font-size: 16px !important;
+            }
+
+            /* Ajuste de título en móvil */
+            .login-title {
+                font-size: 24px;
+            }
+
+            /* Ajuste de modal */
+            .modal-card {
+                padding: 25px 20px;
+            }
+
+            .modal-close {
+                top: 15px;
+                right: 15px;
+            }
+
+        }
+
+        @media (max-width: 480px) {
+            .chat-header h1 {
+                font-size: 1.25rem;
+                /* ~20px */
+            }
+
+            .logout-button {
+                padding: 6px 10px;
+                font-size: 9px;
+            }
+
+            .welcome-icon {
+                font-size: 40px;
+            }
+
+            .welcome-message h3 {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <!-- ===================================
+             PANTALLA DE LOGIN
+        =================================== -->
+        <div class="login-screen" id="loginScreen">
+            <div class="login-card">
+                <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/694eb76bb62dd36ed9d6cbdf.png"
+                    alt="Ovejas Voladoras" class="login-logo">
+
+                <h1 class="login-title">Acceso Exclusivo</h1>
+                <p class="login-subtitle">
+                    Ingresa con el email registrado en tu membresía de Skool para acceder al soporte.
+                </p>
+
+                <form class="login-form" id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="emailInput">Email</label>
+                        <input type="email" id="emailInput" class="form-input" placeholder="tu@email.com" required
+                            autocomplete="email">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="passwordInput">Contraseña</label>
+                        <div class="password-container">
+                            <input type="password" id="passwordInput" class="form-input" placeholder="••••••••" required
+                                autocomplete="current-password">
+                            <button type="button" class="toggle-password" data-target="passwordInput">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M2.036 12.322a1.012 1.012 0 010-.644C3.412 8.587 6.69 6 10 6c3.31 0 6.588 2.587 7.964 5.678a1.012 1.012 0 010 .644C16.588 15.413 13.31 18 10 18c-3.31 0-6.588-2.587-7.964-5.678z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="login-button" id="loginButton">
+                        Acceder al Soporte
+                    </button>
+
+                    <div id="loginError" style="display: none;"></div>
+                </form>
+
+                <div class="register-prompt">
+                    <p>¿Aún no tienes acceso?</p>
+                    <button type="button" class="btn-secondary" id="openRegisterBtn">Crear mi acceso</button>
+                </div>
+
+                <div class="login-info">
+                    🔒 Solo miembros activos de la comunidad Skool pueden acceder a este soporte.
+                </div>
+            </div>
+        </div>
+
+        <button class="logout-button" id="logoutButton">Cerrar Sesión</button>
+
+        <!-- ===================================
+             PANTALLA DE CHAT (ORIGINAL)
+        =================================== -->
+        <div class="chat-screen" id="chatScreen">
+            <div class="chat-header">
+                <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/694eb76bb62dd36ed9d6cbdf.png"
+                    alt="Ovejas Voladoras" class="w-12 h-12 mx-auto mb-3 object-contain"
+                    style="filter: drop-shadow(0 4px 12px rgba(253, 253, 150, 0.3));">
+                <h1 class="text-2xl font-black text-pastel-yellow text-center mb-1">Tu copiloto de vuelo</h1>
+                <p class="text-center text-xs text-gray-400 font-semibold uppercase tracking-wider">Ovejas Voladoras</p>
+            </div>
+
+            <div class="messages-container" id="messagesContainer">
+                <div class="welcome-message">
+                    <div class="welcome-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                            class="w-16 h-16 mx-auto text-pastel-yellow">
+                            <path
+                                d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                        </svg>
+                    </div>
+                    <h3 class="font-bold text-pastel-yellow mb-2">¡Bienvenido a tu copiloto!</h3>
+                    <p style="color: #ffffff;">Pregunta lo que necesites y te ayudaré en tu vuelo.</p>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <button id="micButton" class="mic-button" title="Pulsa para hablar">
+                    <svg class="mic-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                    </svg>
+                    <div class="listening-indicator" id="listeningIndicator">
+                        🎤 Escuchando...
+                    </div>
+                </button>
+                <input type="text" id="messageInput" placeholder="Escribe o habla tu mensaje..." autocomplete="off">
+                <button id="sendButton">Enviar</button>
+            </div>
+        </div>
+
+        <!-- ===================================
+             MODAL DE REGISTRO
+        =================================== -->
+        <div class="modal-overlay" id="registerModal">
+            <div class="modal-card">
+                <span class="modal-close" id="closeRegisterBtn">&times;</span>
+                <h2 class="login-title" style="font-size: 24px;">Crear tu Acceso</h2>
+                <p class="login-subtitle">Regístrate para habilitar tu copiloto de vuelo.</p>
+
+                <form class="login-form" id="registerForm">
+                    <div class="form-group">
+                        <label class="form-label" for="regNameInput">Nombre Completo</label>
+                        <input type="text" id="regNameInput" class="form-input" placeholder="Tu nombre" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="regEmailInput">Email</label>
+                        <input type="email" id="regEmailInput" class="form-input" placeholder="tu@email.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="regPasswordInput">Contraseña</label>
+                        <div class="password-container">
+                            <input type="password" id="regPasswordInput" class="form-input"
+                                placeholder="Mínimo 6 caracteres" required minlength="6">
+                            <button type="button" class="toggle-password" data-target="regPasswordInput">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M2.036 12.322a1.012 1.012 0 010-.644C3.412 8.587 6.69 6 10 6c3.31 0 6.588 2.587 7.964 5.678a1.012 1.012 0 010 .644C16.588 15.413 13.31 18 10 18c-3.31 0-6.588-2.587-7.964-5.678z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="login-button" id="registerButton">
+                        Crear Acceso
+                    </button>
+
+                    <div id="registerError" style="display: none;"></div>
+                </form>
+
+                <!-- VISTA DE ÉXITO DENTRO DEL MODAL -->
+                <div id="registerSuccessView" style="display: none; text-align: center; padding: 20px 0;">
+                    <div style="font-size: 50px; margin-bottom: 20px;">✅</div>
+                    <h3 class="text-pastel-yellow font-bold text-xl mb-3">¡Acceso Creado!</h3>
+                    <p class="text-gray-300 text-sm mb-6" id="successViewMessage">Tu cuenta ha sido creada
+                        correctamente.</p>
+                    <button type="button" class="login-button w-full" id="closeSuccessViewBtn">
+                        Ir al Inicio de Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // 🔧 CONFIGURACIÓN
+        // ============================================
+        const WEBHOOK_LOGIN = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/login-chat-user'; // Webhook para verificar login
+        const WEBHOOK_CHAT = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/0cfa10fb-35c4-4f1b-af53-42f499c59acb'; // Webhook para chat
+        const WEBHOOK_REGISTER = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/register-chat-user'; // Webhook para registro
+        // ============================================
+
+        // Referencias a elementos
+        const loginScreen = document.getElementById('loginScreen');
+        const chatScreen = document.getElementById('chatScreen');
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
+        const loginError = document.getElementById('loginError');
+        const logoutButton = document.getElementById('logoutButton');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        // Referencias Registro
+        const openRegisterBtn = document.getElementById('openRegisterBtn');
+        const registerModal = document.getElementById('registerModal');
+        const closeRegisterBtn = document.getElementById('closeRegisterBtn');
+        const registerForm = document.getElementById('registerForm');
+        const registerButton = document.getElementById('registerButton');
+        const registerError = document.getElementById('registerError');
+        const registerSuccessView = document.getElementById('registerSuccessView');
+        const successViewMessage = document.getElementById('successViewMessage');
+        const closeSuccessViewBtn = document.getElementById('closeSuccessViewBtn');
+
+        // Variables de sesión
+        let userToken = null;
+        let userEmail = null;
+        let conversationHistory = [];
+
+        // Referencias a botón de micrófono
+        const micButton = document.getElementById('micButton');
+        const listeningIndicator = document.getElementById('listeningIndicator');
+
+        // Variables para reconocimiento de voz
+        let recognition = null;
+        let isListening = false;
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        window.addEventListener('DOMContentLoaded', () => {
+            checkExistingSession();
+            initializeSpeechRecognition();
+        });
+
+        // ============================================
+        // GESTIÓN DE SESIÓN
+        // ============================================
+        function checkExistingSession() {
+            // Limpieza TOTAL de cualquier rastro de sesión persistente
+            // Esto fuerza a que cada vez que se recargue la página, el usuario deba loguearse
+            localStorage.removeItem('chatEmail');
+            localStorage.removeItem('chatName');
+            localStorage.removeItem('chatToken');
+
+            sessionStorage.removeItem('chatEmail');
+            sessionStorage.removeItem('chatName');
+
+            // Ya no recuperamos nada. Siempre mostramos login al cargar/recargar.
+            // Si userEmail es null, la UI por defecto es login, así que no hay que hacer más.
+        }
+
+        function clearSession() {
+            sessionStorage.removeItem('chatToken');
+            sessionStorage.removeItem('chatEmail');
+            sessionStorage.removeItem('chatName');
+            sessionStorage.removeItem('chatSessionId'); // También limpiar ID de conversación
+            // Limpieza legacy
+            localStorage.removeItem('chatToken');
+            localStorage.removeItem('chatEmail');
+            localStorage.removeItem('chatName');
+
+            userToken = null;
+            userEmail = null;
+            showLoginScreen();
+        }
+
+        function showLoginScreen() {
+            loginScreen.style.display = 'flex';
+            chatScreen.classList.remove('active');
+            logoutButton.classList.remove('active');
+            if (recognition && isListening) {
+                recognition.stop();
+            }
+        }
+
+        function showChatScreen() {
+            loginScreen.style.display = 'none';
+            chatScreen.classList.add('active');
+            logoutButton.classList.add('active');
+            messageInput.focus();
+        }
+
+        // ============================================
+        // PROCESO DE LOGIN
+        // ============================================
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleLogin();
+        });
+
+        // Registro
+        openRegisterBtn.addEventListener('click', () => {
+            registerModal.classList.add('active');
+            registerForm.style.display = 'flex';
+            registerSuccessView.style.display = 'none';
+            hideRegisterError(); // Ensure register error is hidden
+            registerForm.reset(); // Clear form fields
+        });
+
+        closeRegisterBtn.addEventListener('click', () => {
+            registerModal.classList.remove('active');
+        });
+
+        closeSuccessViewBtn.addEventListener('click', () => {
+            registerModal.classList.remove('active');
+            // Optionally, reset the modal to show the form again if it's reopened
+            registerForm.style.display = 'flex';
+            registerSuccessView.style.display = 'none';
+            // No need for loginScreen opacity/transform changes here, as the success is within the modal
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleRegister();
+        });
+
+        // Toggle Password Visibility
+        document.querySelectorAll('.toggle-password').forEach(button => {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+
+                // Cambiar icono
+                if (type === 'text') {
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                        </svg>
+                    `;
+                } else {
+                    this.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.644C3.412 8.587 6.69 6 10 6c3.31 0 6.588 2.587 7.964 5.678a1.012 1.012 0 010 .644C16.588 15.413 13.31 18 10 18c-3.31 0-6.588-2.587-7.964-5.678z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    `;
+                }
+            });
+        });
+
+        async function handleLogin() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+
+            if (!email || !password) {
+                showLoginError('Por favor ingresa email y contraseña');
+                return;
+            }
+
+            // Validar formato de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showLoginError('Por favor ingresa un formato de email válido');
+                return;
+            }
+
+            loginButton.disabled = true;
+            loginButton.textContent = 'Verificando...';
+            hideLoginError();
+
+            try {
+                const response = await fetch(WEBHOOK_LOGIN, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'login',
+                        email: email,
+                        password: password,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const result = Array.isArray(data) ? data[0] : data;
+
+                if (result.success) {
+                    // Login exitoso
+                    userEmail = email;
+                    const userName = result.data?.name || 'Usuario';
+
+                    // NO guardamos en storage para que al recargar se pida login de nuevo
+                    // Solo mantenemos en memoria RAM
+                    // sessionStorage.setItem('chatEmail', email);
+                    // sessionStorage.setItem('chatName', userName);
+
+                    // Mostrar pantalla de chat
+                    showChatScreen();
+
+                } else {
+                    // Login fallido
+                    showLoginError(result.message || 'Email o contraseña incorrectos.');
+                }
+
+            } catch (error) {
+                console.error('Error en login:', error);
+                showLoginError('Error de conexión. Por favor intenta de nuevo.');
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = 'Acceder al Soporte';
+            }
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('regNameInput').value.trim();
+            const email = document.getElementById('regEmailInput').value.trim();
+            const password = document.getElementById('regPasswordInput').value;
+
+            if (!name || !email || !password) {
+                showRegisterError('Todos los campos son obligatorios');
+                return;
+            }
+
+            registerButton.disabled = true;
+            registerButton.textContent = 'Comprobando correo y creando acceso...';
+            hideRegisterError();
+
+            try {
+                const response = await fetch(WEBHOOK_REGISTER, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+                const result = Array.isArray(data) ? data[0] : data;
+
+                if (result.success) {
+                    // Éxito - Mostrar vista de éxito dentro del mismo modal
+                    registerForm.style.display = 'none';
+                    registerSuccessView.style.display = 'block';
+                    successViewMessage.textContent = result.message || 'Tu acceso ha sido creado correctamente. Ya puedes iniciar sesión.';
+                    registerForm.reset();
+                } else {
+                    // Error
+                    showRegisterError(result.message || 'No se pudo crear el acceso. Verifica tus datos.');
+                }
+            } catch (error) {
+                console.error('Error en registro:', error);
+                showRegisterError('Error de conexión. Intenta de nuevo.');
+            } finally {
+                registerButton.disabled = false;
+                registerButton.textContent = 'Crear Acceso';
+            }
+        }
+
+        function showResponsePopup(title, message) {
+            popupTitle.textContent = title;
+            popupMessage.textContent = message;
+            responsePopup.classList.add('active');
+        }
+
+        function showRegisterError(message) {
+            registerError.textContent = '❌ ' + message;
+            registerError.className = 'login-error'; // Reusar estilo
+            registerError.style.display = 'block';
+            registerError.style.marginTop = '10px';
+        }
+
+        function hideRegisterError() {
+            registerError.style.display = 'none';
+        }
+
+        function showLoginError(message) {
+            loginError.textContent = '❌ ' + message;
+            loginError.className = 'login-error';
+            loginError.style.display = 'block';
+        }
+
+        function hideLoginError() {
+            loginError.style.display = 'none';
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+        logoutButton.addEventListener('click', () => {
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                clearSession();
+                conversationHistory = [];
+                messagesContainer.innerHTML = `
+                    <div class="welcome-message">
+                        <div class="welcome-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                class="w-16 h-16 mx-auto text-pastel-yellow">
+                                <path
+                                    d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-pastel-yellow mb-2">¡Bienvenido a tu copiloto!</h3>
+                        <p>Pregunta lo que necesites y te ayudaré en tu vuelo.</p>
+                    </div>
+                `;
+            }
+        });
+
+        // ============================================
+        // FUNCIONES DE CHAT (MANTENER ORIGINALES)
+        // ============================================
+        function addMessage(text, sender) {
+            const welcomeMsg = messagesContainer.querySelector('.welcome-message');
+            if (welcomeMsg) {
+                welcomeMsg.remove();
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = sender === 'user' ? 'U' : 'A';
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+
+            if (sender === 'assistant') {
+                content.innerHTML = marked.parse(text);
+            } else {
+                content.textContent = text;
+            }
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            conversationHistory.push({
+                role: sender === 'user' ? 'user' : 'assistant',
+                content: text,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = 'A';
+
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator active';
+            indicator.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+            typingDiv.appendChild(avatar);
+            typingDiv.appendChild(indicator);
+
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            messagesContainer.appendChild(errorDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+
+        async function sendToWebhook(userMessage) {
+            try {
+                const response = await fetch(WEBHOOK_CHAT, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: userMessage,
+                        conversationHistory: conversationHistory,
+                        timestamp: new Date().toISOString(),
+                        sessionId: getSessionId(),
+                        userEmail: userEmail   // Incluir email para contexto
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const payload = Array.isArray(data) ? data[0] : data;
+
+                const replyText = payload.response ||
+                    payload.message ||
+                    payload.text ||
+                    payload.output ||
+                    (payload.output && payload.output.text) ||
+                    'Respuesta recibida';
+
+                return replyText;
+
+            } catch (error) {
+                console.error('Error al enviar mensaje:', error);
+                throw error;
+            }
+        }
+
+        function getSessionId() {
+            let sessionId = sessionStorage.getItem('chatSessionId');
+            if (!sessionId) {
+                sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('chatSessionId', sessionId);
+            }
+            return sessionId;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+
+            if (!message) return;
+
+            if (!userEmail) {
+                showError('⚠️ Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+                clearSession();
+                return;
+            }
+
+            addMessage(message, 'user');
+            messageInput.value = '';
+
+            sendButton.disabled = true;
+            showTypingIndicator();
+
+            try {
+                const response = await sendToWebhook(message);
+                hideTypingIndicator();
+                addMessage(response, 'assistant');
+
+            } catch (error) {
+                hideTypingIndicator();
+                showError('❌ No se pudo enviar el mensaje. Por favor intenta de nuevo.');
+            } finally {
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        // Event listeners para chat
+        sendButton.addEventListener('click', sendMessage);
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // ============================================
+        // FUNCIONALIDAD DE VOZ (SPEECH-TO-TEXT)
+        // ============================================
+        function initializeSpeechRecognition() {
+            // Verificar soporte para Speech Recognition
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (!SpeechRecognition) {
+                console.warn('Tu navegador no soporta reconocimiento de voz');
+                micButton.disabled = true;
+                micButton.title = 'Tu navegador no soporta reconocimiento de voz';
+                return;
+            }
+
+            // Crear instancia de reconocimiento
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES'; // Español
+            recognition.continuous = false; // Se detiene después de una frase
+            recognition.interimResults = false; // Solo resultados finales
+            recognition.maxAlternatives = 1;
+
+            // Evento: Cuando se obtiene un resultado
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                messageInput.value = transcript;
+                messageInput.focus();
+            };
+
+            // Evento: Cuando termina de escuchar
+            recognition.onend = () => {
+                isListening = false;
+                micButton.classList.remove('listening');
+                listeningIndicator.classList.remove('active');
+                micButton.disabled = false;
+            };
+
+            // Evento: Cuando hay un error
+            recognition.onerror = (event) => {
+                console.error('Error en reconocimiento de voz:', event.error);
+
+                isListening = false;
+                micButton.classList.remove('listening');
+                listeningIndicator.classList.remove('active');
+                micButton.disabled = false;
+
+                let errorMessage = 'Error al escuchar. Intenta de nuevo.';
+
+                switch (event.error) {
+                    case 'no-speech':
+                        errorMessage = 'No se detectó ninguna voz. Habla más fuerte.';
+                        break;
+                    case 'audio-capture':
+                        errorMessage = 'No se pudo acceder al micrófono.';
+                        break;
+                    case 'not-allowed':
+                        errorMessage = 'Permiso de micrófono denegado.';
+                        break;
+                    case 'network':
+                        errorMessage = 'Error de red. Verifica tu conexión.';
+                        break;
+                }
+
+                showError(errorMessage);
+            };
+
+            // Evento: Cuando empieza a escuchar
+            recognition.onstart = () => {
+                isListening = true;
+                micButton.classList.add('listening');
+                listeningIndicator.classList.add('active');
+            };
+
+            // Event listener para el botón de micrófono
+            micButton.addEventListener('click', toggleVoiceInput);
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                showError('Reconocimiento de voz no disponible');
+                return;
+            }
+
+            if (isListening) {
+                // Detener la escucha
+                recognition.stop();
+                isListening = false;
+                micButton.classList.remove('listening');
+                listeningIndicator.classList.remove('active');
+            } else {
+                // Iniciar la escucha
+                try {
+                    recognition.start();
+                    micButton.disabled = true; // Deshabilitar mientras escucha
+                } catch (error) {
+                    console.error('Error al iniciar reconocimiento:', error);
+                    showError('No se pudo iniciar el reconocimiento de voz');
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
