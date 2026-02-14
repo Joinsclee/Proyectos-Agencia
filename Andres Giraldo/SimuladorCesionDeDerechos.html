@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="es">
+<!-- Version 2.0 - Updated 2026-02-13 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Rentabilidad CRECE - Cesión de Derechos</title>
+    <!-- Fonts: Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+            background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.03), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.03), transparent 40%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+        }
+
+        .aura-gradient-text {
+            background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .tooltip-trigger {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background-color: #0f172a;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 6px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        .tooltip-trigger:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 10000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #0f172a;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.5;
+            width: 280px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s, visibility 0.3s;
+            white-space: normal;
+            pointer-events: none;
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #0f172a;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            outline: none;
+        }
+
+        .primary-button {
+            background-color: #0f172a;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .primary-button:hover {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-header {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .section-cesion .section-header {
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+        }
+
+        .section-resultado .section-header {
+            background: #4ade80;
+            color: #064e3b;
+        }
+
+        .section-resultado {
+            background-color: #dcfce7 !important;
+            background-image: none !important;
+            border: 2px solid #86efac !important;
+        }
+
+        .section-resultado .field-label {
+            color: #065f46;
+        }
+
+        .section-resultado .field-input-wrapper {
+            background-color: #dcfce7 !important;
+            background-image: none !important;
+            border-color: #86efac !important;
+            box-shadow: none !important;
+        }
+
+        .section-resultado .field-input-wrapper input,
+        .section-resultado .field-input-wrapper .currency-symbol,
+        .section-resultado .field-input-wrapper .percent-symbol {
+            color: #064e3b !important;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .field-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .field-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .field-label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            line-height: 1.4;
+        }
+
+        .field-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: all 0.2s;
+        }
+
+        .field-input-wrapper.short {
+            max-width: 140px;
+        }
+
+        .field-input-wrapper.short input {
+            text-align: left;
+        }
+
+        .field-input-wrapper:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .field-input-wrapper:focus-within {
+            border-color: #94a3b8;
+            box-shadow: 0 0 0 4px rgba(148, 163, 184, 0.1);
+        }
+
+        .field-input-wrapper.calculated {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #86efac;
+        }
+
+        .field-input-wrapper input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+            text-align: left;
+            color: #0f172a;
+        }
+
+        .field-input-wrapper .currency-symbol {
+            font-weight: 700;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        .field-input-wrapper .percent-symbol {
+            font-weight: 700;
+            color: #64748b;
+            font-size: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .field-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body class="selection:bg-slate-200">
+    <!-- Header Image -->
+    <div class="w-full flex justify-center py-6">
+        <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png"
+            alt="Aura Logo" class="h-16 object-contain">
+    </div>
+
+    <div class="container mx-auto px-4 pb-8 max-w-5xl">
+        <!-- Header -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100">
+            <h1 class="text-3xl md:text-4xl font-bold text-center mb-2 aura-gradient-text uppercase">
+                SIMULADOR DE RENTABILIDAD CRECE
+            </h1>
+            <p class="text-lg text-center font-semibold text-slate-700">
+                PROYECTO INMOBILIARIO EN PLANOS
+            </p>
+            <p class="text-md text-center mb-4 text-slate-600">
+                Estrategia de Inversión: Venta de Cesión de Derechos
+            </p>
+            <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 inline-block max-w-3xl">
+                <p class="text-sm text-slate-600">
+                    <strong>OBJETIVO:</strong> Ayudar al inversionista a simular y analizar la rentabilidad del capital
+                    invertido en un proyecto inmobiliario en planos, evaluando una salida anticipada mediante la cesión
+                    de derechos antes de la escrituración.
+                </p>
+            </div>
+
+            <!-- Nombre del Proyecto -->
+            <div class="mt-4 flex items-center justify-center gap-2">
+                <label for="nombreProyecto" class="text-sm font-semibold text-slate-700">📝 Nombre del Proyecto o Inversión:</label>
+                <input type="text" id="nombreProyecto" placeholder="Ej: Proyecto Alto de la María"
+                    class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400" style="width: 500px;">
+            </div>
+        </div>
+
+        <!-- DATOS DEL PROYECTO -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100">
+            <div class="section-header">
+                📋 DATOS DEL PROYECTO
+            </div>
+
+            <div class="field-row">
+                <div class="field-item full-width">
+                    <label class="field-label">Precio de Compra del Inmueble</label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="precioCompra" value="300.000.000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Porcentaje de la Cuota Inicial
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Cuota Inicial: En proyectos sobre planos generalmente es el 20%
+                                al 30% del valor del inmueble. La cuota se paga a plazos mensuales, hasta la
+                                entrega.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="porcentajeCuotaInicial" value="25" min="0" max="100" step="1">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Meses Otorgados para Pagar la Cuota Inicial
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Número de meses definidos por la constructora para completar el
+                                pago de la cuota inicial antes de la entrega o escrituración.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="mesesCuotaInicial" value="30" min="1" step="1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Valor de la Cuota Inicial
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor que se paga en cuotas mensuales. Según el país, puede denominarse Pago Inicial, Entrada, Enganche o Depósito.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="valorCuotaInicial" readonly>
+                    </div>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Pago Mensual de la Cuota Inicial
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor periódico que el inversionista se comprometió a pagar para
+                                completar la cuota inicial del inmueble.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="pagoMensual" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Saldo Final al Momento de la Entrega
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es el valor pendiente por pagar una vez se completa el pago de la
+                                cuota inicial y se realiza la entrega del inmueble.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="saldoFinal" readonly>
+                    </div>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Dinero para Reservar el Inmueble
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor entregado para asegurar el inmueble y su ubicación dentro
+                                del proyecto. Se descuenta de la Cuota Inicial.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="dineroReserva" value="5.000.000">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CESIÓN DE DERECHOS -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-cesion">
+            <div class="section-header">
+                🔄 CESIÓN DE DERECHOS
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Mes Estimado de Venta
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es el mes en el que se proyecta realizar la cesión de derechos. Debe verificarse a partir de qué mes el proyecto permite realizar la cesión.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="mesVenta" value="20" min="1" step="1">
+                    </div>
+                    <p class="text-xs text-red-600 font-medium" id="validacionMes"></p>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Costos Asociados a la Cesión (Penalidad - Comisión)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es el valor que cobra la constructora por transferir el derecho
+                                de compra del inmueble a otra persona antes de la escritura, permitiendo una salida
+                                anticipada y rentable. Además, puede incluirse el pago de comisiones a terceros.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costosCesion" value="4.000.000">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Precio de Venta Esperado del Inmueble</label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="precioVenta" value="340.000.000">
+                    </div>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Valorización Frente al Precio de Compra
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">En qué porcentaje aumentó el valor frente al precio inicial de
+                                compra del proyecto.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated"
+                        style="background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);">
+                        <input type="text" id="valorizacion" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADOS -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-resultado">
+            <div class="flex justify-end mb-6">
+                <button onclick="descargarPDF()"
+                    class="primary-button px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Descargar Informe PDF
+                </button>
+            </div>
+
+            <div class="section-header">
+                💰 RESULTADO DE LA INVERSIÓN
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        CAPITAL TOTAL INVERTIDO
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es el total dinero aportado, proveniente de los pagos realizados
+                                por concepto de la Cuota Inicial, efectuados antes de la cesión de derechos.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <span id="capitalInvertido" style="font-weight: bold; font-size: 18px; color: #0f172a;">0</span>
+                    </div>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Rentabilidad sobre el Capital Invertido (ROI)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es un indicador financiero que mide la rentabilidad de una
+                                inversión, expresando la ganancia obtenida en relación con el capital invertido.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <input type="text" id="roi" readonly>
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        GANANCIA
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Se calcula como la diferencia entre el Precio de Compra Inicial y el Precio de Venta del Inmueble al momento de la Cesión, descontando los Costos.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <span id="ganancia" style="font-weight: bold; font-size: 18px; color: #0f172a;">0</span>
+                    </div>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Tasa Interna de Retorno Mensual (TIR)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es una medida financiera que indica el rendimiento que genera una
+                                inversión cada mes, teniendo en cuenta todos los flujos de dinero que entran y salen
+                                durante el período de la inversión.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span id="tirMensual" style="font-weight: bold; font-size: 18px; color: #0f172a;">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        CAPITAL DE REINVERSIÓN
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es el dinero que queda disponible después de cerrar una inversión, incluyendo lo invertido y la ganancia. Este capital se utiliza para seguir invirtiendo y hacer crecer el patrimonio de forma progresiva dentro del Sistema CRECE.</span>
+                        </span>
+                        <div style="font-size: 11px; font-weight: normal; color: #64748b; margin-top: 2px;">(Capital
+                            Invertido + Ganancia)</div>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <span id="capitalReinversion"
+                            style="font-weight: bold; font-size: 18px; color: #0f172a;">0</span>
+                    </div>
+                </div>
+
+                <div class="field-item">
+                    <label class="field-label">
+                        Tasa Interna de Retorno Anual (TIR)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Es una medida financiera que indica el rendimiento que genera una
+                                inversión en un año, teniendo en cuenta todos los flujos de dinero que entran y salen
+                                durante ese período.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span id="tirAnual" style="font-weight: bold; font-size: 18px; color: #0f172a;">0%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAPA DE RENTABILIDAD -->
+        <div id="mapaRentabilidad" class="glass rounded-3xl p-8 mb-6 border border-slate-100">
+            <h2 class="text-2xl font-bold mb-2 text-slate-800 text-center uppercase">MAPA DE RENTABILIDAD</h2>
+            <p class="text-center text-slate-600 mb-8 font-medium">Zonas de Calor - Análisis de Rentabilidad según Tiempo de Cesión</p>
+
+            <!-- Barra de zonas de calor -->
+            <div class="relative h-24 rounded-xl overflow-visible shadow-lg mb-12">
+                <div
+                    class="absolute left-0 top-0 bottom-0 w-[30%] bg-gradient-to-r from-green-600 via-green-500 to-green-400 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <p class="font-bold text-lg">Zona Verde</p>
+                    </div>
+                </div>
+                <div
+                    class="absolute left-[30%] top-0 bottom-0 w-[30%] bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <p class="font-bold text-lg">Zona Amarilla</p>
+                    </div>
+                </div>
+                <div
+                    class="absolute right-0 top-0 bottom-0 w-[40%] bg-gradient-to-r from-orange-500 via-orange-400 to-orange-300 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <p class="font-bold text-lg">Zona Naranja</p>
+                    </div>
+                </div>
+
+                <div id="indicadorPosicion"
+                    class="absolute top-0 bottom-0 w-1 bg-slate-800 z-10 transition-all duration-300"
+                    style="left: 50%; box-shadow: 0 0 20px rgba(15,23,42,0.5);">
+                    <div
+                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-bold whitespace-nowrap shadow-lg">
+                        Tu cesión
+                        <div
+                            class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800">
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-bold"
+                        id="indicadorTiempoCesion">
+                        20 meses
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica de ROI vs Tiempo -->
+            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 mb-6">
+                <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">ROI vs Tiempo de Cesión</h3>
+
+                <div class="relative h-64">
+                    <div
+                        class="absolute left-0 top-0 bottom-8 w-16 flex flex-col justify-between text-right pr-2 text-sm font-medium text-slate-600">
+                        <span id="ejeY3">50%</span>
+                        <span id="ejeY2">33%</span>
+                        <span id="ejeY1">17%</span>
+                        <span>0%</span>
+                    </div>
+
+                    <div class="absolute left-16 right-0 top-0 bottom-8 border-l-2 border-b-2 border-slate-300">
+                        <div class="absolute left-0 right-0 top-0 border-b border-slate-200"></div>
+                        <div class="absolute left-0 right-0 top-1/3 border-b border-slate-200"></div>
+                        <div class="absolute left-0 right-0 top-2/3 border-b border-slate-200"></div>
+
+                        <div class="absolute left-0 top-0 bottom-0 w-[30%] bg-green-500 opacity-20"></div>
+                        <div class="absolute left-[30%] top-0 bottom-0 w-[30%] bg-yellow-400 opacity-20"></div>
+                        <div class="absolute right-0 top-0 bottom-0 w-[40%] bg-orange-400 opacity-20"></div>
+
+                        <div id="puntoCesion"
+                            class="absolute w-5 h-5 bg-slate-800 rounded-full border-4 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 z-10"
+                            style="left: 50%; top: 50%;">
+                            <div
+                                class="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap shadow-xl">
+                                <span id="roiTooltip">ROI: 0%</span>
+                                <div
+                                    class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute left-16 right-0 bottom-0 h-8 flex justify-between items-start pt-2 text-sm font-medium text-slate-600">
+                        <span>0m</span>
+                        <span class="text-green-600">12m</span>
+                        <span class="text-yellow-600">24m</span>
+                        <span class="text-orange-600">40m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leyenda -->
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-4 h-4 bg-green-600 rounded"></div>
+                        <h4 class="font-bold text-green-800">Zona Verde</h4>
+                    </div>
+                    <p class="text-sm text-green-700">Cesión en etapa temprana con mínimo capital invertido.</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                        <h4 class="font-bold text-yellow-800">Zona Amarilla</h4>
+                    </div>
+                    <p class="text-sm text-yellow-700">Balance entre valorización o plusvalía y el capital invertido.
+                    </p>
+                </div>
+
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-4 h-4 bg-orange-600 rounded"></div>
+                        <h4 class="font-bold text-orange-800">Zona Naranja</h4>
+                    </div>
+                    <p class="text-sm text-orange-700">Mayor capital comprometido, requiere analizar la valorización y
+                        tu objetivo de inversión.</p>
+                </div>
+            </div>
+
+            <!-- Análisis personalizado -->
+            <div id="analisisPersonalizado"
+                class="rounded-xl p-6 border-2 bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-300">
+                <h4 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    ANÁLISIS DE TU CESIÓN DE DERECHOS
+                </h4>
+                <div class="space-y-2 text-gray-800" id="textoAnalisis">
+                    <p class="font-medium">Cargando análisis...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div class="bg-amber-50 border-l-4 border-amber-500 rounded-xl p-6 mb-8">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                <div>
+                    <h4 class="font-bold text-amber-900 mb-2">⚠ EXCLUSIÓN DE RESPONSABILIDAD:</h4>
+                    <p class="text-amber-800 text-sm leading-relaxed">
+                        Este análisis es una herramienta de apoyo financiero elaborada con fines informativos y
+                        educativos. No debe interpretarse en ningún caso como una recomendación de inversión. No
+                        reemplaza la revisión del contrato, ni la validación de las condiciones de cesión.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-slate-600 text-sm">
+            <p>© Simulador de Rentabilidad CRECE - Análisis de Inversión Inmobiliaria</p>
+            <p class="mt-1 text-slate-500">Estrategia: Cesión de Derechos en Proyectos Sobre Planos</p>
+        </div>
+    </div>
+
+    <script>
+        // ==================== FUNCIONES DE FORMATEO ====================
+
+        function formatNumberInput(value) {
+            const numbers = value.replace(/\D/g, '');
+            return numbers.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        function parseFormattedNumber(value) {
+            return parseFloat(value.replace(/\./g, '')) || 0;
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        function formatPercent(value) {
+            return (value * 100).toFixed(2) + '%';
+        }
+
+        // ==================== FUNCIÓN DE CÁLCULO TIR ====================
+
+        function calcularTIR(flujos, estimacionInicial = 0.01) {
+            const maxIteraciones = 1000;
+            const precision = 0.00000001;
+            let tir = estimacionInicial;
+
+            for (let i = 0; i < maxIteraciones; i++) {
+                let vpn = 0;
+                let derivadaVpn = 0;
+
+                for (let t = 0; t < flujos.length; t++) {
+                    const factor = Math.pow(1 + tir, t);
+                    vpn += flujos[t] / factor;
+                    derivadaVpn -= t * flujos[t] / (factor * (1 + tir));
+                }
+
+                if (Math.abs(vpn) < precision) {
+                    return tir;
+                }
+
+                if (Math.abs(derivadaVpn) < 0.0000001) {
+                    tir = estimacionInicial * (1 + Math.random() * 0.1);
+                    continue;
+                }
+
+                const tirAnterior = tir;
+                tir = tir - vpn / derivadaVpn;
+
+                if (Math.abs(tir - tirAnterior) > 0.5) {
+                    tir = tirAnterior + 0.01 * Math.sign(tir - tirAnterior);
+                }
+
+                if (tir < -0.99) {
+                    tir = -0.99;
+                } else if (tir > 10) {
+                    tir = 0.01;
+                }
+            }
+
+            return tir;
+        }
+
+        // ==================== FUNCIÓN PRINCIPAL DE CÁLCULO ====================
+
+        function calcular() {
+            const precioCompra = parseFormattedNumber(document.getElementById('precioCompra').value);
+            const porcentajeCuotaInicial = parseFloat(document.getElementById('porcentajeCuotaInicial').value) / 100;
+            const mesesCuotaInicial = parseFormattedNumber(document.getElementById('mesesCuotaInicial').value) || 1;
+            let dineroReserva = parseFormattedNumber(document.getElementById('dineroReserva').value);
+            const mesVenta = parseFormattedNumber(document.getElementById('mesVenta').value) || 1;
+            let precioVenta = parseFormattedNumber(document.getElementById('precioVenta').value);
+            const costosCesion = parseFormattedNumber(document.getElementById('costosCesion').value);
+
+            // Cálculo de valor de cuota inicial para validación
+            const valorCuotaInicialTemp = precioCompra * porcentajeCuotaInicial;
+
+            // Validación 1: Dinero de reserva no puede ser mayor que la cuota inicial
+            if (dineroReserva > valorCuotaInicialTemp) {
+                dineroReserva = valorCuotaInicialTemp;
+                document.getElementById('dineroReserva').value = formatNumberInput(Math.round(dineroReserva).toString());
+            }
+
+            // Validación 2: Precio de venta no puede ser menor que precio de compra
+            if (precioVenta < precioCompra) {
+                precioVenta = precioCompra;
+                document.getElementById('precioVenta').value = formatNumberInput(Math.round(precioVenta).toString());
+            }
+
+            // Validar mes de venta
+            const mesVentaLimitado = Math.min(mesVenta, mesesCuotaInicial);
+            if (mesVenta > mesesCuotaInicial) {
+                document.getElementById('validacionMes').textContent = `⚠️ El mes de venta no puede ser superior a ${mesesCuotaInicial} meses`;
+                document.getElementById('mesVenta').value = mesVentaLimitado;
+            } else {
+                document.getElementById('validacionMes').textContent = '';
+            }
+
+            // Cálculos principales (según Excel nuevo) - mantener decimales para precisión
+            const valorCuotaInicial = precioCompra * porcentajeCuotaInicial;
+            const saldoFinal = precioCompra * (1 - porcentajeCuotaInicial);
+            const pagoMensual = (valorCuotaInicial - dineroReserva) / mesesCuotaInicial;
+            const valorizacion = ((precioVenta - precioCompra) / precioCompra);
+
+            // Resultados (según Excel nuevo) - calcular con precisión y redondear al final
+            const capitalInvertido = dineroReserva + (mesVentaLimitado * pagoMensual);
+            const ganancia = precioVenta - precioCompra - costosCesion;
+            const capitalReinversion = capitalInvertido + ganancia;
+
+            // Generar flujo de caja para TIR
+            const flujosCaja = [];
+
+            // Mes 0: Reserva
+            flujosCaja.push(-dineroReserva);
+
+            // Meses 1 hasta el mes de venta
+            for (let mes = 1; mes <= mesVentaLimitado; mes++) {
+                if (mes < mesVentaLimitado) {
+                    flujosCaja.push(-pagoMensual);
+                } else {
+                    // En el mes de venta: última cuota + ingreso por capital de reinversión
+                    flujosCaja.push(-pagoMensual + capitalReinversion);
+                }
+            }
+
+            // Calcular TIR
+            const tirMensual = calcularTIR(flujosCaja);
+            const tirAnual = Math.pow(1 + tirMensual, 12) - 1;
+            const roi = ganancia / capitalInvertido;
+
+            // Actualizar campos calculados (sin símbolo $ porque ya está en HTML) - redondear al mostrar
+            document.getElementById('valorCuotaInicial').value = formatNumberInput(Math.round(valorCuotaInicial).toString());
+            document.getElementById('saldoFinal').value = formatNumberInput(Math.round(saldoFinal).toString());
+            document.getElementById('pagoMensual').value = formatNumberInput(Math.round(pagoMensual).toString());
+            document.getElementById('valorizacion').value = formatPercent(valorizacion);
+
+            // Formatear sin el símbolo $ para las celdas que ya tienen el símbolo en HTML - redondear al mostrar
+            document.getElementById('capitalInvertido').textContent = formatNumberInput(Math.round(capitalInvertido).toString());
+            document.getElementById('ganancia').textContent = formatNumberInput(Math.round(ganancia).toString());
+            document.getElementById('capitalReinversion').textContent = formatNumberInput(Math.round(capitalReinversion).toString());
+
+            document.getElementById('tirMensual').textContent = formatPercent(tirMensual || 0);
+            document.getElementById('tirAnual').textContent = formatPercent(tirAnual);
+            document.getElementById('roi').value = formatPercent(roi);
+
+            // Actualizar análisis con nuevas zonas (1-12, 12-24, 24-40+)
+            actualizarAnalisis(mesVentaLimitado, mesesCuotaInicial, roi, valorizacion, capitalInvertido);
+        }
+
+        // ==================== ACTUALIZAR ANÁLISIS CON NUEVAS ZONAS ====================
+
+        function actualizarAnalisis(mesVenta, mesesTotales, roi, valorizacion, capitalInvertido) {
+            // Ocultar mapa si ROI es negativo
+            const mapaRentabilidad = document.getElementById('mapaRentabilidad');
+            if (roi < 0) {
+                mapaRentabilidad.style.display = 'none';
+                return;
+            } else {
+                mapaRentabilidad.style.display = 'block';
+            }
+
+            // Nuevas zonas: Verde 1-12, Amarilla 12-24, Naranja 24-40+
+            const limiteVerde = 12;
+            const limiteAmarilla = 24;
+            const limiteNaranja = 40;
+
+            // Calcular posición en porcentaje (0-100)
+            let porcentajePosicion;
+            if (mesVenta <= limiteVerde) {
+                porcentajePosicion = (mesVenta / limiteNaranja) * 30; // 0-30%
+            } else if (mesVenta <= limiteAmarilla) {
+                porcentajePosicion = 30 + ((mesVenta - limiteVerde) / limiteNaranja) * 30; // 30-60%
+            } else {
+                porcentajePosicion = 60 + ((mesVenta - limiteAmarilla) / limiteNaranja) * 40; // 60-100%
+            }
+            porcentajePosicion = Math.min(porcentajePosicion, 100);
+
+            document.getElementById('indicadorPosicion').style.left = porcentajePosicion + '%';
+            document.getElementById('indicadorTiempoCesion').textContent = (roi * 100).toFixed(2) + '%';
+
+            // Actualizar punto en la gráfica
+            const roiMax = Math.max(roi * 1.5, 0.5);
+            const porcentajePosicionY = 100 - Math.max(0, Math.min(100, (roi / roiMax) * 100));
+            document.getElementById('puntoCesion').style.left = porcentajePosicion + '%';
+            document.getElementById('puntoCesion').style.top = porcentajePosicionY + '%';
+            document.getElementById('roiTooltip').textContent = 'ROI: ' + formatPercent(roi);
+
+            // Actualizar ejes Y de la gráfica
+            document.getElementById('ejeY3').textContent = formatPercent(roiMax);
+            document.getElementById('ejeY2').textContent = formatPercent(roiMax * 0.67);
+            document.getElementById('ejeY1').textContent = formatPercent(roiMax * 0.33);
+
+            let zona = '';
+            let colorClasses = '';
+            let tituloZona = '';
+            let mensaje = '';
+            let mensajeAdicional = '';
+
+            if (mesVenta <= limiteVerde) {
+                zona = 'Zona Verde';
+                colorClasses = 'bg-gradient-to-br from-green-50 to-green-100 border-green-200';
+                tituloZona = `Con una cesión proyectada en el mes ${mesVenta} de ${mesesTotales} meses totales, tu inversión se encuentra en Zona Verde`;
+                mensaje = `<strong>"Fase inicial del proyecto".</strong> Cesión temprana (${mesVenta} de ${mesesTotales} meses proyectados). Poco capital comprometido (${formatCurrency(capitalInvertido)}). ROI: ${formatPercent(roi)}. Valorización o Plusvalía del Proyecto: ${formatPercent(valorizacion)}.`;
+                mensajeAdicional = 'Verifica si el proyecto autoriza la cesión de derechos en esta etapa.';
+            } else if (mesVenta <= limiteAmarilla) {
+                zona = 'Zona Amarilla';
+                colorClasses = 'bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200';
+                tituloZona = `Con una cesión proyectada en el mes ${mesVenta} de ${mesesTotales} meses totales, tu inversión se encuentra en Zona Amarilla`;
+                mensaje = `<strong>"Fase intermedia".</strong> El mercado ya reconoce el valor del proyecto. Evalúa la rentabilidad y valida el objetivo de tu inversión. Capital invertido (${formatCurrency(capitalInvertido)}). ROI: ${formatPercent(roi)}. Valorización o Plusvalía del Proyecto: ${formatPercent(valorizacion)}.`;
+            } else {
+                zona = 'Zona Naranja';
+                colorClasses = 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200';
+                tituloZona = `Con una cesión proyectada en el mes ${mesVenta} de ${mesesTotales} meses totales, tu inversión se encuentra en Zona Naranja`;
+                mensaje = `<strong>"Fase avanzada del proyecto".</strong> La construcción se encuentra en una etapa de ejecución consolidada. Mayor capital comprometido. Es momento para analizar el cumplimiento de tus objetivos. Capital invertido (${formatCurrency(capitalInvertido)}). ROI: ${formatPercent(roi)}. Valorización o Plusvalía del Proyecto: ${formatPercent(valorizacion)}.`;
+            }
+
+            const analisisDiv = document.getElementById('analisisPersonalizado');
+            analisisDiv.className = 'rounded-xl p-6 border ' + colorClasses;
+
+            let htmlAnalisis = `<p class="font-medium mb-2">${tituloZona}</p>`;
+            htmlAnalisis += `<p class="mb-2">${mensaje}</p>`;
+            if (mensajeAdicional) {
+                htmlAnalisis += `<p class="text-sm italic">${mensajeAdicional}</p>`;
+            }
+
+            document.getElementById('textoAnalisis').innerHTML = htmlAnalisis;
+        }
+
+        // ==================== FUNCIÓN DESCARGAR PDF ====================
+
+        async function descargarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Configuración de colores
+            const colorPrimario = [15, 23, 42]; // #0f172a
+            const colorSecundario = [100, 116, 139]; // #64748b
+            const colorVerde = [134, 239, 172]; // #86efac
+            const colorRosa = [248, 187, 208]; // #f8bbd0
+            const colorFondoClaro = [248, 250, 252]; // #f8fafc
+
+            let yPosition = 20;
+            const margenIzq = 20;
+            const margenDer = 190;
+            const anchoUtil = margenDer - margenIzq;
+
+            try {
+                // Cargar y agregar el logo
+                const logoUrl = 'https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png';
+                const imgData = await cargarImagenBase64(logoUrl);
+
+                // Calcular dimensiones manteniendo proporción
+                const maxLogoWidth = 60;
+                const maxLogoHeight = 30;
+                const img = await cargarImagen(logoUrl);
+                const aspectRatio = img.width / img.height;
+
+                let logoWidth = maxLogoWidth;
+                let logoHeight = maxLogoWidth / aspectRatio;
+
+                if (logoHeight > maxLogoHeight) {
+                    logoHeight = maxLogoHeight;
+                    logoWidth = maxLogoHeight * aspectRatio;
+                }
+
+                const logoX = (210 - logoWidth) / 2;
+                doc.addImage(imgData, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+                yPosition += logoHeight + 10;
+            } catch (error) {
+                console.log('No se pudo cargar el logo, continuando sin él');
+                yPosition += 5;
+            }
+
+            // Título principal
+            doc.setFillColor(...colorPrimario);
+            doc.rect(margenIzq, yPosition, anchoUtil, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SIMULADOR DE RENTABILIDAD CRECE', 105, yPosition + 8, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text('PROYECTO INMOBILIARIO EN PLANOS', 105, yPosition + 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text('Estrategia de Inversión: Venta de Cesión de Derechos', 105, yPosition + 21, { align: 'center' });
+            yPosition += 27;
+
+            // Nombre del Proyecto (si se ingresó)
+            const nombreProyecto = document.getElementById('nombreProyecto').value.trim();
+            if (nombreProyecto) {
+                doc.setFillColor(241, 245, 249);
+                doc.roundedRect(margenIzq, yPosition, anchoUtil, 8, 2, 2, 'F');
+                doc.setTextColor(51, 65, 85);
+                doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(nombreProyecto, 105, yPosition + 5.5, { align: 'center' });
+                yPosition += 12;
+            } else {
+                yPosition += 8;
+            }
+
+            // Obtener valores actuales
+            const precioCompra = parseFormattedNumber(document.getElementById('precioCompra').value);
+            const porcentajeCuotaInicial = parseFloat(document.getElementById('porcentajeCuotaInicial').value);
+            const mesesCuotaInicial = parseFormattedNumber(document.getElementById('mesesCuotaInicial').value);
+            const valorCuotaInicial = document.getElementById('valorCuotaInicial').value;
+            const pagoMensual = document.getElementById('pagoMensual').value;
+            const saldoFinal = document.getElementById('saldoFinal').value;
+            const dineroReserva = parseFormattedNumber(document.getElementById('dineroReserva').value);
+            const mesVenta = parseFormattedNumber(document.getElementById('mesVenta').value);
+            const precioVenta = parseFormattedNumber(document.getElementById('precioVenta').value);
+            const valorizacion = document.getElementById('valorizacion').value;
+            const costosCesion = parseFormattedNumber(document.getElementById('costosCesion').value);
+            const capitalInvertidoStr = document.getElementById('capitalInvertido').textContent;
+            const gananciaStr = document.getElementById('ganancia').textContent;
+            const capitalReinversionStr = document.getElementById('capitalReinversion').textContent;
+            const roiStr = document.getElementById('roi').value;
+            const tirMensualStr = document.getElementById('tirMensual').textContent;
+            const tirAnualStr = document.getElementById('tirAnual').textContent;
+
+            const capitalInvertidoNum = parseFormattedNumber(capitalInvertidoStr);
+            const gananciaNum = parseFormattedNumber(gananciaStr);
+            const capitalReinversionNum = parseFormattedNumber(capitalReinversionStr);
+
+            // Sección 1: DATOS DEL PROYECTO
+            doc.setFillColor(...colorFondoClaro);
+            doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DATOS DEL PROYECTO', margenIzq + 3, yPosition + 6);
+            yPosition += 12;
+
+            const datosProyecto = [
+                ['Precio de Compra del Inmueble', '$' + formatNumberInput(precioCompra.toString())],
+                ['Porcentaje de la Cuota Inicial', porcentajeCuotaInicial + '%'],
+                ['Meses Otorgados para Pagar la Cuota Inicial', mesesCuotaInicial],
+                ['Valor de la Cuota Inicial', '$' + valorCuotaInicial],
+                ['Pago Mensual de la Cuota Inicial', '$' + pagoMensual],
+                ['Saldo Final al Momento de la Entrega', '$' + saldoFinal],
+                ['Dinero para Reservar el Inmueble', '$' + formatNumberInput(dineroReserva.toString())]
+            ];
+
+            doc.autoTable({
+                startY: yPosition,
+                head: [],
+                body: datosProyecto,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 20 },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: colorSecundario },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                didParseCell: function (data) {
+                    if (data.row.index >= 3 && data.column.index === 1) {
+                        data.cell.styles.fillColor = [232, 245, 233]; // Verde claro para calculados
+                    }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // Sección 2: CESIÓN DE DERECHOS
+            doc.setFillColor(252, 228, 236); // Rosa claro
+            doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('CESION DE DERECHOS', margenIzq + 3, yPosition + 6);
+            yPosition += 12;
+
+            const datosCesion = [
+                ['Mes Estimado de Venta', mesVenta + ' meses'],
+                ['Costos Asociados a la Cesión (Penalidad - Comisión)', '$' + formatNumberInput(costosCesion.toString())],
+                ['Precio de Venta Esperado del Inmueble', '$' + formatNumberInput(precioVenta.toString())],
+                ['Valorización Frente al Precio de Compra', valorizacion]
+            ];
+
+            doc.autoTable({
+                startY: yPosition,
+                head: [],
+                body: datosCesion,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 20 },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: colorSecundario },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                didParseCell: function (data) {
+                    if (data.row.index === 3 && data.column.index === 1) {
+                        data.cell.styles.fillColor = [252, 228, 236]; // Rosa claro para valorización
+                    }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // Sección 3: RESULTADO DE LA INVERSIÓN
+            const yStartResultados = yPosition;
+            const tableHeight = 44; // Altura estimada para 6 filas
+
+            // 1. Fondo de la sección
+            doc.setFillColor(220, 252, 231); // #dcfce7
+            doc.setDrawColor(134, 239, 172); // #86efac
+            doc.setLineWidth(0.4);
+            doc.roundedRect(margenIzq, yStartResultados, anchoUtil, 10 + tableHeight, 2, 2, 'FD');
+
+            // 2. Cabecera de la sección
+            doc.setFillColor(74, 222, 128); // #4ade80
+            doc.rect(margenIzq, yStartResultados, anchoUtil, 10, 'F');
+            doc.setTextColor(6, 78, 59); // #064e3b
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RESULTADO DE LA INVERSIÓN', margenIzq + 5, yStartResultados + 7);
+
+            const datosResultado = [
+                ['CAPITAL TOTAL INVERTIDO', '$' + capitalInvertidoStr],
+                ['GANANCIA', '$' + gananciaStr],
+                ['CAPITAL DE REINVERSIÓN', '$' + capitalReinversionStr],
+                ['Rentabilidad sobre el Capital Invertido (ROI)', roiStr],
+                ['Tasa Interna de Retorno Mensual (TIR)', tirMensualStr],
+                ['Tasa Interna de Retorno Anual (TIR)', tirAnualStr]
+            ];
+
+            doc.autoTable({
+                startY: yStartResultados + 10,
+                head: [],
+                body: datosResultado,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 210 - margenDer },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [134, 239, 172], // #86efac
+                    lineWidth: 0.1,
+                    fillColor: [220, 252, 231] // #dcfce7
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: [6, 95, 70] },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: [6, 78, 59] }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 15;
+
+            // Sección 4: MAPA DE RENTABILIDAD
+            if (yPosition > 200) {
+                doc.addPage();
+                yPosition = 20;
+            }
+
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('MAPA DE RENTABILIDAD', margenIzq + 3, yPosition + 6);
+            yPosition += 12;
+
+            // Subtítulo
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(...colorSecundario);
+            doc.text('Zonas de Calor - Análisis de Rentabilidad según Tiempo de Cesión', margenIzq + 3, yPosition + 2);
+            yPosition += 8;
+
+            // Gráfica de zonas
+            const zonaWidth = anchoUtil;
+            const zonaHeight = 20;
+            const zonaVerdeWidth = zonaWidth * 0.30;
+            const zonaAmarillaWidth = zonaWidth * 0.30;
+            const zonaNaranjaWidth = zonaWidth * 0.40;
+
+            // Zona Verde
+            doc.setFillColor(34, 197, 94); // Verde
+            doc.rect(margenIzq, yPosition, zonaVerdeWidth, zonaHeight, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Zona Verde', margenIzq + zonaVerdeWidth / 2, yPosition + zonaHeight / 2 + 2, { align: 'center' });
+
+            // Zona Amarilla
+            doc.setFillColor(234, 179, 8); // Amarillo
+            doc.rect(margenIzq + zonaVerdeWidth, yPosition, zonaAmarillaWidth, zonaHeight, 'F');
+            doc.text('Zona Amarilla', margenIzq + zonaVerdeWidth + zonaAmarillaWidth / 2, yPosition + zonaHeight / 2 + 2, { align: 'center' });
+
+            // Zona Naranja
+            doc.setFillColor(249, 115, 22); // Naranja
+            doc.rect(margenIzq + zonaVerdeWidth + zonaAmarillaWidth, yPosition, zonaNaranjaWidth, zonaHeight, 'F');
+            doc.text('Zona Naranja', margenIzq + zonaVerdeWidth + zonaAmarillaWidth + zonaNaranjaWidth / 2, yPosition + zonaHeight / 2 + 2, { align: 'center' });
+
+            // Calcular posición del indicador (basado en el mes de venta)
+            const limiteVerde = 12;
+            const limiteAmarilla = 24;
+            const limiteNaranja = 40;
+
+            let porcentajePosicion;
+            if (mesVenta <= limiteVerde) {
+                porcentajePosicion = (mesVenta / limiteNaranja) * 30;
+            } else if (mesVenta <= limiteAmarilla) {
+                porcentajePosicion = 30 + ((mesVenta - limiteVerde) / limiteNaranja) * 30;
+            } else {
+                porcentajePosicion = 60 + ((mesVenta - limiteAmarilla) / limiteNaranja) * 40;
+            }
+            porcentajePosicion = Math.min(porcentajePosicion, 100);
+
+            const indicadorX = margenIzq + (zonaWidth * porcentajePosicion / 100);
+
+            // Dibujar indicador
+            doc.setDrawColor(...colorPrimario);
+            doc.setLineWidth(1.5);
+            doc.line(indicadorX, yPosition, indicadorX, yPosition + zonaHeight);
+
+            // Etiqueta del indicador
+            doc.setFillColor(...colorPrimario);
+            doc.roundedRect(indicadorX - 12, yPosition - 6, 24, 5, 1, 1, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Tu cesión', indicadorX, yPosition - 2.5, { align: 'center' });
+
+            doc.roundedRect(indicadorX - 12, yPosition + zonaHeight + 1, 24, 5, 1, 1, 'F');
+            doc.text(mesVenta + ' meses', indicadorX, yPosition + zonaHeight + 4.5, { align: 'center' });
+
+            yPosition += zonaHeight + 15;
+
+            // Gráfica de ROI vs Tiempo
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margenIzq, yPosition, anchoUtil, 60, 'F');
+            doc.setDrawColor(226, 232, 240);
+            doc.rect(margenIzq, yPosition, anchoUtil, 60, 'S');
+
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(' ROI vs Tiempo de Cesión', margenIzq + anchoUtil / 2, yPosition + 7, { align: 'center' });
+
+            const gX = margenIzq + 20;
+            const gY = yPosition + 15;
+            const gW = anchoUtil - 30;
+            const gH = 35;
+
+            // Ejes
+            doc.setDrawColor(100, 116, 139);
+            doc.setLineWidth(0.3);
+            doc.line(gX, gY, gX, gY + gH); // Y
+            doc.line(gX, gY + gH, gX + gW, gY + gH); // X
+
+            // Zonas de fondo en la gráfica
+            doc.setFillColor(220, 252, 231); // Verde muy claro
+            doc.rect(gX, gY, gW * 0.3, gH, 'F');
+            doc.setFillColor(254, 252, 232); // Amarillo muy claro
+            doc.rect(gX + gW * 0.3, gY, gW * 0.3, gH, 'F');
+            doc.setFillColor(255, 247, 237); // Naranja muy claro
+            doc.rect(gX + gW * 0.6, gY, gW * 0.4, gH, 'F');
+
+            // Etiquetas Eje Y
+            doc.setFontSize(7);
+            doc.setTextColor(...colorSecundario);
+            const roiMax = document.getElementById('ejeY3').textContent;
+            doc.text(roiMax, gX - 2, gY + 2, { align: 'right' });
+            doc.text('0%', gX - 2, gY + gH, { align: 'right' });
+
+            // Etiquetas Eje X
+            doc.text('0m', gX, gY + gH + 4);
+            doc.text('12m', gX + gW * 0.3, gY + gH + 4);
+            doc.text('24m', gX + gW * 0.6, gY + gH + 4);
+            doc.text('40m', gX + gW, gY + gH + 4);
+
+            // Punto de la cesión actual
+            const pX = gX + (gW * porcentajePosicion / 100);
+            const roiNum = parseFloat(roiStr);
+            const roiMaxNum = parseFloat(roiMax);
+            const pY = gY + gH - (Math.min(1, roiNum / roiMaxNum) * gH);
+
+            doc.setFillColor(...colorPrimario);
+            doc.circle(pX, pY, 1.5, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.text('Tu ROI: ' + roiStr, pX, pY - 3, { align: 'center' });
+
+            yPosition += 70;
+
+            // Leyenda de zonas
+            const leyendaY = yPosition;
+            const leyendaBoxWidth = (anchoUtil - 10) / 3;
+
+            // Zona Verde - Leyenda
+            doc.setFillColor(240, 253, 244);
+            doc.setDrawColor(187, 247, 208);
+            doc.setLineWidth(0.3);
+            doc.roundedRect(margenIzq, leyendaY, leyendaBoxWidth, 20, 2, 2, 'FD');
+            doc.setFillColor(34, 197, 94);
+            doc.circle(margenIzq + 3, leyendaY + 4, 1.5, 'F');
+            doc.setTextColor(21, 128, 61);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Zona Verde', margenIzq + 7, leyendaY + 5);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            const textoVerde = doc.splitTextToSize('Cesión en etapa temprana con mínimo capital invertido.', leyendaBoxWidth - 8);
+            doc.text(textoVerde, margenIzq + 3, leyendaY + 9);
+
+            // Zona Amarilla - Leyenda
+            doc.setFillColor(254, 252, 232);
+            doc.setDrawColor(253, 224, 71);
+            doc.roundedRect(margenIzq + leyendaBoxWidth + 5, leyendaY, leyendaBoxWidth, 20, 2, 2, 'FD');
+            doc.setFillColor(234, 179, 8);
+            doc.circle(margenIzq + leyendaBoxWidth + 8, leyendaY + 4, 1.5, 'F');
+            doc.setTextColor(133, 77, 14);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Zona Amarilla', margenIzq + leyendaBoxWidth + 12, leyendaY + 5);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            const textoAmarillo = doc.splitTextToSize('Balance entre valorización o plusvalía y el capital invertido.', leyendaBoxWidth - 8);
+            doc.text(textoAmarillo, margenIzq + leyendaBoxWidth + 8, leyendaY + 9);
+
+            // Zona Naranja - Leyenda
+            doc.setFillColor(255, 247, 237);
+            doc.setDrawColor(251, 146, 60);
+            doc.roundedRect(margenIzq + (leyendaBoxWidth * 2) + 10, leyendaY, leyendaBoxWidth, 20, 2, 2, 'FD');
+            doc.setFillColor(249, 115, 22);
+            doc.circle(margenIzq + (leyendaBoxWidth * 2) + 13, leyendaY + 4, 1.5, 'F');
+            doc.setTextColor(154, 52, 18);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Zona Naranja', margenIzq + (leyendaBoxWidth * 2) + 17, leyendaY + 5);
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            const textoNaranja = doc.splitTextToSize('Mayor capital comprometido, requiere analizar la valorización y tu objetivo de inversión.', leyendaBoxWidth - 8);
+            doc.text(textoNaranja, margenIzq + (leyendaBoxWidth * 2) + 13, leyendaY + 9);
+
+            yPosition += 30;
+
+            // Análisis personalizado
+            const roiCalc = gananciaNum / capitalInvertidoNum;
+            let zonaTexto = '';
+            let colorFondo = [];
+            let colorBorde = [];
+            let colorTexto = [];
+            let mensaje = '';
+
+            if (mesVenta <= limiteVerde) {
+                zonaTexto = 'Zona Verde';
+                colorFondo = [240, 253, 244];
+                colorBorde = [34, 197, 94];
+                colorTexto = [21, 128, 61];
+                mensaje = `Con una cesión proyectada en el mes ${mesVenta} de ${mesesCuotaInicial} meses totales, tu inversión se encuentra en Zona Verde. "Fase inicial del proyecto". Cesión temprana (${mesVenta} de ${mesesCuotaInicial} meses proyectados). Poco capital comprometido ($${formatNumberInput(Math.round(capitalInvertidoNum).toString())}). ROI: ${roiStr}. Valorización o Plusvalía del Proyecto: ${valorizacion}. Verifica si el proyecto autoriza la cesión de derechos en esta etapa.`;
+            } else if (mesVenta <= limiteAmarilla) {
+                zonaTexto = 'Zona Amarilla';
+                colorFondo = [254, 252, 232];
+                colorBorde = [234, 179, 8];
+                colorTexto = [133, 77, 14];
+                mensaje = `Con una cesión proyectada en el mes ${mesVenta} de ${mesesCuotaInicial} meses totales, tu inversión se encuentra en Zona Amarilla. "Fase intermedia". El mercado ya reconoce el valor del proyecto. Evalúa la rentabilidad y valida el objetivo de tu inversión. Capital invertido ($${formatNumberInput(Math.round(capitalInvertidoNum).toString())}). ROI: ${roiStr}. Valorización o Plusvalía del Proyecto: ${valorizacion}.`;
+            } else {
+                zonaTexto = 'Zona Naranja';
+                colorFondo = [255, 247, 237];
+                colorBorde = [249, 115, 22];
+                colorTexto = [154, 52, 18];
+                mensaje = `Con una cesión proyectada en el mes ${mesVenta} de ${mesesCuotaInicial} meses totales, tu inversión se encuentra en Zona Naranja. "Fase avanzada del proyecto". La construcción se encuentra en una etapa de ejecución consolidada. Mayor capital comprometido. Es momento para analizar el cumplimiento de tus objetivos. Capital invertido ($${formatNumberInput(Math.round(capitalInvertidoNum).toString())}). ROI: ${roiStr}. Valorización o Plusvalía del Proyecto: ${valorizacion}.`;
+            }
+
+            doc.setFillColor(...colorFondo);
+            doc.setDrawColor(...colorBorde);
+            doc.setLineWidth(0.5);
+            doc.roundedRect(margenIzq, yPosition, anchoUtil, 30, 2, 2, 'FD');
+
+            doc.setTextColor(...colorTexto);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ANÁLISIS DE TU CESIÓN DE DERECHOS', margenIzq + 3, yPosition + 5);
+
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            const mensajeLines = doc.splitTextToSize(mensaje, anchoUtil - 6);
+            doc.text(mensajeLines, margenIzq + 3, yPosition + 10);
+
+            yPosition += 40;
+
+            // Disclaimer
+            if (yPosition > 240) {
+                doc.addPage();
+                yPosition = 20;
+            }
+
+            doc.setFillColor(255, 251, 235); // Amarillo claro
+            doc.rect(margenIzq, yPosition, anchoUtil, 30, 'F');
+            doc.setDrawColor(245, 158, 11); // Borde amarillo
+            doc.setLineWidth(0.5);
+            doc.rect(margenIzq, yPosition, anchoUtil, 30, 'S');
+
+            doc.setTextColor(120, 53, 15); // Texto ámbar oscuro
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('EXCLUSION DE RESPONSABILIDAD:', margenIzq + 3, yPosition + 6);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            const disclaimerText = 'Este análisis es una herramienta de apoyo financiero elaborada con fines informativos y educativos. No debe interpretarse en ningún caso como una recomendación de inversión. No reemplaza la revisión del contrato, ni la validación de las condiciones de cesión.';
+            const disclaimerLines = doc.splitTextToSize(disclaimerText, anchoUtil - 6);
+            doc.text(disclaimerLines, margenIzq + 3, yPosition + 12);
+
+            // Pie de página
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(...colorSecundario);
+                doc.setFont('helvetica', 'normal');
+                const footerText = 'Simulador de Rentabilidad CRECE - Estrategia: Cesión de Derechos en Proyectos Sobre Planos';
+                doc.text(footerText, 105, 285, { align: 'center' });
+                doc.text('Página ' + i + ' de ' + pageCount, 105, 290, { align: 'center' });
+            }
+
+            // Descargar el PDF
+            const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
+            doc.save(`Simulador_Rentabilidad_CRECE_${fecha}.pdf`);
+        }
+
+        // Función auxiliar para cargar imagen
+        function cargarImagen(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function () {
+                    resolve(img);
+                };
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        // Función auxiliar para cargar imagen como base64
+        function cargarImagenBase64(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    try {
+                        const dataURL = canvas.toDataURL('image/png');
+                        resolve(dataURL);
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        // ==================== EVENT LISTENERS ====================
+
+        const inputs = document.querySelectorAll('input[type="text"], input[type="number"]');
+        inputs.forEach(input => {
+            const moneyFields = ['precioCompra', 'dineroReserva', 'precioVenta', 'costosCesion'];
+
+            if (moneyFields.includes(input.id)) {
+                input.addEventListener('input', function (e) {
+                    const cursorPosition = this.selectionStart;
+                    const oldLength = this.value.length;
+                    const formatted = formatNumberInput(this.value);
+                    this.value = formatted;
+                    const newLength = formatted.length;
+                    const newCursorPosition = cursorPosition + (newLength - oldLength);
+                    this.setSelectionRange(newCursorPosition, newCursorPosition);
+                    calcular();
+                });
+            } else {
+                input.addEventListener('input', calcular);
+            }
+        });
+
+        // Calcular al cargar la página
+        window.addEventListener('load', calcular);
+    </script>
+</body>
+
+</html>

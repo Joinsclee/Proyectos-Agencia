@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programa Alas Doradas | Crea, Lanza y Escala</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
+
+    <!-- GSAP for Premium Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    screens: {
+                        'xs': '375px',
+                    },
+                    colors: {
+                        gold: {
+                            100: '#FBF5E6',
+                            200: '#F3E2B8',
+                            300: '#EAD185',
+                            400: '#DFC05A',
+                            500: '#D4AF37', // Classic Gold
+                            600: '#AA8C2C',
+                            700: '#806921',
+                            800: '#554616',
+                            900: '#2B230B',
+                        },
+                        dark: {
+                            950: '#050505', // Deepest Black
+                            900: '#0A0A0A',
+                            800: '#121212',
+                            700: '#1E1E1E',
+                            card: '#141414'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                        'gold-shine': 'linear-gradient(45deg, transparent 25%, rgba(212, 175, 55, 0.3) 50%, transparent 75%)',
+                    },
+                    animation: {
+                        'swipe-hint': 'swipe 2s infinite',
+                    },
+                    keyframes: {
+                        swipe: {
+                            '0%, 100%': { transform: 'translateX(0)', opacity: '0.5' },
+                            '50%': { transform: 'translateX(-10px)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #E2E8F0;
+        }
+
+        /* Reveal Animation Classes */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.5, 0, 0, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Delays for staggered animations */
+        .delay-100 {
+            transition-delay: 0.1s;
+        }
+
+        .delay-200 {
+            transition-delay: 0.2s;
+        }
+
+        .delay-300 {
+            transition-delay: 0.3s;
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(to right, #F3E2B8, #D4AF37, #F3E2B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            background-size: 200% auto;
+            animation: shine 5s linear infinite;
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        .glass-card {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .gold-border-glow {
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        /* Timeline & Ray of Light */
+        .phase-line {
+            position: relative;
+        }
+
+        .phase-line::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #1a1a1a;
+            transform: translateX(-50%);
+            z-index: 0;
+        }
+
+        /* The moving golden ray */
+        .ray-of-light {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #D4AF37 50%, transparent);
+            box-shadow: 0 0 15px #D4AF37;
+            transform: translateX(-50%);
+            z-index: 1;
+            height: 0%;
+            transition: height 0.1s linear;
+        }
+
+        /* Timeline Dots */
+        .timeline-dot {
+            transition: all 0.5s ease;
+        }
+
+        .timeline-dot.lit {
+            background-color: #D4AF37;
+            box-shadow: 0 0 20px #D4AF37, 0 0 40px rgba(212, 175, 55, 0.5);
+            border-color: #FBF5E6;
+        }
+
+        /* Mobile specific adjustments for Timeline */
+        @media (max-width: 768px) {
+
+            .phase-line::before,
+            .ray-of-light {
+                left: 20px;
+                /* Alineado a la izquierda en móvil */
+                transform: translateX(0);
+            }
+
+            .timeline-dot {
+                left: 20px !important;
+                /* Forzar alineación izquierda */
+                transform: translateX(-50%) !important;
+                /* Centrar el punto sobre la línea */
+            }
+        }
+
+        /* IA Box Glow */
+        .ia-box-glow.active {
+            box-shadow: 0 0 60px rgba(212, 175, 55, 0.15);
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+
+        /* Sticky Column for Mobile Table */
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            background-color: #0A0A0A;
+            /* Match row bg */
+            z-index: 10;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Ensure sticky col has background on hover rows too */
+        tr:hover .sticky-col {
+            background-color: #141414;
+            /* Match hover bg */
+        }
+
+        /* Hero Animation Wrapper specific styles */
+        #hero-content,
+        #benefits-teaser {
+            will-change: transform, opacity, filter;
+        }
+
+        #hero-title {
+            letter-spacing: -0.04em;
+            word-spacing: -0.05em;
+            line-height: 0.95;
+        }
+
+        @media (max-width: 768px) {
+            #hero-title {
+                font-size: clamp(2.5rem, 12vw, 4rem);
+            }
+        }
+
+        #hero-aura {
+            filter: blur(120px);
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+        }
+
+        /* GoHighLevel Compatibility: Force Full Width */
+        .force-full-width {
+            width: 100vw !important;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw !important;
+            margin-right: -50vw !important;
+            max-width: none !important;
+        }
+
+        /* Smooth scroll optimization */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Glassmorphism for benefits cards */
+        .glass-card {
+            background: rgba(20, 20, 20, 0.4);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .glass-card:hover {
+            background: rgba(30, 30, 30, 0.6);
+            border-color: rgba(212, 175, 55, 0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D4AF37;
+        }
+
+        /* Modal Styles - Premium Edition */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(5, 5, 5, 0.7);
+            backdrop-filter: blur(16px) saturate(120%);
+            -webkit-backdrop-filter: blur(16px) saturate(120%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #000000 0%, #0a0a0a 100%);
+            margin: auto;
+            padding: 0;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 720px;
+            max-height: 90vh;
+            animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow:
+                0 0 0 1px rgba(212, 175, 55, 0.15),
+                0 8px 32px rgba(0, 0, 0, 0.6),
+                0 16px 48px rgba(212, 175, 55, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(135deg,
+                rgba(212, 175, 55, 0.6) 0%,
+                rgba(243, 226, 184, 0.3) 25%,
+                rgba(212, 175, 55, 0.4) 50%,
+                rgba(170, 140, 44, 0.5) 75%,
+                rgba(212, 175, 55, 0.6) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% {
+                opacity: 0.6;
+                filter: brightness(1);
+            }
+            50% {
+                opacity: 1;
+                filter: brightness(1.3);
+            }
+        }
+
+        @keyframes modalSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-40px) scale(0.95);
+                filter: blur(8px);
+            }
+            60% {
+                transform: translateY(5px) scale(1.01);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #D4AF37 0%, #C5A028 50%, #D4AF37 100%);
+            background-size: 200% 100%;
+            padding: 24px 28px;
+            border-radius: 22px 22px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 4px 12px rgba(212, 175, 55, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            50%, 100% {
+                left: 100%;
+            }
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #050505;
+            font-size: 1.5rem;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.3);
+            letter-spacing: -0.02em;
+        }
+
+        .close-modal {
+            color: #050505;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+            line-height: 1;
+        }
+
+        .close-modal:hover,
+        .close-modal:focus {
+            background-color: rgba(0, 0, 0, 0.25);
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-body {
+            padding: 0;
+            overflow-y: auto;
+            max-height: calc(90vh - 96px);
+            position: relative;
+            background: #000000;
+            border-radius: 0 0 22px 22px;
+        }
+
+        .modal-body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(212, 175, 55, 0.3) 50%,
+                transparent);
+        }
+
+        .modal-body iframe {
+            width: 100%;
+            min-height: 896px;
+            border: none;
+            display: block;
+            border-radius: 0 0 22px 22px;
+        }
+
+        /* Scrollbar dorado premium para el modal */
+        .modal-body::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .modal-body::-webkit-scrollbar-track {
+            background: linear-gradient(180deg, #0a0a0a 0%, #141414 100%);
+            border-radius: 5px;
+            margin: 8px 0;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .modal-body::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #F3E2B8 0%, #D4AF37 50%, #AA8C2C 100%);
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            box-shadow:
+                0 0 10px rgba(212, 175, 55, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-body::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #FBF5E6 0%, #F3E2B8 50%, #D4AF37 100%);
+            box-shadow:
+                0 0 15px rgba(212, 175, 55, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        /* Efecto de resplandor sutil en el modal */
+        @keyframes pulseGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.06));
+            }
+            50% {
+                filter: drop-shadow(0 0 18px rgba(212, 175, 55, 0.1));
+            }
+        }
+
+        .modal-content {
+            animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), pulseGlow 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+
+<body class="antialiased overflow-x-hidden">
+
+    <!-- Top Bar -->
+    <div
+        class="bg-gold-600 text-dark-950 text-center py-2 text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold z-50 sticky top-0 h-[32px] flex items-center justify-center w-full">
+        Programa Exclusivo - Plazas Limitadas
+    </div>
+
+    <!-- Nuevo Contenedor de Animación Principal (Diseño Minimalista) -->
+    <main id="hero-animation-wrapper" class="relative bg-dark-950 h-[130vh] force-full-width">
+
+        <!-- El Escenario Fijo -->
+        <div class="sticky top-[32px] h-[calc(100vh-32px)] w-full flex items-center justify-center overflow-hidden">
+
+            <!-- Capa de Fondo (Aura/Glow) -->
+            <div class="absolute inset-0 z-0 pointer-events-none">
+                <div id="hero-aura"
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-gold-500/10 rounded-full blur-[80px] md:blur-[120px] opacity-0">
+                </div>
+            </div>
+
+            <!-- Capa Superior (Contenido Minimalista) -->
+            <div class="relative z-20 w-full h-full overflow-hidden">
+
+                <!-- Hero Content -->
+                <section id="hero-content"
+                    class="h-full w-full flex flex-col items-center justify-center text-center px-6 absolute top-0 left-0">
+                    <div class="max-w-5xl w-full">
+                        <div class="reveal-immediate opacity-0 mb-8 md:mb-12" id="hero-tagline">
+                            <span
+                                class="inline-block py-1 px-4 border border-gold-500/20 bg-gold-500/5 rounded-full text-gold-500/60 text-[10px] md:text-xs font-bold tracking-[0.4em] uppercase backdrop-blur-sm">
+                                Programa Alas Doradas
+                            </span>
+                        </div>
+
+                        <h1 id="hero-title"
+                            class="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-9xl font-medium text-white mb-8 md:mb-10 leading-[0.9] tracking-tighter opacity-0">
+                            Crea, Lanza y Escala Tu <br class="hidden sm:block">
+                            <span class="italic gold-gradient-text">Empresa Educativa</span>
+                        </h1>
+
+                        <div id="hero-cta" class="opacity-0">
+                            <p
+                                class="text-sm md:text-xl text-slate-500 max-w-xl mx-auto mb-10 md:mb-16 font-light leading-relaxed tracking-wide px-4">
+                                Transforma tu conocimiento en un negocio escalable. Sin promesas vacías.
+                                <br class="hidden md:block"> Con sistemas, estructura y alma.
+                            </p>
+
+                            <button onclick="openModal()"
+                                class="group relative inline-flex items-center justify-center px-10 py-4 md:px-12 md:py-5 text-[10px] md:text-xs font-bold text-dark-950 transition-all duration-500 bg-gold-500 rounded-full hover:bg-white hover:scale-105 tracking-[0.2em] uppercase cursor-pointer">
+                                <span class="relative z-10">Postular al Programa</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Beneficios Transicionales -->
+                <section id="benefits-teaser"
+                    class="h-full w-full flex items-center justify-center text-center px-6 absolute top-full left-0">
+                    <div class="max-w-6xl w-full">
+                        <h2
+                            class="text-gold-500/60 text-[10px] tracking-[0.4em] uppercase font-bold mb-12 md:mb-20 text-center">
+                            Beneficios Transformadores</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-24 text-center">
+                            <div class="space-y-3 md:space-y-4">
+                                <h3 class="text-white font-serif text-xl md:text-3xl italic">Claridad absoluta</h3>
+                                <div class="w-8 h-[1px] bg-gold-500/30 mx-auto"></div>
+                                <p
+                                    class="text-[11px] md:text-sm text-slate-500 font-light leading-relaxed max-w-[280px] mx-auto">
+                                    Descubres exactamente qué vendes, a quién y por qué. Adiós al síndrome del impostor.
+                                </p>
+                            </div>
+                            <div class="space-y-3 md:space-y-4">
+                                <h3 class="text-white font-serif text-xl md:text-3xl italic">Audiencia desde cero</h3>
+                                <div class="w-8 h-[1px] bg-gold-500/30 mx-auto"></div>
+                                <p
+                                    class="text-[11px] md:text-sm text-slate-500 font-light leading-relaxed max-w-[280px] mx-auto">
+                                    Una comunidad de 1,000 personas en Skool listas para comprar. Tu casa digital con
+                                    vida propia.</p>
+                            </div>
+                            <div class="space-y-3 md:space-y-4">
+                                <h3 class="text-white font-serif text-xl md:text-3xl italic">Facturación validada</h3>
+                                <div class="w-8 h-[1px] bg-gold-500/30 mx-auto"></div>
+                                <p
+                                    class="text-[11px] md:text-sm text-slate-500 font-light leading-relaxed max-w-[280px] mx-auto">
+                                    Lanzas con un sistema de 4 fases probado. Ventas, testimonios y dinero tangible.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- Sección de Beneficios Detallados -->
+    <section class="py-20 md:py-24 bg-dark-950 relative border-t border-white/5 force-full-width">
+        <div class="container mx-auto px-4 md:px-6 max-w-7xl">
+            <div class="text-center mb-20">
+                <h2 class="font-serif text-4xl md:text-6xl text-white mb-6">El Privilegio de la <span
+                        class="gold-gradient-text italic">Excelencia</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto">Cada pilar de Alas Doradas ha sido diseñado para maximizar
+                    tu impacto y rentabilidad.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <!-- Card 1 -->
+                <div
+                    class="group glass-card p-6 md:p-8 rounded-2xl hover:border-gold-500/50 transition-all duration-500 hover:-translate-y-2 reveal delay-100">
+                    <div
+                        class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-dark-800 border border-gold-500/20 flex items-center justify-center text-gold-500 text-lg md:text-xl mb-4 md:mb-6 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3 class="font-serif text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Claridad absoluta</h3>
+                    <p class="text-xs md:text-sm text-slate-400 leading-relaxed">Descubres exactamente qué vendes, a
+                        quién y por qué. Adiós al síndrome del impostor. Define tu diferenciador único.</p>
+                </div>
+                <!-- Card 2 -->
+                <div
+                    class="group glass-card p-6 md:p-8 rounded-2xl hover:border-gold-500/50 transition-all duration-500 hover:-translate-y-2 reveal delay-200">
+                    <div
+                        class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-dark-800 border border-gold-500/20 flex items-center justify-center text-gold-500 text-lg md:text-xl mb-4 md:mb-6 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="font-serif text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Audiencia desde cero
+                    </h3>
+                    <p class="text-xs md:text-sm text-slate-400 leading-relaxed">Una comunidad de 1,000 personas en
+                        Skool listas para comprar. Tu casa digital con vida propia.</p>
+                </div>
+                <!-- Card 3 -->
+                <div
+                    class="group glass-card p-6 md:p-8 rounded-2xl hover:border-gold-500/50 transition-all duration-500 hover:-translate-y-2 reveal delay-300">
+                    <div
+                        class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-dark-800 border border-gold-500/20 flex items-center justify-center text-gold-500 text-lg md:text-xl mb-4 md:mb-6 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="font-serif text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Facturación validada
+                    </h3>
+                    <p class="text-xs md:text-sm text-slate-400 leading-relaxed">Lanzas con un sistema de 4 fases
+                        probado. Ventas, testimonios y dinero tangible en tu cuenta.</p>
+                </div>
+                <!-- Card 4 -->
+                <div
+                    class="group glass-card p-6 md:p-8 rounded-2xl hover:border-gold-500/50 transition-all duration-500 hover:-translate-y-2 reveal delay-100 relative overflow-hidden">
+                    <div
+                        class="absolute inset-0 bg-gold-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                    </div>
+                    <div class="relative z-10">
+                        <div
+                            class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-dark-800 border border-gold-500/20 flex items-center justify-center text-gold-500 text-lg md:text-xl mb-4 md:mb-6 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <h3 class="font-serif text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Diferenciación con
+                            IA</h3>
+                        <p class="text-xs md:text-sm text-slate-400 leading-relaxed">Tu competencia vende cursos. Tú
+                            entregas una experiencia potenciada con IA: Chatbots, GPTs y herramientas únicas.</p>
+                    </div>
+                </div>
+                <!-- Card 5 -->
+                <div
+                    class="group glass-card p-6 md:p-8 rounded-2xl hover:border-gold-500/50 transition-all duration-500 hover:-translate-y-2 reveal delay-200">
+                    <div
+                        class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-dark-800 border border-gold-500/20 flex items-center justify-center text-gold-500 text-lg md:text-xl mb-4 md:mb-6 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 class="font-serif text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Empresa sólida</h3>
+                    <p class="text-xs md:text-sm text-slate-400 leading-relaxed">Departamentos definidos, SOPs,
+                        dashboards. Tu negocio puede funcionar mientras duermes o viajas.</p>
+                </div>
+                <!-- Card 6 -->
+                <div
+                    class="group glass-card p-6 md:p-8 rounded-2xl hover:border-gold-500/50 transition-all duration-500 hover:-translate-y-2 reveal delay-300">
+                    <div
+                        class="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-dark-800 border border-gold-500/20 flex items-center justify-center text-gold-500 text-lg md:text-xl mb-4 md:mb-6 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3 class="font-serif text-lg md:text-xl font-bold text-white mb-2 md:mb-3">Libertad sin burnout
+                    </h3>
+                    <p class="text-xs md:text-sm text-slate-400 leading-relaxed">No construimos para que seas esclavo.
+                        Construimos para que vivas con propósito y tranquilidad.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Roadmap / Entregables -->
+    <section class="py-16 md:py-24 bg-dark-950 overflow-hidden relative force-full-width">
+        <div class="container mx-auto px-4 md:px-6 max-w-5xl">
+            <div class="text-center mb-16 md:mb-20 reveal">
+                <span class="text-gold-500 font-bold tracking-[0.3em] uppercase text-xs">Hoja de Ruta Clara</span>
+                <h2 class="font-serif text-3xl md:text-5xl mt-4 text-white">6 Meses de Acompañamiento</h2>
+            </div>
+
+            <div class="relative phase-line space-y-16 md:space-y-20 pb-10" id="roadmap-container">
+                <!-- Golden Ray Element -->
+                <div class="ray-of-light" id="ray"></div>
+
+                <!-- Fase 0 -->
+                <div class="relative md:flex items-start gap-8 md:gap-12 reveal phase-item" data-index="0">
+                    <div class="hidden md:block w-1/2 text-right pr-12 pt-4">
+                        <span class="text-6xl font-serif text-dark-800 font-bold stroke-text"
+                            style="-webkit-text-stroke: 1px #333;">00</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full bg-dark-950 border-2 border-slate-700 shadow-none z-10 mt-1 md:mt-6 timeline-dot"
+                        id="dot-0"></div>
+                    <div class="pl-10 md:w-1/2 md:pl-12">
+                        <span
+                            class="text-[10px] font-bold text-gold-500 uppercase tracking-widest border border-gold-500/30 px-2 py-1 rounded mb-2 inline-block">Días
+                            1-20</span>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold text-white mb-2">Análisis y Diagnóstico</h3>
+                        <p class="text-slate-500 mb-4 md:mb-6 font-medium italic text-sm">Sentando bases sólidas antes
+                            de ejecutar.</p>
+                        <ul class="space-y-3 md:space-y-4 text-sm text-slate-400">
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Investigación
+                                profunda de competencia.</li>
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Definición de
+                                avatares concretos.</li>
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Optimización de
+                                oferta irresistible.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Fase 1 -->
+                <div class="relative md:flex items-start gap-8 md:gap-12 md:flex-row-reverse reveal phase-item"
+                    data-index="1">
+                    <div class="hidden md:block w-1/2 text-left pl-12 pt-4">
+                        <span class="text-6xl font-serif text-dark-800 font-bold"
+                            style="-webkit-text-stroke: 1px #333;">01</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full bg-dark-950 border-2 border-slate-700 shadow-none z-10 mt-1 md:mt-6 timeline-dot"
+                        id="dot-1"></div>
+                    <div class="pl-10 md:w-1/2 md:pr-12 text-left md:text-right">
+                        <span
+                            class="text-[10px] font-bold text-gold-500 uppercase tracking-widest border border-gold-500/30 px-2 py-1 rounded mb-2 inline-block">Días
+                            20-65</span>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold text-white mb-2">Creación de Audiencia</h3>
+                        <p class="text-slate-500 mb-4 md:mb-6 font-medium italic text-sm">1,000 personas comprometidas.
+                        </p>
+                        <ul class="space-y-3 md:space-y-4 text-sm text-slate-400 inline-block text-left w-full">
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Casa digital en
+                                Skool configurada.</li>
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Lead Magnets y
+                                Embudos.</li>
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Campañas Meta Ads
+                                operadas por nosotros.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Fase 2 (Moved before Phase 3) -->
+                <div class="relative md:flex items-start gap-8 md:gap-12 reveal phase-item" data-index="2">
+                    <div class="hidden md:block w-1/2 text-right pr-12 pt-4">
+                        <span class="text-6xl font-serif text-dark-800 font-bold"
+                            style="-webkit-text-stroke: 1px #333;">02</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full bg-dark-950 border-2 border-slate-700 shadow-none z-10 mt-1 md:mt-6 timeline-dot"
+                        id="dot-2"></div>
+                    <div class="pl-10 md:w-1/2 md:pl-12">
+                        <span
+                            class="text-[10px] font-bold text-gold-500 uppercase tracking-widest border border-gold-500/30 px-2 py-1 rounded mb-2 inline-block">Días
+                            65-110</span>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold text-white mb-2">Lanzamiento y Evergreen
+                        </h3>
+                        <p class="text-slate-500 mb-4 md:mb-6 font-medium italic text-sm">Facturación y automatización.
+                        </p>
+                        <div class="bg-dark-900 p-4 rounded border border-gold-500/20 mb-4">
+                            <h4 class="font-bold text-gold-400 text-sm mb-2">Parte A: Lanzamiento de 4 Fases</h4>
+                            <div
+                                class="flex justify-between text-[9px] md:text-[10px] uppercase text-slate-500 tracking-wide">
+                                <span>Invitación</span><span>→</span><span>Conciencia</span><span>→</span><span>Entreno</span><span>→</span><span
+                                    class="text-white">Venta</span>
+                            </div>
+                        </div>
+                        <ul class="space-y-3 md:space-y-4 text-sm text-slate-400">
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Infraestructura
+                                técnica completa.</li>
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Sistema Evergreen
+                                High Ticket.</li>
+                            <li class="flex items-start bg-dark-900 p-3 rounded border border-white/5"><i
+                                    class="fas fa-check text-gold-500 mt-1 mr-3 flex-shrink-0"></i> Análisis y
+                                optimización.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Fase 3 (IA Special Box) - Reordered but labeled as Transversal -->
+                <div class="relative z-20 reveal phase-item pl-6 md:pl-0" data-index="3">
+                    <div
+                        class="bg-gradient-to-br from-dark-800 to-black border border-gold-500/30 rounded-2xl md:rounded-3xl p-6 md:p-12 max-w-4xl mx-auto ia-box-glow relative overflow-hidden group transition-all duration-700">
+                        <!-- BG Glow -->
+                        <div
+                            class="absolute top-0 right-0 w-64 h-64 bg-gold-500/10 rounded-full blur-[80px] -mr-16 -mt-16 group-hover:bg-gold-500/20 transition-all duration-700">
+                        </div>
+
+                        <div class="relative z-10">
+                            <div class="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 mb-6 md:mb-8">
+                                <span
+                                    class="bg-gold-500 text-dark-950 text-[9px] md:text-[10px] font-bold px-3 py-1 rounded-full w-fit uppercase tracking-wider">Desarrollo
+                                    Paralelo</span>
+                                <span class="text-gold-400 text-xs md:text-sm font-bold tracking-[0.2em] uppercase">Fase
+                                    3: Ecosistema IA</span>
+                            </div>
+
+                            <h3 class="text-2xl md:text-3xl font-serif font-medium text-white mb-3 md:mb-4">Inteligencia
+                                Artificial Integrada</h3>
+                            <p class="text-slate-400 mb-8 md:mb-10 text-sm max-w-2xl">Esta fase corre en paralelo
+                                durante 4 meses. Convertimos tu negocio en algo único mediante tecnología propietaria.
+                            </p>
+
+                            <!-- Grid Rediseñado -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                                <!-- Item 1 -->
+                                <div
+                                    class="bg-white/5 border border-white/5 p-4 rounded-xl flex items-start hover:bg-white/10 transition-colors">
+                                    <div class="text-gold-500 text-lg md:text-xl mr-3 md:mr-4 mt-1 flex-shrink-0"><i
+                                            class="fas fa-brain"></i></div>
+                                    <div>
+                                        <h4 class="text-white font-bold text-sm mb-1">Cerebro del Negocio (RAG)</h4>
+                                        <p class="text-xs text-slate-500">IA entrenada específicamente con tu método y
+                                            filosofía.</p>
+                                    </div>
+                                </div>
+                                <!-- Item 2 -->
+                                <div
+                                    class="bg-white/5 border border-white/5 p-4 rounded-xl flex items-start hover:bg-white/10 transition-colors">
+                                    <div class="text-gold-500 text-lg md:text-xl mr-3 md:mr-4 mt-1 flex-shrink-0"><i
+                                            class="fas fa-users-cog"></i></div>
+                                    <div>
+                                        <h4 class="text-white font-bold text-sm mb-1">GPTs Especializados</h4>
+                                        <p class="text-xs text-slate-500">Mentor personal, Onboarding automático y
+                                            Soporte técnico.</p>
+                                    </div>
+                                </div>
+                                <!-- Item 3 -->
+                                <div
+                                    class="bg-white/5 border border-white/5 p-4 rounded-xl flex items-start hover:bg-white/10 transition-colors">
+                                    <div class="text-gold-500 text-lg md:text-xl mr-3 md:mr-4 mt-1 flex-shrink-0"><i
+                                            class="fas fa-robot"></i></div>
+                                    <div>
+                                        <h4 class="text-white font-bold text-sm mb-1">Chatbot 24/7 en Skool</h4>
+                                        <p class="text-xs text-slate-500">Atención inmediata a tu comunidad sin tu
+                                            presencia.</p>
+                                    </div>
+                                </div>
+                                <!-- Item 4 -->
+                                <div
+                                    class="bg-white/5 border border-white/5 p-4 rounded-xl flex items-start hover:bg-white/10 transition-colors">
+                                    <div class="text-gold-500 text-lg md:text-xl mr-3 md:mr-4 mt-1 flex-shrink-0"><i
+                                            class="fas fa-tools"></i></div>
+                                    <div>
+                                        <h4 class="text-white font-bold text-sm mb-1">Herramientas Custom</h4>
+                                        <p class="text-xs text-slate-500">Calculadoras, diagnósticos y generadores de
+                                            planes.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fase 4 -->
+                <div class="relative md:flex items-start gap-8 md:gap-12 md:flex-row-reverse reveal phase-item"
+                    data-index="4">
+                    <div class="hidden md:block w-1/2 text-left pl-12 pt-4">
+                        <span class="text-6xl font-serif text-dark-800 font-bold"
+                            style="-webkit-text-stroke: 1px #333;">04</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full bg-dark-950 border-2 border-slate-700 shadow-none z-10 mt-1 md:mt-6 timeline-dot"
+                        id="dot-4"></div>
+                    <div class="pl-10 md:w-1/2 md:pr-12 text-left md:text-right">
+                        <span
+                            class="text-[10px] font-bold text-gold-500 uppercase tracking-widest border border-gold-500/30 px-2 py-1 rounded mb-2 inline-block">Últimos
+                            45-60 días</span>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold text-white mb-2">Sistemas y Estructura</h3>
+                        <p class="text-slate-500 mb-6 md:mb-8 font-medium italic text-sm">Operación sin dependencia
+                            absoluta.</p>
+
+                        <!-- Lista Organizada -->
+                        <div class="space-y-4 md:space-y-6">
+                            <!-- Depts -->
+                            <div class="bg-dark-900 border border-white/5 rounded-xl p-4 text-left">
+                                <h4
+                                    class="text-gold-400 font-bold text-xs uppercase mb-3 border-b border-white/10 pb-2">
+                                    3 Departamentos Clave</h4>
+                                <div class="flex gap-2 flex-wrap">
+                                    <span
+                                        class="px-2 py-1 bg-white/5 rounded text-[10px] md:text-xs text-white border border-white/10">Growth</span>
+                                    <span
+                                        class="px-2 py-1 bg-white/5 rounded text-[10px] md:text-xs text-white border border-white/10">Producto</span>
+                                    <span
+                                        class="px-2 py-1 bg-white/5 rounded text-[10px] md:text-xs text-white border border-white/10">Finanzas</span>
+                                </div>
+                            </div>
+
+                            <ul class="space-y-3 text-sm text-slate-400 text-left">
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-dark-800 flex items-center justify-center text-gold-500 border border-white/5 flex-shrink-0"><i
+                                            class="fas fa-file-alt text-xs"></i></span>
+                                    <span class="text-xs md:text-sm"><strong>SOPs Documentados:</strong> 15-20 procesos
+                                        (video + checklist).</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-dark-800 flex items-center justify-center text-gold-500 border border-white/5 flex-shrink-0"><i
+                                            class="fas fa-chart-pie text-xs"></i></span>
+                                    <span class="text-xs md:text-sm"><strong>Dashboards:</strong> Métricas en tiempo
+                                        real.</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-dark-800 flex items-center justify-center text-gold-500 border border-white/5 flex-shrink-0"><i
+                                            class="fas fa-globe-americas text-xs"></i></span>
+                                    <span class="text-xs md:text-sm"><strong>Legal:</strong> Apoyo creación LLC en
+                                        USA.</span>
+                                </li>
+                                <li class="flex items-center gap-3">
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-dark-800 flex items-center justify-center text-gold-500 border border-white/5 flex-shrink-0"><i
+                                            class="fas fa-users text-xs"></i></span>
+                                    <span class="text-xs md:text-sm"><strong>Escalado:</strong> Plan de contratación y
+                                        roadmap.</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- NEW GHL VALUE STACK SECTION -->
+    <section class="py-16 md:py-24 bg-dark-900 relative border-y border-white/5 force-full-width">
+        <div class="container mx-auto px-4 md:px-6 max-w-6xl">
+            <div class="text-center mb-10 md:mb-16 reveal">
+                <span class="text-gold-500 font-bold tracking-[0.2em] uppercase text-xs mb-2 block">Infraestructura
+                    Tecnológica</span>
+                <h2 class="font-serif text-3xl md:text-5xl text-white mb-4 md:mb-6">Todo lo que necesitas. <span
+                        class="italic text-gold-400">Todo incluido.</span></h2>
+                <p class="text-slate-400 max-w-2xl mx-auto text-sm md:text-base">Te ahorramos miles de dólares en
+                    software. Incluimos 12 meses de la plataforma líder GoHighLevel, configurada para ti.</p>
+            </div>
+
+            <!-- Comparison Table container with sticky first col on mobile -->
+            <div class="relative reveal delay-200">
+                <!-- Mobile Swipe Hint -->
+                <div
+                    class="md:hidden absolute -top-8 right-0 text-gold-500 text-xs flex items-center gap-2 animate-swipe-hint pointer-events-none">
+                    <span>Desliza para ver más</span>
+                    <i class="fas fa-hand-pointer transform rotate-[-90deg]"></i>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-white/10 shadow-2xl bg-dark-950 pb-2">
+                    <table class="w-full text-left border-collapse min-w-[700px]">
+                        <thead>
+                            <tr
+                                class="bg-dark-800 border-b border-white/10 text-[10px] md:text-xs uppercase tracking-wider text-slate-400">
+                                <th class="p-4 md:p-6 font-medium sticky-col min-w-[140px]">Funcionalidad</th>
+                                <th class="p-4 md:p-6 font-medium">Reemplaza a</th>
+                                <th class="p-4 md:p-6 font-medium">Costo otros</th>
+                                <th
+                                    class="p-4 md:p-6 font-bold text-gold-400 bg-gold-900/10 border-l border-gold-500/20 text-center">
+                                    Alas Doradas</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs md:text-sm text-slate-300 divide-y divide-white/5">
+                            <!-- Row 1 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 md:p-5 font-bold text-white sticky-col">CRM & Pipeline</td>
+                                <td
+                                    class="p-4 md:p-5 flex items-center gap-2 text-[10px] md:text-xs text-slate-500 whitespace-nowrap">
+                                    Hubspot</td>
+                                <td class="p-4 md:p-5 text-slate-500">$99 / mes</td>
+                                <td
+                                    class="p-4 md:p-5 text-center bg-gold-900/5 border-l border-gold-500/10 text-gold-400">
+                                    <i class="fas fa-check-circle"></i>
+                                </td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 md:p-5 font-bold text-white sticky-col">Embudos Ilimitados</td>
+                                <td
+                                    class="p-4 md:p-5 flex items-center gap-2 text-[10px] md:text-xs text-slate-500 whitespace-nowrap">
+                                    ClickFunnels</td>
+                                <td class="p-4 md:p-5 text-slate-500">$297 / mes</td>
+                                <td
+                                    class="p-4 md:p-5 text-center bg-gold-900/5 border-l border-gold-500/10 text-gold-400">
+                                    <i class="fas fa-check-circle"></i>
+                                </td>
+                            </tr>
+                            <!-- Row 3 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 md:p-5 font-bold text-white sticky-col">Email Marketing</td>
+                                <td
+                                    class="p-4 md:p-5 flex items-center gap-2 text-[10px] md:text-xs text-slate-500 whitespace-nowrap">
+                                    ActiveC / Mailchimp</td>
+                                <td class="p-4 md:p-5 text-slate-500">$99 / mes</td>
+                                <td
+                                    class="p-4 md:p-5 text-center bg-gold-900/5 border-l border-gold-500/10 text-gold-400">
+                                    <i class="fas fa-check-circle"></i>
+                                </td>
+                            </tr>
+                            <!-- Row 4 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 md:p-5 font-bold text-white sticky-col">Cursos y Membresías</td>
+                                <td
+                                    class="p-4 md:p-5 flex items-center gap-2 text-[10px] md:text-xs text-slate-500 whitespace-nowrap">
+                                    Kajabi / Teachable</td>
+                                <td class="p-4 md:p-5 text-slate-500">$149 / mes</td>
+                                <td
+                                    class="p-4 md:p-5 text-center bg-gold-900/5 border-l border-gold-500/10 text-gold-400">
+                                    <i class="fas fa-check-circle"></i>
+                                </td>
+                            </tr>
+                            <!-- Row 5 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 md:p-5 font-bold text-white sticky-col">Calendario y Citas</td>
+                                <td
+                                    class="p-4 md:p-5 flex items-center gap-2 text-[10px] md:text-xs text-slate-500 whitespace-nowrap">
+                                    Calendly</td>
+                                <td class="p-4 md:p-5 text-slate-500">$29 / mes</td>
+                                <td
+                                    class="p-4 md:p-5 text-center bg-gold-900/5 border-l border-gold-500/10 text-gold-400">
+                                    <i class="fas fa-check-circle"></i>
+                                </td>
+                            </tr>
+                            <!-- Row 6 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 md:p-5 font-bold text-white sticky-col">Automatizaciones</td>
+                                <td
+                                    class="p-4 md:p-5 flex items-center gap-2 text-[10px] md:text-xs text-slate-500 whitespace-nowrap">
+                                    Zapier</td>
+                                <td class="p-4 md:p-5 text-slate-500">$50 / mes</td>
+                                <td
+                                    class="p-4 md:p-5 text-center bg-gold-900/5 border-l border-gold-500/10 text-gold-400">
+                                    <i class="fas fa-check-circle"></i>
+                                </td>
+                            </tr>
+                            <!-- Row 7 -->
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="p-4 md:p-5 font-bold text-white sticky-col">Comunidades</td>
+                                <td
+                                    class="p-4 md:p-5 flex items-center gap-2 text-[10px] md:text-xs text-slate-500 whitespace-nowrap">
+                                    Mighty / Circle</td>
+                                <td class="p-4 md:p-5 text-slate-500">$89 / mes</td>
+                                <td
+                                    class="p-4 md:p-5 text-center bg-gold-900/5 border-l border-gold-500/10 text-gold-400">
+                                    <i class="fas fa-check-circle"></i>
+                                </td>
+                            </tr>
+                            <!-- Total Row -->
+                            <tr class="bg-dark-800 text-white font-bold text-sm md:text-base">
+                                <td class="p-4 md:p-6 sticky-col bg-dark-800 border-r border-white/10" colspan="1">Valor
+                                    Mensual</td>
+                                <td class="p-4 md:p-6" colspan="2"><span
+                                        class="text-slate-400 line-through decoration-red-500 decoration-2">$800+ /
+                                        mes</span></td>
+                                <td
+                                    class="p-4 md:p-6 text-center bg-gold-600 text-dark-950 border-l border-gold-500 text-sm md:text-lg uppercase tracking-wider">
+                                    Gratis</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="text-center text-[10px] md:text-xs text-slate-600 mt-6">*Valores estimados basados en planes
+                estándar del mercado.</p>
+        </div>
+    </section>
+
+    <!-- OFERTA IRRESISTIBLE -->
+    <section id="oferta" class="py-16 md:py-24 bg-dark-950 relative overflow-hidden force-full-width">
+        <!-- Shine Effect Background -->
+        <div class="absolute inset-0 bg-gold-shine opacity-5 pointer-events-none"></div>
+
+        <div class="container mx-auto px-4 md:px-6 max-w-4xl relative z-10">
+            <div class="reveal">
+                <div class="gold-border-glow rounded-2xl md:rounded-3xl overflow-hidden bg-dark-900 relative">
+                    <!-- Header -->
+                    <div
+                        class="bg-gradient-to-b from-gold-600 to-gold-700 text-dark-950 p-6 md:p-10 text-center relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 w-64 h-64 bg-white rounded-full blur-[80px] opacity-20 -mr-20 -mt-20">
+                        </div>
+                        <h2 class="font-serif text-2xl md:text-5xl mb-2 text-white drop-shadow-md">Programa ALAS DORADAS
+                        </h2>
+                        <p
+                            class="text-dark-900 uppercase tracking-[0.2em] md:tracking-[0.3em] text-[10px] md:text-xs font-bold mt-2 md:mt-4 bg-white/20 inline-block px-3 py-1 md:px-4 rounded-full backdrop-blur-sm">
+                            6 Meses de Transformación</p>
+                    </div>
+
+                    <div class="p-6 md:p-12">
+                        <div class="space-y-4 md:space-y-5 mb-8 md:mb-12">
+                            <!-- Items de la oferta -->
+                            <div class="flex items-center justify-between border-b border-white/5 pb-3 md:pb-4">
+                                <span class="flex items-center text-slate-300 font-medium text-xs md:text-base"><i
+                                        class="fas fa-check-circle text-gold-500 mr-3 md:mr-4"></i> 6 Meses de
+                                    acompañamiento</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-white/5 pb-3 md:pb-4">
+                                <span class="flex items-center text-slate-300 font-medium text-xs md:text-base"><i
+                                        class="fas fa-check-circle text-gold-500 mr-3 md:mr-4"></i> Equipo
+                                    multidisciplinario</span>
+                            </div>
+                            <div
+                                class="flex items-center justify-between border-b border-white/5 pb-3 md:pb-4 bg-gold-500/10 rounded-lg p-3 md:p-4 -mx-2 border border-gold-500/20">
+                                <span class="flex items-center text-white font-bold text-xs md:text-base"><i
+                                        class="fas fa-star text-gold-500 mr-3 md:mr-4"></i> Sistema IA Custom
+                                    Único</span>
+                                <span
+                                    class="text-[9px] md:text-[10px] bg-gold-500 text-dark-950 px-2 py-1 rounded font-bold uppercase tracking-wide inline-block ml-2">Exclusivo</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-white/5 pb-3 md:pb-4">
+                                <span class="flex items-center text-slate-300 font-medium text-xs md:text-base"><i
+                                        class="fas fa-check-circle text-gold-500 mr-3 md:mr-4"></i> Embudos, Campañas y
+                                    Landing Pages</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-white/5 pb-3 md:pb-4">
+                                <span class="flex items-center text-slate-300 font-medium text-xs md:text-base"><i
+                                        class="fas fa-check-circle text-gold-500 mr-3 md:mr-4"></i> Lanzamiento 4 fases
+                                    ejecutado</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-white/5 pb-3 md:pb-4">
+                                <span class="flex items-center text-slate-300 font-medium text-xs md:text-base"><i
+                                        class="fas fa-check-circle text-gold-500 mr-3 md:mr-4"></i> Estructura
+                                    Empresarial + SOPs</span>
+                            </div>
+                        </div>
+
+                        <!-- Bonuses -->
+                        <div
+                            class="bg-dark-950 p-6 md:p-8 rounded-xl border border-dashed border-white/10 mb-8 md:mb-12 relative">
+                            <div
+                                class="absolute -top-3 left-1/2 -translate-x-1/2 bg-dark-900 px-4 text-[10px] md:text-xs font-bold text-gold-500 uppercase tracking-widest border border-white/10 rounded-full whitespace-nowrap">
+                                Bonos Incluidos</div>
+                            <ul class="space-y-3 md:space-y-4 text-xs md:text-sm">
+                                <li class="flex justify-between items-start border-b border-white/5 pb-2">
+                                    <span class="text-slate-300 pr-2"><strong class="text-gold-400 block md:inline">BONO
+                                            1:</strong> Sistema IA Completo</span>
+                                    <span class="text-slate-600 line-through text-[10px] md:text-xs">$3,500</span>
+                                </li>
+                                <li class="flex justify-between items-start border-b border-white/5 pb-2">
+                                    <span class="text-slate-300 pr-2"><strong class="text-gold-400 block md:inline">BONO
+                                            2:</strong> Soporte Directo (6m)</span>
+                                    <span class="text-slate-600 line-through text-[10px] md:text-xs">$997</span>
+                                </li>
+                                <li class="flex justify-between items-start border-b border-white/5 pb-2">
+                                    <span class="text-slate-300 pr-2"><strong class="text-gold-400 block md:inline">BONO
+                                            3:</strong> GoHighLevel (12 meses)</span>
+                                    <span class="text-slate-600 line-through text-[10px] md:text-xs">$540</span>
+                                </li>
+                                <li class="flex justify-between items-start border-b border-white/5 pb-2">
+                                    <span class="text-slate-300 pr-2"><strong class="text-gold-400 block md:inline">BONO
+                                            4:</strong> Templates Premium</span>
+                                    <span class="text-slate-600 line-through text-[10px] md:text-xs">$500</span>
+                                </li>
+                                <li class="flex justify-between items-start">
+                                    <span class="text-slate-300 pr-2"><strong class="text-gold-400 block md:inline">BONO
+                                            5:</strong> Creación LLC</span>
+                                    <span class="text-slate-600 line-through text-[10px] md:text-xs">$300</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button onclick="openModal()"
+                            class="group block w-full py-5 md:py-6 text-center text-dark-950 bg-gradient-to-r from-gold-400 to-gold-600 hover:from-white hover:to-white transition-all rounded-full text-base md:text-lg font-bold shadow-[0_0_30px_rgba(212,175,55,0.4)] uppercase tracking-wide relative overflow-hidden cursor-pointer">
+                            <span class="relative z-10 group-hover:text-dark-950 transition-colors px-2 block">Sí,
+                                quiero postular al programa</span>
+                        </button>
+                        <p
+                            class="text-center text-[10px] md:text-xs text-slate-500 mt-6 max-w-md mx-auto leading-relaxed">
+                            Garantía de Compromiso Mutuo: Continuamos contigo hasta que consigas resultados (aplican
+                            condiciones de participación).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Next Steps -->
+    <section class="py-16 md:py-24 bg-dark-900 border-t border-white/5 force-full-width">
+        <div class="container mx-auto px-4 md:px-6 max-w-3xl text-center">
+            <h2 class="font-serif text-3xl mb-10 md:mb-12 text-white">Próximos Pasos</h2>
+            <div class="space-y-4 text-left max-w-lg mx-auto">
+                <div
+                    class="group flex gap-4 md:gap-6 items-center bg-dark-950 p-4 md:p-6 rounded-2xl border border-white/5 hover:border-gold-500/50 transition-all reveal delay-100">
+                    <div
+                        class="bg-dark-800 text-gold-500 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full font-bold border border-gold-500/30 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors flex-shrink-0">
+                        1</div>
+                    <p class="text-slate-300 text-sm">Confirma tu decisión (responde mensaje o llamada).</p>
+                </div>
+                <div
+                    class="group flex gap-4 md:gap-6 items-center bg-dark-950 p-4 md:p-6 rounded-2xl border border-white/5 hover:border-gold-500/50 transition-all reveal delay-200">
+                    <div
+                        class="bg-dark-800 text-gold-500 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full font-bold border border-gold-500/30 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors flex-shrink-0">
+                        2</div>
+                    <p class="text-slate-300 text-sm">Selección de forma de pago y acuerdo.</p>
+                </div>
+                <div
+                    class="group flex gap-4 md:gap-6 items-center bg-dark-950 p-4 md:p-6 rounded-2xl border border-white/5 hover:border-gold-500/50 transition-all reveal delay-300">
+                    <div
+                        class="bg-dark-800 text-gold-500 w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full font-bold border border-gold-500/30 group-hover:bg-gold-500 group-hover:text-dark-950 transition-colors flex-shrink-0">
+                        3</div>
+                    <p class="text-slate-300 text-sm"><strong>Kickoff inmediato (48h):</strong> Acceso a Slack, WhatsApp
+                        y comienzo Fase 0.</p>
+                </div>
+            </div>
+
+            <div class="mt-12 md:mt-16 p-6 md:p-8 border-t border-white/5 reveal">
+                <p class="font-serif italic text-lg md:text-2xl text-white mb-4">"Que no sea el miedo quien decida por
+                    ti."</p>
+                <p class="font-bold text-[10px] md:text-xs text-gold-500 uppercase tracking-[0.2em]">- Equipo Alas
+                    Doradas</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de Formulario -->
+    <div id="formModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="font-serif">Formulario de Postulación</h3>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <iframe
+                    src="https://link.cleesaas.com/widget/form/gB0MB9aqjvkZFYR4VaVO"
+                    id="inline-gB0MB9aqjvkZFYR4VaVO"
+                    data-layout="{'id':'INLINE'}"
+                    data-trigger-type="alwaysShow"
+                    data-trigger-value=""
+                    data-activation-type="alwaysActivated"
+                    data-activation-value=""
+                    data-deactivation-type="neverDeactivate"
+                    data-deactivation-value=""
+                    data-form-name="Form Calificación Alas Doradas - D"
+                    data-height="896"
+                    data-layout-iframe-id="inline-gB0MB9aqjvkZFYR4VaVO"
+                    data-form-id="gB0MB9aqjvkZFYR4VaVO"
+                    title="Form Calificación Alas Doradas - D">
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark-950 text-slate-500 py-12 md:py-16 text-sm border-t border-white/5 force-full-width">
+        <div class="container mx-auto px-6 text-center">
+            <p class="mb-4 text-slate-400">&copy; 2026 Alas Doradas. Todos los derechos reservados.</p>
+            <p class="text-[10px] opacity-40 max-w-2xl mx-auto">Este sitio no es parte del sitio web de Facebook o
+                Facebook Inc. Además, este sitio no está respaldado por Facebook de ninguna manera.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Animations Script
+        document.addEventListener('DOMContentLoaded', () => {
+            const reveals = document.querySelectorAll('.reveal');
+
+            // Ray of light logic
+            const ray = document.getElementById('ray');
+            const roadmapContainer = document.getElementById('roadmap-container');
+            const dots = document.querySelectorAll('.timeline-dot');
+            const phaseItems = document.querySelectorAll('.phase-item');
+            const iaBox = document.querySelector('.ia-box-glow');
+
+            const handleScrollAnimations = () => {
+                const windowHeight = window.innerHeight;
+                const windowTop = window.scrollY;
+                const elementVisible = 50;
+
+                // Standard Reveals
+                reveals.forEach((reveal) => {
+                    const elementTop = reveal.getBoundingClientRect().top;
+                    if (elementTop < windowHeight - elementVisible) {
+                        reveal.classList.add('active');
+                    }
+                });
+
+                // Ray of light animation calculation
+                if (roadmapContainer) {
+                    const rect = roadmapContainer.getBoundingClientRect();
+                    const containerTop = rect.top + windowTop;
+                    const containerHeight = rect.height;
+
+                    // Start ray when container enters roughly middle of screen
+                    const startOffset = windowHeight / 2;
+                    let scrollProgress = (windowTop + startOffset - containerTop) / containerHeight;
+
+                    // Clamp between 0 and 1
+                    scrollProgress = Math.max(0, Math.min(1, scrollProgress));
+
+                    if (ray) {
+                        ray.style.height = `${scrollProgress * 100}%`;
+                    }
+
+                    // Light up dots based on scroll progress or intersection
+                    dots.forEach((dot, index) => {
+                        const dotTop = dot.getBoundingClientRect().top;
+                        // If dot is above the bottom 1/3 of screen, light it up
+                        if (dotTop < windowHeight * 0.7) {
+                            dot.classList.add('lit');
+
+                            // If it's the IA phase (index 3 here based on reorder, careful with IDs)
+                            // Let's check parent phase index
+                            const parentPhase = dot.closest('.phase-item');
+                            if (parentPhase && parentPhase.getAttribute('data-index') === '3') {
+                                if (iaBox) iaBox.classList.add('active');
+                            }
+                        } else {
+                            dot.classList.remove('lit');
+                            const parentPhase = dot.closest('.phase-item');
+                            if (parentPhase && parentPhase.getAttribute('data-index') === '3') {
+                                if (iaBox) iaBox.classList.remove('active');
+                            }
+                        }
+                    });
+                }
+            };
+
+            window.addEventListener('scroll', handleScrollAnimations);
+            // Trigger once on load
+            handleScrollAnimations();
+
+            // GSAP Scroll Animations - Sophisticated Minimalist Approach
+            gsap.registerPlugin(ScrollTrigger);
+
+            // Initial Entrance Animation
+            const entranceTl = gsap.timeline();
+            entranceTl.to("#hero-tagline", { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" })
+                .to("#hero-title", { opacity: 1, y: 0, duration: 1.5, ease: "power4.out" }, "-=0.8")
+                .to("#hero-cta", { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" }, "-=0.8")
+                .to("#hero-aura", { opacity: 1, scale: 1.2, duration: 2.5, ease: "sine.inOut" }, 0);
+
+            // Scroll Scrubbing Timeline - Compacted
+            const scrollTl = gsap.timeline({
+                scrollTrigger: {
+                    trigger: "#hero-animation-wrapper",
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 1, // Más directo
+                }
+            });
+
+            // Parallax and Aesthetics for Hero on Scroll
+            scrollTl.to("#hero-content", {
+                y: -80,
+                opacity: 0,
+                scale: 0.98,
+                filter: "blur(8px)",
+                duration: 1
+            }, 0);
+
+            scrollTl.to("#hero-aura", {
+                scale: 1.5,
+                opacity: 0.2,
+                duration: 1
+            }, 0);
+
+            // Subtle glow for the title on scroll
+            scrollTl.to("#hero-title", {
+                textShadow: "0 0 30px rgba(212, 175, 55, 0.3)",
+                duration: 0.5
+            }, 0);
+
+            // Reveal Benefits Teaser - Faster entrance
+            scrollTl.fromTo("#benefits-teaser",
+                { y: 150, opacity: 0 },
+                { y: 0, opacity: 1, duration: 1, ease: "none" },
+                0.5 // Solapamiento con la salida del hero
+            );
+
+            // Staggered reveal for benefit items
+            gsap.utils.toArray("#benefits-teaser .space-y-4").forEach((item, i) => {
+                scrollTl.from(item, {
+                    y: 40,
+                    opacity: 0,
+                    duration: 0.4,
+                    ease: "power2.out"
+                }, 0.8 + (i * 0.1));
+            });
+        });
+
+        // Modal Control Functions
+        function openModal() {
+            const modal = document.getElementById('formModal');
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('formModal');
+            modal.classList.remove('show');
+            document.body.style.overflow = ''; // Restaurar scroll
+        }
+
+        // Cerrar modal al hacer clic fuera del contenido
+        window.onclick = function(event) {
+            const modal = document.getElementById('formModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Cerrar modal con la tecla ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+
+    <!-- Script del formulario -->
+    <script src="https://link.cleesaas.com/js/form_embed.js"></script>
+</body>

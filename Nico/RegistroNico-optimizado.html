@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Evento IA LAB 2026 | Método VIBE</title>
+    <meta name="description"
+        content="Descubre el Método VIBE para crear aplicaciones completas de IA que funcionan en producción.">
+
+    <!-- Preconnect para reducir latencia DNS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://storage.googleapis.com">
+
+    <!-- Fonts optimizadas con display=swap -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS CDN con defer -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+
+    <!-- Lucide Icons CDN con defer -->
+    <script src="https://unpkg.com/lucide@latest" defer></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                        serif: ['"IBM Plex Serif"', 'serif'],
+                    },
+                    colors: {
+                        bg: '#ffffff',
+                        primary: '#2563eb',
+                        secondary: '#0f172a',
+                        surface: '#f8fafc',
+                        text: '#0f172a',
+                        live: '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/css">
+        /* Critical CSS - Estilos mínimos para above-the-fold */
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            font-display: swap;
+        }
+
+        /* Breakout para GHL */
+        .full-width-breakout {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        .clean-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease;
+        }
+
+        .clean-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .glow-blue {
+            position: absolute;
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Video Container - Simplificado */
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #0f172a;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .video-container {
+                border-radius: 1rem;
+            }
+        }
+
+        /* Video Placeholder - Simplificado sin animaciones pesadas */
+        .video-placeholder-minimal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-placeholder-minimal.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .play-group {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .play-circle-minimal {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(37, 99, 235, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .video-placeholder-minimal:hover .play-circle-minimal {
+            background: rgba(37, 99, 235, 0.95);
+            border-color: rgba(37, 99, 235, 1);
+            transform: scale(1.05);
+        }
+
+        .video-placeholder-minimal:hover .play-triangle {
+            fill: white;
+        }
+
+        .play-triangle {
+            fill: #2563eb;
+            opacity: 1;
+        }
+
+        .play-text {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.75rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (max-width: 640px) {
+            .play-circle-minimal {
+                width: 70px;
+                height: 70px;
+                border-width: 2px;
+            }
+
+            .play-group {
+                gap: 1rem;
+            }
+
+            .play-text {
+                font-size: 0.6rem;
+                letter-spacing: 0.2em;
+                padding: 0 1rem;
+                text-align: center;
+            }
+
+            #video-oficial {
+                object-fit: cover;
+            }
+        }
+
+        #video-oficial {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            touch-action: manipulation;
+        }
+
+        /* Mejora para imágenes */
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Popup optimizado */
+        .popup-overlay {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+            padding: 20px 0;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+        }
+
+        .popup-overlay.active {
+            z-index: 9999;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+
+        .popup-content {
+            position: relative;
+            width: 90%;
+            max-width: 550px;
+            max-height: 85vh;
+            background: white;
+            border-radius: 12px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-width: 640px) {
+            .popup-content {
+                width: 95%;
+                max-width: 100%;
+            }
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+
+        .popup-close:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+    </style>
+</head>
+
+<body class="antialiased font-sans text-text bg-white">
+    <!-- Hero -->
+    <header class="relative pt-16 pb-12 md:pt-20 md:pb-16 px-4 sm:px-6 overflow-hidden">
+        <div class="glow-blue"></div>
+        <div class="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center">
+
+            <!-- Etiqueta Live -->
+            <div
+                class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-red-200 bg-red-100/90 mb-6 sm:mb-8">
+                <div class="relative flex h-2.5 w-2.5">
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
+                </div>
+                <span class="text-[10px] sm:text-xs font-black text-red-600 tracking-widest">Evento Online GRATUITO el
+                    23, 24 y 25 de FEBRERO</span>
+            </div>
+
+            <!-- Título -->
+            <h1
+                class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.15] mb-6 sm:mb-8 tracking-tight text-slate-900 px-2 max-w-4xl">
+                Descubre el <span class="font-serif italic font-normal text-primary">Método VIBE</span> para crear
+                aplicaciones completas con IA
+            </h1>
+
+            <!-- Subtítulo -->
+            <p
+                class="text-base sm:text-lg md:text-xl text-slate-500 mb-10 sm:mb-12 max-w-3xl leading-relaxed font-medium px-4">
+                y conviértete en desarrollador híbrido capaz de elegir la mejor solución en cada caso
+            </p>
+
+            <!-- VSL Container -->
+            <div id="vsl-container" class="w-full max-w-4xl mx-auto mb-12">
+                <div class="video-container">
+                    <div class="video-placeholder-minimal" id="video-placeholder-oficial">
+                        <div class="play-group">
+                            <div class="play-circle-minimal">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 4V20L20 12L7 4Z" class="play-triangle" />
+                                </svg>
+                            </div>
+                            <span class="play-text">HAZ CLIC PARA VER EL VIDEO</span>
+                        </div>
+                    </div>
+
+                    <!-- Video con loading optimizado -->
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+                        <video id="video-oficial"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
+                            src="https://storage.googleapis.com/msgsndr/SSlZBjR2BiiDJ4vR4exM/media/6985e6385f93995cdf85c417.mp4"
+                            muted autoplay loop playsinline preload="metadata" controlslist="nodownload"
+                            oncontextmenu="return false;">
+                        </video>
+                    </div>
+                </div>
+            </div>
+            <!-- Botón CTA -->
+            <div class="mt-8">
+                <button id="btn-registro-popup"
+                    class="trigger-popup inline-block w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-full font-bold text-lg hover:bg-blue-600 transition-all active:scale-[0.98] text-center cursor-pointer border-none">
+                    REGISTRARME GRATIS AHORA
+                </button>
+                <p class="text-[10px] sm:text-[11px] text-slate-400 mt-3">Plazas limitadas para asegurar la calidad
+                    del Q&A en vivo.</p>
+            </div>
+        </div>
+        <!-- Stats Bar -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 text-slate-400">
+            <div class="flex items-center gap-2">
+                <i data-lucide="calendar" class="w-4 h-4 text-primary"></i>
+                <span class="font-bold text-slate-700 text-sm sm:text-base">Lunes 23, Martes 24 y Miércoles 25 de
+                    Febrero</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="clock" class="w-4 h-4 text-primary"></i>
+                <span class="font-bold text-slate-700 text-sm sm:text-base">19:00 CET</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <i data-lucide="zap" class="w-4 h-4 text-primary"></i>
+                <span class="font-bold text-slate-700 text-sm sm:text-base">60-90 minutos por clase</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Agenda/Acordeones -->
+    <section class="py-12 sm:py-16 px-4 sm:px-6 bg-white">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-8 sm:mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-4">QUÉ VERÁS EN ESTAS CLASES</h2>
+            </div>
+
+            <div class="space-y-8">
+                <!-- CLASE 1 -->
+                <div class="clean-card rounded-2xl overflow-hidden">
+                    <div class="px-6 sm:px-8 py-5 sm:py-6 bg-white border-b border-slate-100">
+                        <p class="text-xs text-primary font-bold mb-1">CLASE 1 · Lunes 23 de Febrero · 19:00 CET</p>
+                        <h3 class="font-bold text-base sm:text-lg text-slate-900">Descubre el sistema para pasar de usar
+                            herramientas a construir las tuyas (sin tocar una línea de código)</h3>
+                    </div>
+                    <div class="bg-slate-50/50 px-6 sm:px-8 py-6">
+                        <div class="grid md:grid-cols-2 gap-6 items-start">
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>Cómo funciona Lovable + n8n para crear sistemas completos</span>
+                                </li>
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>La diferencia entre consumir herramientas y construir las tuyas</span>
+                                </li>
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>3 casos de uso que puedes replicar el mismo día</span>
+                                </li>
+                            </ul>
+
+                            <div class="rounded-xl overflow-hidden border border-slate-200">
+                                <img src="https://storage.googleapis.com/msgsndr/SSlZBjR2BiiDJ4vR4exM/media/6981eab30708e4656a531338.png"
+                                    alt="Miniatura Clase 1" loading="lazy" decoding="async" width="600" height="400"
+                                    class="w-full h-auto">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CLASE 2 -->
+                <div class="clean-card rounded-2xl overflow-hidden">
+                    <div class="px-6 sm:px-8 py-5 sm:py-6 bg-white border-b border-slate-100">
+                        <p class="text-xs text-primary font-bold mb-1">CLASE 2 · Martes 24 de Febrero · 19:00 CET</p>
+                        <h3 class="font-bold text-base sm:text-lg text-slate-900">Aprende el sistema que utilizo para
+                            aumentar mi productividad y producir más en menos tiempo</h3>
+                    </div>
+                    <div class="bg-slate-50/50 px-6 sm:px-8 py-6">
+                        <div class="grid md:grid-cols-2 gap-6 items-start">
+                            <div class="rounded-xl overflow-hidden border border-slate-200">
+                                <img src="https://storage.googleapis.com/msgsndr/SSlZBjR2BiiDJ4vR4exM/media/6981eab3d2e7efbcb204a111.png"
+                                    alt="Miniatura Clase 2" loading="lazy" decoding="async" width="600" height="400"
+                                    class="w-full h-auto">
+                            </div>
+
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>Introducción a Claude Code sin necesidad de programar</span>
+                                </li>
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>Cómo conectar Claude Code con n8n para automatizar la creación</span>
+                                </li>
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>Mi sistema personal de productividad que uso a diario</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CLASE 3 -->
+                <div class="clean-card rounded-2xl overflow-hidden">
+                    <div class="px-6 sm:px-8 py-5 sm:py-6 bg-white border-b border-slate-100">
+                        <p class="text-xs text-primary font-bold mb-1">CLASE 3 · Miércoles 25 de Febrero · 19:00 CET</p>
+                        <h3 class="font-bold text-base sm:text-lg text-slate-900">Aprende el sistema más efectivo para
+                            desarrollar aplicaciones con IA (Aunque nunca lo hayas hecho antes)</h3>
+                    </div>
+                    <div class="bg-slate-50/50 px-6 sm:px-8 py-6">
+                        <div class="grid md:grid-cols-2 gap-6 items-start">
+                            <ul class="space-y-4">
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>El stack que necesitas para comenzar a crear proyectos reales como
+                                        desarrollador hibrido</span>
+                                </li>
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>Demo en vivo de una aplicación completa funcionando</span>
+                                </li>
+                                <li class="flex items-start gap-3 text-sm sm:text-base text-slate-700">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-primary mt-0.5 shrink-0"></i>
+                                    <span>Como puedes obtener mi stack tecnologico a modo plantilla para que no partas
+                                        de cero</span>
+                                </li>
+                            </ul>
+
+                            <div class="rounded-xl overflow-hidden border border-slate-200">
+                                <img src="https://storage.googleapis.com/msgsndr/SSlZBjR2BiiDJ4vR4exM/media/6981eab3d2e7ef436c04a112.png"
+                                    alt="Miniatura Clase 3" loading="lazy" decoding="async" width="600" height="400"
+                                    class="w-full h-auto">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bullets -->
+    <section class="full-width-breakout py-12 sm:py-16 bg-white border-y border-slate-100 px-4 sm:px-6 relative">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex flex-col items-center text-center">
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 text-slate-900">La realidad incómoda:</h2>
+
+                <p class="text-slate-600 text-base sm:text-lg mb-8 leading-relaxed max-w-2xl">
+                    El mercado de automatizaciones cada vez está más saturado. Cada vez hay más gente haciendo lo mismo
+                    porque la curva de aprendizaje es baja.
+                    <br><br>
+                    Pero hay una evolución natural que pocos están viendo:
+                </p>
+
+                <div class="space-y-4 text-left max-w-xl w-full">
+                    <div class="flex gap-4 items-start">
+                        <div class="text-primary mt-1 shrink-0"><i data-lucide="arrow-right-circle" class="w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-700 font-bold text-base sm:text-lg">Pasar de automatizaciones a
+                            aplicaciones completas</p>
+                    </div>
+                    <div class="flex gap-4 items-start">
+                        <div class="text-primary mt-1 shrink-0"><i data-lucide="arrow-right-circle" class="w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-700 font-bold text-base sm:text-lg">De workflows backend a sistemas con
+                            interfaz visible</p>
+                    </div>
+                    <div class="flex gap-4 items-start">
+                        <div class="text-primary mt-1 shrink-0"><i data-lucide="arrow-right-circle" class="w-5 h-5"></i>
+                        </div>
+                        <p class="text-slate-700 font-bold text-base sm:text-lg">De técnico de n8n a desarrollador
+                            híbrido que elige la mejor solución en cada caso</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 max-w-xl w-full text-left">
+                    <p class="text-slate-900 font-bold text-lg border-l-4 border-primary pl-4">
+                        Y eso es exactamente lo que verás en estas clases.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Para Quién Es -->
+    <section class="full-width-breakout py-12 sm:py-16 bg-slate-50 border-y border-slate-100 px-4 sm:px-6 relative">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-8 sm:mb-12">
+                <h2 class="text-3xl sm:text-4xl font-bold mb-4 text-slate-900">Para Quién es Este Evento</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 sm:gap-10">
+
+                <!-- ES PARA TI -->
+                <div class="clean-card rounded-2xl p-6 sm:p-8 bg-white">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-6 text-slate-900">Este evento es para ti si:</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Te interesan las
+                                automatizaciones (n8n, Make, Zapier) pero quieres ir <strong
+                                    class="font-bold text-slate-900">MÁS ALLÁ</strong></p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Sientes que te estás quedando
+                                en la "punta del iceberg" de IA</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Quieres crear software con
+                                IA, tu propio producto</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-green-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Buscas un método reproducible
+                                que funcione (no más tutoriales sueltos)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NO ES PARA TI -->
+                <div class="clean-card rounded-2xl p-6 sm:p-8 bg-white border-red-100">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-6 text-slate-900">Este evento NO es para ti si:</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="x-circle" class="w-5 h-5 text-red-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Buscas fórmulas mágicas sin
+                                esfuerzo real</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="x-circle" class="w-5 h-5 text-red-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Solo quieres ver esto como si
+                                fuese Netflix, sin intención de aplicarlo</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="x-circle" class="w-5 h-5 text-red-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">Te conformas con seguir
+                                copiando tutoriales sin evolucionar</p>
+                        </div>
+                        <div class="flex gap-3 items-start">
+                            <i data-lucide="x-circle" class="w-5 h-5 text-red-500 mt-0.5 shrink-0"></i>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed">No estás dispuesto a aprender
+                                algo nuevo (Vibe Coding como herramienta principal)</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructor -->
+    <section id="instructor" class="full-width-breakout bg-white py-12 sm:py-16 px-6 relative">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex flex-col md:flex-row items-start gap-12 bg-white">
+                <div class="w-full md:w-1/2 relative sticky top-24">
+                    <div class="aspect-square rounded-2xl overflow-hidden relative z-10 border-4 border-white">
+                        <img src="https://storage.googleapis.com/msgsndr/0DGrKc1pz6fnALaQvlxp/media/68b62ae5dc48178b5c90946e.jpeg"
+                            alt="Nico Instructor" loading="lazy" decoding="async" width="600" height="600"
+                            class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2 space-y-6">
+                    <div
+                        class="inline-block px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+                        Instructor</div>
+
+                    <h2 class="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
+                        Hola, soy Nico.
+                    </h2>
+
+                    <div class="text-slate-600 text-base space-y-4 font-light leading-relaxed">
+                        <p>Estaba estudiando física cuando descubrí la IA, y tuve la suerte de meterme justo antes de
+                            que todo explotara con los modelos de lenguaje. Desde entonces no he parado de construir
+                            automatizaciones, sistemas, y en el último año he dado el salto a crear productos completos
+                            porque veo que las soluciones que se pueden hacer ahora son mucho mejores.</p>
+                        <p>He formado a más de 10 mil personas en inteligencia artificial, construyo y vendo mis propias
+                            soluciones, y solo trabajo en proyectos que realmente me gustan. Comparto todo el proceso en
+                            redes porque creo que la mejor forma de aprender es viendo cómo se hace de verdad.</p>
+                        <p>Lo que me mueve no es vender formación por vender. Lo que me mueve es trabajar con gente con
+                            la que pueda construir soluciones reales y hacer negocio juntos. Por eso enseño el método
+                            exacto que yo uso para construir, para que después, si se da la oportunidad, podamos crear
+                            proyectos juntos.</p>
+                        <div>
+                            <p class="font-bold text-slate-900 mb-1">Mi promesa es simple:</p>
+                            <p>No te voy a enseñar nada que no haya hecho yo mismo. Todo lo que verás en estas clases
+                                son
+                                aplicaciones reales que funcionan en producción con usuarios reales. Por eso no vas a
+                                ver slides bonitos ni teoría de relleno. Vas a ver construcción técnica real, las mismas
+                                decisiones que tomo cuando construyo, los mismos pasos que sigo para llevar sistemas a
+                                producción sin que se rompan.</p>
+                        </div>
+                        <p>Si estás leyendo esto es porque quieres crear aplicaciones completas con IA, no solo
+                            automatizaciones. Y yo te prometo que en estas clases te voy a enseñar exactamente cómo lo
+                            hago.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Final de Registro -->
+    <section class="full-width-breakout py-12 sm:py-16 px-6 bg-slate-50 text-center border-t border-slate-100">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl sm:text-4xl font-bold mb-6 text-slate-900">Regístrate al Único Evento que Hago en el Año
+            </h2>
+            <p class="text-slate-600 text-lg mb-8">Las Plazas son limitadas para mantener la calidad y poderte responder
+                Q&A en vivo</p>
+
+            <button id="btn-registro-popup-final"
+                class="trigger-popup inline-block w-full sm:w-auto px-10 py-4 bg-primary text-white rounded-full font-bold text-lg hover:bg-blue-600 transition-all active:scale-[0.98] text-center cursor-pointer border-none mb-8">
+                REGISTRARME
+            </button>
+
+            <p class="text-slate-500 text-sm max-w-2xl mx-auto italic leading-relaxed">
+                Al final del evento, además, voy a hacer una oferta única para que puedas llevar esto al
+                siguiente nivel para que puedas aprender todo esto, formarte y luego crear tus propios productos juntos
+                conmigo. Pero es completamente opcional.
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="full-width-breakout bg-secondary py-12 px-6 text-center border-t border-slate-800">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-center gap-2 mb-8">
+                <img src="https://storage.googleapis.com/msgsndr/0DGrKc1pz6fnALaQvlxp/media/68fd0dbf47cb3bbe70b09b0c.png"
+                    alt="Nico Logo" loading="lazy" decoding="async" width="150" height="32"
+                    class="h-8 w-auto object-contain grayscale invert opacity-40">
+            </div>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                COPYRIGHT © 2026 NICO - IA LAB.
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                AVISO
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                Este sitio no forma parte ni está respaldado por Facebook™. Facebook™ es una marca comercial de
+                Facebook™, Inc.
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                Los resultados indicados anteriormente son mis resultados personales. Por favor, comprende que mis
+                resultados no son típicos, no estoy dando a entender que necesariamente los replicarás o harás algo al
+                respecto. Tengo la ventaja de tener años de experiencia en esta materia.
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                Estoy usando las referencias a resultados solo a modo de ejemplo. Tus resultados variarán y dependerán
+                de muchos factores como tus antecedentes, experiencia o incluso ética.
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                En mi experiencia todo logro o proyecto conlleva un riesgo, así como un esfuerzo y una acción constante.
+                Si no estás dispuesto a aceptar esto puede que este evento no sea para ti.
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                Gracias por tu interés y comprensión.
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                Al final del evento haré una oferta para las personas que quieran tener acceso a un programa
+                completo (IA LAB) que les ayudará a implementar y profundizar aún más en la materia. Esto es
+                completamente opcional.
+            </p>
+            <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                Este evento gratuito consta de 3 clases en directo (60-90 minutos cada una) y si no quieres el programa
+                completo puedes irte
+                sin comprar nada en cualquier momento. El evento gratuito no te compromete a nada y podrás implementar
+                lo que aprendas de inmediato por tu cuenta.
+            </p>
+            <div class="flex justify-center gap-6 mt-6 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                <a href="#" class="hover:text-white transition">Legal</a>
+                <a href="#" class="hover:text-white transition">Privacidad</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Popup para Formulario -->
+    <div id="form-popup-overlay" class="popup-overlay">
+        <div class="popup-content">
+            <button class="popup-close" id="close-popup">&times;</button>
+
+            <div class="px-5 sm:px-6 py-4 bg-white">
+                <p class="text-slate-700 text-xs sm:text-sm leading-relaxed font-medium text-center">
+                    Este <strong class="font-bold text-slate-900">NO</strong> es un evento con slides bonitos. Vas a ver
+                    la construcción <strong class="font-bold text-slate-900">REAL</strong> de sistemas completos a lo
+                    largo de las 3 clases. Si
+                    buscas teoría sin implementación, este no es tu sitio
+                </p>
+            </div>
+
+            <iframe
+                src="https://link.cleesaas.com/widget/form/CGoGWRM9tCWt613aGYox"
+                style="width:100%;height:500px;border:none;border-radius:5px"
+                id="inline-CGoGWRM9tCWt613aGYox"
+                data-layout="{'id':'INLINE'}"
+                data-trigger-type="alwaysShow"
+                data-trigger-value=""
+                data-activation-type="alwaysActivated"
+                data-activation-value=""
+                data-deactivation-type="neverDeactivate"
+                data-deactivation-value=""
+                data-form-name="Form Evento 2026"
+                data-height="500"
+                data-layout-iframe-id="inline-CGoGWRM9tCWt613aGYox"
+                data-form-id="CGoGWRM9tCWt613aGYox"
+                title="Form Evento 2026"
+                loading="lazy">
+            </iframe>
+        </div>
+    </div>
+
+    <script defer>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+
+            // Video placeholder logic
+            const vPlaceOficial = document.getElementById('video-placeholder-oficial');
+            const videoOficial = document.getElementById('video-oficial');
+
+            if (vPlaceOficial && videoOficial) {
+                const playVideo = () => {
+                    vPlaceOficial.classList.add('fade-out');
+                    videoOficial.currentTime = 0;
+                    videoOficial.loop = false;
+                    videoOficial.muted = false;
+                    videoOficial.controls = true;
+                    videoOficial.play().catch(err => console.log('Error al reproducir video:', err));
+                };
+
+                vPlaceOficial.addEventListener('click', playVideo);
+                vPlaceOficial.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    playVideo();
+                });
+
+                videoOficial.play().catch(() => console.log('Autoplay bloqueado'));
+            }
+
+            // Scroll handling
+            window.addEventListener('scroll', () => {
+                const nav = document.querySelector('nav');
+                if (nav) {
+                    nav.classList.toggle('shadow-sm', window.scrollY > 20);
+                    nav.classList.toggle('border-b-slate-200', window.scrollY > 20);
+                }
+            }, { passive: true });
+
+            // Smooth scroll
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    if (!this.classList.contains('trigger-popup')) {
+                        e.preventDefault();
+                        const target = document.querySelector(this.getAttribute('href'));
+                        if (target) {
+                            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }
+                });
+            });
+
+            // Popup handling
+            const popupOverlay = document.getElementById('form-popup-overlay');
+            const btnClose = document.getElementById('close-popup');
+            const triggerButtons = document.querySelectorAll('.trigger-popup');
+
+            if (triggerButtons.length > 0 && popupOverlay) {
+                triggerButtons.forEach(btn => {
+                    btn.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        popupOverlay.classList.add('active');
+                        document.body.style.overflow = 'hidden';
+                    });
+                });
+            }
+
+            function closePopup() {
+                if (popupOverlay) {
+                    popupOverlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            }
+
+            if (btnClose && popupOverlay) {
+                btnClose.addEventListener('click', closePopup);
+            }
+
+            if (popupOverlay) {
+                popupOverlay.addEventListener('click', function (e) {
+                    if (e.target === popupOverlay) {
+                        closePopup();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && popupOverlay && popupOverlay.classList.contains('active')) {
+                    closePopup();
+                }
+            });
+        });
+    </script>
+    <script src="https://link.cleesaas.com/js/form_embed.js" defer></script>
+</body>
+
+</html>

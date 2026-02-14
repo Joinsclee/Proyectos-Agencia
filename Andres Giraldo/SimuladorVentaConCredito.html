@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="es">
+<!-- Version 2.0 - Updated 2026-02-13 -->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Rentabilidad CRECE - Venta con Crédito Hipotecario</title>
+    <!-- Fonts: Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+            background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.03), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.03), transparent 40%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+        }
+
+        .aura-gradient-text {
+            background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-header {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            color: #1e293b;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        /* TÍTULOS DE SECCIÓN PERSONALIZADOS */
+
+        /* 1. Datos (Blue/Sky) */
+        .section-datos .section-header {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            color: #0369a1;
+            border-color: #7dd3fc;
+        }
+
+        /* 2. Financiación (Teal) */
+        .section-financiacion .section-header {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            color: #0f766e;
+            border-color: #5eead4;
+        }
+
+        /* 3. Tenencia (Amber) */
+        .section-tenencia .section-header {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #b45309;
+            border-color: #fcd34d;
+        }
+
+        /* 4. Venta (Indigo) */
+        .section-venta .section-header {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4338ca;
+            border-color: #a5b4fc;
+        }
+
+        /* 5. Resultados (Green/Emerald) - Full Background */
+        .section-resultado {
+            background-color: #ecfdf5 !important;
+            border: 2px solid #6ee7b7 !important;
+        }
+
+        .section-resultado .section-header {
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+        }
+
+        .section-resultado .field-input-wrapper {
+            background-color: #d1fae5 !important;
+            border-color: #6ee7b7 !important;
+        }
+
+        .section-resultado .field-input-wrapper input {
+            color: #065f46 !important;
+            font-weight: 800;
+        }
+
+        .section-resultado .currency-symbol,
+        .section-resultado .percent-symbol {
+            color: #059669 !important;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .field-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            /* Allow tooltip overflow */
+            position: relative;
+        }
+
+        .field-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .field-label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .field-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: all 0.2s;
+        }
+
+        .field-input-wrapper:focus-within {
+            border-color: #64748b;
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+        }
+
+        /* Calculated fields tinte específico por sección */
+        .field-input-wrapper.calculated {
+            background: #f8fafc;
+        }
+
+        .section-datos .field-input-wrapper.calculated {
+            background: #f0f9ff;
+            border-color: #bae6fd;
+        }
+
+        .section-financiacion .field-input-wrapper.calculated {
+            background: #f0fdfa;
+            border-color: #99f6e4;
+        }
+
+        .section-tenencia .field-input-wrapper.calculated {
+            background: #fffbeb;
+            border-color: #fde68a;
+        }
+
+        .section-venta .field-input-wrapper.calculated {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+        }
+
+        .field-input-wrapper input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+            text-align: left;
+            color: #0f172a;
+        }
+
+        .currency-symbol,
+        .percent-symbol {
+            font-weight: 700;
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .primary-button {
+            background-color: #0f172a;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .primary-button:hover {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .tooltip-trigger {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background-color: #0f172a;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 6px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        .tooltip-trigger:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 10000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #0f172a;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: normal;
+            line-height: 1.5;
+            width: 280px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s, visibility 0.3s;
+            white-space: normal;
+            pointer-events: none;
+        }
+
+        .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid transparent;
+            border-top-color: #0f172a;
+        }
+
+        @media (max-width: 768px) {
+            .field-row {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body class="selection:bg-slate-200">
+    <div class="w-full flex justify-center py-6">
+        <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png"
+            alt="Logo" class="h-16 object-contain">
+    </div>
+
+    <div class="container mx-auto px-4 pb-8 max-w-5xl">
+        <!-- Header -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2 aura-gradient-text uppercase">SIMULADOR DE RENTABILIDAD CRECE
+            </h1>
+            <p class="text-lg font-semibold text-slate-700">PROYECTO INMOBILIARIO EN PLANOS</p>
+            <p class="text-md text-slate-600 mb-4">Estrategia: Venta de un Inmueble Adquirido con Crédito Hipotecario
+            </p>
+            <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 inline-block max-w-3xl">
+                <p class="text-sm text-slate-600">
+                    <strong>OBJETIVO:</strong> Ayudar al inversionista a simular y analizar la rentabilidad de un
+                    proyecto inmobiliario, evaluando el aporte de capital, el uso de crédito hipotecario y la venta del
+                    inmueble como estrategia de salida.
+                </p>
+            </div>
+
+            <!-- Nombre del Proyecto -->
+            <div class="mt-4 flex items-center justify-center gap-2">
+                <label for="nombreProyecto" class="text-sm font-semibold text-slate-700">📝 Nombre del Proyecto o Inversión:</label>
+                <input type="text" id="nombreProyecto" placeholder="Ej: Proyecto Alto de la María"
+                    class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400" style="width: 500px;">
+            </div>
+        </div>
+
+        <!-- 1. DATOS DEL PROYECTO -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-datos">
+            <div class="section-header">📋 DATOS DEL PROYECTO</div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Precio de Compra del Inmueble
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor final pagado por el inmueble, luego de aplicar el descuento
+                                negociado mediante las tácticas de Captura de Oportunidades del Sistema CRECE.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="precioCompra" value="245.300.000">
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Área del Inmueble (M²)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Ingrese el área construida que registra en las escrituras.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="areaM2" value="50">
+                        <span class="percent-symbol">M²</span>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Valor del Metro Cuadrado
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor que se utiliza para realizar análisis comparativos de
+                                precios de mercado, tomando como referencia el área del inmueble.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="valorM2" readonly>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Meses para Pagar la Cuota Inicial</label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="mesesCuotaInicial" value="30">
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Porcentaje de la Cuota Inicial (Max 100%)</label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="porcentajeCuotaInicial" value="30" min="0" max="100">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Dinero para Reservar el Inmueble</label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="dineroReserva" value="0">
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Valor de la Cuota Inicial
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">La cuota inicial ("enganche" o "entrada") es el monto de dinero
+                                que el comprador paga de sus propios recursos para asegurar la propiedad, representando
+                                una parte del valor total del inmueble.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="valorCuotaInicial" readonly>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Pago Mensual de la Cuota Inicial</label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="pagoMensualCuotaInicial" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Saldo Final al Momento de la Entrega (Préstamo)</label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="saldoEntrega" readonly>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <!-- Espacio vacío para mantener alineación -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. FINANCIACIÓN -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-financiacion">
+            <div class="section-header">🏦 FINANCIACIÓN (Crédito Hipotecario)</div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Plazo del Crédito (Años)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Número de años durante los cuales se proyecta el Crédito
+                                Hipotecario.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="plazoAnos" value="20">
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Tasa Efectiva Anual (E.A.)</label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="tasaEA" value="12" step="0.01">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Tasa Efectiva Mensual (E.M.)</label>
+                    <div class="field-input-wrapper calculated">
+                        <input type="text" id="tasaEM" readonly>
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Cuota Mensual del Crédito (Sin Seguros)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor estimado de la cuota del crédito hipotecario, sin incluir
+                                los seguros exigidos por el Banco. Este valor se presenta únicamente como referencia de
+                                simulación, ya que el valor real de la cuota mensual es determinado por la Entidad
+                                Financiera o Banco.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="cuotaMensual" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        % Costos de Escrituración (Compra)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Porcentaje aplicado al precio de compra del inmueble para cubrir
+                                los costos de escrituración. Varía según la Ciudad y el País.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="porcentajeEscrituracionCompra" value="2.5" step="0.1">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Costos de Escrituración por Compra</label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costosEscrituracionCompra" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. COSTOS DE TENENCIA -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-tenencia">
+            <div class="section-header">🏠 COSTOS MENSUALES DE TENENCIA</div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Administración Mensual
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Costo mensual por el mantenimiento y operación de las áreas
+                                comunes del inmueble. Solo aplica a inmuebles en unidades residenciales con cuota de
+                                mantenimiento.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="administracionMensual" value="200.000">
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Servicios Públicos Mensual</label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="serviciosPublicosMensual" value="80.000">
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Otros Costos del Mes
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Indica posibles costos como los seguros obligatorios del crédito
+                                y otros pagos menores relacionados con la tenencia de la propiedad previo a la
+                                venta.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="otrosCostosMes" value="247.238">
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Costo Total de Tenencia Mensual
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Representa la suma de costos periódicos que el propietario debe
+                                asumir una vez recibe el inmueble previo a la venta.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costoTotalTenenciaMensual" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. SALIDA POR VENTA -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-venta">
+            <div class="section-header">💰 SALIDA POR VENTA</div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Precio de Venta Esperado</label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="precioVentaEsperado" value="363.422.743">
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Mes Estimado de Venta (Post-Entrega)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Mes en el que se proyecta vender el inmueble. A menor tiempo de
+                                venta, mayor Rentabilidad.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="mesEstimadoVenta" value="10">
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Costo Tenencia + Crédito Acumulado
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor total de los costos de tenencia del inmueble y de las
+                                cuotas del crédito hipotecario pagadas desde la entrega del inmueble hasta su
+                                venta.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costoTenenciaAcumulado" readonly>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Valorización Fto. Precio Compra
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Indica en qué porcentaje ha aumentado el valor del inmueble en
+                                comparación con el precio inicial de compra.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <input type="text" id="valorizacion" readonly>
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        % Costos Escrituración (Venta)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Porcentaje aplicado al precio de venta del inmueble para cubrir
+                                los costos de escrituración. Varía según la Ciudad y el País.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="porcentajeEscrituracionVenta" value="2.5" step="0.1">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Costos Escrituración por Venta</label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costosEscrituracionVenta" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Saldo Crédito al Momento Venta
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor estimado por pagar del crédito hipotecario al momento de la
+                                venta del inmueble. Este valor se presenta únicamente como referencia de simulación, ya
+                                que el saldo real es determinado por la Entidad Financiera o Banco.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="saldoCreditoVenta" readonly>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Otros Costos Venta
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Representa eventuales pagos de comisiones o tributos relacionados
+                                con la venta.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="otrosCostosVenta" value="6.000.000">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. RESULTADOS -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-resultado">
+            <div class="flex justify-end mb-4">
+                <button onclick="descargarPDF()"
+                    class="primary-button px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Descargar Informe PDF
+                </button>
+            </div>
+            <div class="section-header">📊 RESULTADO DE LA INVERSIÓN</div>
+            <div id="resultadoNegativo"
+                class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center font-bold">
+                La Rentabilidad de esta simulación es Negativa. Debe revisar el precio de venta con respecto al precio
+                de compra y los costos de la operación.
+            </div>
+            <div id="contenedorResultados">
+                <!-- Tiempo de Inversión -->
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">TIEMPO DE LA INVERSIÓN (Meses)</label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tiempoInversion"
+                                readonly><span class="percent-symbol">Meses</span></div>
+                    </div>
+                    <div class="field-item">
+                        <!-- Espacio vacío -->
+                    </div>
+                </div>
+
+                <!-- Subsección: INDICADORES -->
+                <div class="mt-6 mb-3">
+                    <h3 class="text-lg font-bold text-emerald-800 uppercase">Indicadores de Rentabilidad</h3>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">
+                            ROI (Rentabilidad sobre Capital)
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Mide la rentabilidad generada frente al capital invertido.
+                                    Este indicador no tiene en cuenta el tiempo en que se obtiene el resultado.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="roi" readonly><span class="percent-symbol">%</span></div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">
+                            TIR MENSUAL (Estimada)
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Tasa Interna de Retorno mensual. Mide la rentabilidad
+                                    promedio mensual que genera la inversión.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tirMensual" readonly><span
+                                class="percent-symbol">%</span></div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">
+                            TIR ANUAL (Estimada)
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Tasa Interna de Retorno anualizada. Mide la rentabilidad
+                                    anual equivalente que genera la inversión.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tirAnual" readonly><span
+                                class="percent-symbol">%</span></div>
+                    </div>
+                    <div class="field-item">
+                        <!-- Espacio vacío -->
+                    </div>
+                </div>
+
+                <!-- Subsección: CIFRAS -->
+                <div class="mt-6 mb-3">
+                    <h3 class="text-lg font-bold text-emerald-800 uppercase">Cifras de la Inversión</h3>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">
+                            CAPITAL TOTAL INVERTIDO
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Es el dinero real que salió del bolsillo del inversionista
+                                    para ejecutar la operación.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><span class="currency-symbol">$</span><input
+                                type="text" id="capitalTotalInvertido" readonly></div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">
+                            GANANCIA
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Resultado neto de la inversión después de la venta del
+                                    inmueble.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><span class="currency-symbol">$</span><input
+                                type="text" id="ganancia" readonly></div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">
+                            CAPITAL DE REINVERSIÓN
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Es el dinero que queda disponible después de cerrar una
+                                    inversión, pagando el saldo del crédito y los costos asociados a la venta. Este
+                                    capital se utiliza para seguir invirtiendo y hacer crecer el patrimonio de forma
+                                    progresiva dentro del Sistema CRECE.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><span class="currency-symbol">$</span><input
+                                type="text" id="capitalReinversion" readonly></div>
+                    </div>
+                    <div class="field-item">
+                        <!-- Espacio vacío -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. MAPA DE RENTABILIDAD -->
+        <div id="mapaRentabilidad" class="glass rounded-3xl p-8 mb-6 border border-slate-100">
+            <h2 class="text-2xl font-bold mb-2 text-slate-800 text-center uppercase">MAPA DE RENTABILIDAD</h2>
+            <p class="text-center text-slate-600 mb-8 font-medium">Zonas de Calor - Análisis de Rentabilidad</p>
+
+            <!-- Barra de zonas de calor -->
+            <div class="relative h-24 rounded-xl overflow-visible shadow-lg mb-12">
+                <div
+                    class="absolute left-0 top-0 bottom-0 w-[30%] bg-gradient-to-r from-green-600 via-green-500 to-green-400 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <p class="font-bold text-lg">Zona Verde</p>
+                    </div>
+                </div>
+                <div
+                    class="absolute left-[30%] top-0 bottom-0 w-[40%] bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <p class="font-bold text-lg">Zona Amarilla</p>
+                    </div>
+                </div>
+                <div
+                    class="absolute right-0 top-0 bottom-0 w-[30%] bg-gradient-to-r from-orange-500 via-orange-400 to-orange-300 flex items-center justify-center">
+                    <div class="text-center text-white">
+                        <p class="font-bold text-lg">Zona Naranja</p>
+                    </div>
+                </div>
+
+                <div id="indicadorPosicion"
+                    class="absolute top-0 bottom-0 w-1 bg-slate-800 z-10 transition-all duration-300"
+                    style="left: 50%; box-shadow: 0 0 20px rgba(15,23,42,0.5);">
+                    <div
+                        class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-bold whitespace-nowrap shadow-lg">
+                        Tu ROI
+                        <div
+                            class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800">
+                        </div>
+                    </div>
+                    <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-bold"
+                        id="indicadorTiempoCesion">
+                        20 meses
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráfica de ROI vs Tiempo -->
+            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200 mb-6">
+                <h3 class="text-xl font-bold text-slate-800 mb-4 text-center">ROI vs Tiempo de Inversión</h3>
+
+                <div class="relative h-64">
+                    <div
+                        class="absolute left-0 top-0 bottom-8 w-16 flex flex-col justify-between text-right pr-2 text-sm font-medium text-slate-600">
+                        <span id="ejeY3">50%</span>
+                        <span id="ejeY2">33%</span>
+                        <span id="ejeY1">17%</span>
+                        <span>0%</span>
+                    </div>
+
+                    <div class="absolute left-16 right-0 top-0 bottom-8 border-l-2 border-b-2 border-slate-300">
+                        <div class="absolute left-0 right-0 top-0 border-b border-slate-200"></div>
+                        <div class="absolute left-0 right-0 top-1/3 border-b border-slate-200"></div>
+                        <div class="absolute left-0 right-0 top-2/3 border-b border-slate-200"></div>
+
+                        <!-- Zonas horizontales basadas en ROI: Verde ≥30%, Amarilla 15-30%, Naranja <15% -->
+                        <div class="absolute left-0 right-0 top-0 h-[40%] bg-green-500 opacity-20"></div>
+                        <div class="absolute left-0 right-0 top-[40%] h-[30%] bg-yellow-400 opacity-20"></div>
+                        <div class="absolute left-0 right-0 bottom-0 h-[30%] bg-orange-400 opacity-20"></div>
+
+                        <div id="puntoCesion"
+                            class="absolute w-5 h-5 bg-slate-800 rounded-full border-4 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2 z-10"
+                            style="left: 50%; top: 50%;">
+                            <div
+                                class="absolute -top-14 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap shadow-xl">
+                                <span id="roiTooltip">ROI: 0%</span>
+                                <div
+                                    class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="absolute left-16 right-0 bottom-0 h-8 flex justify-between items-start pt-2 text-sm font-medium text-slate-600">
+                        <span>0m</span>
+                        <span class="text-green-600">12m</span>
+                        <span class="text-yellow-600">24m</span>
+                        <span class="text-orange-600">40m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leyenda -->
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-4 h-4 bg-green-600 rounded"></div>
+                        <h4 class="font-bold text-green-800">Zona Verde</h4>
+                    </div>
+                    <p class="text-sm text-green-700">ROI igual o superior al 30%, excelente rentabilidad.</p>
+                </div>
+
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-4 h-4 bg-yellow-500 rounded"></div>
+                        <h4 class="font-bold text-yellow-800">Zona Amarilla</h4>
+                    </div>
+                    <p class="text-sm text-yellow-700">ROI entre 15% y 30%, rentabilidad moderada.
+                    </p>
+                </div>
+
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-4 h-4 bg-orange-600 rounded"></div>
+                        <h4 class="font-bold text-orange-800">Zona Naranja</h4>
+                    </div>
+                    <p class="text-sm text-orange-700">ROI inferior al 15%, requiere analizar la valorización y
+                        tu objetivo de inversión.</p>
+                </div>
+            </div>
+
+            <!-- Análisis personalizado -->
+            <div id="analisisPersonalizado"
+                class="rounded-xl p-6 border-2 bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-300">
+                <h4 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    ANÁLISIS DE TU INVERSIÓN
+                </h4>
+                <div class="space-y-2 text-gray-800" id="textoAnalisis">
+                    <p class="font-medium">Cargando análisis...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. DISCLAIMER -->
+        <div class="bg-amber-50 border-l-4 border-amber-500 rounded-xl p-6 mb-8">
+            <h4 class="font-bold text-amber-900 mb-2 flex items-center gap-2">⚠ NOTA IMPORTANTE:</h4>
+            <p class="text-amber-800 text-xs text-justify">
+                Este análisis es una herramienta de apoyo financiero elaborada con fines informativos y educativos, y no
+                debe interpretarse como una recomendación final de inversión. No reemplaza el análisis legal ni la
+                validación de las condiciones del crédito hipotecario. Los resultados obtenidos dependen de los
+                supuestos ingresados en el simulador y pueden variar según las condiciones reales del proyecto, del
+                crédito hipotecario, del mercado inmobiliario y del momento de la venta.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function formatNumberInput(value) { return value.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function parseFormattedNumber(value) { return parseFloat(value.toString().replace(/\./g, '')) || 0; }
+
+        function calcular() {
+            // Entradas
+            let pCompra = parseFormattedNumber(document.getElementById('precioCompra').value);
+            let area = parseFloat(document.getElementById('areaM2').value) || 1;
+            let mCI = parseInt(document.getElementById('mesesCuotaInicial').value) || 1;
+            let perCI = parseFloat(document.getElementById('porcentajeCuotaInicial').value) || 0;
+            let reserva = parseFormattedNumber(document.getElementById('dineroReserva').value);
+
+            let vCI = Math.round(pCompra * (perCI / 100));
+            // Validación CSV: Dinero reserva no mayor a cuota inicial
+            if (reserva > vCI) { reserva = vCI; document.getElementById('dineroReserva').value = formatNumberInput(reserva); }
+
+            let pagoM_CI = Math.round((vCI - reserva) / mCI);
+            let saldoEntrega = pCompra - vCI;
+
+            // Financiación
+            let plazo = parseInt(document.getElementById('plazoAnos').value) || 1;
+            let tasaEA = parseFloat(document.getElementById('tasaEA').value) || 0;
+            let tasaEM = Math.pow(1 + (tasaEA / 100), 1 / 12) - 1;
+            let nPer = plazo * 12;
+            let cuotaH = Math.round(saldoEntrega * (tasaEM / (1 - Math.pow(1 + tasaEM, -nPer))));
+            let perEscCompra = parseFloat(document.getElementById('porcentajeEscrituracionCompra').value) || 0;
+            let costosEscCompra = Math.round(pCompra * (perEscCompra / 100));
+
+            // Tenencia
+            let admin = parseFormattedNumber(document.getElementById('administracionMensual').value);
+            let serv = parseFormattedNumber(document.getElementById('serviciosPublicosMensual').value);
+            let otrosTen = parseFormattedNumber(document.getElementById('otrosCostosMes').value);
+            let tenenciaMes = admin + serv + otrosTen;
+
+            // Salida
+            let pVenta = parseFormattedNumber(document.getElementById('precioVentaEsperado').value);
+            let mesVenta = parseInt(document.getElementById('mesEstimadoVenta').value) || 0;
+            let costoTenenciaAcum = (cuotaH + tenenciaMes) * mesVenta;
+            let valorizacion = (pVenta / pCompra) - 1;
+            let perEscVenta = parseFloat(document.getElementById('porcentajeEscrituracionVenta').value) || 0;
+            let costosEscVenta = Math.round(pVenta * (perEscVenta / 100));
+
+            // Formula Saldo Remanente Exacta (Mortgage Balance)
+            let factorN = Math.pow(1 + tasaEM, nPer);
+            let factorP = Math.pow(1 + tasaEM, mesVenta);
+            let saldoCreditoVenta = saldoEntrega * (factorN - factorP) / (factorN - 1);
+            if (saldoCreditoVenta < 0) saldoCreditoVenta = 0;
+
+            let otrosCostosVenta = parseFormattedNumber(document.getElementById('otrosCostosVenta').value);
+
+            // Resultados
+            let tiempoTotal = mCI + mesVenta;
+            let capitalInv = vCI + costosEscCompra + costoTenenciaAcum + otrosCostosVenta;
+            let ganancia = pVenta - saldoCreditoVenta - costosEscVenta - capitalInv;
+            let roi = (capitalInv > 0) ? (ganancia / capitalInv) : 0;
+            let capitalReinv = capitalInv + ganancia;
+
+            let tirAnual = (tiempoTotal > 0 && capitalInv > 0 && (capitalReinv / capitalInv) > 0) ? (Math.pow((capitalReinv / capitalInv), 12 / tiempoTotal) - 1) : 0;
+            let tirMensual = (tiempoTotal > 0 && capitalInv > 0 && (capitalReinv / capitalInv) > 0) ? (Math.pow((capitalReinv / capitalInv), 1 / tiempoTotal) - 1) : 0;
+
+            // Set Values
+            document.getElementById('valorM2').value = formatNumberInput(Math.round(pCompra / area));
+            document.getElementById('valorCuotaInicial').value = formatNumberInput(vCI);
+            document.getElementById('pagoMensualCuotaInicial').value = formatNumberInput(pagoM_CI);
+            document.getElementById('saldoEntrega').value = formatNumberInput(Math.round(saldoEntrega));
+
+            document.getElementById('tasaEM').value = (tasaEM * 100).toFixed(2);
+            document.getElementById('cuotaMensual').value = formatNumberInput(cuotaH);
+            document.getElementById('costosEscrituracionCompra').value = formatNumberInput(costosEscCompra);
+
+            document.getElementById('costoTotalTenenciaMensual').value = formatNumberInput(tenenciaMes);
+
+            document.getElementById('costoTenenciaAcumulado').value = formatNumberInput(Math.round(costoTenenciaAcum));
+            document.getElementById('valorizacion').value = (valorizacion * 100).toFixed(2);
+            document.getElementById('costosEscrituracionVenta').value = formatNumberInput(costosEscVenta);
+            document.getElementById('saldoCreditoVenta').value = formatNumberInput(Math.round(saldoCreditoVenta));
+
+            document.getElementById('tiempoInversion').value = tiempoTotal;
+            document.getElementById('capitalTotalInvertido').value = formatNumberInput(Math.round(capitalInv));
+            document.getElementById('ganancia').value = formatNumberInput(Math.round(ganancia));
+            document.getElementById('capitalReinversion').value = formatNumberInput(Math.round(capitalReinv));
+            document.getElementById('roi').value = (roi * 100).toFixed(2);
+            document.getElementById('tirMensual').value = (tirMensual * 100).toFixed(2);
+            document.getElementById('tirAnual').value = (tirAnual * 100).toFixed(2);
+
+            analizarResultados(roi * 100, tiempoTotal, Math.round(costoTenenciaAcum), Math.round(capitalInv));
+        }
+
+        function analizarResultados(roiVal, meses, costoTenencia, capitalInv) {
+            const map = document.getElementById('mapaRentabilidad');
+            const resNeg = document.getElementById('resultadoNegativo');
+
+            if (roiVal < 0) {
+                resNeg.classList.remove('hidden');
+                map.classList.add('hidden');
+                return;
+            } else {
+                resNeg.classList.add('hidden');
+                map.classList.remove('hidden');
+            }
+
+            let titulo = "", msg = "", colorCls = "";
+            let pctTenencia = (capitalInv > 0) ? ((costoTenencia / capitalInv) * 100).toFixed(1) : "0";
+            let posPunto = 0;
+
+            if (roiVal >= 30) {
+                titulo = "Inversión Atractiva. Con buen desempeño con respecto al capital invertido.";
+                msg = `Con un tiempo de Inversión de ${meses} meses, esta operación se ubica en la Zona Verde. Este nivel de ROI corresponde a oportunidades que permiten acelerar el crecimiento del capital y avanzar más rápido en la ruta del inversionista.<br><br><strong>Costo de Tenencia Actual: $${formatNumberInput(costoTenencia)} (${pctTenencia}% Del total de Capital Invertido)</strong>`;
+                colorCls = "bg-green-50 border-green-200 text-green-900";
+                posPunto = 15;
+            } else if (roiVal >= 15) {
+                titulo = "ROI SALUDABLE. Inversión que genera valor y recupera el capital con utilidad razonable.";
+                msg = `Con un tiempo de Inversión de ${meses} meses, esta operación se ubica en la Zona Amarilla. Balance entre rentabilidad y tiempo. Frente a alternativas tradicionales, este ROI representa una inversión inmobiliaria competitiva.<br><br><strong>Costo de Tenencia Actual: $${formatNumberInput(costoTenencia)} (${pctTenencia}% Del total de Capital Invertido)</strong>`;
+                colorCls = "bg-yellow-50 border-yellow-200 text-yellow-900";
+                posPunto = 50;
+            } else {
+                titulo = "BAJO Retorno de la Inversión. Evalúa la rentabilidad y verifica el cumplimiento del objetivo.";
+                msg = `Con un tiempo de Inversión de ${meses} meses, esta operación se ubica en la Zona Naranja. Rentabilidad baja respecto al capital aportado, con costos que afectan significativamente la eficiencia de la inversión. 'El proyecto trabaja más para el banco que para el inversionista.'<br><br><strong>Costo de Tenencia Actual: $${formatNumberInput(costoTenencia)} (${pctTenencia}% Del total de Capital Invertido)</strong>`;
+                colorCls = "bg-orange-50 border-orange-200 text-orange-900";
+                posPunto = 85;
+            }
+
+            document.getElementById('indicadorPosicion').style.left = posPunto + "%";
+            document.getElementById('indicadorTiempoCesion').textContent = roiVal.toFixed(2) + '%';
+            const box = document.getElementById('analisisPersonalizado');
+            box.className = `rounded-xl p-6 border-2 ${colorCls}`;
+            document.getElementById('textoAnalisis').innerHTML = `<p class="font-bold mb-2">${titulo}</p><p>${msg}</p>`;
+
+            // Grafica ROI vs Tiempo (Ejes Dinámicos)
+            let maxRoiGraph = Math.max(50, Math.ceil(roiVal * 1.2));
+            let xPct = Math.min(100, (meses / 40) * 100);
+            let yPct = Math.min(100, (roiVal / maxRoiGraph) * 100);
+
+            document.getElementById('puntoCesion').style.left = xPct + "%";
+            document.getElementById('puntoCesion').style.top = (100 - yPct) + "%";
+            document.getElementById('roiTooltip').innerText = "ROI: " + roiVal.toFixed(2) + "%";
+
+            // Update Axis Labels to match threshold boundaries
+            document.getElementById('ejeY3').innerText = maxRoiGraph + "%";
+            document.getElementById('ejeY2').innerText = "30%";  // Verde threshold
+            document.getElementById('ejeY1').innerText = "15%";  // Amarilla threshold
+        }
+
+        async function descargarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Configuración de colores
+            const colorPrimario = [15, 23, 42]; // #0f172a
+            const colorSecundario = [100, 116, 139]; // #64748b
+            const colorVerde = [134, 239, 172]; // #86efac
+            const colorFondoClaro = [248, 250, 252]; // #f8fafc
+
+            let yPosition = 20;
+            const margenIzq = 20;
+            const margenDer = 190;
+            const anchoUtil = margenDer - margenIzq;
+
+            // Función para verificar salto de página
+            function checkPageBreak(heightNeeded) {
+                if (yPosition + heightNeeded > 270) {
+                    doc.addPage();
+                    yPosition = 20;
+                    return true;
+                }
+                return false;
+            }
+
+            try {
+                // Cargar y agregar el logo
+                const logoUrl = 'https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png';
+                const imgData = await cargarImagenBase64(logoUrl);
+
+                // Calcular dimensiones manteniendo proporción
+                const maxLogoWidth = 60;
+                const maxLogoHeight = 30;
+                const img = await cargarImagen(logoUrl);
+                const aspectRatio = img.width / img.height;
+
+                let logoWidth = maxLogoWidth;
+                let logoHeight = maxLogoWidth / aspectRatio;
+
+                if (logoHeight > maxLogoHeight) {
+                    logoHeight = maxLogoHeight;
+                    logoWidth = maxLogoHeight * aspectRatio;
+                }
+
+                const logoX = (210 - logoWidth) / 2;
+                doc.addImage(imgData, 'PNG', logoX, yPosition, logoWidth, logoHeight);
+                yPosition += logoHeight + 10;
+            } catch (error) {
+                console.log('No se pudo cargar el logo, continuando sin él');
+                yPosition += 5;
+            }
+
+            // Título principal
+            doc.setFillColor(...colorPrimario);
+            doc.rect(margenIzq, yPosition, anchoUtil, 25, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SIMULADOR DE RENTABILIDAD CRECE', 105, yPosition + 8, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text('PROYECTO INMOBILIARIO EN PLANOS - CRÉDITO HIPOTECARIO', 105, yPosition + 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text('Estrategia: Venta de un Inmueble Adquirido con Crédito Hipotecario', 105, yPosition + 21, { align: 'center' });
+            yPosition += 27;
+
+            // Nombre del Proyecto (si se ingresó)
+            const nombreProyecto = document.getElementById('nombreProyecto').value.trim();
+            if (nombreProyecto) {
+                doc.setFillColor(241, 245, 249);
+                doc.roundedRect(margenIzq, yPosition, anchoUtil, 8, 2, 2, 'F');
+                doc.setTextColor(51, 65, 85);
+                doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+                doc.text(nombreProyecto, 105, yPosition + 5.5, { align: 'center' });
+                yPosition += 12;
+            } else {
+                yPosition += 8;
+            }
+
+            // Obtener valores actuales
+            const precioCompra = parseFormattedNumber(document.getElementById('precioCompra').value);
+            const areaM2 = parseFloat(document.getElementById('areaM2').value);
+            const valorM2 = document.getElementById('valorM2').value;
+            const mesesCuotaInicial = parseFormattedNumber(document.getElementById('mesesCuotaInicial').value);
+            const porcentajeCuotaInicial = parseFloat(document.getElementById('porcentajeCuotaInicial').value);
+            const dineroReserva = parseFormattedNumber(document.getElementById('dineroReserva').value);
+            const valorCuotaInicial = document.getElementById('valorCuotaInicial').value;
+            const pagoMensualCuotaInicial = document.getElementById('pagoMensualCuotaInicial').value;
+            const saldoEntrega = document.getElementById('saldoEntrega').value;
+
+            const plazoAnos = parseFloat(document.getElementById('plazoAnos').value);
+            const tasaEA = parseFloat(document.getElementById('tasaEA').value);
+            const tasaEM = document.getElementById('tasaEM').value;
+            const cuotaMensual = document.getElementById('cuotaMensual').value;
+            const porcentajeEscrituracionCompra = parseFloat(document.getElementById('porcentajeEscrituracionCompra').value);
+            const costosEscrituracionCompra = document.getElementById('costosEscrituracionCompra').value;
+
+            const administracionMensual = parseFormattedNumber(document.getElementById('administracionMensual').value);
+            const serviciosPublicosMensual = parseFormattedNumber(document.getElementById('serviciosPublicosMensual').value);
+            const otrosCostosMes = parseFormattedNumber(document.getElementById('otrosCostosMes').value);
+            const costoTotalTenenciaMensual = document.getElementById('costoTotalTenenciaMensual').value;
+
+            const precioVentaEsperado = parseFormattedNumber(document.getElementById('precioVentaEsperado').value);
+            const mesEstimadoVenta = parseFormattedNumber(document.getElementById('mesEstimadoVenta').value);
+            const costoTenenciaAcumulado = document.getElementById('costoTenenciaAcumulado').value;
+            const valorizacion = document.getElementById('valorizacion').value;
+            const porcentajeEscrituracionVenta = parseFloat(document.getElementById('porcentajeEscrituracionVenta').value);
+            const costosEscrituracionVenta = document.getElementById('costosEscrituracionVenta').value;
+            const saldoCreditoVenta = document.getElementById('saldoCreditoVenta').value;
+            const otrosCostosVenta = parseFormattedNumber(document.getElementById('otrosCostosVenta').value);
+
+            const tiempoInversion = document.getElementById('tiempoInversion').value;
+            const capitalTotalInvertido = document.getElementById('capitalTotalInvertido').value;
+            const ganancia = document.getElementById('ganancia').value;
+            const capitalReinversion = document.getElementById('capitalReinversion').value;
+            const roiStr = document.getElementById('roi').value;
+            const tirMensualStr = document.getElementById('tirMensual').value;
+            const tirAnualStr = document.getElementById('tirAnual').value;
+
+            const capitalTotalInvertidoNum = parseFormattedNumber(capitalTotalInvertido);
+            const gananciaNum = parseFormattedNumber(ganancia);
+            const capitalReinversionNum = parseFormattedNumber(capitalReinversion);
+
+            // Sección 1: DATOS DEL PROYECTO
+            doc.setFillColor(...colorFondoClaro);
+            doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DATOS DEL PROYECTO', margenIzq + 3, yPosition + 6);
+            yPosition += 12;
+
+            const datosProyecto = [
+                ['Precio de Compra del Inmueble', '$' + formatNumberInput(precioCompra.toString())],
+                ['Área del Inmueble (M²)', areaM2 + ' M²'],
+                ['Valor del Metro Cuadrado', '$' + valorM2],
+                ['Meses para Pagar la Cuota Inicial', mesesCuotaInicial],
+                ['Porcentaje de la Cuota Inicial', porcentajeCuotaInicial + '%'],
+                ['Dinero para Reservar el Inmueble', '$' + formatNumberInput(dineroReserva.toString())],
+                ['Valor de la Cuota Inicial', '$' + valorCuotaInicial],
+                ['Pago Mensual de la Cuota Inicial', '$' + pagoMensualCuotaInicial],
+                ['Saldo Final al Momento de la Entrega', '$' + saldoEntrega]
+            ];
+
+            doc.autoTable({
+                startY: yPosition,
+                head: [],
+                body: datosProyecto,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 20 },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: colorSecundario },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                didParseCell: function (data) {
+                    if (data.row.index >= 2 && data.row.index <= 2 && data.column.index === 1) {
+                        data.cell.styles.fillColor = [240, 249, 255]; // Azul claro para calculados
+                    }
+                    if (data.row.index >= 6 && data.column.index === 1) {
+                        data.cell.styles.fillColor = [240, 249, 255]; // Azul claro para calculados
+                    }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // Sección 2: FINANCIACIÓN (Crédito Hipotecario)
+            doc.setFillColor(204, 251, 241); // Teal claro
+            doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('FINANCIACIÓN (Crédito Hipotecario)', margenIzq + 3, yPosition + 6);
+            yPosition += 12;
+
+            const datosFinanciacion = [
+                ['Plazo del Crédito (Años)', plazoAnos + ' años'],
+                ['Tasa Efectiva Anual (E.A.)', tasaEA + '%'],
+                ['Tasa Efectiva Mensual (E.M.)', tasaEM + '%'],
+                ['Cuota Mensual del Crédito (Sin Seguros)', '$' + cuotaMensual],
+                ['% Costos de Escrituración (Compra)', porcentajeEscrituracionCompra + '%'],
+                ['Costos de Escrituración por Compra', '$' + costosEscrituracionCompra]
+            ];
+
+            doc.autoTable({
+                startY: yPosition,
+                head: [],
+                body: datosFinanciacion,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 20 },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: colorSecundario },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                didParseCell: function (data) {
+                    if ((data.row.index === 2 || data.row.index === 3 || data.row.index === 5) && data.column.index === 1) {
+                        data.cell.styles.fillColor = [240, 253, 250]; // Teal claro para calculados
+                    }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // Sección 3: COSTOS DE TENENCIA
+            doc.setFillColor(254, 243, 199); // Amarillo claro
+            doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('COSTOS DE TENENCIA', margenIzq + 3, yPosition + 6);
+            yPosition += 12;
+
+            const datosTenencia = [
+                ['Administración Mensual', '$' + formatNumberInput(administracionMensual.toString())],
+                ['Servicios Públicos Mensual', '$' + formatNumberInput(serviciosPublicosMensual.toString())],
+                ['Otros Costos del Mes', '$' + formatNumberInput(otrosCostosMes.toString())],
+                ['Costo Total de Tenencia Mensual', '$' + costoTotalTenenciaMensual]
+            ];
+
+            doc.autoTable({
+                startY: yPosition,
+                head: [],
+                body: datosTenencia,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 20 },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: colorSecundario },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                didParseCell: function (data) {
+                    if (data.row.index === 3 && data.column.index === 1) {
+                        data.cell.styles.fillColor = [255, 251, 235]; // Amarillo claro para calculado
+                    }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // Sección 4: SALIDA POR VENTA
+            doc.setFillColor(224, 231, 255); // Indigo claro
+            doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+            doc.setTextColor(...colorPrimario);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SALIDA POR VENTA', margenIzq + 3, yPosition + 6);
+            yPosition += 12;
+
+            const datosVenta = [
+                ['Precio de Venta Esperado', '$' + formatNumberInput(precioVentaEsperado.toString())],
+                ['Mes Estimado de Venta (Post-Entrega)', mesEstimadoVenta + ' meses'],
+                ['Costo Tenencia + Crédito Acumulado', '$' + costoTenenciaAcumulado],
+                ['Valorización Frente al Precio de Compra', valorizacion + '%'],
+                ['% Costos Escrituración (Venta)', porcentajeEscrituracionVenta + '%'],
+                ['Costos Escrituración por Venta', '$' + costosEscrituracionVenta],
+                ['Saldo Crédito al Momento Venta', '$' + saldoCreditoVenta],
+                ['Otros Costos Venta', '$' + formatNumberInput(otrosCostosVenta.toString())]
+            ];
+
+            doc.autoTable({
+                startY: yPosition,
+                head: [],
+                body: datosVenta,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 20 },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.1
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: colorSecundario },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                didParseCell: function (data) {
+                    if ((data.row.index === 2 || data.row.index === 3 || data.row.index === 5 || data.row.index === 6) && data.column.index === 1) {
+                        data.cell.styles.fillColor = [238, 242, 255]; // Indigo claro para calculados
+                    }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // Sección 5: RESULTADO DE LA INVERSIÓN
+            checkPageBreak(60);
+            const yStartResultados = yPosition;
+            const tableHeight = 52; // Altura estimada para 6 filas
+
+            // 1. Fondo de la sección
+            doc.setFillColor(220, 252, 231); // #dcfce7
+            doc.setDrawColor(134, 239, 172); // #86efac
+            doc.setLineWidth(0.4);
+            doc.roundedRect(margenIzq, yStartResultados, anchoUtil, 10 + tableHeight, 2, 2, 'FD');
+
+            // 2. Cabecera de la sección
+            doc.setFillColor(74, 222, 128); // #4ade80
+            doc.rect(margenIzq, yStartResultados, anchoUtil, 10, 'F');
+            doc.setTextColor(6, 78, 59); // #064e3b
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RESULTADO DE LA INVERSIÓN', margenIzq + 5, yStartResultados + 7);
+
+            const datosResultado = [
+                ['CAPITAL TOTAL INVERTIDO', '$' + capitalTotalInvertido],
+                ['GANANCIA NETA', '$' + ganancia],
+                ['ROI (Rentabilidad sobre Capital)', roiStr + '%'],
+                ['TIR MENSUAL (Estimada)', tirMensualStr + '%'],
+                ['TIR ANUAL (Estimada)', tirAnualStr + '%'],
+                ['CAPITAL DE REINVERSIÓN', '$' + capitalReinversion]
+            ];
+
+            doc.autoTable({
+                startY: yStartResultados + 10,
+                head: [],
+                body: datosResultado,
+                theme: 'grid',
+                margin: { left: margenIzq, right: 210 - margenDer },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 3,
+                    lineColor: [134, 239, 172], // #86efac
+                    lineWidth: 0.1,
+                    fillColor: [220, 252, 231] // #dcfce7
+                },
+                columnStyles: {
+                    0: { fontStyle: 'bold', cellWidth: 100, textColor: [6, 95, 70] },
+                    1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: [6, 78, 59] }
+                }
+            });
+
+            yPosition = doc.lastAutoTable.finalY + 15;
+
+            // Sección 6: MAPA DE RENTABILIDAD
+            const roiNum = parseFloat(roiStr);
+            if (roiNum >= 0) {
+                if (yPosition > 200) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+
+                doc.setFillColor(248, 250, 252);
+                doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+                doc.setTextColor(...colorPrimario);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('MAPA DE RENTABILIDAD', margenIzq + 3, yPosition + 6);
+                yPosition += 12;
+
+                // Subtítulo
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(...colorSecundario);
+                doc.text('Zona de Calor - Análisis de Rentabilidad', margenIzq + 3, yPosition + 2);
+                yPosition += 8;
+
+                // Gráfica de zonas
+                const zonaWidth = anchoUtil;
+                const zonaHeight = 20;
+                const zonaVerdeWidth = zonaWidth * 0.30;
+                const zonaAmarillaWidth = zonaWidth * 0.40;
+                const zonaNaranjaWidth = zonaWidth * 0.30;
+
+                // Zona Verde
+                doc.setFillColor(34, 197, 94); // Verde
+                doc.rect(margenIzq, yPosition, zonaVerdeWidth, zonaHeight, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Zona Verde', margenIzq + zonaVerdeWidth / 2, yPosition + zonaHeight / 2 + 2, { align: 'center' });
+
+                // Zona Amarilla
+                doc.setFillColor(234, 179, 8); // Amarillo
+                doc.rect(margenIzq + zonaVerdeWidth, yPosition, zonaAmarillaWidth, zonaHeight, 'F');
+                doc.text('Zona Amarilla', margenIzq + zonaVerdeWidth + zonaAmarillaWidth / 2, yPosition + zonaHeight / 2 + 2, { align: 'center' });
+
+                // Zona Naranja
+                doc.setFillColor(249, 115, 22); // Naranja
+                doc.rect(margenIzq + zonaVerdeWidth + zonaAmarillaWidth, yPosition, zonaNaranjaWidth, zonaHeight, 'F');
+                doc.text('Zona Naranja', margenIzq + zonaVerdeWidth + zonaAmarillaWidth + zonaNaranjaWidth / 2, yPosition + zonaHeight / 2 + 2, { align: 'center' });
+
+                // Calcular posición del indicador (basado en el ROI)
+                let porcentajePosicion;
+                if (roiNum >= 30) {
+                    porcentajePosicion = 15; // Centro de zona verde
+                } else if (roiNum >= 15) {
+                    porcentajePosicion = 50; // Centro de zona amarilla
+                } else {
+                    porcentajePosicion = 85; // Centro de zona naranja
+                }
+
+                const indicadorX = margenIzq + (zonaWidth * porcentajePosicion / 100);
+
+                // Dibujar indicador
+                doc.setDrawColor(...colorPrimario);
+                doc.setLineWidth(1.5);
+                doc.line(indicadorX, yPosition, indicadorX, yPosition + zonaHeight);
+
+                // Etiqueta del indicador
+                doc.setFillColor(...colorPrimario);
+                doc.roundedRect(indicadorX - 12, yPosition - 6, 24, 5, 1, 1, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Tu ROI', indicadorX, yPosition - 2.5, { align: 'center' });
+
+                doc.roundedRect(indicadorX - 12, yPosition + zonaHeight + 1, 24, 5, 1, 1, 'F');
+                doc.text(roiNum.toFixed(1) + '%', indicadorX, yPosition + zonaHeight + 4.5, { align: 'center' });
+
+                yPosition += zonaHeight + 15;
+
+                // Gráfica de ROI vs Tiempo
+                doc.setFillColor(248, 250, 252);
+                doc.rect(margenIzq, yPosition, anchoUtil, 60, 'F');
+                doc.setDrawColor(226, 232, 240);
+                doc.rect(margenIzq, yPosition, anchoUtil, 60, 'S');
+
+                doc.setTextColor(...colorPrimario);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('ROI vs Tiempo de Inversión', margenIzq + anchoUtil / 2, yPosition + 7, { align: 'center' });
+
+                const gX = margenIzq + 20;
+                const gY = yPosition + 15;
+                const gW = anchoUtil - 30;
+                const gH = 35;
+
+                // Ejes
+                doc.setDrawColor(100, 116, 139);
+                doc.setLineWidth(0.3);
+                doc.line(gX, gY, gX, gY + gH); // Y
+                doc.line(gX, gY + gH, gX + gW, gY + gH); // X
+
+                // Zonas de fondo en la gráfica (HORIZONTAL basado en ROI)
+                const maxRoiGraph = Math.max(50, Math.ceil(roiNum * 1.2));
+                const threshold30 = 30 / maxRoiGraph;
+                const threshold15 = 15 / maxRoiGraph;
+
+                // Verde (top)
+                const greenHeight = gH * (1 - threshold30);
+                doc.setFillColor(220, 252, 231);
+                doc.rect(gX, gY, gW, greenHeight, 'F');
+
+                // Amarillo (middle)
+                const yellowStart = gY + greenHeight;
+                const yellowHeight = gH * (threshold30 - threshold15);
+                doc.setFillColor(254, 252, 232);
+                doc.rect(gX, yellowStart, gW, yellowHeight, 'F');
+
+                // Naranja (bottom)
+                const orangeStart = yellowStart + yellowHeight;
+                const orangeHeight = gH * threshold15;
+                doc.setFillColor(255, 247, 237);
+                doc.rect(gX, orangeStart, gW, orangeHeight, 'F');
+
+                // Etiquetas Eje Y
+                doc.setFontSize(7);
+                doc.setTextColor(...colorSecundario);
+                doc.text(maxRoiGraph + '%', gX - 2, gY + 2, { align: 'right' });
+                doc.text('30%', gX - 2, gY + greenHeight, { align: 'right' });
+                doc.text('15%', gX - 2, yellowStart + yellowHeight, { align: 'right' });
+                doc.text('0%', gX - 2, gY + gH, { align: 'right' });
+
+                // Etiquetas Eje X
+                doc.text('0m', gX, gY + gH + 4);
+                doc.text('12m', gX + gW * 0.3, gY + gH + 4);
+                doc.text('24m', gX + gW * 0.6, gY + gH + 4);
+                doc.text('40m', gX + gW, gY + gH + 4);
+
+                // Punto de la inversión actual
+                const mesesInversion = parseFormattedNumber(tiempoInversion);
+                const xPct = Math.min(1, mesesInversion / 40);
+                const yPct = Math.min(1, roiNum / maxRoiGraph);
+                const pX = gX + (gW * xPct);
+                const pY = gY + gH - (gH * yPct);
+
+                doc.setFillColor(...colorPrimario);
+                doc.circle(pX, pY, 1.5, 'F');
+                doc.setFont('helvetica', 'bold');
+                doc.text('Tu ROI: ' + roiNum.toFixed(2) + '%', pX, pY - 3, { align: 'center' });
+
+                yPosition += 70;
+
+                // Leyenda de zonas
+                const leyendaY = yPosition;
+                const leyendaBoxWidth = (anchoUtil - 10) / 3;
+
+                // Zona Verde - Leyenda
+                doc.setFillColor(240, 253, 244);
+                doc.setDrawColor(187, 247, 208);
+                doc.setLineWidth(0.3);
+                doc.roundedRect(margenIzq, leyendaY, leyendaBoxWidth, 20, 2, 2, 'FD');
+                doc.setFillColor(34, 197, 94);
+                doc.circle(margenIzq + 3, leyendaY + 4, 1.5, 'F');
+                doc.setTextColor(21, 128, 61);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Zona Verde', margenIzq + 7, leyendaY + 5);
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'normal');
+                const textoVerde = doc.splitTextToSize('Inversión atractiva con buen desempeño respecto al capital invertido.', leyendaBoxWidth - 8);
+                doc.text(textoVerde, margenIzq + 3, leyendaY + 9);
+
+                // Zona Amarilla - Leyenda
+                doc.setFillColor(254, 252, 232);
+                doc.setDrawColor(253, 224, 71);
+                doc.roundedRect(margenIzq + leyendaBoxWidth + 5, leyendaY, leyendaBoxWidth, 20, 2, 2, 'FD');
+                doc.setFillColor(234, 179, 8);
+                doc.circle(margenIzq + leyendaBoxWidth + 8, leyendaY + 4, 1.5, 'F');
+                doc.setTextColor(133, 77, 14);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Zona Amarilla', margenIzq + leyendaBoxWidth + 12, leyendaY + 5);
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'normal');
+                const textoAmarillo = doc.splitTextToSize('ROI saludable. Inversión que genera valor y recupera el capital con utilidad razonable.', leyendaBoxWidth - 8);
+                doc.text(textoAmarillo, margenIzq + leyendaBoxWidth + 8, leyendaY + 9);
+
+                // Zona Naranja - Leyenda
+                doc.setFillColor(255, 247, 237);
+                doc.setDrawColor(251, 146, 60);
+                doc.roundedRect(margenIzq + (leyendaBoxWidth * 2) + 10, leyendaY, leyendaBoxWidth, 20, 2, 2, 'FD');
+                doc.setFillColor(249, 115, 22);
+                doc.circle(margenIzq + (leyendaBoxWidth * 2) + 13, leyendaY + 4, 1.5, 'F');
+                doc.setTextColor(154, 52, 18);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Zona Naranja', margenIzq + (leyendaBoxWidth * 2) + 17, leyendaY + 5);
+                doc.setFontSize(7);
+                doc.setFont('helvetica', 'normal');
+                const textoNaranja = doc.splitTextToSize('Bajo retorno. Evalúa la rentabilidad y verifica el cumplimiento del objetivo.', leyendaBoxWidth - 8);
+                doc.text(textoNaranja, margenIzq + (leyendaBoxWidth * 2) + 13, leyendaY + 9);
+
+                yPosition += 30;
+
+                // Análisis personalizado
+                const costoTenenciaAcumuladoNum = parseFormattedNumber(costoTenenciaAcumulado);
+                let zonaTexto = '';
+                let colorFondo = [];
+                let colorBorde = [];
+                let colorTexto = [];
+                let mensaje = '';
+
+                const pctTenencia = (capitalTotalInvertidoNum > 0) ? ((costoTenenciaAcumuladoNum / capitalTotalInvertidoNum) * 100).toFixed(1) : "0";
+
+                if (roiNum >= 30) {
+                    zonaTexto = 'Zona Verde';
+                    colorFondo = [240, 253, 244];
+                    colorBorde = [34, 197, 94];
+                    colorTexto = [21, 128, 61];
+                    mensaje = `Con un tiempo de Inversión de ${mesesInversion} meses, esta operación se ubica en la Zona Verde. Inversión Atractiva. Con buen desempeño con respecto al capital invertido. Este nivel de ROI corresponde a oportunidades que permiten acelerar el crecimiento del capital y avanzar más rápido en la ruta del inversionista. Costo de Tenencia Actual: $${formatNumberInput(Math.round(costoTenenciaAcumuladoNum).toString())} (${pctTenencia}% Del total de Capital Invertido)`;
+                } else if (roiNum >= 15) {
+                    zonaTexto = 'Zona Amarilla';
+                    colorFondo = [254, 252, 232];
+                    colorBorde = [234, 179, 8];
+                    colorTexto = [133, 77, 14];
+                    mensaje = `Con un tiempo de Inversión de ${mesesInversion} meses, esta operación se ubica en la Zona Amarilla. ROI SALUDABLE. Inversión que genera valor y recupera el capital con utilidad razonable. Balance entre rentabilidad y tiempo. Frente a alternativas tradicionales, este ROI representa una inversión inmobiliaria competitiva. Costo de Tenencia Actual: $${formatNumberInput(Math.round(costoTenenciaAcumuladoNum).toString())} (${pctTenencia}% Del total de Capital Invertido)`;
+                } else {
+                    zonaTexto = 'Zona Naranja';
+                    colorFondo = [255, 247, 237];
+                    colorBorde = [249, 115, 22];
+                    colorTexto = [154, 52, 18];
+                    mensaje = `Con un tiempo de Inversión de ${mesesInversion} meses, esta operación se ubica en la Zona Naranja. BAJO Retorno de la Inversión. Evalúa la rentabilidad y verifica el cumplimiento del objetivo. Rentabilidad baja respecto al capital aportado, con costos que afectan significativamente la eficiencia de la inversión. 'El proyecto trabaja más para el banco que para el inversionista.' Costo de Tenencia Actual: $${formatNumberInput(Math.round(costoTenenciaAcumuladoNum).toString())} (${pctTenencia}% Del total de Capital Invertido)`;
+                }
+
+                doc.setFillColor(...colorFondo);
+                doc.setDrawColor(...colorBorde);
+                doc.setLineWidth(0.5);
+                doc.roundedRect(margenIzq, yPosition, anchoUtil, 30, 2, 2, 'FD');
+
+                doc.setTextColor(...colorTexto);
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.text('ANÁLISIS DE TU INVERSIÓN', margenIzq + 3, yPosition + 5);
+
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                const mensajeLines = doc.splitTextToSize(mensaje, anchoUtil - 6);
+                doc.text(mensajeLines, margenIzq + 3, yPosition + 10);
+
+                yPosition += 40;
+            }
+
+            // Disclaimer
+            if (yPosition > 240) {
+                doc.addPage();
+                yPosition = 20;
+            }
+
+            doc.setFillColor(255, 251, 235); // Amarillo claro
+            doc.rect(margenIzq, yPosition, anchoUtil, 30, 'F');
+            doc.setDrawColor(245, 158, 11); // Borde amarillo
+            doc.setLineWidth(0.5);
+            doc.rect(margenIzq, yPosition, anchoUtil, 30, 'S');
+
+            doc.setTextColor(120, 53, 15); // Texto ámbar oscuro
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('NOTA IMPORTANTE:', margenIzq + 3, yPosition + 6);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            const disclaimerText = 'Este análisis es una herramienta de apoyo financiero elaborada con fines informativos y educativos, y no debe interpretarse como una recomendación final de inversión. No reemplaza el análisis legal ni la validación de las condiciones del crédito hipotecario. Los resultados obtenidos dependen de los supuestos ingresados en el simulador y pueden variar según las condiciones reales del proyecto, del crédito hipotecario, del mercado inmobiliario y del momento de la venta.';
+            const disclaimerLines = doc.splitTextToSize(disclaimerText, anchoUtil - 6);
+            doc.text(disclaimerLines, margenIzq + 3, yPosition + 12);
+
+            // Pie de página
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(...colorSecundario);
+                doc.setFont('helvetica', 'normal');
+                const footerText = 'Simulador Venta con Crédito - CRECE';
+                doc.text(footerText, 105, 285, { align: 'center' });
+                doc.text('Página ' + i + ' de ' + pageCount, 105, 290, { align: 'center' });
+            }
+
+            // Descargar el PDF
+            const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
+            doc.save(`Simulador_VentaConCredito_${fecha}.pdf`);
+        }
+
+        // Función auxiliar para cargar imagen
+        function cargarImagen(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function () {
+                    resolve(img);
+                };
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        // Función auxiliar para cargar imagen como base64
+        function cargarImagenBase64(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    try {
+                        const dataURL = canvas.toDataURL('image/png');
+                        resolve(dataURL);
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        document.querySelectorAll('input').forEach(i => i.addEventListener('input', (e) => {
+            if (e.target.type === 'text' && e.target.id !== 'nombreProyecto') {
+                e.target.value = formatNumberInput(e.target.value);
+            }
+            if (e.target.id !== 'nombreProyecto') {
+                calcular();
+            }
+        }));
+        window.onload = calcular;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#1a5f7a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Diagnóstico para Asesoría de Pensiones IMSS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(36, 182, 145, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.12),
+                0 2px 8px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a5f7a 0%, #159895 50%, #24b691 100%);
+            color: white;
+            padding: 48px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.95;
+            line-height: 1.7;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .form-container {
+            padding: 48px 40px;
+        }
+
+        .form-section {
+            margin-bottom: 36px;
+            padding-bottom: 36px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            color: #1a5f7a;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid #24b691;
+            letter-spacing: -0.3px;
+            display: inline-block;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 40%;
+            height: 3px;
+            background: linear-gradient(90deg, #159895, transparent);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: -0.1px;
+        }
+
+        label .required {
+            color: #ef4444;
+            margin-left: 4px;
+            font-weight: 700;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 15px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: inherit;
+            background: #fafafa;
+            color: #1a1a1a;
+            font-weight: 400;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #24b691;
+            box-shadow: 0 0 0 4px rgba(36, 182, 145, 0.1);
+            background: white;
+        }
+
+        input:hover:not(:focus),
+        select:hover:not(:focus),
+        textarea:hover:not(:focus) {
+            border-color: #cbd5e1;
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.6;
+        }
+
+        .radio-group,
+        .scale-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .radio-option:hover {
+            background: white;
+            border-color: #cbd5e1;
+        }
+
+        .radio-option:has(input:checked) {
+            background: linear-gradient(135deg, rgba(26, 95, 122, 0.08) 0%, rgba(36, 182, 145, 0.08) 100%);
+            border-color: #24b691;
+        }
+
+        .radio-option input[type="radio"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+            accent-color: #24b691;
+        }
+
+        .radio-option label {
+            cursor: pointer;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .scale-group {
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        .scale-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: #f8fafc;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 60px;
+        }
+
+        .scale-option:hover {
+            background: white;
+            border-color: #cbd5e1;
+        }
+
+        .scale-option:has(input:checked) {
+            background: linear-gradient(135deg, rgba(26, 95, 122, 0.08) 0%, rgba(36, 182, 145, 0.08) 100%);
+            border-color: #24b691;
+        }
+
+        .scale-option input[type="radio"] {
+            width: auto;
+            cursor: pointer;
+            accent-color: #24b691;
+        }
+
+        .scale-option label {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            letter-spacing: -0.2px;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1a5f7a 0%, #159895 50%, #24b691 100%);
+            color: white;
+            box-shadow:
+                0 4px 12px rgba(36, 182, 145, 0.25),
+                0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 24px rgba(36, 182, 145, 0.35),
+                0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #475569;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 48px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(36, 182, 145, 0.1);
+            border-top: 3px solid #24b691;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            margin: 0 auto 24px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading p {
+            color: #475569;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: none;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
+        }
+
+        .error-message.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5L10 12.5L15 7.5' stroke='%2324b691' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 20px;
+            padding-right: 40px;
+            appearance: none;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: hue-rotate(180deg) brightness(0.8);
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .header {
+                padding: 32px 24px;
+            }
+
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .header p {
+                font-size: 15px;
+            }
+
+            .form-container {
+                padding: 32px 24px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .btn-container {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .scale-group {
+                gap: 8px;
+            }
+
+            .scale-option {
+                min-width: 50px;
+                padding: 10px 8px;
+            }
+
+            .radio-option {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+
+            /* Ajustes adicionales para móviles */
+            label {
+                font-size: 13px;
+            }
+
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            input[type="date"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: 16px;
+                /* Evita zoom automático en iOS */
+                padding: 12px 14px;
+            }
+
+            .form-section {
+                margin-bottom: 28px;
+                padding-bottom: 28px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .radio-group {
+                gap: 12px;
+            }
+
+            .loading {
+                padding: 32px 20px;
+            }
+
+            .spinner {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        /* Ajustes para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 22px;
+                line-height: 1.3;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+
+            .form-container {
+                padding: 24px 20px;
+            }
+
+            .section-title {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .scale-group {
+                gap: 6px;
+                justify-content: space-around;
+            }
+
+            .scale-option {
+                min-width: 42px;
+                padding: 8px 6px;
+            }
+
+            .scale-option label {
+                font-size: 11px;
+            }
+
+            .btn {
+                padding: 14px 24px;
+                font-size: 15px;
+            }
+
+            .success-modal-content {
+                padding: 28px 20px;
+                width: 90%;
+            }
+
+            .success-icon {
+                width: 60px;
+                height: 60px;
+            }
+
+            .success-icon svg {
+                width: 30px;
+                height: 30px;
+            }
+
+            .success-modal h3 {
+                font-size: 20px;
+                margin-bottom: 10px;
+            }
+
+            .success-modal p {
+                font-size: 14px;
+                margin-bottom: 24px;
+            }
+
+            .success-modal-btn {
+                padding: 12px 32px;
+                font-size: 15px;
+            }
+        }
+
+        /* Mejoras para landscape en móviles */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .header {
+                padding: 24px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .success-modal-content {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Evitar zoom en inputs en iOS */
+        @supports (-webkit-touch-callout: none) {
+
+            input[type="text"],
+            input[type="email"],
+            input[type="tel"],
+            input[type="date"],
+            input[type="number"],
+            select,
+            textarea {
+                font-size: 16px;
+            }
+        }
+
+        /* Animaciones de entrada */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .container {
+            animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Estilos para placeholders */
+        ::placeholder {
+            color: #94a3b8;
+            opacity: 1;
+        }
+
+        :-ms-input-placeholder {
+            color: #94a3b8;
+        }
+
+        ::-ms-input-placeholder {
+            color: #94a3b8;
+        }
+
+        /* Mejoras en validación visual */
+        input[style*="border-color: rgb(46, 204, 113)"],
+        input[style*="border-color:#2ecc71"] {
+            border-color: #10b981 !important;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, rgba(5, 150, 105, 0.03) 100%);
+        }
+
+        input[style*="border-color: rgb(231, 76, 60)"],
+        input[style*="border-color:#e74c3c"] {
+            border-color: #ef4444 !important;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(220, 38, 38, 0.03) 100%);
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #24b691 0%, #159895 100%);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #1a5f7a 0%, #159895 100%);
+        }
+
+        /* Suavizado de fuentes */
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        /* Efectos de enfoque mejorados en radio/checkbox */
+        input[type="radio"]:focus-visible {
+            outline: 2px solid #24b691;
+            outline-offset: 2px;
+        }
+
+        /* Modal de éxito */
+        .success-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .success-modal.active {
+            display: flex;
+        }
+
+        .success-modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-icon svg {
+            width: 40px;
+            height: 40px;
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .checkmark {
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            animation: drawCheck 0.5s ease forwards 0.4s;
+        }
+
+        @keyframes drawCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .success-modal h3 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .success-modal p {
+            font-size: 16px;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .success-modal-btn {
+            background: linear-gradient(135deg, #1a5f7a 0%, #159895 50%, #24b691 100%);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.2px;
+            box-shadow: 0 4px 12px rgba(36, 182, 145, 0.25);
+        }
+
+        .success-modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(36, 182, 145, 0.35);
+        }
+
+        .success-modal-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .success-modal-content {
+                padding: 32px 24px;
+                width: 85%;
+            }
+
+            .success-icon {
+                width: 70px;
+                height: 70px;
+            }
+
+            .success-icon svg {
+                width: 35px;
+                height: 35px;
+            }
+
+            .success-modal h3 {
+                font-size: 24px;
+            }
+
+            .success-modal p {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Diagnóstico para Asesoría de Pensiones IMSS</h1>
+            <p>El diagnóstico permite identificar con claridad la situación actual del cliente y las oportunidades que
+                puede aprovechar. Con esta evaluación precisa, definimos la mejor estrategia para aumentar su beneficio,
+                evitar errores y asegurar un trámite ágil y exitoso.</p>
+        </div>
+
+        <div class="form-container">
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="diagnosticForm">
+                <!-- Sección 1: Datos Personales -->
+                <div class="form-section">
+                    <h2 class="section-title">👤 Datos Personales</h2>
+
+                    <div class="form-group">
+                        <label for="nombreCompleto">Nombre completo (tal como lo indica su acta de nacimiento) <span
+                                class="required">*</span></label>
+                        <input type="text" id="nombreCompleto" name="nombreCompleto" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fechaNacimiento">Fecha de nacimiento <span class="required">*</span></label>
+                        <input type="date" id="fechaNacimiento" name="fechaNacimiento" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sexo">Sexo <span class="required">*</span></label>
+                        <select id="sexo" name="sexo" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lugarNacimiento">Lugar de nacimiento <span class="required">*</span></label>
+                        <input type="text" id="lugarNacimiento" name="lugarNacimiento" placeholder="Ciudad, Estado"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lugarResidencia">Lugar de residencia <span class="required">*</span></label>
+                        <input type="text" id="lugarResidencia" name="lugarResidencia" placeholder="Ciudad, Estado"
+                            required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="estadoCivil">Estado Civil <span class="required">*</span></label>
+                        <select id="estadoCivil" name="estadoCivil" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Soltero/a">Soltero/a</option>
+                            <option value="Casado/a">Casado/a</option>
+                            <option value="Divorciado/a">Divorciado/a</option>
+                            <option value="Viudo/a">Viudo/a</option>
+                            <option value="Unión libre">Unión libre</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="celular">Número de celular <span class="required">*</span></label>
+                        <input type="tel" id="celular" name="celular" placeholder="10 dígitos" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Correo electrónico <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="curp">CURP <span class="required">*</span></label>
+                        <input type="text" id="curp" name="curp" maxlength="18" placeholder="18 caracteres" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rfc">RFC <span class="required">*</span></label>
+                        <input type="text" id="rfc" name="rfc" maxlength="13" placeholder="13 caracteres" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dependientes">Dependientes económicos (nombre, parentesco y edad)</label>
+                        <textarea id="dependientes" name="dependientes"
+                            placeholder="Ej: Juan Pérez (Hijo, 15 años), María Pérez (Hija, 12 años)"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nss">Número de seguridad social <span class="required">*</span></label>
+                        <input type="text" id="nss" name="nss" maxlength="11" placeholder="11 dígitos" required>
+                    </div>
+                </div>
+
+                <!-- Sección 2: Información Laboral -->
+                <div class="form-section">
+                    <h2 class="section-title">💼 Información Laboral</h2>
+
+                    <div class="form-group">
+                        <label for="ocupacion">Ocupación <span class="required">*</span></label>
+                        <input type="text" id="ocupacion" name="ocupacion" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gastosFijos">Gastos fijos mensuales (un aproximado) <span
+                                class="required">*</span></label>
+                        <input type="number" id="gastosFijos" name="gastosFijos" placeholder="$" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fechaPrimeraCotizacion">Fecha de primera cotización <span
+                                class="required">*</span></label>
+                        <input type="date" id="fechaPrimeraCotizacion" name="fechaPrimeraCotizacion" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fechaUltimaCotizacion">Fecha de última cotización o está vigente <span
+                                class="required">*</span></label>
+                        <input type="text" id="fechaUltimaCotizacion" name="fechaUltimaCotizacion"
+                            placeholder="Fecha o 'Vigente'" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="institucionCotizacion">Ante qué institución está cotizando <span
+                                class="required">*</span></label>
+                        <select id="institucionCotizacion" name="institucionCotizacion" required>
+                            <option value="">Seleccione...</option>
+                            <option value="IMSS">IMSS</option>
+                            <option value="ISSSTE">ISSSTE</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="semanasCotizadas">Semanas cotizadas / Años de servicio <span
+                                class="required">*</span></label>
+                        <input type="text" id="semanasCotizadas" name="semanasCotizadas"
+                            placeholder="Ej: 1250 semanas o 24 años" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ultimoSalario">Último salario cotizado <span class="required">*</span></label>
+                        <input type="number" id="ultimoSalario" name="ultimoSalario" placeholder="$" required>
+                    </div>
+                </div>
+
+                <!-- Sección 3: Información INFONAVIT y Prestaciones -->
+                <div class="form-section">
+                    <h2 class="section-title">🏠 INFONAVIT y Prestaciones</h2>
+
+                    <div class="form-group">
+                        <label for="creditoInfonavit">Cuenta con crédito vigente de INFONAVIT/FOVISSSTE <span
+                                class="required">*</span></label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="creditoSi" name="creditoInfonavit" value="Sí" required>
+                                <label for="creditoSi">Sí</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="creditoNo" name="creditoInfonavit" value="No">
+                                <label for="creditoNo">No</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ayudaDesempleo">¿Ha solicitado la ayuda por desempleo, cuántas veces y cuánto le han
+                            dado en total?</label>
+                        <textarea id="ayudaDesempleo" name="ayudaDesempleo"
+                            placeholder="Ej: Sí, 2 veces. Total recibido: $15,000"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="semanasDescontadas">¿Cuántas semanas le descontaron por la o las ayuda de
+                            desempleo?</label>
+                        <input type="number" id="semanasDescontadas" name="semanasDescontadas"
+                            placeholder="Número de semanas">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="variosNSS">¿Sabe si tiene varios NSS o periodos faltantes en su historial?</label>
+                        <textarea id="variosNSS" name="variosNSS"
+                            placeholder="Describa la situación si aplica"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="simulacionLaboral">¿Ha tenido simulación laboral en algún momento?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="simulacionSi" name="simulacionLaboral" value="Sí">
+                                <label for="simulacionSi">Sí</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="simulacionNo" name="simulacionLaboral" value="No">
+                                <label for="simulacionNo">No</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="simulacionNoSe" name="simulacionLaboral" value="No sé">
+                                <label for="simulacionNoSe">No sé</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pensionPrevia">¿Tiene alguna pensión previa y de qué tipo?</label>
+                        <textarea id="pensionPrevia" name="pensionPrevia"
+                            placeholder="Tipo de pensión y detalles"></textarea>
+                    </div>
+                </div>
+
+                <!-- Sección 4: AFORE y Planeación -->
+                <div class="form-section">
+                    <h2 class="section-title">💰 AFORE y Planeación de Retiro</h2>
+
+                    <div class="form-group">
+                        <label for="afore">AFORE en la que está registrado <span class="required">*</span></label>
+                        <input type="text" id="afore" name="afore" placeholder="Nombre de la AFORE" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edadPension">¿A qué edad te gustaría pensionarte? <span
+                                class="required">*</span></label>
+                        <input type="number" id="edadPension" name="edadPension" min="60" max="70" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pensionIdeal">Pensión ideal estimada que te gustaría alcanzar <span
+                                class="required">*</span></label>
+                        <input type="number" id="pensionIdeal" name="pensionIdeal" placeholder="$ mensual" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="visionM40">¿Cómo ves la M40: gasto, inversión o negocio? <span
+                                class="required">*</span></label>
+                        <select id="visionM40" name="visionM40" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Gasto">Gasto</option>
+                            <option value="Inversión">Inversión</option>
+                            <option value="Negocio">Negocio</option>
+                            <option value="No estoy seguro">No estoy seguro</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="posibilidadPagoM40">¿Tienes posibilidades de pagar mensualidades en M40 y
+                            cuánto?</label>
+                        <input type="number" id="posibilidadPagoM40" name="posibilidadPagoM40"
+                            placeholder="$ mensual disponible">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="financiamiento">¿Te gustaría ver opciones de financiamiento? Si sí, ¿Cuánto capital
+                            tienes disponible para no pedir tanto préstamo?</label>
+                        <textarea id="financiamiento" name="financiamiento"
+                            placeholder="Ejemplo: Sí me interesa. Tengo $50,000 disponibles"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pensionMinima">Si no pudieras incrementar tu pensión, ¿Con cuánto crees que podrías
+                            vivir?</label>
+                        <input type="number" id="pensionMinima" name="pensionMinima" placeholder="$ mensual mínimo">
+                    </div>
+                </div>
+
+                <!-- Sección 5: Salud y Bienestar -->
+                <div class="form-section">
+                    <h2 class="section-title">🏥 Salud y Bienestar</h2>
+
+                    <div class="form-group">
+                        <label>En una escala del 1 al 10, ¿Cómo te sientes de salud? <span
+                                class="required">*</span></label>
+                        <div class="scale-group">
+                            <div class="scale-option">
+                                <input type="radio" id="salud1" name="escalaSalud" value="1" required>
+                                <label for="salud1">1</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud2" name="escalaSalud" value="2">
+                                <label for="salud2">2</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud3" name="escalaSalud" value="3">
+                                <label for="salud3">3</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud4" name="escalaSalud" value="4">
+                                <label for="salud4">4</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud5" name="escalaSalud" value="5">
+                                <label for="salud5">5</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud6" name="escalaSalud" value="6">
+                                <label for="salud6">6</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud7" name="escalaSalud" value="7">
+                                <label for="salud7">7</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud8" name="escalaSalud" value="8">
+                                <label for="salud8">8</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud9" name="escalaSalud" value="9">
+                                <label for="salud9">9</label>
+                            </div>
+                            <div class="scale-option">
+                                <input type="radio" id="salud10" name="escalaSalud" value="10">
+                                <label for="salud10">10</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="padecimientos">¿Tienes algún padecimiento físico o emocional que debamos considerar
+                            para tu planeación?</label>
+                        <textarea id="padecimientos" name="padecimientos"
+                            placeholder="Describa cualquier condición relevante"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="retiroDigno">¿Un retiro digno te daría estabilidad emocional y tranquilidad?</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="retiroSi" name="retiroDigno" value="Definitivamente sí">
+                                <label for="retiroSi">Definitivamente sí</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="retiroProbablemente" name="retiroDigno" value="Probablemente">
+                                <label for="retiroProbablemente">Probablemente</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="retiroNoSe" name="retiroDigno" value="No estoy seguro">
+                                <label for="retiroNoSe">No estoy seguro</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="optimismo">¿Qué tan optimista te sientes para iniciar hoy tu proyecto de
+                            retiro?</label>
+                        <select id="optimismo" name="optimismo">
+                            <option value="">Seleccione...</option>
+                            <option value="Muy optimista">Muy optimista</option>
+                            <option value="Optimista">Optimista</option>
+                            <option value="Neutral">Neutral</option>
+                            <option value="Algo pesimista">Algo pesimista</option>
+                            <option value="Muy pesimista">Muy pesimista</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Sección 6: Documentación -->
+                <div class="form-section">
+                    <h2 class="section-title">📄 Documentación</h2>
+
+                    <div class="form-group">
+                        <label for="erroresDocumentos">Tiene conocimiento de algún error en los siguientes documentos:
+                            Acta de nacimiento, INE, CURP, homonimia o algún error en el IMSS</label>
+                        <textarea id="erroresDocumentos" name="erroresDocumentos"
+                            placeholder="Describa cualquier error o inconsistencia conocida"></textarea>
+                    </div>
+                </div>
+
+                <div class="btn-container">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('diagnosticForm').reset()">
+                        🔄 Limpiar Formulario
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        🚀 Generar Informe PDF
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loadingContainer">
+                <div class="spinner"></div>
+                <p style="color: #667eea; font-weight: 600;">Generando su informe profesional...</p>
+                <p style="color: #666; margin-top: 10px;">Esto puede tomar entre 30-60 segundos</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de éxito -->
+    <div class="success-modal" id="successModal">
+        <div class="success-modal-content">
+            <div class="success-icon">
+                <svg viewBox="0 0 50 50">
+                    <path class="checkmark" d="M14 27 L22 35 L38 16" />
+                </svg>
+            </div>
+            <h3>¡Informe Generado!</h3>
+            <p>Su informe PDF ha sido generado exitosamente y se ha descargado automáticamente.</p>
+            <button class="success-modal-btn" onclick="cerrarModalExito()">Entendido</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        console.log('🚀 Iniciando carga del script...');
+        // ============================================================================
+        // CONFIGURACIÓN DE API - COLOCA TU API KEY DE OPENAI AQUÍ
+        // ============================================================================
+        const OPENAI_API_KEY = 'YOUR_API_KEY_HERE'; // Cambia esto por tu API Key real
+        // ============================================================================
+        console.log('📝 API Key configurada');
+
+        // Prompt del consultor experto
+        const CONSULTOR_PROMPT = `IMPORTANTE: Genera el informe SIN usar markdown (**negrita**, *cursiva*, etc.).
+Usa TEXTO PLANO con estructura clara mediante:
+- Líneas que empiecen con "A)", "B)", "C)" para secciones principales
+- Para listas usa guión simple "- " al inicio
+- Para viñetas con etiqueta usa formato "Etiqueta: descripción"
+- NO uses asteriscos, corchetes ni símbolos especiales
+
+Actúa como un CONSULTOR EXPERTO EN PENSIONES IMSS DE ALTO NIVEL,
+especializado en el régimen de la Ley del Seguro Social 1973,
+Modalidad 40 (Continuación Voluntaria en el Régimen Obligatorio),
+auditoría documental institucional y planeación financiera para el retiro.
+Tu nivel es equivalente a:
+- Consultor certificado bajo el EC0485
+- Especialista técnico IMSS
+- Analista financiero previsional
+- Auditor documental (RENAPO, Registro Civil, INE, AFORE, IMSS)
+- Consultor humano (salud física, emocional y toma de decisiones)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 OBJETIVO PRINCIPAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Recibirás la información de un DIAGNÓSTICO INTEGRAL dividido en 4 módulos:
+1) Información legal y laboral
+2) Análisis financiero
+3) Auditoría documental
+4) Salud física y psicológica
+
+Con base en esta información, debes elaborar un
+**REPORTE DE PREEVALUACIÓN PENSIONAL PROFESIONAL**,
+similar a un dictamen técnico-consultivo,
+listo para entregarse en formato PDF al cliente.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 PRINCIPIOS OBLIGATORIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. NO garantices pensiones ni montos finales.
+2. NO sustituyas a la autoridad (IMSS, AFORE, Registro Civil).
+3. NO realices cálculos oficiales finales.
+4. SÍ analiza viabilidad, riesgos y escenarios preliminares.
+5. SÉ técnico, ético, claro y profesional.
+6. Usa lenguaje comprensible para el cliente, pero con fondo experto.
+7. Todo debe ser PRELIMINAR y CONDICIONADO a validaciones posteriores.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚖️ BASE LEGAL Y TÉCNICA QUE DEBES CONOCER Y APLICAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Ley del Seguro Social 1973
+- Artículos 154 a 170 (vejez y cesantía)
+- Artículos 194 a 196 (Continuación Voluntaria – Modalidad 40)
+- Regla operativa: mínimo 52 semanas en los últimos 5 años para CVRO
+- Plazo legal: 12 meses desde la baja para solicitar CVRO
+- Topes salariales, UMA, semanas válidas
+- Riesgos de NSS múltiple, homonimia, simulación laboral
+- Importancia de CURP certificada, actas correctas y AFORE con homoclave
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 METODOLOGÍA DE ANÁLISIS (OBLIGATORIA)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+### PASO 1 – RESUMEN GENERAL DEL CASO
+Redacta un resumen ejecutivo que incluya:
+- Edad, régimen y semanas cotizadas
+- Estado general de viabilidad del caso
+- Objetivo del cliente (pensión deseada)
+- Nivel de disposición financiera
+- Estado general de salud y motivación
+
+### PASO 2 – MATRIZ DE VIABILIDAD (SCORING)
+Evalúa y clasifica el caso en:
+- Legal / Régimen IMSS
+- Financiero
+- Documental
+- Salud y emocional
+
+Clasifica cada uno como:
+🟢 Favorable
+🟡 Condicionado
+🔴 Riesgo
+
+Y emite un dictamen general:
+- APTO
+- APTO CONDICIONADO
+- NO APTO POR EL MOMENTO
+
+### PASO 3 – ANÁLISIS TÉCNICO IMSS (SIN FÓRMULAS)
+Analiza:
+- Semanas cotizadas y descontadas
+- Vigencia de derechos
+- Última cotización
+- Elegibilidad preliminar para Modalidad 40
+- Riesgos técnicos detectados
+
+NO muestres fórmulas ni cálculos oficiales.
+
+### PASO 4 – ANÁLISIS DOCUMENTAL E INSTITUCIONAL
+Identifica errores o riesgos en:
+- Acta de nacimiento
+- CURP
+- INE
+- AFORE
+- IMSS (NSS, patrones, homonimia)
+
+Explica cómo estos errores pueden afectar un trámite futuro
+y la importancia de corregirlos antes de pensionarse.
+
+### PASO 5 – ANÁLISIS FINANCIERO PRELIMINAR
+Analiza:
+- Capacidad mensual real
+- Capital disponible
+- Necesidad o no de financiamiento
+- Percepción del cliente sobre Modalidad 40
+
+Plantea ESCENARIOS CONCEPTUALES:
+- Sin estrategia
+- Estrategia parcial
+- Estrategia optimizada
+
+SIN mencionar montos exactos finales garantizados.
+
+### PASO 6 – ANÁLISIS DE SALUD Y FACTOR HUMANO
+Evalúa:
+- Salud autopercibida
+- Padecimientos relevantes
+- Estrés financiero o emocional
+- Optimismo y disposición a iniciar
+
+Determina si el cliente puede sostener un proyecto de pensión
+o si requiere un enfoque gradual y acompañado.
+
+### PASO 7 – ESTRATEGIA PRELIMINAR RECOMENDADA
+Enumera acciones sugeridas:
+- Correcciones documentales prioritarias
+- Definición de estrategia financiera
+- Evaluación de Modalidad 40
+- Orden de ejecución recomendado
+
+### PASO 8 – CONCLUSIÓN PROFESIONAL Y SIGUIENTE PASO
+Cierra el reporte indicando que:
+- Este análisis es PRELIMINAR
+- No determina pensión final
+- Para obtener cifras exactas y estrategia completa,
+se requiere el **ESTUDIO DE PENSIÓN PROFESIONAL**
+
+Presenta el Estudio como:
+- Paso lógico
+- Inversión informada
+- Decisión consciente y sin presión
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📄 FORMATO DE SALIDA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Entrega el resultado en texto estructurado listo para PDF, con secciones:
+
+A) RESUMEN GENERAL DEL CASO
+B) MATRIZ DE VIABILIDAD
+C) RIESGOS TÉCNICOS IMSS
+D) RIESGOS DOCUMENTALES
+E) ANÁLISIS FINANCIERO PRELIMINAR
+F) SALUD Y FACTOR HUMANO
+G) ESTRATEGIA PRELIMINAR RECOMENDADA
+H) ACLARACIÓN PROFESIONAL Y SIGUIENTE PASO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔒 AVISO FINAL OBLIGATORIO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Incluye siempre una aclaración profesional indicando que:
+- El presente análisis es preliminar
+- No sustituye resoluciones de autoridad
+- Está sujeto a validación documental y técnica
+
+IMPORTANTE: Responde ÚNICAMENTE con el contenido del informe, estructurado y profesional, sin mencionar que eres un asistente de IA. Actúa como el consultor experto descrito.`;
+
+        // Función para calcular edad
+        function calcularEdad(fechaNacimiento) {
+            const hoy = new Date();
+            const nacimiento = new Date(fechaNacimiento);
+            let edad = hoy.getFullYear() - nacimiento.getFullYear();
+            const mes = hoy.getMonth() - nacimiento.getMonth();
+
+            if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+                edad--;
+            }
+
+            return edad;
+        }
+
+        // Función para formatear los datos del formulario
+        function formatearDatosFormulario(formData) {
+            const edad = calcularEdad(formData.get('fechaNacimiento'));
+
+            return `
+DIAGNÓSTICO INTEGRAL PARA ASESORÍA DE PENSIONES IMSS
+
+═══════════════════════════════════════════════════════
+MÓDULO 1: INFORMACIÓN PERSONAL Y LEGAL
+═══════════════════════════════════════════════════════
+
+Nombre Completo: ${formData.get('nombreCompleto')}
+Fecha de Nacimiento: ${formData.get('fechaNacimiento')} (${edad} años)
+Sexo: ${formData.get('sexo')}
+Lugar de Nacimiento: ${formData.get('lugarNacimiento')}
+Lugar de Residencia: ${formData.get('lugarResidencia')}
+Estado Civil: ${formData.get('estadoCivil')}
+Celular: ${formData.get('celular')}
+Correo Electrónico: ${formData.get('email')}
+CURP: ${formData.get('curp')}
+RFC: ${formData.get('rfc')}
+Dependientes Económicos: ${formData.get('dependientes') || 'No especificado'}
+Número de Seguridad Social: ${formData.get('nss')}
+
+═══════════════════════════════════════════════════════
+MÓDULO 2: INFORMACIÓN LABORAL Y COTIZACIÓN IMSS
+═══════════════════════════════════════════════════════
+
+Ocupación: ${formData.get('ocupacion')}
+Gastos Fijos Mensuales: $${formData.get('gastosFijos')}
+Fecha de Primera Cotización: ${formData.get('fechaPrimeraCotizacion')}
+Fecha de Última Cotización: ${formData.get('fechaUltimaCotizacion')}
+Institución de Cotización: ${formData.get('institucionCotizacion')}
+Semanas Cotizadas / Años de Servicio: ${formData.get('semanasCotizadas')}
+Último Salario Cotizado: $${formData.get('ultimoSalario')}
+
+Crédito INFONAVIT/FOVISSSTE Vigente: ${formData.get('creditoInfonavit')}
+Ayuda por Desempleo: ${formData.get('ayudaDesempleo') || 'No especificado'}
+Semanas Descontadas por Ayuda: ${formData.get('semanasDescontadas') || 'No aplica'}
+NSS Múltiples o Periodos Faltantes: ${formData.get('variosNSS') || 'No especificado'}
+Simulación Laboral: ${formData.get('simulacionLaboral') || 'No especificado'}
+Pensión Previa: ${formData.get('pensionPrevia') || 'Ninguna'}
+
+═══════════════════════════════════════════════════════
+MÓDULO 3: PLANEACIÓN FINANCIERA Y AFORE
+═══════════════════════════════════════════════════════
+
+AFORE: ${formData.get('afore')}
+Edad Deseada para Pensionarse: ${formData.get('edadPension')} años
+Pensión Ideal Estimada: $${formData.get('pensionIdeal')} mensuales
+Visión sobre Modalidad 40: ${formData.get('visionM40')}
+Posibilidad de Pago M40 Mensual: $${formData.get('posibilidadPagoM40') || 'No especificado'}
+Interés en Financiamiento: ${formData.get('financiamiento') || 'No especificado'}
+Pensión Mínima con la que Podría Vivir: $${formData.get('pensionMinima') || 'No especificado'}
+
+═══════════════════════════════════════════════════════
+MÓDULO 4: SALUD FÍSICA Y PSICOLÓGICA
+═══════════════════════════════════════════════════════
+
+Escala de Salud (1-10): ${formData.get('escalaSalud')}/10
+Padecimientos Físicos o Emocionales: ${formData.get('padecimientos') || 'Ninguno reportado'}
+Retiro Digno y Estabilidad Emocional: ${formData.get('retiroDigno') || 'No especificado'}
+Nivel de Optimismo para Iniciar Proyecto: ${formData.get('optimismo') || 'No especificado'}
+
+═══════════════════════════════════════════════════════
+MÓDULO 5: AUDITORÍA DOCUMENTAL
+═══════════════════════════════════════════════════════
+
+Errores Conocidos en Documentos: ${formData.get('erroresDocumentos') || 'Ninguno reportado'}
+
+═══════════════════════════════════════════════════════
+
+Con base en esta información completa, genera el REPORTE DE PREEVALUACIÓN PENSIONAL PROFESIONAL siguiendo la metodología establecida.`;
+        }
+
+        // Función para mostrar error
+        function mostrarError(mensaje) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = mensaje;
+            errorDiv.classList.add('active');
+
+            setTimeout(() => {
+                errorDiv.classList.remove('active');
+            }, 5000);
+        }
+
+        // Función para llamar a OpenAI API
+        async function generarInformeConIA(datosFormateados) {
+            const url = 'https://api.openai.com/v1/chat/completions';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-4o',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: CONSULTOR_PROMPT
+                            },
+                            {
+                                role: 'user',
+                                content: datosFormateados
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 6000
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'Error al comunicarse con OpenAI');
+                }
+
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                console.error('Error en API de OpenAI:', error);
+                throw error;
+            }
+        }
+
+        // Función para generar PDF - VERSIÓN LIMPIA Y PROFESIONAL
+        function generarPDF(contenidoInforme, nombreCliente) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const margenIzq = 20;
+            const anchoTexto = 170;
+            let yPos = 20;
+            const lineHeight = 7;
+            const margenInferior = 265;
+
+            // Función para limpiar TODO el markdown y caracteres especiales
+            function limpiarTextoFinal(texto) {
+                if (!texto) return '';
+
+                // Eliminar TODOS los asteriscos (simples y dobles)
+                texto = texto.replace(/\*+/g, '');
+
+                // Eliminar corchetes con contenido
+                texto = texto.replace(/\[[^\]]*\]/g, '');
+
+                // Eliminar caracteres especiales de markdown
+                texto = texto.replace(/[#]{1,6}\s*/g, '');
+                texto = texto.replace(/[-━═]{3,}/g, '');
+
+                // Limpiar emojis
+                const emojis = ['🟢', '🟡', '🔴', '✅', '⚠️', '❌', '✓', '📋', '👤', '💼', '🏠', '💰', '🏥', '📄', '🚀', '🔄', '🎯', '📌', '⚖️', '📊', '🔒'];
+                emojis.forEach(emoji => {
+                    texto = texto.replace(new RegExp(emoji, 'g'), '');
+                });
+
+                return texto.trim();
+            }
+
+            // Función para verificar salto de página
+            function verificarSaltoPagina() {
+                if (yPos > margenInferior) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+            }
+
+            // Función para agregar texto con wrap automático
+            function agregarTextoSimple(texto, bold = false, fontSize = 10, color = [0, 0, 0], indent = 0) {
+                texto = limpiarTextoFinal(texto);
+                if (!texto) return;
+
+                doc.setFontSize(fontSize);
+                doc.setTextColor(...color);
+                doc.setFont(undefined, bold ? 'bold' : 'normal');
+
+                const lineas = doc.splitTextToSize(texto, anchoTexto - indent);
+                lineas.forEach(linea => {
+                    verificarSaltoPagina();
+                    doc.text(linea, margenIzq + indent, yPos);
+                    yPos += lineHeight;
+                });
+            }
+
+            // Función completa de limpieza de texto
+            function limpiarTextoCompleto(texto) {
+                if (!texto) return '';
+
+                // Limpiar emojis
+                const emojiMap = {
+                    '🟢': '', '🟡': '', '🔴': '', '✅': '', '⚠️': '', '❌': '', '✓': '',
+                    '📋': '', '👤': '', '💼': '', '🏠': '', '💰': '', '🏥': '', '📄': '',
+                    '🚀': '', '🔄': '', '🎯': '', '📌': '', '⚖️': '', '📊': '', '🔒': ''
+                };
+
+                let resultado = texto;
+                for (const [emoji, reemplazo] of Object.entries(emojiMap)) {
+                    resultado = resultado.replace(new RegExp(emoji, 'g'), reemplazo);
+                }
+
+                // Limpiar todos los corchetes con contenido extraño
+                resultado = resultado.replace(/\[[^\]]*\]/g, '');
+
+                // Limpiar asteriscos dobles sueltos y markdown mal formado
+                resultado = resultado.replace(/\*\*\s*\]\]/g, '');
+                resultado = resultado.replace(/\(\*\*\s*\]\]/g, '');
+                resultado = resultado.replace(/\(\*\*\s*/g, '');
+                resultado = resultado.replace(/\*\*\s*\)/g, '');
+                resultado = resultado.replace(/\]\]\)/g, '');
+
+                // NUEVAS REGLAS ESPECÍFICAS para los caracteres raros detectados:
+                // Limpiar ** después de dos puntos (ej: "Edad:**" -> "Edad:")
+                resultado = resultado.replace(/:\*\*\s*/g, ': ');
+
+                // Limpiar ** al final de paréntesis (ej: "(**)" -> "")
+                resultado = resultado.replace(/\(\*\*\)/g, '');
+
+                // Limpiar paréntesis con ** y espacio (ej: "(** " -> "")
+                resultado = resultado.replace(/\(\*\*\s+/g, '');
+
+                // Limpiar ** al final de línea
+                resultado = resultado.replace(/\*\*$/g, '');
+
+                // Limpiar un solo asterisco al inicio (ej: "*Salud" -> "Salud")
+                resultado = resultado.replace(/^\*([^*])/g, '$1');
+
+                return resultado.trim();
+            }
+
+            // Mantener compatibilidad con código existente
+            function limpiarEmojis(texto) {
+                return limpiarTextoCompleto(texto);
+            }
+
+            // Función para procesar una línea con markdown **texto**
+            function procesarMarkdown(texto) {
+                const partes = [];
+                const regex = /\*\*(.+?)\*\*/g;
+                let lastIndex = 0;
+                let match;
+
+                while ((match = regex.exec(texto)) !== null) {
+                    if (match.index > lastIndex) {
+                        partes.push({
+                            texto: texto.substring(lastIndex, match.index),
+                            bold: false
+                        });
+                    }
+                    partes.push({
+                        texto: match[1],
+                        bold: true
+                    });
+                    lastIndex = match.index + match[0].length;
+                }
+
+                if (lastIndex < texto.length) {
+                    partes.push({
+                        texto: texto.substring(lastIndex),
+                        bold: false
+                    });
+                }
+
+                if (partes.length === 0) {
+                    partes.push({ texto: texto, bold: false });
+                }
+
+                return partes;
+            }
+
+            // Función para agregar línea de viabilidad con indicador de color
+            function agregarLineaViabilidad(texto) {
+                // Limpiar la línea de viñetas, emojis y caracteres extraños
+                texto = limpiarEmojis(texto);
+                texto = texto.replace(/^\s*[-•*]\s*/, ''); // Quitar viñetas
+                texto = texto.replace(/\[[^\]]*\]/g, ''); // Quitar todos los corchetes con contenido
+                texto = texto.trim();
+
+                // Detectar el tipo de indicador
+                let color;
+                let indicadorTexto = '';
+
+                if (texto.match(/favorable/i)) {
+                    color = [46, 204, 113]; // Verde
+                    indicadorTexto = 'FAVORABLE';
+                } else if (texto.match(/condicionado/i)) {
+                    color = [241, 196, 15]; // Amarillo
+                    indicadorTexto = 'CONDICIONADO';
+                } else if (texto.match(/riesgo/i)) {
+                    color = [231, 76, 60]; // Rojo
+                    indicadorTexto = 'RIESGO';
+                } else {
+                    // Sin indicador específico
+                    agregarTexto(texto, 10, false, [0, 0, 0]);
+                    return;
+                }
+
+                // Verificar salto de página
+                if (yPos > margenInferior) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                // Dibujar círculo de color
+                doc.setFillColor(...color);
+                doc.circle(margenIzq + 5, yPos - 2, 2, 'F');
+
+                // Extraer categoría y descripción
+                const partes = texto.split(':');
+                if (partes.length >= 2) {
+                    const categoria = partes[0].trim();
+                    const descripcion = partes.slice(1).join(':').trim();
+
+                    // Categoría en negrita
+                    doc.setFont(undefined, 'bold');
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text(categoria + ':', margenIzq + 10, yPos);
+
+                    // Descripción normal con indicador de color
+                    doc.setFont(undefined, 'normal');
+                    doc.setTextColor(...color);
+                    const anchoCategoria = doc.getTextWidth(categoria + ': ');
+
+                    const textoIndicador = ` ${indicadorTexto}`;
+                    doc.text(textoIndicador, margenIzq + 10 + anchoCategoria, yPos);
+
+                    // Si hay descripción adicional
+                    if (descripcion && descripcion.toLowerCase() !== indicadorTexto.toLowerCase()) {
+                        doc.setTextColor(100, 100, 100);
+                        const anchoIndicador = doc.getTextWidth(textoIndicador);
+                        const descripcionLimpia = descripcion.replace(new RegExp(indicadorTexto, 'i'), '').trim();
+
+                        if (descripcionLimpia && descripcionLimpia !== '') {
+                            const lineasDesc = doc.splitTextToSize(
+                                ` (${descripcionLimpia})`,
+                                anchoTexto - anchoCategoria - anchoIndicador - 10
+                            );
+
+                            lineasDesc.forEach((linea, i) => {
+                                if (i === 0) {
+                                    doc.text(linea, margenIzq + 10 + anchoCategoria + anchoIndicador, yPos);
+                                } else {
+                                    yPos += lineHeight;
+                                    if (yPos > margenInferior) {
+                                        doc.addPage();
+                                        yPos = 20;
+                                    }
+                                    doc.text(linea, margenIzq + 10, yPos);
+                                }
+                            });
+                        }
+                    }
+                } else {
+                    // Sin formato especial
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(10);
+                    doc.setTextColor(...color);
+                    doc.text(` ${indicadorTexto}`, margenIzq + 10, yPos);
+                }
+
+                yPos += lineHeight;
+            }
+
+            // Función para procesar markdown y agregar texto con formato
+            function agregarTextoConMarkdown(texto, fontSize = 10, color = [0, 0, 0]) {
+                // Limpiar completamente el texto
+                texto = limpiarTextoCompleto(texto);
+
+                // Si no tiene markdown después de limpiar, usar función simple
+                if (!texto.includes('**')) {
+                    agregarTexto(texto, fontSize, false, color);
+                    return;
+                }
+
+                doc.setFontSize(fontSize);
+                doc.setTextColor(...color);
+
+                const partes = procesarMarkdown(texto);
+                let xPos = margenIzq;
+
+                partes.forEach((parte) => {
+                    if (!parte.texto || parte.texto.trim() === '') return;
+
+                    doc.setFont(undefined, parte.bold ? 'bold' : 'normal');
+
+                    const palabras = parte.texto.split(' ').filter(p => p.trim() !== '');
+                    palabras.forEach((palabra, i) => {
+                        if (i > 0) palabra = ' ' + palabra;
+
+                        const anchoPalabra = doc.getTextWidth(palabra);
+
+                        if (xPos + anchoPalabra > margenIzq + anchoTexto) {
+                            yPos += lineHeight;
+                            xPos = margenIzq;
+
+                            if (yPos > margenInferior) {
+                                doc.addPage();
+                                yPos = 20;
+                            }
+
+                            palabra = palabra.trim();
+                        }
+
+                        doc.text(palabra, xPos, yPos);
+                        xPos += anchoPalabra;
+                    });
+                });
+
+                yPos += lineHeight;
+            }
+
+            function agregarTexto(texto, fontSize = 10, isBold = false, color = [0, 0, 0]) {
+                // Limpiar completamente el texto primero
+                texto = limpiarTextoCompleto(texto);
+
+                // Si después de limpiar aún tiene markdown, procesarlo
+                if (texto.includes('**')) {
+                    agregarTextoConMarkdown(texto, fontSize, color);
+                    return;
+                }
+
+                if (!texto || texto.trim() === '') return;
+
+                doc.setFontSize(fontSize);
+                doc.setTextColor(...color);
+
+                if (isBold) {
+                    doc.setFont(undefined, 'bold');
+                } else {
+                    doc.setFont(undefined, 'normal');
+                }
+
+                const lineas = doc.splitTextToSize(texto, anchoTexto);
+
+                lineas.forEach(linea => {
+                    if (yPos > margenInferior) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+
+                    doc.text(linea, margenIzq, yPos);
+                    yPos += lineHeight;
+                });
+            }
+
+            // Encabezado con degradado simulado
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 0, 210, 45, 'F');
+
+            // Borde decorativo
+            doc.setDrawColor(255, 255, 255);
+            doc.setLineWidth(0.5);
+            doc.line(15, 42, 195, 42);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont(undefined, 'bold');
+            doc.text('REPORTE DE PREEVALUACIÓN', 105, 18, { align: 'center' });
+            doc.setFontSize(20);
+            doc.text('PENSIONAL PROFESIONAL', 105, 30, { align: 'center' });
+
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.text('Diagnóstico Integral IMSS', 105, 38, { align: 'center' });
+
+            yPos = 58;
+
+            // Información del cliente en recuadro
+            doc.setFillColor(248, 249, 250);
+            doc.roundedRect(margenIzq - 5, yPos - 5, anchoTexto + 10, 18, 2, 2, 'F');
+
+            doc.setDrawColor(102, 126, 234);
+            doc.setLineWidth(0.3);
+            doc.roundedRect(margenIzq - 5, yPos - 5, anchoTexto + 10, 18, 2, 2, 'S');
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Cliente: ${nombreCliente}`, margenIzq, yPos + 3);
+
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            const fecha = new Date().toLocaleDateString('es-MX', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            doc.text(`Fecha de emisión: ${fecha}`, margenIzq, yPos + 10);
+
+            yPos += 25;
+
+            // PROCESAMIENTO PRINCIPAL - LIMPIO Y SIMPLE
+            const lineas = contenidoInforme.split('\n');
+
+            lineas.forEach(linea => {
+                // LIMPIAR TODO EL MARKDOWN PRIMERO
+                let lineaLimpia = limpiarTextoFinal(linea);
+
+                // Omitir líneas vacías o decorativas
+                if (!lineaLimpia || lineaLimpia.trim() === '' || lineaLimpia.match(/^[-━═%]+$/)) {
+                    if (lineaLimpia.trim() === '') yPos += 2;
+                    return;
+                }
+
+                // 1. TÍTULOS DE SECCIONES (A), B), C), etc.)
+                if (lineaLimpia.match(/^[A-H]\)\s+/)) {
+                    yPos += 10;
+                    verificarSaltoPagina();
+
+                    // Línea decorativa
+                    doc.setDrawColor(102, 126, 234);
+                    doc.setLineWidth(0.5);
+                    doc.line(margenIzq, yPos - 5, margenIzq + anchoTexto, yPos - 5);
+
+                    // Título en azul y negrita
+                    agregarTextoSimple(lineaLimpia, true, 13, [102, 126, 234]);
+                    yPos += 3;
+                    return;
+                }
+
+                // 2. MATRIZ DE VIABILIDAD (Legal, Financiero, Documental, Salud)
+                if (lineaLimpia.match(/(Legal|Financiero|Documental|Salud)\s*(\/ |y)?\s*[^:]*:/i)) {
+                    // Limpiar y preparar
+                    let textoViabilidad = limpiarTextoFinal(lineaLimpia);
+
+                    let color, indicador;
+                    if (textoViabilidad.match(/favorable/i)) {
+                        color = [46, 204, 113];
+                        indicador = 'FAVORABLE';
+                    } else if (textoViabilidad.match(/condicionado/i)) {
+                        color = [241, 196, 15];
+                        indicador = 'CONDICIONADO';
+                    } else if (textoViabilidad.match(/riesgo/i)) {
+                        color = [231, 76, 60];
+                        indicador = 'RIESGO';
+                    } else {
+                        agregarTextoSimple(textoViabilidad, false);
+                        return;
+                    }
+
+                    verificarSaltoPagina();
+
+                    // Dibujar círculo
+                    doc.setFillColor(...color);
+                    doc.circle(margenIzq + 5, yPos - 2, 2, 'F');
+
+                    // Extraer y mostrar
+                    const partes = textoViabilidad.split(':');
+                    if (partes.length >= 2) {
+                        const categoria = partes[0].trim();
+                        const descripcion = partes.slice(1).join(':').trim();
+
+                        // Categoría en negrita
+                        doc.setFont(undefined, 'bold');
+                        doc.setFontSize(10);
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(categoria + ':', margenIzq + 10, yPos);
+
+                        // Indicador en color
+                        const anchoCategoria = doc.getTextWidth(categoria + ': ');
+                        doc.setFont(undefined, 'normal');
+                        doc.setTextColor(...color);
+                        doc.text(indicador, margenIzq + 10 + anchoCategoria, yPos);
+
+                        // Descripción adicional si existe
+                        if (descripcion && !descripcion.toLowerCase().includes(indicador.toLowerCase())) {
+                            doc.setTextColor(100, 100, 100);
+                            const anchoIndicador = doc.getTextWidth(indicador + ' ');
+                            const lineasDesc = doc.splitTextToSize(
+                                `(${descripcion})`,
+                                anchoTexto - anchoCategoria - anchoIndicador - 10
+                            );
+
+                            lineasDesc.forEach((l, i) => {
+                                if (i === 0) {
+                                    doc.text(l, margenIzq + 10 + anchoCategoria + anchoIndicador, yPos);
+                                } else {
+                                    yPos += lineHeight;
+                                    verificarSaltoPagina();
+                                    doc.text(l, margenIzq + 10, yPos);
+                                }
+                            });
+                        }
+                    }
+
+                    yPos += lineHeight;
+                    return;
+                }
+
+                // 3. VIÑETAS - Detectar patrón "Etiqueta: descripción"
+                const matchVineta = lineaLimpia.match(/^([A-ZÁÉÍÓÚÑ][^:]{2,60}):\s*(.+)$/);
+                if (matchVineta) {
+                    verificarSaltoPagina();
+
+                    // Bullet point
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 0, 0);
+                    doc.text('•', margenIzq + 3, yPos);
+
+                    // Etiqueta en negrita
+                    doc.setFont(undefined, 'bold');
+                    doc.text(matchVineta[1] + ':', margenIzq + 8, yPos);
+
+                    // Descripción normal
+                    const anchoEtiqueta = doc.getTextWidth(matchVineta[1] + ': ');
+                    doc.setFont(undefined, 'normal');
+                    const lineasDesc = doc.splitTextToSize(matchVineta[2], anchoTexto - 8 - anchoEtiqueta);
+
+                    lineasDesc.forEach((l, i) => {
+                        if (i === 0) {
+                            doc.text(l, margenIzq + 8 + anchoEtiqueta, yPos);
+                        } else {
+                            yPos += lineHeight;
+                            verificarSaltoPagina();
+                            doc.text(l, margenIzq + 8, yPos);
+                        }
+                    });
+
+                    yPos += lineHeight;
+                    return;
+                }
+
+                // 4. SUBTÍTULOS (línea que termina en :)
+                if (lineaLimpia.match(/^[A-ZÁÉÍÓÚÑ][^:]{3,50}:$/)) {
+                    yPos += 2;
+                    agregarTextoSimple(lineaLimpia, true);
+                    return;
+                }
+
+                // 5. TEXTO NORMAL
+                agregarTextoSimple(lineaLimpia, false);
+            });
+
+            // Pie de página profesional
+            const totalPages = doc.internal.getNumberOfPages();
+
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+
+                // Línea decorativa superior
+                doc.setDrawColor(200, 200, 200);
+                doc.setLineWidth(0.3);
+                doc.line(20, 280, 190, 280);
+
+                // Texto del pie de página
+                doc.setFontSize(8);
+                doc.setTextColor(128, 128, 128);
+                doc.setFont(undefined, 'normal');
+
+                doc.text(
+                    'Documento confidencial - Uso exclusivo del cliente',
+                    105,
+                    285,
+                    { align: 'center' }
+                );
+
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(102, 126, 234);
+                doc.text(
+                    `Página ${i} de ${totalPages}`,
+                    105,
+                    290,
+                    { align: 'center' }
+                );
+            }
+
+            const nombreArchivo = `Informe_Pension_${nombreCliente.replace(/ /g, '_')}_${new Date().getTime()}.pdf`;
+            doc.save(nombreArchivo);
+        }
+
+        // Funciones para el modal de éxito
+        function mostrarModalExito() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevenir scroll del fondo
+        }
+
+        function cerrarModalExito() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Restaurar scroll
+        }
+
+        // Cerrar modal al hacer clic fuera del contenido
+        document.addEventListener('click', function (e) {
+            const modal = document.getElementById('successModal');
+            if (e.target === modal) {
+                cerrarModalExito();
+            }
+        });
+
+        // Cerrar modal con tecla ESC
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                cerrarModalExito();
+            }
+        });
+
+        // Manejador del formulario
+        document.getElementById('diagnosticForm').addEventListener('submit', async function (e) {
+            console.log('🔥 Formulario enviado - preventDefault activado');
+            e.preventDefault();
+
+            // Validar que la API Key esté configurada
+            if (!OPENAI_API_KEY || OPENAI_API_KEY === 'TU_API_KEY_AQUI') {
+                mostrarError('⚠️ Error de configuración: La API Key de OpenAI no ha sido configurada. Por favor, edita el archivo HTML y agrega tu API Key en la línea 547.');
+                return;
+            }
+
+            const formData = new FormData(this);
+            const nombreCliente = formData.get('nombreCompleto');
+
+            document.getElementById('loadingContainer').classList.add('active');
+            document.getElementById('submitBtn').disabled = true;
+
+            try {
+                const datosFormateados = formatearDatosFormulario(formData);
+                const informeGenerado = await generarInformeConIA(datosFormateados);
+                generarPDF(informeGenerado, nombreCliente);
+
+                // Mostrar modal de éxito
+                mostrarModalExito();
+
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarError('❌ Error al generar el informe: ' + error.message);
+            } finally {
+                document.getElementById('loadingContainer').classList.remove('active');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        });
+
+        // Validaciones en tiempo real
+        document.getElementById('curp').addEventListener('input', function (e) {
+            this.value = this.value.toUpperCase();
+            if (this.value.length === 18) {
+                const curpRegex = /^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z][0-9]$/;
+                this.style.borderColor = curpRegex.test(this.value) ? '#2ecc71' : '#e74c3c';
+            }
+        });
+
+        document.getElementById('rfc').addEventListener('input', function (e) {
+            this.value = this.value.toUpperCase();
+            if (this.value.length === 13) {
+                const rfcRegex = /^[A-ZÑ&]{4}[0-9]{6}[A-Z0-9]{3}$/;
+                this.style.borderColor = rfcRegex.test(this.value) ? '#2ecc71' : '#e74c3c';
+            }
+        });
+
+        document.getElementById('nss').addEventListener('input', function (e) {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 11) {
+                this.style.borderColor = '#2ecc71';
+            }
+        });
+
+        document.getElementById('celular').addEventListener('input', function (e) {
+            this.value = this.value.replace(/\D/g, '');
+            if (this.value.length === 10) {
+                this.style.borderColor = '#2ecc71';
+            }
+        });
+
+        console.log('✅ Sistema de Diagnóstico de Pensiones IMSS cargado correctamente');
+    </script>
+</body>
+
+</html>

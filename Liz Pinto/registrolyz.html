@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Click Boss | Registro Evento</title>
+
+    <!-- Fuentes: Playfair Display (Títulos) y Raleway (Cuerpo) - Estilo Liz Pinto + Font Awesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Playfair Display para títulos y Raleway para párrafos (como en lizpinto.net) -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lzGold: '#e7b93f',
+                        lzGoldLight: '#f5d88a',
+                        lzDark: '#2b2b2b',        // Gris muy oscuro (branding Liz)
+                        lzGrey: '#7a7a7a',
+                        lzGreyDark: '#4a4a4a',    // Gris medio oscuro
+                        lzLightBg: '#f9f9f9',
+                        lzBlack: '#1a1a1a',       // Negro más profundo
+                        lzBeige: '#f5f1e8',
+                        lzChocolate: '#8B6F47',   // Color chocolate secundario de Liz
+                    },
+                    fontFamily: {
+                        sans: ['Raleway', 'sans-serif'],         // Cambiado a Raleway
+                        heading: ['Playfair Display', 'serif'],
+                    },
+                    boxShadow: {
+                        'lz-soft': '0 10px 40px rgba(0,0,0,0.06)',
+                        'lz-medium': '0 15px 50px rgba(0,0,0,0.08)',
+                        'lz-strong': '0 20px 60px rgba(0,0,0,0.12)',
+                        'lz-gold': '0 8px 25px rgba(231,185,63,0.15)',
+                    },
+                    letterSpacing: {
+                        'extra-wide': '0.15em',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ============================================
+           ESTILOS GLOBALES EXTRAÍDOS DE LIZPINTO.NET
+           ============================================ */
+
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            color: #333;
+            line-height: 1.7;
+            overflow-x: hidden;
+            font-family: 'Raleway', sans-serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Playfair Display', serif;
+            color: #000;
+            font-weight: 400;
+            /* Peso normal para Playfair Display */
+            line-height: 1.2;
+        }
+
+        /* Subrayado estilo Liz Pinto - Línea recta simple - Mejorado para móviles */
+        .underline-lz {
+            background-image: linear-gradient(to top, #e7b93f 0%, #e7b93f 2px, transparent 2px, transparent 100%);
+            background-position: 0 calc(100% - 4px);
+            background-repeat: repeat-x;
+            display: inline;
+            box-decoration-break: clone;
+            -webkit-box-decoration-break: clone;
+        }
+
+        /* Botones estilo Liz Pinto - Rectangulares, sin degradados */
+        .btn-liz {
+            background-color: #2b2b2b;
+            color: #fff;
+            font-family: 'Raleway', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .btn-liz:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            background-color: #1a1a1a;
+        }
+
+        .btn-gold {
+            background: #e7b93f;
+            /* Amarillo sólido, sin degradado */
+            color: #2b2b2b;
+            /* Texto gris oscuro */
+            font-weight: 700;
+        }
+
+        .btn-gold:hover {
+            background: #d4a01e;
+            /* Amarillo más oscuro al hover */
+            box-shadow: 0 10px 30px rgba(231, 185, 63, 0.4);
+        }
+
+        /* Fix: Asegurar que todo el botón sea clickable ignorando hijos */
+        .btn-liz>*,
+        #close-modal-btn>* {
+            pointer-events: none;
+        }
+
+        /* Inputs elegantes */
+        .input-liz {
+            background-color: #f9f9f9;
+            border: 2px solid #e5e5e5;
+            color: #333;
+            font-family: 'Raleway', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        .input-liz:focus {
+            border-color: #e7b93f;
+            background-color: #fff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(231, 185, 63, 0.1);
+        }
+
+        /* Línea decorativa estilo Liz Pinto - Recta y simple */
+        .decorative-line {
+            height: 2px;
+            background: #e7b93f;
+            /* Amarillo sólido */
+            margin: 2rem auto;
+            max-width: 150px;
+        }
+
+        /* Tarjetas con hover premium */
+        .card-lz {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #f0f0f0;
+        }
+
+        .card-lz:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+            border-color: #e7b93f;
+        }
+
+        /* Animación de pulso mejorada */
+        @keyframes pulse-premium {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(231, 185, 63, 0.5);
+                transform: scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 0 15px rgba(231, 185, 63, 0);
+                transform: scale(1.02);
+            }
+        }
+
+        .btn-pulse {
+            animation: pulse-premium 2.5s ease-in-out infinite;
+        }
+
+        /* Contador con animación suave */
+        @keyframes countUp {
+            0% {
+                opacity: 0;
+                transform: translateY(15px) scale(0.9);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .count-animation {
+            animation: countUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Checkmarks estilo Liz Pinto - Sin degradados */
+        .check-icon-large {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            background: #e7b93f;
+            /* Amarillo sólido */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(231, 185, 63, 0.2);
+            transition: all 0.3s ease;
+            margin-top: 4px;
+        }
+
+        /* Sin verde ni rojo - Liz no usa estos colores */
+
+        .check-icon-large:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(231, 185, 63, 0.3);
+            background: #d4a01e;
+        }
+
+        .check-icon-large i {
+            font-size: 12px;
+            color: white;
+        }
+
+        /* SVG Bullet estilo Liz Pinto */
+        .svg-check-liz {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .svg-check-liz svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Ícono de línea simple para "No es para ti" (gris oscuro, no rojo) */
+        .x-icon-large {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            background: #4a4a4a;
+            /* Gris oscuro, NO rojo */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(74, 74, 74, 0.2);
+            transition: all 0.3s ease;
+            margin-top: 4px;
+        }
+
+        .x-icon-large:hover {
+            transform: scale(1.1);
+            background: #2b2b2b;
+        }
+
+        .x-icon-large i {
+            font-size: 12px;
+            color: white;
+        }
+
+        /* Listas de beneficios - Icono más pequeño */
+        .benefit-icon-small {
+            width: 40px;
+            /* Reducido de 48px (w-12) */
+            height: 40px;
+            /* Reducido */
+            min-width: 40px;
+        }
+
+        /* Modal mejorado */
+        #modal-overlay {
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #modal-overlay.modal-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            display: none !important;
+        }
+
+        #modal-overlay.modal-visible {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            display: flex !important;
+        }
+
+        #modal-content {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Badge estilo Liz Pinto - Sin degradados */
+        .badge-lz {
+            background: rgba(231, 185, 63, 0.1);
+            border: 1px solid rgba(231, 185, 63, 0.25);
+            transition: all 0.3s ease;
+        }
+
+        .badge-lz:hover {
+            background: rgba(231, 185, 63, 0.15);
+            border-color: rgba(231, 185, 63, 0.35);
+        }
+
+        /* Secciones con fondos sutiles - Sin degradados */
+        .section-beige {
+            background: #f5f1e8;
+            /* Beige sólido */
+        }
+
+        /* CLASE MÁGICA PARA GOHIGHLEVEL / CONSTRUCTORES */
+        /* Fuerza a la sección a salirse del contenedor padre y ocupar todo el ancho */
+        .force-full-width {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        /* Video player estilo Liz Pinto - Rectangular */
+        .video-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .video-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .video-overlay {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Lista con iconos premium */
+        .list-item-premium {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding-left: 0;
+        }
+
+        .list-item-premium:hover {
+            transform: translateX(8px);
+        }
+
+        .list-item-premium i {
+            transition: all 0.3s ease;
+        }
+
+        .list-item-premium:hover i {
+            color: #d4a01e;
+            transform: scale(1.2);
+        }
+
+        /* Biografía con imagen rotada */
+        .bio-image-container {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .bio-image-container:hover {
+            transform: rotate(-2deg) scale(1.05);
+        }
+
+        /* Alert estilo Liz Pinto - Sin degradados */
+        .alert-gold {
+            background: #e7b93f;
+            /* Amarillo sólido */
+            border: 2px solid #d4a01e;
+            box-shadow: 0 10px 30px rgba(231, 185, 63, 0.2);
+            position: relative;
+        }
+
+        .alert-gold::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #d4a01e;
+            /* Línea superior sólida */
+        }
+
+        /* Número decorativo en cards - Estilo Liz Pinto */
+        .card-number {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400;
+            font-size: 3rem;
+            line-height: 1;
+            color: #e7b93f;
+            /* Amarillo sólido */
+            opacity: 0.15;
+            position: absolute;
+            top: -10px;
+            right: 20px;
+        }
+
+        /* Scroll smooth */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Mejoras de accesibilidad y UX */
+        *:focus-visible {
+            outline: 2px solid #e7b93f;
+            outline-offset: 2px;
+        }
+
+        /* Transiciones globales optimizadas */
+        * {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Loading spinner premium (por si se necesita) */
+        @keyframes spin-premium {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner-lz {
+            border: 3px solid rgba(231, 185, 63, 0.1);
+            border-top-color: #e7b93f;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin-premium 0.8s linear infinite;
+        }
+
+        /* Texto dorado - Estilo Liz Pinto */
+        .text-gradient-gold {
+            color: #e7b93f;
+            /* Amarillo sólido */
+        }
+
+        /* Separador decorativo - Línea recta */
+        .separator-lz {
+            height: 1px;
+            background: #e7b93f;
+            /* Amarillo sólido */
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+
+    <!-- HEADER / LOGO (Estilo oscuro Liz Pinto) -->
+    <header class="py-3 md:py-4 text-center bg-lzDark border-b border-lzGreyDark force-full-width">
+        <div class="inline-block w-full max-w-[240px] md:max-w-sm px-6">
+            <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/69653f00f8a93b584f0124df.png"
+                alt="The Click Boss" class="w-full h-auto">
+        </div>
+    </header>
+
+    <!-- HERO SECTION con fondo oscuro estilo Liz Pinto -->
+    <section class="px-6 pb-16 pt-4 md:pt-6 bg-lzDark force-full-width">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-1">
+
+                <!-- TÍTULO EN 3 LÍNEAS -->
+                <h1
+                    class="font-heading font-normal text-3xl md:text-4xl lg:text-5xl mb-0 uppercase leading-tight text-white">
+                    Descubre el paso a paso<br class="hidden md:block">
+                    para <span class="underline-lz">salir del estancamiento</span><br class="hidden md:block">
+                    en tu negocio de fotografía
+                </h1>
+
+            </div>
+
+            <div class="flex flex-col items-center">
+                <!-- FECHA Y HORA DEL EVENTO -->
+                <div
+                    class="inline-flex items-center justify-center gap-2 text-lzGold font-sans font-semibold text-base md:text-lg mb-1">
+                    <i class="fa-solid fa-calendar-check text-lg"></i>
+                    <span>2 al 6 de Febrero • 12:00 PM (Hora Panamá)</span>
+                </div>
+
+                <!-- VSL CONTAINER con efectos premium -->
+                <div class="video-container relative w-full aspect-video bg-black mb-6 max-w-3xl">
+                    <div style="padding:56.25% 0 0 0;position:relative;"><iframe
+                            src="https://player.vimeo.com/video/1153969710?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;loop=1"
+                            frameborder="0"
+                            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Invitación"></iframe>
+                    </div>
+                    <script src="https://player.vimeo.com/api/player.js"></script>
+                </div>
+
+                <!-- CTA INMEDIATO -->
+                <div class="text-center w-full max-w-3xl mx-auto mb-8">
+
+                    <div
+                        class="flex flex-col md:flex-row gap-4 justify-center items-center w-full max-w-4xl mx-auto mb-8">
+                        <a href="#"
+                            class="open-modal-trigger inline-block btn-liz bg-white border-2 border-gray-300 text-lzBlack hover:border-lzGold hover:bg-gray-50 py-5 px-8 rounded-full text-lg shadow-lz-soft hover:shadow-lz-medium transform transition-all w-full md:w-auto text-center uppercase leading-tight flex-1"
+                            style="background-color: #ffffff !important; color: #1a1a1a !important; border: 2px solid #d1d5db !important;">
+                            Quiero las clases en vivo
+                        </a>
+                        <a href="#"
+                            class="open-modal-trigger inline-block btn-liz btn-gold py-5 px-8 rounded-full text-lg shadow-lz-strong hover:shadow-lz-gold transform transition-all w-full md:w-auto text-center uppercase leading-tight btn-pulse flex-1"
+                            style="background-color: #e7b93f !important; color: #2b2b2b !important;">
+                            Quiero clases + grabaciones
+                            <i
+                                class="fa-solid fa-video ml-2 group-hover:translate-x-2 transition-transform inline-block"></i>
+                        </a>
+                    </div>
+                    <p
+                        class="text-lg md:text-xl text-white mb-8 mx-auto font-sans max-w-3xl leading-relaxed text-center">
+                        Empieza a <strong>atraer clientes con más constancia</strong>, <strong>cobrando mejor</strong> y
+                        con <strong>más seguridad</strong>.
+                        Usando <strong>IA como asistente, no como reemplazo</strong>.<br>Dejando atrás <strong>la
+                            improvisación</strong>.
+                    </p>
+
+                    <!-- FECHAS DE LAS 3 CLASES -->
+                    <div class="mt-8 max-w-3xl mx-auto flex flex-col items-center">
+                        <p class="text-white font-bold text-lg mb-4 flex items-center">
+                            <i class="fa-solid fa-calendar-days text-lzGold mr-3 text-xl"></i>
+                            Las 3 Clases en Vivo:
+                        </p>
+                        <ul class="text-white font-sans text-base space-y-2 text-left">
+                            <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Lunes 2 de Febrero</li>
+                            <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Miércoles 4 de Febrero</li>
+                            <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Viernes 6 de Febrero</li>
+                        </ul>
+
+                        <!-- HORARIOS POR PAÍS -->
+                        <div class="text-center mt-6">
+                            <p class="text-lzGold font-bold text-sm mb-3 flex items-center justify-center">
+                                <i class="fa-solid fa-clock mr-2"></i>
+                                Horario de las clases:
+                            </p>
+                            <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-white font-sans text-sm">
+                                <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>México: 11:00
+                                    AM</span>
+                                <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Panamá: 12:00
+                                    PM</span>
+                                <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>USA (Los
+                                    Ángeles): 9:00 AM</span>
+                                <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Argentina: 2:00
+                                    PM</span>
+                                <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>España: 6:00
+                                    PM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- LAS 3 CLASES (Fondo beige elegante - CON FORCE FULL WIDTH) -->
+    <section class="section-beige py-24 px-6 border-y border-gray-100 force-full-width">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-14">
+                <h2 class="font-heading font-normal text-4xl md:text-5xl uppercase">
+                    Las <span class="text-lzGold">3</span> Clases del Evento
+                </h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-10 mt-16">
+                <!-- Card 1 -->
+                <div
+                    class="card-lz bg-white p-10 rounded-none shadow-lz-soft hover:shadow-lz-strong flex flex-col relative overflow-hidden">
+                    <div
+                        class="text-lzGold font-heading font-semibold text-base md:text-lg tracking-extra-wide mb-2 flex items-center">
+                        <i class="fa-solid fa-minus text-xs mr-2"></i> CLASE 1
+                    </div>
+                    <p class="text-sm text-lzBlack font-sans mb-4">Lunes 2 de Febrero</p>
+                    <h3 class="font-heading font-normal text-2xl md:text-3xl mb-4 leading-tight">
+                        Por qué no estás atrayendo clientes
+                    </h3>
+                    <p class="text-base md:text-lg text-lzBlack mb-5 leading-relaxed font-sans">
+                        En esta clase vamos a <strong>romper las creencias</strong> que hoy te están frenando y a
+                        identificar <strong>el problema real</strong> detrás del estancamiento.
+                    </p>
+                    <p class="text-base md:text-lg font-bold text-lzDark mb-4 font-sans">Vas a entender por qué:</p>
+                    <ul class="space-y-4 mb-8 flex-grow font-sans">
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>El talento <strong>no garantiza ingresos</strong></span>
+                        </li>
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>La técnica <strong>no es la prioridad</strong></span>
+                        </li>
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>Improvisar como negocio genera <strong>frustración y desorden</strong></span>
+                        </li>
+                    </ul>
+                    <div class="separator-lz mb-4"></div>
+                    <div class="mt-auto text-center">
+                        <span
+                            class="font-heading font-medium text-xs uppercase text-lzGreyDark tracking-wider flex items-center justify-center">
+                            <!-- Bajado de semibold a medium -->
+                            <i class="fa-solid fa-arrow-right-long mr-2"></i> No es culpa. Es claridad.
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div
+                    class="card-lz bg-white p-10 rounded-none shadow-lz-soft hover:shadow-lz-strong flex flex-col relative overflow-hidden">
+                    <div
+                        class="text-lzGold font-heading font-semibold text-base md:text-lg tracking-extra-wide mb-2 flex items-center">
+                        <i class="fa-solid fa-minus text-xs mr-2"></i> CLASE 2
+                    </div>
+                    <p class="text-sm text-lzBlack font-sans mb-4">Miércoles 4 de Febrero</p>
+                    <h3 class="font-heading font-normal text-2xl md:text-3xl mb-4 leading-tight">
+                        El mapa real para vivir de la fotografía
+                    </h3>
+                    <p class="text-base md:text-lg text-lzBlack  mb-5 leading-relaxed font-sans">
+                        Aquí te voy a mostrar <strong>el orden lógico</strong> del negocio fotográfico, sin tácticas
+                        sueltas ni fórmulas mágicas.
+                    </p>
+                    <p class="text-base md:text-lg font-bold text-lzDark mb-4 font-sans">Vas a descubrir:</p>
+                    <ul class="space-y-4 mb-8 flex-grow font-sans">
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>Por qué hacer <strong>"un poco de todo" no funciona</strong></span>
+                        </li>
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>Cuáles son <strong>las etapas reales del crecimiento</strong></span>
+                        </li>
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>Qué pasa cuando intentas <strong>escalar sin una base sólida</strong></span>
+                        </li>
+                    </ul>
+                    <div class="separator-lz mb-4"></div>
+                    <div class="mt-auto text-center">
+                        <span
+                            class="font-heading font-medium text-xs uppercase text-lzGreyDark tracking-wider flex items-center justify-center">
+                            <!-- Bajado de semibold a medium -->
+                            <i class="fa-solid fa-arrow-right-long mr-2"></i> Menos ruido. Más dirección.
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div
+                    class="card-lz bg-white p-10 rounded-none shadow-lz-soft hover:shadow-lz-strong flex flex-col relative overflow-hidden">
+                    <div
+                        class="text-lzGold font-heading font-semibold text-base md:text-lg tracking-extra-wide mb-2 flex items-center">
+                        <i class="fa-solid fa-minus text-xs mr-2"></i> CLASE 3
+                    </div>
+                    <p class="text-sm text-lzBlack font-sans mb-4">Viernes 6 de Febrero</p>
+                    <h3 class="font-heading font-normal text-2xl md:text-3xl mb-4 leading-tight">
+                        Qué hacer para no volver a estancarte
+                    </h3>
+                    <p class="text-base md:text-lg text-lzBlack mb-5 leading-relaxed font-sans">
+                        Esta clase es para <strong>cerrar el ciclo</strong> y tomar una <strong>decisión
+                            consciente</strong>.
+                    </p>
+                    <p class="text-base md:text-lg font-bold text-lzDark mb-4 font-sans">Vamos a hablar de:</p>
+                    <ul class="space-y-4 mb-8 flex-grow font-sans">
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>Por qué <strong>la motivación no es suficiente</strong></span>
+                        </li>
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>El rol de <strong>la estructura y el acompañamiento</strong></span>
+                        </li>
+                        <li class="list-item-premium flex items-start text-base md:text-lg text-lzDark font-semibold">
+                            <i class="fa-solid fa-angle-right text-lzGold mt-1 mr-3 min-w-[20px] text-lg"></i>
+                            <span>La diferencia entre <strong>avanzar solo… o con guía</strong></span>
+                        </li>
+                    </ul>
+                    <div class="separator-lz mb-4"></div>
+                    <div class="mt-auto text-center">
+                        <span
+                            class="font-heading font-medium text-xs uppercase text-lzGreyDark tracking-wider flex items-center justify-center">
+                            <!-- Bajado de semibold a medium -->
+                            <i class="fa-solid fa-arrow-right-long mr-2"></i> No desde el miedo. Desde la claridad.
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <p class="text-center font-medium font-heading text-xl md:text-2xl text-lzBlack mb-8 leading-snug">
+                <!-- Bajado de semibold a medium -->
+                En una semana puedes corregir errores que hoy <br class="hidden md:block"> te están costando clientes y
+                dinero
+            </p>
+
+            <!-- Nota importante -->
+            <div class="text-center mt-8">
+                <div class="inline-block bg-white px-6 py-3 rounded-none border border-gray-300 shadow-lz-soft">
+                    <p class="text-sm text-lzBlack italic font-sans">
+                        <i class="fa-solid fa-circle-info text-lzGold mr-2"></i>
+                        LAS 3 CLASES SE VIVEN EN VIVO. SIN GRABACIONES.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BENEFICIOS -->
+    <section class="py-24 px-6 max-w-4xl mx-auto">
+        <h2 class="font-heading font-normal text-4xl text-center mb-14 uppercase"> <!-- Bajado de bold a normal -->
+            Al participar en esta semana vas a:
+        </h2>
+
+        <div class="grid gap-8">
+            <!-- Item 1 -->
+            <div class="flex items-start group">
+                <div
+                    class="flex-shrink-0 benefit-icon-small rounded-full bg-lzBeige flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-lzGold shadow-lz-soft">
+                    <i class="fa-solid fa-check text-lzGold text-lg group-hover:text-white transition-colors"></i>
+                </div>
+                <div>
+                    <p class="text-lzDark font-medium text-lg leading-relaxed font-sans">
+                        Entender <strong>por qué tu negocio se siente desordenado</strong>, aunque trabajes mucho
+                    </p>
+                </div>
+            </div>
+
+            <!-- Item 2 -->
+            <div class="flex items-start group">
+                <div
+                    class="flex-shrink-0 benefit-icon-small rounded-full bg-lzBeige flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-lzGold shadow-lz-soft">
+                    <i class="fa-solid fa-check text-lzGold text-lg group-hover:text-white transition-colors"></i>
+                </div>
+                <div>
+                    <p class="text-lzDark font-medium text-lg leading-relaxed font-sans">
+                        <strong>Dejar de culparte</strong> por no avanzar y empezar a ver el problema real
+                    </p>
+                </div>
+            </div>
+
+            <!-- Item 3 -->
+            <div class="flex items-start group">
+                <div
+                    class="flex-shrink-0 benefit-icon-small rounded-full bg-lzBeige flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-lzGold shadow-lz-soft">
+                    <i class="fa-solid fa-check text-lzGold text-lg group-hover:text-white transition-colors"></i>
+                </div>
+                <div>
+                    <p class="text-lzDark font-medium text-lg leading-relaxed font-sans">
+                        Tener un <strong>mapa claro</strong> de qué hacer primero y qué dejar para después
+                    </p>
+                </div>
+            </div>
+
+            <!-- Item 4 -->
+            <div class="flex items-start group">
+                <div
+                    class="flex-shrink-0 benefit-icon-small rounded-full bg-lzBeige flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-lzGold shadow-lz-soft">
+                    <i class="fa-solid fa-check text-lzGold text-lg group-hover:text-white transition-colors"></i>
+                </div>
+                <div>
+                    <p class="text-lzDark font-medium text-lg leading-relaxed font-sans">
+                        Sentir <strong>más seguridad al cobrar</strong> y tomar decisiones
+                    </p>
+                </div>
+            </div>
+
+            <!-- Item 5 -->
+            <div class="flex items-start group">
+                <div
+                    class="flex-shrink-0 benefit-icon-small rounded-full bg-lzBeige flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-lzGold shadow-lz-soft">
+                    <i class="fa-solid fa-check text-lzGold text-lg group-hover:text-white transition-colors"></i>
+                </div>
+                <div>
+                    <p class="text-lzDark font-medium text-lg leading-relaxed font-sans">
+                        <strong>Dejar de improvisar</strong> y empezar a trabajar con intención
+                    </p>
+                </div>
+            </div>
+
+            <!-- Item 6 -->
+            <div class="flex items-start group">
+                <div
+                    class="flex-shrink-0 benefit-icon-small rounded-full bg-lzBeige flex items-center justify-center mr-5 transition-all duration-300 group-hover:scale-110 group-hover:bg-lzGold shadow-lz-soft">
+                    <i class="fa-solid fa-check text-lzGold text-lg group-hover:text-white transition-colors"></i>
+                </div>
+                <div>
+                    <p class="text-lzDark font-medium text-lg leading-relaxed font-sans">
+                        Salir con <strong>claridad mental, foco</strong> y una dirección concreta
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-20 p-10 bg-lzBeige rounded-none text-center border border-lzGreyDark/20 shadow-lz-soft">
+            <p class="font-heading font-medium text-2xl text-lzDark leading-relaxed">
+                Además de salir con "motivación". <br>
+                <span class="text-lzBlack font-semibold text-3xl uppercase block mt-3">Aquí vas a salir con más
+                    orden.</span>
+            </p>
+        </div>
+    </section>
+
+    <!-- ESTO ES PARA TI (Checkmarks mejorados - Fondo oscuro) -->
+    <section class="bg-lzDark py-24 px-6 border-t border-lzGreyDark force-full-width">
+        <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-16">
+            <!-- Columna SI -->
+            <div>
+                <h3 class="font-heading font-normal text-3xl mb-10 uppercase flex items-center text-white">
+                    <i class="fa-solid fa-circle-check text-lzGold mr-4 text-4xl"></i>
+                    Este evento es para ti si:
+                </h3>
+                <ul class="space-y-8 font-sans">
+                    <li class="flex items-start gap-5 group">
+                        <div class="check-icon-large">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Ya sabes usar tu cámara, pero <strong>tu negocio no es estable</strong>
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 group">
+                        <div class="check-icon-large">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Te sientes <strong>estancado</strong> y <strong>cansado de improvisar</strong>
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 group">
+                        <div class="check-icon-large">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Hay <strong>meses buenos y meses muy flojos</strong>
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 group">
+                        <div class="check-icon-large">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Te cuesta <strong>cobrar con seguridad</strong> lo que vales
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 group">
+                        <div class="check-icon-large">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Quieres <strong>estructura, no humo</strong>
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 group">
+                        <div class="check-icon-large">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Estás dispuesto a <strong>cuestionar cómo estás manejando tu negocio</strong>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Columna NO -->
+            <div>
+                <h3 class="font-heading font-normal text-3xl mb-10 uppercase flex items-center text-gray-400">
+                    <i class="fa-solid fa-circle-xmark text-lzGreyDark mr-4 text-4xl"></i>
+                    NO es para ti si:
+                </h3>
+                <ul class="space-y-8 font-sans">
+                    <li class="flex items-start gap-5 opacity-75">
+                        <div class="x-icon-large">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Buscas <strong>trucos rápidos</strong> o <strong>fórmulas mágicas</strong>
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 opacity-75">
+                        <div class="x-icon-large">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Crees que el problema es <strong>solo Instagram o el algoritmo</strong>
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 opacity-75">
+                        <div class="x-icon-large">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            <strong>No estás dispuesto a revisar</strong> tu forma de trabajar
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 opacity-75">
+                        <div class="x-icon-large">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Prefieres <strong>seguir improvisando</strong> y "ver qué pasa"
+                        </span>
+                    </li>
+                    <li class="flex items-start gap-5 opacity-75">
+                        <div class="x-icon-large">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                        <span class="text-white font-semibold text-lg leading-tight pt-2">
+                            Solo quieres <strong>consumir contenido sin aplicarlo</strong>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- TEXTO CIERRE EN 2 LÍNEAS -->
+        <p class="text-center mt-12 font-medium text-white text-2xl max-w-4xl mx-auto leading-relaxed font-heading">
+            <!-- Bajado de semibold a medium -->
+            Este espacio no es para curiosos. <br class="hidden md:block">
+            Es para fotógrafos que quieren<br class="hidden md:block">
+            <strong>ordenar su negocio y dejar atrás el estancamiento.</strong>
+        </p>
+    </section>
+
+    <!-- BIOGRAFÍA (Fondo elegante - CON FORCE FULL WIDTH) -->
+    <section class="py-24 px-6 section-beige force-full-width">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-16">
+            <div class="w-full md:w-2/5">
+                <img src="https://lizpinto.net/wp-content/uploads/2025/08/LizPintoTCB-600x600.jpg" alt="Liz Pinto"
+                    class="w-full h-auto rounded-none">
+            </div>
+            <div class="w-full md:w-3/5">
+                <h2 class="font-heading font-normal text-3xl mb-8 uppercase"> <!-- Bajado de bold a normal -->
+                    ¿Quién es <span class="underline-lz">Liz Pinto</span>?
+                </h2>
+                <div class="space-y-5 text-lzDark text-lg font-sans leading-relaxed">
+                    <p>
+                        Soy Liz Pinto, fotógrafa y empresaria de la fotografía.
+                    </p>
+                    <p>
+                        Llevo <strong>más de 15 años viviendo de mi talento</strong>, no desde la improvisación, sino
+                        desde decisiones reales, errores cometidos, muchos ajustes en el camino y un negocio construido
+                        con intención.
+                    </p>
+                    <p>
+                        Durante años tuve agenda llena… pero también caos, cansancio y esa sensación constante de que
+                        <strong>trabajar más no siempre significaba avanzar mejor</strong>.
+                    </p>
+                    <p>
+                        Por eso hoy enseño desde la experiencia de haber pasado de <strong>fotógrafa agotada a
+                            empresaria con claridad</strong>, sistemas y un negocio sostenible.
+                    </p>
+                    <p>
+                        Soy la creadora de <strong>The Click Academy</strong> y del programa <strong>The Click
+                            Boss</strong>, un ecosistema diseñado para que fotógrafos dejen de improvisar, aprendan a
+                        vender con claridad, cobrar con seguridad y construir un negocio que los sostenga, sin perder su
+                        esencia creativa.
+                    </p>
+                    <p>
+                        Mi enfoque no es hacerte trabajar más. Es ayudarte a trabajar mejor, con orden, intención y una
+                        estructura que te permita <strong>vivir bien de la fotografía</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="py-28 px-6 bg-gray-50 text-center">
+        <div class="max-w-3xl mx-auto">
+            <h2 class="font-heading font-normal text-4xl mb-8 uppercase leading-tight"> <!-- Bajado de bold a normal -->
+                ¿Y si el verdadero riesgo no es intentarlo…
+                sino seguir exactamente donde estás?
+            </h2>
+            <!-- TEXTO CIERRE FINAL EN 2 LÍNEAS -->
+            <p class="text-2xl text-lzBlack mb-12 leading-relaxed font-sans">
+                Si hoy sientes que <strong>tu negocio no avanza como debería</strong>, que <strong>trabajas mucho pero
+                    no con claridad</strong>. <br>
+                Este evento puede ser <strong>el punto de quiebre que necesitas</strong>.
+            </p>
+
+            <div class="flex flex-col md:flex-row gap-4 justify-center items-center w-full max-w-4xl mx-auto mb-8">
+                <a href="#"
+                    class="open-modal-trigger inline-block btn-liz bg-white border-2 border-gray-300 text-lzBlack hover:border-lzGold hover:bg-gray-50 py-5 px-8 rounded-full text-lg shadow-lz-soft hover:shadow-lz-medium transform transition-all w-full md:w-auto text-center uppercase leading-tight flex-1"
+                    style="background-color: #ffffff !important; color: #1a1a1a !important; border: 2px solid #d1d5db !important;">
+                    Quiero las clases en vivo
+                </a>
+                <a href="#"
+                    class="open-modal-trigger inline-block btn-liz btn-gold py-5 px-8 rounded-full text-lg shadow-lz-strong hover:shadow-lz-gold transform transition-all w-full md:w-auto text-center uppercase leading-tight btn-pulse flex-1"
+                    style="background-color: #e7b93f !important; color: #2b2b2b !important;">
+                    Quiero clases + grabaciones
+                    <i class="fa-solid fa-video ml-2 group-hover:translate-x-2 transition-transform inline-block"></i>
+                </a>
+            </div>
+
+            <p class="text-lzBlack text-xl max-w-2xl mx-auto leading-relaxed font-sans mb-12">
+                Este puede ser el primer paso
+                para dejar el estancamiento atrás
+                y empezar a construir con intención.
+            </p>
+
+            <!-- FECHAS DE LAS 3 CLASES -->
+            <div class="mt-8 max-w-3xl mx-auto flex flex-col items-center">
+                <p class="text-lzDark font-bold text-lg mb-4 flex items-center">
+                    <i class="fa-solid fa-calendar-days text-lzGold mr-3 text-xl"></i>
+                    Las 3 Clases en Vivo:
+                </p>
+                <ul class="text-lzDark font-sans text-base space-y-2 text-left">
+                    <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Lunes 2 de Febrero</li>
+                    <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Miércoles 4 de Febrero</li>
+                    <li><i class="fa-solid fa-circle text-lzGold text-xs mr-2"></i>Viernes 6 de Febrero</li>
+                </ul>
+
+                <!-- HORARIOS POR PAÍS -->
+                <div class="text-center mt-6">
+                    <p class="text-lzGold font-bold text-sm mb-3 flex items-center justify-center">
+                        <i class="fa-solid fa-clock mr-2"></i>
+                        Horario de las clases:
+                    </p>
+                    <div class="flex flex-wrap justify-center gap-x-4 gap-y-2 text-lzDark font-sans text-sm">
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>México: 11:00 AM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Panamá: 12:00 PM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>USA (Los Ángeles): 9:00
+                            AM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>Argentina: 2:00 PM</span>
+                        <span><i class="fa-solid fa-location-dot text-lzGold text-xs mr-1"></i>España: 6:00 PM</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-10 bg-lzDark text-white text-center text-sm force-full-width font-sans">
+        <p class="mb-4">© 2026 Liz Pinto - Fotógrafa profesional y Cursos de fotografía.</p>
+        <div class="mt-4 text-gray-400 space-x-6">
+            <a href="#" class="hover:text-lzGold transition-colors">Términos y condiciones</a>
+            <a href="#" class="hover:text-lzGold transition-colors">Políticas de Privacidad</a>
+        </div>
+    </footer>
+
+    <!-- MODAL / POPUP estilo Liz Pinto -->
+    <div id="modal-overlay"
+        class="fixed inset-0 z-[9999] modal-hidden flex items-center justify-center bg-black/70 backdrop-blur-md p-4">
+        <div class="bg-white w-full max-w-md md:max-w-lg lg:max-w-xl rounded-none shadow-lz-strong relative transform transition-all scale-95 opacity-0 duration-300"
+            id="modal-content">
+
+            <button id="close-modal-btn"
+                class="absolute top-4 right-5 text-gray-400 hover:text-lzGold transition-colors z-50 w-10 h-10 flex items-center justify-center hover:bg-lzLightBg">
+                <i class="fa-solid fa-xmark text-3xl"></i>
+            </button>
+
+            <div class="p-8 md:p-10">
+                <p
+                    class="text-center text-lzDark font-heading font-medium text-xl md:text-2xl leading-relaxed mb-10 border-b-2 border-lzGold/20 pb-8 not-italic">
+                    <!-- Bajado de semibold a medium -->
+                    Este puede ser el primer paso<br>
+                    para <strong>dejar el estancamiento atrás</strong><br>
+                    y empezar a <strong>construir con intención.</strong>
+                </p>
+
+                <div class="w-full rounded-none overflow-hidden relative bg-white shadow-inner"
+                    style="min-height: 350px; height: 300px;">
+                    <iframe src="https://link.cleesaas.com/widget/form/WBabJx4LfczvDHaiojzY"
+                        style="width:100%;height:100%;border:none;border-radius:0" id="inline-WBabJx4LfczvDHaiojzY"
+                        data-form-name="Form Evento" data-layout-iframe-id="inline-WBabJx4LfczvDHaiojzY"
+                        data-form-id="WBabJx4LfczvDHaiojzY" title="Form Evento">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://link.cleesaas.com/js/form_embed.js"></script>
+    <script>
+        // Funciones globales para que estén disponibles inmediatamente
+        function getModalElements() {
+            return {
+                overlay: document.getElementById('modal-overlay'),
+                content: document.getElementById('modal-content')
+            };
+        }
+
+        function openModalMain(e) {
+            e.preventDefault();
+            const { overlay, content } = getModalElements();
+            if (!overlay || !content) return; // Seguridad
+
+            console.log('Opening modal via robust delegation');
+            overlay.classList.remove('modal-hidden');
+            overlay.classList.add('modal-visible');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModalMain() {
+            const { overlay, content } = getModalElements();
+            if (!overlay || !content) return;
+
+            // Desactivar pointer-events INMEDIATAMENTE para no bloquear clics
+            overlay.classList.remove('modal-visible');
+            overlay.classList.add('modal-hidden');
+
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+
+            // Recargar el iframe para limpiar el formulario después de la animación
+            setTimeout(() => {
+                const iframe = document.getElementById('inline-WBabJx4LfczvDHaiojzY');
+                if (iframe) {
+                    iframe.src = iframe.src;
+                }
+            }, 300);
+        }
+
+        // Delegación de eventos INMEDIATA (no espera a DOMContentLoaded)
+        document.addEventListener('click', function (e) {
+            // 1. Detectar trigger de apertura
+            const trigger = e.target.closest('.open-modal-trigger');
+            if (trigger) {
+                openModalMain(e);
+                return;
+            }
+
+            // 2. Detectar clic en overlay (cerrar)
+            const overlay = document.getElementById('modal-overlay');
+            if (e.target === overlay) {
+                closeModalMain();
+                return;
+            }
+
+            // 3. Detectar botón de cierre
+            const closeBtn = e.target.closest('#close-modal-btn');
+            if (closeBtn) {
+                e.preventDefault();
+                closeModalMain();
+                return;
+            }
+        });
+
+        // Eventos de teclado
+        document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('modal-overlay');
+            if (e.key === 'Escape' && overlay && overlay.classList.contains('modal-visible')) {
+                closeModalMain();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

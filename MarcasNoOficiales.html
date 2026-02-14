@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>111 Marcas No Oficiales Por Categoría de Skool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Avenir', sans-serif;
+            background: linear-gradient(180deg, #f8fafa 0%, #e8f0ef 100%);
+            min-height: 100vh;
+            color: #1a1a1a;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2A6B6B 0%, #1d4d4d 100%);
+            padding: 40px 24px;
+            text-align: center;
+            border-bottom: 4px solid #C4D600;
+        }
+
+        .header-label {
+            font-size: 12px;
+            letter-spacing: 3px;
+            color: #C4D600;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            margin: 0 0 16px 0;
+            line-height: 1.2;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #8BB5B2;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .total-badge {
+            margin-top: 20px;
+            display: inline-block;
+            background: rgba(196, 214, 0, 0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid #C4D600;
+            color: #C4D600;
+            font-weight: 600;
+        }
+
+        .config-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 16px 24px;
+            text-align: center;
+            font-weight: 500;
+            color: #856404;
+        }
+
+        .config-banner code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .tabs {
+            background: white;
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            overflow-x: auto;
+        }
+
+        .tabs-inner {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 24px;
+            border: none;
+            background: #f0f0f0;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .tab-btn.active {
+            background: #2A6B6B;
+            color: white;
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .category-section {
+            margin-bottom: 48px;
+            display: none;
+        }
+
+        .category-section.active {
+            display: block;
+        }
+
+        .category-header {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #C4D600;
+        }
+
+        .category-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .category-emoji {
+            font-size: 32px;
+        }
+
+        .category-name {
+            margin: 0;
+            color: #2A6B6B;
+            font-size: 24px;
+        }
+
+        .category-badge {
+            background: #C4D600;
+            color: #1a1a1a;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .category-desc {
+            color: #666;
+            margin: 0 0 20px 0;
+            line-height: 1.6;
+        }
+
+        .prompts-box {
+            background: #f8fafa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #8BB5B2;
+        }
+
+        .prompts-title {
+            color: #2A6B6B;
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .prompts-list {
+            margin: 0;
+            padding-left: 20px;
+            color: #444;
+            line-height: 1.8;
+        }
+
+        .prompts-list li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .brands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .brand-card {
+            background: white;
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+            transition: all 0.2s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .brand-card:hover {
+            border-color: #8BB5B2;
+            box-shadow: 0 4px 12px rgba(42, 107, 107, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .brand-card::after {
+            content: '✨ Clic para ideas';
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            font-size: 10px;
+            color: #999;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .brand-card:hover::after {
+            opacity: 1;
+        }
+
+        .brand-number {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 11px;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #2A6B6B;
+            display: block;
+            padding-right: 24px;
+        }
+
+        .master-prompt {
+            background: linear-gradient(135deg, #2A6B6B 0%, #1d4d4d 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-top: 48px;
+            color: white;
+        }
+
+        .master-prompt h3 {
+            color: #C4D600;
+            margin: 0 0 16px 0;
+            font-size: 20px;
+        }
+
+        .master-prompt>p {
+            color: #8BB5B2;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .prompt-box {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            border: 1px solid rgba(196, 214, 0, 0.3);
+        }
+
+        .prompt-box strong {
+            color: #C4D600;
+        }
+
+        .prompt-box ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .why-section {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-top: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .why-section h3 {
+            color: #2A6B6B;
+            margin: 0 0 20px 0;
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .why-card {
+            padding: 20px;
+            background: #f8fafa;
+            border-radius: 12px;
+        }
+
+        .why-card h4 {
+            color: #2A6B6B;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+
+        .why-card p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #2A6B6B 0%, #1d4d4d 100%);
+            padding: 24px 28px;
+            border-radius: 20px 20px 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .modal-header h2 {
+            color: white;
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            padding-right: 40px;
+        }
+
+        .modal-header p {
+            color: #C4D600;
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .modal-content {
+            padding: 28px;
+        }
+
+        .niche-explanation {
+            background: #f8fafa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border-left: 4px solid #C4D600;
+        }
+
+        .niche-explanation h3 {
+            color: #2A6B6B;
+            margin: 0 0 12px 0;
+            font-size: 16px;
+        }
+
+        .niche-explanation p {
+            color: #444;
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        .community-ideas h3 {
+            color: #2A6B6B;
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .idea-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .idea-card:hover {
+            border-color: #8BB5B2;
+            box-shadow: 0 4px 12px rgba(42, 107, 107, 0.1);
+        }
+
+        .idea-card h4 {
+            color: #2A6B6B;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .idea-card .model-tag {
+            background: #C4D600;
+            color: #1a1a1a;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .idea-card p {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f0f0f0;
+            border-top-color: #2A6B6B;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .error-state button {
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: #2A6B6B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="config-banner" id="configBanner">
+        ⚠️ RECUERDA: Configura tu URL de n8n en el código JavaScript. Busca <code>N8N_WEBHOOK_URL</code>
+    </div>
+
+    <div class="header">
+        <div class="header-label">SISTEMA DE LANZAMIENTO SKOOL DE EVELYN</div>
+        <h1>111 Marcas No Oficiales Por Categoría</h1>
+        <p>Transformaciones con reconocimiento de marca incorporado. Haz clic en cualquier nicho para ideas de comunidad
+            generadas por IA.</p>
+        <div class="total-badge">999 Marcas No Oficiales en Total en 9 Categorías</div>
+    </div>
+
+    <div class="tabs">
+        <div class="tabs-inner">
+            <button class="tab-btn active" onclick="showCategory('all')">Todas (999)</button>
+            <button class="tab-btn" onclick="showCategory('hobbies')">🎨 Pasatiempos</button>
+            <button class="tab-btn" onclick="showCategory('music')">🎵 Música</button>
+            <button class="tab-btn" onclick="showCategory('money')">💰 Dinero</button>
+            <button class="tab-btn" onclick="showCategory('spirituality')">🙏 Espiritualidad</button>
+            <button class="tab-btn" onclick="showCategory('tech')">💻 Tecnología</button>
+            <button class="tab-btn" onclick="showCategory('health')">🥕 Salud</button>
+            <button class="tab-btn" onclick="showCategory('sports')">⚽ Deportes</button>
+            <button class="tab-btn" onclick="showCategory('self-improvement')">🏆 Superación Personal</button>
+            <button class="tab-btn" onclick="showCategory('relationships')">❤️ Relaciones</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="category-section active" id="hobbies">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🎨</span>
+                    <div>
+                        <h2 class="category-name">Pasatiempos</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Actividades de ocio y búsquedas creativas en las que las personas invierten
+                    tiempo y pasión</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué transformación creó tu pasatiempo en tu vida que otros querrían?</li>
+                        <li>¿Qué lucha dentro de este pasatiempo superaste que ahora puedes guiar a otros?</li>
+                        <li>Si pudieras dar consejos a ti mismo cuando empezaste, ¿qué lo cambiaría todo?</li>
+                        <li>¿Cómo se ve la maestría en este pasatiempo y qué idea única la desbloqueó para ti?</li>
+                        <li>¿Cómo se ha conectado este pasatiempo con un significado o propósito más profundo en tu
+                            vida?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="hobbies-brands"></div>
+        </div>
+
+        <div class="category-section" id="music">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🎵</span>
+                    <div>
+                        <h2 class="category-name">Música</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Habilidades musicales, producción, apreciación y conocimiento de la industria
+                </p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué momento decisivo transformó tu viaje musical que otros necesitan experimentar?</li>
+                        <li>¿Qué habilidad técnica o cambio de mentalidad finalmente hizo que todo encajara para ti?
+                        </li>
+                        <li>¿Cómo se conecta tu expresión musical con quién te estás convirtiendo?</li>
+                        <li>¿Cómo suena tu Yo Modelo? ¿Qué música crean o comparten?</li>
+                        <li>¿Qué le dirías a alguien que comienza su viaje musical para acelerar su crecimiento?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="music-brands"></div>
+        </div>
+
+        <div class="category-section" id="money">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">💰</span>
+                    <div>
+                        <h2 class="category-name">Dinero</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Estrategias financieras, construcción de riqueza, generación de ingresos y
+                    mentalidad sobre el dinero</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué transformación financiera has experimentado que cambió toda tu realidad?</li>
+                        <li>¿Qué creencia sobre el dinero tuviste que desaprender para crear los resultados que tienes
+                            ahora?</li>
+                        <li>¿Cómo se relaciona tu Yo Modelo con el dinero, la riqueza y las decisiones financieras?</li>
+                        <li>¿Cuál es la idea sobre el dinero que hubiera cambiado todo si la hubieras sabido antes?</li>
+                        <li>¿Cómo se ve la libertad financiera para TI específicamente, no solo la versión genérica?
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="money-brands"></div>
+        </div>
+
+        <div class="category-section" id="spirituality">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🙏</span>
+                    <div>
+                        <h2 class="category-name">Espiritualidad</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Crecimiento interior, conciencia, prácticas metafísicas y desarrollo espiritual
+                </p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué cambio o despertar espiritual cambió fundamentalmente cómo experimentas la vida?</li>
+                        <li>¿Qué práctica se convirtió en tu ancla que ahora no puedes imaginar la vida sin ella?</li>
+                        <li>¿Cómo se conecta tu Yo Modelo con lo espiritual o trascendente?</li>
+                        <li>¿Qué verdad espiritual resististe que se convirtió en tu mayor maestro?</li>
+                        <li>¿Qué ayudarías a alguien a experimentar que desearías haber accedido antes?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="spirituality-brands"></div>
+        </div>
+
+        <div class="category-section" id="tech">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">💻</span>
+                    <div>
+                        <h2 class="category-name">Tecnología</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Habilidades tecnológicas, desarrollo de software, herramientas digitales e
+                    innovación</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué habilidad técnica transformó tus capacidades y qué avance lo hizo encajar?</li>
+                        <li>¿Qué frustración tecnológica resolviste con la que otros todavía luchan?</li>
+                        <li>¿Cómo aprovecha tu Yo Modelo la tecnología para crear impacto?</li>
+                        <li>¿Qué construirías o automatizarías si tuvieras capacidad técnica ilimitada?</li>
+                        <li>¿Cuál es la solución tecnológica más simple que creó el mayor resultado para ti?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="tech-brands"></div>
+        </div>
+
+        <div class="category-section" id="health">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🥕</span>
+                    <div>
+                        <h2 class="category-name">Salud</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Bienestar físico, nutrición, fitness y prácticas de salud holística</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué transformación de salud cambió no solo tu cuerpo sino toda tu experiencia de vida?</li>
+                        <li>¿Qué verdad sobre la salud descubriste que contradijo todo lo que te dijeron?</li>
+                        <li>¿Cómo se siente tu Yo Modelo en su cuerpo? ¿Cómo se ve su salud diaria?</li>
+                        <li>¿Qué cambio único de salud creó una cascada de otras mejoras?</li>
+                        <li>¿Qué le dirías a alguien que acaba de comenzar su viaje de salud para ahorrarle años de
+                            prueba y error?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="health-brands"></div>
+        </div>
+
+        <div class="category-section" id="sports">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">⚽</span>
+                    <div>
+                        <h2 class="category-name">Deportes</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Rendimiento atlético, deportes específicos, metodologías de entrenamiento y
+                    competición</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué avance en el rendimiento cambió tu relación con tu deporte?</li>
+                        <li>¿Qué barrera mental o física superaste que define tu viaje atlético?</li>
+                        <li>¿Cómo se presenta tu Yo Modelo en el entrenamiento y la competición?</li>
+                        <li>¿Qué principio o enfoque de entrenamiento desbloqueó tu siguiente nivel de rendimiento?</li>
+                        <li>¿Qué le enseñarías a un atleta más joven que aceleraría su desarrollo por años?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="sports-brands"></div>
+        </div>
+
+        <div class="category-section" id="self-improvement">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🏆</span>
+                    <div>
+                        <h2 class="category-name">Superación Personal</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Desarrollo personal, productividad, mentalidad y optimización de la vida</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué avance en el desarrollo personal cambió fundamentalmente la trayectoria de tu vida?
+                        </li>
+                        <li>¿Qué hábito o práctica se convirtió en la base sobre la que se construye todo lo demás?</li>
+                        <li>¿Cómo aborda tu Yo Modelo el crecimiento, el aprendizaje y la superación personal?</li>
+                        <li>¿Qué tuviste que desaprender para convertirte en quien te estás convirtiendo?</li>
+                        <li>¿Cuál es la idea sobre el crecimiento personal que desearías que fuera más ampliamente
+                            entendida?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="self-improvement-brands"></div>
+        </div>
+
+        <div class="category-section" id="relationships">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">❤️</span>
+                    <div>
+                        <h2 class="category-name">Relaciones</h2>
+                        <span class="category-badge">111 MARCAS NO OFICIALES</span>
+                    </div>
+                </div>
+                <p class="category-desc">Conexión, citas, pareja, dinámicas familiares y habilidades interpersonales</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS DE AUTODESCUBRIMIENTO DEL YO MODELO</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué cambio o sanación en las relaciones transformó cómo te conectas con los demás?</li>
+                        <li>¿Qué patrón finalmente rompiste que te abrió a relaciones más saludables?</li>
+                        <li>¿Cómo se presenta tu Yo Modelo en las relaciones? ¿Qué modelan?</li>
+                        <li>¿Qué verdad sobre las relaciones resististe que se convirtió en tu mayor liberación?</li>
+                        <li>¿Qué ayudarías a alguien a entender sobre las relaciones que te tomó años aprender?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="relationships-brands"></div>
+        </div>
+
+        <div class="master-prompt">
+            <h3>🔑 EL PROMPT MAESTRO: Encuentra Tu Expresión En Cualquier Marca</h3>
+            <p>Usa este prompt con cualquier marca no oficial para descubrir TU ángulo único:</p>
+            <div class="prompt-box">
+                <p><strong>Quiero construir una comunidad Skool alrededor de [MARCA NO OFICIAL].</strong></p>
+                <p>Mi Yo Modelo es alguien que ha dominado esta área y ayuda a otros a hacer lo mismo.</p>
+                <p>Ayúdame a descubrir:</p>
+                <ol>
+                    <li>¿Hacia qué transformación específica dentro de [MARCA] estoy caminando?</li>
+                    <li>¿Cuál es mi ángulo o enfoque único que me diferencia?</li>
+                    <li>¿Qué luchas superé con las que mi comunidad se identificaría?</li>
+                    <li>¿Qué le diría mi Yo Modelo a alguien que apenas comienza?</li>
+                    <li>¿Cuál es el objetivo e identidad compartida hacia los que mi comunidad camina juntos?</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="why-section">
+            <h3>💡 Por Qué Importan las "Marcas No Oficiales"</h3>
+            <div class="why-grid">
+                <div class="why-card">
+                    <h4>Volumen de Búsqueda Incorporado</h4>
+                    <p>La gente ya busca "ayuno intermitente" o "bullet journaling". Te subes a la demanda existente en
+                        lugar de crearla.</p>
+                </div>
+                <div class="why-card">
+                    <h4>Comprensión Instantánea</h4>
+                    <p>No se necesita explicación. Cuando alguien ve "Comunidad de Shadow Work", inmediatamente sabe qué
+                        transformación ofreces.</p>
+                </div>
+                <div class="why-card">
+                    <h4>Puente a la Marca Personal</h4>
+                    <p>Comienza con el reconocimiento de la marca no oficial, luego haz crecer TU reputación dentro de
+                        ese espacio. La marca se convierte en un vehículo para tu viaje.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Cargando...</h2>
+                <p id="modal-category">Ideas de Comunidad Skool</p>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-content" id="modal-body">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Generando ideas de comunidad...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ CONFIGURACIÓN - CAMBIA ESTA URL POR TU WEBHOOK DE N8N
+        const N8N_WEBHOOK_URL = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/generar-ideas-skool';
+
+        if (N8N_WEBHOOK_URL !== 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/generar-ideas-skool') {
+            document.getElementById('configBanner').style.display = 'none';
+        }
+
+        const brandsData = {
+            hobbies: ['Bullet Journal', 'Dibujo Urbano', 'Pintura de Miniaturas', 'Trabajo en Cuero', 'Arte con Resina', 'Torno de Cerámica', 'Macramé', 'Punto de Cruz', 'Bordado', 'Quilting', 'Hacer Velas', 'Hacer Jabón', 'Construcción de Terrarios', 'Aquascaping', 'Bonsái', 'Origami', 'Quilling de Papel', 'Caligrafía', 'Lettering a Mano', 'Encuadernación', 'Carpintería', 'Tallado en Madera', 'Pirograbado', 'Restauración de Muebles', 'Upcycling', 'Trabajo en Metal', 'Hacer Joyería', 'Wire Wrapping', 'Tejido de Cuentas', 'Arcilla Polimérica', 'Costura', 'Tejer', 'Crochet', 'Telar', 'Fieltrado', 'Fotografía', 'Fotografía Análoga', 'Fotografía con Drones', 'Astrofotografía', 'Fotografía Callejera', 'Observación de Aves', 'Jardinería', 'Forrajeo', 'Caza de Hongos', 'Herbolaria', 'Cerveza Artesanal', 'Hacer Vino', 'Fermentación', 'Hacer Queso', 'Masa Madre', 'Coleccionar Antigüedades', 'Thrifting', 'Coleccionar Vinilos', 'Coleccionar Cómics', 'Coleccionar Sneakers', 'Modelismo', 'Autos RC', 'Hacer Dioramas', 'Trenes a Escala', 'Construcción con Lego', 'Cosplay', 'Hacer Props', 'Diseño de Vestuario', 'Maquillaje de Efectos', 'Forja de Armaduras', 'Genealogía', 'Historia Familiar', 'Pruebas de ADN', 'Investigación Ancestral', 'Preservación del Patrimonio', 'Journaling', 'Scrapbooking', 'Preservar Memorias', 'Art Journaling', 'Junk Journaling', 'Resolver Puzzles', 'Escape Rooms', 'Juegos de Mesa', 'RPG de Mesa', 'Juegos de Cartas', 'Trucos de Magia', 'Flourishing de Cartas', 'Magia con Monedas', 'Mentalismo', 'Magia de Cerca', 'Exploración Urbana', 'Geocaching', 'Detección de Metales', 'Búsqueda de Tesoros', 'Coleccionar Rocas', 'Astronomía', 'Observación de Estrellas', 'Construir Telescopios', 'Astrofotografía Nocturna', 'Observación de Meteoros', 'Ganzuado', 'Lock Sport', 'Hobbies de Seguridad', 'Cajas de Rompecabezas', 'Puzzles Mecánicos', 'Coleccionar Plumas', 'Plumas Fuente', 'Hacer Tinta', 'Papelería', 'Sellos de Cera', 'Radio Aficionado', 'Radio CB', 'Escucha de Scanner', 'Restauración de Radios', 'Construir Antenas', 'Acuariofilia'],
+            music: ['Producción Musical', 'Hacer Beats', 'Producción Lo-Fi', 'Synthwave', 'Producción EDM', 'Grabación Casera', 'Mezcla', 'Masterización', 'Ingeniería de Audio', 'Diseño de Sonido', 'Composición de Canciones', 'Escribir Letras', 'Toplining', 'Composición Musical', 'Música para Cine', 'Tocar Guitarra', 'Bajo Eléctrico', 'Guitarra Eléctrica', 'Guitarra Acústica', 'Guitarra Clásica', 'Piano', 'Teclado', 'Sintetizadores', 'Órgano', 'Piano Jazz', 'Batería', 'Percusión', 'Batería Electrónica', 'Percusión Manual', 'Percusión Mundial', 'Canto', 'Entrenamiento Vocal', 'Salud Vocal', 'Armonización', 'Producción Vocal', 'Rap', 'Freestyle', 'Battle Rap', 'Rap Consciente', 'Rap Narrativo', 'DJing', 'Turntablismo', 'DJ de Club', 'DJ Móvil', 'DJ de Radio', 'Teoría Musical', 'Entrenamiento Auditivo', 'Lectura a Primera Vista', 'Notación Musical', 'Arreglos', 'Ableton Live', 'FL Studio', 'Logic Pro', 'Pro Tools', 'GarageBand', 'Sintetizadores Modulares', 'Sintetizadores Hardware', 'Sintetizadores Vintage', 'Eurorack', 'Semi-Modular', 'Sampling', 'Paquetes de Samples', 'Chopping de Samples', 'Clearance de Samples', 'Crate Digging', 'Marketing Musical', 'Crecimiento en Spotify', 'Distribución Musical', 'Playlist Pitching', 'Construcción de Fans', 'NFTs Musicales', 'Música Web3', 'Regalías Musicales', 'Licencias Sync', 'Publicación Musical', 'Violín', 'Viola', 'Violonchelo', 'Contrabajo', 'Ensamble de Cuerdas', 'Saxofón', 'Trompeta', 'Trombón', 'Flauta', 'Clarinete', 'Ukelele', 'Banjo', 'Mandolina', 'Armónica', 'Acordeón', 'Musicoterapia', 'Sanación con Sonido', 'Sanación con Frecuencias', 'Binaural Beats', 'Música ASMR', 'Presentaciones en Vivo', 'Presencia Escénica', 'Giras de Conciertos', 'Sonido en Vivo', 'Booking de Shows', 'Educación Musical', 'Enseñanza Musical', 'Enseñanza de Piano', 'Enseñanza de Guitarra', 'Clases Grupales', 'Coro', 'A Cappella', 'Barbershop', 'Música Gospel', 'Arreglos Corales', 'Podcasting Musical'],
+            money: ['Movimiento FIRE', 'Independencia Financiera', 'Jubilación Anticipada', 'Coast FIRE', 'Barista FIRE', 'Inversión en Índices', 'Inversión en Dividendos', 'Value Investing', 'Growth Investing', 'Factor Investing', 'Inversión Inmobiliaria', 'House Hacking', 'Método BRRRR', 'Propiedades en Renta', 'REITs', 'Trading de Acciones', 'Day Trading', 'Swing Trading', 'Trading de Opciones', 'Trading de Futuros', 'Inversión en Cripto', 'Bitcoin', 'Ethereum', 'DeFi', 'Inversión en NFTs', 'Presupuesto', 'Presupuesto Base Cero', 'Sistema de Sobres', 'Método YNAB', 'Regla 50/30/20', 'Libertad de Deudas', 'Bola de Nieve de Deudas', 'Avalancha de Deudas', 'Pago de Tarjetas', 'Libertad de Préstamos Estudiantiles', 'Side Hustles', 'Economía Gig', 'Freelancing', 'Múltiples Fuentes de Ingreso', 'Ingresos Pasivos', 'E-commerce', 'Dropshipping', 'Amazon FBA', 'Print on Demand', 'Productos Digitales', 'Marketing de Afiliados', 'Ingresos de Influencer', 'Patrocinios', 'Acuerdos de Marca', 'Economía de Creadores', 'Flipping', 'Arbitraje Retail', 'Arbitraje Online', 'Mayoreo', 'Ventas de Herencias', 'Trading Forex', 'Trading de Divisas', 'Trading de Commodities', 'Metales Preciosos', 'Inversión en Oro', 'Optimización Fiscal', 'Tax-Loss Harvesting', 'Cuentas con Ventajas Fiscales', 'Planificación Fiscal', 'Deducciones de Negocio', 'Planificación de Retiro', 'Optimización 401k', 'Estrategias IRA', 'Conversiones Roth', 'Planificación de Pensiones', 'Construcción de Crédito', 'Score de Crédito', 'Reparación de Crédito', 'Puntos de Tarjetas', 'Travel Hacking', 'Negociación', 'Negociación Salarial', 'Conseguir Aumentos', 'Ofertas de Trabajo', 'Negociación de Contratos', 'Mentalidad de Dinero', 'Conciencia de Riqueza', 'Mentalidad de Abundancia', 'Bloqueos de Dinero', 'Sanación de Trauma Financiero', 'Vida Frugal', 'Dinero Minimalista', 'Anti-Consumismo', 'Gasto Intencional', 'Gasto Basado en Valores', 'Finanzas Familiares', 'Enseñar Dinero a Niños', 'Finanzas de Pareja', 'Crianza Financiera', 'Riqueza Generacional', 'Finanzas de Negocio', 'Gestión de Flujo de Caja', 'Profit First', 'Banca Empresarial', 'Pronóstico Financiero', 'Inversión Ángel', 'Inversión en Startups', 'Capital de Riesgo', 'Inversión en Sindicatos', 'Crowdfunding', 'Planificación Patrimonial', 'Testamentos y Fideicomisos', 'Planificación de Herencias', 'Protección de Activos', 'Construcción de Legado', 'Optimización de Seguros'],
+            spirituality: ['Meditación', 'Mindfulness', 'Meditación Trascendental', 'Vipassana', 'Meditación Metta', 'Trabajo de Respiración', 'Pranayama', 'Método Wim Hof', 'Respiración Holotropica', 'Respiración en Caja', 'Yoga', 'Kundalini Yoga', 'Vinyasa Flow', 'Yin Yoga', 'Yoga Nidra', 'Manifestación', 'Ley de Atracción', 'Scripting', 'Tableros de Visión', 'Afirmaciones', 'Tarot', 'Cartas Oráculo', 'Lectura de Cartas', 'Lectura Intuitiva', 'Tarot para Autodescubrimiento', 'Astrología', 'Cartas Natales', 'Lectura de Tránsitos', 'Sinastría', 'Astrología Diseño Humano', 'Diseño Humano', 'Llaves Genéticas', 'Vida de Proyector', 'Estrategia de Generador', 'Generador Manifestante', 'Numerología', 'Camino de Vida', 'Números Ángel', 'Cartas Numerológicas', 'Numerología de Nombres', 'Chakras', 'Balance de Chakras', 'Sanación de Chakras', 'Centros Energéticos', 'Despertar Kundalini', 'Sanación Energética', 'Reiki', 'Sanación Pránica', 'Sanación Cuántica', 'Sanación a Distancia', 'Sanación con Cristales', 'Grids de Cristales', 'Programación de Cristales', 'Gemoterapia', 'Coleccionar Cristales', 'Sanación con Sonido', 'Cuencos Tibetanos', 'Baño de Gong', 'Diapasones', 'Frecuencias Solfeggio', 'Chamanismo', 'Viaje Chamánico', 'Medicina de Plantas', 'Integración Ayahuasca', 'Animales de Poder', 'Regresión a Vidas Pasadas', 'Registros Akáshicos', 'Recuperación del Alma', 'Trabajo de Niño Interior', 'Sanación Ancestral', 'Rituales Lunares', 'Intenciones Luna Nueva', 'Liberación Luna Llena', 'Vivir con la Luna', 'Fases Lunares', 'Trabajo de Sombra', 'Sombra Jungiana', 'Integración de Sombra', 'Noche Oscura del Alma', 'Muerte del Ego', 'Despertar', 'Despertar Espiritual', 'Ascensión', 'Expansión de Conciencia', 'Vida 5D', 'Misticismo', 'Misticismo Cristiano', 'Kabbalah', 'Sufismo', 'Estudios Esotéricos', 'Budismo', 'Práctica Zen', 'Filosofía Budista', 'Cuatro Nobles Verdades', 'Estudio del Dharma', 'Taoísmo', 'Tao Te Ching', 'Wu Wei', 'Estado de Flujo', 'Vida Taoísta', 'Herbolaria Espiritual', 'Aliados Vegetales', 'Plantas Sagradas', 'Esencias Florales', 'Aromaterapia Espiritual', 'Geometría Sagrada', 'Proporción Áurea', 'Sólidos Platónicos', 'Merkaba', 'Meditación Geométrica', 'Adivinación'],
+            tech: ['Herramientas de IA', 'Dominio de ChatGPT', 'Ingeniería de Prompts', 'Automatización con IA', 'Generación de Arte con IA', 'No-Code', 'Bubble', 'Webflow', 'Zapier', 'Automatización Make', 'Desarrollo Web', 'HTML/CSS', 'JavaScript', 'React', 'Vue.js', 'Python', 'Automatización Python', 'Data Science Python', 'Machine Learning', 'Scripting Python', 'Desarrollo de Apps', 'Desarrollo iOS', 'Desarrollo Android', 'Flutter', 'React Native', 'WordPress', 'Elementor', 'Divi', 'WooCommerce', 'Seguridad WordPress', 'Notion', 'Templates Notion', 'Sistemas Notion', 'Segundo Cerebro Notion', 'Fórmulas Notion', 'Airtable', 'Bases Airtable', 'Automatización Airtable', 'Diseño de Bases de Datos', 'Interfaces Airtable', 'Figma', 'Diseño UI', 'Diseño UX', 'Sistemas de Diseño', 'Prototipos', 'Canva', 'Templates Canva', 'Branding Canva', 'Gráficos Sociales', 'Canva Pro', 'Edición de Video', 'Premiere Pro', 'DaVinci Resolve', 'Final Cut Pro', 'CapCut', 'Motion Graphics', 'After Effects', 'Animación', 'Tipografía Cinética', 'Efectos Visuales', 'Diseño 3D', 'Blender', 'Cinema 4D', 'Impresión 3D', 'Modelado 3D', 'Ciberseguridad', 'Hacking Ético', 'Protección de Privacidad', 'Seguridad de Contraseñas', 'Configuración VPN', 'Computación en la Nube', 'AWS', 'Google Cloud', 'Azure', 'Arquitectura Cloud', 'DevOps', 'Docker', 'Kubernetes', 'CI/CD', 'Infraestructura como Código', 'Blockchain', 'Smart Contracts', 'Solidity', 'Desarrollo Web3', 'Construcción DApp', 'Análisis de Datos', 'SQL', 'Excel Avanzado', 'Power BI', 'Tableau', 'SEO', 'SEO Técnico', 'Investigación de Palabras Clave', 'Link Building', 'SEO Local', 'Email Marketing Tech', 'ConvertKit', 'Mailchimp', 'Automatización de Email', 'Deliverability', 'Sistemas CRM', 'Salesforce', 'HubSpot', 'Pipedrive', 'Optimización CRM', 'Tecnología de Podcasting', 'Edición de Podcast', 'Feeds RSS', 'Hosting de Podcast', 'Calidad de Audio', 'Tecnología de Streaming'],
+            health: ['Salud Intestinal', 'Microbioma', 'Intestino Permeable', 'Salud Digestiva', 'Probióticos', 'Ayuno Intermitente', 'Ayuno 16:8', 'Ayuno Prolongado', 'Estilo de Vida Ayuno', 'Autofagia', 'Dieta Keto', 'Dieta Carnívora', 'Bajo en Carbohidratos', 'Cetosis', 'Adaptación a Grasas', 'Plant-Based', 'Nutrición Vegana', 'Whole Food Plant Based', 'Vegano Crudo', 'Alto en Carbos Bajo en Grasas', 'Paleo', 'Salud Ancestral', 'Vida Primal', 'Dieta de Eliminación', 'Dieta Antiinflamatoria', 'Pérdida de Peso', 'Pérdida de Grasa', 'Recomposición Corporal', 'Pérdida de Peso Sostenible', 'Mantenimiento de Peso', 'Entrenamiento de Fuerza', 'Powerlifting', 'Levantamiento Olímpico', 'Entrenamiento con Barra', 'Levantamientos Compuestos', 'Culturismo', 'Construcción Muscular', 'Hipertrofia', 'Culturismo Natural', 'Preparación de Competencia', 'Calistenia', 'Entrenamiento con Peso Corporal', 'Street Workout', 'Fuerza Gimnástica', 'Entrenamiento con Anillas', 'Running', 'Entrenamiento de Maratón', 'Ultrarunning', '5K a Maratón', 'Trail Running', 'HIIT', 'Tabata', 'Entrenamiento en Circuito', 'Acondicionamiento Metabólico', 'Eficiencia Cardiovascular', 'Flexibilidad', 'Estiramientos', 'Trabajo de Movilidad', 'Recuperación Activa', 'Estiramientos PNF', 'Optimización del Sueño', 'Higiene del Sueño', 'Ritmo Circadiano', 'Sueño Profundo', 'Rastreo de Sueño', 'Salud Hormonal', 'Salud Tiroidea', 'Salud Adrenal', 'Balance Hormonal', 'SOP', 'Salud Femenina', 'Sincronización del Ciclo', 'Menopausia', 'Fertilidad', 'Postparto', 'Salud Masculina', 'Testosterona', 'Salud de Próstata', 'Fertilidad Masculina', 'Andropausia', 'Longevidad', 'Anti-Envejecimiento', 'Biohacking', 'Healthspan', 'Zonas Azules', 'Medicina Funcional', 'Salud de Raíz', 'Salud Holística', 'Salud Integrativa', 'Medicina Natural', 'Salud Mental', 'Manejo de Ansiedad', 'Recuperación de Depresión', 'Manejo de Estrés', 'Recuperación de Burnout', 'Autoinmune', 'Hashimotos', 'Celíaco', 'Manejo de Lupus', 'Apoyo MS', 'Enfermedad Crónica', 'Fibromialgia', 'Fatiga Crónica', 'Enfermedad de Lyme', 'Long COVID', 'Recuperación de Adicciones', 'Sobriedad', 'Vida Sin Alcohol', 'Adicción al Azúcar', 'Adicción a la Comida', 'Corrección de Postura'],
+            sports: ['Golf', 'Swing de Golf', 'Juego Corto Golf', 'Juego Mental Golf', 'Fitness para Golf', 'Tenis', 'Técnica de Tenis', 'Estrategia de Tenis', 'Fitness para Tenis', 'Tenis de Dobles', 'Baloncesto', 'Habilidades de Baloncesto', 'Forma de Tiro', 'Manejo de Balón', 'IQ de Baloncesto', 'Fútbol', 'Habilidades de Fútbol', 'Tácticas de Fútbol', 'Fitness para Fútbol', 'Entrenamiento de Portero', 'Béisbol', 'Mecánica de Bateo', 'Pitcheo', 'Juego Mental Béisbol', 'Fildeo', 'Fútbol Americano', 'Entrenamiento Fútbol Americano', 'Habilidades de Quarterback', 'Wide Receiver', 'Acondicionamiento Fútbol', 'Hockey', 'Habilidades de Hockey', 'Patinaje', 'Acondicionamiento Hockey', 'Entrenamiento de Portero Hockey', 'Natación', 'Técnica de Natación', 'Natación Competitiva', 'Aguas Abiertas', 'Natación Masters', 'Ciclismo', 'Ciclismo de Ruta', 'Mountain Bike', 'Entrenamiento de Ciclismo', 'Ciclismo Indoor', 'Triatlón', 'Entrenamiento Ironman', 'Triatlón Sprint', 'Entrenamiento de Transición', 'Brick Workouts', 'CrossFit', 'Entrenamiento WOD', 'Competencia CrossFit', 'Programación CrossFit', 'Fitness Funcional', 'MMA', 'Jiu Jitsu Brasileño', 'Boxeo', 'Muay Thai', 'Lucha Libre', 'Artes Marciales', 'Karate', 'Taekwondo', 'Judo', 'Kung Fu', 'Escalada', 'Bouldering', 'Escalada Deportiva', 'Escalada Tradicional', 'Escalada Indoor', 'Surf', 'Técnica de Surf', 'Lectura de Olas', 'Fitness para Surf', 'Longboard', 'Skateboarding', 'Street Skating', 'Vert Skating', 'Trucos de Skate', 'Fitness para Skate', 'Snowboard', 'Trucos de Snowboard', 'Freestyle', 'Backcountry', 'Park Riding', 'Esquí', 'Esquí Alpino', 'Técnica de Esquí', 'Moguls', 'Esquí Backcountry', 'Voleibol', 'Voleibol de Playa', 'Voleibol Indoor', 'Habilidades de Voleibol', 'Colocación', 'Atletismo', 'Sprints', 'Larga Distancia', 'Eventos de Campo', 'Vallas', 'Gimnasia', 'Gimnasia Artística', 'Tumbling', 'Entrenamiento de Flexibilidad', 'Fuerza para Gimnasia', 'Remo', 'Entrenamiento de Crew', 'Ergómetro', 'Técnica de Remo', 'Remo Competitivo', 'Pickleball'],
+            'self-improvement': ['Hábitos Atómicos', 'Apilamiento de Hábitos', 'Rastreo de Hábitos', 'Hábitos Pequeños', 'Hábitos Clave', 'Rutina Matutina', 'Milagro Matutino', 'Club 5AM', 'Rituales Matutinos', 'Rutinas Nocturnas', 'Productividad', 'Método GTD', 'Bloqueo de Tiempo', 'Trabajo Profundo', 'Técnica Pomodoro', 'Establecimiento de Metas', 'OKRs', 'Metas SMART', 'Visión', 'Año de 12 Semanas', 'Journaling', 'Páginas Matutinas', 'Diario de Gratitud', 'Journaling Reflexivo', 'Diario de Sueños', 'Mentalidad', 'Mentalidad de Crecimiento', 'Cambio de Mentalidad Fija', 'Creencias Limitantes', 'Coaching de Mentalidad', 'Construcción de Confianza', 'Autoestima', 'Síndrome del Impostor', 'Autovaloración', 'Crítico Interno', 'Hablar en Público', 'Habilidades de Presentación', 'Charla TED', 'Storytelling', 'Presencia Escénica', 'Liderazgo', 'Liderazgo Servidor', 'Presencia Ejecutiva', 'Liderazgo de Equipo', 'Autoliderazgo', 'Comunicación', 'Conversaciones Difíciles', 'Escucha Activa', 'Asertividad', 'Resolución de Conflictos', 'Inteligencia Emocional', 'Desarrollo de EQ', 'Autoconciencia', 'Empatía', 'Habilidades Sociales', 'Toma de Decisiones', 'Modelos Mentales', 'Primeros Principios', 'Pensamiento Crítico', 'Resolución de Problemas', 'Enfoque', 'Gestión de Atención', 'Minimalismo Digital', 'Libre de Distracciones', 'Monotarea', 'Memoria', 'Palacio de Memoria', 'Lectura Rápida', 'Aprender a Aprender', 'Retención', 'Diseño de Vida', 'Ikigai', 'Propósito de Vida', 'Clarificación de Valores', 'Planificación de Legado', 'Minimalismo', 'Esencialismo', 'Decluttering', 'Vida Intencional', 'Vida Simple', 'Estoicismo', 'Estoico Diario', 'Marco Aurelio', 'Séneca', 'Estoicismo Moderno', 'Networking', 'Construcción de Relaciones', 'Marca Personal', 'Crecimiento LinkedIn', 'Construcción de Comunidad', 'Desarrollo de Carrera', 'Cambio de Carrera', 'Búsqueda de Empleo', 'Habilidades de Entrevista', 'Estrategia de Promoción', 'Gestión del Tiempo', 'Gestión de Calendario', 'Matriz de Prioridades', 'Gestión de Energía', 'Límites', 'Lectura', 'Clubes de Lectura', 'Lectura Rápida', 'Escuchar Audiolibros', 'Tomar Notas', 'Escritura', 'Redacción de Contenido', 'Copywriting', 'Escritura de Blog', 'Escritura de Libros', 'Creatividad'],
+            relationships: ['Estilos de Apego', 'Apego Ansioso', 'Apego Evitativo', 'Apego Seguro', 'Sanación de Apego', 'Citas', 'Citas Online', 'Apps de Citas', 'Primeras Citas', 'Citas Después del Divorcio', 'Matrimonio', 'Enriquecimiento Matrimonial', 'Consejería Matrimonial', 'Comunicación Matrimonial', 'Intimidad Matrimonial', 'Comunicación en Relaciones', 'Comunicación No Violenta', 'Lenguajes del Amor', 'Pujas Emocionales', 'Conversaciones de Reparación', 'Límites', 'Establecer Límites', 'Scripts de Límites', 'Límites Saludables', 'Recuperación de Límites', 'Codependencia', 'Recuperación de Codependencia', 'Complacer a la Gente', 'Enmeshment', 'Diferenciación', 'Recuperación de Abuso Narcisista', 'Relaciones Tóxicas', 'Recuperación de Gaslighting', 'Abuso Emocional', 'Trauma Bonding', 'Recuperación de Divorcio', 'Proceso de Divorcio', 'Co-Paternidad', 'Familias Ensambladas', 'Paternidad/Maternidad Sola', 'Crianza Consciente', 'Crianza Gentil', 'Disciplina Positiva', 'Crianza Conectada', 'Crianza de Adolescentes', 'Sistemas Familiares', 'Dinámicas Familiares', 'Relaciones entre Hermanos', 'Relaciones con Suegros', 'Sanación Familiar', 'Amistad', 'Amistades de Adultos', 'Hacer Amigos', 'Grupos de Amigos', 'Límites en Amistades', 'Habilidades Sociales', 'Habilidades de Conversación', 'Small Talk', 'Carisma', 'Simpatía', 'Resolución de Conflictos', 'Pelear Limpio', 'Reparación de Relaciones', 'Reconstrucción de Confianza', 'Perdón', 'Intimidad', 'Intimidad Emocional', 'Intimidad Física', 'Construcción de Intimidad', 'Intimidad Después de Hijos', 'Educación Sexual', 'Salud Sexual', 'Discrepancia de Deseo', 'Comunicación Sexual', 'Placer', 'Poliamor', 'No Monogamia Ética', 'Relaciones Abiertas', 'Anarquía Relacional', 'Compersión', 'Relaciones LGBTQ+', 'Salir del Clóset', 'Citas Queer', 'Matrimonio Igualitario', 'Relaciones Trans', 'Larga Distancia', 'Éxito LDR', 'Cerrar la Brecha', 'Citas Virtuales', 'Comunicación LDR', 'Recuperación de Ruptura', 'Sanación de Corazón Roto', 'Seguir Adelante', 'No Contacto', 'Amor Propio Después de Ruptura', 'Amor Propio', 'Autocompasión', 'Trabajo Interior', 'Dignidad', 'Aceptación Radical de Sí Mismo', 'Energía Masculina/Femenina', 'Polaridad', 'Femenino Sagrado', 'Masculino Divino', 'Dinámicas de Energía', 'Almas Gemelas', 'Llamas Gemelas', 'Relaciones Kármicas', 'Contratos del Alma', 'Manifestación de Relaciones']
+        };
+
+        const categoryNames = {
+            hobbies: 'Pasatiempos',
+            music: 'Música',
+            money: 'Dinero',
+            spirituality: 'Espiritualidad',
+            tech: 'Tecnología',
+            health: 'Salud',
+            sports: 'Deportes',
+            'self-improvement': 'Superación Personal',
+            relationships: 'Relaciones'
+        };
+
+        const ideaCache = {};
+
+        function renderBrands(containerId, brands, category) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = brands.map((brand, i) => `
+        <div class="brand-card" onclick="openModal('${brand.replace(/'/g, "\\'")}', '${category}')">
+          <span class="brand-number">#${i + 1}</span>
+          <span class="brand-name">${brand}</span>
+        </div>
+      `).join('');
+        }
+
+        function showCategory(category) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.category-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            if (category === 'all') {
+                document.querySelectorAll('.category-section').forEach(section => {
+                    section.classList.add('active');
+                });
+            } else {
+                document.getElementById(category).classList.add('active');
+            }
+        }
+
+        function openModal(niche, category) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const categoryLabel = document.getElementById('modal-category');
+            const body = document.getElementById('modal-body');
+
+            title.textContent = niche;
+            categoryLabel.textContent = `${categoryNames[category]} • Ideas de Comunidad Skool`;
+
+            body.innerHTML = `
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <p>Generando ideas de comunidad basadas en los Modelos de Valor A-Z de Evelyn...</p>
+        </div>
+      `;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            generateIdeas(niche, category);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        async function generateIdeas(niche, category) {
+            const cacheKey = `${niche}-${category}`;
+
+            if (ideaCache[cacheKey]) {
+                renderIdeas(ideaCache[cacheKey]);
+                return;
+            }
+
+            try {
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        niche: niche,
+                        category: categoryNames[category]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    ideaCache[cacheKey] = data.data;
+                    renderIdeas(data.data);
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (err) {
+                console.error("Error al generar ideas:", err);
+                document.getElementById('modal-body').innerHTML = `
+          <div class="error-state">
+            <p>😅 No se pudieron generar ideas en este momento.</p>
+            <p style="font-size: 12px; margin-top: 8px;">Verifica que tu webhook de n8n esté configurado correctamente.</p>
+            <button onclick="generateIdeas('${niche.replace(/'/g, "\\'")}', '${category}')">Intentar de Nuevo</button>
+          </div>
+        `;
+            }
+        }
+
+        function renderIdeas(data) {
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `
+        <div class="niche-explanation">
+          <h3>💡 Sobre Este Nicho</h3>
+          <p>${data.explanation}</p>
+        </div>
+        <div class="community-ideas">
+          <h3>🚀 5 Ideas de Comunidad</h3>
+          ${data.ideas.map(idea => `
+            <div class="idea-card">
+              <h4>${idea.name} <span class="model-tag">${idea.model}</span></h4>
+              <p>${idea.description}</p>
+            </div>
+          `).join('')}
+        </div>
+      `;
+        }
+
+        // Inicializar todas las categorías
+        Object.keys(brandsData).forEach(cat => {
+            renderBrands(cat + '-brands', brandsData[cat], cat);
+        });
+
+        // Mostrar todas por defecto
+        document.querySelectorAll('.category-section').forEach(section => {
+            section.classList.add('active');
+        });
+    </script>
+</body>
+
+</html>

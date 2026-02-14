@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Mapa de Tu Talento - Ovejas Voladoras</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --pastel-yellow: #fdfd96;
+            --crude: #f5f5f5;
+            --soft-grey: #0a0a0a;
+            --black: #000000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--black);
+            color: var(--crude);
+            min-height: 100vh;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        .header {
+            background: linear-gradient(145deg, #18181b, #000);
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--pastel-yellow);
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
+            position: relative;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 24px;
+            box-sizing: border-box;
+        }
+
+        .header-label {
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            color: var(--pastel-yellow);
+            margin-bottom: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin: 0 0 16px 0;
+            line-height: 1.2;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #a1a1aa;
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .total-badge {
+            margin-top: 20px;
+            display: inline-block;
+            background: rgba(253, 253, 150, 0.1);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--pastel-yellow);
+            color: var(--pastel-yellow);
+            font-weight: 700;
+        }
+
+        .tabs {
+            background: rgba(24, 24, 27, 0.8);
+            padding: 12px 0;
+            border-bottom: 1px solid #27272a;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            width: 100vw;
+            margin-left: calc(50% - 50vw);
+        }
+
+        .tabs-inner {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 12px 24px;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+        }
+
+        .tabs-inner::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border-radius: 24px;
+            border: 1px solid #27272a;
+            background: rgba(39, 39, 42, 0.6);
+            color: #a1a1aa;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .tab-btn:hover {
+            background: rgba(63, 63, 70, 0.8);
+            border-color: var(--pastel-yellow);
+            color: white;
+        }
+
+        .tab-btn.active {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            border-color: var(--pastel-yellow);
+        }
+
+        .content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .category-section {
+            margin-bottom: 48px;
+            display: none;
+        }
+
+        .category-section.active {
+            display: block;
+        }
+
+        .category-header {
+            background: rgba(24, 24, 27, 0.6);
+            border: 1px solid #27272a;
+            border-radius: 1.5rem;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border-left: 4px solid var(--pastel-yellow);
+        }
+
+        .category-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .category-emoji {
+            font-size: 32px;
+        }
+
+        .category-name {
+            margin: 0;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .category-badge {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .category-desc {
+            color: #a1a1aa;
+            margin: 0 0 20px 0;
+            line-height: 1.6;
+        }
+
+        .prompts-box {
+            background: rgba(39, 39, 42, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #27272a;
+        }
+
+        .prompts-title {
+            color: var(--pastel-yellow);
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            letter-spacing: 0.1em;
+            font-weight: 800;
+        }
+
+        .prompts-list {
+            margin: 0;
+            padding-left: 20px;
+            color: #d4d4d8;
+            line-height: 1.8;
+        }
+
+        .prompts-list li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .brands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .brand-card {
+            background: rgba(24, 24, 27, 0.6);
+            padding: 16px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            border: 1px solid #27272a;
+            transition: all 0.3s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .brand-card:hover {
+            border-color: var(--pastel-yellow);
+            box-shadow: 0 8px 24px rgba(253, 253, 150, 0.2);
+            transform: translateY(-4px);
+        }
+
+        .brand-card::after {
+            content: '✨ Descubre tu ángulo';
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            font-size: 10px;
+            color: #71717a;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .brand-card:hover::after {
+            opacity: 1;
+            color: var(--pastel-yellow);
+        }
+
+        .brand-number {
+            position: absolute;
+            top: 8px;
+            right: 10px;
+            font-size: 11px;
+            color: #52525b;
+            font-weight: 700;
+        }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+            display: block;
+            padding-right: 24px;
+        }
+
+        .master-prompt {
+            background: linear-gradient(145deg, #18181b, #000);
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 1.5rem;
+            padding: 32px;
+            margin: 48px auto 0;
+            max-width: 1200px;
+            color: white;
+            box-shadow: 0 0 30px rgba(253, 253, 150, 0.1);
+        }
+
+        .master-prompt h3 {
+            color: var(--pastel-yellow);
+            margin: 0 0 16px 0;
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .master-prompt>p {
+            color: #a1a1aa;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+
+        .prompt-box {
+            background: rgba(253, 253, 150, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            border: 1px solid rgba(253, 253, 150, 0.2);
+        }
+
+        .prompt-box strong {
+            color: var(--pastel-yellow);
+        }
+
+        .prompt-box ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .why-section {
+            background: rgba(24, 24, 27, 0.6);
+            border: 1px solid #27272a;
+            border-radius: 1.5rem;
+            padding: 32px;
+            margin: 24px auto 0;
+            max-width: 1200px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .why-section h3 {
+            color: white;
+            margin: 0 0 20px 0;
+            font-weight: 700;
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .why-card {
+            padding: 20px;
+            background: rgba(39, 39, 42, 0.5);
+            border-radius: 12px;
+            border: 1px solid #27272a;
+        }
+
+        .why-card h4 {
+            color: var(--pastel-yellow);
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .why-card p {
+            color: #a1a1aa;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(145deg, #18181b, #0a0a0a);
+            border: 2px solid var(--pastel-yellow);
+            border-radius: 1.5rem;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(253, 253, 150, 0.2);
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .modal-header {
+            background: rgba(253, 253, 150, 0.1);
+            padding: 24px 28px;
+            border-bottom: 1px solid #27272a;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-header h2 {
+            color: white;
+            margin: 0 0 8px 0;
+            font-size: 24px;
+            padding-right: 40px;
+            font-weight: 700;
+        }
+
+        .modal-header p {
+            color: var(--pastel-yellow);
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(253, 253, 150, 0.2);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--pastel-yellow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            transform: scale(1.1);
+        }
+
+        .modal-content {
+            padding: 28px;
+        }
+
+        .niche-explanation {
+            background: rgba(253, 253, 150, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border-left: 4px solid var(--pastel-yellow);
+        }
+
+        .niche-explanation h3 {
+            color: var(--pastel-yellow);
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .niche-explanation p {
+            color: #d4d4d8;
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        .community-ideas h3 {
+            color: white;
+            margin: 0 0 16px 0;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+        }
+
+        .idea-card {
+            background: rgba(24, 24, 27, 0.6);
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .idea-card:hover {
+            border-color: var(--pastel-yellow);
+            box-shadow: 0 4px 16px rgba(253, 253, 150, 0.1);
+        }
+
+        .idea-card h4 {
+            color: white;
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            font-weight: 700;
+        }
+
+        .idea-card .model-tag {
+            background: var(--pastel-yellow);
+            color: var(--black);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .idea-card p {
+            color: #a1a1aa;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #27272a;
+            border-top-color: var(--pastel-yellow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading p {
+            color: #a1a1aa;
+            font-size: 14px;
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #a1a1aa;
+        }
+
+        .error-state button {
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: var(--pastel-yellow);
+            color: var(--black);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .error-state button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(253, 253, 150, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .header p {
+                font-size: 14px;
+            }
+
+            .category-header {
+                padding: 16px;
+            }
+
+            .category-name {
+                font-size: 20px;
+            }
+
+            .category-emoji {
+                font-size: 24px;
+            }
+
+            .content {
+                padding: 16px;
+            }
+
+            .modal-header h2 {
+                font-size: 18px;
+            }
+
+            .modal-content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-inner">
+            <img src="https://storage.googleapis.com/msgsndr/d63IMfTrRgWzePUPTy8e/media/694eb76bb62dd36ed9d6cbdf.png"
+                alt="Isotipo Ovejas Voladoras"
+                style="width: 64px; height: 64px; margin: 0 auto 24px; object-fit: contain; display: block;">
+            <div class="header-label">EL MAPA DE TU TALENTO</div>
+            <h1>Descubre el nicho exacto donde tu P+H <br>se convierte en
+                <span style="color: var(--pastel-yellow)">talento vendible</span>
+            </h1>
+            <p>328 nichos reales probados en Latinoamérica y España. 41 opciones por cada categoría. Basados en datos de
+                tu
+                audiencia y metodología P+H=T. Haz clic en cualquier nicho y descubre tu ángulo único.</p>
+            <div class="total-badge">328 Nichos • 41 por Categoría • LATAM y España</div>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tabs-inner">
+            <button class="tab-btn active" onclick="showCategory('all')">Todos (328)</button>
+            <button class="tab-btn" onclick="showCategory('hobbies')">🎨 Hobbies (41)</button>
+            <button class="tab-btn" onclick="showCategory('music')">🎸 Música (41)</button>
+            <button class="tab-btn" onclick="showCategory('money')">💰 Dinero (41)</button>
+            <button class="tab-btn" onclick="showCategory('spirituality')">🙏 Espiritualidad (41)</button>
+            <button class="tab-btn" onclick="showCategory('tech')">💻 Tecnología (41)</button>
+            <button class="tab-btn" onclick="showCategory('health')">🥕 Salud (41)</button>
+            <button class="tab-btn" onclick="showCategory('sports')">⚽ Deportes (41)</button>
+            <button class="tab-btn" onclick="showCategory('self-improvement')">🏆 Desarrollo Personal (41)</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="category-section active" id="hobbies">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🎨</span>
+                    <div>
+                        <h2 class="category-name">Hobbies</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">Cuando tu pasión deja de ser "solo un hobby" y se convierte en el negocio que
+                    te sostiene. 41 nichos donde latinos están viviendo de lo que aman.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué hobby te hace perder la noción del tiempo sin que parezca trabajo?</li>
+                        <li>¿En qué actividad te buscan otros constantemente para que les enseñes?</li>
+                        <li>Si tuvieras que enseñar este hobby sin cobrar, ¿lo harías igual?</li>
+                        <li>¿Qué transformación creó este hobby en tu vida que otros querrían tener?</li>
+                        <li>¿Qué le dirías a alguien que comienza en este hobby que te hubiera ahorrado años?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="hobbies-brands"></div>
+        </div>
+
+        <div class="category-section" id="music">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🎸</span>
+                    <div>
+                        <h2 class="category-name">Música</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">De tocar para ti a enseñar lo que sabes. Tu instrumento puede ser tu ingreso
+                    principal. 41 nichos donde músicos latinos están creando comunidades prósperas.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué momento musical transformó tu manera de ver este arte?</li>
+                        <li>¿Qué te preguntan constantemente otros músicos o principiantes?</li>
+                        <li>¿En qué aspecto de la música sientes que tienes un método propio?</li>
+                        <li>¿Qué frustraciones musicales superaste que ahora puedes enseñar?</li>
+                        <li>¿Cómo sería tu "yo musical" dentro de 3 años enseñando esto?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="music-brands"></div>
+        </div>
+
+        <div class="category-section" id="money">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">💰</span>
+                    <div>
+                        <h2 class="category-name">Dinero</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">No se trata de hacerte rico rápido. Se trata de vivir bien haciendo lo que
+                    sabes. 41 nichos donde educadores latinos están generando ingresos reales y sostenibles.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué cambio financiero hiciste que transformó toda tu realidad?</li>
+                        <li>¿Qué creencia sobre el dinero tuviste que desaprender para prosperar?</li>
+                        <li>¿En qué área del dinero te buscan constantemente para pedir consejo?</li>
+                        <li>¿Qué hubiera cambiado todo si lo hubieras sabido al empezar?</li>
+                        <li>¿Cómo te relacionas HOY con el dinero vs hace 5 años?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="money-brands"></div>
+        </div>
+
+        <div class="category-section" id="spirituality">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🙏</span>
+                    <div>
+                        <h2 class="category-name">Espiritualidad</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">Donde propósito y práctica se encuentran. Sin humo, sin promesas mágicas. 41
+                    nichos donde guías espirituales latinos están generando impacto real.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué práctica espiritual cambió fundamentalmente tu experiencia de vida?</li>
+                        <li>¿En qué te buscan para guiarlos en su camino espiritual?</li>
+                        <li>¿Qué verdad espiritual resististe al principio y hoy es tu ancla?</li>
+                        <li>¿Cómo integras espiritualidad + vida real sin caer en fantasía?</li>
+                        <li>¿Qué le dirías a alguien escéptico que quiere empezar en esto?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="spirituality-brands"></div>
+        </div>
+
+        <div class="category-section" id="tech">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">💻</span>
+                    <div>
+                        <h2 class="category-name">Tecnología</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">La tech no es solo para programadores. Es para quien quiere crear, automatizar
+                    y escalar. 41 nichos donde educadores tech están simplificando lo complejo.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué habilidad tech aprendiste que cambió tu productividad para siempre?</li>
+                        <li>¿Qué frustración tecnológica resolviste que otros aún sufren?</li>
+                        <li>¿En qué herramienta o skill tech te buscan para que les enseñes?</li>
+                        <li>¿Qué podrías automatizar si tuvieras el conocimiento técnico?</li>
+                        <li>¿Cómo usarías la tecnología para crear impacto en otros?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="tech-brands"></div>
+        </div>
+
+        <div class="category-section" id="health">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🥕</span>
+                    <div>
+                        <h2 class="category-name">Salud</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">Tu transformación de salud puede ser el puente que otros necesitan. 41 nichos
+                    donde coaches de salud latinos están cambiando vidas.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué cambio de salud transformó no solo tu cuerpo sino tu vida entera?</li>
+                        <li>¿Qué verdad sobre salud descubriste que contradice lo que todos dicen?</li>
+                        <li>¿En qué aspecto de salud te buscan para que los guíes?</li>
+                        <li>¿Qué protocolo o método creaste basado en tu propia experiencia?</li>
+                        <li>¿Qué le dirías a alguien al inicio de su viaje de salud?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="health-brands"></div>
+        </div>
+
+        <div class="category-section" id="sports">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">⚽</span>
+                    <div>
+                        <h2 class="category-name">Deportes</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">De jugar por jugar a enseñar con método. Tu experiencia atlética tiene valor
+                    comercial. 41 nichos donde entrenadores latinos están construyendo comunidades activas.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué avance deportivo cambió tu relación con tu cuerpo?</li>
+                        <li>¿Qué barrera física o mental superaste en tu deporte?</li>
+                        <li>¿En qué aspecto del entrenamiento tienes un enfoque único?</li>
+                        <li>¿Qué le enseñarías a un principiante que te hubiera ahorrado años?</li>
+                        <li>¿Cómo sería tu "yo atlético" dentro de 3 años enseñando esto?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="sports-brands"></div>
+        </div>
+
+        <div class="category-section" id="self-improvement">
+            <div class="category-header">
+                <div class="category-title-row">
+                    <span class="category-emoji">🏆</span>
+                    <div>
+                        <h2 class="category-name">Desarrollo Personal</h2>
+                        <span class="category-badge">41 NICHOS</span>
+                    </div>
+                </div>
+                <p class="category-desc">El trabajo interno que hiciste contigo puede ser el servicio que otros
+                    necesitan. 41 nichos donde facilitadores latinos están generando cambios profundos.</p>
+                <div class="prompts-box">
+                    <h4 class="prompts-title">🌟 PREGUNTAS PARA ENCONTRAR TU P+H=T</h4>
+                    <ol class="prompts-list">
+                        <li>¿Qué breakthrough personal cambió fundamentalmente tu trayectoria?</li>
+                        <li>¿Qué hábito o práctica se convirtió en la base de todo lo demás?</li>
+                        <li>¿En qué área de crecimiento personal te buscan para guiarlos?</li>
+                        <li>¿Qué tuviste que desaprender para convertirte en quien eres hoy?</li>
+                        <li>¿Qué insight sobre desarrollo personal desearías que fuera más conocido?</li>
+                    </ol>
+                </div>
+            </div>
+            <div class="brands-grid" id="self-improvement-brands"></div>
+        </div>
+
+        <div class="master-prompt">
+            <h3>🔑 Encuentra Tu Ángulo Único en Cualquier Nicho</h3>
+            <p>Usa este prompt con cualquier nicho para descubrir TU expresión:</p>
+            <div class="prompt-box">
+                <p><strong>Quiero crear una comunidad Skool alrededor de [NICHO].</strong></p>
+                <p>Basándome en la metodología P+H=T:</p>
+                <p>- Mi PASIÓN dentro de este nicho es: ___<br>
+                    - Mi HABILIDAD única que aporto es: ___<br>
+                    - Mi TRANSFORMACIÓN personal en este tema fue: ___</p>
+                <p>Ayúdame a descubrir:</p>
+                <ol>
+                    <li>¿Cuál es mi ángulo diferenciador en este nicho?</li>
+                    <li>¿Qué transformación específica puedo facilitar?</li>
+                    <li>¿A quién exactamente puedo servir mejor?</li>
+                    <li>¿Cómo conecto mi historia con este nicho?</li>
+                    <li>¿Cuál sería el nombre de mi comunidad?</li>
+                </ol>
+                <p><strong>💡 Recuerda:</strong> No buscas ser el más experto. Buscas ser el puente perfecto para quien
+                    está donde TÚ estuviste.</p>
+            </div>
+        </div>
+
+        <div class="why-section">
+            <h3>💡 Por Qué Estos 328 Nichos (y No Miles)</h3>
+            <div class="why-grid">
+                <div class="why-card">
+                    <h4>Basados en Tu Audiencia Real</h4>
+                    <p>Cada nicho cumple con los datos de 265 personas encuestadas: 75% necesita claridad, 58% trabaja
+                        mindset, 47% teme que nadie compre. Estos nichos responden a dolores reales.</p>
+                </div>
+                <div class="why-card">
+                    <h4>Validados en Latinoamérica</h4>
+                    <p>No son nichos americanos traducidos. Son nichos con comunidades Skool exitosas en español, con
+                        poder adquisitivo regional y cultural latina.</p>
+                </div>
+                <div class="why-card">
+                    <h4>Conectados con P+H=T</h4>
+                    <p>Cada nicho te ayuda a identificar tu Pasión + Habilidad para convertirlo en Talento vendible. No
+                        se trata de copiar, sino de encontrar tu ángulo único.</p>
+                </div>
+                <div class="why-card">
+                    <h4>41 por Categoría, No Relleno</h4>
+                    <p>328 nichos totales (41 × 8 categorías). El número 41 es significativo: Andy cumple 41 años. Cada
+                        nicho tiene propósito, no está ahí solo por llenar espacio.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Cargando...</h2>
+                <p id="modal-category">Ideas de Comunidad Skool</p>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-content" id="modal-body">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Generando ideas con la metodología P+H=T de Andy...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const N8N_WEBHOOK_URL = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/generar-ideas-skool';
+
+        const brandsData = {
+            hobbies: ['Bullet Journaling & Productividad Visual', 'Fotografía de Producto para E-commerce', 'Fotografía de Retratos Emocionales', 'Fotografía Lifestyle para Redes Sociales', 'Lettering y Caligrafía Moderna', 'Lettering para Eventos y Papelería', 'Plantas de Interior y Urban Jungle', 'Huertos en Casa y Cultivo Urbano', 'Scrapbooking Digital', 'Preservación de Memorias Familiares', 'Ilustración Digital para Principiantes', 'Ilustración Editorial', 'Acuarela Botánica', 'Pintura al Óleo para Adultos', 'Cerámica y Alfarería Funcional', 'Torno de Cerámica para Principiantes', 'Macramé y Decoración Bohemia', 'Tejido a Crochet para Negocio', 'Tejido a Dos Agujas (Punto)', 'Bordado Contemporáneo', 'Joyería Artesanal en Plata', 'Joyería con Resina', 'Bisutería Fine y Accesorios', 'Velas Aromáticas Artesanales', 'Velas Decorativas y de Soya', 'Jabones Artesanales Naturales', 'Cosmética Natural Casera', 'Terrarios y Jardines Miniatura', 'Kokedamas y Jardinería Japonesa', 'Bonsái para Principiantes', 'Origami Decorativo', 'Papiroflexia Avanzada', 'Carpintería Básica para el Hogar', 'Muebles con Palets Reciclados', 'Restauración de Muebles Vintage', 'Upcycling y Reutilización Creativa', 'Costura para Principiantes', 'Patronaje y Diseño de Ropa', 'Reparación de Ropa (Visible Mending)', 'Encuadernación Artesanal', 'Mini-álbumes y Cuadernos Personalizados'],
+            music: ['Producción Musical con Presupuesto Cero', 'Producción de Beats para Artistas', 'Producción Lo-Fi y Chill Beats', 'Mezcla y Masterización Casera', 'Grabación en Home Studio', 'Diseño de Sonido para Contenido', 'Canto para Personas Sin "Talento Natural"', 'Técnica Vocal para Cantantes Líricos', 'Canto Popular y Moderno', 'Entrenamiento Vocal para Profesores', 'Salud Vocal para Cantantes', 'Guitarra Acústica para Adultos Principiantes', 'Guitarra Eléctrica y Rock', 'Guitarra Flamenca', 'Guitarra Fingerstyle', 'Ukelele para Principiantes', 'Piano para Adultos que Siempre Soñaron Tocar', 'Piano Jazz y Improvisación', 'Piano Clásico desde Cero', 'Teclado y Sintetizadores', 'Batería para Principiantes', 'Batería Electrónica y Pads', 'Percusión Latina y Afro', 'Cajón Peruano', 'Bajo Eléctrico para Principiantes', 'Violín para Adultos', 'Saxofón desde Cero', 'Armónica y Blues', 'Composición de Canciones con Tu Historia', 'Escribir Letras que Conectan', 'Composición Musical para Cine', 'Teoría Musical Práctica', 'Lectura Musical Rápida', 'Entrenamiento Auditivo', 'DJing y Mezcla para Eventos', 'DJ Producer (Crear + Mezclar)', 'Música para Meditación y Sanación', 'Producción de Podcasts Musicales', 'Marketing Musical para Artistas Independientes', 'Distribución Digital de Música', 'Monetización en Spotify y Plataformas'],
+            money: ['Finanzas Personales para Millennials Latinos', 'Finanzas para Mujeres Emprendedoras', 'Libertad Financiera para Familias', 'Presupuesto Base Cero', 'Método de Sobres y Control de Gastos', 'Eliminación de Deudas (Método Bola de Nieve)', 'Recuperación Financiera Post-Crisis', 'Ahorro Automático e Inteligente', 'Inversión para Principiantes en Latinoamérica', 'Fondos Indexados para Latinos', 'Inversión en Bienes Raíces para Principiantes', 'Renta de Propiedades Exitosa', 'Inversión en Crowdfunding Inmobiliario', 'Criptomonedas para Principiantes (sin hype)', 'Trading Responsable para Principiantes', 'Comunidades Digitales Rentables (Skool/Circle)', 'Infoproductos que Venden', 'Cursos Online Rentables', 'Membresías Recurrentes que Sostienen', 'E-commerce con Dropshipping Realista', 'Amazon FBA para el Mercado Latino', 'Print on Demand para Creativos', 'Marketing Digital para Negocios Locales', 'Google Ads para Principiantes', 'Meta Ads que Convierten', 'Email Marketing que Vende', 'Marketing de Afiliados Honesto', 'Marca Personal para Profesionales', 'Marca Personal en LinkedIn', 'Posicionamiento de Experto', 'Freelancing de Alto Valor', 'Freelancing en Upwork y Fiverr', 'Consultoría 1:1 Rentable', 'Mentoría Grupal Escalable', 'Side Hustles que Funcionan en LATAM', 'Ingresos Pasivos Reales (sin humo)', 'Optimización Fiscal para Autónomos', 'Contabilidad para Emprendedores', 'Mentalidad de Abundancia y Dinero', 'Bloqueos de Dinero y Sanación Financiera', 'Negociación Salarial y Aumentos'],
+            spirituality: ['Meditación para Personas Ansiosas', 'Meditación Mindfulness Secular', 'Meditación Trascendental', 'Meditación Vipassana', 'Meditación Metta (Amor Benevolente)', 'Trabajo de Respiración (Breathwork)', 'Pranayama y Respiración Yóguica', 'Método Wim Hof', 'Respiración para Ansiedad', 'Tarot como Herramienta de Autoconocimiento', 'Lectura de Tarot Profesional', 'Cartas Oráculo y Mensajes Intuitivos', 'Astrología Práctica (no predictiva)', 'Lectura de Carta Natal', 'Astrología Evolutiva', 'Astrología y Diseño Humano', 'Diseño Humano para la Vida Cotidiana', 'Vivir según Tu Tipo en Diseño Humano', 'Numerología y Camino de Vida', 'Interpretación de Números Ángel', 'Trabajo de Sombra e Integración', 'Sanación del Niño Interior', 'Trauma y Sanación Somática', 'Recuperación de Alma (Soul Retrieval)', 'Yoga para Vida Cotidiana', 'Vinyasa Flow', 'Yin Yoga y Restaurativo', 'Kundalini Yoga', 'Yoga Nidra y Relajación Profunda', 'Chakras y Balance Energético', 'Sanación de Chakras', 'Activación de Kundalini Segura', 'Sanación Energética y Reiki', 'Reiki Nivel 1 y 2', 'Sanación Pránica', 'Sanación con Cristales', 'Grids de Cristales', 'Gemoterapia Práctica', 'Rituales de Luna Nueva y Llena', 'Vivir según Ciclos Lunares', 'Sincronización del Ciclo Menstrual con la Luna'],
+            tech: ['Herramientas de IA para No-Técnicos', 'ChatGPT para Emprendedores', 'Prompts Efectivos (Prompt Engineering)', 'Automatización con IA', 'Generación de Arte con IA (Midjourney/DALL-E)', 'No-Code: Crea sin Programar', 'Bubble para Aplicaciones Web', 'Webflow para Sitios Profesionales', 'Softr para Apps desde Airtable', 'Notion para Emprendedores y Creadores', 'Sistema de Productividad en Notion', 'Notion para Equipos Pequeños', 'Templates de Notion que Venden', 'Fórmulas y Bases de Datos en Notion', 'Airtable para Gestión de Proyectos', 'Automatización con Airtable', 'CRM en Airtable para Pequeños Negocios', 'Zapier y Automatización de Workflows', 'Make (Integromat) Avanzado', 'n8n para Automatización Open Source', 'WordPress para Principiantes', 'Elementor y Diseño Web Visual', 'WooCommerce para Tiendas Online', 'SEO Técnico para WordPress', 'Figma para Diseñadores No-Diseñadores', 'Prototipado en Figma', 'Sistemas de Diseño en Figma', 'Canva Pro para Negocios', 'Branding Completo en Canva', 'Templates Canva que Venden', 'Edición de Video con CapCut', 'Edición de Video con DaVinci Resolve', 'Premiere Pro para Principiantes', 'Edición de Reels y Shorts Virales', 'Excel Avanzado para Negocios', 'Google Sheets y Automatización', 'Análisis de Datos con Google Sheets', 'Power BI para Principiantes', 'SEO para Principiantes', 'SEO Local para Negocios', 'Link Building y Autoridad Web'],
+            health: ['Nutrición Intuitiva (anti-dietas)', 'Alimentación Consciente', 'Comer Sin Culpa', 'Recuperación de Trastornos Alimenticios', 'Nutrición Plant-Based', 'Veganismo Saludable', 'Nutrición Vegetariana Completa', 'Dieta Mediterránea Moderna', 'Keto sin Restricción Extrema', 'Ayuno Intermitente Seguro', 'Alimentación Antiinflamatoria', 'Salud Intestinal y Microbioma', 'SIBO y Disbiosis Intestinal', 'Entrenamiento en Casa sin Equipamiento', 'Rutinas de 20 Minutos Efectivas', 'Entrenamiento Funcional', 'HIIT para Principiantes', 'Entrenamiento de Fuerza para Mujeres', 'Entrenamiento de Fuerza para +40', 'Calistenia y Peso Corporal', 'Yoga y Fuerza Combinados', 'Pilates para Principiantes', 'Pilates Reformer en Casa', 'Movilidad y Flexibilidad', 'Estiramientos para Oficinistas', 'Salud Hormonal Femenina', 'Síndrome de Ovario Poliquístico (SOP)', 'Menopausia Natural', 'Fertilidad Natural', 'Ciclo Menstrual y Rendimiento', 'Sueño Reparador y Descanso Consciente', 'Higiene del Sueño', 'Insomnio y Soluciones Naturales', 'Ritmo Circadiano y Energía', 'Movimiento Funcional para +40', 'Prevención de Lesiones', 'Recuperación de Lesiones Comunes', 'Postura y Ergonomía', 'Dolor de Espalda Crónico', 'Salud Metabólica', 'Resistencia a la Insulina'],
+            sports: ['Iniciación al Running: Del Sofá a la Meta', 'Running de 5K a Maratón', 'Trail Running y Montaña', 'Ultra Running y Resistencia', 'Técnica de Carrera Eficiente', 'Fútbol para Niños (6-12 años)', 'Fútbol para Adolescentes', 'Entrenamiento de Porteros', 'Fútbol Femenino', 'Fútbol 7 y Fútbol Sala', 'Natación para Adultos con Miedo al Agua', 'Natación Técnica (4 estilos)', 'Natación para Triatlón', 'Natación Masters (+35)', 'Aguas Abiertas', 'Triatlón Sprint para Principiantes', 'Entrenamiento Ironman', 'Triatlón Olímpico', 'Ciclismo de Ruta', 'Mountain Bike', 'Ciclismo Indoor (Spinning)', 'Bikepacking y Cicloturismo', 'Mecánica Básica de Bicicletas', 'Tenis para Adultos Principiantes', 'Tenis Competitivo', 'Pádel para Principiantes', 'Pádel Avanzado', 'Golf para Principiantes', 'Swing de Golf Perfecto', 'Golf Mental', 'Baloncesto para Jóvenes', 'Habilidades de Tiro en Baloncesto', 'CrossFit para Principiantes', 'Gimnasia Olímpica para Adultos', 'Calistenia Avanzada', 'Street Workout', 'Escalada Deportiva', 'Bouldering para Principiantes', 'Artes Marciales Mixtas (MMA)', 'Jiu Jitsu Brasileño', 'Boxeo para Fitness'],
+            'self-improvement': ['Hábitos Atómicos Aplicados', 'Apilamiento de Hábitos', 'Romper Malos Hábitos', 'Hábitos Clave (Keystone Habits)', 'Rutina Matutina Transformadora', 'Club 5AM en Español', 'Rituales Nocturnos para Mejor Sueño', 'Gestión de Ansiedad y Estrés', 'Ansiedad Social', 'Ataques de Pánico y Manejo', 'Ansiedad Generalizada', 'Técnicas de Grounding', 'Síndrome del Impostor en Profesionales', 'Síndrome del Impostor en Mujeres', 'Síndrome del Impostor en Emprendedores', 'Confianza Genuina', 'Autoestima desde la Raíz', 'Journaling Terapéutico', 'Páginas Matutinas (Morning Pages)', 'Diario de Gratitud Profundo', 'Journaling de Sombra', 'Bullet Journal Emocional', 'Productividad Consciente (anti-burnout)', 'Método GTD en Español', 'Trabajo Profundo (Deep Work)', 'Bloqueo de Tiempo Efectivo', 'Técnica Pomodoro Personalizada', 'Minimalismo Digital', 'Desintoxicación de Redes Sociales', 'Límites con la Tecnología', 'Establecimiento de Metas Conscientes', 'Metas SMART que Funcionan', 'Objetivos OKR para la Vida', 'Planificación Anual Personal', 'Hablar en Público sin Miedo', 'Storytelling Personal', 'Presencia Escénica', 'Comunicación Asertiva', 'Conversaciones Difíciles', 'Escucha Activa Profunda', 'Inteligencia Emocional Práctica']
+        };
+
+        const categoryNames = {
+            hobbies: 'Hobbies',
+            music: 'Música',
+            money: 'Dinero',
+            spirituality: 'Espiritualidad',
+            tech: 'Tecnología',
+            health: 'Salud',
+            sports: 'Deportes',
+            'self-improvement': 'Desarrollo Personal'
+        };
+
+        const ideaCache = {};
+
+        function renderBrands(containerId, brands, category) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = brands.map((brand, i) => `
+                <div class="brand-card" onclick="openModal('${brand.replace(/'/g, "\\'")}', '${category}')">
+                    <span class="brand-number">#${i + 1}</span>
+                    <span class="brand-name">${brand}</span>
+                </div>
+            `).join('');
+        }
+
+        function showCategory(category) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.category-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            if (category === 'all') {
+                document.querySelectorAll('.category-section').forEach(section => {
+                    section.classList.add('active');
+                });
+            } else {
+                document.getElementById(category).classList.add('active');
+            }
+        }
+
+        function openModal(niche, category) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modal-title');
+            const categoryLabel = document.getElementById('modal-category');
+            const body = document.getElementById('modal-body');
+
+            title.textContent = niche;
+            categoryLabel.textContent = `${categoryNames[category]} • Ideas de Comunidad Skool`;
+
+            body.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Generando ideas con la metodología P+H=T de Andy...</p>
+                </div>
+            `;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            generateIdeas(niche, category);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        async function generateIdeas(niche, category) {
+            const cacheKey = `${niche}-${category}`;
+
+            if (ideaCache[cacheKey]) {
+                renderIdeas(ideaCache[cacheKey]);
+                return;
+            }
+
+            try {
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        niche: niche + " (usa español universal para Latinoamérica y España, evita regionalismos excesivos)",
+                        category: categoryNames[category]
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data) {
+                    ideaCache[cacheKey] = data.data;
+                    renderIdeas(data.data);
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            } catch (err) {
+                console.error("Error al generar ideas:", err);
+                document.getElementById('modal-body').innerHTML = `
+                    <div class="error-state">
+                        <p>😅 No se pudieron generar ideas en este momento.</p>
+                        <p style="font-size: 12px; margin-top: 8px;">Verifica que tu webhook de n8n esté configurado correctamente.</p>
+                        <button onclick="generateIdeas('${niche.replace(/'/g, "\\'")}', '${category}')">Intentar de Nuevo</button>
+                    </div>
+                `;
+            }
+        }
+
+        function renderIdeas(data) {
+            const body = document.getElementById('modal-body');
+            body.innerHTML = `
+                <div class="niche-explanation">
+                    <h3>💡 Sobre Este Nicho</h3>
+                    <p>${data.explanation}</p>
+                </div>
+                <div class="community-ideas">
+                    <h3>🚀 5 Ideas de Comunidad</h3>
+                    ${data.ideas.map(idea => `
+                        <div class="idea-card">
+                            <h4>${idea.name} <span class="model-tag">${idea.model}</span></h4>
+                            <p>${idea.description}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        Object.keys(brandsData).forEach(cat => {
+            renderBrands(cat + '-brands', brandsData[cat], cat);
+        });
+
+        document.querySelectorAll('.category-section').forEach(section => {
+            section.classList.add('active');
+        });
+    </script>
+</body>
+
+</html>

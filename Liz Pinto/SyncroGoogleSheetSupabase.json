@@ -1,0 +1,454 @@
+{
+    "nodes": [
+        {
+            "parameters": {
+                "pollTimes": {
+                    "item": [
+                        {
+                            "mode": "everyMinute"
+                        }
+                    ]
+                },
+                "documentId": {
+                    "__rl": true,
+                    "value": "19GU8mkOCzBdFdWmzK0Rh6boUIIMUw4y77PXQ2c-WCO8",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Hoja 1",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19GU8mkOCzBdFdWmzK0Rh6boUIIMUw4y77PXQ2c-WCO8/edit#gid=0"
+                },
+                "options": {}
+            },
+            "id": "213451f6-f51a-432d-97f9-63e823236af6",
+            "name": "Google Sheets Trigger",
+            "type": "n8n-nodes-base.googleSheetsTrigger",
+            "typeVersion": 1,
+            "position": [
+                -608,
+                -144
+            ],
+            "credentials": {
+                "googleSheetsTriggerOAuth2Api": {
+                    "id": "WKvbY2tGBZDVHLI2",
+                    "name": "Google Sheet JoinsClee"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "getAll",
+                "tableId": "users",
+                "returnAll": true,
+                "matchType": "allFilters",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "email",
+                            "condition": "eq",
+                            "keyValue": "={{ $json.email }}"
+                        }
+                    ]
+                }
+            },
+            "id": "a73b5663-41cf-4a74-84f4-0e0a10e1176e",
+            "name": "Existe en Supabase?",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                -160,
+                -144
+            ],
+            "alwaysOutputData": true,
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "tableId": "users",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "email",
+                            "condition": "eq",
+                            "keyValue": "={{ $node['Google Sheets Trigger'].json.email }}"
+                        }
+                    ]
+                },
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "username",
+                            "fieldValue": "={{ $node['Google Sheets Trigger'].json.username }}"
+                        }
+                    ]
+                }
+            },
+            "id": "dc6fbba3-85e7-4e2e-aded-2d5ce1c3cdbb",
+            "name": "Actualizar Usuario",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                320,
+                -272
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "tableId": "users",
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "email",
+                            "fieldValue": "={{ $('Loop Over Items').item.json.email }}"
+                        },
+                        {
+                            "fieldId": "username",
+                            "fieldValue": "={{ $('Loop Over Items').item.json.username }}"
+                        }
+                    ]
+                }
+            },
+            "id": "b1d4b8ad-5702-43d4-ba12-49ee300cf0d0",
+            "name": "Crear Nuevo Usuario",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                320,
+                -32
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "documentId": {
+                    "__rl": true,
+                    "value": "19GU8mkOCzBdFdWmzK0Rh6boUIIMUw4y77PXQ2c-WCO8",
+                    "mode": "id"
+                },
+                "sheetName": {
+                    "__rl": true,
+                    "value": "gid=0",
+                    "mode": "list",
+                    "cachedResultName": "Hoja 1",
+                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/19GU8mkOCzBdFdWmzK0Rh6boUIIMUw4y77PXQ2c-WCO8/edit#gid=0"
+                },
+                "options": {}
+            },
+            "id": "00ee1849-c242-4d35-afab-f71a43054232",
+            "name": "Leer todo el Excel",
+            "type": "n8n-nodes-base.googleSheets",
+            "typeVersion": 4,
+            "position": [
+                560,
+                -32
+            ],
+            "credentials": {
+                "googleSheetsOAuth2Api": {
+                    "id": "GKc1HtffKTjACrjp",
+                    "name": "Google Sheets JoinsClee"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "getAll",
+                "tableId": "users",
+                "returnAll": true,
+                "filterType": "none"
+            },
+            "id": "c2651dfd-9322-4e17-acdf-2f970983157b",
+            "name": "Leer todo Supabase",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                560,
+                -272
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "mode": "combine",
+                "mergeByFields": {
+                    "values": [
+                        {
+                            "field1": "email",
+                            "field2": "email"
+                        }
+                    ]
+                },
+                "joinMode": "keepNonMatches",
+                "outputDataFrom": "input1",
+                "options": {}
+            },
+            "id": "f64c9ddc-420c-4fe5-b82b-def6fecd5090",
+            "name": "Detectar Bajas",
+            "type": "n8n-nodes-base.merge",
+            "typeVersion": 2.1,
+            "position": [
+                800,
+                -144
+            ],
+            "alwaysOutputData": true
+        },
+        {
+            "parameters": {
+                "operation": "delete",
+                "tableId": "users",
+                "matchType": "allFilters",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "email",
+                            "condition": "eq",
+                            "keyValue": "={{ $json.email }}"
+                        }
+                    ]
+                }
+            },
+            "id": "36424b89-2255-4e3f-af39-e1fd19145d2e",
+            "name": "Eliminar de Supabase",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                1040,
+                -144
+            ],
+            "alwaysOutputData": true,
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose",
+                        "version": 3
+                    },
+                    "conditions": [
+                        {
+                            "id": "4b5ef9e9-b15f-4c47-b347-ce0aaf6e01e6",
+                            "leftValue": "={{ $json.username }}",
+                            "rightValue": 0,
+                            "operator": {
+                                "type": "string",
+                                "operation": "exists",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "looseTypeValidation": true,
+                "options": {}
+            },
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2.3,
+            "position": [
+                96,
+                -112
+            ],
+            "id": "9be922b5-aee9-42a6-9ee9-a14d5d97f4f8",
+            "name": "If"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "n8n-nodes-base.splitInBatches",
+            "typeVersion": 3,
+            "position": [
+                -400,
+                -144
+            ],
+            "id": "14e72250-58d3-464b-91dc-e4342ec8054d",
+            "name": "Loop Over Items"
+        },
+        {
+            "parameters": {
+                "amount": 2
+            },
+            "type": "n8n-nodes-base.wait",
+            "typeVersion": 1.1,
+            "position": [
+                1248,
+                -144
+            ],
+            "id": "18011d29-d7e8-46b7-ab59-a52a5e6920db",
+            "name": "Wait",
+            "webhookId": "c9c977dc-30d5-4e7e-85ab-22e6844aaf7a"
+        }
+    ],
+    "connections": {
+        "Google Sheets Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Existe en Supabase?": {
+            "main": [
+                [
+                    {
+                        "node": "If",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Actualizar Usuario": {
+            "main": [
+                [
+                    {
+                        "node": "Leer todo Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Crear Nuevo Usuario": {
+            "main": [
+                [
+                    {
+                        "node": "Leer todo Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Leer todo el Excel": {
+            "main": [
+                [
+                    {
+                        "node": "Detectar Bajas",
+                        "type": "main",
+                        "index": 1
+                    }
+                ]
+            ]
+        },
+        "Leer todo Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Leer todo el Excel",
+                        "type": "main",
+                        "index": 0
+                    },
+                    {
+                        "node": "Detectar Bajas",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Detectar Bajas": {
+            "main": [
+                [
+                    {
+                        "node": "Eliminar de Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Eliminar de Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Wait",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "If": {
+            "main": [
+                [
+                    {
+                        "node": "Actualizar Usuario",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Crear Nuevo Usuario",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Loop Over Items": {
+            "main": [
+                [],
+                [
+                    {
+                        "node": "Existe en Supabase?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Wait": {
+            "main": [
+                [
+                    {
+                        "node": "Loop Over Items",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "meta": {
+        "templateCredsSetupCompleted": true,
+        "instanceId": "0b6a7c6fa1c998524bca6de2ef568a5067c2f2437e2fe53b57c06b9c950424d9"
+    }
+}

@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruta Técnica - Método VIBE</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=Manrope:wght@200;300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Wistia Scripts -->
+    <script src="https://fast.wistia.com/embed/medias/3akrxwhden.jsonp" async></script>
+    <script src="https://fast.wistia.com/assets/external/E-v1.js" async></script>
+
+    <!-- Custom Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                        serif: ['"IBM Plex Serif"', 'serif'],
+                    },
+                    colors: {
+                        bg: '#ffffff',
+                        primary: '#2563eb', // Azul vibrante
+                        secondary: '#0f172a', // Negro pizarra
+                        surface: '#f8fafc',
+                        text: '#0f172a',
+                        whatsapp: '#25D366',
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px rgba(37, 99, 235, 0.15)',
+                        'card': '0 10px 40px -10px rgba(0,0,0,0.05)',
+                        'vsl': '0 25px 60px -15px rgba(15, 23, 42, 0.2)',
+                        'calendar': '0 30px 60px -15px rgba(15, 23, 42, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #0f172a;
+            overflow-x: hidden;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Nav styles removed */
+
+        .full-width-breakout {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        /* CARD con Marco Estático para el Calendario */
+        .static-border-card {
+            border-radius: 2.5rem;
+            position: relative;
+            background: #ffffff;
+            isolation: isolate;
+            padding: 12px;
+            border: 2px solid #2563eb;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.05);
+        }
+
+        /* TARJETAS DE LA RUTA - MEJORADAS */
+        .day-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            padding: 24px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            height: 200px;
+            /* Un poco más alto para la miniatura */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            overflow: hidden;
+            /* Importante para la imagen de fondo */
+        }
+
+        /* Estado desbloqueado (activo) */
+        .day-card.unlocked {
+            border-color: rgba(37, 99, 235, 0.3);
+            background: linear-gradient(to bottom right, #ffffff, #f8fafc);
+        }
+
+        .day-card.unlocked:hover {
+            transform: translateY(-4px);
+            border-color: #2563eb;
+            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.15);
+        }
+
+        /* Estado bloqueado (inactivo pero visible) */
+        .day-card.locked {
+            background: #fafafa;
+            border-color: #e2e8f0;
+            opacity: 0.8;
+            cursor: not-allowed;
+        }
+
+        .day-card.locked:hover {
+            border-color: #cbd5e1;
+        }
+
+        .lock-icon {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: #cbd5e1;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .day-card.unlocked .lock-icon {
+            color: #ffffff;
+            /* Blanco para contrastar con la miniatura */
+            transform: scale(1.1);
+            background: rgba(37, 99, 235, 0.9);
+            padding: 8px;
+            border-radius: 50%;
+            bottom: 15px;
+            right: 15px;
+        }
+
+        /* Estilos para la miniatura de YouTube */
+        .card-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+
+        .card-thumbnail::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.2) 60%, rgba(15, 23, 42, 0) 100%);
+        }
+
+        /* Contenido sobre la imagen */
+        .day-card.unlocked .card-content-wrapper {
+            position: relative;
+            z-index: 2;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .day-card.unlocked .card-content-wrapper .flex {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .day-card.unlocked h4 {
+            color: white !important;
+            margin-bottom: 0;
+        }
+
+        .day-card.unlocked span {
+            background: rgba(37, 99, 235, 0.9);
+            color: white !important;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+
+        /* BOTÓN DE RECURSOS - ACTUALIZADO PARA MAYOR VISIBILIDAD */
+        .resource-btn {
+            width: 100%;
+            padding: 14px;
+            /* Un poco más alto */
+            border-radius: 1rem;
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-top: 12px;
+            border: 1px solid transparent;
+            /* Base border */
+        }
+
+        .resource-btn.unlocked-btn {
+            background-color: white;
+            border-color: #e2e8f0;
+            color: #475569;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+        }
+
+        .resource-btn.unlocked-btn:hover {
+            border-color: #2563eb;
+            color: #2563eb;
+            background-color: #f8fafc;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Estilo MODIFICADO para el botón bloqueado: Más visible */
+        .resource-btn.locked-btn {
+            background-color: #f8fafc;
+            /* Fondo gris muy claro en vez de transparente */
+            border-color: #e2e8f0;
+            /* Borde gris claro */
+            color: #94a3b8;
+            /* Texto gris medio (más visible que antes) */
+            cursor: not-allowed;
+        }
+
+        /* CALENDARIO */
+        .calendar-day-active {
+            background-color: #f8fafc;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            /* Radio más pequeño en móvil */
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        @media (min-width: 640px) {
+            .calendar-day-active {
+                border-radius: 0.75rem;
+            }
+        }
+
+        .calendar-day-active:hover {
+            background-color: #ffffff;
+            border-color: #2563eb;
+            transform: scale(1.1);
+            z-index: 20;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-day-active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background-color: #2563eb;
+            border-radius: 50%;
+        }
+
+        @media (min-width: 640px) {
+            .calendar-day-active::after {
+                bottom: 8px;
+            }
+        }
+
+        /* ESTILOS PARA EL DÍA 17 (Evento en vivo) */
+        .calendar-day-special {
+            background-color: #2563eb;
+            /* primary */
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 5px 15px -3px rgba(37, 99, 235, 0.4);
+        }
+
+        @media (min-width: 640px) {
+            .calendar-day-special {
+                border-radius: 0.75rem;
+                box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+            }
+        }
+
+        .calendar-day-special:hover {
+            transform: scale(1.1);
+            background-color: #1d4ed8;
+            z-index: 20;
+        }
+
+        /* TOOLTIP */
+        .calendar-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            min-width: 140px;
+            /* Más pequeño para móvil */
+            width: max-content;
+            max-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            font-size: 0.75rem;
+        }
+
+        @media (min-width: 640px) {
+            .calendar-tooltip {
+                padding: 12px 16px;
+                min-width: 220px;
+                bottom: calc(100% + 12px);
+                border-radius: 12px;
+                font-size: 0.875rem;
+            }
+        }
+
+        .calendar-day-wrapper:hover .calendar-tooltip,
+        .calendar-day-special:hover .calendar-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #f1f5f9;
+            color: #64748b;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .glow-blue {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, rgba(255, 255, 255, 0) 70%);
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .whatsapp-btn {
+            background-color: #25D366;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .whatsapp-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 30px rgba(37, 211, 102, 0.2);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* ============================================================== */
+        /* SECCIÓN DE COMENTARIOS */
+        /* ============================================================== */
+
+        .comments-form-card {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .comment-input,
+        .comment-textarea {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            color: #0f172a;
+            transition: all 0.3s ease;
+        }
+
+        .comment-input:focus,
+        .comment-textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .comment-input::placeholder,
+        .comment-textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .comment-card {
+            background: #ffffff;
+            border: 2px solid #f1f5f9;
+            border-radius: 0.75rem;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .comment-card:hover {
+            border-color: #e2e8f0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .comment-author {
+            font-weight: 800;
+            color: #2563eb;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .comment-text {
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .comment-date {
+            color: #94a3b8;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .like-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .like-button:hover:not(.liked) {
+            border-color: #2563eb;
+            color: #2563eb;
+            transform: scale(1.05);
+        }
+
+        .like-button.liked {
+            background: #eff6ff;
+            border-color: #2563eb;
+            color: #2563eb;
+            cursor: default;
+        }
+
+        .like-button svg {
+            width: 14px;
+            height: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .like-button.liked svg {
+            fill: #2563eb;
+        }
+
+        .like-button:active:not(.liked) {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body class="antialiased bg-white text-text">
+
+    <!-- Navbar removed -->
+
+    <div class="max-w-6xl mx-auto px-6 pt-20 pb-20">
+        <div class="glow-blue"></div>
+
+        <!-- Header -->
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-4 leading-tight">
+                BIENVENIDO A LA RUTA TÉCNICA DEL <br class="md:hidden" /> <span
+                    class="font-serif italic font-normal text-primary">MÉTODO VIBE</span>
+            </h1>
+            <p class="text-slate-500 text-lg md:text-xl font-light max-w-3xl mx-auto">
+                Desde hoy hasta el 23 de febrero, se van a ir desbloqueando videos diseñados para que llegues preparado
+                al evento.
+            </p>
+        </header>
+
+        <!-- VSL Section -->
+        <section class="mb-24">
+            <div class="max-w-5xl mx-auto">
+                <!-- Video Container Wistia -->
+                <div class="bg-slate-900 rounded-[2.5rem] shadow-vsl overflow-hidden relative w-full">
+                    <div class="wistia_responsive_padding" style="padding:56.25% 0 0 0;position:relative;">
+                        <div class="wistia_responsive_wrapper"
+                            style="height:100%;left:0;position:absolute;top:0;width:100%;">
+                            <div class="wistia_embed wistia_async_3akrxwhden seo=false videoFoam=true"
+                                style="height:100%;position:relative;width:100%">
+                                <div class="wistia_swatch"
+                                    style="height:100%;left:0;opacity:0;overflow:hidden;position:absolute;top:0;transition:opacity 200ms;width:100%;">
+                                    <img src="https://fast.wistia.com/embed/medias/3akrxwhden/swatch"
+                                        style="filter:blur(5px);height:100%;object-fit:contain;width:100%;" alt=""
+                                        aria-hidden="true" onload="this.parentNode.style.opacity=1;" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WhatsApp Community -->
+        <section class="text-center mb-24">
+            <a href="https://group.wha.link/avZBMa" class="inline-block w-full max-w-2xl">
+                <button
+                    class="whatsapp-btn text-white w-full py-5 px-8 rounded-full flex items-center justify-center gap-4 shadow-lg group">
+                    <!-- WhatsApp Logo -->
+                    <svg viewBox="0 0 24 24" width="48" height="48" class="w-8 h-8 md:w-10 md:h-10 fill-white shrink-0">
+                        <path
+                            d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.747-2.874-2.512-2.96-2.626-.087-.114-.708-.941-.708-1.793 0-.852.443-1.271.601-1.439.158-.168.344-.209.458-.209.115 0 .23 0 .33.005.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.088.274.072.376-.043.101-.116.433-.506.548-.68.115-.173.231-.144.39-.087.158.058 1.011.477 1.184.564.173.087.288.13.33.202.043.072.043.419-.101.824zM12.05 2.19c5.418 0 9.8 4.382 9.8 9.8 0 5.418-4.382 9.8-9.8 9.8-1.656 0-3.26-.41-4.707-1.186l-4.526 1.189 1.218-4.41C2.964 15.938 2.25 14.077 2.25 11.99c0-5.418 4.382-9.8 9.8-9.8z" />
+                    </svg>
+                    <span class="text-sm md:text-lg font-black uppercase tracking-wider leading-tight text-left">
+                        CONFIRMAR QUE ESTOY EN WHATSAPP
+                    </span>
+                </button>
+            </a>
+        </section>
+
+        <!-- RUTA DE VIDEOS (Breakout Gris) -->
+        <section id="ruta" class="full-width-breakout bg-slate-50 border-y border-slate-100 py-24 px-6 mb-24">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-5xl font-bold mb-4 text-slate-900">Contenido de la Ruta</h2>
+                    <p class="text-slate-400 font-medium text-lg">Videos desbloqueándose progresivamente</p>
+                </div>
+
+                <!-- Grid de la Ruta -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+
+                    <!-- VIDEO 1 - AHORA CON LINK Y MINIATURA -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-01-05"
+                            data-youtube-url="https://www.youtube.com/watch?v=VbORgH4MjmA"
+                            data-resource-url="https://drive.google.com/drive/folders/1u2qJWL12wRZC-apTbVf6GwFmve_HxC_b?usp=sharing">
+                            <!-- <-- AQUI VA EL LINK DE DRIVE -->
+
+                            <!-- Contenedor para la miniatura de fondo -->
+                            <div class="card-thumbnail"></div>
+
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        1</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">Cómo Usar AntiGravity mejor
+                                    que el 99% de las personas</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                        <button class="resource-btn locked-btn" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i> Acceder a Recursos
+                        </button>
+                    </div>
+
+                    <!-- VIDEO 2 -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-01-11"
+                            data-youtube-url="https://www.youtube.com/watch?v=dsKZXdvd3Bs"
+                            data-resource-url="https://drive.google.com/file/d/13RfrhQw2yqPxs6XuQa3njW30Bn5Zp3DW/view?usp=sharing">
+                            <div class="card-thumbnail"></div>
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        2</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">Por qué dejé de usar SOLO
+                                    n8n (y tú deberías hacer lo mismo)</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                        <button class="resource-btn locked-btn" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i> Acceder a Recursos
+                        </button>
+                    </div>
+
+                    <!-- VIDEO 3 -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-01-18"
+                            data-youtube-url="https://www.youtube.com/watch?v=n1iMpJapAe8"
+                            data-resource-url="https://docs.google.com/document/d/16GnjpTZ9VofVb6zA0lGw1D9PRheij4Fl2RGfm-wuLI8/edit?usp=sharing">
+                            <div class="card-thumbnail"></div>
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        3</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">La nueva forma de crear
+                                    automatizaciones con el Método VIBE</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                        <button class="resource-btn locked-btn" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i> Acceder a Recursos
+                        </button>
+                    </div>
+
+                    <!-- VIDEO 4 -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-01-25"
+                            data-youtube-url="https://www.youtube.com/watch?v=mHTEN2St3cA">
+                            <div class="card-thumbnail"></div>
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        4</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">Antigravity ahora puede
+                                    crear videos por ti</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                    </div>
+
+                    <!-- VIDEO 5 -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-01-30"
+                            data-youtube-url="https://www.youtube.com/watch?v=O-QY5NtxZdI"
+                            data-resource-url="https://drive.google.com/file/d/11OFF-na5y2e3mh81o2gLqEVV7E0espRh/view?usp=sharing">
+                            <div class="card-thumbnail"></div>
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        5</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">Creo una app con IA en 24
+                                    horas (y la puedes usar)</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                        <button class="resource-btn locked-btn" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i> Descarga la App
+                        </button>
+                    </div>
+
+                    <!-- VIDEO 6 -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-02-3"
+                            data-resource-url="PON_AQUI_TU_LINK_DE_DRIVE">
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        6</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">Construí una app en 12 horas
+                                    - Time-lapse y breakdown</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                        <button class="resource-btn locked-btn" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i> Acceder a Recursos
+                        </button>
+                    </div>
+
+                    <!-- VIDEO 7 -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-02-9"
+                            data-resource-url="PON_AQUI_TU_LINK_DE_DRIVE">
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        7</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">Mi nueva App ya está
+                                    disponible (De idea a lanzamiento - 2 semanas)</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                        <button class="resource-btn locked-btn" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i> Acceder a Recursos
+                        </button>
+                    </div>
+
+                    <!-- VIDEO 8 -->
+                    <div class="flex flex-col">
+                        <div class="day-card locked" data-unlock-date="2026-02-13"
+                            data-resource-url="PON_AQUI_TU_LINK_DE_DRIVE">
+                            <div class="card-content-wrapper space-y-4">
+                                <div class="flex gap-2">
+                                    <span class="text-[10px] font-black text-primary uppercase tracking-widest">VIDEO
+                                        8</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 leading-snug">He construido 3 aplicaciones
+                                    con IA Descubre el patrón - (Cómo nació el Método VIBE)</h4>
+                            </div>
+                            <div class="lock-icon"><i data-lucide="lock" class="w-5 h-5"></i></div>
+                        </div>
+                        <button class="resource-btn locked-btn" disabled>
+                            <i data-lucide="download" class="w-4 h-4"></i> Acceder a Recursos
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- SECCIÓN DE INSTRUCCIONES IMPORTANTES -->
+                <div class="mt-20 max-w-4xl mx-auto">
+                    <div class="clean-card p-10 rounded-[2rem] border border-blue-100 bg-white/50 backdrop-blur-sm">
+                        <h3 class="text-2xl font-bold text-slate-900 mb-8 text-center uppercase tracking-tight">
+                            Instrucciones Importantes</h3>
+
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="flex gap-4">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" class="w-6 h-6 fill-green-600">
+                                        <path
+                                            d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.747-2.874-2.512-2.96-2.626-.087-.114-.708-.941-.708-1.793 0-.852.443-1.271.601-1.439.158-.168.344-.209.458-.209.115 0 .23 0 .33.005.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.088.274.072.376-.043.101-.116.433-.506.548-.68.115-.173.231-.144.39-.087.158.058 1.011.477 1.184.564.173.087.288.13.33.202.043.072.043.419-.101.824zM12.05 2.19c5.418 0 9.8 4.382 9.8 9.8 0 5.418-4.382 9.8-9.8 9.8-1.656 0-3.26-.41-4.707-1.186l-4.526 1.189 1.218-4.41C2.964 15.938 2.25 14.077 2.25 11.99c0-5.418 4.382-9.8 9.8-9.8z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 mb-2">Estate atento a la comunidad</h4>
+                                    <p class="text-sm text-slate-600 leading-relaxed">Es por donde voy a avisar cuando
+                                        se desbloqueen videos y donde voy a mandar el enlace de la sala en vivo 30
+                                        minutos antes del evento.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                                    <i data-lucide="download" class="w-6 h-6 text-blue-600"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-slate-900 mb-2">Recursos Descargables</h4>
+                                    <p class="text-sm text-slate-600 leading-relaxed">Cada video tiene recursos
+                                        descargables. Úsalos. No los dejes guardados.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CALENDARIO INTERACTIVO (Dinámico) -->
+        <section id="calendario" class="py-6 px-4 sm:px-6 mb-12">
+            <div class="max-w-2xl mx-auto static-border-card shadow-calendar">
+                <div class="bg-white p-4 sm:p-8 md:p-12 rounded-[2rem]">
+
+                    <!-- TITULO SECCIÓN CALENDARIO -->
+                    <div class="text-center mb-8">
+                        <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Agenda las 3 clases AHORA</h3>
+                        <p class="text-slate-500 font-medium text-sm sm:text-base">23, 24 y 25 de febrero · 19:00 CET ·
+                            60-90 minutos cada clase.</p>
+                    </div>
+
+                    <div class="flex items-center justify-between mb-6 sm:mb-10">
+                        <!-- Flecha izquierda (OCULTA POR DEFECTO en Enero) -->
+                        <button id="prev-month" class="nav-btn" style="visibility: hidden;">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+
+                        <div class="text-center">
+                            <h3 id="calendar-month-title"
+                                class="text-slate-900 font-black text-xl sm:text-2xl md:text-3xl uppercase tracking-tighter">
+                                Enero 2026</h3>
+                            <p id="calendar-subtitle" class="text-slate-400 text-xs sm:text-sm mt-1">El camino empieza
+                                aquí</p>
+                        </div>
+
+                        <!-- Flecha derecha (VISIBLE en Enero) -->
+                        <button id="next-month" class="nav-btn">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Header Días -->
+                    <div
+                        class="grid grid-cols-7 gap-1 sm:gap-3 text-center text-[10px] sm:text-[11px] text-slate-400 font-black uppercase tracking-widest mb-4 sm:mb-6">
+                        <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span><span>Do</span>
+                    </div>
+
+                    <!-- Grid Días Dinámico -->
+                    <div id="calendar-grid"
+                        class="grid grid-cols-7 gap-1 sm:gap-3 text-center text-sm sm:text-base font-bold text-slate-900">
+                        <!-- El JS llenará esto -->
+                    </div>
+
+                    <div class="mt-8 sm:mt-12 text-center">
+                        <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Método+VIBE+-+Clase+1+-+IA+LAB+2026&dates=20260223T180000/20260223T200000&details=Clase+1+del+Método+VIBE+en+vivo.+Lovable+%2B+n8n+para+crear+sistemas+completos."
+                            target="_blank"
+                            class="inline-flex bg-primary text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-black text-base sm:text-lg hover:bg-blue-600 transition-all shadow-xl shadow-blue-200 uppercase tracking-widest">
+                            AGREGAR A CALENDARIO
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TU TRABAJO EMPIEZA HOY (Nueva Sección) -->
+        <section class="full-width-breakout bg-slate-50 border-y border-slate-100 py-12 px-6 mb-12 text-center">
+            <div class="max-w-3xl mx-auto mb-6">
+                <h3 class="text-slate-900 font-bold text-3xl md:text-4xl mb-6 uppercase tracking-tight">TU TRABAJO
+                    EMPIEZA HOY</h3>
+                <p class="text-slate-600 text-lg leading-relaxed mb-12">
+                    Esta ruta es preparación. Cuando lleguen las clases del 23, 24 y 25 de febrero y yo esté
+                    construyendo en vivo,
+                    tú vas a entender cada decisión que tome. Porque hiciste el trabajo previo.
+                </p>
+
+                <div class="flex flex-col gap-6 justify-center items-center">
+                    <!-- Botón WhatsApp (Copia exacta) -->
+                    <a href="https://group.wha.link/avZBMa" class="inline-block w-full max-w-xl">
+                        <button
+                            class="whatsapp-btn text-white w-full py-5 px-8 rounded-full flex items-center justify-center gap-4 shadow-lg group">
+                            <svg viewBox="0 0 24 24" width="32" height="32" class="w-8 h-8 fill-white shrink-0">
+                                <path
+                                    d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.747-2.874-2.512-2.96-2.626-.087-.114-.708-.941-.708-1.793 0-.852.443-1.271.601-1.439.158-.168.344-.209.458-.209.115 0 .23 0 .33.005.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.088.274.072.376-.043.101-.116.433-.506.548-.68.115-.173.231-.144.39-.087.158.058 1.011.477 1.184.564.173.087.288.13.33.202.043.072.043.419-.101.824zM12.05 2.19c5.418 0 9.8 4.382 9.8 9.8 0 5.418-4.382 9.8-9.8 9.8-1.656 0-3.26-.41-4.707-1.186l-4.526 1.189 1.218-4.41C2.964 15.938 2.25 14.077 2.25 11.99c0-5.418 4.382-9.8 9.8-9.8z" />
+                            </svg>
+                            <span
+                                class="text-sm md:text-lg font-black uppercase tracking-wider leading-tight text-left">
+                                CONFIRMAR QUE ESTOY EN WHATSAPP
+                            </span>
+                        </button>
+                    </a>
+
+                    <!-- Botón Agendar (Copia del estilo Calendario) -->
+                    <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Método+VIBE+-+Clase+1+-+IA+LAB+2026&dates=20260223T180000/20260223T200000&details=Clase+1+del+Método+VIBE+en+vivo.+Lovable+%2B+n8n+para+crear+sistemas+completos."
+                        target="_blank"
+                        class="inline-block w-full max-w-xl bg-primary text-white py-5 px-8 rounded-full font-black text-lg hover:bg-blue-600 transition-all shadow-xl shadow-blue-200 uppercase tracking-widest text-center">
+                        AGREGAR A CALENDARIO
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN DE COMENTARIOS -->
+        <section class="py-1 px-6 bg-white" id="comments-section">
+            <div class="max-w-3xl mx-auto">
+
+                <!-- Header de la sección -->
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl md:text-4xl font-black uppercase tracking-tight mb-3">
+                        <span class="text-primary">Comparte</span> tu Experiencia
+                    </h2>
+                    <p class="text-slate-500 text-sm uppercase tracking-wider">
+                        Deja tu comentario • Inspira a otros • Crece con la comunidad
+                    </p>
+                </div>
+
+                <!-- Formulario de Comentarios -->
+                <div class="comments-form-card rounded-xl p-8 mb-8">
+                    <form id="commentForm" class="space-y-5">
+                        <div>
+                            <label for="userName"
+                                class="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
+                                Tu Nombre
+                            </label>
+                            <input type="text" id="userName" name="userName" required placeholder="¿Cómo te llamas?"
+                                class="comment-input w-full px-4 py-3 rounded-lg text-sm">
+                        </div>
+
+                        <div>
+                            <label for="userComment"
+                                class="block text-xs font-bold text-primary uppercase tracking-wider mb-2">
+                                Tu Comentario
+                            </label>
+                            <textarea id="userComment" name="userComment" required rows="4"
+                                placeholder="¿Qué te ha parecido este contenido? ¿Cómo te está ayudando?"
+                                class="comment-textarea w-full px-4 py-3 rounded-lg text-sm resize-none"></textarea>
+                        </div>
+
+                        <button type="submit" id="submitBtn"
+                            class="w-full bg-primary text-white py-4 px-6 text-sm font-black uppercase tracking-wider rounded-full hover:bg-blue-600 transition-all transform hover:scale-105 shadow-lg shadow-blue-200">
+                            <span id="submitBtnText">Enviar Comentario</span>
+                            <span id="submitBtnLoading" style="display: none;">Enviando...</span>
+                        </button>
+
+                        <div id="formMessage" class="text-center text-sm font-bold uppercase tracking-wider hidden">
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Comentarios -->
+                <div id="commentsList" class="space-y-4">
+                    <div class="text-center py-12 text-slate-400">
+                        <p class="text-sm uppercase tracking-wider">Cargando comentarios...</p>
+                    </div>
+                </div>
+
+                <!-- Botón Ver Más Comentarios -->
+                <div id="loadMoreContainer" class="text-center mt-6" style="display: none;">
+                    <button id="loadMoreBtn"
+                        class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 text-slate-600 font-bold uppercase text-xs tracking-widest rounded-full hover:border-primary hover:text-primary transition-all">
+                        Ver más comentarios
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="full-width-breakout bg-secondary py-16 px-6 text-center border-t border-slate-800">
+        <img src="https://storage.googleapis.com/msgsndr/0DGrKc1pz6fnALaQvlxp/media/68fd0dbf47cb3bbe70b09b0c.png"
+            alt="Nico Logo" class="h-8 mx-auto grayscale invert opacity-20 mb-8 text-white">
+        <p class="text-slate-500 text-[10px] uppercase font-black tracking-[0.3em] mb-4">IA LAB - 2026</p>
+        <div class="flex justify-center gap-8 text-[10px] text-slate-600 font-bold uppercase tracking-widest">
+            <a href="#" class="hover:text-white transition">Legal</a>
+            <a href="#" class="hover:text-white transition">Privacidad</a>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // --- SISTEMA DE DESBLOQUEO DE VIDEOS ---
+        function getCurrentDateColombia() {
+            return new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+        }
+
+        function parseUnlockDate(dateStr) {
+            // Desbloquear a las 16:05 hora de España
+            return new Date(dateStr + 'T16:00:00+01:00');
+        }
+
+        // FUNCIÓN PARA EXTRAER ID DE YOUTUBE
+        function getYoutubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        function updateCardStates() {
+            const wrappers = document.querySelectorAll('#ruta .grid > div');
+            const now = getCurrentDateColombia();
+
+            wrappers.forEach(wrapper => {
+                const card = wrapper.querySelector('.day-card');
+                const btn = wrapper.querySelector('.resource-btn');
+
+                if (card && card.dataset.unlockDate) {
+                    const unlockDate = parseUnlockDate(card.dataset.unlockDate);
+
+                    if (now >= unlockDate) {
+                        // Desbloquear Tarjeta
+                        card.classList.remove('locked');
+                        card.classList.add('unlocked');
+
+                        // LÓGICA DE YOUTUBE: Si hay URL, poner la miniatura y hacerla clickeable
+                        if (card.dataset.youtubeUrl) {
+                            const ytUrl = card.dataset.youtubeUrl;
+                            const videoId = getYoutubeId(ytUrl);
+
+                            if (videoId) {
+                                // Poner imagen de fondo
+                                const thumbDiv = card.querySelector('.card-thumbnail');
+                                if (thumbDiv) {
+                                    thumbDiv.style.backgroundImage = `url('https://img.youtube.com/vi/${videoId}/hqdefault.jpg')`;
+                                    thumbDiv.style.opacity = '1';
+                                }
+                            }
+
+                            // Hacer clickeable la tarjeta completa
+                            card.addEventListener('click', () => {
+                                window.open(ytUrl, '_blank');
+                            });
+                        }
+
+                        // Cambiar icono a Play
+                        const iconContainer = card.querySelector('.lock-icon');
+                        if (iconContainer) {
+                            iconContainer.innerHTML = '<i data-lucide="play" class="w-6 h-6 fill-white"></i>'; // Icono Play sólido
+                        }
+
+                        // Desbloquear Botón de Recursos
+                        if (btn) {
+                            btn.classList.remove('locked-btn');
+                            btn.classList.add('unlocked-btn');
+                            btn.removeAttribute('disabled');
+
+                            // Lógica para abrir el link de recursos si existe
+                            if (card.dataset.resourceUrl) {
+                                btn.onclick = (e) => {
+                                    e.stopPropagation(); // Evitar que el clic se propague a la tarjeta
+                                    window.open(card.dataset.resourceUrl, '_blank');
+                                };
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Re-render icons
+            lucide.createIcons();
+        }
+
+        // --- CALENDARIO DINÁMICO ---
+        const eventsData = {
+            // Enero 2026
+            '2026-0-5': { title: 'VIDEO 1: AntiGravity', type: 'video' },
+            '2026-0-11': { title: 'VIDEO 2: Dejé n8n', type: 'video' },
+            '2026-0-18': { title: 'VIDEO 3: Nuevo Método', type: 'video' },
+            '2026-0-25': { title: 'VIDEO 4: Crea Videos con IA', type: 'video' },
+            '2026-0-30': { title: 'VIDEO 5: Creo App en 24 horas', type: 'video' },
+            '2026-1-3': { title: 'VIDEO 6: App en 12h', type: 'video' },
+            '2026-1-9': { title: 'VIDEO 7: Lanzamiento', type: 'video' },
+            // Febrero 2026
+            '2026-1-13': { title: 'VIDEO 8: Patrón VIBE', type: 'video' },
+            '2026-1-23': { title: 'CLASE 1 EN VIVO', type: 'live' },
+            '2026-1-24': { title: 'CLASE 2 EN VIVO', type: 'live' },
+            '2026-1-25': { title: 'CLASE 3 EN VIVO', type: 'live' }
+        };
+
+        let currentMonth = 0; // 0 = Enero, 1 = Febrero
+        const currentYear = 2026;
+
+        function renderCalendar(month, year) {
+            const grid = document.getElementById('calendar-grid');
+            const monthTitle = document.getElementById('calendar-month-title');
+            const subtitle = document.getElementById('calendar-subtitle');
+
+            // Botones de navegación
+            const prevBtn = document.getElementById('prev-month');
+            const nextBtn = document.getElementById('next-month');
+
+            grid.innerHTML = ''; // Limpiar
+
+            // Configurar títulos y visibilidad de flechas
+            if (month === 0) {
+                monthTitle.innerText = "ENERO 2026";
+                subtitle.innerText = "El camino empieza aquí";
+                prevBtn.style.visibility = 'hidden'; // Ocultar flecha izquierda
+                nextBtn.style.visibility = 'visible'; // Mostrar flecha derecha
+            } else {
+                monthTitle.innerText = "FEBRERO 2026";
+                subtitle.innerText = "El mes de la transformación";
+                prevBtn.style.visibility = 'visible'; // Mostrar flecha izquierda
+                nextBtn.style.visibility = 'hidden'; // Ocultar flecha derecha
+            }
+
+            // Datos del mes
+            // Enero 2026 empieza en Jueves. Ajuste para Lunes=0
+            const firstDay = new Date(year, month, 1).getDay();
+            let startDayIndex = (firstDay === 0 ? 6 : firstDay - 1);
+
+            const daysInMonth = new Date(year, month + 1, 0).getDate(); // 31 o 28
+
+            // Rellenar espacios vacíos
+            for (let i = 0; i < startDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "p-2 sm:p-3";
+                grid.appendChild(emptyCell);
+            }
+
+            // Rellenar días
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${year}-${month}-${day}`;
+                const event = eventsData[dateKey];
+
+                // Contenedor del día
+                const dayWrapper = document.createElement(event && event.type === 'live' ? 'a' : 'div');
+                dayWrapper.className = "calendar-day-wrapper relative group";
+
+                if (event && event.type === 'live') {
+                    // Configuración especial para días de clases
+                    let calendarLink = "";
+                    if (day === 23) {
+                        calendarLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Método+VIBE+-+Clase+1+-+IA+LAB+2026&dates=20260223T180000/20260223T200000&details=Clase+1+del+Método+VIBE+en+vivo.";
+                    } else if (day === 24) {
+                        calendarLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Método+VIBE+-+Clase+2+-+IA+LAB+2026&dates=20260224T180000/20260224T200000&details=Clase+2+del+Método+VIBE+en+vivo.";
+                    } else if (day === 25) {
+                        calendarLink = "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Método+VIBE+-+Clase+3+-+IA+LAB+2026&dates=20260225T180000/20260225T200000&details=Clase+3+del+Método+VIBE+en+vivo.";
+                    }
+                    dayWrapper.href = calendarLink;
+                    dayWrapper.target = "_blank";
+                    dayWrapper.innerHTML = `
+                        <div class="p-2 sm:p-3 bg-primary text-white rounded-lg sm:rounded-xl shadow-xl shadow-blue-200 transform scale-110 ring-2 sm:ring-4 ring-blue-50 group-hover:scale-125 transition-transform duration-300 cursor-pointer text-xs sm:text-base">
+                            ${day}
+                        </div>
+                        <div class="calendar-tooltip">
+                            <div class="text-[10px] font-black text-blue-600 uppercase mb-1 text-center">Cita Obligatoria</div>
+                            <div class="text-sm font-bold leading-tight text-slate-900 text-center">${event.title}</div>
+                        </div>
+                    `;
+                } else if (event) {
+                    // Días con video - PARSEO DE TÍTULO PARA ESTILO (RESTAURADO)
+                    let videoTag = "";
+                    let videoTitle = event.title;
+
+                    // Separamos "VIDEO X" del resto del título si existen dos puntos
+                    if (event.title.includes(':')) {
+                        const parts = event.title.split(':');
+                        videoTag = parts[0].trim(); // "VIDEO 1"
+                        videoTitle = parts.slice(1).join(':').trim(); // "Spotify con IA"
+                    } else {
+                        // Fallback si no hay dos puntos
+                        videoTag = "VIDEO FASE";
+                        videoTitle = event.title;
+                    }
+
+                    dayWrapper.innerHTML = `
+                        <div class="p-2 sm:p-3 calendar-day-active text-xs sm:text-base">${day}</div>
+                        <div class="calendar-tooltip">
+                            <div class="text-[10px] font-black text-blue-600 uppercase mb-1 text-center">${videoTag}</div>
+                            <div class="text-xs font-bold leading-tight text-slate-900 text-center">${videoTitle}</div>
+                        </div>
+                    `;
+                } else {
+                    // Días normales
+                    dayWrapper.innerHTML = `<div class="p-2 sm:p-3 text-slate-200 text-xs sm:text-base">${day}</div>`;
+                }
+
+                grid.appendChild(dayWrapper);
+            }
+        }
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCardStates();
+            renderCalendar(currentMonth, currentYear); // Renderizar Enero por defecto
+
+            // Botones del calendario
+            document.getElementById('prev-month').addEventListener('click', () => {
+                if (currentMonth === 1) {
+                    currentMonth = 0;
+                    renderCalendar(currentMonth, currentYear);
+                }
+            });
+
+            document.getElementById('next-month').addEventListener('click', () => {
+                if (currentMonth === 0) {
+                    currentMonth = 1;
+                    renderCalendar(currentMonth, currentYear);
+                }
+            });
+
+            // Navbar Shadow
+            window.addEventListener('scroll', () => {
+                const nav = document.querySelector('nav');
+                if (nav && window.scrollY > 50) nav.classList.add('shadow-md');
+                else if (nav) nav.classList.remove('shadow-md');
+            });
+        });
+
+        /* ============================================================== */
+        /* SISTEMA DE COMENTARIOS CON GOOGLE SHEETS */
+        /* ============================================================== */
+
+        // 🔥 CONFIGURA AQUÍ TU URL DEL GOOGLE APPS SCRIPT
+        // IMPORTANTE: Esta URL debe ser reemplazada con la URL de tu Google Apps Script
+        // Sigue la documentación en el archivo GOOGLE_SHEET_SETUP.md para configurarlo
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxidvbu-sGQNn_EoBdPHMNGsTSlEtlGBdV4d3R7Vn7CgAbNja8lXijF3Z1VMEMDWX5R/exec';
+
+        // Variables globales para el sistema de comentarios
+        let allComments = [];
+        let displayedComments = 5; // Mostrar 5 inicialmente
+        const commentsIncrement = 10; // Cargar 10 más cada vez
+
+        // Cargar comentarios al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadComments();
+
+            // Event listener para el botón "Ver más"
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (loadMoreBtn) {
+                loadMoreBtn.addEventListener('click', () => {
+                    displayedComments += commentsIncrement;
+                    renderComments();
+                });
+            }
+        });
+
+        // Enviar comentario
+        const commentForm = document.getElementById('commentForm');
+        if (commentForm) {
+            commentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const submitBtn = document.getElementById('submitBtn');
+                const submitBtnText = document.getElementById('submitBtnText');
+                const submitBtnLoading = document.getElementById('submitBtnLoading');
+                const formMessage = document.getElementById('formMessage');
+
+                const userName = document.getElementById('userName').value.trim();
+                const userComment = document.getElementById('userComment').value.trim();
+
+                if (!userName || !userComment) {
+                    showMessage('Por favor completa todos los campos', 'error');
+                    return;
+                }
+
+                // Mostrar loading
+                submitBtn.disabled = true;
+                submitBtnText.style.display = 'none';
+                submitBtnLoading.style.display = 'inline';
+
+                try {
+                    const response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: 'addComment',
+                            name: userName,
+                            comment: userComment,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    // Como usamos no-cors, asumimos que fue exitoso
+                    showMessage('¡Comentario enviado!', 'success');
+                    document.getElementById('commentForm').reset();
+
+                    // Recargar comentarios después de un pequeño delay
+                    setTimeout(() => {
+                        loadComments();
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    showMessage('Error al enviar el comentario. Intenta de nuevo.', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtnText.style.display = 'inline';
+                    submitBtnLoading.style.display = 'none';
+                }
+            });
+        }
+
+        // Cargar comentarios desde el servidor
+        async function loadComments() {
+            const commentsList = document.getElementById('commentsList');
+
+            try {
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getComments&t=${Date.now()}`);
+                const data = await response.json();
+
+                if (data.comments && data.comments.length > 0) {
+                    allComments = data.comments;
+                    displayedComments = 5; // Resetear a 5 al cargar nuevos comentarios
+                    renderComments();
+                } else {
+                    commentsList.innerHTML = `
+                        <div class="text-center py-12">
+                            <p class="text-slate-500 text-sm uppercase tracking-wider mb-2">
+                                Sé el primero en comentar
+                            </p>
+                            <p class="text-slate-400 text-xs">
+                                ¡Comparte tu experiencia con la comunidad!
+                            </p>
+                        </div>
+                    `;
+                    document.getElementById('loadMoreContainer').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error cargando comentarios:', error);
+                commentsList.innerHTML = `
+                    <div class="text-center py-12 text-slate-400">
+                        <p class="text-sm uppercase tracking-wider">No se pudieron cargar los comentarios</p>
+                    </div>
+                `;
+                document.getElementById('loadMoreContainer').style.display = 'none';
+            }
+        }
+
+        // Renderizar comentarios
+        function renderComments() {
+            const commentsList = document.getElementById('commentsList');
+            const loadMoreContainer = document.getElementById('loadMoreContainer');
+
+            // Comentarios a mostrar
+            const commentsToShow = allComments.slice(0, displayedComments);
+
+            commentsList.innerHTML = commentsToShow.map((comment, index) => {
+                const commentId = getCommentId(comment);
+                const isLiked = hasLikedComment(commentId);
+                const likes = comment.likes || 0;
+
+                return `
+                    <div class="comment-card">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="comment-author">${escapeHtml(comment.name)}</div>
+                            <div class="comment-date">${formatDate(comment.timestamp)}</div>
+                        </div>
+                        <div class="comment-text mb-3">${escapeHtml(comment.comment)}</div>
+                        <div class="flex items-center">
+                            <button
+                                onclick="handleLike('${commentId}', ${index})"
+                                class="like-button ${isLiked ? 'liked' : ''}"
+                                ${isLiked ? 'disabled' : ''}>
+                                <svg fill="${isLiked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                <span>${likes}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Mostrar u ocultar botón "Ver más"
+            if (displayedComments >= allComments.length) {
+                loadMoreContainer.style.display = 'none';
+            } else {
+                loadMoreContainer.style.display = 'block';
+            }
+        }
+
+        // Generar ID único para cada comentario
+        function getCommentId(comment) {
+            return btoa(comment.name + comment.timestamp).replace(/[^a-zA-Z0-9]/g, '');
+        }
+
+        // Verificar si el usuario ya dio like a un comentario
+        function hasLikedComment(commentId) {
+            const likedComments = JSON.parse(localStorage.getItem('likedComments') || '[]');
+            return likedComments.includes(commentId);
+        }
+
+        // Guardar like en localStorage
+        function saveLike(commentId) {
+            const likedComments = JSON.parse(localStorage.getItem('likedComments') || '[]');
+            if (!likedComments.includes(commentId)) {
+                likedComments.push(commentId);
+                localStorage.setItem('likedComments', JSON.stringify(likedComments));
+            }
+        }
+
+        // Manejar click en botón de like
+        async function handleLike(commentId, commentIndex) {
+            // Verificar si ya dio like
+            if (hasLikedComment(commentId)) {
+                return;
+            }
+
+            const comment = allComments[commentIndex];
+
+            // ✅ ACTUALIZACIÓN INSTANTÁNEA (UI primero)
+            // Guardar like localmente INMEDIATAMENTE
+            saveLike(commentId);
+
+            // Incrementar contador local INMEDIATAMENTE
+            allComments[commentIndex].likes = (allComments[commentIndex].likes || 0) + 1;
+
+            // Re-renderizar comentarios INMEDIATAMENTE
+            renderComments();
+
+            // 🔄 Enviar like al servidor en background (igual que Andy)
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'likeComment',
+                    commentId: comment.timestamp // Usar timestamp como ID (igual que Andy)
+                })
+            }).catch(error => {
+                console.error('Error enviando like al servidor:', error);
+                // Si falla el envío al servidor, el like ya quedó guardado localmente
+            });
+        }
+
+        // Mostrar mensaje de éxito/error
+        function showMessage(message, type) {
+            const formMessage = document.getElementById('formMessage');
+            formMessage.textContent = message;
+            formMessage.classList.remove('hidden');
+
+            if (type === 'success') {
+                formMessage.style.color = '#2563eb';
+            } else {
+                formMessage.style.color = '#ef4444';
+            }
+
+            setTimeout(() => {
+                formMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Formatear fecha
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffInMs = now - date;
+            const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+            const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+            if (diffInHours < 24) {
+                return diffInHours === 0 ? 'Hace menos de 1 hora' : `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
+            } else if (diffInDays < 7) {
+                return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
+            } else {
+                return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+            }
+        }
+
+        // Escapar HTML para prevenir XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+
+</html>

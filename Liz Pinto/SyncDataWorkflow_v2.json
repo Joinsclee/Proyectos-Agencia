@@ -1,0 +1,434 @@
+{
+    "name": "Sync Calculator Data Workflow",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "sync-data",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "id": "webhook-sync-trigger",
+            "name": "Webhook Sync",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                -600,
+                300
+            ],
+            "webhookId": "sync-data-webhook"
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose"
+                    },
+                    "conditions": [
+                        {
+                            "id": "action-is-save",
+                            "leftValue": "={{ $json.body.action }}",
+                            "rightValue": "save",
+                            "operator": {
+                                "type": "string",
+                                "operation": "equals"
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "check-action-type",
+            "name": "Es Guardar o Cargar?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                -360,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "getAll",
+                "tableId": "user_data",
+                "returnAll": false,
+                "limit": 1,
+                "matchType": "allFilters",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "email",
+                            "condition": "eq",
+                            "keyValue": "={{ $json.body.email }}"
+                        }
+                    ]
+                }
+            },
+            "id": "check-existing-data",
+            "name": "Verificar Datos Existentes",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                -80,
+                180
+            ],
+            "alwaysOutputData": true,
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose"
+                    },
+                    "conditions": [
+                        {
+                            "id": "data-exists-condition",
+                            "leftValue": "={{ $json.email }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "exists",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "data-exists-check",
+            "name": "Datos Existen?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                160,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "tableId": "user_data",
+                "matchType": "allFilters",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "email",
+                            "condition": "eq",
+                            "keyValue": "={{ $node['Webhook Sync'].json.body.email }}"
+                        }
+                    ]
+                },
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "data",
+                            "fieldValue": "={{ JSON.stringify($node['Webhook Sync'].json.body.data) }}"
+                        }
+                    ]
+                }
+            },
+            "id": "update-existing-data",
+            "name": "Actualizar Datos",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                400,
+                80
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "tableId": "user_data",
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "email",
+                            "fieldValue": "={{ $node['Webhook Sync'].json.body.email }}"
+                        },
+                        {
+                            "fieldId": "data",
+                            "fieldValue": "={{ JSON.stringify($node['Webhook Sync'].json.body.data) }}"
+                        }
+                    ]
+                }
+            },
+            "id": "create-new-data",
+            "name": "Crear Nuevos Datos",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                400,
+                280
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ {\n  \"success\": true,\n  \"message\": \"Datos guardados exitosamente\",\n  \"timestamp\": new Date().toISOString()\n} }}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "id": "response-save-success",
+            "name": "Respuesta Guardado Exitoso",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                640,
+                180
+            ]
+        },
+        {
+            "parameters": {
+                "operation": "getAll",
+                "tableId": "user_data",
+                "returnAll": false,
+                "limit": 1,
+                "matchType": "allFilters",
+                "filters": {
+                    "conditions": [
+                        {
+                            "keyName": "email",
+                            "condition": "eq",
+                            "keyValue": "={{ $json.body.email }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "sort": [
+                        {
+                            "field": "updated_at",
+                            "direction": "desc"
+                        }
+                    ]
+                }
+            },
+            "id": "load-user-data",
+            "name": "Cargar Datos Usuario",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                -80,
+                420
+            ],
+            "alwaysOutputData": true,
+            "credentials": {
+                "supabaseApi": {
+                    "id": "G26hGKCGR7PYPLXT",
+                    "name": "Liz Databases"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "conditions": {
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "loose"
+                    },
+                    "conditions": [
+                        {
+                            "id": "has-data-condition",
+                            "leftValue": "={{ $json.email }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "exists",
+                                "singleValue": true
+                            }
+                        }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
+            },
+            "id": "check-data-found",
+            "name": "Datos Encontrados?",
+            "type": "n8n-nodes-base.if",
+            "typeVersion": 2,
+            "position": [
+                160,
+                420
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ {\n  \"success\": true,\n  \"data\": JSON.parse($json.data),\n  \"updated_at\": $json.updated_at,\n  \"message\": \"Datos cargados exitosamente\"\n} }}",
+                "options": {
+                    "responseCode": 200
+                }
+            },
+            "id": "response-load-success",
+            "name": "Respuesta Carga Exitosa",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                400,
+                340
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ {\n  \"success\": false,\n  \"message\": \"No se encontraron datos guardados para este usuario\",\n  \"data\": null\n} }}",
+                "options": {
+                    "responseCode": 404
+                }
+            },
+            "id": "response-no-data",
+            "name": "Respuesta Sin Datos",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                400,
+                500
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook Sync": {
+            "main": [
+                [
+                    {
+                        "node": "Es Guardar o Cargar?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Es Guardar o Cargar?": {
+            "main": [
+                [
+                    {
+                        "node": "Verificar Datos Existentes",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Cargar Datos Usuario",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Verificar Datos Existentes": {
+            "main": [
+                [
+                    {
+                        "node": "Datos Existen?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Datos Existen?": {
+            "main": [
+                [
+                    {
+                        "node": "Actualizar Datos",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Crear Nuevos Datos",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Actualizar Datos": {
+            "main": [
+                [
+                    {
+                        "node": "Respuesta Guardado Exitoso",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Crear Nuevos Datos": {
+            "main": [
+                [
+                    {
+                        "node": "Respuesta Guardado Exitoso",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Cargar Datos Usuario": {
+            "main": [
+                [
+                    {
+                        "node": "Datos Encontrados?",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Datos Encontrados?": {
+            "main": [
+                [
+                    {
+                        "node": "Respuesta Carga Exitosa",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Respuesta Sin Datos",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "pinData": {},
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "staticData": null,
+    "tags": [],
+    "triggerCount": 1,
+    "updatedAt": "2026-02-06T00:00:00.000Z",
+    "versionId": "2"
+}
