@@ -757,7 +757,7 @@
                 height: 180px !important;
             }
 
-            #userPanel > div {
+            #userPanel>div {
                 padding: 0 15px !important;
             }
         }
@@ -782,17 +782,17 @@
                 padding: 10px 0 !important;
             }
 
-            #userPanel > div {
+            #userPanel>div {
                 flex-direction: column !important;
                 gap: 12px !important;
                 padding: 0 15px !important;
             }
 
-            #userPanel > div > div:first-child {
+            #userPanel>div>div:first-child {
                 width: 100%;
             }
 
-            #userPanel > div > div:last-child {
+            #userPanel>div>div:last-child {
                 width: 100%;
                 justify-content: space-between !important;
             }
@@ -913,13 +913,13 @@
             }
 
             /* Mejorar header de costos en móviles */
-            .costs-section > div:first-child {
+            .costs-section>div:first-child {
                 flex-direction: column !important;
                 align-items: flex-start !important;
                 gap: 10px !important;
             }
 
-            .costs-section > div:first-child button {
+            .costs-section>div:first-child button {
                 width: 100%;
             }
 
@@ -1024,7 +1024,7 @@
                 padding: 8px 0 !important;
             }
 
-            #userPanel > div {
+            #userPanel>div {
                 padding: 0 10px !important;
             }
 
@@ -1135,7 +1135,8 @@
             .form-input,
             .table-input,
             select {
-                font-size: 16px !important; /* Prevenir zoom en iOS */
+                font-size: 16px !important;
+                /* Prevenir zoom en iOS */
             }
 
             /* Mejorar cost-items */
@@ -1695,10 +1696,7 @@
             <p class="login-subtitle">Ingresa con tus datos de la comunidad para ver y guardar tus paquetes.</p>
 
             <form id="loginForm" class="login-form">
-                <div class="form-group">
-                    <label class="form-label">Nombre de Usuario (exacto)</label>
-                    <input type="text" id="loginUsername" class="form-input" placeholder="Ej: Liz Pinto" required>
-                </div>
+
                 <div class="form-group">
                     <label class="form-label">Correo Electrónico</label>
                     <input type="email" id="loginEmail" class="form-input" placeholder="tu@correo.com" required>
@@ -1718,13 +1716,16 @@
         </div>
     </div>
 
-    <header class="bg-lzDark border-b border-lzGreyDark full-width-section" style="margin: 0 0 20px 0; overflow: visible;">
+    <header class="bg-lzDark border-b border-lzGreyDark full-width-section"
+        style="margin: 0 0 20px 0; overflow: visible;">
         <!-- Barra superior con usuario -->
         <div id="userPanel" class="hidden"
             style="background: rgba(255,255,255,0.05); padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); width: 100%;">
-            <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div
+                style="max-width: 1400px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; width: 100%;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="user-avatar" id="userAvatarLogo" style="width: 36px; height: 36px; font-size: 16px;">U</div>
+                    <div class="user-avatar" id="userAvatarLogo" style="width: 36px; height: 36px; font-size: 16px;">U
+                    </div>
                     <div style="display: flex; flex-direction: column;">
                         <span class="user-name" id="displayUserName"
                             style="color: white; font-weight: 500; font-size: 14px;">Bienvenido</span>
@@ -1747,8 +1748,7 @@
             </div>
         </div>
         <!-- Logo central -->
-        <div
-            style="display: flex; justify-content: center; align-items: center; padding: 16px 20px; width: 100%;">
+        <div style="display: flex; justify-content: center; align-items: center; padding: 16px 20px; width: 100%;">
             <img src="https://storage.googleapis.com/msgsndr/R76xoXk1Vi58ed0PT1On/media/6986053d2dd9853d527daf52.png"
                 alt="The Click Boss" style="height: 250px; width: auto; max-width: 100%;">
         </div>
@@ -2132,12 +2132,11 @@
         async function handleLogin(e) {
             if (e) e.preventDefault();
 
-            const username = document.getElementById('loginUsername').value.trim();
             const email = document.getElementById('loginEmail').value.trim();
             const submitBtn = document.getElementById('loginSubmitBtn');
             const errorDiv = document.getElementById('loginError');
 
-            if (!username || !email) return;
+            if (!email) return;
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<div class="sync-spinner"></div> <span>Verificando...</span>';
@@ -2149,7 +2148,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'login',
-                        username: username,
                         email: email
                     })
                 });
@@ -2158,11 +2156,12 @@
                 const result = Array.isArray(data) ? data[0] : data;
 
                 if (result.success) {
+                    const username = result.username || result.name || email.split('@')[0];
                     currentUser = { username, email };
                     localStorage.setItem('lizCalc_user', JSON.stringify(currentUser));
 
                     // Guardar credenciales para autocompletar en futuros logins
-                    localStorage.setItem('lizCalc_rememberedCredentials', JSON.stringify({ username, email }));
+                    localStorage.setItem('lizCalc_rememberedCredentials', JSON.stringify({ email }));
 
                     document.getElementById('loginOverlay').classList.add('hidden');
                     document.getElementById('userPanel').classList.remove('hidden');
@@ -2212,12 +2211,8 @@
             if (rememberedCredentials) {
                 try {
                     const credentials = JSON.parse(rememberedCredentials);
-                    const usernameInput = document.getElementById('loginUsername');
                     const emailInput = document.getElementById('loginEmail');
 
-                    if (usernameInput && credentials.username) {
-                        usernameInput.value = credentials.username;
-                    }
                     if (emailInput && credentials.email) {
                         emailInput.value = credentials.email;
                     }
