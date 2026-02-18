@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <!-- Version 2.0 - Updated 2026-02-13 -->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -275,7 +276,7 @@
             <h1 class="text-3xl md:text-4xl font-bold mb-2 aura-gradient-text uppercase">SIMULADOR DE RENTABILIDAD CRECE
             </h1>
             <p class="text-lg font-semibold text-slate-700">PROYECTO INMOBILIARIO EN PLANOS</p>
-            <p class="text-md text-slate-600 mb-4">Estrategia: Venta de un Inmueble Adquirido con Crédito Hipotecario
+            <p class="text-md text-slate-600 mb-4">Estrategia: Venta de un Inmueble Adquirido con Financiamiento
             </p>
             <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 inline-block max-w-3xl">
                 <p class="text-sm text-slate-600">
@@ -287,9 +288,11 @@
 
             <!-- Nombre del Proyecto -->
             <div class="mt-4 flex items-center justify-center gap-2">
-                <label for="nombreProyecto" class="text-sm font-semibold text-slate-700">📝 Nombre del Proyecto o Inversión:</label>
+                <label for="nombreProyecto" class="text-sm font-semibold text-slate-700">📝 Nombre del Proyecto o
+                    Inversión:</label>
                 <input type="text" id="nombreProyecto" placeholder="Ej: Proyecto Alto de la María"
-                    class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400" style="width: 500px;">
+                    class="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    style="width: 500px;">
             </div>
         </div>
 
@@ -312,6 +315,14 @@
                     </div>
                 </div>
                 <div class="field-item">
+                    <label class="field-label">Meses para Pagar la Cuota Inicial</label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="mesesCuotaInicial" value="30">
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
                     <label class="field-label">
                         Área del Inmueble (M²)
                         <span class="tooltip-trigger">
@@ -322,6 +333,13 @@
                     <div class="field-input-wrapper">
                         <input type="number" id="areaM2" value="50">
                         <span class="percent-symbol">M²</span>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Pago Mensual de la Cuota Inicial</label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="pagoMensualCuotaInicial" readonly>
                     </div>
                 </div>
             </div>
@@ -341,9 +359,10 @@
                     </div>
                 </div>
                 <div class="field-item">
-                    <label class="field-label">Meses para Pagar la Cuota Inicial</label>
+                    <label class="field-label">Dinero para Reservar el Inmueble</label>
                     <div class="field-input-wrapper">
-                        <input type="number" id="mesesCuotaInicial" value="30">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="dineroReserva" value="0">
                     </div>
                 </div>
             </div>
@@ -356,10 +375,10 @@
                     </div>
                 </div>
                 <div class="field-item">
-                    <label class="field-label">Dinero para Reservar el Inmueble</label>
-                    <div class="field-input-wrapper">
+                    <label class="field-label">Saldo Final al Momento de la Entrega (Préstamo)</label>
+                    <div class="field-input-wrapper calculated">
                         <span class="currency-symbol">$</span>
-                        <input type="text" id="dineroReserva" value="0">
+                        <input type="text" id="saldoEntrega" readonly>
                     </div>
                 </div>
             </div>
@@ -380,23 +399,18 @@
                     </div>
                 </div>
                 <div class="field-item">
-                    <label class="field-label">Pago Mensual de la Cuota Inicial</label>
-                    <div class="field-input-wrapper calculated">
+                    <label class="field-label">
+                        Costo de Acabados Finales
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Costo adicional de adecuaciones, mejoras o acabados realizados al
+                                inmueble antes de la venta, con el fin de aumentar su valor de mercado.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
                         <span class="currency-symbol">$</span>
-                        <input type="text" id="pagoMensualCuotaInicial" readonly>
+                        <input type="text" id="costoAcabados" value="0">
                     </div>
-                </div>
-            </div>
-            <div class="field-row">
-                <div class="field-item">
-                    <label class="field-label">Saldo Final al Momento de la Entrega (Préstamo)</label>
-                    <div class="field-input-wrapper calculated">
-                        <span class="currency-symbol">$</span>
-                        <input type="text" id="saldoEntrega" readonly>
-                    </div>
-                </div>
-                <div class="field-item">
-                    <!-- Espacio vacío para mantener alineación -->
                 </div>
             </div>
         </div>
@@ -404,6 +418,38 @@
         <!-- 2. FINANCIACIÓN -->
         <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-financiacion">
             <div class="section-header">🏦 FINANCIACIÓN (Crédito Hipotecario)</div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Recursos Propios
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Monto de recursos propios que el inversionista aporta para cubrir
+                                parte del saldo final al momento de la entrega. El valor no puede ser mayor al Saldo
+                                Final al Momento de la Entrega.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="recursosPropios" value="0">
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Préstamo a Solicitar
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor del crédito hipotecario a solicitar al banco. Es el
+                                resultado de restar los Recursos Propios al Saldo Final al Momento de la Entrega. Este
+                                es el valor base para calcular la cuota mensual y el saldo del crédito.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="prestamoSolicitar" readonly>
+                    </div>
+                </div>
+            </div>
             <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
@@ -421,7 +467,7 @@
                 <div class="field-item">
                     <label class="field-label">Tasa Efectiva Anual (E.A.)</label>
                     <div class="field-input-wrapper">
-                        <input type="number" id="tasaEA" value="12" step="0.01">
+                        <input type="number" id="tasaEA" value="13.60" step="0.01">
                         <span class="percent-symbol">%</span>
                     </div>
                 </div>
@@ -479,6 +525,7 @@
         <!-- 3. COSTOS DE TENENCIA -->
         <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-tenencia">
             <div class="section-header">🏠 COSTOS MENSUALES DE TENENCIA</div>
+            <!-- Fila 1: Administración Mensual | Otros Costos del Mes -->
             <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
@@ -496,15 +543,6 @@
                     </div>
                 </div>
                 <div class="field-item">
-                    <label class="field-label">Servicios Públicos Mensual</label>
-                    <div class="field-input-wrapper">
-                        <span class="currency-symbol">$</span>
-                        <input type="text" id="serviciosPublicosMensual" value="80.000">
-                    </div>
-                </div>
-            </div>
-            <div class="field-row">
-                <div class="field-item">
                     <label class="field-label">
                         Otros Costos del Mes
                         <span class="tooltip-trigger">
@@ -517,6 +555,16 @@
                     <div class="field-input-wrapper">
                         <span class="currency-symbol">$</span>
                         <input type="text" id="otrosCostosMes" value="247.238">
+                    </div>
+                </div>
+            </div>
+            <!-- Fila 2: Servicios Públicos | Costo Total Tenencia Mensual -->
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Servicios Públicos Mensual</label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="serviciosPublicosMensual" value="80.000">
                     </div>
                 </div>
                 <div class="field-item">
@@ -539,6 +587,7 @@
         <!-- 4. SALIDA POR VENTA -->
         <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-venta">
             <div class="section-header">💰 SALIDA POR VENTA</div>
+            <!-- Fila 1: Precio Venta | Costo Tenencia Acumulado -->
             <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">Precio de Venta Esperado</label>
@@ -547,21 +596,6 @@
                         <input type="text" id="precioVentaEsperado" value="363.422.743">
                     </div>
                 </div>
-                <div class="field-item">
-                    <label class="field-label">
-                        Mes Estimado de Venta (Post-Entrega)
-                        <span class="tooltip-trigger">
-                            i
-                            <span class="tooltip-text">Mes en el que se proyecta vender el inmueble. A menor tiempo de
-                                venta, mayor Rentabilidad.</span>
-                        </span>
-                    </label>
-                    <div class="field-input-wrapper">
-                        <input type="number" id="mesEstimadoVenta" value="10">
-                    </div>
-                </div>
-            </div>
-            <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
                         Costo Tenencia + Crédito Acumulado
@@ -577,22 +611,22 @@
                         <input type="text" id="costoTenenciaAcumulado" readonly>
                     </div>
                 </div>
+            </div>
+            <!-- Fila 2: Mes Estimado Venta | % Costos Escrituración Venta -->
+            <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
-                        Valorización Fto. Precio Compra
+                        Mes Estimado de Venta (Post-Entrega)
                         <span class="tooltip-trigger">
                             i
-                            <span class="tooltip-text">Indica en qué porcentaje ha aumentado el valor del inmueble en
-                                comparación con el precio inicial de compra.</span>
+                            <span class="tooltip-text">Mes en el que se proyecta vender el inmueble. A menor tiempo de
+                                venta, mayor Rentabilidad.</span>
                         </span>
                     </label>
-                    <div class="field-input-wrapper calculated">
-                        <input type="text" id="valorizacion" readonly>
-                        <span class="percent-symbol">%</span>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="mesEstimadoVenta" value="10">
                     </div>
                 </div>
-            </div>
-            <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
                         % Costos Escrituración (Venta)
@@ -607,6 +641,23 @@
                         <span class="percent-symbol">%</span>
                     </div>
                 </div>
+            </div>
+            <!-- Fila 3: Valorización | Costos Escrituración Venta -->
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Valorización Fto. Precio Compra
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Indica en qué porcentaje ha aumentado el valor del inmueble en
+                                comparación con el precio inicial de compra.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <input type="text" id="valorizacion" readonly>
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
                 <div class="field-item">
                     <label class="field-label">Costos Escrituración por Venta</label>
                     <div class="field-input-wrapper calculated">
@@ -615,6 +666,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Fila 4: Saldo Crédito Venta | Otros Costos Venta -->
             <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
@@ -680,57 +732,7 @@
                     </div>
                 </div>
 
-                <!-- Subsección: INDICADORES -->
-                <div class="mt-6 mb-3">
-                    <h3 class="text-lg font-bold text-emerald-800 uppercase">Indicadores de Rentabilidad</h3>
-                </div>
-                <div class="field-row">
-                    <div class="field-item">
-                        <label class="field-label">
-                            ROI (Rentabilidad sobre Capital)
-                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
-                                i
-                                <span class="tooltip-text">Mide la rentabilidad generada frente al capital invertido.
-                                    Este indicador no tiene en cuenta el tiempo en que se obtiene el resultado.</span>
-                            </span>
-                        </label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="roi" readonly><span class="percent-symbol">%</span></div>
-                    </div>
-                    <div class="field-item">
-                        <label class="field-label">
-                            TIR MENSUAL (Estimada)
-                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
-                                i
-                                <span class="tooltip-text">Tasa Interna de Retorno mensual. Mide la rentabilidad
-                                    promedio mensual que genera la inversión.</span>
-                            </span>
-                        </label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="tirMensual" readonly><span
-                                class="percent-symbol">%</span></div>
-                    </div>
-                </div>
-                <div class="field-row">
-                    <div class="field-item">
-                        <label class="field-label">
-                            TIR ANUAL (Estimada)
-                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
-                                i
-                                <span class="tooltip-text">Tasa Interna de Retorno anualizada. Mide la rentabilidad
-                                    anual equivalente que genera la inversión.</span>
-                            </span>
-                        </label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="tirAnual" readonly><span
-                                class="percent-symbol">%</span></div>
-                    </div>
-                    <div class="field-item">
-                        <!-- Espacio vacío -->
-                    </div>
-                </div>
-
-                <!-- Subsección: CIFRAS -->
-                <div class="mt-6 mb-3">
-                    <h3 class="text-lg font-bold text-emerald-800 uppercase">Cifras de la Inversión</h3>
-                </div>
+                <!-- Fila: Capital Total Invertido | ROI -->
                 <div class="field-row">
                     <div class="field-item">
                         <label class="field-label">
@@ -746,6 +748,22 @@
                     </div>
                     <div class="field-item">
                         <label class="field-label">
+                            Rentabilidad sobre el Capital Invertido (ROI)
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Mide la rentabilidad generada frente al capital invertido.
+                                    Este indicador no tiene en cuenta el tiempo en que se obtiene el resultado.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="roi" readonly><span
+                                class="percent-symbol">%</span></div>
+                    </div>
+                </div>
+
+                <!-- Fila: Ganancia | TIR Mensual -->
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">
                             GANANCIA
                             <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
                                 i
@@ -756,7 +774,21 @@
                         <div class="field-input-wrapper calculated"><span class="currency-symbol">$</span><input
                                 type="text" id="ganancia" readonly></div>
                     </div>
+                    <div class="field-item">
+                        <label class="field-label">
+                            Tasa Interna de Retorno Mensual (TIR)
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Tasa Interna de Retorno mensual. Mide la rentabilidad
+                                    promedio mensual que genera la inversión.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tirMensual" readonly><span
+                                class="percent-symbol">%</span></div>
+                    </div>
                 </div>
+
+                <!-- Fila: Capital de Reinversión | TIR Anual -->
                 <div class="field-row">
                     <div class="field-item">
                         <label class="field-label">
@@ -773,7 +805,16 @@
                                 type="text" id="capitalReinversion" readonly></div>
                     </div>
                     <div class="field-item">
-                        <!-- Espacio vacío -->
+                        <label class="field-label">
+                            Tasa Interna de Retorno Anual (TIR)
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Tasa Interna de Retorno anualizada. Mide la rentabilidad
+                                    anual equivalente que genera la inversión.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tirAnual" readonly><span
+                                class="percent-symbol">%</span></div>
                     </div>
                 </div>
             </div>
@@ -810,7 +851,7 @@
                     style="left: 50%; box-shadow: 0 0 20px rgba(15,23,42,0.5);">
                     <div
                         class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-bold whitespace-nowrap shadow-lg">
-                        Tu ROI
+                        Meses
                         <div
                             class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800">
                         </div>
@@ -914,17 +955,24 @@
         </div>
 
         <!-- 7. DISCLAIMER -->
-        <div class="bg-amber-50 border-l-4 border-amber-500 rounded-xl p-6 mb-8">
-            <h4 class="font-bold text-amber-900 mb-2 flex items-center gap-2">⚠ NOTA IMPORTANTE:</h4>
-            <p class="text-amber-800 text-xs text-justify">
-                Este análisis es una herramienta de apoyo financiero elaborada con fines informativos y educativos, y no
-                debe interpretarse como una recomendación final de inversión. No reemplaza el análisis legal ni la
+        <div class="bg-amber-50 border border-amber-400 rounded-xl p-6 mb-8">
+            <h4 class="font-bold text-amber-900 mb-4 flex items-center gap-2">⚠ EXCLUSIÓN DE RESPONSABILIDAD:</h4>
+            <p class="text-amber-800 text-sm text-justify">
+                Este análisis es una herramienta de apoyo financiero elaborada con fines informativos y educativos, y
+                no debe interpretarse como una recomendación final de inversión. No reemplaza el análisis legal ni la
                 validación de las condiciones del crédito hipotecario. Los resultados obtenidos dependen de los
                 supuestos ingresados en el simulador y pueden variar según las condiciones reales del proyecto, del
                 crédito hipotecario, del mercado inmobiliario y del momento de la venta.
             </p>
         </div>
     </div>
+    <!-- PIE DE PÁGINA -->
+    <footer
+        style="text-align: center; padding: 24px 16px; margin-top: 8px; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-family: 'Inter', sans-serif;">
+        <p style="margin: 0 0 4px 0; font-weight: 600; color: #334155;">© Simulador de Rentabilidad CRECE - Análisis de
+            Inversión Inmobiliaria</p>
+        <p style="margin: 0; color: #94a3b8;">Estrategia: Venta de un Inmueble Adquirido con Financiamiento</p>
+    </footer>
 
     <script>
         function formatNumberInput(value) { return value.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
@@ -937,6 +985,7 @@
             let mCI = parseInt(document.getElementById('mesesCuotaInicial').value) || 1;
             let perCI = parseFloat(document.getElementById('porcentajeCuotaInicial').value) || 0;
             let reserva = parseFormattedNumber(document.getElementById('dineroReserva').value);
+            let costoAcabados = parseFormattedNumber(document.getElementById('costoAcabados').value);
 
             let vCI = Math.round(pCompra * (perCI / 100));
             // Validación CSV: Dinero reserva no mayor a cuota inicial
@@ -946,11 +995,20 @@
             let saldoEntrega = pCompra - vCI;
 
             // Financiación
+            // Recursos Propios: validación que no supere el saldo final al momento de la entrega
+            let recursosPropios = parseFormattedNumber(document.getElementById('recursosPropios').value);
+            if (recursosPropios > saldoEntrega) {
+                recursosPropios = saldoEntrega;
+                document.getElementById('recursosPropios').value = formatNumberInput(recursosPropios);
+            }
+            let prestamoSolicitar = saldoEntrega - recursosPropios;
+
             let plazo = parseInt(document.getElementById('plazoAnos').value) || 1;
             let tasaEA = parseFloat(document.getElementById('tasaEA').value) || 0;
             let tasaEM = Math.pow(1 + (tasaEA / 100), 1 / 12) - 1;
             let nPer = plazo * 12;
-            let cuotaH = Math.round(saldoEntrega * (tasaEM / (1 - Math.pow(1 + tasaEM, -nPer))));
+            // Cuota mensual calculada sobre el Préstamo a Solicitar (no sobre el saldo total)
+            let cuotaH = (prestamoSolicitar > 0 && tasaEM > 0) ? Math.round(prestamoSolicitar * (tasaEM / (1 - Math.pow(1 + tasaEM, -nPer)))) : 0;
             let perEscCompra = parseFloat(document.getElementById('porcentajeEscrituracionCompra').value) || 0;
             let costosEscCompra = Math.round(pCompra * (perEscCompra / 100));
 
@@ -968,20 +1026,27 @@
             let perEscVenta = parseFloat(document.getElementById('porcentajeEscrituracionVenta').value) || 0;
             let costosEscVenta = Math.round(pVenta * (perEscVenta / 100));
 
-            // Formula Saldo Remanente Exacta (Mortgage Balance)
-            let factorN = Math.pow(1 + tasaEM, nPer);
-            let factorP = Math.pow(1 + tasaEM, mesVenta);
-            let saldoCreditoVenta = saldoEntrega * (factorN - factorP) / (factorN - 1);
-            if (saldoCreditoVenta < 0) saldoCreditoVenta = 0;
+            // Saldo Crédito al Momento de la Venta — calculado sobre el Préstamo a Solicitar
+            let saldoCreditoVenta = 0;
+            if (prestamoSolicitar > 0 && tasaEM > 0 && nPer > 0) {
+                let factorN = Math.pow(1 + tasaEM, nPer);
+                let factorP = Math.pow(1 + tasaEM, mesVenta);
+                saldoCreditoVenta = prestamoSolicitar * (factorN - factorP) / (factorN - 1);
+                if (saldoCreditoVenta < 0) saldoCreditoVenta = 0;
+            }
 
             let otrosCostosVenta = parseFormattedNumber(document.getElementById('otrosCostosVenta').value);
 
             // Resultados
             let tiempoTotal = mCI + mesVenta;
-            let capitalInv = vCI + costosEscCompra + costoTenenciaAcum + otrosCostosVenta;
-            let ganancia = pVenta - saldoCreditoVenta - costosEscVenta - capitalInv;
+            // Capital Total Invertido: cuota inicial + escrituración compra + costos tenencia acumulados + acabados
+            // (NO incluye otrosCostosVenta — esos van en Capital de Reinversión)
+            let capitalInv = vCI + costosEscCompra + costoTenenciaAcum + costoAcabados;
+            // Capital de Reinversión: lo que queda después de vender, pagar crédito, escrituración y comisión
+            let capitalReinv = pVenta - saldoCreditoVenta - costosEscVenta - otrosCostosVenta;
+            // Ganancia: Capital de Reinversión menos Capital Total Invertido
+            let ganancia = capitalReinv - capitalInv;
             let roi = (capitalInv > 0) ? (ganancia / capitalInv) : 0;
-            let capitalReinv = capitalInv + ganancia;
 
             let tirAnual = (tiempoTotal > 0 && capitalInv > 0 && (capitalReinv / capitalInv) > 0) ? (Math.pow((capitalReinv / capitalInv), 12 / tiempoTotal) - 1) : 0;
             let tirMensual = (tiempoTotal > 0 && capitalInv > 0 && (capitalReinv / capitalInv) > 0) ? (Math.pow((capitalReinv / capitalInv), 1 / tiempoTotal) - 1) : 0;
@@ -992,6 +1057,7 @@
             document.getElementById('pagoMensualCuotaInicial').value = formatNumberInput(pagoM_CI);
             document.getElementById('saldoEntrega').value = formatNumberInput(Math.round(saldoEntrega));
 
+            document.getElementById('prestamoSolicitar').value = formatNumberInput(Math.round(prestamoSolicitar));
             document.getElementById('tasaEM').value = (tasaEM * 100).toFixed(2);
             document.getElementById('cuotaMensual').value = formatNumberInput(cuotaH);
             document.getElementById('costosEscrituracionCompra').value = formatNumberInput(costosEscCompra);
@@ -1049,7 +1115,7 @@
             }
 
             document.getElementById('indicadorPosicion').style.left = posPunto + "%";
-            document.getElementById('indicadorTiempoCesion').textContent = roiVal.toFixed(2) + '%';
+            document.getElementById('indicadorTiempoCesion').textContent = meses;
             const box = document.getElementById('analisisPersonalizado');
             box.className = `rounded-xl p-6 border-2 ${colorCls}`;
             document.getElementById('textoAnalisis').innerHTML = `<p class="font-bold mb-2">${titulo}</p><p>${msg}</p>`;
@@ -1132,7 +1198,7 @@
             doc.setFont('helvetica', 'normal');
             doc.text('PROYECTO INMOBILIARIO EN PLANOS - CRÉDITO HIPOTECARIO', 105, yPosition + 15, { align: 'center' });
             doc.setFontSize(10);
-            doc.text('Estrategia: Venta de un Inmueble Adquirido con Crédito Hipotecario', 105, yPosition + 21, { align: 'center' });
+            doc.text('Estrategia: Venta de un Inmueble Adquirido con Financiamiento', 105, yPosition + 21, { align: 'center' });
             yPosition += 27;
 
             // Nombre del Proyecto (si se ingresó)
@@ -1158,6 +1224,9 @@
             const valorCuotaInicial = document.getElementById('valorCuotaInicial').value;
             const pagoMensualCuotaInicial = document.getElementById('pagoMensualCuotaInicial').value;
             const saldoEntrega = document.getElementById('saldoEntrega').value;
+            const costoAcabadosPDF = parseFormattedNumber(document.getElementById('costoAcabados').value);
+            const recursosPropiosPDF = parseFormattedNumber(document.getElementById('recursosPropios').value);
+            const prestamoSolicitarPDF = document.getElementById('prestamoSolicitar').value;
 
             const plazoAnos = parseFloat(document.getElementById('plazoAnos').value);
             const tasaEA = parseFloat(document.getElementById('tasaEA').value);
@@ -1210,7 +1279,8 @@
                 ['Dinero para Reservar el Inmueble', '$' + formatNumberInput(dineroReserva.toString())],
                 ['Valor de la Cuota Inicial', '$' + valorCuotaInicial],
                 ['Pago Mensual de la Cuota Inicial', '$' + pagoMensualCuotaInicial],
-                ['Saldo Final al Momento de la Entrega', '$' + saldoEntrega]
+                ['Saldo Final al Momento de la Entrega', '$' + saldoEntrega],
+                ['Costo de Acabados Finales', '$' + formatNumberInput(costoAcabadosPDF.toString())]
             ];
 
             doc.autoTable({
@@ -1251,6 +1321,8 @@
             yPosition += 12;
 
             const datosFinanciacion = [
+                ['Recursos Propios', '$' + formatNumberInput(recursosPropiosPDF.toString())],
+                ['Préstamo a Solicitar', '$' + prestamoSolicitarPDF],
                 ['Plazo del Crédito (Años)', plazoAnos + ' años'],
                 ['Tasa Efectiva Anual (E.A.)', tasaEA + '%'],
                 ['Tasa Efectiva Mensual (E.M.)', tasaEM + '%'],
@@ -1276,7 +1348,8 @@
                     1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
                 },
                 didParseCell: function (data) {
-                    if ((data.row.index === 2 || data.row.index === 3 || data.row.index === 5) && data.column.index === 1) {
+                    // Calculados: Préstamo a Solicitar (idx 1), Tasa EM (idx 4), Cuota Mensual (idx 5), Costos Esc (idx 7)
+                    if ((data.row.index === 1 || data.row.index === 4 || data.row.index === 5 || data.row.index === 7) && data.column.index === 1) {
                         data.cell.styles.fillColor = [240, 253, 250]; // Teal claro para calculados
                     }
                 }
@@ -1285,6 +1358,7 @@
             yPosition = doc.lastAutoTable.finalY + 10;
 
             // Sección 3: COSTOS DE TENENCIA
+            checkPageBreak(55);
             doc.setFillColor(254, 243, 199); // Amarillo claro
             doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
             doc.setTextColor(...colorPrimario);
@@ -1373,7 +1447,7 @@
             // Sección 5: RESULTADO DE LA INVERSIÓN
             checkPageBreak(60);
             const yStartResultados = yPosition;
-            const tableHeight = 52; // Altura estimada para 6 filas
+            const tableHeight = 60; // Altura estimada para 7 filas
 
             // 1. Fondo de la sección
             doc.setFillColor(220, 252, 231); // #dcfce7
@@ -1390,12 +1464,13 @@
             doc.text('RESULTADO DE LA INVERSIÓN', margenIzq + 5, yStartResultados + 7);
 
             const datosResultado = [
+                ['TIEMPO DE LA INVERSIÓN (Meses)', tiempoInversion + ' Meses'],
                 ['CAPITAL TOTAL INVERTIDO', '$' + capitalTotalInvertido],
+                ['CAPITAL DE REINVERSIÓN', '$' + capitalReinversion],
                 ['GANANCIA NETA', '$' + ganancia],
-                ['ROI (Rentabilidad sobre Capital)', roiStr + '%'],
                 ['TIR MENSUAL (Estimada)', tirMensualStr + '%'],
                 ['TIR ANUAL (Estimada)', tirAnualStr + '%'],
-                ['CAPITAL DE REINVERSIÓN', '$' + capitalReinversion]
+                ['ROI (Rentabilidad sobre Capital)', roiStr + '%']
             ];
 
             doc.autoTable({
@@ -1485,15 +1560,17 @@
                 doc.line(indicadorX, yPosition, indicadorX, yPosition + zonaHeight);
 
                 // Etiqueta del indicador
+                const etiquetaMesesPDF = tiempoInversion + (parseInt(tiempoInversion) === 1 ? ' Mes' : ' Meses');
+                const etiquetaMesesWidth = Math.max(24, etiquetaMesesPDF.length * 2.2);
                 doc.setFillColor(...colorPrimario);
-                doc.roundedRect(indicadorX - 12, yPosition - 6, 24, 5, 1, 1, 'F');
+                doc.roundedRect(indicadorX - etiquetaMesesWidth / 2, yPosition - 6, etiquetaMesesWidth, 5, 1, 1, 'F');
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(8);
                 doc.setFont('helvetica', 'bold');
-                doc.text('Tu ROI', indicadorX, yPosition - 2.5, { align: 'center' });
+                doc.text(etiquetaMesesPDF, indicadorX, yPosition - 2.5, { align: 'center' });
 
-                doc.roundedRect(indicadorX - 12, yPosition + zonaHeight + 1, 24, 5, 1, 1, 'F');
-                doc.text(roiNum.toFixed(1) + '%', indicadorX, yPosition + zonaHeight + 4.5, { align: 'center' });
+                doc.roundedRect(indicadorX - etiquetaMesesWidth / 2, yPosition + zonaHeight + 1, etiquetaMesesWidth, 5, 1, 1, 'F');
+                doc.text(etiquetaMesesPDF, indicadorX, yPosition + zonaHeight + 4.5, { align: 'center' });
 
                 yPosition += zonaHeight + 15;
 
@@ -1684,7 +1761,7 @@
             doc.setTextColor(120, 53, 15); // Texto ámbar oscuro
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
-            doc.text('NOTA IMPORTANTE:', margenIzq + 3, yPosition + 6);
+            doc.text('EXCLUSI\u00D3N DE RESPONSABILIDAD:', margenIzq + 3, yPosition + 6);
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             const disclaimerText = 'Este análisis es una herramienta de apoyo financiero elaborada con fines informativos y educativos, y no debe interpretarse como una recomendación final de inversión. No reemplaza el análisis legal ni la validación de las condiciones del crédito hipotecario. Los resultados obtenidos dependen de los supuestos ingresados en el simulador y pueden variar según las condiciones reales del proyecto, del crédito hipotecario, del mercado inmobiliario y del momento de la venta.';
