@@ -444,6 +444,64 @@
             box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
         }
 
+        /* LOOM MODAL STYLES */
+        .loom-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .loom-modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .loom-modal-content {
+            width: 100%;
+            max-width: 1000px;
+            aspect-ratio: 16/9;
+            background: black;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .loom-modal-overlay.active .loom-modal-content {
+            transform: scale(1);
+        }
+
+        .loom-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s ease;
+        }
+
+        .loom-close:hover {
+            color: #2563eb;
+            transform: translateY(-2px);
+        }
+
         /* FORCE BLUE BUTTON STYLE FOR GHL */
         a.resource-link-primary {
             background-color: #2563eb !important;
@@ -1204,9 +1262,9 @@
                         </div>
                     </div>
 
-                    <!-- VIDEO 10 - BLOQUEADO (FUTURO) -->
+                    <!-- VIDEO 10 - ANTIGUA MANERA VS NUEVA MANERA -->
                     <div class="relative md:flex items-start gap-12 reveal phase-item" data-index="2"
-                        data-unlock-date="2026-02-20">
+                        data-unlock-date="2026-02-20" data-custom-hour="14">
                         <div class="hidden md:block w-1/2 text-right pr-12 pt-4">
                             <span class="text-6xl font-serif text-slate-100 font-bold phase-number" id="num-2"
                                 style="-webkit-text-stroke: 1px #e2e8f0;">10</span>
@@ -1215,18 +1273,32 @@
                             id="dot-2"></div>
                         <div class="pl-10 md:w-1/2 md:pl-12">
                             <div class="clean-card p-8 rounded-3xl">
-                                <div class="video-thumbnail-container">
+                                <div class="video-thumbnail-container"
+                                    onclick="openVideoModal('https://assets.cdn.filesafe.space/SSlZBjR2BiiDJ4vR4exM/media/699896f85ba498e2bb03e665.mp4')">
+                                    <div class="video-thumbnail-img"
+                                        style="background-image: url('https://assets.cdn.filesafe.space/SSlZBjR2BiiDJ4vR4exM/media/69989744df9bdfc94d62581b.png'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+                                    </div>
                                     <div class="video-play-overlay">
-                                        <div class="lock-orbit-ring"></div>
-                                        <i data-lucide="lock" class="w-8 h-8 text-slate-300"></i>
+                                        <div class="play-icon-glow">
+                                            <i data-lucide="play" class="w-8 h-8"></i>
+                                        </div>
+                                        <span class="play-text-overlay">VER PÍLDORA</span>
                                     </div>
                                 </div>
                                 <span
-                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded mb-4 inline-block">
-                                    REVELACIÓN - 20 FEB
+                                    class="text-[10px] font-bold text-primary uppercase tracking-widest border border-primary/30 px-2 py-1 rounded mb-4 inline-block">
+                                    PÍLDORA - 20 FEB
                                 </span>
-                                <h3 class="text-lg sm:text-xl md:text-2xl font-bold text-slate-300 mb-4">Contenido
-                                    Estratégico</h3>
+                                <h3 class="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 mb-4 leading-snug">
+                                    "ANTIGUA MANERA VS NUEVA MANERA"</h3>
+                                <div class="flex flex-col gap-3">
+                                    <button
+                                        onclick="openVideoModal('https://assets.cdn.filesafe.space/SSlZBjR2BiiDJ4vR4exM/media/699896f85ba498e2bb03e665.mp4')"
+                                        class="resource-link resource-link-primary flex items-center justify-center gap-2 text-sm font-bold text-white bg-blue-600 px-6 py-4 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200"
+                                        style="background-color: #2563eb !important; color: white !important;">
+                                        <i data-lucide="play" class="w-5 h-5"></i> REPRODUCIR PÍLDORA
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1622,21 +1694,38 @@
             <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <i data-lucide="clipboard-check" class="w-8 h-8 text-primary"></i>
             </div>
-            <h2 class="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">CUÉNTAME DÓNDE ESTÁS</h2>
-            <p class="text-primary font-bold text-sm mb-4">4 minutos que van a hacer estas 3 clases mucho mejores para
-                ti.</p>
+            <h2 class="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight">AYÚDAME A AYUDARTE</h2>
+            <p class="text-primary font-bold text-sm mb-4">Si aún no has rellenado la encuesta pre-evento, te toma 2
+                minutos y vas a aprender mucho más si lo haces.</p>
 
             <div class="text-slate-600 text-xs sm:text-sm mb-8 space-y-4 text-center sm:text-left leading-relaxed">
-                <p>Antes de que empiece el evento, quiero conocerte un poco mejor. No para calificarte, sino para
-                    ajustar el nivel, los ejemplos y los sistemas que vamos a ver en vivo.</p>
-                <p>La idea es que salgas con un sistema montado. Para eso necesito saber con quién voy a estar.</p>
+                <p>Sino dale a saltar y ves la Píldora de hoy. Gracias.</p>
                 <p class="font-bold">— Nico</p>
             </div>
 
-            <a href="https://forms.gle/A5noaJdKFqLtcEvb9" target="_blank" id="modalButton"
-                class="block w-full bg-primary text-white py-4 px-8 rounded-full font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 transform hover:scale-105">
-                RELLENAR ENCUESTA
-            </a>
+            <div class="flex flex-col gap-3">
+                <a href="https://forms.gle/A5noaJdKFqLtcEvb9" target="_blank" id="modalButton"
+                    class="block w-full bg-primary text-white py-4 px-8 rounded-full font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 transform hover:scale-105 text-center">
+                    RELLENAR ENCUESTA
+                </a>
+                <button id="skipModal"
+                    class="text-slate-400 hover:text-slate-600 text-[10px] font-bold uppercase tracking-widest transition-all">
+                    SALTAR Y VER PÍLDORA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIDEO MODAL -->
+    <div id="videoModal" class="loom-modal-overlay">
+        <div class="loom-modal-content">
+            <div id="closeVideo" class="loom-close">
+                <span>Cerrar</span>
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </div>
+            <div id="videoContainer" class="w-full h-full bg-black flex items-center justify-center">
+                <!-- Video tag inserted by JS -->
+            </div>
         </div>
     </div>
 
@@ -1805,7 +1894,7 @@
             '2026-1-16': { title: 'VIDEO 7: Hice OpenClaw 10x Más Potente', type: 'video' },
             '2026-1-17': { title: 'REGALO ESPECIAL: Diagrama OpenClaw', type: 'gift', url: 'https://drive.google.com/file/d/1MDcWEPubxYva_zPUHzE5zR-PQ3RJ-Z3T/view?usp=sharing' },
             '2026-1-19': { title: 'PASO 9: Encuesta Importante', type: 'video' },
-            '2026-1-20': { title: 'PASO 10: Estrategia', type: 'video' },
+            '2026-1-20': { title: 'PÍLDORA: ANTIGUA MANERA VS NUEVA MANERA', type: 'video' },
             '2026-1-21': { title: 'PASO 11: Implementación', type: 'video' },
             '2026-1-22': { title: 'PASO 12: Último Paso', type: 'video' },
             '2026-1-23': { title: 'CLASE 1 EN VIVO', type: 'live', url: 'https://www.youtube.com/watch?v=H3-hR2Ox5_c' },
@@ -1923,11 +2012,50 @@
             }
         }
 
+        // --- MODAL DE VIDEO (MP4/DIRECTO) ---
+        function openVideoModal(url) {
+            const modal = document.getElementById('videoModal');
+            const container = document.getElementById('videoContainer');
+            if (!modal || !container) return;
+
+            // Bloquear scroll
+            document.body.style.overflow = 'hidden';
+
+            // Insertar video nativo con protección de descarga
+            container.innerHTML = `
+                <video controls autoplay controlsList="nodownload" oncontextmenu="return false;" class="w-full h-full object-contain">
+                    <source src="${url}" type="video/mp4">
+                    Tu navegador no soporta el formato de video.
+                </video>
+            `;
+
+            modal.classList.add('active');
+
+            // Cerrar al hacer clic fuera o en X
+            const closeBtn = document.getElementById('closeVideo');
+            const handleClose = () => {
+                modal.classList.remove('active');
+                container.innerHTML = '';
+                document.body.style.overflow = '';
+            };
+
+            closeBtn.onclick = handleClose;
+            modal.onclick = (e) => {
+                if (e.target === modal) handleClose();
+            };
+
+            // Tecla ESC para cerrar
+            document.onkeydown = (e) => {
+                if (e.key === 'Escape') handleClose();
+            };
+        }
+
         // --- MODAL DE ENCUESTA ---
         function initSurveyModal() {
             const modal = document.getElementById('surveyModal');
             const closeBtn = document.getElementById('closeModal');
             const modalBtn = document.getElementById('modalButton');
+            const skipBtn = document.getElementById('skipModal');
 
             if (!modal) return;
 
@@ -1943,6 +2071,12 @@
             modalBtn.onclick = () => {
                 modal.classList.remove('active');
             };
+
+            if (skipBtn) {
+                skipBtn.onclick = () => {
+                    modal.classList.remove('active');
+                };
+            }
 
             // Cerrar al hacer clic fuera
             window.onclick = (event) => {
