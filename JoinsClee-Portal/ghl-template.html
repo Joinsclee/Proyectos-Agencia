@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{CLIENT_NAME}} — Estado del Proyecto</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fc;
+            --bg-card: #fff;
+            --bg-col: #f1f3f9;
+            --text: #1a1d2e;
+            --text2: #5a5f7a;
+            --text3: #8b90a5;
+            --border: #e2e4ed;
+            --accent: #6c5ce7;
+            --accent-light: rgba(108, 92, 231, .1);
+            --p-urgent: #e74c3c;
+            --p-high: #e67e22;
+            --p-medium: #3498db;
+            --p-low: #95a5a6;
+            --radius: 10px;
+            --shadow: 0 4px 12px rgba(0, 0, 0, .08);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto
+        }
+
+        /* HEADER */
+        .portal-header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .portal-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -.03em;
+            margin-bottom: 4px
+        }
+
+        .portal-header p {
+            color: var(--text2);
+            font-size: .9rem
+        }
+
+        /* MILESTONES */
+        .milestones-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 32px;
+            position: relative;
+            padding: 0 20px
+        }
+
+        .milestone-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1
+        }
+
+        .milestone-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .8rem;
+            font-weight: 600;
+            border: 3px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text3);
+            transition: all .3s;
+            margin-bottom: 8px
+        }
+
+        .milestone-step.completed .milestone-dot {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff
+        }
+
+        .milestone-step.in_progress .milestone-dot {
+            border-color: var(--accent);
+            color: var(--accent);
+            animation: pulse 2s infinite
+        }
+
+        .milestone-label {
+            font-size: .7rem;
+            color: var(--text3);
+            text-align: center;
+            max-width: 100px;
+            font-weight: 500
+        }
+
+        .milestone-step.completed .milestone-label {
+            color: var(--accent);
+            font-weight: 600
+        }
+
+        .milestone-step.in_progress .milestone-label {
+            color: var(--text);
+            font-weight: 600
+        }
+
+        .milestones-line {
+            position: absolute;
+            top: 18px;
+            left: 40px;
+            right: 40px;
+            height: 3px;
+            background: var(--border);
+            z-index: 0
+        }
+
+        .milestones-line-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #a29bfe);
+            border-radius: 2px;
+            transition: width .8s ease
+        }
+
+        .milestones-summary-text {
+            text-align: center;
+            font-size: .85rem;
+            color: var(--text2);
+            margin-bottom: 24px
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(108, 92, 231, .3)
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(108, 92, 231, 0)
+            }
+        }
+
+        /* KANBAN */
+        .kanban {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding-bottom: 16px
+        }
+
+        .kanban-col {
+            flex: 1;
+            min-width: 200px;
+            background: var(--bg-col);
+            border-radius: var(--radius);
+            padding: 12px
+        }
+
+        .col-title {
+            font-size: .75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--text3);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .col-count {
+            background: var(--border);
+            padding: 1px 7px;
+            border-radius: 8px;
+            font-size: .65rem
+        }
+
+        .task {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px
+        }
+
+        .task-title {
+            font-size: .825rem;
+            font-weight: 500;
+            margin-bottom: 6px;
+            line-height: 1.4
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        .p-badge {
+            padding: 2px 7px;
+            border-radius: 8px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase
+        }
+
+        .p-badge.urgent {
+            background: rgba(231, 76, 60, .12);
+            color: var(--p-urgent)
+        }
+
+        .p-badge.high {
+            background: rgba(230, 126, 34, .12);
+            color: var(--p-high)
+        }
+
+        .p-badge.medium {
+            background: rgba(52, 152, 219, .12);
+            color: var(--p-medium)
+        }
+
+        .p-badge.low {
+            background: rgba(149, 165, 166, .12);
+            color: var(--p-low)
+        }
+
+        .task-due {
+            font-size: .65rem;
+            color: var(--text3)
+        }
+
+        .task-desc {
+            font-size: .7rem;
+            color: var(--text2);
+            margin-top: 4px;
+            line-height: 1.4;
+            display: none
+        }
+
+        .task.expanded .task-desc {
+            display: block
+        }
+
+        .task {
+            cursor: pointer
+        }
+
+        .phase-badge-ghl {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: .55rem;
+            font-weight: 600;
+            background: rgba(108, 92, 231, .1);
+            color: var(--accent);
+            margin-bottom: 4px
+        }
+
+        .group-badge-ghl {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: .55rem;
+            font-weight: 500;
+            background: #ebedf5;
+            color: var(--text2);
+            margin-bottom: 4px
+        }
+
+        .assignee-tag-ghl {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: .55rem;
+            font-weight: 600
+        }
+
+        .assignee-tag-ghl.jc {
+            background: rgba(108, 92, 231, .12);
+            color: var(--accent)
+        }
+
+        .assignee-tag-ghl.mp {
+            background: rgba(46, 204, 113, .12);
+            color: #27ae60
+        }
+
+        .empty-col {
+            text-align: center;
+            color: var(--text3);
+            font-size: .75rem;
+            padding: 20px 0;
+            opacity: .6
+        }
+
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--text3)
+        }
+
+        /* COMMENTS */
+        .task-comments-section {
+            display: none;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border)
+        }
+
+        .task.expanded .task-comments-section {
+            display: block
+        }
+
+        .task-comments-section h5 {
+            font-size: .7rem;
+            font-weight: 600;
+            color: var(--text3);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: .04em
+        }
+
+        .comment-item-ghl {
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, .04)
+        }
+
+        .comment-item-ghl:last-child {
+            border-bottom: none
+        }
+
+        .comment-author-ghl {
+            font-size: .65rem;
+            font-weight: 600;
+            color: var(--accent)
+        }
+
+        .comment-author-ghl.client {
+            color: #27ae60
+        }
+
+        .comment-body-ghl {
+            font-size: .75rem;
+            color: var(--text);
+            margin: 2px 0
+        }
+
+        .comment-date-ghl {
+            font-size: .6rem;
+            color: var(--text3)
+        }
+
+        .add-comment-ghl {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap
+        }
+
+        .add-comment-ghl input {
+            flex: 1;
+            min-width: 0;
+            padding: 6px 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: .75rem;
+            font-family: inherit;
+            outline: none
+        }
+
+        .add-comment-ghl input:focus {
+            border-color: var(--accent)
+        }
+
+        .add-comment-ghl button {
+            padding: 6px 12px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: .7rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0
+        }
+
+        .add-comment-ghl button:hover {
+            background: #5b4cdb
+        }
+
+        .comments-loading {
+            font-size: .65rem;
+            color: var(--text3);
+            padding: 4px 0
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:768px) {
+            body {
+                padding: 16px
+            }
+
+            .kanban {
+                flex-direction: column
+            }
+
+            .kanban-col {
+                min-width: 100%
+            }
+
+            .milestones-bar {
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 0
+            }
+
+            .milestones-line {
+                display: none
+            }
+
+            .portal-header img {
+                height: 32px
+            }
+
+            .portal-header h1 {
+                font-size: 1.2rem
+            }
+
+            .task {
+                padding: 8px 10px
+            }
+
+            .add-comment-ghl {
+                flex-direction: column
+            }
+
+            .add-comment-ghl input {
+                width: 100%
+            }
+
+            .add-comment-ghl button {
+                width: 100%;
+                text-align: center
+            }
+        }
+
+        @media(max-width:480px) {
+            body {
+                padding: 12px
+            }
+
+            .portal-header {
+                margin-bottom: 20px;
+                padding-bottom: 16px
+            }
+
+            .portal-header h1 {
+                font-size: 1.1rem
+            }
+
+            .milestone-dot {
+                width: 28px;
+                height: 28px;
+                font-size: .65rem
+            }
+
+            .milestone-label {
+                font-size: .6rem;
+                max-width: 60px
+            }
+
+            .col-title {
+                font-size: .7rem
+            }
+
+            .task-title {
+                font-size: .8rem
+            }
+
+            .task-meta {
+                gap: 4px
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="portal-header">
+        <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/68e8a33455c3ad82c6152a93.png"
+            alt="JoinsClee" style="height:40px;margin-bottom:12px">
+        <h1>{{CLIENT_NAME}}</h1>
+        <p>Estado actual del proyecto</p>
+    </div>
+
+    <div id="milestonesContainer"></div>
+    <div id="kanbanContainer">
+        <div class="loading">⏳ Cargando...</div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://xooacjcabrjvfzhdfdlc.supabase.co';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhvb2FjamNhYnJqdmZ6aGRmZGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjY2NDEsImV4cCI6MjA4NjkwMjY0MX0.kSYFiJLRlgUTLN2dbHvSdatGsArdH0lqLsTiLS3XEkk';
+        const CLIENT_ID = '{{CLIENT_ID}}';
+        const SCHEMA = 'portal';
+        const COLS = ['backlog', 'todo', 'in_progress', 'review', 'done'];
+        const LABELS = { backlog: 'Pendiente', todo: 'Por Hacer', in_progress: 'En Progreso', review: 'Revisión', done: 'Hecho' };
+
+        async function api(table, filters) {
+            const url = `${SUPABASE_URL}/rest/v1/${table}?${filters}`;
+            const r = await fetch(url, { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Accept-Profile': SCHEMA } });
+            if (!r.ok) throw new Error(await r.text());
+            return r.json();
+        }
+
+        function apiPost(table, data) {
+            const url = `${SUPABASE_URL}/rest/v1/${table}`;
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`, 'Content-Profile': SCHEMA, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+                body: JSON.stringify(data)
+            }).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+        }
+
+        // Initialization Function
+        async function init() {
+            try {
+                const projects = await api('projects', `client_id=eq.${CLIENT_ID}&status=eq.active&order=created_at`);
+                if (projects.length > 0) {
+                    const milestones = await api('milestones', `project_id=eq.${projects[0].id}&order=position`);
+                    renderMilestones(milestones);
+                }
+                const tasks = await api('tasks', `client_id=eq.${CLIENT_ID}&status=neq.cancelled&order=position`);
+                renderKanban(tasks);
+            } catch (e) {
+                document.getElementById('kanbanContainer').innerHTML = `<div class="loading">⚠️ Error al cargar datos: ${e.message}</div>`;
+            }
+        }
+
+        // Render Milestones Section
+        function renderMilestones(ms) {
+            if (!ms.length) return;
+            const container = document.getElementById('milestonesContainer');
+            const completed = ms.filter(m => m.status === 'completed').length;
+            const pct = ms.length ? Math.round((completed / ms.length) * 100) : 0;
+
+            container.innerHTML = `
+    <div class="milestones-bar">
+      <div class="milestones-line"><div class="milestones-line-fill" style="width:${pct}%"></div></div>
+      ${ms.map((m, i) => `
+        <div class="milestone-step ${m.status}">
+          <div class="milestone-dot">${m.status === 'completed' ? '✓' : (i + 1)}</div>
+          <div class="milestone-label">${m.name}</div>
+        </div>`).join('')}
+    </div>
+    <div class="milestones-summary-text">${completed} de ${ms.length} hitos completados</div>`;
+        }
+
+        // Render Kanban Board
+        function renderKanban(tasks) {
+            const container = document.getElementById('kanbanContainer');
+            container.innerHTML = `<div class="kanban">${COLS.map(col => {
+                const ct = tasks.filter(t => t.status === col);
+                return `<div class="kanban-col">
+      <div class="col-title">${LABELS[col]} <span class="col-count">${ct.length}</span></div>
+      ${ct.length ? ct.map(t => `<div class="task" data-task-id="${t.id}">
+        ${t.phase ? `<div class="phase-badge-ghl">${t.phase}</div>` : ''}
+        <div class="task-title">${t.title}</div>
+        ${t.task_group ? `<div class="group-badge-ghl">${t.task_group}</div>` : ''}
+        <div class="task-meta">
+          <span class="p-badge ${t.priority}">${t.priority}</span>
+          ${renderAssigneeTagsGHL(t.assigned_to)}
+          ${t.due_date ? `<span class="task-due">📅 ${t.due_date}</span>` : ''}
+        </div>
+        ${t.description ? `<div class="task-desc">${t.description}</div>` : ''}
+        <div class="task-comments-section" id="comments-${t.id}">
+          <h5>💬 Comentarios</h5>
+          <div class="comments-list" id="clist-${t.id}"><span class="comments-loading">Cargando...</span></div>
+          <div class="add-comment-ghl">
+            <input type="text" placeholder="Escribe un comentario..." id="cinput-${t.id}">
+            <button data-tid="${t.id}">Enviar</button>
+          </div>
+        </div>
+      </div>`).join('') : `<div class="empty-col">Sin tareas</div>`}
+    </div>`;
+            }).join('')}</div>`;
+        }
+
+        // Render Assignee Tags
+        function renderAssigneeTagsGHL(a) {
+            if (!a) return '';
+            return a.split('+').map(p => {
+                p = p.trim();
+                const cls = p.toLowerCase() === 'jc' ? 'jc' : 'mp';
+                const label = p.toLowerCase() === 'jc' ? 'JoinsClee' : 'Cliente';
+                return `<span class="assignee-tag-ghl ${cls}">${label}</span>`;
+            }).join(' ');
+        }
+
+        // Comment Functions
+        function loadComments(taskId) {
+            const list = document.getElementById('clist-' + taskId);
+            if (!list) return;
+            api('task_comments', `task_id=eq.${taskId}&order=created_at.desc`).then(comments => {
+                if (comments.length === 0) {
+                    list.innerHTML = '<span class="comments-loading">Sin comentarios aún</span>';
+                    return;
+                }
+                list.innerHTML = comments.map(c => {
+                    const isClient = c.author !== 'JoinsClee';
+                    return `<div class="comment-item-ghl">
+                        <span class="comment-author-ghl${isClient ? ' client' : ''}">${c.author}</span>
+                        <div class="comment-body-ghl">${c.body}</div>
+                        <div class="comment-date-ghl">${new Date(c.created_at).toLocaleString('es')}</div>
+                    </div>`;
+                }).join('');
+            }).catch(() => {
+                list.innerHTML = '<span class="comments-loading">Error al cargar</span>';
+            });
+        }
+
+        function postComment(taskId) {
+            const input = document.getElementById('cinput-' + taskId);
+            const body = input.value.trim();
+            if (!body) return;
+            apiPost('task_comments', { task_id: taskId, author: '{{CLIENT_NAME}}', body: body }).then(() => {
+                input.value = '';
+                loadComments(taskId);
+            }).catch(() => {
+                alert('Error al enviar comentario');
+            });
+        }
+
+        // Event Listeners
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.add-comment-ghl button');
+            if (btn) {
+                postComment(btn.getAttribute('data-tid'));
+                return;
+            }
+            const task = e.target.closest('.task');
+            if (task && !e.target.closest('.add-comment-ghl')) {
+                task.classList.toggle('expanded');
+                if (task.classList.contains('expanded')) {
+                    loadComments(task.getAttribute('data-task-id'));
+                }
+            }
+        });
+
+        init();
+    </script>
+</body>
+
+</html>

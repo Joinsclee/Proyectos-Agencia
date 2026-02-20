@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JoinsClee — Panel de Cliente</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f9;
+            --bg-hover: #ebedf5;
+            --bg-modal-overlay: rgba(0, 0, 0, 0.45);
+            --text-primary: #1a1d2e;
+            --text-secondary: #5a5f7a;
+            --text-tertiary: #8b90a5;
+            --border-color: #e2e4ed;
+            --border-light: #eef0f6;
+            --accent: #6c5ce7;
+            --accent-hover: #5b4cdb;
+            --accent-light: rgba(108, 92, 231, 0.1);
+            --danger: #e74c3c;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --priority-urgent: #e74c3c;
+            --priority-high: #e67e22;
+            --priority-medium: #3498db;
+            --priority-low: #95a5a6;
+            --status-active: #27ae60;
+            --status-paused: #f39c12;
+            --status-archived: #95a5a6;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-tertiary: #232639;
+            --bg-hover: #2a2e45;
+            --bg-modal-overlay: rgba(0, 0, 0, 0.7);
+            --text-primary: #e8eaf0;
+            --text-secondary: #a0a5bd;
+            --text-tertiary: #6b7190;
+            --border-color: #2e3248;
+            --border-light: #252840;
+            --accent: #8b7cf7;
+            --accent-hover: #7c6cf0;
+            --accent-light: rgba(139, 124, 247, 0.15);
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background var(--transition-normal), color var(--transition-normal)
+        }
+
+        /* TOPBAR */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px)
+        }
+
+        .topbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px
+        }
+
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #a29bfe);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: .875rem
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .85rem;
+            color: var(--text-tertiary)
+        }
+
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color var(--transition-fast)
+        }
+
+        .breadcrumb a:hover {
+            color: var(--accent)
+        }
+
+        .breadcrumb .sep {
+            opacity: .4
+        }
+
+        .breadcrumb .current {
+            color: var(--text-primary);
+            font-weight: 500
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            transition: all var(--transition-fast)
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+            color: var(--accent)
+        }
+
+        /* LAYOUT */
+        .app-layout {
+            display: flex;
+            min-height: calc(100vh - 57px)
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            overflow-y: auto;
+            flex-shrink: 0
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-x: auto
+        }
+
+        /* SIDEBAR */
+        .sidebar-section {
+            margin-bottom: 24px
+        }
+
+        .sidebar-section h3 {
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            font-weight: 600
+        }
+
+        .client-info-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 4px
+        }
+
+        .client-info-detail {
+            font-size: .8rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px
+        }
+
+        .sidebar select {
+            width: 100%;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: .85rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            outline: none
+        }
+
+        .sidebar select:focus {
+            border-color: var(--accent)
+        }
+
+        /* MILESTONES */
+        .milestone-item {
+            margin-bottom: 12px
+        }
+
+        .milestone-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: .8rem;
+            margin-bottom: 4px
+        }
+
+        .milestone-name {
+            font-weight: 500
+        }
+
+        .milestone-status {
+            color: var(--text-tertiary);
+            font-size: .75rem
+        }
+
+        .milestone-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .milestone-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), #a29bfe);
+            border-radius: 3px;
+            transition: width .6s ease
+        }
+
+        .milestones-summary {
+            font-size: .8rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-light)
+        }
+
+        /* SIDEBAR BUTTONS */
+        .sidebar-btn {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-tertiary);
+            font-size: .85rem;
+            font-family: inherit;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 500
+        }
+
+        .sidebar-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent)
+        }
+
+        .sidebar-btn.primary {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent)
+        }
+
+        .sidebar-btn.primary:hover {
+            background: var(--accent-hover)
+        }
+
+        /* KANBAN */
+        .kanban-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px
+        }
+
+        .kanban-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: -.02em
+        }
+
+        .kanban-board {
+            display: flex;
+            gap: 16px;
+            min-height: 400px
+        }
+
+        .kanban-column {
+            flex: 1;
+            min-width: 220px;
+            background: var(--bg-tertiary);
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 0 4px
+        }
+
+        .column-title {
+            font-size: .8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .column-count {
+            background: var(--bg-hover);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .7rem;
+            font-weight: 600;
+            color: var(--text-tertiary)
+        }
+
+        .column-add {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast)
+        }
+
+        .column-add:hover {
+            background: var(--bg-hover);
+            color: var(--accent)
+        }
+
+        .column-tasks {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 60px
+        }
+
+        .column-tasks.drag-over {
+            background: var(--accent-light);
+            border-radius: 10px;
+            transition: background .2s
+        }
+
+        /* TASK CARDS */
+        .task-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            cursor: grab;
+            transition: all var(--transition-fast);
+            position: relative
+        }
+
+        .task-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px)
+        }
+
+        .task-card.dragging {
+            opacity: .5;
+            cursor: grabbing;
+            transform: rotate(2deg)
+        }
+
+        .task-card-title {
+            font-size: .85rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            line-height: 1.4
+        }
+
+        .task-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: .65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .03em
+        }
+
+        .priority-badge.urgent {
+            background: rgba(231, 76, 60, .12);
+            color: var(--priority-urgent)
+        }
+
+        .priority-badge.high {
+            background: rgba(230, 126, 34, .12);
+            color: var(--priority-high)
+        }
+
+        .priority-badge.medium {
+            background: rgba(52, 152, 219, .12);
+            color: var(--priority-medium)
+        }
+
+        .priority-badge.low {
+            background: rgba(149, 165, 166, .12);
+            color: var(--priority-low)
+        }
+
+        .task-assignee {
+            font-size: .75rem;
+            color: var(--text-tertiary)
+        }
+
+        .task-due {
+            font-size: .7rem;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 3px
+        }
+
+        .task-due.overdue {
+            color: var(--danger)
+        }
+
+        /* MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-modal-overlay);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+            padding: 24px
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            transform: translateY(20px) scale(.97);
+            transition: transform var(--transition-normal);
+            border: 1px solid var(--border-color)
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1)
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-light)
+        }
+
+        .modal-header h2 {
+            font-size: 1.15rem;
+            font-weight: 600
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast)
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary)
+        }
+
+        .modal-body {
+            padding: 24px
+        }
+
+        .form-group {
+            margin-bottom: 16px
+        }
+
+        .form-group label {
+            display: block;
+            font-size: .825rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: .875rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            outline: none;
+            transition: all var(--transition-fast)
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light)
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 70px
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-light)
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: .875rem;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast)
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px)
+        }
+
+        .btn-secondary {
+            padding: 9px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: .85rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast)
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover)
+        }
+
+        .btn-danger {
+            padding: 9px 18px;
+            background: transparent;
+            border: 1px solid var(--danger);
+            border-radius: 10px;
+            font-size: .85rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--danger);
+            cursor: pointer;
+            transition: all var(--transition-fast)
+        }
+
+        .btn-danger:hover {
+            background: rgba(231, 76, 60, .08)
+        }
+
+        /* COMMENTS */
+        .comments-section {
+            margin-top: 20px;
+            border-top: 1px solid var(--border-light);
+            padding-top: 16px
+        }
+
+        .comments-section h4 {
+            font-size: .85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary)
+        }
+
+        .comment-item {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light)
+        }
+
+        .comment-author {
+            font-size: .75rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 2px
+        }
+
+        .comment-body {
+            font-size: .825rem;
+            color: var(--text-primary);
+            line-height: 1.5
+        }
+
+        .comment-date {
+            font-size: .7rem;
+            color: var(--text-tertiary);
+            margin-top: 4px
+        }
+
+        .add-comment {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px
+        }
+
+        .add-comment input {
+            flex: 1
+        }
+
+        .add-comment button {
+            flex-shrink: 0
+        }
+
+        /* GHL MODAL */
+        .ghl-textarea {
+            width: 100%;
+            min-height: 300px;
+            font-family: 'Courier New', monospace;
+            font-size: .8rem;
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            resize: vertical
+        }
+
+        /* PHASE BADGE */
+        .phase-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: .6rem;
+            font-weight: 600;
+            background: rgba(108, 92, 231, .1);
+            color: var(--accent);
+            letter-spacing: .02em;
+            white-space: nowrap;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .group-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: .6rem;
+            font-weight: 500;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .assignee-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .assignee-tag {
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: .6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assignee-tag.jc {
+            background: rgba(108, 92, 231, .12);
+            color: var(--accent);
+        }
+
+        .assignee-tag.mp {
+            background: rgba(46, 204, 113, .12);
+            color: #27ae60;
+        }
+
+        /* TOAST */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .toast {
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            font-size: .85rem;
+            animation: toastIn .3s ease;
+            max-width: 360px
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--success)
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--danger)
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .6s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .loading-overlay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
+            gap: 16px;
+            color: var(--text-secondary)
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:1024px) {
+            .sidebar {
+                width: 240px
+            }
+
+            .kanban-column {
+                min-width: 200px
+            }
+        }
+
+        @media(max-width:768px) {
+            .app-layout {
+                flex-direction: column
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                max-height: 300px;
+                overflow-y: auto
+            }
+
+            .kanban-board {
+                overflow-x: auto;
+                padding-bottom: 16px
+            }
+
+            .kanban-column {
+                min-width: 260px
+            }
+
+            .form-row {
+                grid-template-columns: 1fr
+            }
+
+            .breadcrumb .sep,
+            .breadcrumb a {
+                display: none
+            }
+
+            .topbar {
+                padding: 0 12px
+            }
+
+            .topbar-logo span {
+                display: none
+            }
+
+            .modal-content {
+                margin: 16px;
+                max-height: calc(100vh - 32px)
+            }
+
+            .ghl-textarea {
+                font-size: .7rem
+            }
+        }
+
+        @media(max-width:480px) {
+            .topbar {
+                height: 48px
+            }
+
+            .topbar-logo img {
+                height: 24px
+            }
+
+            .kanban-column {
+                min-width: 240px
+            }
+
+            .task-card {
+                padding: 8px 10px
+            }
+
+            .task-card-title {
+                font-size: .8rem
+            }
+
+            .column-header {
+                font-size: .7rem
+            }
+
+            .sidebar-section h3 {
+                font-size: .85rem
+            }
+
+            .milestone-fill {
+                transition: width .3s
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <a href="dashboard.html" class="topbar-logo">
+                <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/68e8a33455c3ad82c6152a93.png"
+                    alt="JoinsClee" style="height:32px;width:auto;">
+            </a>
+            <div class="breadcrumb">
+                <a href="dashboard.html">Dashboard</a><span class="sep">›</span><span class="current"
+                    id="breadcrumbName">Cargando...</span>
+            </div>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
+    </header>
+
+    <!-- LAYOUT -->
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-section">
+                <h3>Cliente</h3>
+                <div class="client-info-name" id="clientName">—</div>
+                <div class="client-info-detail" id="clientContact"></div>
+                <div class="client-info-detail" id="clientEmail"></div>
+            </div>
+            <div class="sidebar-section">
+                <h3>Proyecto</h3>
+                <select id="projectFilter">
+                    <option value="all">Todos los proyectos</option>
+                </select>
+            </div>
+            <div class="sidebar-section" id="milestonesSection" style="display:none">
+                <h3>Hitos</h3>
+                <div id="milestonesList"></div>
+                <div class="milestones-summary" id="milestonesSummary"></div>
+            </div>
+            <div class="sidebar-section">
+                <button class="sidebar-btn" onclick="openNewProjectModal()">📁 Nuevo Proyecto</button>
+                <button class="sidebar-btn primary" onclick="openGHLGenerator()">📋 Generar HTML para GHL</button>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="main-content">
+            <div class="kanban-header">
+                <h2>Tablero de Tareas</h2>
+            </div>
+            <div class="kanban-board" id="kanbanBoard">
+                <div class="loading-overlay">
+                    <div class="spinner"></div> Cargando tareas...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TASK MODAL -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="taskModalTitle">Nueva Tarea</h2>
+                <button class="modal-close" onclick="closeTaskModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="taskForm">
+                    <input type="hidden" id="taskId">
+                    <input type="hidden" id="taskStatusField">
+                    <div class="form-group">
+                        <label for="taskTitle">Título *</label>
+                        <input type="text" id="taskTitle" required placeholder="Título de la tarea">
+                    </div>
+                    <div class="form-group">
+                        <label for="taskDescription">Descripción</label>
+                        <textarea id="taskDescription" placeholder="Describe la tarea..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taskPriority">Prioridad</label>
+                            <select id="taskPriority">
+                                <option value="low">🟢 Baja</option>
+                                <option value="medium" selected>🔵 Media</option>
+                                <option value="high">🟠 Alta</option>
+                                <option value="urgent">🔴 Urgente</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="taskAssigned">Asignado a</label>
+                            <input type="text" id="taskAssigned" placeholder="Nombre">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taskDue">Fecha límite</label>
+                            <input type="date" id="taskDue">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskProject">Proyecto</label>
+                            <select id="taskProject"></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="taskPhase">Fase</label>
+                            <input type="text" id="taskPhase" placeholder="Ej: Fase 0 - Análisis">
+                        </div>
+                        <div class="form-group">
+                            <label for="taskGroup">Grupo de tarea</label>
+                            <input type="text" id="taskGroup" placeholder="Ej: Métricas">
+                        </div>
+                    </div>
+                </form>
+                <div class="comments-section" id="commentsSection" style="display:none">
+                    <h4>Comentarios</h4>
+                    <div id="commentsList"></div>
+                    <div class="add-comment">
+                        <input type="text" id="commentAuthor" placeholder="Tu nombre" value="JoinsClee"
+                            style="max-width:120px">
+                        <input type="text" id="commentBody" placeholder="Escribe un comentario...">
+                        <button class="btn-primary" onclick="addComment()"
+                            style="padding:8px 14px;font-size:.8rem">Enviar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" id="cancelTaskBtn" style="display:none;margin-right:auto"
+                    onclick="cancelTask()">Cancelar Tarea</button>
+                <button class="btn-danger" id="deleteTaskBtn" style="display:none"
+                    onclick="deleteCurrentTask()">Eliminar</button>
+                <button class="btn-secondary" onclick="closeTaskModal()">Cerrar</button>
+                <button class="btn-primary" onclick="saveTask()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW PROJECT MODAL -->
+    <div class="modal-overlay" id="projectModal">
+        <div class="modal" style="max-width:460px">
+            <div class="modal-header">
+                <h2>Nuevo Proyecto</h2>
+                <button class="modal-close" onclick="closeProjectModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="projName">Nombre *</label>
+                    <input type="text" id="projName" required placeholder="Nombre del proyecto">
+                </div>
+                <div class="form-group">
+                    <label for="projDesc">Descripción</label>
+                    <textarea id="projDesc" placeholder="Describe el proyecto..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="projStart">Inicio</label><input type="date" id="projStart">
+                    </div>
+                    <div class="form-group"><label for="projDue">Fecha límite</label><input type="date" id="projDue">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeProjectModal()">Cancelar</button>
+                <button class="btn-primary" onclick="saveProject()">Crear Proyecto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GHL GENERATOR MODAL -->
+    <div class="modal-overlay" id="ghlModal">
+        <div class="modal" style="max-width:700px">
+            <div class="modal-header">
+                <h2>Código HTML para GHL</h2>
+                <button class="modal-close" onclick="closeGHLModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:16px">Copia este código HTML y
+                    pégalo en tu página de GoHighLevel. El tablero mostrará las tareas e hitos de este cliente en modo
+                    solo lectura.</p>
+                <textarea class="ghl-textarea" id="ghlOutput" readonly></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="copyGHL()">📋 Copiar al portapapeles</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        /* CONFIG */
+        const SUPABASE_URL = 'https://xooacjcabrjvfzhdfdlc.supabase.co';
+        const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhvb2FjamNhYnJqdmZ6aGRmZGxjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTMyNjY0MSwiZXhwIjoyMDg2OTAyNjQxfQ.6prAAymJMWXjeCfkSl6IpnLm593QuN5YO1N6wUthDhc';
+        const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhvb2FjamNhYnJqdmZ6aGRmZGxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzMjY2NDEsImV4cCI6MjA4NjkwMjY0MX0.kSYFiJLRlgUTLN2dbHvSdatGsArdH0lqLsTiLS3XEkk';
+        const SCHEMA = 'portal';
+        const COLUMNS = ['backlog', 'todo', 'in_progress', 'review', 'done'];
+        const COL_LABELS = { backlog: 'Pendiente', todo: 'Por Hacer', in_progress: 'En Progreso', review: 'Revisión', done: 'Hecho' };
+
+        /* STATE */
+        let clientId = null, clientData = null, projects = [], tasks = [], milestones = [], currentProject = 'all';
+
+        /* SUPABASE API */
+        async function api(method, table, opts = {}) {
+            const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+            if (opts.filters) url.search += (url.search ? '&' : '?') + opts.filters;
+            if (opts.select) url.searchParams.set('select', opts.select);
+            if (opts.order) url.searchParams.set('order', opts.order);
+            const h = { 'apikey': SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' };
+            if (method === 'GET') h['Accept-Profile'] = SCHEMA; else h['Content-Profile'] = SCHEMA;
+            if (method !== 'GET') h['Prefer'] = 'return=representation';
+            const r = await fetch(url.toString(), { method, headers: h, body: opts.body ? JSON.stringify(opts.body) : undefined });
+            if (!r.ok) throw new Error(await r.text());
+            const t = await r.text(); return t ? JSON.parse(t) : null;
+        }
+
+        /* INIT */
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            clientId = params.get('id');
+            if (!clientId) { window.location.href = 'dashboard.html'; return }
+            initTheme(); loadAll();
+        })();
+
+        async function loadAll() {
+            try {
+                const clients = await api('GET', 'clients', { filters: `id=eq.${clientId}` });
+                if (!clients || !clients.length) { alert('Cliente no encontrado'); window.location.href = 'dashboard.html'; return }
+                clientData = clients[0];
+                document.getElementById('breadcrumbName').textContent = clientData.name;
+                document.getElementById('clientName').textContent = clientData.name;
+                document.getElementById('clientContact').textContent = clientData.contact_name ? `👤 ${clientData.contact_name}` : '';
+                document.getElementById('clientEmail').textContent = clientData.contact_email ? `✉️ ${clientData.contact_email}` : '';
+                document.title = `JoinsClee — ${clientData.name}`;
+                await Promise.all([loadProjects(), loadTasks()]);
+            } catch (e) { showToast('Error: ' + e.message, 'error') }
+        }
+
+        async function loadProjects() {
+            projects = await api('GET', 'projects', { filters: `client_id=eq.${clientId}`, order: 'name' });
+            const sel = document.getElementById('projectFilter');
+            const taskProj = document.getElementById('taskProject');
+            sel.innerHTML = '<option value="all">Todos los proyectos</option>';
+            taskProj.innerHTML = '';
+            projects.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                taskProj.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+            sel.value = currentProject;
+            if (projects.length > 0) loadMilestones();
+        }
+
+        async function loadTasks() {
+            let filters = `client_id=eq.${clientId}`;
+            if (currentProject !== 'all') filters += `&project_id=eq.${currentProject}`;
+            tasks = await api('GET', 'tasks', { filters, order: 'position' });
+            renderKanban();
+        }
+
+        async function loadMilestones() {
+            let pid = currentProject !== 'all' ? currentProject : (projects[0] ? projects[0].id : null);
+            if (!pid) { document.getElementById('milestonesSection').style.display = 'none'; return }
+            milestones = await api('GET', 'milestones', { filters: `project_id=eq.${pid}`, order: 'position' });
+            renderMilestones();
+        }
+
+        /* RENDER KANBAN */
+        function renderKanban() {
+            const board = document.getElementById('kanbanBoard');
+            board.innerHTML = COLUMNS.map(col => {
+                const colTasks = tasks.filter(t => t.status === col);
+                return `<div class="kanban-column" data-status="${col}">
+      <div class="column-header">
+        <span class="column-title">${COL_LABELS[col]} <span class="column-count">${colTasks.length}</span></span>
+        <button class="column-add" onclick="openTaskModal('${col}')" title="Agregar tarea">＋</button>
+      </div>
+      <div class="column-tasks" data-status="${col}"
+        ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        ${colTasks.map(t => renderTaskCard(t)).join('')}
+      </div>
+    </div>`;
+            }).join('');
+        }
+
+        function renderAssigneeTags(assignedTo) {
+            if (!assignedTo) return '';
+            const parts = assignedTo.split('+').map(s => s.trim());
+            return parts.map(p => {
+                const cls = p.toLowerCase() === 'jc' ? 'jc' : 'mp';
+                const label = p.toLowerCase() === 'jc' ? 'JoinsClee' : 'Cliente';
+                return `<span class="assignee-tag ${cls}">${label}</span>`;
+            }).join('');
+        }
+
+        function renderTaskCard(t) {
+            const today = new Date().toISOString().split('T')[0];
+            const overdue = t.due_date && t.due_date < today ? 'overdue' : '';
+            return `<div class="task-card" draggable="true" data-id="${t.id}"
+    ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)"
+    onclick="openTaskModal(null,'${t.id}')">
+    ${t.phase ? `<div class="phase-badge">${t.phase}</div>` : ''}
+    <div class="task-card-title">${t.title}</div>
+    ${t.task_group ? `<div class="group-badge">${t.task_group}</div>` : ''}
+    <div class="task-card-meta">
+      <span class="priority-badge ${t.priority}">${t.priority}</span>
+      <div class="assignee-tags">${renderAssigneeTags(t.assigned_to)}</div>
+      ${t.due_date ? `<span class="task-due ${overdue}">📅 ${t.due_date}</span>` : ''}
+    </div>
+  </div>`;
+        }
+
+        /* MILESTONES */
+        function renderMilestones() {
+            const sec = document.getElementById('milestonesSection');
+            const list = document.getElementById('milestonesList');
+            const sum = document.getElementById('milestonesSummary');
+            if (!milestones.length) { sec.style.display = 'none'; return }
+            sec.style.display = 'block';
+            const completed = milestones.filter(m => m.status === 'completed').length;
+            list.innerHTML = milestones.map(m => {
+                // Calculate actual percentage from tasks in this phase
+                const phaseTasks = tasks.filter(t => t.phase === m.name);
+                let pct;
+                if (phaseTasks.length > 0) {
+                    const doneTasks = phaseTasks.filter(t => t.status === 'done').length;
+                    pct = Math.round((doneTasks / phaseTasks.length) * 100);
+                } else {
+                    pct = m.status === 'completed' ? 100 : m.status === 'in_progress' ? 50 : 0;
+                }
+                return `<div class="milestone-item">
+      <div class="milestone-header"><span class="milestone-name">${m.name}</span>
+        <span class="milestone-status">${m.status === 'completed' ? '✅' : m.status === 'in_progress' ? '🔄' : '⏳'} ${pct}%</span></div>
+      <div class="milestone-bar"><div class="milestone-fill" style="width:${pct}%"></div></div>
+    </div>`;
+            }).join('');
+            sum.textContent = `${completed} de ${milestones.length} hitos completados`;
+        }
+
+        /* DRAG & DROP */
+        let draggedId = null;
+        function handleDragStart(e) {
+            draggedId = e.target.dataset.id;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+        }
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over');
+        }
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        function getDropIndex(container, y) {
+            const cards = [...container.querySelectorAll('.task-card:not(.dragging)')];
+            let closest = null, closestOffset = Number.NEGATIVE_INFINITY;
+            cards.forEach((card, i) => {
+                const box = card.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closestOffset) {
+                    closestOffset = offset;
+                    closest = i;
+                }
+            });
+            return closest !== null ? closest : cards.length;
+        }
+        async function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (!draggedId) return;
+            const newStatus = e.currentTarget.dataset.status;
+            const dropIndex = getDropIndex(e.currentTarget, e.clientY);
+            try {
+                // Get all tasks in this column excluding the dragged one
+                const colTasks = tasks.filter(t => t.status === newStatus && t.id !== draggedId);
+                // Insert at the right position
+                colTasks.splice(dropIndex, 0, { id: draggedId });
+                // Update positions for all tasks in this column
+                const updates = colTasks.map((t, i) =>
+                    api('PATCH', 'tasks', { filters: `id=eq.${t.id}`, body: { status: newStatus, position: i } })
+                );
+                await Promise.all(updates);
+                await loadTasks();
+                showToast('Tarea movida');
+                // Auto-update milestones based on task completion
+                await updateMilestonesFromTasks();
+            } catch (err) { showToast('Error: ' + err.message, 'error') }
+            draggedId = null;
+        }
+
+        /* AUTO-UPDATE MILESTONES */
+        async function updateMilestonesFromTasks() {
+            if (!milestones.length) return;
+            try {
+                for (const m of milestones) {
+                    // Find tasks whose phase matches this milestone name
+                    const phaseTasks = tasks.filter(t => t.phase === m.name);
+                    if (phaseTasks.length === 0) continue;
+                    const doneTasks = phaseTasks.filter(t => t.status === 'done');
+                    const inProgressTasks = phaseTasks.filter(t => t.status !== 'backlog' && t.status !== 'done');
+                    let newStatus;
+                    if (doneTasks.length === phaseTasks.length) {
+                        newStatus = 'completed';
+                    } else if (doneTasks.length > 0 || inProgressTasks.length > 0) {
+                        newStatus = 'in_progress';
+                    } else {
+                        newStatus = 'pending';
+                    }
+                    if (m.status !== newStatus) {
+                        await api('PATCH', 'milestones', { filters: `id=eq.${m.id}`, body: { status: newStatus } });
+                    }
+                }
+                await loadMilestones();
+            } catch (e) { /* silently fail */ }
+        }
+
+        /* TASK MODAL */
+        function openTaskModal(status, taskId) {
+            const modal = document.getElementById('taskModal');
+            const title = document.getElementById('taskModalTitle');
+            const delBtn = document.getElementById('deleteTaskBtn');
+            const cancelBtn = document.getElementById('cancelTaskBtn');
+            const commSec = document.getElementById('commentsSection');
+            document.getElementById('taskForm').reset();
+            document.getElementById('taskId').value = '';
+
+            if (taskId) {
+                const t = tasks.find(x => x.id === taskId);
+                if (!t) return;
+                title.textContent = 'Editar Tarea';
+                delBtn.style.display = 'inline-flex';
+                cancelBtn.style.display = 'inline-flex';
+                commSec.style.display = 'block';
+                document.getElementById('taskId').value = t.id;
+                document.getElementById('taskTitle').value = t.title;
+                document.getElementById('taskDescription').value = t.description || '';
+                document.getElementById('taskPriority').value = t.priority;
+                document.getElementById('taskAssigned').value = t.assigned_to || '';
+                document.getElementById('taskDue').value = t.due_date || '';
+                document.getElementById('taskProject').value = t.project_id;
+                document.getElementById('taskPhase').value = t.phase || '';
+                document.getElementById('taskGroup').value = t.task_group || '';
+                document.getElementById('taskStatusField').value = t.status;
+                loadComments(t.id);
+            } else {
+                title.textContent = 'Nueva Tarea';
+                delBtn.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                commSec.style.display = 'none';
+                document.getElementById('taskStatusField').value = status || 'backlog';
+                if (currentProject !== 'all') document.getElementById('taskProject').value = currentProject;
+            }
+            modal.classList.add('active');
+        }
+
+        function closeTaskModal() { document.getElementById('taskModal').classList.remove('active') }
+
+        async function saveTask() {
+            const id = document.getElementById('taskId').value;
+            const title = document.getElementById('taskTitle').value.trim();
+            const projectId = document.getElementById('taskProject').value;
+            if (!title) { showToast('El título es obligatorio', 'error'); return }
+            if (!projectId) { showToast('Selecciona un proyecto', 'error'); return }
+            const data = {
+                title, project_id: projectId, client_id: clientId,
+                description: document.getElementById('taskDescription').value.trim() || null,
+                priority: document.getElementById('taskPriority').value,
+                assigned_to: document.getElementById('taskAssigned').value.trim() || null,
+                due_date: document.getElementById('taskDue').value || null,
+                phase: document.getElementById('taskPhase').value.trim() || null,
+                task_group: document.getElementById('taskGroup').value.trim() || null,
+                status: document.getElementById('taskStatusField').value
+            };
+            try {
+                if (id) await api('PATCH', 'tasks', { filters: `id=eq.${id}`, body: data });
+                else { data.position = tasks.filter(t => t.status === data.status).length; await api('POST', 'tasks', { body: data }) }
+                closeTaskModal(); await loadTasks(); showToast(id ? 'Tarea actualizada' : 'Tarea creada');
+                await updateMilestonesFromTasks();
+            } catch (e) { showToast('Error: ' + e.message, 'error') }
+        }
+
+        async function deleteCurrentTask() {
+            const id = document.getElementById('taskId').value;
+            if (!id || !confirm('¿Eliminar esta tarea?')) return;
+            try { await api('DELETE', 'tasks', { filters: `id=eq.${id}` }); closeTaskModal(); await loadTasks(); showToast('Tarea eliminada') } catch (e) { showToast('Error: ' + e.message, 'error') }
+        }
+
+        async function cancelTask() {
+            const id = document.getElementById('taskId').value;
+            if (!id || !confirm('¿Cancelar esta tarea? Se quitará del tablero.')) return;
+            try { await api('PATCH', 'tasks', { filters: `id=eq.${id}`, body: { status: 'cancelled' } }); closeTaskModal(); await loadTasks(); showToast('Tarea cancelada') } catch (e) { showToast('Error: ' + e.message, 'error') }
+        }
+
+        /* COMMENTS */
+        async function loadComments(taskId) {
+            const list = document.getElementById('commentsList');
+            try {
+                const comments = await api('GET', 'task_comments', { filters: `task_id=eq.${taskId}`, order: 'created_at.desc' });
+                list.innerHTML = comments.length ? comments.map(c => `<div class="comment-item">
+      <div class="comment-author">${c.author}</div>
+      <div class="comment-body">${c.body}</div>
+      <div class="comment-date">${new Date(c.created_at).toLocaleString('es')}</div>
+    </div>`).join('') : '<p style="font-size:.8rem;color:var(--text-tertiary)">Sin comentarios aún</p>';
+            } catch (e) { list.innerHTML = '' }
+        }
+
+        async function addComment() {
+            const taskId = document.getElementById('taskId').value;
+            const author = document.getElementById('commentAuthor').value.trim();
+            const body = document.getElementById('commentBody').value.trim();
+            if (!author || !body) { showToast('Nombre y comentario requeridos', 'error'); return }
+            try {
+                await api('POST', 'task_comments', { body: { task_id: taskId, author, body } });
+                document.getElementById('commentBody').value = '';
+                loadComments(taskId); showToast('Comentario agregado');
+            } catch (e) { showToast('Error: ' + e.message, 'error') }
+        }
+
+        /* PROJECT MODAL */
+        function openNewProjectModal() { document.getElementById('projectModal').classList.add('active') }
+        function closeProjectModal() { document.getElementById('projectModal').classList.remove('active') }
+        async function saveProject() {
+            const name = document.getElementById('projName').value.trim();
+            if (!name) { showToast('Nombre requerido', 'error'); return }
+            try {
+                await api('POST', 'projects', { body: { client_id: clientId, name, description: document.getElementById('projDesc').value.trim() || null, start_date: document.getElementById('projStart').value || null, due_date: document.getElementById('projDue').value || null } });
+                closeProjectModal(); await loadProjects(); showToast('Proyecto creado');
+            } catch (e) { showToast('Error: ' + e.message, 'error') }
+        }
+
+        /* GHL GENERATOR */
+        function getGHLTemplate() {
+            return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{CLIENT_NAME}} — Estado del Proyecto</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f8f9fc;--bg-card:#fff;--bg-col:#f1f3f9;--text:#1a1d2e;--text2:#5a5f7a;--text3:#8b90a5;--border:#e2e4ed;--accent:#6c5ce7;--accent-hover:#5b4cdb;--accent-light:rgba(108,92,231,.1);--p-urgent:#e74c3c;--p-high:#e67e22;--p-medium:#3498db;--p-low:#95a5a6;--radius:10px;--shadow:0 4px 12px rgba(0,0,0,.08)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);padding:24px;max-width:1200px;margin:0 auto}
+.portal-header{text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.portal-header img{height:40px;margin-bottom:12px}
+.portal-header h1{font-size:1.5rem;font-weight:700;letter-spacing:-.03em;margin-bottom:4px}
+.portal-header p{color:var(--text2);font-size:.9rem}
+.milestones-bar{display:flex;align-items:center;gap:0;margin-bottom:32px;position:relative;padding:0 20px}
+.milestone-step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1}
+.milestone-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:600;border:3px solid var(--border);background:var(--bg-card);color:var(--text3);transition:all .3s;margin-bottom:8px}
+.milestone-step.completed .milestone-dot{background:var(--accent);border-color:var(--accent);color:#fff}
+.milestone-step.in_progress .milestone-dot{border-color:var(--accent);color:var(--accent);animation:pulse 2s infinite}
+.milestone-label{font-size:.7rem;color:var(--text3);text-align:center;max-width:100px;font-weight:500}
+.milestone-step.completed .milestone-label{color:var(--accent);font-weight:600}
+.milestone-step.in_progress .milestone-label{color:var(--text);font-weight:600}
+.milestones-line{position:absolute;top:18px;left:40px;right:40px;height:3px;background:var(--border);z-index:0}
+.milestones-line-fill{height:100%;background:linear-gradient(90deg,var(--accent),#a29bfe);border-radius:2px;transition:width .8s ease}
+.milestones-summary-text{text-align:center;font-size:.85rem;color:var(--text2);margin-bottom:24px}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(108,92,231,.3)}50%{box-shadow:0 0 0 8px rgba(108,92,231,0)}}
+.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:16px}
+.kanban-col{flex:1;min-width:200px;background:var(--bg-col);border-radius:var(--radius);padding:12px}
+.col-title{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.col-count{background:var(--border);padding:1px 7px;border-radius:8px;font-size:.65rem}
+.task{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .2s}
+.task:hover{border-color:var(--accent)}
+.task-title{font-size:.825rem;font-weight:500;margin-bottom:6px;line-height:1.4}
+.task-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.p-badge{padding:2px 7px;border-radius:8px;font-size:.6rem;font-weight:600;text-transform:uppercase}
+.p-badge.urgent{background:rgba(231,76,60,.12);color:var(--p-urgent)}
+.p-badge.high{background:rgba(230,126,34,.12);color:var(--p-high)}
+.p-badge.medium{background:rgba(52,152,219,.12);color:var(--p-medium)}
+.p-badge.low{background:rgba(149,165,166,.12);color:var(--p-low)}
+.task-due{font-size:.65rem;color:var(--text3)}
+.task-desc{font-size:.7rem;color:var(--text2);margin-top:4px;line-height:1.4;display:none}
+.task.expanded .task-desc{display:block}
+.task.expanded .task-comments-section{display:block}
+.phase-badge-ghl{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.55rem;font-weight:600;background:rgba(108,92,231,.1);color:var(--accent);margin-bottom:4px}
+.group-badge-ghl{display:inline-block;padding:2px 7px;border-radius:6px;font-size:.55rem;font-weight:500;background:#ebedf5;color:var(--text2);margin-bottom:4px}
+.assignee-tag-ghl{display:inline-block;padding:2px 7px;border-radius:6px;font-size:.55rem;font-weight:600}
+.assignee-tag-ghl.jc{background:rgba(108,92,231,.12);color:var(--accent)}
+.assignee-tag-ghl.mp{background:rgba(46,204,113,.12);color:#27ae60}
+.empty-col{text-align:center;color:var(--text3);font-size:.75rem;padding:20px 0;opacity:.6}
+.loading{text-align:center;padding:48px;color:var(--text3)}
+.task-comments-section{display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.task-comments-section h5{font-size:.7rem;font-weight:600;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.comment-item-ghl{padding:6px 0;border-bottom:1px solid rgba(0,0,0,.04)}
+.comment-item-ghl:last-child{border-bottom:none}
+.comment-author-ghl{font-size:.65rem;font-weight:600;color:var(--accent)}
+.comment-author-ghl.client{color:#27ae60}
+.comment-body-ghl{font-size:.75rem;color:var(--text);margin:2px 0}
+.comment-date-ghl{font-size:.6rem;color:var(--text3)}
+.add-comment-ghl{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.add-comment-ghl input{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;font-family:inherit;outline:none}
+.add-comment-ghl input:focus{border-color:var(--accent)}
+.add-comment-ghl button{padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.7rem;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.add-comment-ghl button:hover{background:var(--accent-hover)}
+.comments-loading{font-size:.65rem;color:var(--text3);padding:4px 0}
+@media(max-width:768px){body{padding:16px}.kanban{flex-direction:column}.kanban-col{min-width:100%}.milestones-bar{flex-wrap:wrap;gap:8px;padding:0}.milestones-line{display:none}.portal-header img{height:32px}.portal-header h1{font-size:1.2rem}.task{padding:8px 10px}.add-comment-ghl{flex-direction:column}.add-comment-ghl input{width:100%}.add-comment-ghl button{width:100%;text-align:center}}
+@media(max-width:480px){body{padding:12px}.portal-header{margin-bottom:20px;padding-bottom:16px}.portal-header h1{font-size:1.1rem}.milestone-dot{width:28px;height:28px;font-size:.65rem}.milestone-label{font-size:.6rem;max-width:60px}.col-title{font-size:.7rem}.task-title{font-size:.8rem}.task-meta{gap:4px}}
+<\/style>
+<\/head>
+<body>
+<div class="portal-header">
+<img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/68e8a33455c3ad82c6152a93.png" alt="JoinsClee">
+<h1>{{CLIENT_NAME}}</h1>
+<p>Estado actual del proyecto</p>
+</div>
+<div id="milestonesContainer"></div>
+<div id="kanbanContainer"><div class="loading">&#x23f3; Cargando...</div></div>
+<script>
+var SUPABASE_URL='https://xooacjcabrjvfzhdfdlc.supabase.co';
+var ANON_KEY_GHL='{{ANON_KEY}}';
+var CLIENT_ID_GHL='{{CLIENT_ID}}';
+var SCHEMA_GHL='portal';
+var COLS=['backlog','todo','in_progress','review','done'];
+var LABELS={backlog:'Pendiente',todo:'Por Hacer',in_progress:'En Progreso',review:'Revisi\u00f3n',done:'Hecho'};
+var allTasks=[];
+function apiGet(table,filters){var url=SUPABASE_URL+'/rest/v1/'+table+'?'+filters;return fetch(url,{headers:{'apikey':ANON_KEY_GHL,'Authorization':'Bearer '+ANON_KEY_GHL,'Accept-Profile':SCHEMA_GHL}}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
+function apiPost(table,data){var url=SUPABASE_URL+'/rest/v1/'+table;return fetch(url,{method:'POST',headers:{'apikey':ANON_KEY_GHL,'Authorization':'Bearer '+ANON_KEY_GHL,'Content-Profile':SCHEMA_GHL,'Content-Type':'application/json','Prefer':'return=representation'},body:JSON.stringify(data)}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})}
+function init(){apiGet('projects','client_id=eq.'+CLIENT_ID_GHL+'&status=eq.active&order=created_at').then(function(projects){if(projects.length>0){return apiGet('milestones','project_id=eq.'+projects[0].id+'&order=position').then(function(ms){renderMilestones(ms)})}}).then(function(){return apiGet('tasks','client_id=eq.'+CLIENT_ID_GHL+'&status=neq.cancelled&order=position')}).then(function(tasks){allTasks=tasks;renderKanban(tasks)}).catch(function(e){document.getElementById('kanbanContainer').innerHTML='<div class="loading">&#x26a0;&#xfe0f; Error al cargar: '+e.message+'</div>'})}
+function renderMilestones(ms){if(!ms.length)return;var container=document.getElementById('milestonesContainer');var completed=ms.filter(function(m){return m.status==='completed'}).length;var pct=ms.length?Math.round((completed/ms.length)*100):0;container.innerHTML='<div class="milestones-bar"><div class="milestones-line"><div class="milestones-line-fill" style="width:'+pct+'%"></div></div>'+ms.map(function(m,i){return '<div class="milestone-step '+m.status+'"><div class="milestone-dot">'+(m.status==='completed'?'&#x2713;':(i+1))+'</div><div class="milestone-label">'+m.name+'</div></div>'}).join('')+'</div><div class="milestones-summary-text">'+completed+' de '+ms.length+' hitos completados</div>'}
+function renderAssigneeTagsGHL(a){if(!a)return '';return a.split('+').map(function(p){p=p.trim();var cls=p.toLowerCase()==='jc'?'jc':'mp';var label=p.toLowerCase()==='jc'?'JoinsClee':'Cliente';return '<span class="assignee-tag-ghl '+cls+'">'+label+'</span>'}).join(' ')}
+function renderKanban(tasks){var container=document.getElementById('kanbanContainer');container.innerHTML='<div class="kanban">'+COLS.map(function(col){var ct=tasks.filter(function(t){return t.status===col});return '<div class="kanban-col"><div class="col-title">'+LABELS[col]+' <span class="col-count">'+ct.length+'</span></div>'+(ct.length?ct.map(function(t){return '<div class="task" data-task-id="'+t.id+'">'+(t.phase?'<div class="phase-badge-ghl">'+t.phase+'</div>':'')+'<div class="task-title">'+t.title+'</div>'+(t.task_group?'<div class="group-badge-ghl">'+t.task_group+'</div>':'')+'<div class="task-meta"><span class="p-badge '+t.priority+'">'+t.priority+'</span>'+renderAssigneeTagsGHL(t.assigned_to)+(t.due_date?'<span class="task-due">&#x1f4cc; '+t.due_date+'</span>':'')+'</div>'+(t.description?'<div class="task-desc">'+t.description+'</div>':'')+'<div class="task-comments-section" id="comments-'+t.id+'"><h5>&#x1f4ac; Comentarios</h5><div class="comments-list" id="clist-'+t.id+'"><span class="comments-loading">Cargando...</span></div><div class="add-comment-ghl"><input type="text" placeholder="Escribe un comentario..." id="cinput-'+t.id+'"><button data-tid="'+t.id+'">Enviar</button></div></div></div>'}).join(''):'<div class="empty-col">Sin tareas</div>')+'</div>'}).join('')+'</div>'}
+function loadComments(taskId){var list=document.getElementById('clist-'+taskId);if(!list)return;apiGet('task_comments','task_id=eq.'+taskId+'&order=created_at.desc').then(function(comments){if(comments.length===0){list.innerHTML='<span class="comments-loading">Sin comentarios aún</span>';return}list.innerHTML=comments.map(function(c){var isClient=c.author!=='JoinsClee';return '<div class="comment-item-ghl"><span class="comment-author-ghl'+(isClient?' client':'')+'">'+(c.author)+'</span><div class="comment-body-ghl">'+c.body+'</div><div class="comment-date-ghl">'+new Date(c.created_at).toLocaleString("es")+'</div></div>'}).join('')}).catch(function(){list.innerHTML='<span class="comments-loading">Error al cargar</span>'})}
+function postComment(taskId){var input=document.getElementById('cinput-'+taskId);var body=input.value.trim();if(!body)return;apiPost('task_comments',{task_id:taskId,author:'{{CLIENT_NAME}}',body:body}).then(function(){input.value='';loadComments(taskId)}).catch(function(e){alert('Error al enviar comentario')})}
+document.addEventListener('click',function(e){var btn=e.target.closest('.add-comment-ghl button');if(btn){var tid=btn.getAttribute('data-tid');postComment(tid);return}var task=e.target.closest('.task');if(task&&!e.target.closest('.add-comment-ghl')){task.classList.toggle('expanded');if(task.classList.contains('expanded')){loadComments(task.getAttribute('data-task-id'))}}});
+init();
+    <\/script>
+<\/body>
+
+<\/html>`;
+        }
+        async function openGHLGenerator() {
+            const modal = document.getElementById('ghlModal');
+            let html = getGHLTemplate();
+            html = html.replace(/\{\{CLIENT_ID\}\}/g, clientId);
+            html = html.replace(/\{\{CLIENT_NAME\}\}/g, clientData.name);
+            html = html.replace(/\{\{ANON_KEY\}\}/g, ANON_KEY);
+            document.getElementById('ghlOutput').value = html;
+            modal.classList.add('active');
+        }
+        function closeGHLModal() { document.getElementById('ghlModal').classList.remove('active') }
+        function copyGHL() {
+            const ta = document.getElementById('ghlOutput'); ta.select(); document.execCommand('copy');
+            showToast('HTML copiado al portapapeles');
+        }
+
+        /* PROJECT FILTER */
+        document.getElementById('projectFilter').addEventListener('change', e => {
+            currentProject = e.target.value; loadTasks(); loadMilestones();
+        });
+
+        /* DARK MODE */
+        function initTheme() {
+            const s = localStorage.getItem('jc-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', s); document.getElementById('themeToggle').textContent = s ===
+                'dark' ? '☀️' : '🌙'
+        }
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            const c = document.documentElement.getAttribute('data-theme'); const n = c === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', n); localStorage.setItem('jc-theme', n);
+            document.getElementById('themeToggle').textContent = n === 'dark' ? '☀️' : '🌙';
+        });
+
+        /* MODAL CLOSE ON OVERLAY */
+        ['taskModal', 'projectModal', 'ghlModal'].forEach(id => {
+            document.getElementById(id).addEventListener('click', e => {
+                if (e.target.id === id)
+                    document.getElementById(id).classList.remove('active')
+            });
+        });
+
+        /* TOAST */
+        function showToast(msg, type = 'success') {
+            const c = document.getElementById('toastContainer'); const t = document.createElement('div');
+            t.className = `toast ${type}`; t.textContent = msg; c.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0'; t.style.transform = 'translateX(20px)'; t.style.transition = 'all .3s';
+                setTimeout(() => t.remove(), 300)
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JoinsClee — Panel de Clientes</title>
+    <meta name="description" content="Panel interno de gestión de clientes de la agencia JoinsClee">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ==========================================
+   DESIGN SYSTEM — JoinsClee Portal
+   ========================================== */
+        :root {
+            /* Colors */
+            --bg-primary: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f3f9;
+            --bg-hover: #ebedf5;
+            --bg-modal-overlay: rgba(0, 0, 0, 0.45);
+            --text-primary: #1a1d2e;
+            --text-secondary: #5a5f7a;
+            --text-tertiary: #8b90a5;
+            --border-color: #e2e4ed;
+            --border-light: #eef0f6;
+            --accent: #6c5ce7;
+            --accent-hover: #5b4cdb;
+            --accent-light: rgba(108, 92, 231, 0.1);
+            --danger: #e74c3c;
+            --danger-hover: #c0392b;
+            --success: #27ae60;
+            --warning: #f39c12;
+            /* Priority */
+            --priority-urgent: #e74c3c;
+            --priority-high: #e67e22;
+            --priority-medium: #3498db;
+            --priority-low: #95a5a6;
+            /* Status */
+            --status-active: #27ae60;
+            --status-paused: #f39c12;
+            --status-archived: #95a5a6;
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            /* Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 20px;
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.15);
+            /* Transitions */
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.25s ease;
+            --transition-slow: 0.4s ease;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-tertiary: #232639;
+            --bg-hover: #2a2e45;
+            --bg-modal-overlay: rgba(0, 0, 0, 0.7);
+            --text-primary: #e8eaf0;
+            --text-secondary: #a0a5bd;
+            --text-tertiary: #6b7190;
+            --border-color: #2e3248;
+            --border-light: #252840;
+            --accent: #8b7cf7;
+            --accent-hover: #7c6cf0;
+            --accent-light: rgba(139, 124, 247, 0.15);
+        }
+
+        /* ==========================================
+   RESET & BASE
+   ========================================== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            transition: background var(--transition-normal), color var(--transition-normal);
+        }
+
+        /* ==========================================
+   TOPBAR
+   ========================================== */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-md) var(--space-xl);
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: -0.02em;
+        }
+
+        .topbar-logo .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), #a29bfe);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            transition: all var(--transition-fast);
+            color: var(--text-secondary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* ==========================================
+   MAIN CONTAINER
+   ========================================== */
+        .main-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: var(--space-xl);
+        }
+
+        /* ==========================================
+   HEADER SECTION
+   ========================================== */
+        .page-header {
+            margin-bottom: var(--space-xl);
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: var(--space-xs);
+        }
+
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ==========================================
+   TOOLBAR (Search + Filters + Add)
+   ========================================== */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+            margin-bottom: var(--space-lg);
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 42px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+            outline: none;
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .search-box input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .search-box .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 3px;
+        }
+
+        .filter-btn {
+            padding: 7px 14px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .filter-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-hover);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding: 10px 20px;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* ==========================================
+   CLIENT GRID
+   ========================================== */
+        .client-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: var(--space-lg);
+        }
+
+        .client-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .client-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #a29bfe);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .client-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .client-card:hover::before {
+            opacity: 1;
+        }
+
+        .client-card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: var(--space-md);
+        }
+
+        .client-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, var(--accent), #a29bfe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .client-menu-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-tertiary);
+            font-size: 1.1rem;
+            transition: all var(--transition-fast);
+        }
+
+        .client-menu-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .client-card-body h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: var(--space-xs);
+            letter-spacing: -0.01em;
+        }
+
+        .client-card-body .client-contact {
+            font-size: 0.825rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        .client-card-body .client-email {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-bottom: var(--space-md);
+        }
+
+        .client-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: var(--space-md);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.725rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .status-badge.active {
+            background: rgba(39, 174, 96, 0.1);
+            color: var(--status-active);
+        }
+
+        .status-badge.active::before {
+            background: var(--status-active);
+        }
+
+        .status-badge.paused {
+            background: rgba(243, 156, 18, 0.1);
+            color: var(--status-paused);
+        }
+
+        .status-badge.paused::before {
+            background: var(--status-paused);
+        }
+
+        .status-badge.archived {
+            background: rgba(149, 165, 166, 0.1);
+            color: var(--status-archived);
+        }
+
+        .status-badge.archived::before {
+            background: var(--status-archived);
+        }
+
+        .project-count {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* ==========================================
+   CONTEXT MENU
+   ========================================== */
+        .context-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            z-index: 200;
+            min-width: 160px;
+            padding: var(--space-xs);
+            display: none;
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-menu button {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-sm);
+            font-size: 0.825rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        .context-menu button:hover {
+            background: var(--bg-hover);
+        }
+
+        .context-menu button.danger {
+            color: var(--danger);
+        }
+
+        .context-menu button.danger:hover {
+            background: rgba(231, 76, 60, 0.08);
+        }
+
+        /* ==========================================
+   MODAL
+   ========================================== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-modal-overlay);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-normal);
+            padding: var(--space-lg);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            transform: translateY(20px) scale(0.97);
+            transition: transform var(--transition-normal);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-lg);
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .modal-header h2 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: var(--space-lg);
+        }
+
+        .form-group {
+            margin-bottom: var(--space-md);
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.825rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+            font-family: inherit;
+            color: var(--text-primary);
+            outline: none;
+            transition: all var(--transition-fast);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-md);
+        }
+
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: var(--space-sm);
+            padding: var(--space-md) var(--space-lg);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .btn-secondary {
+            padding: 9px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn-danger {
+            padding: 9px 18px;
+            background: transparent;
+            border: 1px solid var(--danger);
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-family: inherit;
+            font-weight: 500;
+            color: var(--danger);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-danger:hover {
+            background: rgba(231, 76, 60, 0.08);
+        }
+
+        /* ==========================================
+   EMPTY STATE
+   ========================================== */
+        .empty-state {
+            text-align: center;
+            padding: var(--space-2xl) var(--space-lg);
+            color: var(--text-tertiary);
+        }
+
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: var(--space-md);
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--space-sm);
+        }
+
+        /* ==========================================
+   TOAST
+   ========================================== */
+        .toast-container {
+            position: fixed;
+            bottom: var(--space-lg);
+            right: var(--space-lg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-sm);
+        }
+
+        .toast {
+            padding: 12px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            animation: toastIn 0.3s ease;
+            max-width: 360px;
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--danger);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ==========================================
+   LOADING SPINNER
+   ========================================== */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-overlay {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-2xl);
+            gap: var(--space-md);
+            color: var(--text-secondary);
+        }
+
+        /* ==========================================
+   RESPONSIVE
+   ========================================== */
+        @media (max-width: 1024px) {
+            .client-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: var(--space-md);
+            }
+
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-group {
+                overflow-x: auto;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .client-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                padding: var(--space-md);
+            }
+
+            .page-header h1 {
+                font-size: 1.4rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .topbar-logo span {
+                display: none;
+            }
+
+            .btn-primary span.btn-label {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ========== TOPBAR ========== -->
+    <header class="topbar">
+        <div class="topbar-logo">
+            <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/68e8a33455c3ad82c6152a93.png"
+                alt="JoinsClee" style="height:32px;width:auto;">
+        </div>
+        <div class="topbar-actions">
+            <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
+        </div>
+    </header>
+
+    <!-- ========== MAIN ========== -->
+    <main class="main-container">
+        <div class="page-header">
+            <h1>Clientes</h1>
+            <p>Gestiona todos los clientes de la agencia desde un solo lugar.</p>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Buscar cliente por nombre o contacto...">
+            </div>
+            <div class="filter-group">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="active">Activos</button>
+                <button class="filter-btn" data-filter="paused">Pausados</button>
+                <button class="filter-btn" data-filter="archived">Archivados</button>
+            </div>
+            <button class="btn-primary" id="addClientBtn">
+                <span>＋</span>
+                <span class="btn-label">Agregar Cliente</span>
+            </button>
+        </div>
+
+        <!-- Client Grid -->
+        <div id="clientGrid" class="client-grid">
+            <div class="loading-overlay">
+                <div class="spinner"></div> Cargando clientes...
+            </div>
+        </div>
+    </main>
+
+    <!-- ========== MODAL: Agregar / Editar Cliente ========== -->
+    <div class="modal-overlay" id="clientModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Agregar Cliente</h2>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+            <div class="modal-body">
+                <form id="clientForm">
+                    <input type="hidden" id="clientId">
+                    <div class="form-group">
+                        <label for="clientName">Nombre del cliente *</label>
+                        <input type="text" id="clientName" required placeholder="Ej: Mi Empresa SAS">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="contactName">Contacto principal</label>
+                            <input type="text" id="contactName" placeholder="Nombre del contacto">
+                        </div>
+                        <div class="form-group">
+                            <label for="contactEmail">Email de contacto</label>
+                            <input type="email" id="contactEmail" placeholder="email@ejemplo.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ghlAccountId">ID GoHighLevel</label>
+                            <input type="text" id="ghlAccountId" placeholder="ID de cuenta GHL">
+                        </div>
+                        <div class="form-group">
+                            <label for="clientStatus">Estado</label>
+                            <select id="clientStatus">
+                                <option value="active">Activo</option>
+                                <option value="paused">Pausado</option>
+                                <option value="archived">Archivado</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="templateSelect">Plantilla de proyecto (opcional)</label>
+                        <select id="templateSelect">
+                            <option value="">— Sin plantilla —</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="clientNotes">Notas</label>
+                        <textarea id="clientNotes" placeholder="Notas internas sobre el cliente..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" id="deleteClientBtn"
+                    style="display:none;margin-right:auto;">Eliminar</button>
+                <button class="btn-secondary" id="cancelBtn">Cancelar</button>
+                <button class="btn-primary" id="saveClientBtn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== TOAST CONTAINER ========== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        /* ==========================================
+           SUPABASE CONFIG
+           ========================================== */
+        const SUPABASE_URL = 'https://xooacjcabrjvfzhdfdlc.supabase.co';
+        const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhvb2FjamNhYnJqdmZ6aGRmZGxjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTMyNjY0MSwiZXhwIjoyMDg2OTAyNjQxfQ.6prAAymJMWXjeCfkSl6IpnLm593QuN5YO1N6wUthDhc';
+        const SCHEMA = 'portal';
+
+        /* ==========================================
+           SUPABASE API LAYER
+           ========================================== */
+        async function supabaseRequest(method, table, { filters = '', body = null, select = '*', order = '' } = {}) {
+            const url = new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+            if (filters) url.search += (url.search ? '&' : '?') + filters;
+            if (select) url.searchParams.set('select', select);
+            if (order) url.searchParams.set('order', order);
+
+            const headers = {
+                'apikey': SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+            };
+
+            if (method === 'GET') {
+                headers['Accept-Profile'] = SCHEMA;
+            } else {
+                headers['Content-Profile'] = SCHEMA;
+            }
+
+            if (method === 'POST') {
+                headers['Prefer'] = 'return=representation';
+            }
+            if (method === 'PATCH') {
+                headers['Prefer'] = 'return=representation';
+            }
+            if (method === 'DELETE') {
+                headers['Prefer'] = 'return=representation';
+            }
+
+            const res = await fetch(url.toString(), {
+                method,
+                headers,
+                body: body ? JSON.stringify(body) : undefined,
+            });
+
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(`Supabase error (${res.status}): ${err}`);
+            }
+
+            const text = await res.text();
+            return text ? JSON.parse(text) : null;
+        }
+
+        /* CRUD Helpers */
+        const getClients = (filter) => {
+            let filters = 'order=name';
+            if (filter && filter !== 'all') filters += `&status=eq.${filter}`;
+            return supabaseRequest('GET', 'clients', { filters });
+        };
+
+        const createClient = (data) => supabaseRequest('POST', 'clients', { body: data });
+
+        const updateClient = (id, data) => supabaseRequest('PATCH', 'clients', {
+            filters: `id=eq.${id}`, body: data
+        });
+
+        const deleteClient = (id) => supabaseRequest('DELETE', 'clients', {
+            filters: `id=eq.${id}`
+        });
+
+        const getProjectCount = (clientId) => supabaseRequest('GET', 'projects', {
+            filters: `client_id=eq.${clientId}&status=eq.active`,
+            select: 'id'
+        });
+
+        const getTemplates = () => supabaseRequest('GET', 'project_templates', { filters: 'order=name' });
+
+        const createProject = (data) => supabaseRequest('POST', 'projects', { body: data });
+
+        const createTask = (data) => supabaseRequest('POST', 'tasks', { body: data });
+
+        const createMilestone = (data) => supabaseRequest('POST', 'milestones', { body: data });
+
+        /* ==========================================
+           STATE
+           ========================================== */
+        let clients = [];
+        let templates = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        /* ==========================================
+           UTILITY FUNCTIONS
+           ========================================== */
+        function slugify(text) {
+            return text.toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)/g, '')
+                + '-' + Date.now().toString(36);
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* ==========================================
+           RENDER
+           ========================================== */
+        function renderClients() {
+            const grid = document.getElementById('clientGrid');
+            let filtered = clients;
+
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(c => c.status === currentFilter);
+            }
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(c =>
+                    (c.name && c.name.toLowerCase().includes(q)) ||
+                    (c.contact_name && c.contact_name.toLowerCase().includes(q)) ||
+                    (c.contact_email && c.contact_email.toLowerCase().includes(q))
+                );
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div class="empty-icon">📋</div>
+        <h3>${searchQuery || currentFilter !== 'all' ? 'No se encontraron clientes' : 'Aún no hay clientes'}</h3>
+        <p>${searchQuery || currentFilter !== 'all' ? 'Intenta con otros filtros' : 'Agrega tu primer cliente para comenzar'}</p>
+      </div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(client => `
+    <div class="client-card" data-id="${client.id}" onclick="navigateToClient('${client.id}')">
+      <div class="client-card-header">
+        <div class="client-avatar">${getInitials(client.name)}</div>
+        <div style="position:relative;">
+          <button class="client-menu-btn" onclick="event.stopPropagation(); toggleMenu('${client.id}')" title="Opciones">⋯</button>
+          <div class="context-menu" id="menu-${client.id}">
+            <button onclick="event.stopPropagation(); editClient('${client.id}')">✏️ Editar</button>
+            <button class="danger" onclick="event.stopPropagation(); confirmDelete('${client.id}')">🗑️ Eliminar</button>
+          </div>
+        </div>
+      </div>
+      <div class="client-card-body">
+        <h3>${client.name}</h3>
+        ${client.contact_name ? `<div class="client-contact">👤 ${client.contact_name}</div>` : ''}
+        ${client.contact_email ? `<div class="client-email">✉️ ${client.contact_email}</div>` : ''}
+      </div>
+      <div class="client-card-footer">
+        <span class="status-badge ${client.status}">${client.status === 'active' ? 'Activo' : client.status === 'paused' ? 'Pausado' : 'Archivado'}</span>
+        <span class="project-count" id="pc-${client.id}">📁 …</span>
+      </div>
+    </div>
+  `).join('');
+
+            // Load project counts async
+            filtered.forEach(async (client) => {
+                try {
+                    const projects = await getProjectCount(client.id);
+                    const el = document.getElementById(`pc-${client.id}`);
+                    if (el) el.textContent = `📁 ${projects.length} proyecto${projects.length !== 1 ? 's' : ''}`;
+                } catch (e) {
+                    // silently fail
+                }
+            });
+        }
+
+        /* ==========================================
+           NAVIGATION
+           ========================================== */
+        function navigateToClient(id) {
+            window.location.href = `client.html?id=${id}`;
+        }
+
+        /* ==========================================
+           CONTEXT MENU
+           ========================================== */
+        function toggleMenu(id) {
+            // Close all menus first
+            document.querySelectorAll('.context-menu').forEach(m => m.classList.remove('show'));
+            const menu = document.getElementById(`menu-${id}`);
+            menu.classList.toggle('show');
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.context-menu').forEach(m => m.classList.remove('show'));
+        });
+
+        /* ==========================================
+           MODAL HANDLING
+           ========================================== */
+        const modal = document.getElementById('clientModal');
+        const form = document.getElementById('clientForm');
+
+        function openModal(editData = null) {
+            const title = document.getElementById('modalTitle');
+            const deleteBtn = document.getElementById('deleteClientBtn');
+            const templateField = document.getElementById('templateSelect').closest('.form-group');
+
+            form.reset();
+            document.getElementById('clientId').value = '';
+
+            if (editData) {
+                title.textContent = 'Editar Cliente';
+                deleteBtn.style.display = 'inline-flex';
+                templateField.style.display = 'none';
+                document.getElementById('clientId').value = editData.id;
+                document.getElementById('clientName').value = editData.name || '';
+                document.getElementById('contactName').value = editData.contact_name || '';
+                document.getElementById('contactEmail').value = editData.contact_email || '';
+                document.getElementById('ghlAccountId').value = editData.ghl_account_id || '';
+                document.getElementById('clientStatus').value = editData.status || 'active';
+                document.getElementById('clientNotes').value = editData.notes || '';
+            } else {
+                title.textContent = 'Agregar Cliente';
+                deleteBtn.style.display = 'none';
+                templateField.style.display = 'block';
+                loadTemplates();
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        async function loadTemplates() {
+            const select = document.getElementById('templateSelect');
+            select.innerHTML = '<option value="">— Sin plantilla —</option>';
+            try {
+                templates = await getTemplates();
+                templates.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name;
+                    select.appendChild(opt);
+                });
+            } catch (e) {
+                // no templates available
+            }
+        }
+
+        /* ==========================================
+           APPLY TEMPLATE
+           ========================================== */
+        async function applyTemplate(templateId, clientId) {
+            const template = templates.find(t => t.id === templateId);
+            if (!template) return;
+
+            // Create project
+            const projectData = {
+                client_id: clientId,
+                name: template.name,
+                description: template.description || '',
+                status: 'active',
+            };
+            const [project] = await createProject(projectData);
+
+            // Create tasks from template
+            const templateTasks = template.tasks || [];
+            for (let i = 0; i < templateTasks.length; i++) {
+                const t = templateTasks[i];
+                await createTask({
+                    project_id: project.id,
+                    client_id: clientId,
+                    title: t.title || t.name || 'Tarea sin título',
+                    description: t.description || '',
+                    status: t.status || 'backlog',
+                    priority: t.priority || 'medium',
+                    assigned_to: t.assigned_to || '',
+                    phase: t.phase || '',
+                    task_group: t.group || '',
+                    position: i,
+                });
+            }
+
+            // Create milestones from template
+            const templateMilestones = template.milestones || [];
+            for (let i = 0; i < templateMilestones.length; i++) {
+                const m = templateMilestones[i];
+                await createMilestone({
+                    project_id: project.id,
+                    name: m.name || 'Hito sin nombre',
+                    status: 'pending',
+                    position: i,
+                });
+            }
+        }
+
+        /* ==========================================
+           SAVE CLIENT
+           ========================================== */
+        async function saveClient() {
+            const id = document.getElementById('clientId').value;
+            const name = document.getElementById('clientName').value.trim();
+            if (!name) {
+                showToast('El nombre es obligatorio', 'error');
+                return;
+            }
+
+            const data = {
+                name,
+                slug: slugify(name),
+                contact_name: document.getElementById('contactName').value.trim() || null,
+                contact_email: document.getElementById('contactEmail').value.trim() || null,
+                ghl_account_id: document.getElementById('ghlAccountId').value.trim() || null,
+                status: document.getElementById('clientStatus').value,
+                notes: document.getElementById('clientNotes').value.trim() || null,
+            };
+
+            try {
+                if (id) {
+                    await updateClient(id, data);
+                    showToast('Cliente actualizado');
+                } else {
+                    const [newClient] = await createClient(data);
+
+                    // Apply template if selected
+                    const templateId = document.getElementById('templateSelect').value;
+                    if (templateId && newClient) {
+                        await applyTemplate(templateId, newClient.id);
+                        showToast('Cliente creado con proyecto desde plantilla');
+                    } else {
+                        showToast('Cliente creado');
+                    }
+                }
+
+                closeModal();
+                await loadClients();
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+                console.error(e);
+            }
+        }
+
+        /* ==========================================
+           EDIT / DELETE
+           ========================================== */
+        function editClient(id) {
+            const client = clients.find(c => c.id === id);
+            if (client) openModal(client);
+        }
+
+        async function confirmDelete(id) {
+            if (!confirm('¿Eliminar este cliente? Se borrarán todos sus proyectos y tareas.')) return;
+            try {
+                await deleteClient(id);
+                showToast('Cliente eliminado');
+                closeModal();
+                await loadClients();
+            } catch (e) {
+                showToast('Error al eliminar: ' + e.message, 'error');
+            }
+        }
+
+        /* ==========================================
+           LOAD DATA
+           ========================================== */
+        async function loadClients() {
+            try {
+                clients = await getClients();
+                renderClients();
+            } catch (e) {
+                document.getElementById('clientGrid').innerHTML = `
+      <div class="empty-state" style="grid-column: 1/-1;">
+        <div class="empty-icon">⚠️</div>
+        <h3>Error al cargar clientes</h3>
+        <p>${e.message}</p>
+      </div>`;
+            }
+        }
+
+        /* ==========================================
+           DARK MODE
+           ========================================== */
+        function initTheme() {
+            const saved = localStorage.getItem('jc-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeIcon(saved);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('jc-theme', next);
+            updateThemeIcon(next);
+        }
+
+        function updateThemeIcon(theme) {
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        /* ==========================================
+           EVENT LISTENERS
+           ========================================== */
+        document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+        document.getElementById('addClientBtn').addEventListener('click', () => openModal());
+        document.getElementById('modalClose').addEventListener('click', closeModal);
+        document.getElementById('cancelBtn').addEventListener('click', closeModal);
+        document.getElementById('saveClientBtn').addEventListener('click', saveClient);
+        document.getElementById('deleteClientBtn').addEventListener('click', () => {
+            const id = document.getElementById('clientId').value;
+            if (id) confirmDelete(id);
+        });
+
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderClients();
+        });
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderClients();
+            });
+        });
+
+        /* ==========================================
+           INIT
+           ========================================== */
+        initTheme();
+        loadClients();
+    </script>
+</body>
+
+</html>
