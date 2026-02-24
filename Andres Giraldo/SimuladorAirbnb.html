@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Airbnb - CRECE</title>
+    <!-- Fonts: Inter -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+            background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.03), transparent 40%),
+                radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.03), transparent 40%);
+            min-height: 100vh;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+        }
+
+        .aura-gradient-text {
+            background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-header {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            padding: 16px;
+            margin-bottom: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            color: #1e293b;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        /* Colores por Sección */
+        .section-propiedad .section-header {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            color: #0369a1;
+            border-color: #7dd3fc;
+        }
+
+        .section-financiacion .section-header {
+            background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+            color: #0f766e;
+            border-color: #5eead4;
+        }
+
+        .section-airbnb .section-header {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #b45309;
+            border-color: #fcd34d;
+        }
+
+        .section-gastos .section-header {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #b91c1c;
+            border-color: #fca5a5;
+        }
+
+        .section-estacional .section-header {
+            background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+            color: #854d0e;
+            border-color: #fde047;
+        }
+
+        .section-comparacion .section-header {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            color: #4338ca;
+            border-color: #a5b4fc;
+        }
+
+        .section-resultado {
+            background-color: #ecfdf5 !important;
+            border: 2px solid #6ee7b7 !important;
+        }
+
+        .section-resultado .section-header {
+            background: #10b981;
+            color: #ffffff;
+            border: none;
+        }
+
+        .field-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .field-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .field-label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #334155;
+        }
+
+        .field-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 12px 16px;
+            transition: all 0.2s;
+        }
+
+        .field-input-wrapper:focus-within {
+            border-color: #64748b;
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
+        }
+
+        .field-input-wrapper.calculated {
+            background: #f8fafc;
+        }
+
+        .field-input-wrapper input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+            color: #0f172a;
+        }
+
+        .primary-button {
+            background-color: #0f172a;
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .primary-button:hover {
+            background-color: #1e293b;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        .primary-button:disabled {
+            background-color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .view-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            justify-content: center;
+        }
+
+        .view-button {
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+        }
+
+        .view-button.active {
+            background: #0f172a;
+            color: white;
+            border-color: #0f172a;
+        }
+
+        .tooltip-trigger {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            background-color: #0f172a;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: help;
+            margin-left: 6px;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 100;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #0f172a;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            width: 250px;
+            transition: 0.3s;
+            pointer-events: none;
+        }
+
+        .tooltip-trigger:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .field-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body class="selection:bg-slate-200">
+    <div class="w-full flex justify-center py-6">
+        <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png"
+            alt="Logo" class="h-16 object-contain">
+    </div>
+
+    <div class="container mx-auto px-4 pb-8 max-w-5xl">
+        <!-- Header -->
+        <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2 aura-gradient-text uppercase">SIMULADOR AIRBNB CRECE</h1>
+            <p class="text-lg font-semibold text-slate-700">ANÁLISIS DE ALQUILERES DE CORTO PLAZO</p>
+            <p class="text-md text-slate-600 mb-4">Optimice su inversión con el modelo Airbnb</p>
+        </div>
+
+        <!-- View Selector -->
+        <div class="view-selector">
+            <button class="view-button active" onclick="setViewMode('overview')" id="btn-overview">Vista
+                General</button>
+            <button class="view-button" onclick="setViewMode('seasonal')" id="btn-seasonal">Análisis Estacional</button>
+            <button class="view-button" onclick="setViewMode('comparison')" id="btn-comparison">vs Alquiler
+                Tradicional</button>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6">
+            <!-- 1. INFORMACIÓN DE LA PROPIEDAD -->
+            <div class="glass rounded-3xl p-8 border border-slate-100 section-propiedad">
+                <div class="section-header">📋 INFORMACIÓN DE LA PROPIEDAD</div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Precio de Compra</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="purchasePrice" value="180.000.000"
+                                oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Cuota Inicial (Entrada)</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="downPayment" value="40.000.000" oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Gastos de Cierre</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="closingCosts" value="5.400.000" oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Renovación/Mobiliario</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="renovationCosts" value="12.000.000"
+                                oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. FINANCIAMIENTO -->
+            <div class="glass rounded-3xl p-8 border border-slate-100 section-financiacion">
+                <div class="section-header">🏦 FINANCIAMIENTO</div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Monto del Préstamo</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="loanAmount" value="140.000.000" oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Tasa de Interés Anual (%)</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" step="0.1" id="interestRate" value="6.5" oninput="calculateAirbnb()">
+                            <span>%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Plazo del Préstamo (años)</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" id="loanTerm" value="30" oninput="calculateAirbnb()">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Cuota Hipotecaria Mensual</label>
+                        <div class="field-input-wrapper calculated">
+                            <span>$</span>
+                            <input type="text" id="monthlyMortgage" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. OPERACIÓN AIRBNB -->
+            <div class="glass rounded-3xl p-8 border border-slate-100 section-airbnb">
+                <div class="section-header">⭐ OPERACIÓN AIRBNB</div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Tarifa Promedio Diaria (ADR)</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="averageDailyRate" value="160.000" oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Tasa de Ocupación (%)</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" id="occupancyRate" value="75" oninput="calculateAirbnb()">
+                            <span>%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Costo Limpieza por Estadía</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="cleaningFeePerStay" value="70.000"
+                                oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Rotaciones (Estadías) por Mes</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" id="cleaningFrequency" value="12" oninput="calculateAirbnb()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. GASTOS OPERATIVOS -->
+            <div class="glass rounded-3xl p-8 border border-slate-100 section-gastos">
+                <div class="section-header">💸 GASTOS OPERATIVOS MENSUALES</div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Impuestos (Anual / 12)</label>
+                        <div class="field-input-wrapper calculated">
+                            <span>$</span>
+                            <input type="text" id="monthlyPropertyTax" readonly>
+                        </div>
+                        <input type="hidden" id="propertyTax" value="2700000">
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Seguro (Anual / 12)</label>
+                        <div class="field-input-wrapper calculated">
+                            <span>$</span>
+                            <input type="text" id="monthlyInsurance" readonly>
+                        </div>
+                        <input type="hidden" id="insurance" value="1500000">
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Servicios Públicos (Agua, Luz)</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="utilities" value="180.000" oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Administración (%)</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" id="propertyManagement" value="12" oninput="calculateAirbnb()">
+                            <span>%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Internet y TV</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="internet" value="50.000" oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Suministros (Papelería, Aseo, etc.)</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="supplies" value="120.000" oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Mantenimiento y Reparaciones</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="maintenanceRepairs" value="180.000"
+                                oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Comisiones Airbnb (%)</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" id="airbnbFees" value="3" oninput="calculateAirbnb()">
+                            <span>%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. ANÁLISIS ESTACIONAL (Hidden by default) -->
+            <div class="glass rounded-3xl p-8 border border-slate-100 section-estacional hidden" id="seasonal-section">
+                <div class="section-header">📅 CONFIGURACIÓN ESTACIONAL</div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Meses Temporada Alta</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" max="12" id="highSeasonMonths" value="4" oninput="calculateAirbnb()">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Multiplicador Temp. Alta</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" step="0.1" id="highSeasonMultiplier" value="1.3"
+                                oninput="calculateAirbnb()">
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Meses Temporada Baja</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" max="12" id="lowSeasonMonths" value="3" oninput="calculateAirbnb()">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Multiplicador Temp. Baja</label>
+                        <div class="field-input-wrapper">
+                            <input type="number" step="0.1" id="lowSeasonMultiplier" value="0.7"
+                                oninput="calculateAirbnb()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. COMPARACIÓN (Hidden by default) -->
+            <div class="glass rounded-3xl p-8 border border-slate-100 section-comparacion hidden"
+                id="comparison-section">
+                <div class="section-header">🔄 COMPARACIÓN ALQUILER TRADICIONAL</div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">Renta Mensual Tradicional</label>
+                        <div class="field-input-wrapper">
+                            <span>$</span>
+                            <input type="text" id="traditionalRent" value="1.400.000"
+                                oninput="formatAndCalculate(this)">
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Diferencia Airbnb vs Tradicional</label>
+                        <div class="field-input-wrapper calculated">
+                            <span>$</span>
+                            <input type="text" id="incomeDifference" readonly>
+                        </div>
+                    </div>
+                </div>
+                <!-- Success Indicator -->
+                <div id="comparisonIndicator" class="mt-4 p-4 rounded-xl font-bold text-center hidden">
+                    <span id="comparisonText">Calculando...</span>
+                </div>
+            </div>
+
+            <!-- 7. RESULTADOS -->
+            <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-resultado">
+                <div class="flex justify-end mb-4">
+                    <button onclick="generatePDFReport()" id="generatePDFBtn"
+                        class="primary-button px-6 py-3 rounded-xl font-bold shadow-lg flex items-center gap-2">
+                        <svg id="pdfIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                        <span id="pdfBtnText">Descargar Informe PDF</span>
+                    </button>
+                </div>
+                <div class="section-header">📊 RESULTADOS DE LA INVERSIÓN</div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label" id="cashFlowLabel">CASH FLOW MENSUAL</label>
+                        <div class="field-input-wrapper calculated">
+                            <span>$</span>
+                            <input type="text" id="monthlyNetIncome" readonly>
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">RETORNO ANUAL (ROI %)</label>
+                        <div class="field-input-wrapper calculated">
+                            <input type="text" id="cashOnCashReturn" readonly>
+                            <span>%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">RevPAR (Ingreso por Día Disponible)</label>
+                        <div class="field-input-wrapper calculated">
+                            <span>$</span>
+                            <input type="text" id="revPAR" readonly>
+                        </div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">Ocupación Punto de Equilibrio</label>
+                        <div class="field-input-wrapper calculated">
+                            <input type="text" id="breakevenOccupancy" readonly>
+                            <span>%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentViewMode = 'overview';
+        let results = {};
+
+        function parseFormattedNumber(id) {
+            const el = document.getElementById(id);
+            if (!el) return 0;
+            const val = el.value.replace(/\./g, '').replace(/,/g, '.');
+            return parseFloat(val) || 0;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CO', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(Math.round(amount));
+        }
+
+        function formatAndCalculate(input) {
+            let val = input.value.replace(/\D/g, '');
+            if (val !== '') {
+                input.value = new Intl.NumberFormat('es-CO').format(parseInt(val));
+            }
+            calculateAirbnb();
+        }
+
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            document.querySelectorAll('.view-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${mode}`).classList.add('active');
+
+            document.getElementById('seasonal-section').classList.toggle('hidden', mode !== 'seasonal');
+            document.getElementById('comparison-section').classList.toggle('hidden', mode !== 'comparison');
+
+            const compIndicator = document.getElementById('comparisonIndicator');
+            if (compIndicator) compIndicator.classList.toggle('hidden', mode !== 'comparison');
+
+            calculateAirbnb();
+        }
+
+        function calculateAirbnb() {
+            // Inputs: Propiedad y Financiación
+            const purchasePrice = parseFormattedNumber('purchasePrice');
+            const downPayment = parseFormattedNumber('downPayment');
+            const closingCosts = parseFormattedNumber('closingCosts');
+            const renovationCosts = parseFormattedNumber('renovationCosts');
+            const loanAmount = parseFormattedNumber('loanAmount');
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100 || 0;
+            const loanTerm = parseFloat(document.getElementById('loanTerm').value) || 30;
+
+            // Inputs: Operación
+            const adr = parseFormattedNumber('averageDailyRate');
+            const occupancy = parseFloat(document.getElementById('occupancyRate').value) / 100 || 0;
+            const cleaningFee = parseFormattedNumber('cleaningFeePerStay');
+            const cleaningFreq = parseFloat(document.getElementById('cleaningFrequency').value) || 0;
+
+            // Inputs: Gastos
+            const propertyTax = parseFormattedNumber('propertyTax');
+            const insurance = parseFormattedNumber('insurance');
+            const utilities = parseFormattedNumber('utilities');
+            const internet = parseFormattedNumber('internet');
+            const supplies = parseFormattedNumber('supplies');
+            const mgmtPct = parseFloat(document.getElementById('propertyManagement').value) / 100 || 0;
+            const maint = parseFormattedNumber('maintenanceRepairs');
+            const airbnbFeesPct = parseFloat(document.getElementById('airbnbFees').value) / 100 || 0;
+
+            // Hipoteca
+            const monthlyRate = interestRate / 12;
+            const numPayments = loanTerm * 12;
+            const monthlyMortgage = loanAmount > 0 ?
+                (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+                (Math.pow(1 + monthlyRate, numPayments) - 1) : 0;
+
+            document.getElementById('monthlyMortgage').value = formatCurrency(monthlyMortgage);
+
+            // Ingresos base por mes
+            let monthlyGross = adr * 30 * occupancy;
+
+            // Ajuste Estacional si aplica
+            if (currentViewMode === 'seasonal') {
+                const highMonths = parseFloat(document.getElementById('highSeasonMonths').value) || 0;
+                const highMult = parseFloat(document.getElementById('highSeasonMultiplier').value) || 1;
+                const lowMonths = parseFloat(document.getElementById('lowSeasonMonths').value) || 0;
+                const lowMult = parseFloat(document.getElementById('lowSeasonMultiplier').value) || 1;
+                const regMonths = Math.max(0, 12 - highMonths - lowMonths);
+
+                const annualRevenue = (monthlyGross * highMult * highMonths) +
+                    (monthlyGross * lowMult * lowMonths) +
+                    (monthlyGross * regMonths);
+                monthlyGross = annualRevenue / 12;
+                document.getElementById('cashFlowLabel').textContent = 'CASH FLOW MENSUAL PROMEDIO (ESTACIONAL)';
+            } else {
+                document.getElementById('cashFlowLabel').textContent = 'CASH FLOW MENSUAL';
+            }
+
+            // Gastos Mensuales
+            const mPropTax = propertyTax / 12;
+            const mInsurance = insurance / 12;
+            const mCleaning = cleaningFee * cleaningFreq;
+            const mMgmt = monthlyGross * mgmtPct;
+            const mAirbnbFees = monthlyGross * airbnbFeesPct;
+
+            document.getElementById('monthlyPropertyTax').value = formatCurrency(mPropTax);
+            document.getElementById('monthlyInsurance').value = formatCurrency(mInsurance);
+
+            const totalExpenses = monthlyMortgage + mPropTax + mInsurance + utilities + internet + supplies + mCleaning + mMgmt + maint + mAirbnbFees;
+
+            // Resultados Principales
+            const monthlyNet = monthlyGross - totalExpenses;
+            const annualNet = monthlyNet * 12;
+            const totalInvested = downPayment + closingCosts + renovationCosts;
+            const roi = totalInvested > 0 ? (annualNet / totalInvested) * 100 : 0;
+            const revPAR = (monthlyGross / 30); // Usar el promedio ajustado
+            const breakeven = totalExpenses > 0 ? (totalExpenses / (adr * 30)) * 100 : 0;
+
+            // Comparación
+            const tradRent = parseFormattedNumber('traditionalRent');
+            const tradExpenses = (mPropTax + mInsurance + (utilities * 0.5) + (maint * 0.5) + monthlyMortgage);
+            const tradNet = tradRent - tradExpenses;
+            const diff = monthlyNet - tradNet;
+
+            // Actualizar DOM
+            document.getElementById('monthlyNetIncome').value = formatCurrency(monthlyNet);
+            document.getElementById('cashOnCashReturn').value = roi.toFixed(1);
+            document.getElementById('revPAR').value = formatCurrency(revPAR);
+            document.getElementById('breakevenOccupancy').value = breakeven.toFixed(1);
+            document.getElementById('incomeDifference').value = formatCurrency(diff);
+
+            // Update Comparison Indicator
+            const indicator = document.getElementById('comparisonIndicator');
+            const text = document.getElementById('comparisonText');
+            if (indicator && text) {
+                if (diff >= 0) {
+                    indicator.className = 'mt-4 p-4 rounded-xl font-bold text-center bg-green-100 text-green-700 border border-green-200';
+                    text.textContent = '✅ Airbnb es más rentable';
+                } else {
+                    indicator.className = 'mt-4 p-4 rounded-xl font-bold text-center bg-red-100 text-red-700 border border-red-200';
+                    text.textContent = '❌ Alquiler tradicional es mejor';
+                }
+            }
+
+            results = {
+                monthlyNet, roi, revPAR, breakeven, totalInvested,
+                monthlyMortgage, annualNet, adr, occupancy, totalExpenses,
+                mode: currentViewMode
+            };
+        }
+
+        async function generatePDFReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const colorPrimario = [15, 23, 42]; // Slate 900
+            const colorSecundario = [100, 116, 139]; // Slate 500
+            const colorAcento = [16, 185, 129]; // Emerald 500
+            const colorFondoClaro = [248, 250, 252]; // Slate 50
+            
+            const margenIzq = 20;
+            const anchoUtil = 170;
+            let yPosition = 20;
+
+            // --- CABECERA ---
+            doc.setFillColor(...colorPrimario);
+            doc.rect(0, 0, 210, 40, 'F');
+            
+            // Logo (Cargar logo si es posible o usar texto)
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SIMULADOR AIRBNB - CRECE', 105, 20, { align: 'center' });
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Informe Detallado de Proyección de Inversión', 105, 30, { align: 'center' });
+            
+            yPosition = 50;
+
+            // Función auxiliar para secciones
+            function addSectionHeader(title, color = colorPrimario) {
+                doc.setFillColor(...colorFondoClaro);
+                doc.rect(margenIzq, yPosition, anchoUtil, 8, 'F');
+                doc.setTextColor(...color);
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text(title, margenIzq + 3, yPosition + 6);
+                yPosition += 12;
+            }
+
+            // --- SECCIÓN 1: DATOS DE LA PROPIEDAD Y FINANCIACIÓN ---
+            addSectionHeader('DATOS DE LA PROPIEDAD Y FINANCIACIÓN');
+            const tableData1 = [
+                ['Precio de Compra', '$' + document.getElementById('purchasePrice').value],
+                ['Cuota Inicial', '$' + document.getElementById('downPayment').value],
+                ['Gastos de Cierre', '$' + document.getElementById('closingCosts').value],
+                ['Renovación / Mobiliario', '$' + document.getElementById('renovationCosts').value],
+                ['Monto del Préstamo', '$' + document.getElementById('loanAmount').value],
+                ['Tasa Interés Anual', document.getElementById('interestRate').value + '%'],
+                ['Cuota Hipotecaria Mensual', '$' + document.getElementById('monthlyMortgage').value]
+            ];
+            
+            doc.autoTable({
+                startY: yPosition,
+                body: tableData1,
+                theme: 'grid',
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 
+                    0: { fontStyle: 'bold', textColor: colorSecundario, cellWidth: 100 },
+                    1: { halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                margin: { left: margenIzq }
+            });
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // --- SECCIÓN 2: OPERACIÓN AIRBNB ---
+            addSectionHeader('OPERACIÓN AIRBNB');
+            const tableData2 = [
+                ['Tarifa Promedio Diaria (ADR)', '$' + document.getElementById('averageDailyRate').value],
+                ['Tasa de Ocupación', document.getElementById('occupancyRate').value + '%'],
+                ['Limpieza por Estadía', '$' + document.getElementById('cleaningFeePerStay').value],
+                ['Estadías por Mes', document.getElementById('cleaningFrequency').value]
+            ];
+            
+            doc.autoTable({
+                startY: yPosition,
+                body: tableData2,
+                theme: 'grid',
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 
+                    0: { fontStyle: 'bold', textColor: colorSecundario, cellWidth: 100 },
+                    1: { halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                margin: { left: margenIzq }
+            });
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // --- SECCIÓN 3: GASTOS OPERATIVOS ---
+            if (yPosition > 240) { doc.addPage(); yPosition = 20; }
+            addSectionHeader('GASTOS OPERATIVOS MENSUALES');
+            const tableData3 = [
+                ['Impuesto Predial (Prorrateado)', '$' + document.getElementById('monthlyPropertyTax').value],
+                ['Seguro (Prorrateado)', '$' + document.getElementById('monthlyInsurance').value],
+                ['Servicios Públicos', '$' + document.getElementById('utilities').value],
+                ['Internet y TV', '$' + document.getElementById('internet').value],
+                ['Suministros y Artículos', '$' + document.getElementById('supplies').value],
+                ['Administración Operativa', document.getElementById('propertyManagement').value + '%'],
+                ['Mantenimiento y Reparaciones', '$' + document.getElementById('maintenanceRepairs').value],
+                ['Comisiones Airbnb', document.getElementById('airbnbFees').value + '%']
+            ];
+            
+            doc.autoTable({
+                startY: yPosition,
+                body: tableData3,
+                theme: 'grid',
+                styles: { fontSize: 9, cellPadding: 2.5 },
+                columnStyles: { 
+                    0: { fontStyle: 'bold', textColor: colorSecundario, cellWidth: 100 },
+                    1: { halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
+                },
+                margin: { left: margenIzq }
+            });
+            yPosition = doc.lastAutoTable.finalY + 10;
+
+            // --- SECCIÓN DINÁMICA: ANÁLISIS ESTACIONAL O COMPARACIÓN ---
+            if (results.mode === 'seasonal') {
+                if (yPosition > 240) { doc.addPage(); yPosition = 20; }
+                addSectionHeader('ANÁLISIS DE ESTACIONALIDAD');
+                const tableDataS = [
+                    ['Meses Temporada Alta', document.getElementById('highSeasonMonths').value],
+                    ['Multiplicador Alta', document.getElementById('highSeasonMultiplier').value + 'x'],
+                    ['Meses Temporada Baja', document.getElementById('lowSeasonMonths').value],
+                    ['Multiplicador Baja', document.getElementById('lowSeasonMultiplier').value + 'x']
+                ];
+                doc.autoTable({
+                    startY: yPosition,
+                    body: tableDataS,
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 2.5 },
+                    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 100 }, 1: { halign: 'right' } },
+                    margin: { left: margenIzq }
+                });
+                yPosition = doc.lastAutoTable.finalY + 10;
+            } else if (results.mode === 'comparison') {
+                if (yPosition > 240) { doc.addPage(); yPosition = 20; }
+                addSectionHeader('COMPARACIÓN VS ALQUILER TRADICIONAL');
+                const tableDataC = [
+                    ['Renta Mensual Tradicional', '$' + document.getElementById('traditionalRent').value],
+                    ['Diferencia Mensual Airbnb', '$' + document.getElementById('incomeDifference').value],
+                    ['Conclusión', results.monthlyNet > parseFormattedNumber('traditionalRent') ? 'Airbnb es más rentable' : 'Tradicional es preferible']
+                ];
+                doc.autoTable({
+                    startY: yPosition,
+                    body: tableDataC,
+                    theme: 'grid',
+                    styles: { fontSize: 9, cellPadding: 2.5 },
+                    columnStyles: { 0: { fontStyle: 'bold', cellWidth: 100 }, 1: { halign: 'right' } },
+                    margin: { left: margenIzq }
+                });
+                yPosition = doc.lastAutoTable.finalY + 10;
+            }
+
+            // --- SECCIÓN FINAL: RESULTADOS DE LA INVERSIÓN ---
+            if (yPosition > 220) { doc.addPage(); yPosition = 20; }
+            
+            // Fondo verde para resultados
+            doc.setFillColor(236, 253, 245); // Emerald 50
+            doc.setDrawColor(110, 231, 183); // Emerald 300
+            doc.setLineWidth(0.5);
+            doc.roundedRect(margenIzq, yPosition, anchoUtil, 45, 2, 2, 'FD');
+            
+            doc.setFillColor(...colorAcento);
+            doc.rect(margenIzq, yPosition, anchoUtil, 10, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RESULTADOS DE LA INVERSIÓN', margenIzq + 5, yPosition + 7);
+            
+            const tableDataRes = [
+                ['CASH FLOW MENSUAL ' + (results.mode === 'seasonal' ? '(PROMEDIO)' : ''), '$' + formatCurrency(results.monthlyNet)],
+                ['RETORNO ANUAL (ROI)', results.roi.toFixed(1) + '%'],
+                ['RevPAR DIARIO', '$' + formatCurrency(results.revPAR)],
+                ['PUNTO DE EQUILIBRIO (OCUPACIÓN)', results.breakeven.toFixed(1) + '%'],
+                ['GANANCIA NETA ANUAL ESTIMADA', '$' + formatCurrency(results.annualNet)]
+            ];
+            
+            doc.autoTable({
+                startY: yPosition + 10,
+                body: tableDataRes,
+                theme: 'plain',
+                styles: { fontSize: 10, cellPadding: 2, fillColor: [236, 253, 245] },
+                columnStyles: { 
+                    0: { fontStyle: 'bold', textColor: [6, 78, 59], cellWidth: 100 },
+                    1: { halign: 'right', fontStyle: 'bold', textColor: [6, 95, 70] }
+                },
+                margin: { left: margenIzq + 2 }
+            });
+            
+            yPosition = 265;
+
+            // --- PIE DE PÁGINA ---
+            doc.setFontSize(8);
+            doc.setTextColor(...colorSecundario);
+            const disclaimerText = 'NOTA: Este informe es una simulación basada en los datos proporcionados. Los resultados reales pueden variar según el mercado y la gestión operativa. CRECE - Andres Giraldo.';
+            const splitDisclaimer = doc.splitTextToSize(disclaimerText, anchoUtil);
+            doc.text(splitDisclaimer, 105, yPosition, { align: 'center' });
+            
+            doc.text('Página 1 de 1', 105, yPosition + 15, { align: 'center' });
+
+            const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g, '-');
+            doc.save(`Analisis_Airbnb_CRECE_${fecha}.pdf`);
+        }
+
+        window.onload = calculateAirbnb;
+    </script>
+</body>
+
+</html>

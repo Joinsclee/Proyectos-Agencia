@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lovable + n8n + Supabase: Proceso Real | Nico</title>
+    <meta name="description" content="Lo que no se vio en el directo: Cómo conectar Front y Back sin código.">
+
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                        serif: ['"IBM Plex Serif"', 'serif'],
+                    },
+                    colors: {
+                        bg: '#ffffff',
+                        primary: '#2563eb',
+                        secondary: '#0f172a',
+                        surface: '#f8fafc',
+                        text: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/css">
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            background-color: #ffffff;
+            scroll-behavior: smooth;
+        }
+
+        .glow-blue {
+            position: absolute;
+            width: 100%;
+            max-width: 800px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .clean-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .clean-card:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Video Container - Same as RegistroNico */
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #0f172a;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            max-width: 100%;
+        }
+
+        .video-placeholder-minimal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            cursor: pointer;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .video-placeholder-minimal.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .play-circle-minimal {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(37, 99, 235, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, background 0.2s ease;
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.3);
+        }
+
+        .video-placeholder-minimal:hover .play-circle-minimal {
+            background: rgba(37, 99, 235, 0.95);
+            border-color: rgba(37, 99, 235, 1);
+            transform: scale(1.1);
+        }
+
+        .play-triangle {
+            fill: #2563eb;
+            transition: fill 0.2s ease;
+        }
+
+        .video-placeholder-minimal:hover .play-triangle {
+            fill: white;
+        }
+
+        .play-text {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.75rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            font-weight: 800;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .play-circle-minimal {
+                width: 70px;
+                height: 70px;
+            }
+
+            .play-text {
+                font-size: 0.6rem;
+            }
+        }
+
+        #video-oficial {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .btn-premium {
+            background: #2563eb;
+            color: white !important;
+            border-radius: 9999px;
+            padding: 1.25rem 2rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: inline-block;
+            text-decoration: none !important;
+            border: none;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+            white-space: nowrap;
+            /* Force single line */
+            width: 100%;
+            max-width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .btn-premium {
+                padding: 1rem 1rem;
+                font-size: 0.95rem;
+                /* Slightly smaller for mobile single line */
+                letter-spacing: -0.01em;
+            }
+        }
+
+        .btn-premium:hover {
+            transform: scale(1.05) translateY(-2px);
+            background: #1d4ed8;
+            box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.4);
+        }
+
+        /* Invitation animation */
+        .click-hint {
+            position: absolute;
+            bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0.8;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-5px);
+            }
+
+            60% {
+                transform: translateY(-3px);
+            }
+        }
+
+        /* Breakout para GHL */
+        .full-width-breakout {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+    </style>
+</head>
+
+<body class="antialiased font-sans text-text bg-white">
+    <!-- Hero Header -->
+    <header class="relative pt-16 pb-12 md:pt-20 md:pb-16 px-4 sm:px-6 overflow-hidden">
+        <div class="glow-blue"></div>
+        <div class="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center">
+
+            <!-- Etiqueta Live -->
+            <div
+                class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-red-200 bg-red-100/90 mb-6 sm:mb-8">
+                <div class="relative flex h-2.5 w-2.5">
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600 animate-pulse"></span>
+                </div>
+                <span class="text-[10px] sm:text-xs font-black text-red-600 tracking-widest">
+                    Evento Online GRATUITO el 23, 24 y 25 de FEBRERO
+                </span>
+            </div>
+
+            <!-- Título -->
+            <h1
+                class="text-3xl sm:text-5xl md:text-6xl font-bold leading-[1.15] mb-6 sm:mb-8 tracking-tight text-slate-900 px-2 max-w-4xl">
+                Lovable + n8n + Supabase: <span class="font-serif italic font-normal text-primary text-nowrap">lo que no
+                    se vio</span> en el directo
+            </h1>
+
+            <!-- Subtítulo -->
+            <p
+                class="text-base sm:text-lg md:text-xl text-slate-500 mb-10 sm:mb-12 max-w-3xl leading-relaxed font-medium px-4">
+                Cómo conectar Front y Back sin código (El proceso real)
+            </p>
+
+            <!-- VSL Container -->
+            <div class="w-full max-w-4xl mx-auto mb-12">
+                <div class="video-container shadow-2xl">
+                    <!-- Placeholder con invitación visual -->
+                    <div class="video-placeholder-minimal" id="video-placeholder">
+                        <div class="flex flex-col items-center">
+                            <div class="play-circle-minimal">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 4V20L20 12L7 4Z" class="play-triangle" />
+                                </svg>
+                            </div>
+                            <span class="play-text">HAZ CLIC PARA VER EL VIDEO</span>
+                        </div>
+                        <!-- Visual hint -->
+                        <div class="click-hint">
+                            <i data-lucide="mouse-pointer-2" class="w-4 h-4"></i>
+                            <span>Toca para activar el sonido</span>
+                        </div>
+                    </div>
+
+                    <!-- Video con autoplay muted (BG) -->
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+                        <video id="video-oficial"
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;"
+                            src="https://assets.cdn.filesafe.space/SSlZBjR2BiiDJ4vR4exM/media/699d92d05dfd50d4a7c15df2.mp4"
+                            muted autoplay loop playsinline preload="metadata" controlslist="nodownload"
+                            oncontextmenu="return false;">
+                        </video>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 text-slate-400">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4 text-primary"></i>
+                    <span class="font-bold text-slate-700 text-sm sm:text-base">Lunes 23, Martes 24 y Miércoles 25 de
+                        Febrero</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4 text-primary"></i>
+                    <span class="font-bold text-slate-700 text-sm sm:text-base">19:00 CET</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i data-lucide="zap" class="w-4 h-4 text-primary"></i>
+                    <span class="font-bold text-slate-700 text-sm sm:text-base">60-90 minutos por clase</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Reminders Section -->
+    <section class="full-width-breakout py-12 sm:py-16 px-4 sm:px-6 bg-slate-50 border-y border-slate-100 pb-20">
+        <div class="max-w-3xl mx-auto text-center">
+            <div class="clean-card p-8 sm:p-12 relative overflow-hidden mb-12">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50">
+                </div>
+
+                <div class="relative z-10">
+                    <div class="text-center mb-8">
+                        <h2 class="text-2xl sm:text-3xl font-bold mb-4">Recordatorio Clase 2</h2>
+                        <p class="text-lg text-slate-600 leading-relaxed font-medium">
+                            Aprende el sistema que utilizo para <span class="text-primary font-bold">aumentar mi
+                                productividad</span> y producir más en menos tiempo.
+                        </p>
+                    </div>
+
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 pt-8 border-t border-slate-100 text-left">
+                        <div class="space-y-4">
+                            <h3 class="font-bold text-slate-900 flex items-center gap-2 mb-4">
+                                <i data-lucide="clock-4" class="w-5 h-5 text-primary"></i> Horarios Confirmados
+                            </h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-slate-600 border-b border-slate-50 pb-2">
+                                    <span>🇪🇸 España</span> <span class="font-bold text-slate-900">19:00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-600 border-b border-slate-50 pb-2">
+                                    <span>🇦🇷 Argentina</span> <span class="font-bold text-slate-900">15:00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-600 border-b border-slate-50 pb-2">
+                                    <span>🇨🇱 Chile</span> <span class="font-bold text-slate-900">15:00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-600 border-b border-slate-50 pb-2">
+                                    <span>🇨🇴 Colombia</span> <span class="font-bold text-slate-900">13:00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 md:pt-14">
+                            <div class="flex justify-between text-slate-600 border-b border-slate-50 pb-2">
+                                <span>🇺🇸 Nueva York / Miami</span> <span class="font-bold text-slate-900">13:00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-600 border-b border-slate-50 pb-2">
+                                <span>🇲🇽 México</span> <span class="font-bold text-slate-900">12:00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-600 border-b border-slate-50 pb-2">
+                                <span>🇦🇪 Dubái</span> <span class="font-bold text-slate-900">22:00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón CTA Final (Posición corregida y nuevo link) -->
+            <div class="w-full max-w-md mx-auto">
+                <a href="https://www.youtube.com/watch?v=eqTrJ-2cRjs" target="_blank" class="btn-premium w-full">
+                    Activa la campanita para que no te lo pierdas
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Simple estilo RegistroNico -->
+    <footer class="py-12 text-center text-slate-400 text-xs">
+        <p>© 2026 Nico IA LAB. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // Control de Video Avanzado
+        const placeholder = document.getElementById('video-placeholder');
+        const video = document.getElementById('video-oficial');
+
+        placeholder.addEventListener('click', () => {
+            // Animación de salida
+            placeholder.classList.add('fade-out');
+
+            // Lógica de reproducción: Reiniciar, quitar mute y mostrar controles
+            video.muted = false;
+            video.currentTime = 0;
+            video.play();
+            video.controls = true;
+        });
+    </script>
+</body>
+
+</html>
