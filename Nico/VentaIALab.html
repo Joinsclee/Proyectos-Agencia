@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>IA LAB | Construye tu Primera App con IA y Únete al Equipo</title>
+    <meta name="description"
+        content="Construye tu primera aplicación con IA y únete a un equipo que ya está sacando proyectos al mercado. 7 días gratis, sin riesgo.">
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=Manrope:wght@400;600;700;800&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Manrope', 'sans-serif'],
+                        serif: ['"IBM Plex Serif"', 'serif'],
+                    },
+                    colors: {
+                        bg: '#ffffff',
+                        primary: '#2563eb',
+                        secondary: '#0f172a',
+                        surface: '#f8fafc',
+                        text: '#0f172a',
+                        live: '#ef4444',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        /* ── GoHighLevel full-width override ─────────────────────────────
+           GHL wraps custom HTML in constrained columns. This resets every
+           ancestor between <body> and our wrapper so sections always fill
+           the viewport width regardless of the GHL container.
+        ──────────────────────────────────────────────────────────────── */
+        html {
+            overflow-x: hidden;
+        }
+
+        html,
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Reset any GHL ancestor wrapper that constrains width */
+        body>*:not(#ia-lab-root),
+        body>div>*:not(#ia-lab-root) {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        /* Single page root that breaks out of any GHL column constraint */
+        #ia-lab-root {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            overflow-x: hidden;
+        }
+
+        /* All direct section children fill the full wrapper */
+        #ia-lab-root>header,
+        #ia-lab-root>section,
+        #ia-lab-root>footer {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .clean-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease;
+        }
+
+        .clean-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .glow-blue {
+            position: absolute;
+            width: 100%;
+            max-width: 900px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, rgba(255, 255, 255, 0) 70%);
+            top: -150px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* COUNTDOWN — Estilo LED display digital */
+        .led-panel {
+            background: #060101;
+            border: 1px solid #220808;
+            border-radius: 14px;
+            box-shadow:
+                inset 0 2px 16px rgba(0, 0, 0, 0.95),
+                inset 0 0 60px rgba(0, 0, 0, 0.7),
+                0 0 40px rgba(180, 10, 10, 0.1),
+                0 8px 40px rgba(0, 0, 0, 0.6);
+            padding: 1.1rem 1.75rem 0.85rem;
+            position: relative;
+        }
+
+        /* Scanline CRT overlay */
+        .led-panel::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.055) 2px,
+                    rgba(0, 0, 0, 0.055) 4px);
+            pointer-events: none;
+            border-radius: 14px;
+            z-index: 10;
+        }
+
+        /* Individual digit cell */
+        .digit-cell {
+            --dsize: 1.9rem;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            background: rgba(0, 0, 0, 0.45);
+            border-radius: 7px;
+            padding: 0.3rem 0.4rem 0.2rem;
+            border: 1px solid rgba(80, 5, 5, 0.35);
+        }
+
+        @media (min-width: 360px) {
+            .digit-cell {
+                --dsize: 2.3rem;
+            }
+        }
+
+        @media (min-width: 480px) {
+            .digit-cell {
+                --dsize: 2.8rem;
+            }
+        }
+
+        @media (min-width: 640px) {
+            .digit-cell {
+                --dsize: 3.4rem;
+            }
+        }
+
+        /* Ghost / inactive segments */
+        .digit-ghost {
+            position: absolute;
+            top: 0.3rem;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            font-size: var(--dsize);
+            line-height: 1;
+            color: rgba(100, 5, 5, 0.38);
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: 0.04em;
+            z-index: 0;
+        }
+
+        .countdown-digit {
+            font-size: var(--dsize);
+            font-weight: 400;
+            line-height: 1;
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            text-align: center;
+            color: #ff2020;
+            text-shadow:
+                0 0 3px rgba(255, 80, 80, 1),
+                0 0 8px rgba(255, 50, 50, 1),
+                0 0 18px rgba(255, 20, 20, 0.85),
+                0 0 35px rgba(255, 0, 0, 0.55),
+                0 0 65px rgba(255, 0, 0, 0.25);
+            letter-spacing: 0.04em;
+            position: relative;
+            z-index: 1;
+        }
+
+        .countdown-sep {
+            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            font-size: 1.6rem;
+            color: #e01010;
+            text-shadow:
+                0 0 4px rgba(255, 60, 60, 1),
+                0 0 12px rgba(255, 30, 30, 0.75),
+                0 0 28px rgba(255, 0, 0, 0.4);
+            line-height: 1;
+            user-select: none;
+            position: relative;
+            z-index: 1;
+            padding-bottom: 0.9rem;
+            /* align with digit tops, accounts for label height */
+        }
+
+        @media (min-width: 640px) {
+            .countdown-sep {
+                font-size: 2.1rem;
+                padding-bottom: 1.05rem;
+            }
+        }
+
+        .countdown-label {
+            font-size: 0.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(200, 50, 50, 0.45);
+            text-align: center;
+            font-family: 'Manrope', sans-serif;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* MODULE CARD (dark Skool-style) */
+        .module-card {
+            background: #0f172a;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .module-card-icon-area {
+            padding: 1.2rem 1rem 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .module-card-body {
+            background: white;
+            padding: 0.65rem 0.85rem;
+            font-size: 0.78rem;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .ia-lab-badge {
+            position: absolute;
+            bottom: 2.8rem;
+            right: -0.4rem;
+            font-size: 0.52rem;
+            font-weight: 800;
+            padding: 0.15rem 0.8rem;
+            transform: rotate(-4deg);
+            letter-spacing: 0.06em;
+            color: white;
+        }
+
+        .ia-lab-badge.blue {
+            background: #2563eb;
+        }
+
+        .ia-lab-badge.green {
+            background: #16a34a;
+        }
+
+        .ia-lab-badge.purple {
+            background: #7c3aed;
+        }
+
+        /* BONUS CARD */
+        .bonus-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .bonus-card.urgent {
+            border-color: #fca5a5;
+            background: #fffafa;
+        }
+
+        /* CTA pulse */
+        @keyframes pulse-scale {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        .cta-pulse {
+            animation: pulse-scale 2.5s ease-in-out infinite;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ── VSL VIDEO PLAYER ─────────────────────────────────────────── */
+        .vsl-container {
+            position: relative;
+            width: 100%;
+            background: #0f172a;
+            border-radius: 1.5rem;
+            overflow: hidden;
+        }
+
+        @media (max-width: 640px) {
+            .vsl-container {
+                border-radius: 1rem;
+            }
+        }
+
+        .vsl-placeholder {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .vsl-placeholder.fade-out {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .vsl-play-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .vsl-play-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid rgba(37, 99, 235, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .vsl-placeholder:hover .vsl-play-circle {
+            background: rgba(37, 99, 235, 0.95);
+            border-color: rgba(37, 99, 235, 1);
+            transform: scale(1.05);
+        }
+
+        .vsl-play-triangle {
+            fill: #2563eb;
+        }
+
+        .vsl-placeholder:hover .vsl-play-triangle {
+            fill: white;
+        }
+
+        .vsl-play-text {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.75rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        @media (max-width: 640px) {
+            .vsl-play-circle {
+                width: 70px;
+                height: 70px;
+                border-width: 2px;
+            }
+
+            .vsl-play-group {
+                gap: 1rem;
+            }
+
+            .vsl-play-text {
+                font-size: 0.6rem;
+                letter-spacing: 0.2em;
+            }
+        }
+
+        /* FAQ */
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .faq-answer.open {
+            max-height: 400px;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .faq-icon.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body class="antialiased font-sans text-text bg-white">
+
+    <div id="ia-lab-root">
+
+        <!-- ═══════════════════════════════════════════════
+         HERO
+    ════════════════════════════════════════════════ -->
+        <header class="relative pt-14 pb-10 md:pt-20 md:pb-14 px-4 sm:px-6 overflow-hidden">
+            <div class="glow-blue"></div>
+            <div class="max-w-5xl mx-auto text-center relative z-10 flex flex-col items-center">
+
+                <!-- Badge urgencia -->
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-red-200 bg-red-50 mb-6 sm:mb-8">
+                    <div class="relative flex h-2.5 w-2.5">
+                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600 animate-pulse"></span>
+                    </div>
+                    <span class="text-[10px] sm:text-xs font-black text-red-600 tracking-widest">OFERTA DE LANZAMIENTO
+                        — TIEMPO LIMITADO</span>
+                </div>
+
+                <!-- COUNTDOWN PRINCIPAL (rojo) -->
+                <div class="mb-8 led-panel inline-block">
+                    <p
+                        class="text-[9px] text-red-700 font-black uppercase tracking-[0.18em] mb-3.5 text-center opacity-75">
+                        La oferta de lanzamiento expira en</p>
+                    <div class="flex items-end justify-center gap-1.5 sm:gap-2">
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="main-days">00</span>
+                            <span class="countdown-label">Días</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="main-hours">00</span>
+                            <span class="countdown-label">Horas</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="main-minutes">00</span>
+                            <span class="countdown-label">Min</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="main-seconds">00</span>
+                            <span class="countdown-label">Seg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HEADLINE (estilo Registro) -->
+                <h1
+                    class="text-3xl sm:text-5xl md:text-6xl font-bold leading-[1.1] mb-4 sm:mb-6 tracking-tight text-slate-900 px-2 max-w-4xl">
+                    Descubre el <span class="font-serif italic font-normal text-primary">Método VIBE</span><br
+                        class="hidden sm:block">
+                    para crear aplicaciones completas con IA
+                </h1>
+
+                <p class="text-base sm:text-lg text-slate-500 max-w-2xl leading-relaxed font-medium px-4">
+                    y conviértete en desarrollador híbrido capaz de elegir la mejor solución en cada caso
+                </p>
+
+            </div>
+        </header>
+
+        <!-- ═══════════════════════════════════════════════
+         REPLAY DE CLASES
+    ════════════════════════════════════════════════ -->
+        <section class="py-10 sm:py-14 bg-slate-50 border-y border-slate-100 px-4 sm:px-6">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-8 sm:mb-10">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">Si viste las 3 clases, ya sabes de
+                        lo que hablo.</h2>
+                    <p class="text-slate-500 text-sm sm:text-base">Si no pudiste asistir, aquí tienes las repeticiones
+                        antes de que desaparezcan.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
+
+                    <!-- Clase 1 -->
+                    <a href="https://www.youtube.com/watch?v=H3-hR2Ox5_c" target="_blank" rel="noopener noreferrer"
+                        class="clean-card rounded-2xl overflow-hidden group block no-underline">
+                        <div class="relative w-full" style="padding-bottom: 56.25%;">
+                            <img src="https://img.youtube.com/vi/H3-hR2Ox5_c/maxresdefault.jpg"
+                                alt="Clase 1 — El sistema para pasar de usar herramientas a construir las tuyas"
+                                loading="lazy"
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);transition:background 0.2s;"
+                                class="group-hover:bg-black/40">
+                                <div style="width:52px;height:52px;background:rgba(255,255,255,0.95);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:transform 0.2s;"
+                                    class="group-hover:scale-110">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#2563eb"
+                                        style="width:22px;height:22px;margin-left:3px;">
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-5 py-4 border-t border-slate-100">
+                            <p class="text-[10px] font-black text-primary tracking-widest mb-1">CLASE 1 · LUNES 23 DE
+                                FEBRERO</p>
+                            <p
+                                class="font-bold text-slate-900 text-sm leading-snug group-hover:text-primary transition-colors">
+                                El sistema para pasar de usar herramientas a construir las tuyas</p>
+                        </div>
+                    </a>
+
+                    <!-- Clase Extra -->
+                    <a href="https://youtu.be/f1TyMjuwJpA" target="_blank" rel="noopener noreferrer"
+                        class="clean-card rounded-2xl overflow-hidden group block no-underline">
+                        <div class="relative w-full" style="padding-bottom: 56.25%;">
+                            <!-- Gift design background -->
+                            <div
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1e1b4b 0%,#1e3a5f 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.85rem;">
+                                <div style="width:72px;height:72px;background:rgba(251,191,36,0.1);border-radius:50%;border:1.5px solid rgba(251,191,36,0.3);display:flex;align-items:center;justify-content:center;transition:transform 0.3s ease;"
+                                    class="group-hover:scale-110">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                        stroke="#fbbf24" stroke-width="1.5" stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        style="width:34px;height:34px;filter:drop-shadow(0 0 8px rgba(251,191,36,0.5));">
+                                        <path d="M20 12v10H4V12" />
+                                        <path d="M22 7H2v5h20V7z" />
+                                        <path d="M12 22V7" />
+                                        <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                                        <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                                    </svg>
+                                </div>
+                                <div style="text-align:center;padding:0 1rem;">
+                                    <p
+                                        style="color:#fbbf24;font-size:9px;font-weight:800;letter-spacing:0.25em;text-transform:uppercase;margin:0 0 3px;font-family:'Manrope',sans-serif;">
+                                        BONUS EXCLUSIVO</p>
+                                    <p
+                                        style="color:rgba(255,255,255,0.45);font-size:11px;font-weight:600;font-family:'Manrope',sans-serif;">
+                                        Clase regalo para ti</p>
+                                </div>
+                            </div>
+                            <!-- Hover blue tint -->
+                            <div style="position:absolute;inset:0;background:rgba(37,99,235,0.15);opacity:0;transition:opacity 0.2s;"
+                                class="group-hover:opacity-100"></div>
+                            <!-- Badge -->
+                            <span
+                                style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-size:9px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:0.06em;box-shadow:0 2px 8px rgba(245,158,11,0.4);font-family:'Manrope',sans-serif;">REGALO</span>
+                        </div>
+                        <div class="px-5 py-4 border-t border-slate-100">
+                            <p class="text-[10px] font-black text-primary tracking-widest mb-1">CLASE EXTRA · BONUS</p>
+                            <p
+                                class="font-bold text-slate-900 text-sm leading-snug group-hover:text-primary transition-colors">
+                                Lovable + n8n + Supabase: lo que no se vio en el directo</p>
+                        </div>
+                    </a>
+
+                    <!-- Clase 2 -->
+                    <a href="https://www.youtube.com/watch?v=eqTrJ-2cRjs" target="_blank" rel="noopener noreferrer"
+                        class="clean-card rounded-2xl overflow-hidden group block no-underline">
+                        <div class="relative w-full" style="padding-bottom: 56.25%;">
+                            <img src="https://img.youtube.com/vi/eqTrJ-2cRjs/maxresdefault.jpg"
+                                alt="Clase 2 — El sistema para aumentar tu productividad con IA" loading="lazy"
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);transition:background 0.2s;"
+                                class="group-hover:bg-black/40">
+                                <div style="width:52px;height:52px;background:rgba(255,255,255,0.95);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:transform 0.2s;"
+                                    class="group-hover:scale-110">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#2563eb"
+                                        style="width:22px;height:22px;margin-left:3px;">
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-5 py-4 border-t border-slate-100">
+                            <p class="text-[10px] font-black text-primary tracking-widest mb-1">CLASE 2 · MARTES 24 DE
+                                FEBRERO</p>
+                            <p
+                                class="font-bold text-slate-900 text-sm leading-snug group-hover:text-primary transition-colors">
+                                El sistema para aumentar tu productividad y producir más en menos tiempo</p>
+                        </div>
+                    </a>
+
+                    <!-- Clase 3 -->
+                    <a href="https://www.youtube.com/watch?v=txAgH3PSQ7c" target="_blank" rel="noopener noreferrer"
+                        class="clean-card rounded-2xl overflow-hidden group block no-underline">
+                        <div class="relative w-full" style="padding-bottom: 56.25%;">
+                            <img src="https://img.youtube.com/vi/txAgH3PSQ7c/maxresdefault.jpg"
+                                alt="Clase 3 — El sistema más efectivo para desarrollar aplicaciones con IA"
+                                loading="lazy"
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;">
+                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25);transition:background 0.2s;"
+                                class="group-hover:bg-black/40">
+                                <div style="width:52px;height:52px;background:rgba(255,255,255,0.95);border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.3);transition:transform 0.2s;"
+                                    class="group-hover:scale-110">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#2563eb"
+                                        style="width:22px;height:22px;margin-left:3px;">
+                                        <path d="M8 5v14l11-7z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-5 py-4 border-t border-slate-100">
+                            <p class="text-[10px] font-black text-primary tracking-widest mb-1">CLASE 3 · MIÉRCOLES 25
+                                DE FEBRERO</p>
+                            <p
+                                class="font-bold text-slate-900 text-sm leading-snug group-hover:text-primary transition-colors">
+                                El sistema más efectivo para desarrollar aplicaciones completas con IA</p>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         LLAMADA A LA ACCIÓN + VSL
+    ════════════════════════════════════════════════ -->
+        <section class="py-14 sm:py-20 px-4 sm:px-6 bg-slate-900">
+            <div class="max-w-4xl mx-auto text-center flex flex-col items-center">
+
+                <!-- Countdown secundario -->
+                <div class="mb-8 led-panel inline-block">
+                    <p
+                        class="text-[9px] text-red-700 font-black uppercase tracking-[0.18em] mb-3.5 text-center opacity-75">
+                        La oferta de lanzamiento expira en</p>
+                    <div class="flex items-end justify-center gap-1.5 sm:gap-2">
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="cta-days">00</span>
+                            <span class="countdown-label">Días</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="cta-hours">00</span>
+                            <span class="countdown-label">Horas</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="cta-minutes">00</span>
+                            <span class="countdown-label">Min</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="cta-seconds">00</span>
+                            <span class="countdown-label">Seg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Headline (texto del hero original) -->
+                <h2
+                    class="text-2xl sm:text-4xl md:text-5xl font-bold leading-[1.15] mb-5 text-white max-w-3xl tracking-tight px-2">
+                    Construye tu primera aplicación con IA y únete al
+                    <span class="font-serif italic font-normal text-blue-400">equipo que ya está sacando proyectos al
+                        mercado</span>
+                </h2>
+
+                <p class="text-base sm:text-lg text-slate-400 mb-8 max-w-2xl leading-relaxed font-medium px-4">
+                    La mayoría aprende a construir solo. El problema es que solo no llegas tan lejos ni tan rápido.<br>
+                    <strong class="text-white">IA LAB es el sistema para construir tu primera app — y el equipo para
+                        monetizarla.</strong>
+                </p>
+
+                <!-- CTA -->
+                <a href="https://www.skool.com/ia-lab-8166/plans" target="_blank"
+                    class="cta-pulse inline-block w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-full font-bold text-xl text-center no-underline shadow-xl shadow-blue-900/50 hover:bg-blue-700 transition-colors mb-3">
+                    ACTIVA TU PRUEBA GRATUITA DE 7 DÍAS
+                </a>
+                <p class="text-[11px] text-slate-500 mb-10">Sin riesgo. Sin compromiso. Si no es para ti, te vas sin dar
+                    explicaciones.</p>
+
+                <!-- VSL -->
+                <div class="w-full max-w-3xl">
+                    <div class="vsl-container">
+                        <div class="vsl-placeholder" id="vsl-placeholder">
+                            <div class="vsl-play-group">
+                                <div class="vsl-play-circle">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M7 4V20L20 12L7 4Z" class="vsl-play-triangle" />
+                                    </svg>
+                                </div>
+                                <span class="vsl-play-text">HAZ CLIC PARA VER EL VIDEO</span>
+                            </div>
+                        </div>
+                        <div style="position:relative;padding-bottom:56.25%;height:0;">
+                            <video id="vsl-video"
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"
+                                src="https://assets.cdn.filesafe.space/SSlZBjR2BiiDJ4vR4exM/media/699e3aaf1001a5b7264af6f5.mp4"
+                                muted autoplay loop playsinline preload="metadata" controlslist="nodownload"
+                                oncontextmenu="return false;">
+                            </video>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         PROPUESTA ÚNICA DE VALOR
+    ════════════════════════════════════════════════ -->
+        <section class="py-12 sm:py-16 px-4 sm:px-6 bg-white">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl sm:text-4xl font-bold text-slate-900 mb-4">LO QUE NADIE MÁS TE DA</h2>
+                    <p class="text-slate-500 text-lg">4 ventajas reales de IA LAB</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="clean-card rounded-2xl p-6 sm:p-8">
+                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                            <i data-lucide="layers" class="w-5 h-5 text-primary"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-900 mb-2">Un único stack. Una única idea. Un único
+                            objetivo.</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">No más vídeos del "mejor stack de 2026". Nico
+                            ya eligió: <strong class="text-slate-800">N8N + Supabase + Lovable + Claude Code</strong>.
+                            Lo usa con sus clientes, lo ha vendido muchas veces, y te lo da todo. Entras y empiezas a
+                            construir, no a decidir.</p>
+                    </div>
+                    <div class="clean-card rounded-2xl p-6 sm:p-8">
+                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                            <i data-lucide="trophy" class="w-5 h-5 text-primary"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-900 mb-2">Aprendes de aplicaciones que ya se vendieron,
+                            no de demos.</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Nico ha desarrollado estas aplicaciones y las
+                            ha vendido. No te explica teoría — te enseña exactamente cómo lo hizo él: cada decisión
+                            técnica, cada arquitectura, cada sistema que hoy está en producción con un cliente real
+                            detrás. <strong class="text-slate-800">Eso no se encuentra en YouTube.</strong></p>
+                    </div>
+                    <div class="clean-card rounded-2xl p-6 sm:p-8">
+                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                            <i data-lucide="users" class="w-5 h-5 text-primary"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-900 mb-2">Cuando algo falla, no estás solo.</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Construir sistemas reales significa que las
+                            cosas se rompen. Aquí tienes a Nico y a un grupo de personas en la misma situación que tú,
+                            construyendo lo mismo. <strong class="text-slate-800">Nadie se queda bloqueado sin
+                                respuesta.</strong></p>
+                    </div>
+                    <div class="clean-card rounded-2xl p-6 sm:p-8">
+                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+                            <i data-lucide="rocket" class="w-5 h-5 text-primary"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-900 mb-2">Al final no construyes solo — construyes en
+                            equipo.</h3>
+                        <p class="text-slate-600 text-sm leading-relaxed">Una vez que tienes tu primera app, entras al
+                            grupo privado donde se organizan proyectos reales. Alguien tiene la idea, otro el marketing,
+                            tú construyes. <strong class="text-slate-800">No es teoría. Es fabricar productos con
+                                personas reales.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         BENEFICIOS
+    ════════════════════════════════════════════════ -->
+        <section class="py-12 sm:py-16 bg-slate-50 border-y border-slate-100 px-4 sm:px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl sm:text-4xl font-bold text-slate-900 mb-2">BENEFICIOS DE PERTENECER A IA LAB
+                    </h2>
+                </div>
+                <div class="grid sm:grid-cols-2 gap-4">
+                    <div class="flex items-start gap-3 bg-white rounded-xl p-4 sm:p-5 border border-slate-200">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-primary shrink-0 mt-0.5"></i>
+                        <p class="text-slate-700 font-semibold text-sm sm:text-base">Infraestructura montada, no solo
+                            contenido</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-white rounded-xl p-4 sm:p-5 border border-slate-200">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-primary shrink-0 mt-0.5"></i>
+                        <p class="text-slate-700 font-semibold text-sm sm:text-base">Aprende un stack y céntrate en
+                            crear sistemas y productos</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-white rounded-xl p-4 sm:p-5 border border-slate-200">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-primary shrink-0 mt-0.5"></i>
+                        <p class="text-slate-700 font-semibold text-sm sm:text-base">Aprendes con sistemas reales
+                            vendidos a clientes reales</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-white rounded-xl p-4 sm:p-5 border border-slate-200">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-primary shrink-0 mt-0.5"></i>
+                        <p class="text-slate-700 font-semibold text-sm sm:text-base">Crea tu primer producto en menos
+                            de 30 días</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-white rounded-xl p-4 sm:p-5 border border-slate-200">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-primary shrink-0 mt-0.5"></i>
+                        <p class="text-slate-700 font-semibold text-sm sm:text-base">Aprende conceptos avanzados sin
+                            experiencia previa</p>
+                    </div>
+                    <div class="flex items-start gap-3 bg-white rounded-xl p-4 sm:p-5 border border-slate-200">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-primary shrink-0 mt-0.5"></i>
+                        <p class="text-slate-700 font-semibold text-sm sm:text-base">Accede a IA LAB Teams donde nos
+                            unimos para sacar proyectos adelante</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         CÓMO FUNCIONA
+    ════════════════════════════════════════════════ -->
+        <section class="py-12 sm:py-16 bg-slate-900 px-4 sm:px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl sm:text-4xl font-bold text-white mb-2">CÓMO FUNCIONA EL SISTEMA</h2>
+                </div>
+                <div class="grid md:grid-cols-3 gap-5">
+                    <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                        <p class="text-blue-400 font-black text-[10px] tracking-widest mb-3">FASE 1 · DÍAS 7–15</p>
+                        <h3 class="font-bold text-white text-lg mb-3">Aprendes las habilidades básicas</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Fundamentos del Método VIBE → N8N + Supabase
+                            → Casos de uso reales. Entiendes cómo se estructura una aplicación completa.</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                        <p class="text-blue-400 font-black text-[10px] tracking-widest mb-3">FASE 2 · DÍAS 30–45</p>
+                        <h3 class="font-bold text-white text-lg mb-3">Construyes tu primera aplicación</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Usas la infraestructura probada. Personalizas
+                            proyectos base. Participas en Q&A cuando te atascas. Recibes feedback en reviews semanales.
+                        </p>
+                    </div>
+                    <div class="bg-blue-900 rounded-2xl p-6 border border-blue-700">
+                        <p class="text-blue-300 font-black text-[10px] tracking-widest mb-3">FASE 3 · PREMIUM</p>
+                        <h3 class="font-bold text-white text-lg mb-3">Entras al equipo que construye para vender</h3>
+                        <p class="text-blue-200 text-sm leading-relaxed">Presentas tu app a Nico. Si tiene nivel,
+                            entras al grupo donde se forman equipos con habilidades complementarias. <strong>Ya no
+                                construyes solo.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         PLAN STANDARD
+    ════════════════════════════════════════════════ -->
+        <section id="plan-standard" class="py-12 sm:py-16 px-4 sm:px-6 bg-white">
+            <div class="max-w-5xl mx-auto">
+
+                <div class="text-center mb-10">
+                    <div
+                        class="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border-2 border-slate-300 bg-slate-50 mb-4">
+                        <span class="text-xl">⭐</span>
+                        <span class="font-black text-lg sm:text-xl text-slate-900">PLAN STANDARD</span>
+                    </div>
+                    <p class="text-slate-600 text-base sm:text-lg font-medium">El sistema base para construir tu
+                        primera aplicación completa</p>
+                    <p class="text-slate-400 text-sm mt-2 italic max-w-xl mx-auto">Esta es la Fase 1. Sin esta base, no
+                        puedes entrar a jugar en equipo.</p>
+                </div>
+
+                <div class="space-y-6">
+
+                    <!-- Item 1 - Fundamentos -->
+                    <div class="clean-card rounded-2xl overflow-hidden">
+                        <div class="grid md:grid-cols-2">
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-primary font-black tracking-widest mb-2">ENTREGABLE 1</p>
+                                <h3 class="font-bold text-xl text-primary mb-3">Fundamentos del Método VIBE</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">Aprende a construir aplicaciones
+                                    sin tocar una línea de código. Las 3 piezas core del stack:</p>
+                                <ul class="space-y-2">
+                                    <li class="flex items-center gap-2 text-sm text-slate-700"><i data-lucide="check"
+                                            class="w-4 h-4 text-primary shrink-0"></i>N8N — automatizaciones y lógica
+                                        de backend</li>
+                                    <li class="flex items-center gap-2 text-sm text-slate-700"><i data-lucide="check"
+                                            class="w-4 h-4 text-primary shrink-0"></i>Supabase — base de datos y
+                                        autenticación</li>
+                                    <li class="flex items-center gap-2 text-sm text-slate-700"><i data-lucide="check"
+                                            class="w-4 h-4 text-primary shrink-0"></i>Lovable — diseño de la App</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-6 sm:p-8 flex items-center justify-center">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="cpu" class="w-8 h-8 text-blue-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">Fundamentos</span>
+                                        <span class="ia-lab-badge blue">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">De 0 a 1</p>
+                                        <p>Aprende n8n y la IA para desarrollar sistemas completos</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 - Infraestructura -->
+                    <div class="clean-card rounded-2xl overflow-hidden">
+                        <div class="grid md:grid-cols-2">
+                            <div
+                                class="bg-slate-50 p-6 sm:p-8 flex items-center justify-center md:order-first order-last">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="server" class="w-8 h-8 text-blue-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">Infraestructura</span>
+                                        <span class="ia-lab-badge blue">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">Infraestructura de IA</p>
+                                        <p>Instala n8n, Supabase, Chatwoot... bajo un mismo VPS</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-primary font-black tracking-widest mb-2">ENTREGABLE 2</p>
+                                <h3 class="font-bold text-xl text-primary mb-3">Infraestructura Sostenible y Escalable
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Infraestructura de n8n, Supabase y
+                                    otras herramientas para que puedas tenerlo todo bajo un mismo VPS sin volverte loco
+                                    con suscripciones.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 - Casos de Uso -->
+                    <div class="clean-card rounded-2xl overflow-hidden">
+                        <div class="grid md:grid-cols-2">
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-primary font-black tracking-widest mb-2">ENTREGABLE 3</p>
+                                <h3 class="font-bold text-xl text-primary mb-3">Casos de Uso Reales</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Ves exactamente cómo se construyeron
+                                    aplicaciones que ya se vendieron a clientes. <strong class="text-slate-800">Código
+                                        completo, decisiones técnicas explicadas, arquitectura desglosada.</strong>
+                                    Aprendes viendo sistemas reales, no demos bonitos.</p>
+                            </div>
+                            <div class="bg-slate-50 p-6 sm:p-8 flex items-center justify-center">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="briefcase" class="w-8 h-8 text-green-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">Casos de Uso</span>
+                                        <span class="ia-lab-badge green">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">Casos de Uso</p>
+                                        <p>Casos completos listos para sacar a producción</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 - Librería -->
+                    <div class="clean-card rounded-2xl overflow-hidden">
+                        <div class="grid md:grid-cols-2">
+                            <div
+                                class="bg-slate-50 p-6 sm:p-8 flex items-center justify-center md:order-first order-last">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="book-open" class="w-8 h-8 text-blue-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">Librería de Recursos</span>
+                                        <span class="ia-lab-badge green">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">Librería de Recursos</p>
+                                        <p>Todo lo que necesitas para construir y escalar</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-primary font-black tracking-widest mb-2">ENTREGABLE 4</p>
+                                <h3 class="font-bold text-xl text-primary mb-3">Librería de Recursos</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Plantillas listas para usar,
+                                    documentación técnica organizada. Todo lo que necesitas tener a mano mientras
+                                    construyes para no quedarte atascado buscando "cómo hacer X".</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 5 - Q&A -->
+                    <div class="clean-card rounded-2xl overflow-hidden">
+                        <div class="grid md:grid-cols-2">
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-primary font-black tracking-widest mb-2">ENTREGABLE 5</p>
+                                <h3 class="font-bold text-xl text-primary mb-3">Q&A Técnico Semanal (60 min)</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">Cada jueves a las <strong
+                                        class="text-slate-800">17:00 CET</strong>, Nico resuelve bloqueos técnicos en
+                                    vivo. Debuggea código, revisa arquitecturas, responde tus dudas. <strong
+                                        class="text-slate-800">No es teoría — son tus problemas reales de esa
+                                        semana.</strong></p>
+                                <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 rounded-full">
+                                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                    <span class="text-xs font-bold text-red-600">EN VIVO cada jueves</span>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-6 sm:p-8 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div
+                                        class="w-28 h-28 rounded-full overflow-hidden border-4 border-blue-100 mx-auto mb-3 shadow-lg">
+                                        <img src="https://storage.googleapis.com/msgsndr/0DGrKc1pz6fnALaQvlxp/media/68b62ae5dc48178b5c90946e.jpeg"
+                                            alt="Nico Q&A" class="w-full h-full object-cover">
+                                    </div>
+                                    <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-600 rounded-full">
+                                        <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                                        <span class="text-xs font-bold text-white">LIVE</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Item 6 - Comunidad -->
+                    <div class="clean-card rounded-2xl overflow-hidden">
+                        <div class="grid md:grid-cols-2">
+                            <div
+                                class="bg-slate-50 p-6 sm:p-8 flex items-center justify-center md:order-first order-last">
+                                <div class="bg-slate-900 rounded-xl p-4 w-full max-w-xs">
+                                    <div class="flex items-center gap-2 mb-3 pb-3 border-b border-slate-700">
+                                        <i data-lucide="message-circle" class="w-4 h-4 text-blue-400"></i>
+                                        <span class="font-bold text-white text-xs">IA Lab · Comunidad Skool</span>
+                                    </div>
+                                    <div class="space-y-2 text-[11px] text-slate-400">
+                                        <div class="bg-slate-800 rounded-lg p-2">¿Claude Code o Antigravity para
+                                            multi-equipo?</div>
+                                        <div class="bg-slate-800 rounded-lg p-2 text-green-300">¡Acabo de sacar mi
+                                            primera app a producción! 🎉</div>
+                                        <div class="bg-slate-800 rounded-lg p-2">Error en webhook de n8n, ¿alguien me
+                                            ayuda?</div>
+                                    </div>
+                                    <div
+                                        class="mt-3 flex items-center gap-4 text-[10px] text-slate-500 pt-2 border-t border-slate-700">
+                                        <span>259 Miembros</span>
+                                        <span class="text-green-400 font-bold">● 5 Online</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-primary font-black tracking-widest mb-2">ENTREGABLE 6</p>
+                                <h3 class="font-bold text-xl text-primary mb-3">Comunidad Skool 24/7</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Cuando te atascas a medianoche,
+                                    publicas tu error. Alguien que ya pasó por ese mismo problema te responde.
+                                    <strong class="text-slate-800">Soporte técnico real</strong> de gente que está
+                                    construyendo lo mismo que tú, de Nico y de nuestro agente de IA.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CTA Standard -->
+                <div class="mt-12 text-center">
+                    <a href="https://www.skool.com/ia-lab-8166/plans" target="_blank"
+                        class="inline-block w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-full font-bold text-xl text-center no-underline shadow-xl shadow-blue-200 hover:bg-blue-700 transition-colors">
+                        ACTIVA TU PRUEBA GRATUITA DE 7 DÍAS
+                    </a>
+                    <p class="text-slate-500 text-sm mt-3">Cancela cuando quieras</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         PLAN PREMIUM
+    ════════════════════════════════════════════════ -->
+        <section id="plan-premium" class="py-12 sm:py-16 bg-amber-50 border-y border-amber-100 px-4 sm:px-6">
+            <div class="max-w-5xl mx-auto">
+
+                <div class="text-center mb-10">
+                    <div
+                        class="inline-flex items-center gap-3 px-5 py-2.5 rounded-full border-2 border-amber-400 bg-amber-400 mb-4">
+                        <span class="text-xl">⭐</span>
+                        <span class="font-black text-lg sm:text-xl text-slate-900">PLAN PREMIUM</span>
+                    </div>
+                    <p class="text-slate-700 text-base sm:text-lg font-medium">Sistema completo + acceso al grupo que
+                        construye y vende en equipo</p>
+                    <p class="text-slate-600 text-sm mt-2 italic max-w-xl mx-auto">Con Standard construiste tu primera
+                        app. Aquí entras al grupo donde esa app se convierte en negocio.</p>
+                    <div
+                        class="mt-4 inline-block px-4 py-1.5 bg-amber-200 text-amber-900 rounded-full text-xs font-black tracking-widest">
+                        TODO LO DEL PLAN STANDARD +
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+
+                    <!-- Premium 1 - Claude Code -->
+                    <div class="bg-white rounded-2xl overflow-hidden border border-amber-200">
+                        <div class="grid md:grid-cols-2">
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-amber-600 font-black tracking-widest mb-2">PREMIUM
+                                    EXCLUSIVO 1</p>
+                                <h3 class="font-bold text-xl text-slate-900 mb-3">Claude Code</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Tus primeros pasos dentro de Claude
+                                    Code. Aprende los fundamentos de este asistente y cómo utilizarlo para casos que no
+                                    son de desarrollo. <strong class="text-slate-800">Crear agentes con n8n y
+                                        productividad.</strong></p>
+                            </div>
+                            <div class="bg-amber-50 p-6 sm:p-8 flex items-center justify-center">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="terminal" class="w-8 h-8 text-orange-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">Claude Code</span>
+                                        <span class="ia-lab-badge purple">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">Claude Code</p>
+                                        <p>Usa Claude Code para desarrollar y como sistema interno</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium 2 - Programa con IA -->
+                    <div class="bg-white rounded-2xl overflow-hidden border border-amber-200">
+                        <div class="grid md:grid-cols-2">
+                            <div
+                                class="bg-amber-50 p-6 sm:p-8 flex items-center justify-center md:order-first order-last">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="code-2" class="w-8 h-8 text-blue-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">Programa con IA</span>
+                                        <span class="ia-lab-badge purple">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">Programa con IA</p>
+                                        <p>Módulo obligatorio para acceder al grupo privado</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-amber-600 font-black tracking-widest mb-2">PREMIUM
+                                    EXCLUSIVO 2</p>
+                                <h3 class="font-bold text-xl text-slate-900 mb-3">Programación con IA</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Tus primeros pasos dentro del mundo
+                                    de la programación. Aprende las bases del <strong class="text-slate-800">Frontend,
+                                        APIs, Seguridad, Github y Despliegue de Apps</strong> mientras construimos una
+                                    app apoyándonos de la IA.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium 3 - Conceptos Avanzados -->
+                    <div class="bg-white rounded-2xl overflow-hidden border border-amber-200">
+                        <div class="grid md:grid-cols-2">
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-amber-600 font-black tracking-widest mb-2">PREMIUM
+                                    EXCLUSIVO 3</p>
+                                <h3 class="font-bold text-xl text-slate-900 mb-3">Conceptos Avanzados (Clases
+                                    Mensuales)</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Sesiones técnicas profundas sobre n8n
+                                    avanzado, sistemas de agentes de IA, automatizaciones complejas. <strong
+                                        class="text-slate-800">Solo tiene sentido cuando ya estás construyendo en
+                                        serio</strong> y necesitas el siguiente nivel.</p>
+                            </div>
+                            <div class="bg-amber-50 p-6 sm:p-8 flex items-center justify-center">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="graduation-cap" class="w-8 h-8 text-green-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">Conceptos Avanzados</span>
+                                        <span class="ia-lab-badge green">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">Conceptos de IA</p>
+                                        <p>Sesiones técnicas profundas sobre IA y n8n avanzado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium 4 - Ruta 3 Meses -->
+                    <div class="bg-white rounded-2xl overflow-hidden border border-amber-200">
+                        <div class="grid md:grid-cols-2">
+                            <div
+                                class="bg-amber-50 p-6 sm:p-8 flex items-center justify-center md:order-first order-last">
+                                <div class="flex gap-2 w-full max-w-xs">
+                                    <div class="module-card flex-1">
+                                        <div class="px-2 py-4 text-center">
+                                            <i data-lucide="calendar" class="w-5 h-5 text-blue-400 mx-auto mb-1"></i>
+                                            <span class="text-white font-bold text-xs block">Mes 1</span>
+                                            <span class="ia-lab-badge blue"
+                                                style="font-size:0.44rem;padding:0.1rem 0.5rem;">IA LAB</span>
+                                        </div>
+                                        <div class="module-card-body" style="padding:0.4rem 0.5rem;">
+                                            <p class="font-bold text-slate-800 text-[10px]">Consigue tu primer cliente
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="module-card flex-1">
+                                        <div class="px-2 py-4 text-center">
+                                            <i data-lucide="calendar" class="w-5 h-5 text-blue-400 mx-auto mb-1"></i>
+                                            <span class="text-white font-bold text-xs block">Mes 2</span>
+                                            <span class="ia-lab-badge blue"
+                                                style="font-size:0.44rem;padding:0.1rem 0.5rem;">IA LAB</span>
+                                        </div>
+                                        <div class="module-card-body" style="padding:0.4rem 0.5rem;">
+                                            <p class="font-bold text-slate-800 text-[10px]">Construye tu negocio</p>
+                                        </div>
+                                    </div>
+                                    <div class="module-card flex-1">
+                                        <div class="px-2 py-4 text-center">
+                                            <i data-lucide="calendar" class="w-5 h-5 text-blue-400 mx-auto mb-1"></i>
+                                            <span class="text-white font-bold text-xs block">Mes 3</span>
+                                            <span class="ia-lab-badge green"
+                                                style="font-size:0.44rem;padding:0.1rem 0.5rem;">IA LAB</span>
+                                        </div>
+                                        <div class="module-card-body" style="padding:0.4rem 0.5rem;">
+                                            <p class="font-bold text-slate-800 text-[10px]">Escala tu sistema</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-amber-600 font-black tracking-widest mb-2">PREMIUM
+                                    EXCLUSIVO 4</p>
+                                <h3 class="font-bold text-xl text-slate-900 mb-3">Ruta de 3 Meses para Conseguir tus
+                                    Primeros Clientes</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Sistema paso a paso: cómo definir tu
+                                    oferta → dónde encontrar prospectos → cómo cerrar tus primeras ventas. El puente
+                                    entre <strong class="text-slate-800">"sé construir"</strong> y <strong
+                                        class="text-slate-800">"tengo clientes pagando"</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium 5 - GHL -->
+                    <div class="bg-white rounded-2xl overflow-hidden border border-amber-200">
+                        <div class="grid md:grid-cols-2">
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-amber-600 font-black tracking-widest mb-2">PREMIUM
+                                    EXCLUSIVO 5</p>
+                                <h3 class="font-bold text-xl text-slate-900 mb-3">Go High Level + Curso Completo</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Acceso a la plataforma profesional de
+                                    gestión de clientes y automatizaciones + curso completo de uso.
+                                    Herramienta para gestionar tu negocio cuando empieces a cerrar clientes.</p>
+                            </div>
+                            <div class="bg-amber-50 p-6 sm:p-8 flex items-center justify-center">
+                                <div class="module-card w-56">
+                                    <div class="module-card-icon-area">
+                                        <div class="bg-slate-700 rounded-lg p-3">
+                                            <i data-lucide="zap" class="w-8 h-8 text-amber-400"></i>
+                                        </div>
+                                        <span class="text-white font-bold text-sm">GoHighLevel</span>
+                                        <span class="ia-lab-badge green">IA LAB</span>
+                                    </div>
+                                    <div class="module-card-body">
+                                        <p class="font-bold text-slate-800 text-xs mb-0.5">IA Lab + GoHighLevel</p>
+                                        <p>Crea, automatiza y escala tu embudo de ventas</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Premium 6 - Slack Privado -->
+                    <div class="bg-white rounded-2xl overflow-hidden border-2 border-amber-300">
+                        <div class="grid md:grid-cols-2">
+                            <div
+                                class="bg-amber-50 p-6 sm:p-8 flex items-center justify-center md:order-first order-last">
+                                <div class="bg-slate-900 rounded-xl p-5 w-full max-w-xs">
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <i data-lucide="message-square" class="w-4 h-4 text-purple-400"></i>
+                                        <span class="font-bold text-white text-sm">Desarrollador Híbrido</span>
+                                        <span
+                                            class="ml-auto text-[10px] bg-green-500 text-white rounded-full px-2 py-0.5 font-bold">PRIVADO</span>
+                                    </div>
+                                    <div class="space-y-2 text-xs text-slate-400">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+                                            <span>Alguien tiene la idea de negocio</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-blue-400 shrink-0"></span>
+                                            <span>Otro sabe marketing y ventas</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+                                            <span><strong class="text-white">Tú construyes la app</strong></span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 border-t border-slate-700 pt-3 text-[10px] text-slate-500 italic">
+                                        Proyectos reales con objetivo de monetizar
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="px-6 sm:px-8 py-7 sm:py-8">
+                                <p class="text-[10px] text-amber-600 font-black tracking-widest mb-2">PREMIUM
+                                    EXCLUSIVO 6 — LA PIEZA FINAL</p>
+                                <h3 class="font-bold text-xl text-slate-900 mb-3">Canal Privado Desarrollador Híbrido
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-3">Aquí es donde llega todo. Grupo
+                                    privado donde se forman equipos para construir aplicaciones reales y sacarlas al
+                                    mercado juntos. <strong class="text-slate-800">No es teoría. Es construcción real
+                                        con objetivo de monetizar.</strong></p>
+                                <p class="text-slate-400 text-xs italic">Para acceder debes haber creado una App real y
+                                    enseñársela a Nico. Si demuestra nivel, accedes.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CTA Premium -->
+                <div class="mt-12 text-center">
+                    <a href="https://www.skool.com/ia-lab-8166/plans" target="_blank"
+                        class="inline-block w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-full font-bold text-xl text-center no-underline shadow-xl shadow-blue-200 hover:bg-blue-700 transition-colors">
+                        ACTIVA TU PRUEBA GRATUITA DE 7 DÍAS
+                    </a>
+                    <p class="text-slate-600 text-sm mt-3">Sin riesgo · Cancela cuando quieras</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         BONOS EXCLUSIVOS
+    ════════════════════════════════════════════════ -->
+        <section class="py-12 sm:py-16 px-4 sm:px-6 bg-white">
+            <div class="max-w-4xl mx-auto">
+
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl sm:text-4xl font-bold text-slate-900 mb-2">BONOS EXCLUSIVOS</h2>
+                    <p class="text-red-600 font-bold text-sm sm:text-base">Solo para Anual Premium · Desaparecen pronto
+                    </p>
+                </div>
+
+                <div class="space-y-5">
+
+                    <!-- Bono 1 - 30 cupos -->
+                    <div class="bonus-card urgent p-5 sm:p-7">
+                        <div class="flex flex-col sm:flex-row gap-4 items-start">
+                            <div class="bg-red-100 rounded-xl p-3 shrink-0">
+                                <i data-lucide="video" class="w-6 h-6 text-red-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span
+                                        class="bg-red-600 text-white text-[10px] font-black px-2 py-1 rounded-full tracking-wide">BONO
+                                        1</span>
+                                    <span
+                                        class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full">SOLO
+                                        30 CUPOS DISPONIBLES</span>
+                                </div>
+                                <h3 class="font-bold text-lg text-slate-900 mb-1.5">Sesión 1-a-1 con Nico (30 min)
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed">Sesión privada donde Nico ve tu nivel
+                                    técnico actual, tus proyectos y tu situación. Te da un plan específico y
+                                    personalizado: qué construir primero, cómo estructurarlo, por dónde empezar a
+                                    vender. Limitado a los primeros 30 que entren como Anual Premium.</p>
+                                <div class="mt-4 flex items-center gap-3">
+                                    <span class="text-slate-500 text-sm font-medium">Cupos restantes:</span>
+                                    <span id="cupos-count" class="font-black text-3xl text-red-600 leading-none"
+                                        style="font-family:'Share Tech Mono',monospace;text-shadow:0 0 8px rgba(220,38,38,0.7);">30</span>
+                                    <span class="text-slate-400 text-sm self-end">/30</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bono 2 - 24h countdown -->
+                    <div class="bonus-card urgent p-5 sm:p-7">
+                        <div class="flex flex-col sm:flex-row gap-4 items-start">
+                            <div class="bg-orange-100 rounded-xl p-3 shrink-0">
+                                <i data-lucide="film" class="w-6 h-6 text-orange-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span
+                                        class="bg-primary text-white text-[10px] font-black px-2 py-1 rounded-full tracking-wide">BONO
+                                        2</span>
+                                    <span
+                                        class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded-full">DESAPARECE
+                                        EN 24H</span>
+                                </div>
+                                <h3 class="font-bold text-lg text-slate-900 mb-1.5">Video Personalizado de Nico + Plan
+                                    de Acción</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">Rellenas un formulario con tu
+                                    situación actual (nivel técnico, experiencia, objetivos, bloqueos). Nico te graba
+                                    un video personalizado con tu hoja de ruta específica: qué aprender, qué construir
+                                    y los próximos pasos.</p>
+                                <div class="inline-flex items-center gap-3 bg-blue-900 rounded-xl px-4 py-2.5">
+                                    <i data-lucide="clock" class="w-4 h-4 text-blue-300 shrink-0"></i>
+                                    <div class="flex items-center gap-1 text-white font-black text-xl leading-none">
+                                        <span id="b2-hours">23</span><span class="text-blue-300 text-sm ml-0.5">h</span>
+                                        <span class="text-blue-500 mx-1">:</span>
+                                        <span id="b2-minutes">59</span><span
+                                            class="text-blue-300 text-sm ml-0.5">m</span>
+                                        <span class="text-blue-500 mx-1">:</span>
+                                        <span id="b2-seconds">00</span><span
+                                            class="text-blue-300 text-sm ml-0.5">s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bono 3 - 48h countdown -->
+                    <div class="bonus-card p-5 sm:p-7">
+                        <div class="flex flex-col sm:flex-row gap-4 items-start">
+                            <div class="bg-blue-100 rounded-xl p-3 shrink-0">
+                                <i data-lucide="package" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span
+                                        class="bg-primary text-white text-[10px] font-black px-2 py-1 rounded-full tracking-wide">BONO
+                                        3</span>
+                                    <span
+                                        class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-1 rounded-full">DESAPARECE
+                                        EN 48H</span>
+                                </div>
+                                <h3 class="font-bold text-lg text-slate-900 mb-1.5">Proyecto Base Completo "Listo para
+                                    Personalizar"</h3>
+                                <p class="text-slate-600 text-sm leading-relaxed mb-4">Recibes el kit completo con toda
+                                    la arquitectura montada (frontend + Supabase + APIs + autenticación). Todo lo que
+                                    necesitas para construir tu SaaS, herramienta de IA o cualquier app web en días, no
+                                    en semanas.</p>
+                                <div class="inline-flex items-center gap-3 bg-blue-900 rounded-xl px-4 py-2.5">
+                                    <i data-lucide="clock" class="w-4 h-4 text-blue-300 shrink-0"></i>
+                                    <div class="flex items-center gap-1 text-white font-black text-xl leading-none">
+                                        <span id="b3-hours">47</span><span class="text-blue-300 text-sm ml-0.5">h</span>
+                                        <span class="text-blue-500 mx-1">:</span>
+                                        <span id="b3-minutes">59</span><span
+                                            class="text-blue-300 text-sm ml-0.5">m</span>
+                                        <span class="text-blue-500 mx-1">:</span>
+                                        <span id="b3-seconds">00</span><span
+                                            class="text-blue-300 text-sm ml-0.5">s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bono 4 - Checklist -->
+                    <div class="bonus-card p-5 sm:p-7">
+                        <div class="flex flex-col sm:flex-row gap-4 items-start">
+                            <div class="bg-green-100 rounded-xl p-3 shrink-0">
+                                <i data-lucide="clipboard-check" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span
+                                        class="bg-green-600 text-white text-[10px] font-black px-2 py-1 rounded-full tracking-wide">BONO
+                                        4</span>
+                                </div>
+                                <h3 class="font-bold text-lg text-slate-900 mb-1.5">Checklist de Entrega de Proyectos
+                                </h3>
+                                <p class="text-slate-600 text-sm leading-relaxed italic">"El documento que Nico revisa
+                                    antes de entregar cada proyecto a un cliente. Tú lo tienes desde el día uno."
+                                    Simple, concreto, con autoridad.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CTA tras bonos -->
+                <div class="mt-10 text-center bg-slate-900 rounded-2xl p-8 sm:p-10">
+                    <p class="text-slate-400 text-sm mb-3">Activa tu prueba gratuita y asegura los 4 bonos ahora</p>
+                    <a href="https://www.skool.com/ia-lab-8166/plans" target="_blank"
+                        class="inline-block w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-full font-bold text-xl text-center no-underline shadow-blue-200 hover:bg-blue-700 transition-colors">
+                        ACTIVA TU PRUEBA GRATUITA DE 7 DÍAS
+                    </a>
+                    <p class="text-slate-500 text-xs mt-3">7 días gratis · Sin compromiso</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         ACTIVIDADES DE LA SEMANA
+    ════════════════════════════════════════════════ -->
+        <section class="py-14 sm:py-20 px-4 sm:px-6 bg-slate-950">
+            <div class="max-w-3xl mx-auto">
+
+                <!-- Header -->
+                <div class="text-center mb-12">
+                    <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary mb-6">
+                        <span class="text-white text-xs font-black tracking-widest uppercase">ESTO NO ACABA AQUÍ, APENAS
+                            EMPIEZA</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-4xl font-bold text-white mb-4 leading-tight">
+                        Al activar tu prueba gratuita,<br>
+                        <span class="font-serif italic font-normal text-blue-400">esta semana tendrás acceso a:</span>
+                    </h2>
+                    <p class="text-slate-400 text-base">5 sesiones en vivo incluidas desde el primer día.</p>
+                </div>
+
+                <!-- Timeline de actividades -->
+                <div class="flex flex-col gap-3">
+
+                    <!-- Viernes 27 -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex">
+                        <div class="w-1 shrink-0 bg-primary"></div>
+                        <div class="p-5 sm:p-6 flex-1">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-blue-300 text-[10px] font-black tracking-widest uppercase mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" style="width:10px;height:10px;">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                VIERNES 27 — CLASE EN VIVO
+                            </span>
+                            <p class="text-blue-400 font-bold text-sm mb-1">El 20% que nadie te enseña:</p>
+                            <p class="text-white font-semibold text-base leading-snug">Los detalles que separan una app
+                                que funciona de una que se rompe</p>
+                        </div>
+                    </div>
+
+                    <!-- Sábado 28 -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex">
+                        <div class="w-1 shrink-0 bg-primary"></div>
+                        <div class="p-5 sm:p-6 flex-1">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-blue-300 text-[10px] font-black tracking-widest uppercase mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" style="width:10px;height:10px;">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                SÁBADO 28 — TALLER
+                            </span>
+                            <p class="text-blue-400 font-bold text-sm mb-1">Productividad con esteroides:</p>
+                            <p class="text-white font-semibold text-base leading-snug">Mi sistema paso a paso con Claude
+                                Code para producir en horas lo que antes tardaba semanas</p>
+                        </div>
+                    </div>
+
+                    <!-- Domingo 1 -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex">
+                        <div class="w-1 shrink-0 bg-primary"></div>
+                        <div class="p-5 sm:p-6 flex-1">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-blue-300 text-[10px] font-black tracking-widest uppercase mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" style="width:10px;height:10px;">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                DOMINGO 1 — LANZAMIENTO DE CURSO
+                            </span>
+                            <p class="text-blue-400 font-bold text-sm mb-1">Programa con IA:</p>
+                            <p class="text-white font-semibold text-base leading-snug">El curso completo para empezar a
+                                aprender a desarrollar apps usando Claude Code (Clase 1 y 2)</p>
+                        </div>
+                    </div>
+
+                    <!-- Martes 3 -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex">
+                        <div class="w-1 shrink-0 bg-primary"></div>
+                        <div class="p-5 sm:p-6 flex-1">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-blue-300 text-[10px] font-black tracking-widest uppercase mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" style="width:10px;height:10px;">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                MARTES 3 — CLASE EN DIRECTO + INICIO DE RETO
+                            </span>
+                            <p class="text-blue-400 font-bold text-sm mb-1">Construye tu propio sistema con OpenClaw:
+                            </p>
+                            <p class="text-white font-semibold text-base leading-snug">Mi arquitectura al descubierto y
+                                el reto que empieza hoy</p>
+                        </div>
+                    </div>
+
+                    <!-- Jueves 5 -->
+                    <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden flex">
+                        <div class="w-1 shrink-0 bg-primary"></div>
+                        <div class="p-5 sm:p-6 flex-1">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/20 border border-primary/30 text-blue-300 text-[10px] font-black tracking-widest uppercase mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                    stroke-linejoin="round" style="width:10px;height:10px;">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                                    <line x1="16" y1="2" x2="16" y2="6" />
+                                    <line x1="8" y1="2" x2="8" y2="6" />
+                                    <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                JUEVES 5 — SEGUIMIENTO DEL RETO
+                            </span>
+                            <p class="text-blue-400 font-bold text-sm mb-1">Seguimiento del reto OpenClaw:</p>
+                            <p class="text-white font-semibold text-base leading-snug">Revisamos, desbloqueamos y
+                                seguimos construyendo</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CTA -->
+                <div class="mt-12 text-center">
+                    <a href="https://www.skool.com/ia-lab-8166/plans" target="_blank"
+                        class="cta-pulse inline-block w-full sm:w-auto px-10 py-5 bg-primary text-white rounded-full font-bold text-xl text-center no-underline shadow-xl shadow-blue-900/50 hover:bg-blue-700 transition-colors">
+                        ACTIVA TU PRUEBA GRATUITA DE 7 DÍAS
+                    </a>
+                    <p class="text-slate-500 text-xs mt-3">Sin riesgo. Sin compromiso. Si no es para ti, te vas sin dar
+                        explicaciones.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         GARANTÍA
+    ════════════════════════════════════════════════ -->
+        <section class="py-14 sm:py-20 bg-slate-900 px-4 sm:px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <div class="text-6xl mb-6">🔒</div>
+                <h2 class="text-3xl sm:text-4xl font-bold text-white mb-5">GARANTÍA — PRUEBA GRATUITA</h2>
+                <p class="text-slate-300 text-base sm:text-lg leading-relaxed mb-8">
+                    <strong class="text-white text-xl">7 Días de Acceso GRATIS.</strong><br><br>
+                    Entra. Ve toda la infraestructura. Prueba el sistema. Participa en el Q&A semanal. Revisa los
+                    proyectos reales.<br><br>
+                    Si en los primeros 7 días sientes que esto no es para ti, <strong class="text-white">te sales sin
+                        dar explicaciones. Sin letra pequeña.</strong>
+                </p>
+                <p class="text-slate-500 text-sm italic mb-8">Esto es para gente que construye y ejecuta, no para
+                    coleccionistas de contenido.</p>
+                <a href="https://www.skool.com/ia-lab-8166/plans" target="_blank"
+                    class="inline-block w-full sm:w-auto px-10 py-5 bg-white text-slate-900 rounded-full font-bold text-xl text-center no-underline hover:bg-slate-100 transition-colors">
+                    ACTIVA TU PRUEBA GRATUITA DE 7 DÍAS
+                </a>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         FAQ
+    ════════════════════════════════════════════════ -->
+        <section class="py-12 sm:py-16 px-4 sm:px-6 bg-white">
+            <div class="max-w-3xl mx-auto">
+                <div class="text-center mb-10">
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">Preguntas Frecuentes</h2>
+                </div>
+                <div class="space-y-3" id="faq-container"></div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         FINAL CTA
+    ════════════════════════════════════════════════ -->
+        <section class="py-16 sm:py-24 bg-primary px-4 sm:px-6 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 leading-tight">
+                    Construye tu primera app.<br>
+                    Entra al equipo.<br>
+                    <span class="font-serif italic font-normal">Saca algo al mercado.</span>
+                </h2>
+                <p class="text-blue-100 text-base sm:text-lg mb-8 max-w-2xl mx-auto">
+                    La oportunidad está. El sistema está. El equipo está.<br>
+                    <strong class="text-white">Solo falta que entres y ejecutes.</strong>
+                </p>
+
+                <!-- Countdown final -->
+                <div class="mb-8 led-panel inline-block">
+                    <p
+                        class="text-[9px] text-red-700 font-black uppercase tracking-[0.18em] mb-3.5 text-center opacity-75">
+                        La oferta expira en</p>
+                    <div class="flex items-end justify-center gap-1.5 sm:gap-2">
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="final-days">00</span>
+                            <span class="countdown-label">Días</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="final-hours">00</span>
+                            <span class="countdown-label">Horas</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="final-minutes">00</span>
+                            <span class="countdown-label">Min</span>
+                        </div>
+                        <span class="countdown-sep">:</span>
+                        <div class="digit-cell">
+                            <span class="digit-ghost">88</span>
+                            <span class="countdown-digit" id="final-seconds">00</span>
+                            <span class="countdown-label">Seg</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center">
+                    <a href="https://www.skool.com/ia-lab-8166/plans" target="_blank"
+                        class="cta-pulse inline-block w-full sm:w-auto px-10 py-5 bg-white text-primary rounded-full font-bold text-xl text-center no-underline shadow-2xl hover:bg-slate-100 transition-colors">
+                        ACTIVA TU PRUEBA GRATUITA DE 7 DÍAS
+                    </a>
+                </div>
+                <p class="text-blue-200 text-xs mt-5">7 días gratis. Sin riesgo. Sin compromiso.</p>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════
+         FOOTER
+    ════════════════════════════════════════════════ -->
+        <footer class="bg-secondary py-12 px-6 text-center border-t border-slate-800">
+            <div class="max-w-6xl mx-auto">
+                <div class="flex items-center justify-center gap-2 mb-8">
+                    <img src="https://storage.googleapis.com/msgsndr/0DGrKc1pz6fnALaQvlxp/media/68fd0dbf47cb3bbe70b09b0c.png"
+                        alt="Nico Logo" loading="lazy" decoding="async" width="150" height="32"
+                        class="h-8 w-auto object-contain grayscale invert opacity-40">
+                </div>
+                <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4">
+                    COPYRIGHT © 2026 NICO - IA LAB.
+                </p>
+                <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4 mt-2">
+                    Este sitio no forma parte ni está respaldado por Facebook™. Facebook™ es una marca comercial de
+                    Facebook™, Inc.
+                </p>
+                <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4 mt-2">
+                    Los resultados indicados son resultados personales de Nico. Por favor, comprende que los resultados
+                    no son típicos y variarán dependiendo de tu experiencia, dedicación y otros factores. Todo logro
+                    conlleva riesgo, esfuerzo y acción constante.
+                </p>
+                <p class="text-slate-500 text-xs max-w-2xl mx-auto leading-relaxed px-4 mt-2">
+                    Al entrar a IA LAB tienes 7 días de prueba gratuita. Después se activa la membresía seleccionada.
+                    Puedes cancelar en cualquier momento.
+                </p>
+                <div
+                    class="flex justify-center gap-6 mt-6 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                    <a href="#" class="hover:text-white transition">Legal</a>
+                    <a href="#" class="hover:text-white transition">Privacidad</a>
+                </div>
+            </div>
+        </footer>
+
+        <!-- ═══════════════════════════════════════════════
+         SCRIPTS
+    ════════════════════════════════════════════════ -->
+        <script defer>
+            document.addEventListener('DOMContentLoaded', () => {
+
+                // Init Lucide icons
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+
+                // ── FAQ ──────────────────────────────────────────
+                const faqs = [
+                    {
+                        q: "¿Necesito saber programar para entrar?",
+                        a: "No para el Plan Standard. Aprendes desde cero con el Método VIBE usando N8N + Lovable + Supabase, sin tocar código. Para acceder al Canal Privado Desarrollador Híbrido (Premium) sí necesitas haber construido una app real y haber completado el módulo 'Programa con IA'."
+                    },
+                    {
+                        q: "¿Qué pasa después de los 7 días gratis?",
+                        a: "Si decides quedarte, se activa tu membresía (Plan Standard o Plan Premium). Si no es para ti, simplemente cancelas antes de que termine el período de prueba. Sin cargos, sin preguntas, sin letra pequeña."
+                    },
+                    {
+                        q: "¿Los 4 bonos están disponibles en el Plan Standard?",
+                        a: "No. Los 4 bonos exclusivos (sesión 1-a-1, video personalizado, proyecto base completo y checklist de entrega) son EXCLUSIVOS del Plan Premium Anual. Además, los bonos 2 y 3 desaparecen en 24 y 48 horas respectivamente desde el lanzamiento."
+                    },
+                    {
+                        q: "¿Cuándo accedo al Canal Privado de Desarrolladores?",
+                        a: "El Canal Privado (grupo Slack) es parte del Premium. Para acceder necesitas haber creado una App real y presentársela a Nico para que la valide. Es la forma de garantizar que el grupo tenga el nivel necesario para construir en equipo."
+                    },
+                    {
+                        q: "¿Qué pasa si me quedo bloqueado técnicamente?",
+                        a: "Tienes 3 recursos siempre disponibles: la Comunidad Skool 24/7 donde otros miembros y el agente de IA responden, el Q&A técnico semanal en vivo cada jueves con Nico, y el soporte dentro de la comunidad. Nadie se queda bloqueado sin respuesta."
+                    },
+                    {
+                        q: "¿En qué se diferencia de otros cursos de IA?",
+                        a: "IA LAB no es un curso para consumir. Es infraestructura probada + sistema claro para construir + comunidad activa + grupo privado para construcción colaborativa. El objetivo no es que acumules conocimiento — es que construyas tu primera app y la monetices."
+                    }
+                ];
+
+                const container = document.getElementById('faq-container');
+                if (container) {
+                    faqs.forEach((faq, i) => {
+                        const el = document.createElement('div');
+                        el.className = 'clean-card rounded-xl overflow-hidden';
+                        el.innerHTML = `
+                        <button
+                            class="w-full text-left px-5 sm:px-6 py-4 flex items-center justify-between gap-4 hover:bg-slate-50 transition"
+                            onclick="toggleFaq(${i})"
+                            aria-expanded="false"
+                            id="faq-btn-${i}">
+                            <span class="font-bold text-slate-900 text-sm sm:text-base">${faq.q}</span>
+                            <i data-lucide="chevron-down" class="w-5 h-5 text-primary shrink-0 faq-icon" id="faq-icon-${i}"></i>
+                        </button>
+                        <div class="faq-answer" id="faq-answer-${i}">
+                            <div class="px-5 sm:px-6 pb-5 pt-1">
+                                <p class="text-slate-600 text-sm leading-relaxed">${faq.a}</p>
+                            </div>
+                        </div>`;
+                        container.appendChild(el);
+                    });
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            });
+
+            function toggleFaq(i) {
+                const answer = document.getElementById(`faq-answer-${i}`);
+                const icon = document.getElementById(`faq-icon-${i}`);
+                const btn = document.getElementById(`faq-btn-${i}`);
+                if (!answer) return;
+                const isOpen = answer.classList.contains('open');
+                answer.classList.toggle('open', !isOpen);
+                if (icon) icon.classList.toggle('rotated', !isOpen);
+                if (btn) btn.setAttribute('aria-expanded', String(!isOpen));
+            }
+
+            // ── CUPOS COUNTER ────────────────────────────────────
+            // Empieza en 30 y llega a 0 en CUPOS_HOURS horas desde CUPOS_START_DATE
+            // → Ajusta CUPOS_HOURS para controlar la velocidad de bajada
+            const CUPOS_START_DATE = new Date('2026-02-25T16:00:00+01:00').getTime();
+            const CUPOS_HOURS = 1; // ← cambia este valor (ej: 3, 6, 12, 24)
+            const CUPOS_MAX = 30;
+            const CUPOS_END_DATE = CUPOS_START_DATE + (CUPOS_HOURS * 3600000);
+
+            function updateCupos() {
+                const now = Date.now();
+                const elapsed = now - CUPOS_START_DATE;
+                const total = CUPOS_END_DATE - CUPOS_START_DATE;
+                const remaining = Math.max(0, Math.round(CUPOS_MAX * (1 - elapsed / total)));
+                const el = document.getElementById('cupos-count');
+                if (el) el.textContent = remaining;
+            }
+
+            // ── COUNTDOWNS ──────────────────────────────────────
+            // Oferta principal: expira el 1 de Marzo 2026 a las 23:59 CET (UTC+1)
+            const MAIN_DEADLINE = new Date('2026-03-01T23:59:00+01:00').getTime();
+            // Bono 2: 24h desde lanzamiento (26 Feb 12:00 CET → 27 Feb 12:00 CET)
+            const B2_DEADLINE = new Date('2026-02-27T12:00:00+01:00').getTime();
+            // Bono 3: 48h desde lanzamiento (26 Feb 12:00 CET → 28 Feb 12:00 CET)
+            const B3_DEADLINE = new Date('2026-02-28T12:00:00+01:00').getTime();
+
+            function pad(n) {
+                return String(Math.max(0, n)).padStart(2, '0');
+            }
+
+            function updateMainCountdown(deadline, daysId, hoursId, minutesId, secondsId) {
+                const diff = deadline - Date.now();
+                if (diff <= 0) {
+                    [daysId, hoursId, minutesId, secondsId].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = '00';
+                    });
+                    return;
+                }
+                const days = Math.floor(diff / 86400000);
+                const hours = Math.floor((diff % 86400000) / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = pad(val); };
+                set(daysId, days);
+                set(hoursId, hours);
+                set(minutesId, minutes);
+                set(secondsId, seconds);
+            }
+
+            function updateBonusCountdown(deadline, hoursId, minutesId, secondsId) {
+                const diff = deadline - Date.now();
+                if (diff <= 0) {
+                    [hoursId, minutesId, secondsId].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = '00';
+                    });
+                    return;
+                }
+                const totalHours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = pad(val); };
+                set(hoursId, totalHours);
+                set(minutesId, minutes);
+                set(secondsId, seconds);
+            }
+
+            function tick() {
+                updateMainCountdown(MAIN_DEADLINE, 'main-days', 'main-hours', 'main-minutes', 'main-seconds');
+                updateMainCountdown(MAIN_DEADLINE, 'cta-days', 'cta-hours', 'cta-minutes', 'cta-seconds');
+                updateMainCountdown(MAIN_DEADLINE, 'final-days', 'final-hours', 'final-minutes', 'final-seconds');
+                updateBonusCountdown(B2_DEADLINE, 'b2-hours', 'b2-minutes', 'b2-seconds');
+                updateBonusCountdown(B3_DEADLINE, 'b3-hours', 'b3-minutes', 'b3-seconds');
+                updateCupos();
+            }
+
+            tick();
+            setInterval(tick, 1000);
+
+            // ── VSL VIDEO ────────────────────────────────────────
+            const vslPlaceholder = document.getElementById('vsl-placeholder');
+            const vslVideo = document.getElementById('vsl-video');
+
+            if (vslPlaceholder && vslVideo) {
+                const playVsl = () => {
+                    vslPlaceholder.classList.add('fade-out');
+                    vslVideo.currentTime = 0;
+                    vslVideo.loop = false;
+                    vslVideo.muted = false;
+                    vslVideo.controls = true;
+                    vslVideo.play().catch(() => { });
+                };
+                vslPlaceholder.addEventListener('click', playVsl);
+                vslPlaceholder.addEventListener('touchend', (e) => { e.preventDefault(); playVsl(); });
+                vslVideo.play().catch(() => { });
+            }
+
+            // ── SMOOTH SCROLL ────────────────────────────────────
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            });
+        </script>
+
+    </div><!-- /#ia-lab-root -->
+
+</body>
+
+</html>
