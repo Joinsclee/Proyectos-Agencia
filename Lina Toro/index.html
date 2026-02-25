@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Precios - Lina Toro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #9caf88;
+            --secondary-color: #1a1a1a;
+            --accent-soft: #f4f6f2;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e5e7eb;
+            --radius: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--primary-color);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            margin-top: -5px;
+            margin-bottom: 1.5rem;
+        }
+
+        .soap-name-container {
+            max-width: 500px;
+            margin: 0 auto 2.5rem;
+            text-align: center;
+        }
+
+        .soap-name-input {
+            width: 100%;
+            border: none;
+            border-bottom: 2px solid var(--border-color);
+            background: transparent;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--secondary-color);
+            padding: 10px;
+            transition: border-color 0.3s;
+        }
+
+        .soap-name-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .soap-name-input::placeholder {
+            color: #ccc;
+            font-style: italic;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--bg-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        .grid-config {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            background: #fafafa;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(156, 175, 136, 0.1);
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        th {
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #bbb;
+            text-transform: uppercase;
+            padding: 10px;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f8f8f8;
+        }
+
+        .row-name {
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .row-qty,
+        .row-price {
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-size: 0.9rem;
+        }
+
+        .row-total {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--secondary-color);
+            text-align: right;
+        }
+
+        /* TOOLTIPS */
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            font-size: 9px;
+            color: #aaa;
+            cursor: help;
+            position: relative;
+        }
+
+        .help-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            background: #1a1a1a;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            line-height: 1.3;
+            text-align: center;
+            transition: all 0.2s;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        .help-icon:hover .help-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* ADD/DEL BUTTONS */
+        .btn-add-row {
+            background: none;
+            border: 1.5px dashed #d1dbca;
+            color: var(--primary-color);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .btn-add-row:hover {
+            background: #f8faf7;
+            border-color: var(--primary-color);
+        }
+
+        .btn-del-row {
+            background: none;
+            border: none;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .btn-del-row:hover {
+            color: #ff6b6b;
+        }
+
+        /* RENTABILIDAD */
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            text-align: center;
+            background: #fff;
+        }
+
+        .result-box.highlight {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 20px rgba(156, 175, 136, 0.3);
+        }
+
+        .result-box.highlight .label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .result-box.highlight .value {
+            color: #fff;
+        }
+
+        .result-box .label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .result-box .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* ACTION */
+        .pdf-actions {
+            display: flex;
+            justify-content: center;
+            padding: 3rem 0;
+        }
+
+        .btn-pdf {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2.8rem;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-pdf:hover {
+            transform: translateY(-3px);
+            background: #333;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-pdf svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* PDF BUTTON LOADING STATE */
+        .btn-pdf.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .btn-pdf .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .btn-pdf.loading .spinner {
+            display: block;
+        }
+
+        .btn-pdf.loading .pdf-icon {
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Estilos específicos para asegurar la visibilidad en PDF */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .container {
+                padding: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Calculadora de Precios</h1>
+            <div class="subtitle">Lina Toro | Jabones Artesanales</div>
+            <div class="soap-name-container">
+                <input type="text" id="soap-name" class="soap-name-input" placeholder="Nombre de tu jabón artesanal...">
+            </div>
+        </header>
+
+        <!-- CONFIGURACION GLOBAL -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Configuración Global</div>
+            </div>
+            <div class="grid-config">
+                <div class="input-group">
+                    <label>Gramos de jabón a elaborar (Lote)</label>
+                    <input type="number" id="lot-weight" value="1000" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Eficiencia de Proceso (%) <span class="help-icon">? <span class="help-tooltip">Considera
+                                mermas de curado y desperdicio en utensilios. Típico 80%.</span></span></label>
+                    <input type="number" id="efficiency" value="80" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Peso de Pastilla (g)</label>
+                    <input type="number" id="unit-size" value="100" oninput="calc()">
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIONES DE RECETA -->
+        <div class="card" id="section-oils">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Aceites y Mantecas</div>
+                <button class="btn-add-row" onclick="addRow('oils')">AÑADIR ACEITE</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Ingrediente</th>
+                        <th>Gramos (g)</th>
+                        <th>Precio/Kg</th>
+                        <th style="text-align: right;">Total</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody class="row-container">
+                    <tr>
+                        <td><input type="text" class="row-name" value="Aceite de Oliva Orujo"></td>
+                        <td><input type="number" class="row-qty" value="278" oninput="calc()"></td>
+                        <td><input type="number" class="row-price" value="1.60" oninput="calc()"></td>
+                        <td class="row-total">$0.44</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" class="row-name" value="Aceite de Almendras"></td>
+                        <td><input type="number" class="row-qty" value="10" oninput="calc()"></td>
+                        <td><input type="number" class="row-price" value="9.00" oninput="calc()"></td>
+                        <td class="row-total">$0.09</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" class="row-name" value="Aceite de Coco"></td>
+                        <td><input type="number" class="row-qty" value="111" oninput="calc()"></td>
+                        <td><input type="number" class="row-price" value="6.50" oninput="calc()"></td>
+                        <td class="row-total">$0.72</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card" id="section-nutrients">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Nutrientes y Sobreengrasado</div>
+                <button class="btn-add-row" onclick="addRow('nutrients')">AÑADIR NUTRIENTE</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Ingrediente</th>
+                        <th>Gramos (g)</th>
+                        <th>Precio/Kg</th>
+                        <th style="text-align: right;">Total</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody class="row-container">
+                    <!-- Dinámico -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card" id="section-actives">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Activos (Fragancias/AAEE)</div>
+                <button class="btn-add-row" onclick="addRow('actives')">AÑADIR ACTIVO</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Ingrediente</th>
+                        <th>Gramos (g)</th>
+                        <th>Precio/Kg</th>
+                        <th style="text-align: right;">Total</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody class="row-container">
+                    <tr>
+                        <td><input type="text" class="row-name" value="AAEE Lavanda"></td>
+                        <td><input type="number" class="row-qty" value="5" oninput="calc()"></td>
+                        <td><input type="number" class="row-price" value="91.80" oninput="calc()"></td>
+                        <td class="row-total">$0.46</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card" id="section-lye">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Lejía y Otros</div>
+                <button class="btn-add-row" onclick="addRow('lye')">AÑADIR ELEMENTO</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Elemento</th>
+                        <th>Gramos (g)</th>
+                        <th>Precio/Kg</th>
+                        <th style="text-align: right;">Total</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody class="row-container">
+                    <tr>
+                        <td><input type="text" class="row-name" value="NaOH (Sosa)"></td>
+                        <td><input type="number" class="row-qty" value="93.4" oninput="calc()"></td>
+                        <td><input type="number" class="row-price" value="2.50" oninput="calc()"></td>
+                        <td class="row-total">$0.23</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" class="row-name" value="Agua Destilada"></td>
+                        <td><input type="number" class="row-qty" value="240" oninput="calc()"></td>
+                        <td><input type="number" class="row-price" value="0.70" oninput="calc()"></td>
+                        <td class="row-total">$0.17</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- OTROS GASTOS DINAMICOS -->
+        <div class="grid-config" style="grid-template-columns: 1fr 1fr; align-items: stretch;">
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title"><span class="dot"></span> Mano de Obra</div>
+                </div>
+                <div class="input-group">
+                    <label>Valor Hora ($)</label>
+                    <input type="number" id="labor-rate" value="6" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Tiempo por Kg (hrs)</label>
+                    <input type="number" id="labor-time" value="1" oninput="calc()">
+                </div>
+            </div>
+
+            <div class="card" id="section-expenses">
+                <div class="section-header">
+                    <div class="section-title"><span class="dot"></span> Otros Gastos Directos</div>
+                    <button class="btn-add-row" onclick="addExpenseRow()">AÑADIR GASTO</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th style="text-align: right;">Valor ($)</th>
+                            <th style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="row-container">
+                        <tr>
+                            <td><input type="text" class="row-name" value="Electricidad"></td>
+                            <td><input type="number" class="row-expense" value="0.50" oninput="calc()"
+                                    style="text-align: right;"></td>
+                            <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Detalle por Pastilla</div>
+            </div>
+            <div class="grid-config">
+                <div class="input-group">
+                    <label>Packaging Individual ($)</label>
+                    <input type="number" id="unit-pkg" value="0.30" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Otros Unitarios ($)</label>
+                    <input type="number" id="unit-extra" value="0" oninput="calc()">
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADOS FINALES -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Rentabilidad y Precios</div>
+            </div>
+            <div class="results-container">
+                <div class="result-box"><span class="label">Costo Fab/Kg</span><span class="value"
+                        id="res-cost-fab">$0.00</span></div>
+                <div class="result-box highlight"><span class="label">PVP Público</span><span class="value"
+                        id="res-pvp">$0.00</span></div>
+                <div class="result-box"><span class="label">PVP por Pastilla</span><span class="value"
+                        id="res-unit">$0.00</span></div>
+                <div class="result-box"><span class="label">Precio Mínimo</span><span class="value"
+                        id="res-min">$0.00</span></div>
+            </div>
+        </div>
+
+        <div class="pdf-actions">
+            <button class="btn-pdf" id="btn-pdf-main" onclick="generateProfessionalPDF()">
+                <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <div class="spinner"></div>
+                DESCARGAR INFORME TÉCNICO PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- PREVIEW DE IMPRESION (OCULTO) - vacío, se genera dinámicamente -->
+
+    <script>
+        function addRow(sectionId) {
+            const container = document.querySelector(`#section-${sectionId} .row-container`);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+            <td><input type="text" class="row-name" placeholder="Nuevo elemento..."></td>
+            <td><input type="number" class="row-qty" value="0" oninput="calc()"></td>
+            <td><input type="number" class="row-price" value="0" oninput="calc()"></td>
+            <td class="row-total">$0.00</td>
+            <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+        `;
+            container.appendChild(tr);
+            calc();
+        }
+
+        function addExpenseRow() {
+            const container = document.querySelector(`#section-expenses .row-container`);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+            <td><input type="text" class="row-name" placeholder="Concepto de gasto..."></td>
+            <td><input type="number" class="row-expense" value="0" oninput="calc()" style="text-align: right;"></td>
+            <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+        `;
+            container.appendChild(tr);
+            calc();
+        }
+
+        function delRow(btn) {
+            btn.closest('tr').remove();
+            calc();
+        }
+
+        function calc() {
+            const lotWeight = parseFloat(document.getElementById('lot-weight').value) || 0;
+            const efficiency = (parseFloat(document.getElementById('efficiency').value) || 100) / 100;
+            const laborRate = parseFloat(document.getElementById('labor-rate').value) || 0;
+            const laborTime = parseFloat(document.getElementById('labor-time').value) || 0;
+            const unitSize = parseFloat(document.getElementById('unit-size').value) || 100;
+            const unitPkg = parseFloat(document.getElementById('unit-pkg').value) || 0;
+            const unitExtra = parseFloat(document.getElementById('unit-extra').value) || 0;
+
+            let totalGrams = 0;
+            let totalCost = 0;
+
+            // Recolectar ingredientes de las 4 secciones
+            const sections = ['oils', 'nutrients', 'actives', 'lye'];
+            sections.forEach(s => {
+                document.querySelectorAll(`#section-${s} tr`).forEach((row, i) => {
+                    if (i === 0 && row.parentElement.tagName === 'THEAD') return;
+                    const q = parseFloat(row.querySelector('.row-qty')?.value) || 0;
+                    const p = parseFloat(row.querySelector('.row-price')?.value) || 0;
+                    const sub = (q / 1000) * p;
+                    totalGrams += q;
+                    totalCost += sub;
+                    if (row.querySelector('.row-total')) row.querySelector('.row-total').textContent = `$${sub.toFixed(2)}`;
+                });
+            });
+
+            // Otros gastos directos
+            let totalOtherExpenses = 0;
+            document.querySelectorAll('#section-expenses .row-container tr').forEach(row => {
+                totalOtherExpenses += parseFloat(row.querySelector('.row-expense')?.value) || 0;
+            });
+
+            // Calculos por Kilo
+            const matKiloRaw = totalGrams > 0 ? (totalCost / totalGrams) * 1000 : 0;
+            const matKiloEff = matKiloRaw / efficiency;
+            const laborKilo = laborRate * laborTime;
+            const costFabKilo = matKiloEff + laborKilo + totalOtherExpenses;
+
+            const pvp = costFabKilo * 3;
+            const minVal = costFabKilo * 2;
+            const unitPvp = (pvp / 1000 * unitSize) + unitPkg + unitExtra;
+
+            // Mostrar resultados
+            document.getElementById('res-cost-fab').textContent = `$${costFabKilo.toFixed(2)}`;
+            document.getElementById('res-pvp').textContent = `$${pvp.toFixed(2)}`;
+            document.getElementById('res-min').textContent = `$${minVal.toFixed(2)}`;
+            document.getElementById('res-unit').textContent = `$${unitPvp.toFixed(2)}`;
+
+            return { lotWeight, efficiency, unitSize, matKiloEff, laborKilo, totalOtherExpenses, costFabKilo, pvp, unitPvp };
+        }
+
+        async function generateProfessionalPDF() {
+            const btn = document.getElementById('btn-pdf-main');
+            btn.classList.add('loading');
+            await new Promise(r => setTimeout(r, 60));
+
+            try {
+                const d = calc();
+                const soapName = document.getElementById('soap-name').value || 'Receta de Jabon Artesanal';
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+
+                // ── Recolectar datos ─────────────────────────────────────────
+                const sectionDefs = [
+                    { id: 'oils', label: 'Aceites y Mantecas' },
+                    { id: 'nutrients', label: 'Nutrientes y Sobreengrasado' },
+                    { id: 'actives', label: 'Activos (Fragancias/AAEE)' },
+                    { id: 'lye', label: 'Lejia y Otros' }
+                ];
+                let totalGrams = 0;
+                const sectionData = sectionDefs.map(s => {
+                    const rows = document.querySelectorAll(`#section-${s.id} .row-container tr`);
+                    let items = [], sCost = 0, sGrams = 0;
+                    rows.forEach(r => {
+                        const name = r.querySelector('.row-name')?.value || '-';
+                        const qty = parseFloat(r.querySelector('.row-qty')?.value) || 0;
+                        const price = parseFloat(r.querySelector('.row-price')?.value) || 0;
+                        const cost = (qty / 1000) * price;
+                        sCost += cost; sGrams += qty; totalGrams += qty;
+                        items.push({ name, qty, price, cost });
+                    });
+                    return { ...s, items, sCost, sGrams };
+                });
+
+                let expensesData = [], totalOtherExp = 0;
+                document.querySelectorAll('#section-expenses .row-container tr').forEach(r => {
+                    const concept = r.querySelector('.row-name')?.value || '-';
+                    const val = parseFloat(r.querySelector('.row-expense')?.value) || 0;
+                    totalOtherExp += val;
+                    expensesData.push({ concept, val });
+                });
+
+                const laborRate = parseFloat(document.getElementById('labor-rate').value) || 0;
+                const laborTime = parseFloat(document.getElementById('labor-time').value) || 0;
+                const laborKilo = laborRate * laborTime;
+                const unitPkg = parseFloat(document.getElementById('unit-pkg').value) || 0;
+                const unitExtra = parseFloat(document.getElementById('unit-extra').value) || 0;
+                const unidades = Math.floor((d.lotWeight * d.efficiency) / d.unitSize);
+                const minVal = d.costFabKilo * 2;
+                const margen = d.pvp > 0 ? (((d.pvp - d.costFabKilo) / d.pvp) * 100) : 0;
+                const totalMatCost = sectionData.reduce((a, s) => a + s.sCost, 0);
+
+                // ── jsPDF setup ──────────────────────────────────────────────
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                const W = 210;   // ancho A4
+                const ML = 14;   // margen izquierdo
+                const MR = 14;   // margen derecho
+                const CW = W - ML - MR; // ancho de contenido
+                let Y = 0;       // cursor vertical
+
+                // Colores
+                const GREEN = [156, 175, 136];
+                const DARK = [26, 26, 26];
+                const WHITE = [255, 255, 255];
+                const LGRAY = [245, 245, 245];
+                const MGRAY = [200, 200, 200];
+                const DGRAY = [100, 100, 100];
+                const FGRAY = [170, 170, 170];
+                const LGREEN = [240, 245, 238];
+                const ORANGE = [192, 97, 74];
+
+                const f = (v, d = 2) => `$${parseFloat(v).toFixed(d)}`;
+                const PH = 297; // altura A4 en mm
+                const FOOT = 18; // espacio reservado para pie
+
+                // ── HELPER: nueva página si no cabe el bloque ─────────────────
+                function checkPage(needed = 12) {
+                    if (Y + needed > PH - FOOT) {
+                        pdf.addPage();
+                        Y = 14;
+                        // mini-cabecera de continuación
+                        pdf.setFillColor(...DARK);
+                        pdf.rect(0, 0, W, 10, 'F');
+                        pdf.setFillColor(...GREEN);
+                        pdf.rect(0, 0, 3, 10, 'F');
+                        pdf.setTextColor(...FGRAY);
+                        pdf.setFontSize(7);
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text(`${nameDisplay}  —  continuacion`, ML + 2, 6.5);
+                        pdf.setTextColor(...WHITE);
+                        pdf.setFontSize(6.5);
+                        pdf.text('Lina Toro | Calculadora de Precios', W - MR, 6.5, { align: 'right' });
+                        Y = 16;
+                    }
+                }
+
+                // ── CABECERA OSCURA ───────────────────────────────────────────
+                pdf.setFillColor(...DARK);
+                pdf.rect(0, 0, W, 42, 'F');
+                // Franja verde lateral
+                pdf.setFillColor(...GREEN);
+                pdf.rect(0, 0, 3, 42, 'F');
+
+                pdf.setTextColor(...FGRAY);
+                pdf.setFontSize(6.5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text('INFORME TECNICO DE COSTEO', ML, 11);
+
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(20);
+                pdf.setFont('helvetica', 'bold');
+                // Truncar nombre si es muy largo
+                const nameDisplay = soapName.length > 35 ? soapName.substring(0, 33) + '...' : soapName;
+                pdf.text(nameDisplay, ML, 23);
+
+                pdf.setFontSize(8.5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setTextColor(...FGRAY);
+                pdf.text('Lina Toro  |  Jaboneria Artesanal de Autor', ML, 31);
+
+                pdf.setFontSize(7.5);
+                pdf.text(dateStr, W - MR, 11, { align: 'right' });
+
+                // Badge CONFIDENCIAL
+                pdf.setFillColor(...GREEN);
+                pdf.roundedRect(W - MR - 26, 14, 26, 6, 1, 1, 'F');
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(6);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('CONFIDENCIAL', W - MR - 13, 18.2, { align: 'center' });
+
+                Y = 42;
+
+                // ── BANDA VERDE — 4 KPIs ──────────────────────────────────────
+                pdf.setFillColor(...GREEN);
+                pdf.rect(0, Y, W, 18, 'F');
+                const kpiW = W / 4;
+                const kpis = [
+                    { label: 'LOTE TOTAL', value: `${d.lotWeight} g` },
+                    { label: 'EFICIENCIA', value: `${(d.efficiency * 100).toFixed(0)}%` },
+                    { label: 'PESO PASTILLA', value: `${d.unitSize} g` },
+                    { label: 'UNIDADES LOTE', value: `${unidades}` }
+                ];
+                kpis.forEach((k, i) => {
+                    const x = i * kpiW;
+                    if (i > 0) {
+                        pdf.setDrawColor(...WHITE);
+                        pdf.setLineWidth(0.2);
+                        pdf.line(x, Y + 2, x, Y + 16);
+                    }
+                    pdf.setTextColor(220, 235, 220);
+                    pdf.setFontSize(6);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text(k.label, x + kpiW / 2, Y + 7, { align: 'center' });
+                    pdf.setTextColor(...WHITE);
+                    pdf.setFontSize(13);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(k.value, x + kpiW / 2, Y + 14.5, { align: 'center' });
+                });
+
+                Y += 22;
+
+                // ── HELPER: sección título ────────────────────────────────────
+                function sectionTitle(title, sub = '') {
+                    checkPage(sub ? 16 : 12);
+                    pdf.setFillColor(...GREEN);
+                    pdf.rect(ML, Y, 1.5, 5.5, 'F');
+                    pdf.setTextColor(...DARK);
+                    pdf.setFontSize(9);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(title.toUpperCase(), ML + 3, Y + 4.2);
+                    Y += 6.5;
+                    if (sub) {
+                        pdf.setTextColor(...FGRAY);
+                        pdf.setFontSize(7);
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text(sub, ML, Y);
+                        Y += 4;
+                    }
+                    Y += 1;
+                }
+
+                // ── HELPER: fila de tabla con salto de página automático ──────
+                function tableRow(cols, widths, rowY, bg = null, textColor = DARK, fontSize = 8, bold = false) {
+                    // Si la fila no cabe, nueva página y reiniciar rowY
+                    if (rowY + 5.5 > PH - FOOT) {
+                        pdf.addPage();
+                        pdf.setFillColor(...DARK); pdf.rect(0, 0, W, 10, 'F');
+                        pdf.setFillColor(...GREEN); pdf.rect(0, 0, 3, 10, 'F');
+                        pdf.setTextColor(...FGRAY); pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
+                        pdf.text(`${nameDisplay}  —  continuacion`, ML + 2, 6.5);
+                        rowY = 16;
+                        Y = rowY;
+                    }
+                    if (bg) { pdf.setFillColor(...bg); pdf.rect(ML, rowY, CW, 5.5, 'F'); }
+                    pdf.setFontSize(fontSize);
+                    pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+                    pdf.setTextColor(...textColor);
+                    let x = ML;
+                    cols.forEach((t, i) => {
+                        const align = widths[i] < 0 ? 'right' : 'left';
+                        const w = Math.abs(widths[i]);
+                        const padX = align === 'right' ? x + w - 1 : x + 1;
+
+                        // Truncar texto si es muy largo para la celda
+                        let txt = String(t);
+                        const maxChars = Math.floor(w * 1.8); // valor aproximado para helvetica 8pt
+                        if (txt.length > maxChars) txt = txt.substring(0, maxChars - 2) + '...';
+
+                        pdf.text(txt, padX, rowY + 3.8, { align });
+                        x += w;
+                    });
+                    pdf.setDrawColor(230, 230, 230);
+                    pdf.setLineWidth(0.1);
+                    pdf.line(ML, rowY + 5.5, ML + CW, rowY + 5.5);
+                    Y = rowY + 5.5;
+                    return Y;
+                }
+
+                // ── MATERIAS PRIMAS ────────────────────────────────────────────
+                sectionTitle('Desglose de Materias Primas', 'Composicion del lote con porcentajes y costos individuales por ingrediente.');
+
+                // Cabecera tabla
+                let ry = Y;
+                pdf.setFillColor(...DARK);
+                pdf.rect(ML, ry, CW, 5.5, 'F');
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(6.5);
+                pdf.setFont('helvetica', 'bold');
+                const hW = [76, -18, -18, -24, -46];
+                const hT = ['INGREDIENTE', 'CANTIDAD', '% LOTE', 'PRECIO/KG', 'COSTO'];
+                let hx = ML;
+                hT.forEach((t, i) => {
+                    const w = Math.abs(hW[i]);
+                    const align = hW[i] < 0 ? 'right' : 'left';
+                    pdf.text(t, align === 'right' ? hx + w - 1 : hx + 1, ry + 3.8, { align });
+                    hx += w;
+                });
+                ry += 5.5;
+
+                let rowAlt = false;
+                sectionData.forEach(sec => {
+                    if (!sec.items.length) return;
+                    const sPct = totalGrams > 0 ? ((sec.sGrams / totalGrams) * 100).toFixed(1) : '0.0';
+                    // Fila de sección
+                    pdf.setFillColor(...LGREEN);
+                    pdf.rect(ML, ry, CW, 5.5, 'F');
+                    pdf.setTextColor(...GREEN);
+                    pdf.setFontSize(7);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(`${sec.label.toUpperCase()}  —  ${sPct}% del lote`, ML + 2, ry + 3.8);
+                    pdf.setDrawColor(200, 220, 190);
+                    pdf.setLineWidth(0.1);
+                    pdf.line(ML, ry + 5.5, ML + CW, ry + 5.5);
+                    ry += 5.5;
+
+                    sec.items.forEach(it => {
+                        const iPct = totalGrams > 0 ? ((it.qty / totalGrams) * 100).toFixed(1) : '0.0';
+                        ry = tableRow(
+                            [it.name, `${it.qty.toFixed(1)} g`, `${iPct}%`, `${f(it.price)}/Kg`, f(it.cost, 3)],
+                            hW, ry,
+                            rowAlt ? LGRAY : null,
+                            DARK, 7.5
+                        );
+                        rowAlt = !rowAlt;
+                    });
+                    // Subtotal sección
+                    ry = tableRow(
+                        ['', '', '', 'Subtotal seccion', f(sec.sCost, 3)],
+                        hW, ry, [250, 250, 250], DGRAY, 7
+                    );
+                });
+                // Total materias
+                pdf.setFillColor(...DARK);
+                pdf.rect(ML, ry, CW, 6, 'F');
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(8);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('TOTAL MATERIAS PRIMAS', ML + 2, ry + 4.2);
+                pdf.text(f(totalMatCost, 3), ML + CW - 1, ry + 4.2, { align: 'right' });
+                Y = ry + 10;
+
+                // ── MANO DE OBRA + GASTOS (2 columnas sin solapar) ───────────────
+                const half = (CW - 4) / 2;   // ancho de cada columna
+                const midX = ML + half + 4;   // x inicio columna derecha
+
+                const startY2col = Y;  // Y al inicio del bloque de 2 columnas
+
+                // — Título columna izquierda: Mano de Obra
+                checkPage(30);
+                pdf.setFillColor(...GREEN);
+                pdf.rect(ML, Y, 1.5, 5.5, 'F');
+                pdf.setTextColor(...DARK);
+                pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                pdf.text('MANO DE OBRA', ML + 3, Y + 4.2);
+                Y += 7.5;
+                const moStartY = Y;
+
+                // Filas mano de obra (solo columna izquierda: fondo solo sobre 'half')
+                const moRows = [
+                    { l: 'Valor por hora', v: `${f(laborRate)}/hr`, shade: true },
+                    { l: 'Tiempo por kg', v: `${laborTime.toFixed(1)} hr`, shade: false },
+                ];
+                let moY = moStartY;
+                moRows.forEach(r => {
+                    if (r.shade) { pdf.setFillColor(...LGRAY); pdf.rect(ML, moY, half, 5.5, 'F'); }
+                    pdf.setTextColor(...DARK); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'normal');
+                    pdf.text(r.l, ML + 1, moY + 3.8);
+                    pdf.text(r.v, ML + half - 1, moY + 3.8, { align: 'right' });
+                    pdf.setDrawColor(230, 230, 230); pdf.setLineWidth(0.1);
+                    pdf.line(ML, moY + 5.5, ML + half, moY + 5.5);
+                    moY += 5.5;
+                });
+                // Subtotal mano de obra
+                pdf.setFillColor(...LGREEN); pdf.rect(ML, moY, half, 5.5, 'F');
+                pdf.setTextColor(...DARK); pdf.setFontSize(8); pdf.setFont('helvetica', 'bold');
+                pdf.text('Total por Kilo', ML + 1, moY + 3.8);
+                pdf.setTextColor(70, 110, 60);
+                pdf.text(f(laborKilo), ML + half - 1, moY + 3.8, { align: 'right' });
+                moY += 5.5;
+
+                // — Título columna derecha: Gastos Operativos (dibujamos a la misma Y que el título izquierdo)
+                let rightTitleY = startY2col;
+                pdf.setFillColor(...GREEN);
+                pdf.rect(midX, rightTitleY, 1.5, 5.5, 'F');
+                pdf.setTextColor(...DARK);
+                pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                pdf.text('GASTOS OPERATIVOS', midX + 3, rightTitleY + 4.2);
+
+                // Filas gastos (solo columna derecha)
+                const expToShow = expensesData.length > 0 ? expensesData : [{ concept: 'Sin gastos adicionales', val: 0 }];
+                let gaY = moStartY;  // alineado con las filas de mano de obra
+                expToShow.forEach((e, i) => {
+                    pdf.setFillColor(...(i % 2 === 0 ? LGRAY : WHITE));
+                    pdf.rect(midX, gaY, half, 5.5, 'F');
+                    pdf.setTextColor(...DARK); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'normal');
+                    // Truncar concepto si es muy largo
+                    const maxChars = 28;
+                    const concept = e.concept.length > maxChars ? e.concept.substring(0, maxChars - 1) + '.' : e.concept;
+                    pdf.text(concept, midX + 1, gaY + 3.8);
+                    pdf.text(f(e.val), midX + half - 1, gaY + 3.8, { align: 'right' });
+                    pdf.setDrawColor(230, 230, 230); pdf.setLineWidth(0.1);
+                    pdf.line(midX, gaY + 5.5, midX + half, gaY + 5.5);
+                    gaY += 5.5;
+                });
+                // Subtotal gastos
+                pdf.setFillColor(...LGREEN); pdf.rect(midX, gaY, half, 5.5, 'F');
+                pdf.setTextColor(...DARK); pdf.setFontSize(8); pdf.setFont('helvetica', 'bold');
+                pdf.text('Total Gastos', midX + 1, gaY + 3.8);
+                pdf.setTextColor(70, 110, 60);
+                pdf.text(f(totalOtherExp), midX + half - 1, gaY + 3.8, { align: 'right' });
+                gaY += 5.5;
+
+                Y = Math.max(moY, gaY) + 8;
+
+                // ── COSTOS POR PASTILLA ──────────────────────────────────────
+                sectionTitle(`Costos por Pastilla (${d.unitSize} g)`);
+                Y = tableRow(['Packaging individual', f(unitPkg)], [half, -half], Y, LGRAY);
+                Y = tableRow(['Otros costos unitarios', f(unitExtra)], [half, -half], Y);
+                Y += 8;
+
+                // ── ESTRUCTURA DE COSTOS / KILO ──────────────────────────────
+                sectionTitle('Estructura de Costos por Kilo Producido');
+
+                // Columnas: label(~115mm) | valor(25mm) | pct(22mm)
+                const COL_VAL = ML + CW - 22; // x inicio columna valor (right-align aqui)
+                const COL_PCT = ML + CW - 1;  // x inicio columna % (right-align aqui)
+
+                // Cabecera con columnas correctas
+                pdf.setFillColor(...LGRAY);
+                pdf.rect(ML, Y, CW, 5.5, 'F');
+                pdf.setTextColor(...DGRAY);
+                pdf.setFontSize(6.5);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('CONCEPTO', ML + 2, Y + 3.8);
+                pdf.text('VALOR', COL_VAL, Y + 3.8, { align: 'right' });
+                pdf.text('% S/FAB.', COL_PCT, Y + 3.8, { align: 'right' });
+                pdf.setDrawColor(...MGRAY); pdf.setLineWidth(0.1);
+                pdf.line(ML, Y + 5.5, ML + CW, Y + 5.5);
+                Y += 5.5;
+
+                const cosRow = (label, val, pct, bg = null) => {
+                    checkPage(7);
+                    if (bg) { pdf.setFillColor(...bg); pdf.rect(ML, Y, CW, 5.5, 'F'); }
+                    pdf.setTextColor(...DARK); pdf.setFontSize(8); pdf.setFont('helvetica', 'normal');
+                    pdf.text(label, ML + 2, Y + 3.8);
+                    pdf.text(val, COL_VAL, Y + 3.8, { align: 'right' });
+                    pdf.setTextColor(...GREEN);
+                    pdf.text(pct, COL_PCT, Y + 3.8, { align: 'right' });
+                    pdf.setDrawColor(230, 230, 230); pdf.setLineWidth(0.1);
+                    pdf.line(ML, Y + 5.5, ML + CW, Y + 5.5);
+                    Y += 5.5;
+                };
+                cosRow('Materias Primas (ajustado eficiencia)', f(d.matKiloEff),
+                    `${d.costFabKilo > 0 ? ((d.matKiloEff / d.costFabKilo) * 100).toFixed(1) : 0}%`);
+                cosRow('Mano de Obra Directa', f(laborKilo),
+                    `${d.costFabKilo > 0 ? ((laborKilo / d.costFabKilo) * 100).toFixed(1) : 0}%`, LGRAY);
+                cosRow('Gastos Operativos Directos', f(totalOtherExp),
+                    `${d.costFabKilo > 0 ? ((totalOtherExp / d.costFabKilo) * 100).toFixed(1) : 0}%`);
+
+                // Fila total — valor en col-VALOR y '100%' en col-PCT sin pisar
+                checkPage(8);
+                pdf.setFillColor(...DARK);
+                pdf.rect(ML, Y, CW, 6.5, 'F');
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                pdf.text('COSTE DE FABRICACION / KILO', ML + 2, Y + 4.5);
+                pdf.setTextColor(200, 220, 185);
+                pdf.setFontSize(11);
+                pdf.text(f(d.costFabKilo), COL_VAL, Y + 4.5, { align: 'right' });
+                pdf.setTextColor(180, 180, 180);
+                pdf.setFontSize(7.5);
+                pdf.text('100%', COL_PCT, Y + 4.5, { align: 'right' });
+                Y += 12;
+
+                // ── PRECIOS Y RENTABILIDAD ────────────────────────────────────
+                checkPage(55); // tarjetas 22 + panel 14 + margen
+                sectionTitle('Precios y Rentabilidad');
+
+                // 4 tarjetas de precio
+                const cardW = CW / 4 - 2;
+                const cards = [
+                    { label: 'Costo Fab/Kg', val: f(d.costFabKilo), sub: '', bg: LGREEN, border: GREEN, valColor: DARK },
+                    { label: 'Precio Minimo', val: f(minVal), sub: 'x2 costo', bg: WHITE, border: MGRAY, valColor: ORANGE },
+                    { label: 'PVP Sugerido/Kg', val: f(d.pvp), sub: 'x3 costo', bg: DARK, border: DARK, valColor: GREEN },
+                    { label: 'PVP por Pastilla', val: f(d.unitPvp), sub: `${d.unitSize}g+pkg`, bg: WHITE, border: MGRAY, valColor: DARK }
+                ];
+                cards.forEach((c, i) => {
+                    const cx = ML + i * (cardW + 2);
+                    pdf.setFillColor(...c.bg);
+                    pdf.rect(cx, Y, cardW, 18, 'F');
+                    pdf.setDrawColor(...c.border);
+                    pdf.setLineWidth(i === 0 ? 0.6 : 0.3);
+                    pdf.rect(cx, Y, cardW, 18);
+                    pdf.setTextColor(...(c.bg[0] < 50 ? WHITE : DGRAY));
+                    pdf.setFontSize(6); pdf.setFont('helvetica', 'bold');
+                    pdf.text(c.label.toUpperCase(), cx + cardW / 2, Y + 5.5, { align: 'center' });
+                    pdf.setTextColor(...c.valColor);
+                    pdf.setFontSize(12); pdf.setFont('helvetica', 'bold');
+                    pdf.text(c.val, cx + cardW / 2, Y + 12.5, { align: 'center' });
+                    if (c.sub) {
+                        pdf.setTextColor(...(c.bg[0] < 50 ? [100, 100, 100] : FGRAY));
+                        pdf.setFontSize(6); pdf.setFont('helvetica', 'normal');
+                        pdf.text(c.sub, cx + cardW / 2, Y + 16.5, { align: 'center' });
+                    }
+                });
+                Y += 22;
+
+                // Panel de margen
+                checkPage(18);
+                const panelW = CW / 3;
+                const panelData = [
+                    { label: 'Margen Bruto /Kg', val: f(d.pvp - d.costFabKilo) },
+                    { label: 'Margen (%)', val: `${margen.toFixed(1)}%` },
+                    { label: 'Ganancia por Lote', val: f((d.pvp - d.costFabKilo) * (d.lotWeight / 1000)) }
+                ];
+                pdf.setFillColor(...LGREEN);
+                pdf.rect(ML, Y, CW, 14, 'F');
+                pdf.setDrawColor(210, 228, 200);
+                pdf.setLineWidth(0.3);
+                pdf.rect(ML, Y, CW, 14);
+                panelData.forEach((p, i) => {
+                    const px = ML + i * panelW;
+                    if (i > 0) { pdf.setDrawColor(210, 228, 200); pdf.setLineWidth(0.3); pdf.line(px, Y + 1, px, Y + 13); }
+                    pdf.setTextColor(...GREEN);
+                    pdf.setFontSize(6.5); pdf.setFont('helvetica', 'bold');
+                    pdf.text(p.label.toUpperCase(), px + panelW / 2, Y + 4.5, { align: 'center' });
+                    pdf.setTextColor(...DARK);
+                    pdf.setFontSize(11); pdf.setFont('helvetica', 'bold');
+                    pdf.text(p.val, px + panelW / 2, Y + 11.5, { align: 'center' });
+                });
+                Y += 20;
+
+                // ── PIE DE PÁGINA — siempre al fondo de la última página ───────
+                // Si hay espacio justo, lo colocamos al fondo de la página actual.
+                // Si no cabe, añadimos página.
+                const footerY = PH - 15;
+                if (Y + 15 > PH) {
+                    pdf.addPage();
+                    Y = footerY;
+                } else {
+                    Y = footerY;
+                }
+                pdf.setDrawColor(...GREEN);
+                pdf.setLineWidth(0.6);
+                pdf.line(0, Y, W, Y);
+                Y += 1;
+                pdf.setFillColor(...LGRAY);
+                pdf.rect(0, Y, W, 14, 'F');
+                pdf.setTextColor(...DARK);
+                pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                pdf.text('Lina Toro', ML, Y + 5.5);
+                pdf.setTextColor(...DGRAY);
+                pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
+                pdf.text('Jaboneria Artesanal de Autor', ML, Y + 10);
+                pdf.setTextColor(...FGRAY);
+                pdf.setFontSize(6.5);
+                pdf.text(`Informe generado el ${dateStr}`, W / 2, Y + 5.5, { align: 'center' });
+                pdf.text('Documento confidencial — uso interno', W / 2, Y + 10, { align: 'center' });
+                pdf.setTextColor(...GREEN);
+                pdf.setFontSize(7);
+                pdf.text('Calculadora de Precios', W - MR, Y + 5.5, { align: 'right' });
+                pdf.setTextColor(...FGRAY);
+                pdf.setFontSize(6.5);
+                pdf.text(`© ${now.getFullYear()} Lina Toro`, W - MR, Y + 10, { align: 'right' });
+
+                // ── GUARDAR ───────────────────────────────────────────────────
+                const filename = `${soapName.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_') || 'Informe'}_Coste.pdf`;
+                pdf.save(filename);
+
+            } catch (e) {
+                console.error('Error PDF:', e);
+                alert('Error al generar el PDF: ' + e.message);
+            } finally {
+                btn.classList.remove('loading');
+            }
+        }
+        calc();
+    </script>
+
+</body>
+
+</html>
