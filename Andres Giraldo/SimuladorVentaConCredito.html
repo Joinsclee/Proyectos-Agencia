@@ -32,6 +32,7 @@
         .aura-gradient-text {
             background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -368,9 +369,10 @@
             </div>
             <div class="field-row">
                 <div class="field-item">
-                    <label class="field-label">Porcentaje de la Cuota Inicial (Max 100%)</label>
+                    <label class="field-label">Porcentaje de la Cuota Inicial</label>
                     <div class="field-input-wrapper">
-                        <input type="number" id="porcentajeCuotaInicial" value="30" min="0" max="100">
+                        <input type="number" id="porcentajeCuotaInicial" value="30" min="0" max="100"
+                            oninput="if(this.value > 100) this.value = 100;">
                         <span class="percent-symbol">%</span>
                     </div>
                 </div>
@@ -425,8 +427,7 @@
                         <span class="tooltip-trigger">
                             i
                             <span class="tooltip-text">Monto de recursos propios que el inversionista aporta para cubrir
-                                parte del saldo final al momento de la entrega. El valor no puede ser mayor al Saldo
-                                Final al Momento de la Entrega.</span>
+                                parte del saldo final al momento de la entrega.</span>
                         </span>
                     </label>
                     <div class="field-input-wrapper">
@@ -435,18 +436,39 @@
                     </div>
                 </div>
                 <div class="field-item">
+                    <label class="field-label">Tasa Efectiva Mensual (E.M.)</label>
+                    <div class="field-input-wrapper calculated">
+                        <input type="text" id="tasaEM" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
                     <label class="field-label">
                         Préstamo a Solicitar
                         <span class="tooltip-trigger">
                             i
                             <span class="tooltip-text">Valor del crédito hipotecario a solicitar al banco. Es el
-                                resultado de restar los Recursos Propios al Saldo Final al Momento de la Entrega. Este
-                                es el valor base para calcular la cuota mensual y el saldo del crédito.</span>
+                                resultado de restar los Recursos Propios al Saldo Final al Momento de la Entrega.</span>
                         </span>
                     </label>
                     <div class="field-input-wrapper calculated">
                         <span class="currency-symbol">$</span>
                         <input type="text" id="prestamoSolicitar" readonly>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        Cuota Mensual del Crédito (Sin Seguros)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor estimado de la cuota del crédito hipotecario, sin incluir
+                                los seguros exigidos por el Banco.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="cuotaMensual" readonly>
                     </div>
                 </div>
             </div>
@@ -465,50 +487,25 @@
                     </div>
                 </div>
                 <div class="field-item">
-                    <label class="field-label">Tasa Efectiva Anual (E.A.)</label>
-                    <div class="field-input-wrapper">
-                        <input type="number" id="tasaEA" value="13.60" step="0.01">
-                        <span class="percent-symbol">%</span>
-                    </div>
-                </div>
-            </div>
-            <div class="field-row">
-                <div class="field-item">
-                    <label class="field-label">Tasa Efectiva Mensual (E.M.)</label>
-                    <div class="field-input-wrapper calculated">
-                        <input type="text" id="tasaEM" readonly>
-                        <span class="percent-symbol">%</span>
-                    </div>
-                </div>
-                <div class="field-item">
-                    <label class="field-label">
-                        Cuota Mensual del Crédito (Sin Seguros)
-                        <span class="tooltip-trigger">
-                            i
-                            <span class="tooltip-text">Valor estimado de la cuota del crédito hipotecario, sin incluir
-                                los seguros exigidos por el Banco. Este valor se presenta únicamente como referencia de
-                                simulación, ya que el valor real de la cuota mensual es determinado por la Entidad
-                                Financiera o Banco.</span>
-                        </span>
-                    </label>
-                    <div class="field-input-wrapper calculated">
-                        <span class="currency-symbol">$</span>
-                        <input type="text" id="cuotaMensual" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="field-row">
-                <div class="field-item">
                     <label class="field-label">
                         % Costos de Escrituración (Compra)
                         <span class="tooltip-trigger">
                             i
                             <span class="tooltip-text">Porcentaje aplicado al precio de compra del inmueble para cubrir
-                                los costos de escrituración. Varía según la Ciudad y el País.</span>
+                                los costos de Escrituración.</span>
                         </span>
                     </label>
                     <div class="field-input-wrapper">
                         <input type="number" id="porcentajeEscrituracionCompra" value="2.5" step="0.1">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Tasa Efectiva Anual (E.A.)</label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="tasaEA" value="13.60" step="0.01">
                         <span class="percent-symbol">%</span>
                     </div>
                 </div>
@@ -655,7 +652,6 @@
                     </label>
                     <div class="field-input-wrapper calculated">
                         <input type="text" id="valorizacion" readonly>
-                        <span class="percent-symbol">%</span>
                     </div>
                 </div>
                 <div class="field-item">
@@ -723,9 +719,9 @@
                 <!-- Tiempo de Inversión -->
                 <div class="field-row">
                     <div class="field-item">
-                        <label class="field-label">TIEMPO DE LA INVERSIÓN (Meses)</label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="tiempoInversion"
-                                readonly><span class="percent-symbol">Meses</span></div>
+                        <label class="field-label">TIEMPO DE LA INVERSIÓN</label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tiempoInversion" readonly>
+                        </div>
                     </div>
                     <div class="field-item">
                         <!-- Espacio vacío -->
@@ -739,8 +735,9 @@
                             CAPITAL TOTAL INVERTIDO
                             <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
                                 i
-                                <span class="tooltip-text">Es el dinero real que salió del bolsillo del inversionista
-                                    para ejecutar la operación.</span>
+                                <span class="tooltip-text">Es el dinero real que salió del bolsillo del inversionista:
+                                    Cuota Inicial + Recursos Propios + Acabados + Escrituración Compra + Costos de
+                                    Tenencia Acumulados.</span>
                             </span>
                         </label>
                         <div class="field-input-wrapper calculated"><span class="currency-symbol">$</span><input
@@ -755,8 +752,7 @@
                                     Este indicador no tiene en cuenta el tiempo en que se obtiene el resultado.</span>
                             </span>
                         </label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="roi" readonly><span
-                                class="percent-symbol">%</span></div>
+                        <div class="field-input-wrapper calculated"><input type="text" id="roi" readonly></div>
                     </div>
                 </div>
 
@@ -783,8 +779,7 @@
                                     promedio mensual que genera la inversión.</span>
                             </span>
                         </label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="tirMensual" readonly><span
-                                class="percent-symbol">%</span></div>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tirMensual" readonly></div>
                     </div>
                 </div>
 
@@ -813,8 +808,7 @@
                                     anual equivalente que genera la inversión.</span>
                             </span>
                         </label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="tirAnual" readonly><span
-                                class="percent-symbol">%</span></div>
+                        <div class="field-input-wrapper calculated"><input type="text" id="tirAnual" readonly></div>
                     </div>
                 </div>
             </div>
@@ -975,8 +969,43 @@
     </footer>
 
     <script>
-        function formatNumberInput(value) { return value.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-        function parseFormattedNumber(value) { return parseFloat(value.toString().replace(/\./g, '')) || 0; }
+        function formatNumberInput(value) {
+            if (value === null || value === undefined) return '';
+            let valStr = value.toString();
+            let isNegative = valStr.startsWith('-');
+            let cleanValue = valStr.replace(/\D/g, '');
+            let formatted = cleanValue.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return isNegative ? '-' + formatted : formatted;
+        }
+
+        function parseFormattedNumber(value) {
+            if (value === null || value === undefined) return 0;
+            let valStr = value.toString();
+            let isNegative = valStr.startsWith('-');
+            let cleanValue = parseFloat(valStr.replace(/\./g, '')) || 0;
+            return cleanValue;
+        }
+
+        function irr(values, guess = 0.01) {
+            let irr = guess;
+            let maxIterations = 200;
+            let precision = 1e-9;
+
+            for (let i = 0; i < maxIterations; i++) {
+                let f = 0;
+                let df = 0;
+                for (let j = 0; j < values.length; j++) {
+                    let pow = Math.pow(1 + irr, j);
+                    f += values[j] / pow;
+                    df -= j * values[j] / (pow * (1 + irr));
+                }
+                let newIrr = irr - f / df;
+                if (isNaN(newIrr) || !isFinite(newIrr)) return null;
+                if (Math.abs(newIrr - irr) < precision) return irr;
+                irr = newIrr;
+            }
+            return null;
+        }
 
         function calcular() {
             // Entradas
@@ -988,27 +1017,31 @@
             let costoAcabados = parseFormattedNumber(document.getElementById('costoAcabados').value);
 
             let vCI = Math.round(pCompra * (perCI / 100));
-            // Validación CSV: Dinero reserva no mayor a cuota inicial
-            if (reserva > vCI) { reserva = vCI; document.getElementById('dineroReserva').value = formatNumberInput(reserva); }
+            // Validación Dinero reserva no mayor a cuota inicial — solo para cálculo, no modifica el campo
+            if (vCI > 0 && reserva > vCI) {
+                reserva = vCI;
+            }
 
-            let pagoM_CI = Math.round((vCI - reserva) / mCI);
+            let pagoM_CI = (vCI - reserva) / mCI;
             let saldoEntrega = pCompra - vCI;
 
-            // Financiación
-            // Recursos Propios: validación que no supere el saldo final al momento de la entrega
             let recursosPropios = parseFormattedNumber(document.getElementById('recursosPropios').value);
-            if (recursosPropios > saldoEntrega) {
+            // Validación Recursos Propios no mayor a saldo entrega — solo para cálculo, no modifica el campo
+            if (saldoEntrega > 0 && recursosPropios > saldoEntrega) {
                 recursosPropios = saldoEntrega;
-                document.getElementById('recursosPropios').value = formatNumberInput(recursosPropios);
             }
             let prestamoSolicitar = saldoEntrega - recursosPropios;
 
             let plazo = parseInt(document.getElementById('plazoAnos').value) || 1;
             let tasaEA = parseFloat(document.getElementById('tasaEA').value) || 0;
+            // Tasa EM con precisión total para todos los cálculos financieros internos
             let tasaEM = Math.pow(1 + (tasaEA / 100), 1 / 12) - 1;
             let nPer = plazo * 12;
-            // Cuota mensual calculada sobre el Préstamo a Solicitar (no sobre el saldo total)
-            let cuotaH = (prestamoSolicitar > 0 && tasaEM > 0) ? Math.round(prestamoSolicitar * (tasaEM / (1 - Math.pow(1 + tasaEM, -nPer)))) : 0;
+
+            // Calculamos la cuota con precisión total para uso interno y redondeada para la interfaz
+            let cuotaH_raw = (prestamoSolicitar > 0 && tasaEM > 0) ? (prestamoSolicitar * (tasaEM / (1 - Math.pow(1 + tasaEM, -nPer)))) : 0;
+            let cuotaH = Math.round(cuotaH_raw);
+
             let perEscCompra = parseFloat(document.getElementById('porcentajeEscrituracionCompra').value) || 0;
             let costosEscCompra = Math.round(pCompra * (perEscCompra / 100));
 
@@ -1021,17 +1054,18 @@
             // Salida
             let pVenta = parseFormattedNumber(document.getElementById('precioVentaEsperado').value);
             let mesVenta = parseInt(document.getElementById('mesEstimadoVenta').value) || 0;
-            let costoTenenciaAcum = (cuotaH + tenenciaMes) * mesVenta;
+            // Para coincidir con Excel: (Cuota_Exacta + Tenencia_Mes) * Meses_Venta, luego redondear
+            let costoTenenciaAcum = Math.round((cuotaH_raw + tenenciaMes) * mesVenta);
+
             let valorizacion = (pVenta / pCompra) - 1;
             let perEscVenta = parseFloat(document.getElementById('porcentajeEscrituracionVenta').value) || 0;
             let costosEscVenta = Math.round(pVenta * (perEscVenta / 100));
 
-            // Saldo Crédito al Momento de la Venta — calculado sobre el Préstamo a Solicitar
+            // Saldo Crédito al Momento de la Venta — fórmula de valor futuro (amortización Excel)
             let saldoCreditoVenta = 0;
-            if (prestamoSolicitar > 0 && tasaEM > 0 && nPer > 0) {
-                let factorN = Math.pow(1 + tasaEM, nPer);
-                let factorP = Math.pow(1 + tasaEM, mesVenta);
-                saldoCreditoVenta = prestamoSolicitar * (factorN - factorP) / (factorN - 1);
+            if (prestamoSolicitar > 0 && tasaEM > 0 && nPer > 0 && mesVenta > 0) {
+                let factor = Math.pow(1 + tasaEM, mesVenta);
+                saldoCreditoVenta = Math.round(prestamoSolicitar * factor - cuotaH_raw * (factor - 1) / tasaEM);
                 if (saldoCreditoVenta < 0) saldoCreditoVenta = 0;
             }
 
@@ -1039,43 +1073,84 @@
 
             // Resultados
             let tiempoTotal = mCI + mesVenta;
-            // Capital Total Invertido: cuota inicial + escrituración compra + costos tenencia acumulados + acabados
-            // (NO incluye otrosCostosVenta — esos van en Capital de Reinversión)
-            let capitalInv = vCI + costosEscCompra + costoTenenciaAcum + costoAcabados;
+            // Capital Total Invertido: cuota inicial + recursos propios + acabados + escrituracion + tenencia acumulada
+            let capitalInv = vCI + recursosPropios + costosEscCompra + costoTenenciaAcum + costoAcabados;
             // Capital de Reinversión: lo que queda después de vender, pagar crédito, escrituración y comisión
             let capitalReinv = pVenta - saldoCreditoVenta - costosEscVenta - otrosCostosVenta;
             // Ganancia: Capital de Reinversión menos Capital Total Invertido
             let ganancia = capitalReinv - capitalInv;
             let roi = (capitalInv > 0) ? (ganancia / capitalInv) : 0;
 
-            let tirAnual = (tiempoTotal > 0 && capitalInv > 0 && (capitalReinv / capitalInv) > 0) ? (Math.pow((capitalReinv / capitalInv), 12 / tiempoTotal) - 1) : 0;
-            let tirMensual = (tiempoTotal > 0 && capitalInv > 0 && (capitalReinv / capitalInv) > 0) ? (Math.pow((capitalReinv / capitalInv), 1 / tiempoTotal) - 1) : 0;
+            // --- CÁLCULO DE TIR (Flujo de Caja Mensual) ---
+            const cuotaBanco = cuotaH_raw;
+            const escCompra = pCompra * (perEscCompra / 100);
+            const escVenta  = pVenta  * (perEscVenta  / 100);
+
+            let saldoCreditoVenta_raw = 0;
+            if (prestamoSolicitar > 0 && tasaEM > 0 && nPer > 0 && mesVenta > 0) {
+                const factor = Math.pow(1 + tasaEM, mesVenta);
+                saldoCreditoVenta_raw = prestamoSolicitar * factor - cuotaBanco * (factor - 1) / tasaEM;
+                if (saldoCreditoVenta_raw < 0) saldoCreditoVenta_raw = 0;
+            }
+
+            const retornoNeto = pVenta - saldoCreditoVenta_raw - escVenta - otrosCostosVenta;
+
+            let flows = [];
+            flows.push(-reserva);
+
+            for (let t = 1; t <= mCI; t++) {
+                flows.push(-pagoM_CI);
+            }
+
+            for (let k = 1; k < mesVenta; k++) {
+                let cf = -(tenenciaMes + cuotaBanco);
+                if (k === 1) {
+                    cf -= (recursosPropios + costoAcabados + escCompra);
+                }
+                flows.push(cf);
+            }
+
+            flows.push(retornoNeto - (tenenciaMes + cuotaBanco));
+
+            while (flows.length < 81) flows.push(0);
+
+            let tirM = irr(flows, 0.003);
+            let tirA = tirM ? (Math.pow(1 + tirM, 12) - 1) : 0;
 
             // Set Values
             document.getElementById('valorM2').value = formatNumberInput(Math.round(pCompra / area));
             document.getElementById('valorCuotaInicial').value = formatNumberInput(vCI);
-            document.getElementById('pagoMensualCuotaInicial').value = formatNumberInput(pagoM_CI);
+            document.getElementById('pagoMensualCuotaInicial').value = formatNumberInput(Math.round(pagoM_CI));
             document.getElementById('saldoEntrega').value = formatNumberInput(Math.round(saldoEntrega));
 
             document.getElementById('prestamoSolicitar').value = formatNumberInput(Math.round(prestamoSolicitar));
-            document.getElementById('tasaEM').value = (tasaEM * 100).toFixed(2);
+            document.getElementById('tasaEM').value = (tasaEM * 100).toFixed(2) + '%';
             document.getElementById('cuotaMensual').value = formatNumberInput(cuotaH);
             document.getElementById('costosEscrituracionCompra').value = formatNumberInput(costosEscCompra);
 
             document.getElementById('costoTotalTenenciaMensual').value = formatNumberInput(tenenciaMes);
 
-            document.getElementById('costoTenenciaAcumulado').value = formatNumberInput(Math.round(costoTenenciaAcum));
-            document.getElementById('valorizacion').value = (valorizacion * 100).toFixed(2);
+            document.getElementById('costoTenenciaAcumulado').value = formatNumberInput(costoTenenciaAcum);
+            document.getElementById('valorizacion').value = (valorizacion * 100).toFixed(2) + '%';
             document.getElementById('costosEscrituracionVenta').value = formatNumberInput(costosEscVenta);
             document.getElementById('saldoCreditoVenta').value = formatNumberInput(Math.round(saldoCreditoVenta));
 
             document.getElementById('tiempoInversion').value = tiempoTotal;
             document.getElementById('capitalTotalInvertido').value = formatNumberInput(Math.round(capitalInv));
-            document.getElementById('ganancia').value = formatNumberInput(Math.round(ganancia));
+
+            let gananciaVal = Math.round(ganancia);
+            let gananciaElem = document.getElementById('ganancia');
+            gananciaElem.value = formatNumberInput(gananciaVal);
+            if (gananciaVal < 0) {
+                gananciaElem.style.setProperty('color', '#dc2626', 'important');
+            } else {
+                gananciaElem.style.setProperty('color', '#065f46', 'important');
+            }
+
             document.getElementById('capitalReinversion').value = formatNumberInput(Math.round(capitalReinv));
-            document.getElementById('roi').value = (roi * 100).toFixed(2);
-            document.getElementById('tirMensual').value = (tirMensual * 100).toFixed(2);
-            document.getElementById('tirAnual').value = (tirAnual * 100).toFixed(2);
+            document.getElementById('roi').value = (roi * 100).toFixed(2) + '%';
+            document.getElementById('tirMensual').value = tirM ? (tirM * 100).toFixed(2) + '%' : "0.00%";
+            document.getElementById('tirAnual').value = (tirA * 100).toFixed(2) + '%';
 
             analizarResultados(roi * 100, tiempoTotal, Math.round(costoTenenciaAcum), Math.round(capitalInv));
         }
@@ -1208,7 +1283,7 @@
                 doc.roundedRect(margenIzq, yPosition, anchoUtil, 8, 2, 2, 'F');
                 doc.setTextColor(51, 65, 85);
                 doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-                doc.text(nombreProyecto, 105, yPosition + 5.5, { align: 'center' });
+                doc.text('Nombre del Proyecto: ' + nombreProyecto, 105, yPosition + 5.5, { align: 'center' });
                 yPosition += 12;
             } else {
                 yPosition += 8;
@@ -1464,7 +1539,7 @@
             doc.text('RESULTADO DE LA INVERSIÓN', margenIzq + 5, yStartResultados + 7);
 
             const datosResultado = [
-                ['TIEMPO DE LA INVERSIÓN (Meses)', tiempoInversion + ' Meses'],
+                ['TIEMPO DE LA INVERSIÓN', tiempoInversion + ' Meses'],
                 ['CAPITAL TOTAL INVERTIDO', '$' + capitalTotalInvertido],
                 ['CAPITAL DE REINVERSIÓN', '$' + capitalReinversion],
                 ['GANANCIA NETA', '$' + ganancia],

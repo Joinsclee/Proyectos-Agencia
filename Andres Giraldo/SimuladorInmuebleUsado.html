@@ -359,7 +359,7 @@
                         <span class="tooltip-trigger">
                             i
                             <span class="tooltip-text">Porcentaje del valor del inmueble que será financiado por el
-                                banco. Máximo 100%.</span>
+                                banco.</span>
                         </span>
                     </label>
                     <div class="field-input-wrapper">
@@ -888,7 +888,16 @@
     </footer>
 
     <script>
-        function formatNumberInput(value) { return value.toString().replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+        function formatNumberInput(value) {
+            if (value === null || value === undefined || value === '') return '';
+            let str = value.toString();
+            const isNegative = str.startsWith('-');
+            let clean = str.replace(/\D/g, '');
+            if (!clean && isNegative) return '-';
+            if (!clean) return '';
+            let formatted = clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return isNegative ? '-' + formatted : formatted;
+        }
         function parseFormattedNumber(value) { return parseFloat(value.toString().replace(/\./g, '')) || 0; }
 
         function calcular() {
@@ -951,14 +960,16 @@
             if (saldoCreditoVenta < 0) saldoCreditoVenta = 0;
 
             // 5. Resultados
-            // Capital Invertido: CI + Escrituras Compra + Mejoras + Tenencia Acumulada + Otros Costos Venta
-            let capitalInv = vCI + costosEscCompra + costoMejoras + costoTenenciaAcum + otrosCostosVenta;
+            // Capital Invertido: CI + Escrituras Compra + Mejoras + Tenencia Acumulada
+            let capitalInv = vCI + costosEscCompra + costoMejoras + costoTenenciaAcum;
 
-            // Ganancia: Venta - Saldo Credito - Costos Venta (Escrituras) - Capital Invertido
-            let ganancia = pVenta - saldoCreditoVenta - costosEscVenta - capitalInv;
+            // Capital de Reinversión: Venta - Saldo Credito - Costos Escrituración Venta - Otros Costos Venta
+            let capitalReinv = pVenta - saldoCreditoVenta - costosEscVenta - otrosCostosVenta;
+
+            // Ganancia: Capital de Reinversión - Capital Invertido
+            let ganancia = capitalReinv - capitalInv;
 
             let roi = (capitalInv > 0) ? (ganancia / capitalInv) : 0;
-            let capitalReinv = capitalInv + ganancia;
 
             // Set Values
             document.getElementById('valorM2').value = formatNumberInput(Math.round(pCompra / area));
@@ -1108,7 +1119,7 @@
                 doc.roundedRect(margenIzq, yPosition, anchoUtil, 8, 2, 2, 'F');
                 doc.setTextColor(51, 65, 85);
                 doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-                doc.text(nombreProyecto, 105, yPosition + 5.5, { align: 'center' });
+                doc.text('Nombre del proyecto: ' + nombreProyecto, 105, yPosition + 5.5, { align: 'center' });
                 yPosition += 12;
             } else {
                 yPosition += 8;

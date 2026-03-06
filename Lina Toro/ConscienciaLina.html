@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>De Receta Viral a Fórmula de Autor · Lina Toro</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                    },
+                    colors: {
+                        primary: '#9caf88',
+                        'primary-dark': '#8a9d76',
+                        secondary: '#1a1a1a',
+                        surface: '#f4f6f2',
+                        whatsapp: '#25D366',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --verde: #9caf88;
+            --verde-hover: #8a9d76;
+            --verde-claro: #f4f6f2;
+            --negro: #1a1a1a;
+            --texto: #444444;
+            --texto-suave: #888888;
+            --border: #e8eae6;
+            --blanco: #ffffff;
+            --radius: 14px;
+        }
+
+        html,
+        body {
+            background-color: #ffffff;
+            color: #333333;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+            width: 100%;
+            position: relative;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        /* ── REVEAL ANIMATIONS ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            will-change: transform, opacity;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── TIMELINE ── */
+        .phase-line {
+            position: relative;
+        }
+
+        .phase-line::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #eef0eb;
+            transform: translateX(-50%);
+            z-index: 0;
+        }
+
+        .ray-of-light {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #9caf88 50%, transparent);
+            box-shadow: 0 0 15px #9caf88;
+            transform: translateX(-50%);
+            z-index: 1;
+            height: 0%;
+        }
+
+        .timeline-dot {
+            transition: all 0.5s ease;
+        }
+
+        .timeline-dot.lit {
+            background-color: #9caf88 !important;
+            box-shadow: 0 0 20px #9caf88, 0 0 40px rgba(156, 175, 136, 0.5);
+            border-color: #ffffff;
+        }
+
+        .phase-number {
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .phase-number.lit {
+            -webkit-text-stroke-color: #9caf88 !important;
+            opacity: 1 !important;
+            filter: drop-shadow(0 0 10px rgba(156, 175, 136, 0.4));
+        }
+
+        @media (max-width: 768px) {
+
+            .phase-line::before,
+            .ray-of-light {
+                left: 20px;
+                transform: translateX(0);
+            }
+
+            .timeline-dot {
+                left: 20px !important;
+                transform: translateX(-50%) !important;
+            }
+
+            .phase-item {
+                padding-left: 0;
+                width: 100% !important;
+            }
+
+            .phase-item .pl-10 {
+                padding-left: 45px !important;
+                padding-right: 0 !important;
+            }
+
+            .clean-card {
+                width: 100% !important;
+                max-width: 100% !important;
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                padding: 1.25rem !important;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            h2 {
+                font-size: 1.5rem !important;
+            }
+
+            .play-icon-glow {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        /* Título Responsivo estilo Registro.html */
+        .header-title {
+            font-family: 'Outfit', sans-serif;
+            color: #1a1a1a;
+            letter-spacing: -1px;
+            font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+            line-height: 1.12;
+            white-space: nowrap;
+            display: inline-block;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .header-title {
+                white-space: normal;
+                font-size: clamp(1.8rem, 7vw, 2.8rem);
+                display: block;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-title {
+                font-size: clamp(1.7rem, 8vw, 2.2rem);
+            }
+        }
+
+        @media (max-width: 400px) {
+            #calendar-grid {
+                font-size: 0.75rem;
+                gap: 2px;
+            }
+        }
+
+        /* ── CARDS ── */
+        .clean-card {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            overflow: hidden;
+        }
+
+        .clean-card:hover {
+            border-color: #9caf88;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05), 0 0 20px rgba(156, 175, 136, 0.05);
+        }
+
+        /* ── VIDEO THUMBNAIL ── */
+        .video-thumbnail-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background-color: #f4f6f2;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .video-thumbnail-img {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .video-thumbnail-container:hover .video-thumbnail-img {
+            transform: scale(1.05);
+        }
+
+        @keyframes pulse-soft {
+            0% {
+                box-shadow: 0 0 0 0 rgba(156, 175, 136, 0.3);
+            }
+
+            70% {
+                box-shadow: 0 0 0 20px rgba(156, 175, 136, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(156, 175, 136, 0);
+            }
+        }
+
+        .play-icon-glow {
+            width: 50px;
+            height: 50px;
+            background: #9caf88;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(156, 175, 136, 0.4);
+            transform: scale(0.9);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: pulse-soft 3s infinite ease-in-out;
+            margin-bottom: 0.5rem;
+        }
+
+        .play-text-overlay {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            font-weight: 700;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-thumbnail-container:hover .play-text-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .video-play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(26, 26, 26, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        .video-thumbnail-container:hover .play-icon-glow {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(156, 175, 136, 0.6);
+        }
+
+        /* ── LOCKED PLACEHOLDER ── */
+        .pulse-placeholder {
+            width: 100%;
+            height: 100%;
+            background: #f4f6f2;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-placeholder::before {
+            content: '';
+            position: absolute;
+            inset: -50%;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(156, 175, 136, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(156, 175, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.7) 0%, transparent 60%);
+            animation: mesh-rotate 15s infinite linear;
+        }
+
+        .pulse-placeholder::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            transform: skewX(-25deg);
+            animation: glass-shine 4s infinite ease-in-out;
+        }
+
+        @keyframes mesh-rotate {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.1);
+            }
+
+            100% {
+                transform: rotate(360deg) scale(1);
+            }
+        }
+
+        @keyframes glass-shine {
+            0% {
+                left: -150%;
+            }
+
+            35%,
+            100% {
+                left: 150%;
+            }
+        }
+
+        .lock-orbit-ring {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(156, 175, 136, 0.1);
+            border-top-color: #9caf88;
+            border-radius: 50%;
+            animation: orbit-spin 2s linear infinite;
+        }
+
+        @keyframes orbit-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ── RESOURCE LINKS ── */
+        .resource-link {
+            background: #f4f6f2;
+            border: 1px solid #e5e7eb;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-weight: 700 !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .resource-link:hover {
+            background: #9caf88 !important;
+            color: white !important;
+            border-color: #9caf88;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(156, 175, 136, 0.3);
+        }
+
+        a.resource-link-primary,
+        button.resource-link-primary {
+            background-color: #9caf88 !important;
+            color: #ffffff !important;
+            border-color: #9caf88 !important;
+        }
+
+        a.resource-link-primary:hover,
+        button.resource-link-primary:hover {
+            background-color: #8a9d76 !important;
+            color: #ffffff !important;
+        }
+
+        /* ── VIDEO MODAL DINÁMICO ── */
+        .loom-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95) !important;
+            backdrop-filter: blur(8px);
+            z-index: 999999 !important;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .loom-modal-overlay.active {
+            display: flex !important;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .loom-modal-content {
+            width: 100%;
+            max-width: 1000px;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            position: relative;
+            z-index: 1000000;
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+
+        .loom-modal-overlay.active .loom-modal-content {
+            transform: scale(1);
+        }
+
+        @media (max-width: 768px) {
+            .loom-modal-content {
+                border-radius: 4px;
+                aspect-ratio: 16/9;
+            }
+        }
+
+        .loom-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            transition: all 0.3s ease;
+            z-index: 10001;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        .loom-close:hover {
+            background: #9caf88;
+            border-color: #9caf88;
+            transform: scale(1.05);
+        }
+
+        /* ── SURVEY CARD ── */
+        .survey-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f4f6f2 100%) !important;
+            border: 2px solid #9caf88 !important;
+            box-shadow: 0 20px 40px rgba(156, 175, 136, 0.15) !important;
+            position: relative;
+            z-index: 10;
+            overflow: visible !important;
+            animation: card-float 6s ease-in-out infinite;
+        }
+
+        .survey-card::after {
+            content: 'MUY IMPORTANTE';
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.1em;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        @keyframes card-float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* ── LIVE CLASS CARD ── */
+        .live-card {
+            background: linear-gradient(to bottom right, #ffffff, #f4f6f2) !important;
+            border: 2px solid #9caf88 !important;
+            box-shadow: 0 20px 40px rgba(156, 175, 136, 0.15) !important;
+            overflow: visible !important;
+        }
+
+        .live-card::before {
+            content: '🌿 CLASE PRINCIPAL';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: #9caf88;
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.1em;
+            box-shadow: 0 4px 12px rgba(156, 175, 136, 0.3);
+            z-index: 30;
+        }
+
+        /* ── CALENDAR ── */
+        .calendar-day-active {
+            background-color: #f4f6f2;
+            color: #1a1a1a;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        @media (min-width: 640px) {
+            .calendar-day-active {
+                border-radius: 0.75rem;
+            }
+        }
+
+        .calendar-day-active:hover {
+            background-color: #ffffff;
+            border-color: #9caf88;
+            transform: scale(1.1);
+            z-index: 20;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .calendar-day-active::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background-color: #9caf88;
+            border-radius: 50%;
+        }
+
+        @media (min-width: 640px) {
+            .calendar-day-active::after {
+                bottom: 8px;
+            }
+        }
+
+        .calendar-day-special {
+            background-color: #9caf88;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 5px 15px -3px rgba(156, 175, 136, 0.4);
+        }
+
+        @media (min-width: 640px) {
+            .calendar-day-special {
+                border-radius: 0.75rem;
+                box-shadow: 0 10px 25px -5px rgba(156, 175, 136, 0.4);
+            }
+        }
+
+        .calendar-day-special:hover {
+            transform: scale(1.1);
+            background-color: #8a9d76;
+            z-index: 20;
+        }
+
+        .calendar-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ffffff;
+            color: #1a1a1a;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 12px;
+            width: max-content;
+            max-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            font-size: 0.75rem;
+        }
+
+        @media (min-width: 640px) {
+            .calendar-tooltip {
+                padding: 12px 16px;
+                min-width: 220px;
+                bottom: calc(100% + 12px);
+                border-radius: 12px;
+                font-size: 0.875rem;
+            }
+        }
+
+        .calendar-day-wrapper:hover .calendar-tooltip,
+        .calendar-day-special-wrapper:hover .calendar-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: #f4f6f2;
+            color: #888;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            background-color: #e5e7eb;
+            color: #1a1a1a;
+            border-radius: 50%;
+        }
+
+        /* ── STATIC BORDER CALENDAR CARD ── */
+        .static-border-card {
+            border-radius: 2.5rem;
+            position: relative;
+            background: #ffffff;
+            isolation: isolate;
+            padding: 12px;
+            border: 2px solid #9caf88;
+            box-shadow: 0 0 0 4px rgba(156, 175, 136, 0.05);
+        }
+
+        /* BARRA SUPERIOR */
+        .barra-top {
+            background-color: var(--negro);
+            color: white;
+            text-align: center;
+            padding: 11px 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.82rem;
+            letter-spacing: 0.8px;
+
+            /* Breakout para GoHighLevel */
+            width: 100vw;
+            max-width: 100vw;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @media (max-width: 768px) {
+            .barra-top {
+                width: 100%;
+                left: 0;
+                transform: translateX(0);
+            }
+        }
+
+        .barra-top em {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--verde);
+        }
+
+        /* ── WHATSAPP ── */
+        .whatsapp-btn {
+            background-color: #25D366;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .whatsapp-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 15px 30px rgba(37, 211, 102, 0.2);
+        }
+
+        /* ── GLOW ── */
+        .glow-green {
+            position: absolute;
+            width: 100%;
+            max-width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(156, 175, 136, 0.06) 0%, rgba(255, 255, 255, 0) 70%);
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* ── FULL-WIDTH BREAKOUT ── */
+        .full-width-section {
+            width: 100vw;
+            max-width: 100vw;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @media (max-width: 768px) {
+            .full-width-section {
+                width: 100%;
+                left: 0;
+                transform: translateX(0);
+            }
+        }
+
+        /* ── COMMENTS ── */
+        .comments-form-card {
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .comment-input,
+        .comment-textarea {
+            background: #ffffff;
+            border: 2px solid #e5e7eb;
+            color: #1a1a1a;
+            transition: all 0.3s ease;
+        }
+
+        .comment-input:focus,
+        .comment-textarea:focus {
+            border-color: #9caf88;
+            box-shadow: 0 0 0 3px rgba(156, 175, 136, 0.1);
+            outline: none;
+        }
+
+        .comment-input::placeholder,
+        .comment-textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .comment-card {
+            background: #ffffff;
+            border: 2px solid #f4f6f2;
+            border-radius: 0.75rem;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .comment-card:hover {
+            border-color: #e5e7eb;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .comment-author {
+            font-weight: 800;
+            color: #9caf88;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 11px;
+            margin-bottom: 8px;
+        }
+
+        .comment-text {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .comment-date {
+            color: #94a3b8;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        /* ── SCROLLBAR ── */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f4f6f2;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c8d5bf;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="antialiased bg-white" style="font-family: 'Inter', sans-serif;">
+    <!-- EL MODAL DE VIDEO YA NO ESTÁ AQUÍ. AHORA ES DINÁMICO PARA EVITAR BLOQUEOS DE GHL -->
+
+    <!-- BARRA TOP -->
+    <div class="barra-top">
+        Clase Online Gratuita &nbsp;·&nbsp; Viernes 6 de marzo &nbsp;·&nbsp; <em>Plazas limitadas</em>
+    </div>
+
+    <!-- ── HEADER ── -->
+    <header class="full-width-section pt-12 sm:pt-20 pb-8 sm:pb-12 bg-white overflow-hidden">
+        <div class="glow-green"></div>
+        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 text-center reveal">
+            <p class="font-bold tracking-[0.25em] uppercase text-[10px] sm:text-xs mb-5"
+                style="color: #9caf88; font-family: 'Outfit', sans-serif;">
+                Clase en vivo + recursos de preparación
+            </p>
+            <h1 class="header-title">
+                De receta viral a <em
+                    style="font-family: 'Playfair Display', serif; font-style: italic; color: #9caf88; font-weight: 700;">fórmula
+                    de autor</em> anti-manchas
+            </h1>
+            <p class="text-base sm:text-lg md:text-xl font-light max-w-2xl mx-auto px-2"
+                style="color: #666; line-height: 1.8;">
+                Dile adiós a los tutoriales y aprende a elaborar productos artesanales, seguros y efectivos, con el
+                método EVA.
+                <em style="font-family: 'Playfair Display', serif; color: #9caf88;"> Con ingredientes naturales y con
+                    tus propias manos.</em>
+            </p>
+        </div>
+    </header>
+
+    <!-- ── WHATSAPP ── -->
+    <section class="full-width-section bg-white pb-12 sm:pb-16">
+        <div class="max-w-2xl mx-auto px-4 text-center reveal">
+            <a href="https://group.wha.link/avYYVe" class="inline-block w-full mb-6">
+                <button
+                    class="whatsapp-btn text-white w-full py-4 sm:py-5 px-4 sm:px-8 rounded-full flex items-center justify-center gap-3 sm:gap-4 shadow-lg group">
+                    <svg viewBox="0 0 24 24" width="48" height="48" class="w-8 h-8 md:w-10 md:h-10 fill-white shrink-0">
+                        <path
+                            d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.747-2.874-2.512-2.96-2.626-.087-.114-.708-.941-.708-1.793 0-.852.443-1.271.601-1.439.158-.168.344-.209.458-.209.115 0 .23 0 .33.005.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.088.274.072.376-.043.101-.116.433-.506.548-.68.115-.173.231-.144.39-.087.158.058 1.011.477 1.184.564.173.087.288.13.33.202.043.072.043.419-.101.824zM12.05 2.19c5.418 0 9.8 4.382 9.8 9.8 0 5.418-4.382 9.8-9.8 9.8-1.656 0-3.26-.41-4.707-1.186l-4.526 1.189 1.218-4.41C2.964 15.938 2.25 14.077 2.25 11.99c0-5.418 4.382-9.8 9.8-9.8z" />
+                    </svg>
+                    <span class="text-[13px] md:text-lg font-black uppercase tracking-wider leading-tight text-left">
+                        CONFIRMAR QUE ESTOY EN WHATSAPP
+                    </span>
+                </button>
+            </a>
+            <div class="rounded-2xl p-6 flex items-start gap-4 text-left"
+                style="background: #f4f6f2; border: 1px solid #e5e7eb;">
+                <i data-lucide="info" class="w-6 h-6 shrink-0 mt-1" style="color: #9caf88;"></i>
+                <p class="text-xs sm:text-base leading-relaxed" style="color: #555;">
+                    <span class="font-bold" style="color: #1a1a1a;">IMPORTANTE:</span> Solamente por este medio se
+                    enviarán los enlaces de las clases en vivo y los recursos exclusivos.
+                    <span class="font-bold" style="color: #9caf88;">Asegúrate de estar dentro del grupo</span> para
+                    no perderte nada.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── RUTA DE RECURSOS (Timeline) ── -->
+    <section id="ruta" class="full-width-section py-8 sm:py-16 bg-white overflow-hidden">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6">
+            <div class="text-center mb-12 sm:mb-20 reveal">
+                <span class="font-bold tracking-[0.3em] uppercase text-[10px] sm:text-xs" style="color: #9caf88;">Tu
+                    hoja de
+                    ruta</span>
+                <h2 class="text-2xl sm:text-3xl md:text-5xl font-bold mt-4"
+                    style="font-family: 'Outfit', sans-serif; color: #1a1a1a;">Contenido de la Ruta</h2>
+                <p class="font-medium text-sm sm:text-lg mt-4 px-2" style="color: #94a3b8;">Recursos
+                    desbloqueándose progresivamente para tu preparación</p>
+            </div>
+
+            <div class="relative phase-line space-y-12 sm:space-y-20 pb-10" id="roadmap-container">
+                <div class="ray-of-light" id="ray"></div>
+
+                <!-- ─ ENCUESTA (siempre visible) ─ -->
+                <div class="relative md:flex items-start gap-12 reveal phase-item" data-index="0"
+                    data-force-unlock="true">
+                    <div class="hidden md:block w-1/2 text-right pr-12 pt-4">
+                        <span class="text-6xl font-bold phase-number lit" id="num-0"
+                            style="font-family: 'Playfair Display', serif; -webkit-text-stroke: 1px #9caf88; color: #f4f6f2;">01</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full border-2 border-white z-10 mt-6 timeline-dot lit"
+                        id="dot-0" style="background-color: #9caf88;"></div>
+                    <div class="pl-10 md:w-1/2 md:pl-12">
+                        <div class="clean-card survey-card p-8 rounded-3xl">
+                            <div class="video-thumbnail-container"
+                                onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSfuC5xRu20e61BaJawTXQ0M6HLFhgcsUQhc69XiTkPISyoblQ/viewform', '_blank')"
+                                style="cursor:pointer;">
+                                <div class="video-thumbnail-img"
+                                    style="background-image: url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=800');">
+                                </div>
+                                <div class="video-play-overlay">
+                                    <div class="play-icon-glow">
+                                        <i data-lucide="clipboard-list" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="play-text-overlay">COMPLETAR ENCUESTA</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold text-red-600 uppercase tracking-widest border border-red-200 bg-red-50 px-2 py-1 rounded mb-4 inline-block">
+                                PASO OBLIGATORIO
+                            </span>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-3 leading-snug"
+                                style="color: #1a1a1a;">
+                                ¡IMPORTANTE! Rellena esta encuesta para ayudarme a ayudarte
+                            </h3>
+                            <p class="text-sm mb-5" style="color: #888;">Tus respuestas me permiten personalizar la
+                                experiencia y darte exactamente lo que necesitas.</p>
+                            <div class="flex flex-col gap-3">
+                                <a href="https://docs.google.com/forms/d/e/1FAIpQLSfuC5xRu20e61BaJawTXQ0M6HLFhgcsUQhc69XiTkPISyoblQ/viewform"
+                                    target="_blank"
+                                    class="resource-link resource-link-primary flex items-center justify-center gap-2 text-sm font-bold text-white px-6 py-4 rounded-xl transition-all"
+                                    style="background-color: #9caf88 !important; color: white !important;">
+                                    <i data-lucide="external-link" class="w-5 h-5"></i> IR A LA ENCUESTA
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─ CLASE 1 · Mar 3 ─ -->
+                <div class="relative md:flex items-start gap-12 md:flex-row-reverse reveal phase-item" data-index="1"
+                    data-unlock-date="2026-03-02" data-custom-hour="19">
+                    <div class="hidden md:block w-1/2 text-left pl-12 pt-4">
+                        <span class="text-6xl font-bold phase-number" id="num-1"
+                            style="font-family: 'Playfair Display', serif; -webkit-text-stroke: 1px #e5e7eb; color: #f4f6f2;">02</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 z-10 mt-6 timeline-dot"
+                        id="dot-1" style="border-color: #e5e7eb;"></div>
+                    <div class="pl-10 md:w-1/2 md:pr-12 text-left">
+                        <div class="clean-card p-8 rounded-3xl">
+                            <div class="video-thumbnail-container"
+                                onclick="openVideoModal('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a612d9abd05978a66c5798.m4v')">
+                                <div class="video-thumbnail-img"
+                                    style="background-image: url('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a613e6c6b5e9765cffbcd3.png');">
+                                </div>
+                                <div class="video-play-overlay">
+                                    <div class="play-icon-glow">
+                                        <i data-lucide="play" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="play-text-overlay">VER CLASE</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest border px-2 py-1 rounded mb-4 inline-block"
+                                style="color: #9caf88; border-color: rgba(156,175,136,0.3);">
+                                MAR 3 · 19:00
+                            </span>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-1 leading-snug"
+                                style="color: #1a1a1a;">
+                                CLASE 1 · ESTRUCTURA DE LA PIEL
+                            </h3>
+                            <p class="text-sm mb-5 italic"
+                                style="color: #9caf88; font-family: 'Playfair Display', serif;">
+                                La piel como órgano vivo
+                            </p>
+                            <div class="flex flex-col gap-3">
+                                <button
+                                    onclick="openVideoModal('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a612d9abd05978a66c5798.m4v')"
+                                    class="resource-link resource-link-primary flex items-center justify-center gap-2 text-sm font-bold text-white px-6 py-4 rounded-xl transition-all"
+                                    style="background-color: #9caf88 !important; color: white !important;">
+                                    <i data-lucide="play" class="w-5 h-5"></i> VER CLASE 1
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─ CLASE 2 · Mié 4 ─ -->
+                <div class="relative md:flex items-start gap-12 reveal phase-item" data-index="2"
+                    data-unlock-date="2026-03-04" data-custom-hour="18">
+                    <div class="hidden md:block w-1/2 text-right pr-12 pt-4">
+                        <span class="text-6xl font-bold phase-number" id="num-2"
+                            style="font-family: 'Playfair Display', serif; -webkit-text-stroke: 1px #e5e7eb; color: #f4f6f2;">03</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 z-10 mt-6 timeline-dot"
+                        id="dot-2" style="border-color: #e5e7eb;"></div>
+                    <div class="pl-10 md:w-1/2 md:pl-12">
+                        <div class="clean-card p-8 rounded-3xl">
+                            <div class="video-thumbnail-container"
+                                onclick="openVideoModal('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a7431f4cf199b4db2795c3.m4v')">
+                                <div class="video-thumbnail-img"
+                                    style="background-image: url('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a86043b003fa70fd840bc0.png');">
+                                </div>
+                                <div class="video-play-overlay">
+                                    <div class="play-icon-glow">
+                                        <i data-lucide="play" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="play-text-overlay">VER CLASE</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest border px-2 py-1 rounded mb-4 inline-block"
+                                style="color: #9caf88; border-color: rgba(156,175,136,0.3);">
+                                MIÉ 4 · 19:00
+                            </span>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-1 leading-snug"
+                                style="color: #1a1a1a;">
+                                CLASE 2 · PRINCIPIOS ACTIVOS
+                            </h3>
+                            <p class="text-sm mb-5 italic"
+                                style="color: #9caf88; font-family: 'Playfair Display', serif;">
+                                El problema de los ingredientes “de moda”
+                            </p>
+                            <div class="flex flex-col gap-3">
+                                <button
+                                    onclick="openVideoModal('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a7431f4cf199b4db2795c3.m4v')"
+                                    class="resource-link resource-link-primary flex items-center justify-center gap-2 text-sm font-bold text-white px-6 py-4 rounded-xl transition-all"
+                                    style="background-color: #9caf88 !important; color: white !important;">
+                                    <i data-lucide="play" class="w-5 h-5"></i> VER CLASE 2
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─ CLASE 3 · Jue 5 ─ -->
+                <div class="relative md:flex items-start gap-12 md:flex-row-reverse reveal phase-item" data-index="3"
+                    data-unlock-date="2026-03-05" data-custom-hour="18">
+                    <div class="hidden md:block w-1/2 text-left pl-12 pt-4">
+                        <span class="text-6xl font-bold phase-number" id="num-3"
+                            style="font-family: 'Playfair Display', serif; -webkit-text-stroke: 1px #e5e7eb; color: #f4f6f2;">04</span>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 md:-translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 z-10 mt-6 timeline-dot"
+                        id="dot-3" style="border-color: #e5e7eb;"></div>
+                    <div class="pl-10 md:w-1/2 md:pr-12 text-left">
+                        <div class="clean-card p-8 rounded-3xl">
+                            <div class="video-thumbnail-container"
+                                onclick="openVideoModal('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a8809f4dd4286eb9989966.m4v')">
+                                <div class="video-thumbnail-img"
+                                    style="background-image: url('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a880dd6fa6589a80c07052.png');">
+                                </div>
+                                <div class="video-play-overlay">
+                                    <div class="play-icon-glow">
+                                        <i data-lucide="play" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="play-text-overlay">VER CLASE</span>
+                                </div>
+                            </div>
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-widest border px-2 py-1 rounded mb-4 inline-block"
+                                style="color: #9caf88; border-color: rgba(156,175,136,0.3);">
+                                JUE 5 · 19:00
+                            </span>
+                            <h3 class="text-lg sm:text-xl md:text-2xl font-bold mb-1 leading-snug"
+                                style="color: #1a1a1a;">
+                                CLASE 3 · INGENIERÍA A LA INVERSA DE LA FÓRMULA
+                            </h3>
+                            <p class="text-sm mb-5 italic"
+                                style="color: #9caf88; font-family: 'Playfair Display', serif;">
+                                De consumir productos a entender productos
+                            </p>
+                            <div class="flex flex-col gap-3">
+                                <button
+                                    onclick="openVideoModal('https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69a8809f4dd4286eb9989966.m4v')"
+                                    class="resource-link resource-link-primary flex items-center justify-center gap-2 text-sm font-bold text-white px-6 py-4 rounded-xl transition-all"
+                                    style="background-color: #9caf88 !important; color: white !important;">
+                                    <i data-lucide="play" class="w-5 h-5"></i> VER CLASE 3
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ── SECCIÓN CLASE EN VIVO DESTACADA ── -->
+    <section id="clase-en-vivo" class="full-width-section py-16 sm:py-24 bg-surface relative overflow-hidden">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
+            <div class="reveal">
+                <!-- Tarjeta con envoltorio interno para recortar las esquinas correctamente -->
+                <div
+                    class="live-card max-w-4xl mx-auto rounded-[2rem] bg-white shadow-2xl border-2 border-[#9caf88]/15 relative">
+
+                    <!-- ENVOLTORIO INTERNO: Recorta las esquinas de los hijos sin cortar la etiqueta ::before -->
+                    <div class="flex flex-col w-full h-full overflow-hidden rounded-[calc(2rem-2px)]">
+
+                        <!-- Miniatura Superior (Ajustada a 16:9 exacto) -->
+                        <div class="relative w-full aspect-video bg-black">
+                            <div class="video-thumbnail-container !mb-0 !rounded-none h-full w-full cursor-pointer"
+                                onclick="window.open('https://www.youtube.com/watch?v=ej2whC0m2Ng', '_blank')">
+                                <div class="video-thumbnail-img"
+                                    style="background-image: url('https://img.youtube.com/vi/ej2whC0m2Ng/maxresdefault.jpg'); background-size: cover; background-position: center;">
+                                </div>
+                                <div class="video-play-overlay bg-black/30">
+                                    <div class="play-icon-glow !w-16 !h-16">
+                                        <i data-lucide="play" class="w-8 h-8 ml-1"></i>
+                                    </div>
+                                    <span
+                                        class="play-text-overlay !text-[10px] !opacity-100 !translate-y-0 tracking-[0.2em]">ACTIVA
+                                        LA CAMPANITA</span>
+                                </div>
+                                <div class="absolute top-4 left-4 z-20">
+                                    <span
+                                        class="bg-red-600 text-white text-[9px] font-black px-3 py-1.5 rounded-full flex items-center gap-2 animate-pulse shadow-xl">
+                                        <span class="w-2 h-2 bg-white rounded-full"></span> EN VIVO
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contenido Inferior (Más compacto) -->
+                        <div class="p-6 sm:p-10 text-center bg-white flex-1">
+                            <span
+                                class="text-[9px] font-extrabold uppercase tracking-[0.4em] mb-3 inline-block text-[#9caf88]">
+                                Evento Principal
+                            </span>
+                            <h2 class="text-xl sm:text-3xl font-black mb-1 leading-tight max-w-2xl mx-auto"
+                                style="font-family: 'Outfit', sans-serif; color: #1a1a1a;">
+                                CLASE EN VIVO · DE RECETA VIRAL A FÓRMULA DE AUTOR
+                            </h2>
+                            <p class="text-base sm:text-xl italic mb-6"
+                                style="color: #9caf88; font-family: 'Playfair Display', serif;">
+                                Anti-manchas e ingredientes naturales
+                            </p>
+                            <p class="text-sm sm:text-base mb-8 text-slate-500 max-w-xl mx-auto leading-relaxed">
+                                Aprende el método EVA completo para crear tus propios productos desde cero con
+                                ingredientes naturales.
+                            </p>
+
+                            <div class="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto items-center">
+                                <div
+                                    class="flex items-center gap-3 p-4 rounded-xl bg-surface border border-[#9caf88]/10 text-left">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
+                                        <i data-lucide="calendar" class="w-5 h-5 text-[#9caf88]"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400">Fecha y
+                                            Hora</p>
+                                        <p class="text-[13px] font-bold text-slate-800">Viernes, 6 de Marzo · 19:00</p>
+                                    </div>
+                                </div>
+
+                                <button onclick="window.open('https://www.youtube.com/watch?v=ej2whC0m2Ng', '_blank')"
+                                    class="w-full py-4 px-6 rounded-full bg-[#9caf88] text-white font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 hover:bg-[#8a9d76] transition-all transform hover:scale-[1.02] shadow-lg shadow-[#9caf88]/20">
+                                    <i data-lucide="bell" class="w-4 h-4"></i> ACTIVA LA CAMPANITA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decoración de fondo -->
+        <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-100/30 rounded-full blur-3xl"></div>
+        <div class="absolute -top-24 -left-24 w-64 h-64 bg-emerald-50/50 rounded-full blur-3xl"></div>
+    </section>
+
+    <!-- ── CALENDARIO ── -->
+    <section class="full-width-section py-8 sm:py-16 bg-white overflow-hidden">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 reveal">
+            <div class="text-center mb-8">
+                <span class="font-bold tracking-[0.25em] uppercase text-[10px] sm:text-xs" style="color: #9caf88;">Tu
+                    agenda</span>
+                <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mt-3"
+                    style="font-family: 'Outfit', sans-serif; color: #1a1a1a;">Calendario de Marzo</h2>
+                <p class="text-sm mt-2" style="color: #94a3b8;">Guarda estas fechas — son tu hoja de ruta</p>
+            </div>
+            <div class="static-border-card">
+                <div class="bg-white rounded-2xl p-4 sm:p-6">
+                    <!-- Month nav -->
+                    <div class="flex items-center justify-between mb-6">
+                        <button class="nav-btn" id="prev-month" onclick="changeMonth(-1)">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <div class="text-center">
+                            <h3 class="text-base sm:text-lg font-bold" id="calendar-month-title"
+                                style="font-family: 'Outfit', sans-serif; color: #1a1a1a;"></h3>
+                            <p class="text-xs" id="calendar-subtitle" style="color: #9caf88;"></p>
+                        </div>
+                        <button class="nav-btn" id="next-month" onclick="changeMonth(1)">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <!-- Day headers -->
+                    <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center">
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1"
+                            style="color: #9caf88;">Lun</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1"
+                            style="color: #9caf88;">Mar</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1"
+                            style="color: #9caf88;">Mié</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1"
+                            style="color: #9caf88;">Jue</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1"
+                            style="color: #9caf88;">Vie</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1"
+                            style="color: #9caf88;">Sáb</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1"
+                            style="color: #9caf88;">Dom</div>
+                    </div>
+                    <!-- Grid -->
+                    <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center" id="calendar-grid"></div>
+                    <!-- Legend -->
+                    <div class="mt-5 flex flex-wrap gap-4 justify-center">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background: #9caf88;"></div>
+                            <span class="text-xs font-medium" style="color: #888;">Clase en vivo</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background: #f4f6f2; border: 1px solid #e5e7eb;">
+                            </div>
+                            <span class="text-xs font-medium" style="color: #888;">Clase</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── COMENTARIOS ── -->
+    <section class="full-width-section py-12 sm:py-20 bg-white min-h-[600px]">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 reveal">
+            <div class="text-center mb-10">
+                <span class="font-bold tracking-[0.25em] uppercase text-[10px] sm:text-xs"
+                    style="color: #9caf88;">Comunidad</span>
+                <h2 class="text-2xl sm:text-3xl font-bold mt-3 mb-2"
+                    style="font-family: 'Outfit', sans-serif; color: #1a1a1a;">¿Qué dicen las alumnas?</h2>
+                <p class="text-sm" style="color: #94a3b8;">Comparte tu experiencia con la comunidad</p>
+            </div>
+
+            <div class="comments-form-card rounded-xl p-8 mb-8">
+                <form id="commentForm" class="space-y-5">
+                    <div>
+                        <label for="userName" class="block text-xs font-bold uppercase tracking-wider mb-2"
+                            style="color: #9caf88;">Tu Nombre</label>
+                        <input type="text" id="userName" name="userName" required placeholder="¿Cómo te llamas?"
+                            class="comment-input w-full px-4 py-3 rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label for="userComment" class="block text-xs font-bold uppercase tracking-wider mb-2"
+                            style="color: #9caf88;">Tu Comentario</label>
+                        <textarea id="userComment" name="userComment" required rows="4"
+                            placeholder="¿Qué te ha parecido este contenido? ¿Cómo te está ayudando?"
+                            class="comment-textarea w-full px-4 py-3 rounded-lg text-sm resize-none"></textarea>
+                    </div>
+                    <button type="submit" id="submitBtn"
+                        class="w-full text-white py-4 px-6 text-sm font-black uppercase tracking-wider rounded-full transition-all transform hover:scale-105"
+                        style="background: #9caf88; box-shadow: 0 10px 25px rgba(156,175,136,0.25);">
+                        <span id="submitBtnText">Enviar Comentario</span>
+                        <span id="submitBtnLoading" style="display: none;">Enviando...</span>
+                    </button>
+                    <div id="formMessage" class="text-center text-sm font-bold uppercase tracking-wider hidden">
+                    </div>
+                </form>
+            </div>
+
+            <div id="commentsList" class="space-y-4">
+                <div class="text-center py-12" style="color: #94a3b8;">
+                    <p class="text-sm uppercase tracking-wider">Sé la primera en dejar un comentario 🌿</p>
+                </div>
+            </div>
+
+            <div id="loadMoreContainer" class="text-center mt-6" style="display: none;">
+                <button id="loadMoreBtn"
+                    class="inline-flex items-center gap-2 px-6 py-3 bg-white border-2 font-bold uppercase text-xs tracking-widest rounded-full transition-all"
+                    style="border-color: #e5e7eb; color: #888;">
+                    Ver más comentarios
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="full-width-section py-16 sm:py-20 px-4 text-center border-t overflow-hidden"
+        style="background: #1a1a1a; border-color: #2a2a2a;">
+        <div class="max-w-6xl mx-auto">
+            <p class="italic mb-2" style="font-family: 'Playfair Display', serif; color: #9caf88; font-size: 1rem;">Lina
+                Toro</p>
+            <p class="text-[10px] uppercase font-black tracking-[0.3em] mb-6" style="color: #555;">Jabonería &amp;
+                Cosmética
+                Artesanal · 2026</p>
+            <p class="italic mb-6"
+                style="font-family: 'Playfair Display', serif; color: rgba(156,175,136,0.4); font-size: 0.8rem;">Con
+                ingredientes naturales y con tus propias manos.</p>
+            <div class="flex justify-center gap-8 text-[10px] font-bold uppercase tracking-widest" style="color: #555;">
+                <a href="#" class="hover:text-white transition" style="color: #555;">Legal</a>
+                <a href="#" class="hover:text-white transition" style="color: #555;">Privacidad</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // ─── TIMEZONE (España) ───
+        function getCurrentDate() {
+            return new Date();
+        }
+        function parseUnlockDate(dateStr, customHour) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const hour = parseInt(customHour) || 19;
+            // Forzamos la zona horaria de Colombia (UTC-5)
+            // Al crear la fecha en UTC le sumamos 5 horas a la hora de Colombia para que coincida globalmente
+            return new Date(Date.UTC(year, month - 1, day, hour + 5, 0, 0));
+        }
+
+        // ─── DESBLOQUEO DE RECURSOS ───
+        function updateCardStates() {
+            const phaseItems = document.querySelectorAll('.phase-item');
+            const now = getCurrentDate();
+
+            phaseItems.forEach(item => {
+                const unlockDateStr = item.dataset.unlockDate;
+                const customHour = item.dataset.customHour;
+                const forceUnlock = item.dataset.forceUnlock === 'true';
+                if (!unlockDateStr && !forceUnlock) return;
+
+                const unlockDate = forceUnlock ? new Date(0) : parseUnlockDate(unlockDateStr, customHour);
+                const isUnlocked = forceUnlock || now >= unlockDate;
+
+                if (isUnlocked) {
+                    item.classList.remove('opacity-50');
+                    item.querySelectorAll('button, a.resource-link-primary').forEach(btn => {
+                        btn.style.pointerEvents = 'auto';
+                        btn.style.opacity = '1';
+                    });
+                } else {
+                    item.classList.add('opacity-50');
+
+                    const thumbContainer = item.querySelector('.video-thumbnail-container');
+                    if (thumbContainer) {
+                        thumbContainer.style.pointerEvents = 'none';
+                        const overlay = thumbContainer.querySelector('.video-play-overlay');
+                        if (overlay) {
+                            overlay.innerHTML = `
+                                <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;">
+                                    <div class="lock-orbit-ring"></div>
+                                    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                                        <i data-lucide="lock" class="w-8 h-8" style="color:rgba(156,175,136,0.4);"></i>
+                                        <span style="color:rgba(26,26,26,0.4);font-size:10px;text-transform:uppercase;font-weight:bold;letter-spacing:0.1em;">Bloqueado</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
+                    item.querySelectorAll('button, a.resource-link-primary').forEach(btn => {
+                        btn.style.pointerEvents = 'none';
+                        btn.style.opacity = '0.4';
+                    });
+                    lucide.createIcons();
+                }
+            });
+        }
+
+        // ─── GSAP ANIMATIONS ───
+        function initAnimations() {
+            gsap.registerPlugin(ScrollTrigger);
+
+            const ray = document.getElementById('ray');
+            const roadmap = document.getElementById('roadmap-container');
+            if (ray && roadmap) {
+                gsap.to(ray, {
+                    height: "100%",
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: roadmap,
+                        start: "top center",
+                        end: "bottom center",
+                        scrub: 0.5
+                    }
+                });
+            }
+
+            document.querySelectorAll('.reveal').forEach(item => {
+                gsap.to(item, {
+                    opacity: 1, y: 0,
+                    duration: 0.6, ease: "power2.out", overwrite: 'auto',
+                    scrollTrigger: { trigger: item, start: "top 92%", toggleActions: "play none none none" }
+                });
+            });
+
+            document.querySelectorAll('.phase-item').forEach((item, index) => {
+                const dot = document.getElementById(`dot-${index}`);
+                const num = document.getElementById(`num-${index}`);
+                if (dot || num) {
+                    ScrollTrigger.create({
+                        trigger: item,
+                        start: "top center",
+                        onEnter: () => { if (dot) dot.classList.add('lit'); if (num) num.classList.add('lit'); },
+                        onLeaveBack: () => { if (dot) dot.classList.remove('lit'); if (num) num.classList.remove('lit'); },
+                    });
+                }
+            });
+        }
+
+        // ─── CALENDARIO ───
+        const eventsData = {
+            '2026-2-3': { title: 'CLASE 1: Estructura de la piel', type: 'video' },
+            '2026-2-4': { title: 'CLASE 2: Principios activos', type: 'video' },
+            '2026-2-5': { title: 'CLASE 3: Ingeniería a la inversa', type: 'video' },
+            '2026-2-6': { title: 'CLASE EN VIVO: Fórmula de Autor Anti-manchas', type: 'live', url: 'https://www.youtube.com/watch?v=ej2whC0m2Ng' },
+        };
+
+        let currentMonth = 2; // March (index 2)
+        const currentYear = 2026;
+
+        function renderCalendar(month, year) {
+            const grid = document.getElementById('calendar-grid');
+            const monthTitle = document.getElementById('calendar-month-title');
+            const subtitle = document.getElementById('calendar-subtitle');
+            const prevBtn = document.getElementById('prev-month');
+            const nextBtn = document.getElementById('next-month');
+
+            grid.innerHTML = '';
+            monthTitle.innerText = "MARZO 2026";
+            subtitle.innerText = "Tu hoja de ruta hacia la fórmula de autor";
+            prevBtn.style.visibility = 'hidden';
+            nextBtn.style.visibility = 'hidden';
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const startDayIndex = (firstDay === 0 ? 6 : firstDay - 1);
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < startDayIndex; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = "p-2 sm:p-3";
+                grid.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${year}-${month}-${day}`;
+                const event = eventsData[dateKey];
+                const isLiveLink = event && event.type === 'live';
+
+                const dayWrapper = document.createElement(isLiveLink ? 'a' : 'div');
+                dayWrapper.className = "calendar-day-wrapper relative group";
+
+                if (event && event.type === 'live') {
+                    dayWrapper.href = event.url || '#';
+                    dayWrapper.target = "_blank";
+                    const parts = event.title.split(':');
+                    const tag = parts[0].trim();
+                    const title = parts.slice(1).join(':').trim();
+                    dayWrapper.innerHTML = `
+                        <div class="p-2 sm:p-3 text-white rounded-lg sm:rounded-xl shadow-xl transform scale-110 ring-2 sm:ring-4 group-hover:scale-125 transition-transform duration-300 cursor-pointer text-xs sm:text-base"
+                            style="background: #9caf88; box-shadow: 0 10px 25px rgba(156,175,136,0.4); ring-color: rgba(156,175,136,0.1);">
+                            ${day}
+                        </div>
+                        <div class="calendar-tooltip">
+                            <div class="text-[10px] font-black uppercase mb-1 text-center" style="color:#9caf88;">🌿 ${tag}</div>
+                            <div class="text-xs font-bold leading-tight text-center" style="color:#1a1a1a;">${title}</div>
+                        </div>
+                    `;
+                } else if (event && event.type === 'video') {
+                    const parts = event.title.includes(':') ? event.title.split(':') : ['RECURSO', event.title];
+                    const tag = parts[0].trim();
+                    const title = parts.slice(1).join(':').trim();
+                    dayWrapper.innerHTML = `
+                        <div class="p-2 sm:p-3 calendar-day-active text-xs sm:text-base">${day}</div>
+                        <div class="calendar-tooltip">
+                            <div class="text-[10px] font-black uppercase mb-1 text-center" style="color:#9caf88;">${tag}</div>
+                            <div class="text-xs font-bold leading-tight text-center" style="color:#1a1a1a;">${title}</div>
+                        </div>
+                    `;
+                } else {
+                    dayWrapper.innerHTML = `<div class="p-2 sm:p-3 text-xs sm:text-base" style="color:#e5e7eb;">${day}</div>`;
+                }
+
+                grid.appendChild(dayWrapper);
+            }
+        }
+
+        function changeMonth(dir) {
+            // Only March for now
+        }
+
+        // ─── VIDEO MODAL (100% GHL-PROOF) ───
+        window.openVideoModal = function (url) {
+            console.log("Intentando abrir video:", url);
+            if (!url) return;
+
+            // 1. Limpiamos cualquier modal previo (previo creado dinámicamente)
+            let existingModal = document.getElementById('ghl-safe-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // 2. Creamos el contenedor directamente desde JavaScript puro
+            // Esto evita que el HTML visual builder de GHL lo rompa
+            const modal = document.createElement('div');
+            modal.id = 'ghl-safe-modal';
+            modal.className = 'loom-modal-overlay active';
+
+            // 3. Inyectamos la estructura del reproductor 
+            let videoContent = '';
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                let videoId = '';
+                if (url.includes('v=')) {
+                    videoId = url.split('v=')[1].split('&')[0];
+                } else {
+                    videoId = url.split('/').pop();
+                }
+                videoContent = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius:12px;"></iframe>`;
+            } else {
+                videoContent = `
+                    <video id="activeVideo" controls playsinline autoplay webkit-playsinline controlsList="nodownload" oncontextmenu="return false;" style="width:100%; height:100%; background:black;">
+                        <source src="${url}" type="video/mp4">
+                        Tu navegador no soporta video.
+                    </video>
+                `;
+            }
+
+            modal.innerHTML = `
+                <div class="loom-close" id="ghl-close-video">
+                    <span>Cerrar</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </div>
+                <div class="loom-modal-content">
+                    ${videoContent}
+                </div>
+            `;
+
+            // 4. Lo inyectamos directamente en el body real
+            document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
+
+            // 5. Autoplay (Con ligero delay para no asfixiar el navegador)
+            const video = modal.querySelector('#activeVideo');
+            if (video) {
+                setTimeout(() => {
+                    video.play().catch(e => {
+                        console.log("Autoplay requiere interacción del usuario:", e);
+                    });
+                }, 200);
+            }
+
+            // 6. Funciones de Cierre seguro
+            const handleClose = () => {
+                modal.remove();
+                document.body.style.overflow = '';
+            };
+
+            const closeBtn = modal.querySelector('#ghl-close-video');
+            if (closeBtn) closeBtn.onclick = handleClose;
+
+            // Cerrar haciendo clic afuera
+            modal.onclick = (e) => {
+                if (e.target === modal) handleClose();
+            };
+
+            // Cerrar con Escape
+            const escListener = (e) => {
+                if (e.key === 'Escape') {
+                    handleClose();
+                    document.removeEventListener('keydown', escListener);
+                }
+            };
+            document.addEventListener('keydown', escListener);
+        };
+
+        // ─── COMENTARIOS (Google Sheets) ───
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz2hWFr6jFft7BHtMLC6BEIm5xkkekbXo914SJ9GrV55acun6yPR47Gj_kadJXWpG2v/exec';
+        const SHEET_ID = '1aD_2XT_3jxtziULZ8rJArgJtBU076ieDtPKbCeX3yik';
+        const SHEET_NAME = 'Comentarios';
+
+        let comments = [];
+        let commentsShown = 3;
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        function renderComments() {
+            const list = document.getElementById('commentsList');
+            const loadMore = document.getElementById('loadMoreContainer');
+            if (!list) return;
+            if (comments.length === 0) {
+                list.innerHTML = '<div class="text-center py-12" style="color:#94a3b8;"><p class="text-sm uppercase tracking-wider">Sé la primera en dejar un comentario 🌿</p></div>';
+                loadMore.style.display = 'none';
+                return;
+            }
+            list.innerHTML = comments.slice(0, commentsShown).map(c => {
+                const hasLiked = localStorage.getItem(`liked_${c.id}`);
+                return `
+                <div class="comment-card">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="comment-author">${escapeHtml(c.name)}</div>
+                        <button onclick="giveLike('${c.id}')" 
+                            id="like-btn-${c.id}"
+                            class="flex items-center gap-1.5 text-xs font-bold transition-all ${hasLiked ? 'text-primary' : 'text-slate-400 hover:text-primary'}">
+                            <i data-lucide="heart" class="w-4 h-4 ${hasLiked ? 'fill-current' : ''}"></i>
+                            <span id="like-count-${c.id}">${c.likes || 0}</span>
+                        </button>
+                    </div>
+                    <p class="comment-text">${escapeHtml(c.text)}</p>
+                    <div class="comment-date mt-3">${c.date}</div>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+            loadMore.style.display = comments.length > commentsShown ? 'block' : 'none';
+        }
+
+        async function loadComments() {
+            if (!SCRIPT_URL || SCRIPT_URL.includes('TU_URL')) return;
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=read`);
+                const data = await response.json();
+
+                if (Array.isArray(data)) {
+                    comments = data.reverse();
+                    renderComments();
+                }
+            } catch (err) {
+                console.error("Error al cargar comentarios:", err);
+            }
+        }
+
+        document.getElementById('commentForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const name = document.getElementById('userName').value.trim();
+            const text = document.getElementById('userComment').value.trim();
+            if (!name || !text) return;
+
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('submitBtnText');
+            const btnLoading = document.getElementById('submitBtnLoading');
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline';
+
+            const dateStr = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            try {
+                let newId = 'temp-' + Date.now();
+                if (SCRIPT_URL && !SCRIPT_URL.includes('TU_URL')) {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: JSON.stringify({ name, text, date: dateStr }),
+                    });
+                    const resData = await response.json();
+                    if (resData.id) newId = resData.id;
+                }
+                comments.unshift({ name, text, date: dateStr, id: newId, likes: 0 });
+                renderComments();
+            } catch (_) {
+                comments.unshift({ name, text, date: dateStr, id: 'temp-' + Date.now(), likes: 0 });
+                renderComments();
+            }
+
+            this.reset();
+            btn.disabled = false;
+            btnText.style.display = 'inline';
+            btnLoading.style.display = 'none';
+
+            const msg = document.getElementById('formMessage');
+            msg.style.color = '#9caf88';
+            msg.textContent = '¡Comentario publicado! Gracias 🌿';
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 3000);
+        });
+
+        async function giveLike(id) {
+            if (localStorage.getItem(`liked_${id}`)) return;
+            if (!SCRIPT_URL || SCRIPT_URL.includes('TU_URL')) return;
+
+            localStorage.setItem(`liked_${id}`, 'true');
+
+            const countEl = document.getElementById(`like-count-${id}`);
+            const btnEl = document.getElementById(`like-btn-${id}`);
+            if (countEl && btnEl) {
+                countEl.textContent = parseInt(countEl.textContent) + 1;
+                btnEl.classList.add('text-primary');
+                btnEl.classList.remove('text-slate-400', 'hover:text-primary');
+
+                const icon = btnEl.querySelector('i, svg');
+                if (icon) {
+                    icon.classList.add('fill-current');
+                }
+            }
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({ action: 'like', id: id }),
+                });
+            } catch (err) {
+                console.error("Error al enviar like:", err);
+            }
+        }
+
+        document.getElementById('loadMoreBtn')?.addEventListener('click', () => {
+            commentsShown += 3;
+            renderComments();
+        });
+
+        // ─── INIT ───
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar(currentMonth, currentYear);
+            updateCardStates();
+            loadComments();
+            initAnimations();
+            lucide.createIcons();
+        });
+    </script>
+
+</body>
+
+</html>

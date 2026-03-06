@@ -29,6 +29,10 @@
             box-sizing: border-box;
         }
 
+        /* ─── GHL / CONTAINER RESET ─── */
+        html { overflow-x: hidden; width: 100%; }
+        body { width: 100% !important; max-width: 100% !important; overflow-x: hidden; }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #fafafa;
@@ -45,6 +49,13 @@
         header {
             text-align: center;
             margin-bottom: 2rem;
+            /* Full-bleed para escapar contenedores GHL */
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fafafa;
+            padding: 2rem 1rem 0;
         }
 
         h1 {
@@ -1252,6 +1263,36 @@
             }
         }
         calc();
+
+        // ─── Full-Bleed Fixer (GoHighLevel / contenedores con max-width) ───
+        (function () {
+            var FULL_BLEED = 'header';
+            function applyFullBleed() {
+                var vw = window.innerWidth || document.documentElement.clientWidth;
+                [].forEach.call(document.querySelectorAll(FULL_BLEED), function (el) {
+                    // Reset primero
+                    el.style.width = '';
+                    el.style.marginLeft = '';
+                    el.style.transform = '';
+                    el.style.left = '';
+                    // Medir posición real
+                    var rect = el.getBoundingClientRect();
+                    var offLeft = rect.left;
+                    var offRight = vw - rect.right;
+                    // Aplicar solo si el elemento NO está ya en ancho completo
+                    if (Math.abs(offLeft) > 1 || Math.abs(offRight) > 1) {
+                        el.style.position = 'relative';
+                        el.style.marginLeft = (-offLeft) + 'px';
+                        el.style.width = vw + 'px';
+                        el.style.transform = 'none';
+                        el.style.left = '0';
+                    }
+                });
+            }
+            window.addEventListener('resize', applyFullBleed);
+            document.addEventListener('DOMContentLoaded', applyFullBleed);
+            if (document.readyState !== 'loading') applyFullBleed();
+        })();
     </script>
 
 </body>

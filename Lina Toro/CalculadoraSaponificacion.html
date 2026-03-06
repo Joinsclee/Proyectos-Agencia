@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Calculadora de Saponificación · Lina Toro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ─── GHL / CONTAINER RESET & BASE ─── */
+    html,
+    body {
+      overflow-x: hidden;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --verde: #9caf88;
+      --verde-hover: #8a9d76;
+      --verde-claro: #f4f6f2;
+      --negro: #1a1a1a;
+      --texto: #444;
+      --texto-suave: #888;
+      --border: #e8eae6;
+      --blanco: #fff;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fafaf8;
+      color: var(--texto);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    em {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: var(--verde);
+    }
+
+    img,
+    svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* HEADER — full-bleed para escapar de contenedores GHL */
+    .top-bar {
+      background: var(--negro);
+      color: #fff;
+      text-align: center;
+      padding: 10px 20px;
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(0.7rem, 2vw, 0.8rem);
+      letter-spacing: 0.8px;
+      width: 100%;
+      position: relative;
+    }
+
+    .top-bar em {
+      color: var(--verde);
+    }
+
+    .app-header {
+      background: var(--blanco);
+      border-bottom: 1px solid var(--border);
+      padding: clamp(14px, 3vw, 22px) clamp(16px, 4vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      width: 100%;
+      position: relative;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: clamp(36px, 8vw, 42px);
+      height: clamp(36px, 8vw, 42px);
+      background: var(--verde-claro);
+      border-radius: 10px;
+      border: 1px solid rgba(156, 175, 136, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(1.1rem, 3vw, 1.3rem);
+    }
+
+    .brand h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(1rem, 3vw, 1.15rem);
+      font-weight: 700;
+      color: var(--negro);
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .brand span {
+      font-size: 0.78rem;
+      color: var(--texto-suave);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .btn-pdf {
+      background: var(--negro);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.85rem, 2vw, 0.88rem);
+      padding: 12px 24px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-pdf:hover {
+      background: #333;
+      transform: translateY(-1px);
+    }
+
+    /* LAYOUT */
+    .app-body {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: clamp(16px, 4vw, 32px) clamp(12px, 3vw, 24px);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: clamp(16px, 3vw, 20px);
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    /* CARDS */
+    .card {
+      background: var(--blanco);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: clamp(16px, 4vw, 24px);
+      box-shadow: var(--shadow);
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(0.95rem, 2.5vw, 1rem);
+      font-weight: 700;
+      color: var(--negro);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: var(--verde);
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* FORM FIELDS */
+    .field {
+      margin-bottom: 14px;
+      width: 100%;
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--texto-suave);
+      margin-bottom: 5px;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select,
+    .field textarea,
+    .oils-table select,
+    .oils-table input[type=number],
+    .se-table select,
+    .se-table input,
+    .add-input,
+    .custom-add-row input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      color: var(--negro);
+      background: var(--blanco);
+      transition: border-color 0.2s;
+      max-width: 100%;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--verde);
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* GRIDS PARA CAMPOS */
+    .field-row,
+    .field-row3 {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field-row {
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .field-row3 {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    /* TOGGLE */
+    .toggle-group {
+      display: flex;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      width: 100%;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 10px 5px;
+      text-align: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: clamp(0.8rem, 2vw, 0.85rem);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--texto-suave);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: var(--verde);
+      color: #fff;
+    }
+
+    /* RESULT BOXES */
+    .result-box {
+      background: var(--verde-claro);
+      border: 1px solid rgba(156, 175, 136, .3);
+      border-radius: 10px;
+      padding: clamp(12px, 3vw, 16px);
+      text-align: center;
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .result-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(1.3rem, 5vw, 1.7rem);
+      font-weight: 700;
+      color: var(--negro);
+      word-break: break-word;
+    }
+
+    .result-label {
+      font-size: clamp(0.65rem, 2vw, 0.75rem);
+      color: var(--texto-suave);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+
+    .results-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .results-row-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    /* TABLAS RESPONSIVAS CON SCROLL */
+    .table-scroll-wrap {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 8px;
+      background:
+        linear-gradient(to right, white 30%, rgba(255, 255, 255, 0)),
+        linear-gradient(to right, rgba(255, 255, 255, 0), white 70%) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, .1), rgba(0, 0, 0, 0)),
+        radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, .1), rgba(0, 0, 0, 0)) 100% 0;
+      background-repeat: no-repeat;
+      background-color: white;
+      background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+      background-attachment: local, local, scroll, scroll;
+    }
+
+    .table-scroll-hint {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--verde);
+      text-align: center;
+      padding: 5px 0 8px;
+      font-weight: 600;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 0.6;
+      }
+
+      50% {
+        opacity: 1;
+        transform: translateX(3px);
+      }
+
+      100% {
+        opacity: 0.6;
+      }
+    }
+
+    .oils-table,
+    .se-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      min-width: max-content;
+    }
+
+    .oils-table th,
+    .se-table th {
+      background: var(--verde-claro);
+      color: var(--texto-suave);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 10px;
+      text-align: center;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .oils-table th:first-child,
+    .se-table th:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: var(--verde-claro);
+      z-index: 2;
+    }
+
+    .oils-table td,
+    .se-table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .oils-table td:first-child,
+    .se-table td:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: #fff;
+      z-index: 1;
+      border-right: 1px solid var(--border);
+    }
+
+    .oils-table tbody tr:hover td,
+    .se-table tbody tr:hover td {
+      background: #fafaf8;
+    }
+
+    .oils-table select,
+    .se-table select {
+      min-width: 150px;
+      padding: 6px 8px;
+    }
+
+    .oils-table input[type=number] {
+      min-width: 80px;
+      padding: 6px 8px;
+    }
+
+    .oils-table .calc-cell {
+      color: var(--verde-hover);
+      font-weight: 600;
+    }
+
+    .oils-table .total-row td {
+      background: var(--verde-claro);
+      font-weight: 700;
+      color: var(--negro);
+    }
+
+    .oils-table .total-row td:first-child {
+      background: var(--verde-claro);
+    }
+
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--verde-claro);
+      color: var(--verde);
+      border: 1.5px solid rgba(156, 175, 136, .4);
+      padding: 8px 18px;
+      border-radius: 100px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: clamp(0.8rem, 2vw, 0.85rem);
+      cursor: pointer;
+      margin-top: 14px;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-add:hover {
+      background: #eaf0e4;
+    }
+
+    .btn-del {
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 0 8px;
+      transition: color 0.2s;
+    }
+
+    .btn-del:hover {
+      color: #e05555;
+    }
+
+    /* PROPERTIES BARS */
+    .prop-bar-wrap {
+      margin-bottom: 16px;
+    }
+
+    .prop-bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .prop-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--negro);
+    }
+
+    .prop-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--verde);
+    }
+
+    .prop-track {
+      height: 10px;
+      background: #f0f0ee;
+      border-radius: 100px;
+      position: relative;
+      overflow: visible;
+      width: 100%;
+    }
+
+    .prop-fill {
+      height: 100%;
+      background: var(--verde);
+      border-radius: 100px;
+      transition: width 0.4s ease;
+      position: relative;
+      z-index: 2;
+      max-width: 100%;
+    }
+
+    .prop-range {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background: rgba(156, 175, 136, .2);
+      border-left: 2px dashed rgba(156, 175, 136, .5);
+      border-right: 2px dashed rgba(156, 175, 136, .5);
+    }
+
+    .prop-hint {
+      font-size: 0.72rem;
+      color: var(--texto-suave);
+      margin-top: 3px;
+      text-align: right;
+    }
+
+    .prop-status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .status-ideal {
+      background: #e8f4e8;
+      color: #3a7a3a;
+    }
+
+    .status-bajo {
+      background: #fff3e0;
+      color: #c17a00;
+    }
+
+    .status-alto {
+      background: #fde8e8;
+      color: #c0392b;
+    }
+
+    /* FATTY ACIDS */
+    .fa-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .fa-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--verde-claro);
+    }
+
+    .fa-name {
+      font-size: clamp(0.75rem, 2vw, 0.82rem);
+      color: var(--texto);
+    }
+
+    .fa-pct {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.85rem, 2vw, 0.9rem);
+      color: var(--negro);
+    }
+
+    .fa-divider {
+      grid-column: 1 / -1;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--texto-suave);
+      padding: 8px 0 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* IODINE */
+    .iodine-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: clamp(0.85rem, 2vw, 0.95rem);
+      margin-top: 12px;
+    }
+
+    .iodine-muy-blanda {
+      background: #fde8e8;
+      color: #c0392b;
+    }
+
+    .iodine-blanda {
+      background: #fff3e0;
+      color: #c17a00;
+    }
+
+    .iodine-media {
+      background: #e8f4e8;
+      color: #3a7a3a;
+    }
+
+    .iodine-dura {
+      background: #e8f0fa;
+      color: #2563ab;
+    }
+
+    .iodine-muy-dura {
+      background: #ede8f4;
+      color: #6c3aab;
+    }
+
+    /* ADDITIVES */
+    .add-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .add-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: #fafaf8;
+    }
+
+    .add-name {
+      flex: 1;
+      font-size: 0.85rem;
+      color: var(--negro);
+    }
+
+    .add-input {
+      width: 70px;
+      padding: 6px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-size: 16px;
+      text-align: right;
+    }
+
+    .add-unit {
+      font-size: 0.78rem;
+      color: var(--texto-suave);
+      white-space: nowrap;
+    }
+
+    /* CUSTOM ADDITIVES */
+    .custom-add-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .custom-add-row input {
+      flex: 1 1 150px;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .custom-add-row input.grams-input {
+      flex: 0 1 90px;
+    }
+
+    /* SECTION LABEL */
+    .sec-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--verde);
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    /* ALERTS */
+    .alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .alert-warn {
+      background: #fff3e0;
+      border: 1px solid #ffe0a0;
+      color: #9a6200;
+    }
+
+    .alert-ok {
+      background: #e8f4e8;
+      border: 1px solid #b8dcb8;
+      color: #2d6a2d;
+    }
+
+    /* ─── RESPONSIVE AJUSTES ESPECÍFICOS ─── */
+    @media (max-width: 640px) {
+      .app-header {
+        flex-direction: column;
+        text-align: center;
+        justify-content: center;
+      }
+
+      .brand {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .brand-icon {
+        margin: 0 auto;
+      }
+
+      .brand>div>span {
+        display: none;
+      }
+
+      .btn-pdf {
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .results-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .results-row .result-box:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+      }
+
+      .fa-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .results-row {
+        grid-template-columns: 1fr;
+      }
+
+      .fa-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .custom-add-row input {
+        flex: 1 1 100%;
+      }
+    }
+
+    /* ─── PRINT LAYOUT (FICHA PROFESIONAL) ─── */
+    #print-area {
+      display: none;
+    }
+
+    @media print {
+      body> :not(#print-area) {
+        display: none !important;
+      }
+
+      #print-area {
+        display: block !important;
+        width: 100%;
+      }
+
+      body {
+        background: white !important;
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        overflow: visible;
+      }
+
+      .print-sheet {
+        color: #1a1a1a;
+        padding: 0;
+        max-width: 100%;
+        margin: 0 auto;
+      }
+
+      .p-header {
+        border-bottom: 3px solid var(--verde);
+        padding-bottom: 15px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+
+      .p-title {
+        font-family: 'Outfit', sans-serif;
+        font-size: 26pt;
+        color: var(--negro);
+        margin: 0 0 6px 0;
+        line-height: 1.1;
+      }
+
+      .p-subtitle {
+        font-size: 11pt;
+        color: var(--texto-suave);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+      }
+
+      .p-meta {
+        text-align: right;
+        font-size: 10pt;
+        color: var(--texto);
+        line-height: 1.5;
+      }
+
+      .p-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+      }
+
+      .p-box {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .p-section h3,
+      .p-box h3 {
+        font-family: 'Outfit', sans-serif;
+        font-size: 13pt;
+        margin: 0 0 12px 0;
+        color: var(--verde-hover);
+        border-bottom: 1.5px solid var(--border);
+        padding-bottom: 6px;
+      }
+
+      .p-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10.5pt;
+      }
+
+      .p-table td {
+        padding: 6px 0;
+        border-bottom: 1px dashed #eee;
+      }
+
+      .p-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .p-table td:last-child {
+        text-align: right;
+        font-weight: 600;
+        color: var(--negro);
+      }
+
+      .p-lye-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .p-lye-item {
+        background: var(--verde-claro);
+        border: 1px solid rgba(156, 175, 136, .3);
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+      }
+
+      .p-lye-item span {
+        display: block;
+        font-size: 9pt;
+        color: var(--texto-suave);
+        text-transform: uppercase;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+      }
+
+      .p-lye-item strong {
+        font-size: 16pt;
+        font-family: 'Outfit', sans-serif;
+        color: var(--negro);
+        display: block;
+      }
+
+      .p-highlight {
+        background: #eaf0e4;
+        border-color: var(--verde);
+      }
+
+      .p-highlight strong {
+        color: #3a7a3a;
+      }
+
+      .p-oils-table {
+        width: 100%;
+        margin-bottom: 24px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        border-collapse: collapse;
+      }
+
+      .p-oils-table th {
+        text-align: left;
+        background: var(--verde-claro);
+        padding: 10px;
+        font-size: 9pt;
+        text-transform: uppercase;
+        color: var(--texto-suave);
+        border-bottom: 2px solid var(--border);
+      }
+
+      .p-oils-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #eee;
+        font-size: 10pt;
+      }
+
+      .p-oils-table tfoot td {
+        background: var(--verde-claro);
+        border-top: 2px solid var(--border);
+        padding: 10px;
+        font-size: 11pt;
+        color: var(--negro);
+      }
+
+      .p-props-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .p-prop-box {
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 6px;
+        text-align: center;
+      }
+
+      .p-prop-name {
+        font-size: 8pt;
+        color: var(--texto-suave);
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 6px;
+        letter-spacing: 0.5px;
+      }
+
+      .p-prop-val {
+        font-size: 13pt;
+        font-family: 'Outfit', sans-serif;
+        font-weight: 700;
+        color: var(--verde-hover);
+        display: block;
+      }
+
+      .p-notes {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        font-size: 10.5pt;
+        min-height: 80px;
+        white-space: pre-wrap;
+        background: #fafaf8;
+        line-height: 1.6;
+        color: var(--texto);
+      }
+
+      .p-lists {
+        font-size: 10.5pt;
+        line-height: 1.6;
+        padding-left: 20px;
+        margin: 0;
+      }
+
+      .p-lists li {
+        margin-bottom: 4px;
+      }
+
+      .p-section {
+        page-break-inside: avoid;
+        margin-bottom: 24px;
+      }
+
+      .watermark {
+        text-align: center;
+        font-size: 8.5pt;
+        color: #aaa;
+        font-family: 'Outfit', sans-serif;
+        margin-top: 40px;
+        border-top: 1px solid #eee;
+        padding-top: 15px;
+      }
+
+      @page {
+        margin: 15mm;
+        size: A4 portrait;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">Calculadora de Saponificación &nbsp;·&nbsp; <em>Lina Toro</em> &nbsp;·&nbsp; Jabonería &
+    Cosmética Artesanal</div>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">🧼</div>
+      <div>
+        <h1>Calculadora de Saponificación</h1>
+        <span>Versión profesional · <em>Lina Toro</em></span>
+      </div>
+    </div>
+    <button class="btn-pdf" onclick="generarPDF()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="12" y1="18" x2="12" y2="12" />
+        <line x1="9" y1="15" x2="15" y2="15" />
+      </svg>
+      Generar Informe PDF
+    </button>
+  </header>
+
+  <main class="app-body">
+
+    <!-- DATOS DE LA RECETA -->
+    <div class="card full">
+      <div class="card-title">Datos de la Receta</div>
+      <div class="field-row3">
+        <div class="field">
+          <label>Nombre del Jabón</label>
+          <input type="text" id="soap-name" placeholder="Ej: Jabón de Castilla" oninput="updateHeader()">
+        </div>
+        <div class="field">
+          <label>Fecha de Elaboración</label>
+          <input type="date" id="date-elab">
+        </div>
+        <div class="field">
+          <label>Fecha de Curado</label>
+          <input type="date" id="date-cured">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Temperatura Elaboración (°C)</label>
+          <input type="number" id="temp" placeholder="40" value="40">
+        </div>
+        <div class="field">
+          <label>Peso Total Aceites (g) · Escala</label>
+          <input type="number" id="total-oils" placeholder="500" value="500" oninput="calcular()">
+        </div>
+      </div>
+    </div>
+
+    <!-- LEJÍA NaOH -->
+    <div class="card">
+      <div class="card-title">Cálculo de Lejía (NaOH)</div>
+
+      <div class="toggle-group no-print">
+        <button class="toggle-btn active" id="btn-solida" onclick="toggleNaOH('solida')">NaOH Sólida</button>
+        <button class="toggle-btn" id="btn-liquida" onclick="toggleNaOH('liquida')">NaOH Líquida</button>
+      </div>
+
+      <div id="section-solida">
+        <div class="field">
+          <label>Pureza del NaOH (%)</label>
+          <input type="number" id="purity" value="99" min="80" max="100" step="1" oninput="calcular()">
+        </div>
+      </div>
+
+      <div id="section-liquida" style="display:none;">
+        <div class="field">
+          <label>Concentración Solución NaOH (%)</label>
+          <input type="number" id="naoh-liq-conc" value="50" min="30" max="70" oninput="calcular()">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Sobreengrasado (SF) %</label>
+          <input type="number" id="sf" value="5" min="0" max="30" step="0.5" oninput="calcular()">
+        </div>
+        <div class="field">
+          <label>Concentración Lejía %</label>
+          <input type="number" id="conc" value="33" min="20" max="50" step="1" oninput="calcular()">
+        </div>
+      </div>
+      <small
+        style="display:block;margin-top:-8px;margin-bottom:12px;font-size:.75rem;color:var(--texto-suave);">Recomendado
+        30–38%. A mayor CONC, menos agua en la mezcla.</small>
+
+      <div class="results-row">
+        <div class="result-box">
+          <div class="result-val" id="res-naoh">0</div>
+          <div class="result-label" id="res-naoh-label">NaOH (99%)</div>
+        </div>
+        <div class="result-box">
+          <div class="result-val" id="res-agua">0</div>
+          <div class="result-label">Agua Lejía (g)</div>
+        </div>
+        <div class="result-box">
+          <div class="result-val" id="res-total-leija">0</div>
+          <div class="result-label">Total Lejía (g)</div>
+        </div>
+      </div>
+      <div class="results-row-2" id="naoh-liq-extra" style="display:none;">
+        <div class="result-box">
+          <div class="result-val" id="res-naoh-sol">0</div>
+          <div class="result-label">Solución NaOH (g)</div>
+        </div>
+        <div class="result-box">
+          <div class="result-val" id="res-agua-extra">0</div>
+          <div class="result-label">Agua extra (g)</div>
+        </div>
+      </div>
+
+      <div class="result-box" style="margin-top:12px; background: #ebf0e6; border-color: var(--verde);">
+        <div class="result-val" id="res-total-receta" style="color: var(--verde-hover);">0</div>
+        <div class="result-label" style="color: var(--verde-hover); font-weight:600;">PESO TOTAL RECETA (g)</div>
+      </div>
+
+      <div id="conc-alert" class="alert" style="display:none;margin-top:12px;"></div>
+    </div>
+
+    <!-- PORCENTAJES GRASOS -->
+    <div class="card">
+      <div class="card-title">Propiedades del Jabón</div>
+      <div id="props-placeholder" class="alert alert-warn">Agrega aceites para ver las propiedades.</div>
+
+      <div id="props-content" style="display:none;">
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Dureza <span id="st-dureza" class="prop-status"></span></span>
+            <span class="prop-val" id="val-dureza">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:29%;width:25%"></div>
+            <div class="prop-fill" id="bar-dureza" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 29–54%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Burbujas <span id="st-burbujas" class="prop-status"></span></span>
+            <span class="prop-val" id="val-burbujas">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:14%;width:32%"></div>
+            <div class="prop-fill" id="bar-burbujas" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 14–46%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Cremosidad <span id="st-cremo" class="prop-status"></span></span>
+            <span class="prop-val" id="val-cremo">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:16%;width:32%"></div>
+            <div class="prop-fill" id="bar-cremo" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 16–48%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Limpieza <span id="st-limpieza" class="prop-status"></span></span>
+            <span class="prop-val" id="val-limpieza">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:12%;width:10%"></div>
+            <div class="prop-fill" id="bar-limpieza" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 12–22%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Emoliencia <span id="st-emol" class="prop-status"></span></span>
+            <span class="prop-val" id="val-emol">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:44%;width:25%"></div>
+            <div class="prop-fill" id="bar-emol" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 44–69%</div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <span class="sec-label">Índice de Yodo</span>
+          <span style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:700;" id="iodine-val">0</span>
+          <span id="iodine-badge" class="iodine-badge iodine-media">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACEITES TABLE -->
+    <div class="card full">
+      <div class="card-title">Aceites, Grasas, Ceras y Mantecas</div>
+      <span class="table-scroll-hint" style="display:none;" id="scroll-hint">← Desliza horizontalmente la tabla para ver
+        todos los datos →</span>
+      <div class="table-scroll-wrap">
+        <table class="oils-table">
+          <thead>
+            <tr>
+              <th style="min-width:220px;">Aceite / Grasa</th>
+              <th>Gramos</th>
+              <th>% Fórmula</th>
+              <th>SAP (NaOH)</th>
+              <th>NaOH Neto (g)</th>
+              <th>Índice Yodo</th>
+              <th>Láurico</th>
+              <th>Mirístico</th>
+              <th>Palmítico</th>
+              <th>Esteárico</th>
+              <th>Ricinoleico</th>
+              <th>Oléico</th>
+              <th>Linoléico</th>
+              <th>Linolénico</th>
+              <th class="no-print"></th>
+            </tr>
+          </thead>
+          <tbody id="oils-tbody"></tbody>
+          <tfoot>
+            <tr class="total-row">
+              <td>TOTAL</td>
+              <td id="tot-g">0 g</td>
+              <td id="tot-pct">0%</td>
+              <td>—</td>
+              <td id="tot-naoh">0 g</td>
+              <td id="tot-iodine">0</td>
+              <td id="tot-lauric">0%</td>
+              <td id="tot-miristic">0%</td>
+              <td id="tot-palmitic">0%</td>
+              <td id="tot-stearic">0%</td>
+              <td id="tot-ricin">0%</td>
+              <td id="tot-oleic">0%</td>
+              <td id="tot-linoleic">0%</td>
+              <td id="tot-linolenic">0%</td>
+              <td class="no-print"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <button class="btn-add no-print" onclick="addOilRow()">+ Agregar Aceite</button>
+    </div>
+
+    <!-- ÁCIDOS GRASOS -->
+    <div class="card">
+      <div class="card-title">Perfil de Ácidos Grasos</div>
+      <div class="fa-grid" id="fa-grid">
+        <div class="fa-divider">Grasas Saturadas</div>
+        <div class="fa-item"><span class="fa-name">Láurico</span><span class="fa-pct" id="fa-lauric">0%</span></div>
+        <div class="fa-item"><span class="fa-name">Mirístico</span><span class="fa-pct" id="fa-miristic">0%</span></div>
+        <div class="fa-item"><span class="fa-name">Palmítico</span><span class="fa-pct" id="fa-palmitic">0%</span></div>
+        <div class="fa-item"><span class="fa-name">Esteárico</span><span class="fa-pct" id="fa-stearic">0%</span></div>
+        <div class="fa-divider">Grasas Insaturadas</div>
+        <div class="fa-item"><span class="fa-name">Ricinoleico</span><span class="fa-pct" id="fa-ricin">0%</span></div>
+        <div class="fa-item"><span class="fa-name">Oléico</span><span class="fa-pct" id="fa-oleic">0%</span></div>
+        <div class="fa-item"><span class="fa-name">Linoléico</span><span class="fa-pct" id="fa-linoleic">0%</span></div>
+        <div class="fa-item"><span class="fa-name">Linolénico</span><span class="fa-pct" id="fa-linolenic">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOBREENGRASADO -->
+    <div class="card">
+      <div class="card-title">Sobreengrasado (SE)</div>
+      <p style="font-size:0.85rem;color:var(--texto-suave);margin-bottom:12px;">El SF configurado es <strong
+          id="se-sf-info">5%</strong>. Reserva <strong id="se-grams-info">0 g</strong> de aceites sin saponificar.</p>
+      <div class="table-scroll-wrap">
+        <table class="se-table">
+          <thead>
+            <tr>
+              <th>Aceite para SE</th>
+              <th>Gramos</th>
+              <th>Agregar en</th>
+              <th class="no-print"></th>
+            </tr>
+          </thead>
+          <tbody id="se-tbody"></tbody>
+        </table>
+      </div>
+      <button class="btn-add no-print" onclick="addSERow()" style="margin-top:10px;">+ Agregar aceite SE</button>
+      <div id="se-alert" class="alert" style="margin-top:8px;display:none;"></div>
+    </div>
+
+    <!-- ADITIVOS ESPECIALES -->
+    <div class="card">
+      <div class="card-title">Aditivos que Influyen en Propiedades</div>
+      <p style="font-size:0.8rem;color:var(--texto-suave);margin-bottom:12px;">Los marcados con * descuentan agua de la
+        lejía automáticamente.</p>
+      <div class="add-grid" id="special-adds">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- ADITIVOS PERSONALIZADOS -->
+    <div class="card">
+      <div class="card-title">Activos / Aditivos Adicionales</div>
+      <div id="custom-adds-list"></div>
+      <button class="btn-add no-print" onclick="addCustomAdd()">+ Agregar Activo</button>
+    </div>
+
+    <!-- GLICERINA -->
+    <div class="card">
+      <div class="card-title">Glicerina Generada</div>
+      <p style="font-size:0.85rem;color:var(--texto-suave);margin-bottom:12px;">La saponificación genera glicerina
+        naturalmente. Estimación:</p>
+      <div class="result-box">
+        <div class="result-val" id="res-glicerina">0</div>
+        <div class="result-label">Gramos de Glicerina Estimados</div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--texto-suave);margin-top:8px;line-height:1.4;">Factor estimado: ~10.4% del
+        peso de NaOH puro utilizado.</p>
+    </div>
+
+    <!-- ANTIOXIDANTES REFERENCIA -->
+    <div class="card">
+      <div class="card-title">Referencia: Antioxidantes</div>
+      <div style="font-size:0.85rem;line-height:1.7;color:var(--texto);">
+        <p><strong>Vitamina E:</strong> 0.1–0.2% de aceites. Agregar en aceites base o SE.</p>
+        <p><strong>Extracto semilla de pomelo:</strong> 0.1–1% del peso del jabón. En traza.</p>
+        <p><strong>Extracto de romero:</strong> 0.1–0.4% del peso del jabón. En traza.</p>
+        <p><strong>Citrato de sodio:</strong> 1–3% del peso de grasas (rec. 1.5%). En lejía.</p>
+        <p><strong>Lactato de sodio (60–80%):</strong> Dureza 1–5%. Antioxidante/Humectante 1–3%.</p>
+      </div>
+    </div>
+
+    <!-- FRAGANCIAS Y COLORANTES -->
+    <div class="card">
+      <div class="card-title">Referencia: Fragancias y Colorantes</div>
+      <div style="font-size:0.85rem;line-height:1.7;color:var(--texto);">
+        <p><strong>Fragancias:</strong> ≤ 5% peso del jabón (recomendado 0.5–1%).</p>
+        <p><strong>Aceites esenciales (AAEE):</strong> ≤ 5% peso del jabón (rec. 2–3%).</p>
+        <p><strong>Avena y cereales:</strong> ≤ 10% peso del jabón (recomendado 5%).</p>
+        <p><strong>Arcillas:</strong> ≤ 5% del jabón. Hidratar 1:1 con agua + glicerina.</p>
+        <p><strong>Leche/infusiones:</strong> Usar congelados en lejía para conservar propiedades.</p>
+      </div>
+    </div>
+
+    <!-- NOTAS -->
+    <div class="card full">
+      <div class="card-title">Notas de la Receta</div>
+      <div class="field">
+        <textarea id="notes"
+          placeholder="Observaciones, proceso, temperatura de traza, colorantes usados, resultado final…"
+          rows="4"></textarea>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- PRINT CONTAINER (Manejado por JS) -->
+  <div id="print-area"></div>
+
+  <script>
+    // ═══════════════════════════════════════════════
+    // BASE DE DATOS DE ACEITES
+    // ═══════════════════════════════════════════════
+    const OILS = {
+      'Aceite de coco (76°)': { sap: .190, iodine: 10, lauric: 47, miristic: 18, palmitic: 9, stearic: 3, ricin: 0, oleic: 6, linoleic: 2, linolenic: 0 },
+      'Aceite de palmiste': { sap: .178, iodine: 18, lauric: 48, miristic: 16, palmitic: 8, stearic: 2, ricin: 0, oleic: 15, linoleic: 2, linolenic: 0 },
+      'Aceite de palma': { sap: .141, iodine: 53, lauric: 0, miristic: 1, palmitic: 44, stearic: 5, ricin: 0, oleic: 39, linoleic: 10, linolenic: 0 },
+      'Aceite de oliva': { sap: .134, iodine: 85, lauric: 0, miristic: 0, palmitic: 13, stearic: 3, ricin: 0, oleic: 72, linoleic: 10, linolenic: 1 },
+      'Aceite de ricino': { sap: .128, iodine: 86, lauric: 0, miristic: 0, palmitic: 1, stearic: 1, ricin: 90, oleic: 4, linoleic: 4, linolenic: 0 },
+      'Aceite de girasol': { sap: .134, iodine: 133, lauric: 0, miristic: 0, palmitic: 7, stearic: 5, ricin: 0, oleic: 19, linoleic: 68, linolenic: 0 },
+      'Aceite de almendra dulce': { sap: .136, iodine: 99, lauric: 0, miristic: 0, palmitic: 7, stearic: 2, ricin: 0, oleic: 69, linoleic: 20, linolenic: 0 },
+      'Manteca de karité (shea)': { sap: .128, iodine: 58, lauric: 0, miristic: 0, palmitic: 5, stearic: 40, ricin: 0, oleic: 47, linoleic: 6, linolenic: 0 },
+      'Manteca de cacao': { sap: .137, iodine: 36, lauric: 0, miristic: 0, palmitic: 27, stearic: 33, ricin: 0, oleic: 35, linoleic: 3, linolenic: 0 },
+      'Aceite de aguacate': { sap: .133, iodine: 86, lauric: 0, miristic: 0, palmitic: 16, stearic: 2, ricin: 0, oleic: 70, linoleic: 10, linolenic: 1 },
+      'Aceite de soja': { sap: .135, iodine: 133, lauric: 0, miristic: 0, palmitic: 10, stearic: 4, ricin: 0, oleic: 24, linoleic: 54, linolenic: 8 },
+      'Aceite de canola / colza': { sap: .124, iodine: 116, lauric: 0, miristic: 0, palmitic: 4, stearic: 2, ricin: 0, oleic: 62, linoleic: 22, linolenic: 10 },
+      'Aceite de semilla de cáñamo': { sap: .135, iodine: 166, lauric: 0, miristic: 0, palmitic: 6, stearic: 2, ricin: 0, oleic: 12, linoleic: 57, linolenic: 21 },
+      'Aceite de linaza': { sap: .135, iodine: 192, lauric: 0, miristic: 0, palmitic: 6, stearic: 4, ricin: 0, oleic: 19, linoleic: 15, linolenic: 57 },
+      'Aceite de jojoba': { sap: .069, iodine: 80, lauric: 0, miristic: 0, palmitic: 1, stearic: 0, ricin: 0, oleic: 11, linoleic: 0, linolenic: 0 },
+      'Aceite de argán': { sap: .136, iodine: 97, lauric: 0, miristic: 0, palmitic: 13, stearic: 6, ricin: 0, oleic: 46, linoleic: 35, linolenic: 0 },
+      'Manteca de mango': { sap: .128, iodine: 55, lauric: 0, miristic: 0, palmitic: 7, stearic: 42, ricin: 0, oleic: 46, linoleic: 4, linolenic: 0 },
+      'Aceite de rosa mosqueta': { sap: .137, iodine: 183, lauric: 0, miristic: 0, palmitic: 4, stearic: 2, ricin: 0, oleic: 16, linoleic: 45, linolenic: 34 },
+      'Aceite de neem': { sap: .136, iodine: 70, lauric: 0, miristic: 0, palmitic: 16, stearic: 15, ricin: 0, oleic: 53, linoleic: 13, linolenic: 0 },
+      'Aceite de semilla de uva': { sap: .126, iodine: 172, lauric: 0, miristic: 0, palmitic: 7, stearic: 4, ricin: 0, oleic: 16, linoleic: 72, linolenic: 0 },
+      'Aceite de sésamo': { sap: .133, iodine: 109, lauric: 0, miristic: 0, palmitic: 9, stearic: 5, ricin: 0, oleic: 42, linoleic: 43, linolenic: 0 },
+      'Aceite de maíz': { sap: .136, iodine: 125, lauric: 0, miristic: 0, palmitic: 12, stearic: 2, ricin: 0, oleic: 27, linoleic: 58, linolenic: 1 },
+      'Sebo vacuno (tallow)': { sap: .140, iodine: 40, lauric: 0, miristic: 3, palmitic: 24, stearic: 19, ricin: 0, oleic: 43, linoleic: 3, linolenic: 1 },
+      'Manteca de cerdo (lard)': { sap: .138, iodine: 60, lauric: 0, miristic: 1, palmitic: 26, stearic: 14, ricin: 0, oleic: 44, linoleic: 11, linolenic: 1 },
+      '— Personalizado —': { sap: 0, iodine: 0, lauric: 0, miristic: 0, palmitic: 0, stearic: 0, ricin: 0, oleic: 0, linoleic: 0, linolenic: 0 },
+    };
+
+    const SPECIAL_ADDS = [
+      { name: 'Arcillas', max: '≤5%', desc: 'Dureza +' },
+      { name: 'Azúcar / Miel', max: '≤5%', desc: 'Burbujas +, agua −*' },
+      { name: 'Cacao en polvo', max: '≤5%', desc: 'Cremosidad +' },
+      { name: 'Sal', max: '≤3%', desc: 'Dureza +' },
+      { name: 'Propilenglicol', max: '≤5%', desc: 'Burbujas +, agua −*' },
+      { name: 'Sodio lactato', max: '≤5%', desc: 'Dureza +' },
+      { name: 'Gel Aloe Vera', max: 'libre', desc: 'Burbujas +, agua −*' },
+      { name: 'Leche líquida', max: 'libre', desc: 'Agua −*' },
+      { name: 'Yogur griego', max: 'libre', desc: 'Cremosidad +, agua −*' },
+      { name: 'Yogur natural', max: 'libre', desc: 'Cremosidad +' },
+    ];
+
+    let naohMode = 'solida';
+    let rowCount = 0;
+    let seRowCount = 0;
+    let customAddCount = 0;
+
+    // ═══════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════
+    function init() {
+      buildSpecialAdds();
+      addOilRow();
+      addOilRow();
+      addSERow();
+      setDefaultDates();
+      calcular();
+    }
+
+    function setDefaultDates() {
+      const today = new Date();
+      const fmt = d => d.toISOString().split('T')[0];
+      document.getElementById('date-elab').value = fmt(today);
+      const cured = new Date(today);
+      cured.setDate(cured.getDate() + 28);
+      document.getElementById('date-cured').value = fmt(cured);
+    }
+
+    function buildSpecialAdds() {
+      const c = document.getElementById('special-adds');
+      c.innerHTML = SPECIAL_ADDS.map((a, i) => `
+    <div class="add-item">
+      <div>
+        <div class="add-name"><strong>${a.name}</strong> <small style="color:var(--texto-suave)">${a.max}</small></div>
+        <div style="font-size:0.75rem;color:var(--verde)">${a.desc}</div>
+      </div>
+      <input class="add-input" type="number" min="0" step="0.1" placeholder="0" id="sadd-${i}" oninput="calcular()">
+      <span class="add-unit">g</span>
+    </div>`).join('');
+    }
+
+    // ═══════════════════════════════════════════════
+    // OILS TABLE
+    // ═══════════════════════════════════════════════
+    function oilOptions(selected = '') {
+      return Object.keys(OILS).map(k =>
+        `<option value="${k}" ${k === selected ? 'selected' : ''}>${k}</option>`
+      ).join('');
+    }
+
+    function addOilRow() {
+      rowCount++;
+      const id = rowCount;
+      const tr = document.createElement('tr');
+      tr.id = `oil-row-${id}`;
+      tr.innerHTML = `
+    <td><select id="oil-name-${id}" onchange="onOilChange(${id})">${oilOptions()}</select></td>
+    <td><input type="number" id="oil-g-${id}" min="0" step="1" placeholder="0" oninput="calcular()"></td>
+    <td class="calc-cell" id="oil-pct-${id}">—</td>
+    <td class="calc-cell" id="oil-sap-${id}">—</td>
+    <td class="calc-cell" id="oil-naoh-${id}">—</td>
+    <td class="calc-cell" id="oil-iodine-${id}">—</td>
+    <td class="calc-cell" id="oil-lauric-${id}">—</td>
+    <td class="calc-cell" id="oil-miristic-${id}">—</td>
+    <td class="calc-cell" id="oil-palmitic-${id}">—</td>
+    <td class="calc-cell" id="oil-stearic-${id}">—</td>
+    <td class="calc-cell" id="oil-ricin-${id}">—</td>
+    <td class="calc-cell" id="oil-oleic-${id}">—</td>
+    <td class="calc-cell" id="oil-linoleic-${id}">—</td>
+    <td class="calc-cell" id="oil-linolenic-${id}">—</td>
+    <td class="no-print"><button class="btn-del" onclick="removeRow('oil-row-${id}')">✕</button></td>`;
+      document.getElementById('oils-tbody').appendChild(tr);
+      document.getElementById(`oil-name-${id}`).value = Object.keys(OILS)[id % (Object.keys(OILS).length - 1)];
+      calcular();
+    }
+
+    function onOilChange(id) {
+      calcular();
+    }
+
+    function removeRow(rowId) {
+      const el = document.getElementById(rowId);
+      if (el) el.remove();
+      calcular();
+    }
+
+    function getOilRows() {
+      const rows = [];
+      document.querySelectorAll('#oils-tbody tr').forEach(tr => {
+        const id = tr.id.replace('oil-row-', '');
+        const nameEl = document.getElementById(`oil-name-${id}`);
+        const gEl = document.getElementById(`oil-g-${id}`);
+        if (!nameEl || !gEl) return;
+        const name = nameEl.value;
+        const g = parseFloat(gEl.value) || 0;
+        rows.push({ id, name, g, data: OILS[name] || OILS['— Personalizado —'] });
+      });
+      return rows;
+    }
+
+    // ═══════════════════════════════════════════════
+    // SE TABLE
+    // ═══════════════════════════════════════════════
+    function addSERow() {
+      seRowCount++;
+      const id = seRowCount;
+      const tr = document.createElement('tr');
+      tr.id = `se-row-${id}`;
+      tr.innerHTML = `
+    <td><select id="se-name-${id}" style="min-width:160px;">${oilOptions()}</select></td>
+    <td><input type="number" id="se-g-${id}" min="0" step="0.1" placeholder="0" oninput="calcSE()"></td>
+    <td>
+      <select id="se-when-${id}">
+        <option value="traza">En traza</option>
+        <option value="lejia">En lejía</option>
+      </select>
+    </td>
+    <td class="no-print"><button class="btn-del" onclick="removeRow('se-row-${id}')">✕</button></td>`;
+      document.getElementById('se-tbody').appendChild(tr);
+    }
+
+    function calcSE() {
+      const sf = parseFloat(document.getElementById('sf').value) || 5;
+      const totalOilsNaoh = getTotalNaOHPure();
+      const seGrams = totalOilsNaoh > 0 ? (getTotalOilG() * sf / 100) : 0;
+      let seUsed = 0;
+      document.querySelectorAll('#se-tbody tr').forEach(tr => {
+        const id = tr.id.replace('se-row-', '');
+        seUsed += parseFloat(document.getElementById(`se-g-${id}`)?.value) || 0;
+      });
+      const alert = document.getElementById('se-alert');
+      const diff = seGrams - seUsed;
+      if (Math.abs(diff) > 0.5) {
+        alert.className = 'alert alert-warn';
+        alert.textContent = `Faltan ${diff.toFixed(1)} g de SE por asignar (total disponible: ${seGrams.toFixed(1)} g).`;
+        alert.style.display = 'block';
+      } else {
+        alert.style.display = 'none';
+      }
+    }
+
+    function addCustomAdd() {
+      customAddCount++;
+      const id = customAddCount;
+      const div = document.createElement('div');
+      div.className = 'custom-add-row';
+      div.id = `custom-add-${id}`;
+      div.innerHTML = `
+    <input type="text" placeholder="Nombre del activo / aditivo">
+    <input type="number" class="grams-input" placeholder="0" min="0" step="0.1">
+    <span class="add-unit">g</span>
+    <button class="btn-del no-print" onclick="document.getElementById('custom-add-${id}').remove()">✕</button>`;
+      document.getElementById('custom-adds-list').appendChild(div);
+    }
+
+    // ═══════════════════════════════════════════════
+    // CÁLCULO PRINCIPAL
+    // ═══════════════════════════════════════════════
+    function getTotalOilG() {
+      return getOilRows().reduce((s, r) => s + r.g, 0);
+    }
+    function getTotalNaOHPure() {
+      const sf = parseFloat(document.getElementById('sf').value) || 5;
+      const rows = getOilRows();
+      return rows.reduce((s, r) => s + r.g * r.data.sap, 0) * (1 - sf / 100);
+    }
+
+    function calcular() {
+      const sf = parseFloat(document.getElementById('sf').value) || 5;
+      const conc = parseFloat(document.getElementById('conc').value) || 33;
+      const purity = parseFloat(document.getElementById('purity').value) || 99;
+      const naohLiqConc = parseFloat(document.getElementById('naoh-liq-conc').value) || 50;
+
+      const rows = getOilRows();
+      const totalOilG = rows.reduce((s, r) => s + r.g, 0);
+
+      const naohPuro = rows.reduce((s, r) => s + r.g * r.data.sap, 0) * (1 - sf / 100);
+      const naohAjustado = naohPuro / (purity / 100);
+      const agua = naohPuro * (100 / conc - 1);
+
+      const naohSolucion = naohPuro / (naohLiqConc / 100);
+      const aguaEnSolucion = naohSolucion - naohPuro;
+      const aguaExtra = agua - aguaEnSolucion;
+
+      const totalReceta = totalOilG + naohAjustado + agua;
+
+      const fmt = (n, dec = 1) => n.toFixed(dec);
+
+      if (naohMode === 'solida') {
+        document.getElementById('res-naoh').textContent = fmt(naohAjustado) + ' g';
+        document.getElementById('res-naoh-label').textContent = `NaOH (${purity}% pureza)`;
+      } else {
+        document.getElementById('res-naoh').textContent = fmt(naohPuro) + ' g';
+        document.getElementById('res-naoh-label').textContent = 'NaOH puro';
+        document.getElementById('res-naoh-sol').textContent = fmt(naohSolucion) + ' g';
+        document.getElementById('res-agua-extra').textContent = fmt(Math.max(0, aguaExtra)) + ' g';
+      }
+      document.getElementById('res-agua').textContent = fmt(agua) + ' g';
+      document.getElementById('res-total-leija').textContent = fmt(naohAjustado + agua) + ' g';
+      document.getElementById('res-total-receta').textContent = fmt(totalReceta) + ' g';
+      document.getElementById('res-glicerina').textContent = fmt(naohPuro * 0.104, 1) + ' g';
+
+      const concAlert = document.getElementById('conc-alert');
+      if (conc < 25) { concAlert.className = 'alert alert-warn'; concAlert.textContent = 'Concentración baja. Puede causar trazas lentas.'; concAlert.style.display = 'block'; }
+      else if (conc > 45) { concAlert.className = 'alert alert-warn'; concAlert.textContent = 'Concentración alta. Mayor riesgo de aceleración de traza.'; concAlert.style.display = 'block'; }
+      else { concAlert.style.display = 'none'; }
+
+      rows.forEach(r => {
+        const pct = totalOilG > 0 ? (r.g / totalOilG * 100) : 0;
+        const naohLine = r.g * r.data.sap * (1 - sf / 100) / (purity / 100);
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        set(`oil-pct-${r.id}`, pct.toFixed(1) + '%');
+        set(`oil-sap-${r.id}`, r.data.sap.toFixed(3));
+        set(`oil-naoh-${r.id}`, naohLine.toFixed(2) + ' g');
+        set(`oil-iodine-${r.id}`, r.data.iodine);
+        ['lauric', 'miristic', 'palmitic', 'stearic', 'ricin', 'oleic', 'linoleic', 'linolenic'].forEach(fa => {
+          set(`oil-${fa}-${r.id}`, r.data[fa] + '%');
+        });
+      });
+
+      const totNaoh = rows.reduce((s, r) => s + r.g * r.data.sap * (1 - sf / 100) / (purity / 100), 0);
+      const totIodine = totalOilG > 0 ? rows.reduce((s, r) => s + (r.g / totalOilG) * r.data.iodine, 0) : 0;
+      const fas = ['lauric', 'miristic', 'palmitic', 'stearic', 'ricin', 'oleic', 'linoleic', 'linolenic'];
+      const faVals = {};
+      fas.forEach(fa => { faVals[fa] = totalOilG > 0 ? rows.reduce((s, r) => s + (r.g / totalOilG) * r.data[fa], 0) : 0; });
+
+      document.getElementById('tot-g').textContent = totalOilG.toFixed(0) + ' g';
+      document.getElementById('tot-pct').textContent = totalOilG > 0 ? '100%' : '0%';
+      document.getElementById('tot-naoh').textContent = totNaoh.toFixed(2) + ' g';
+      document.getElementById('tot-iodine').textContent = totIodine.toFixed(1);
+      fas.forEach(fa => {
+        const el = document.getElementById(`tot-${fa}`);
+        if (el) el.textContent = faVals[fa].toFixed(2) + '%';
+      });
+
+      if (totalOilG > 0) {
+        document.getElementById('props-placeholder').style.display = 'none';
+        document.getElementById('props-content').style.display = 'block';
+
+        const dureza = faVals.lauric + faVals.miristic + faVals.palmitic + faVals.stearic;
+        const burbujas = faVals.lauric + faVals.miristic + faVals.ricin;
+        const cremo = faVals.palmitic + faVals.stearic + faVals.ricin;
+        const limpieza = faVals.lauric + faVals.miristic;
+        const emol = faVals.oleic + faVals.linoleic + faVals.linolenic;
+
+        setProp('dureza', dureza, 29, 54);
+        setProp('burbujas', burbujas, 14, 46);
+        setProp('cremo', cremo, 16, 48);
+        setProp('limpieza', limpieza, 12, 22);
+        setProp('emol', emol, 44, 69);
+
+        fas.forEach(fa => {
+          const el = document.getElementById(`fa-${fa}`);
+          if (el) el.textContent = faVals[fa].toFixed(1) + '%';
+        });
+
+        document.getElementById('iodine-val').textContent = totIodine.toFixed(1);
+        const badge = document.getElementById('iodine-badge');
+        let badgeText, badgeClass;
+        if (totIodine > 70) { badgeText = 'Muy Blanda'; badgeClass = 'iodine-muy-blanda'; }
+        else if (totIodine > 60) { badgeText = 'Blanda'; badgeClass = 'iodine-blanda'; }
+        else if (totIodine > 50) { badgeText = 'Media'; badgeClass = 'iodine-media'; }
+        else if (totIodine > 40) { badgeText = 'Dura'; badgeClass = 'iodine-dura'; }
+        else { badgeText = 'Muy Dura'; badgeClass = 'iodine-muy-dura'; }
+        badge.textContent = badgeText;
+        badge.className = `iodine-badge ${badgeClass}`;
+      } else {
+        document.getElementById('props-placeholder').style.display = 'block';
+        document.getElementById('props-content').style.display = 'none';
+      }
+
+      document.getElementById('se-sf-info').textContent = sf + '%';
+      document.getElementById('se-grams-info').textContent = (totalOilG * sf / 100).toFixed(1) + ' g';
+      calcSE();
+    }
+
+    function setProp(key, val, min, max) {
+      const clampedWidth = Math.min(val, 100);
+      document.getElementById(`bar-${key}`).style.width = clampedWidth + '%';
+      document.getElementById(`val-${key}`).textContent = val.toFixed(1) + '%';
+      const st = document.getElementById(`st-${key}`);
+      if (val < min) { st.className = 'prop-status status-bajo'; st.textContent = 'Bajo'; }
+      else if (val > max) { st.className = 'prop-status status-alto'; st.textContent = 'Alto'; }
+      else { st.className = 'prop-status status-ideal'; st.textContent = 'Ideal'; }
+    }
+
+    function toggleNaOH(mode) {
+      naohMode = mode;
+      document.getElementById('btn-solida').classList.toggle('active', mode === 'solida');
+      document.getElementById('btn-liquida').classList.toggle('active', mode === 'liquida');
+      document.getElementById('section-solida').style.display = mode === 'solida' ? 'block' : 'none';
+      document.getElementById('section-liquida').style.display = mode === 'liquida' ? 'block' : 'none';
+      document.getElementById('naoh-liq-extra').style.display = mode === 'liquida' ? 'grid' : 'none';
+      calcular();
+    }
+
+    function updateHeader() { /* optional */ }
+
+    // ═══════════════════════════════════════════════
+    // PDF / PRINT PROFESIONAL
+    // ═══════════════════════════════════════════════
+    function generarPDF() {
+      const pa = document.getElementById('print-area');
+
+      // 1. Recopilar datos
+      const soapName = document.getElementById('soap-name').value || 'Fórmula sin título';
+      const dElab = document.getElementById('date-elab').value || '—';
+      const dCure = document.getElementById('date-cured').value || '—';
+      const temp = document.getElementById('temp').value || '—';
+      const sf = document.getElementById('sf').value || '0';
+      const conc = document.getElementById('conc').value || '0';
+      const purity = document.getElementById('purity').value;
+      const liqConc = document.getElementById('naoh-liq-conc').value;
+      const lyeType = naohMode === 'solida' ? `Sólida (${purity}%)` : `Líquida (${liqConc}%)`;
+
+      const totOils = document.getElementById('total-oils').value || '0';
+      const resTotalLejia = document.getElementById('res-total-leija').textContent;
+      const resTotalReceta = document.getElementById('res-total-receta').textContent;
+
+      const resNaoh = document.getElementById('res-naoh').textContent;
+      const resNaohLabel = document.getElementById('res-naoh-label').textContent;
+      const resAgua = document.getElementById('res-agua').textContent;
+
+      // Aceites
+      const oils = getOilRows();
+      let totG = 0;
+      oils.forEach(o => totG += o.g);
+      let oilsHtml = oils.filter(o => o.g > 0).map(o => `
+    <tr>
+      <td>${o.name}</td>
+      <td style="text-align:right">${o.g} g</td>
+      <td style="text-align:right">${((o.g / totG) * 100).toFixed(1)}%</td>
+    </tr>
+  `).join('');
+      if (!oilsHtml) oilsHtml = `<tr><td colspan="3" style="text-align:center;color:#888;">No hay aceites en la fórmula</td></tr>`;
+
+      // Aditivos y SE
+      let extrasHtml = '';
+      let seData = [];
+      document.querySelectorAll('#se-tbody tr').forEach(tr => {
+        const id = tr.id.replace('se-row-', '');
+        const name = document.getElementById(`se-name-${id}`)?.value;
+        const g = document.getElementById(`se-g-${id}`)?.value;
+        const when = document.getElementById(`se-when-${id}`)?.value;
+        if (name && g && parseFloat(g) > 0) seData.push(`<li><strong>${name}:</strong> ${g}g (Añadir en ${when})</li>`);
+      });
+
+      let addData = [];
+      SPECIAL_ADDS.forEach((a, i) => {
+        const g = document.getElementById(`sadd-${i}`)?.value;
+        if (g && parseFloat(g) > 0) addData.push(`<li><strong>${a.name}:</strong> ${g}g</li>`);
+      });
+      document.querySelectorAll('.custom-add-row').forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        const name = inputs[0]?.value;
+        const g = inputs[1]?.value;
+        if (name && g && parseFloat(g) > 0) addData.push(`<li><strong>${name}:</strong> ${g}g</li>`);
+      });
+
+      if (seData.length > 0) extrasHtml += `<h4 style="margin:0 0 8px 0;font-family:'Outfit',sans-serif;font-size:11pt;">Sobreengrasado Libre</h4><ul class="p-lists" style="margin-bottom:12px">${seData.join('')}</ul>`;
+      if (addData.length > 0) extrasHtml += `<h4 style="margin:0 0 8px 0;font-family:'Outfit',sans-serif;font-size:11pt;">Aditivos / Activos</h4><ul class="p-lists">${addData.join('')}</ul>`;
+      if (!extrasHtml) extrasHtml = '<p style="color:#888;font-size:10pt;margin:0;">No se han registrado aditivos ni SE libre extra en esta fórmula.</p>';
+
+      // Propiedades
+      const pDur = document.getElementById('val-dureza').textContent;
+      const pBur = document.getElementById('val-burbujas').textContent;
+      const pCre = document.getElementById('val-cremo').textContent;
+      const pLim = document.getElementById('val-limpieza').textContent;
+      const pEmo = document.getElementById('val-emol').textContent;
+      const pYod = document.getElementById('iodine-val').textContent;
+
+      const notes = document.getElementById('notes').value || 'Sin notas u observaciones especiales.';
+
+      // 2. Construir la estructura de la Lye (Lejía) adaptada a sólida/líquida
+      let lyeGridHtml = '';
+      if (naohMode === 'solida') {
+        lyeGridHtml = `
+          <div class="p-lye-item"><span>${resNaohLabel}</span><strong>${resNaoh}</strong></div>
+          <div class="p-lye-item"><span>Agua Destilada</span><strong>${resAgua}</strong></div>
+          <div class="p-lye-item p-highlight"><span>Total Fase Lejía</span><strong>${resTotalLejia}</strong></div>
+      `;
+      } else {
+        const resNaohSol = document.getElementById('res-naoh-sol').textContent;
+        const resAguaExtra = document.getElementById('res-agua-extra').textContent;
+        lyeGridHtml = `
+          <div class="p-lye-item"><span>Solución NaOH (${liqConc}%)</span><strong>${resNaohSol}</strong></div>
+          <div class="p-lye-item"><span>Agua Adicional</span><strong>${resAguaExtra}</strong></div>
+          <div class="p-lye-item p-highlight"><span>Total Fase Lejía</span><strong>${resTotalLejia}</strong></div>
+      `;
+      }
+
+      // 3. Inyectar HTML en el DOM de Impresión
+      pa.innerHTML = `
+    <div class="print-sheet">
+      <div class="p-header">
+         <div>
+            <h1 class="p-title">${soapName}</h1>
+            <div class="p-subtitle">Ficha Técnica de Saponificación</div>
+         </div>
+         <div class="p-meta">
+            <div><strong>Elaboración:</strong> ${dElab}</div>
+            <div><strong>Curado:</strong> ${dCure}</div>
+            <div><strong>Temperatura:</strong> ${temp} °C</div>
+         </div>
+      </div>
+
+      <div class="p-grid">
+         <div class="p-box">
+             <h3>1. Parámetros Generales</h3>
+             <table class="p-table">
+                 <tr><td>Sobreengrasado (SF)</td><td>${sf}%</td></tr>
+                 <tr><td>Concentración</td><td>${conc}%</td></tr>
+                 <tr><td>Tipo de Álcali</td><td>${lyeType}</td></tr>
+             </table>
+         </div>
+         <div class="p-box">
+             <h3>2. Resumen de Pesos</h3>
+             <table class="p-table">
+                 <tr><td>Grasas Base</td><td>${totOils} g</td></tr>
+                 <tr><td>Total Lejía</td><td>${resTotalLejia}</td></tr>
+                 <tr><td><strong style="color:var(--verde-hover)">PESO TOTAL ESTIMADO</strong></td><td><strong style="color:var(--verde-hover)">${resTotalReceta}</strong></td></tr>
+             </table>
+         </div>
+      </div>
+
+      <div class="p-section">
+         <h3>3. Preparación de la Lejía</h3>
+         <div class="p-lye-grid">
+             ${lyeGridHtml}
+         </div>
+      </div>
+
+      <div class="p-section">
+         <h3>4. Aceites, Grasas y Mantecas Base</h3>
+         <table class="p-oils-table">
+             <thead>
+                 <tr><th>Ingrediente Base</th><th style="text-align:right;width:20%">Gramos</th><th style="text-align:right;width:20%">% Fórmula</th></tr>
+             </thead>
+             <tbody>${oilsHtml}</tbody>
+             <tfoot>
+                 <tr><td><strong>TOTAL GRASAS BASE</strong></td><td style="text-align:right"><strong>${totG.toFixed(1)} g</strong></td><td style="text-align:right"><strong>100%</strong></td></tr>
+             </tfoot>
+         </table>
+      </div>
+
+      <div class="p-section">
+         <h3>5. Aditivos y Sobreengrasado Libre</h3>
+         <div class="p-box" style="padding: 16px;">
+             ${extrasHtml}
+         </div>
+      </div>
+
+      <div class="p-section">
+         <h3>6. Previsión de Propiedades</h3>
+         <div class="p-props-grid">
+             <div class="p-prop-box"><span class="p-prop-name">Dureza</span><span class="p-prop-val">${pDur}</span></div>
+             <div class="p-prop-box"><span class="p-prop-name">Burbujas</span><span class="p-prop-val">${pBur}</span></div>
+             <div class="p-prop-box"><span class="p-prop-name">Cremosidad</span><span class="p-prop-val">${pCre}</span></div>
+             <div class="p-prop-box"><span class="p-prop-name">Limpieza</span><span class="p-prop-val">${pLim}</span></div>
+             <div class="p-prop-box"><span class="p-prop-name">Emoliencia</span><span class="p-prop-val">${pEmo}</span></div>
+             <div class="p-prop-box" style="background:var(--verde-claro)"><span class="p-prop-name">Índice Yodo</span><span class="p-prop-val" style="color:var(--negro)">${pYod}</span></div>
+         </div>
+      </div>
+
+      <div class="p-section" style="page-break-inside: auto;">
+         <h3>7. Notas, Proceso y Observaciones</h3>
+         <div class="p-notes">${notes}</div>
+      </div>
+
+      <div class="watermark">
+         Documento generado automáticamente a través de la Calculadora de Saponificación · Diseño por Lina Toro
+      </div>
+    </div>
+  `;
+
+      // 4. Lanzar impresión (El CSS @media print ocultará todo y solo mostrará esto)
+      window.print();
+    }
+
+    // ═══════════════════════════════════════════════
+    // FULL-BLEED FIX MEJORADO (Sin Scroll Horizontal)
+    // ═══════════════════════════════════════════════
+    (function () {
+      var FULL_BLEED = '.top-bar, .app-header';
+      function applyFullBleed() {
+        var vw = document.documentElement.clientWidth;
+        [].forEach.call(document.querySelectorAll(FULL_BLEED), function (el) {
+          el.style.width = '';
+          el.style.marginLeft = '';
+          el.style.transform = '';
+          el.style.left = '';
+
+          var rect = el.getBoundingClientRect();
+          var offLeft = rect.left;
+          var offRight = vw - rect.right;
+
+          if (Math.abs(offLeft) > 1 || Math.abs(offRight) > 1) {
+            el.style.position = 'relative';
+            el.style.marginLeft = (-offLeft) + 'px';
+            el.style.width = vw + 'px';
+            el.style.transform = 'none';
+            el.style.left = '0';
+          }
+        });
+      }
+      window.addEventListener('resize', applyFullBleed);
+      document.addEventListener('DOMContentLoaded', applyFullBleed);
+      if (document.readyState !== 'loading') applyFullBleed();
+    })();
+
+    // ═══════════════════════════════════════════════
+    // RESPONSIVE HELPERS
+    // ═══════════════════════════════════════════════
+    function checkScrollHint() {
+      const hint = document.getElementById('scroll-hint');
+      if (hint) hint.style.display = window.innerWidth <= 768 ? 'block' : 'none';
+    }
+    window.addEventListener('resize', checkScrollHint);
+
+    init();
+    checkScrollHint();
+  </script>
+</body>
+
+</html>
