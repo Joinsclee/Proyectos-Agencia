@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soporte Sistema CRECE | Andrés Giraldo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Playfair+Display:ital,wght@1,700;1,800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --primary-purple: #613174;
+            --dark-purple: #4d265c;
+            --accent-gold: #F1C901;
+            --green: #37ca37;
+            --header-h: 60px;
+        }
+
+        /* iOS Safari: prevent address bar resize from causing layout shift */
+        @supports (-webkit-touch-callout: none) {
+            #app { height: -webkit-fill-available; }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            color: #1a1a1a;
+        }
+
+        /* ── APP WRAPPER: position:fixed bypasses GHL container completely ──
+           Cubre todo el viewport sin depender del modelo de caja de GHL.    */
+        #app {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f0edf2;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9999;
+        }
+
+        /* ── HEADER ─────────────────────────────────────── */
+        .header {
+            position: relative;
+            width: 100%;
+            height: var(--header-h);
+            background: #ffffff;
+            border-bottom: 1px solid rgba(97, 49, 116, 0.1);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .header img {
+            height: 36px;
+            width: auto;
+        }
+
+        .status-badge {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f5f0f8;
+            border: 1px solid rgba(97, 49, 116, 0.18);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--primary-purple);
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            flex-shrink: 0;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse-green 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.85); }
+        }
+
+        /* ── MAIN / CHAT AREA ────────────────────────────── */
+        .main-container {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .chat-wrapper {
+            width: 100%;
+            max-width: 840px;
+            /* Hereda altura del flex parent */
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── TITLE ───────────────────────────────────────── */
+        .chat-title {
+            text-align: center;
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        .chat-title h1 {
+            font-family: 'Tilt Warp', cursive;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .font-elegant {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-weight: 700;
+            color: var(--primary-purple);
+            font-size: 1.08em;
+            text-transform: lowercase;
+        }
+
+        /* ── CHAT CONTAINER ──────────────────────────────── */
+        .chat-container {
+            flex: 1;
+            min-height: 0;
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid rgba(97, 49, 116, 0.1);
+            box-shadow: 0 8px 32px rgba(97, 49, 116, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── CHAT STRIP ──────────────────────────────────── */
+        .chat-strip {
+            background: linear-gradient(135deg, var(--primary-purple) 0%, var(--dark-purple) 100%);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .bot-avatar {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .bot-avatar svg { width: 19px; height: 19px; fill: white; }
+
+        .strip-info { flex: 1; min-width: 0; }
+
+        .strip-info h2 {
+            font-family: 'Tilt Warp', cursive;
+            font-size: 0.92rem;
+            color: white;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .strip-info p {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin-top: 1px;
+        }
+
+        .online-pill {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.12);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .online-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            animation: pulse-green 2s ease-in-out infinite;
+        }
+
+        /* ── MESSAGES ────────────────────────────────────── */
+        .messages-area {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        .messages-area::-webkit-scrollbar { width: 3px; }
+        .messages-area::-webkit-scrollbar-track { background: transparent; }
+        .messages-area::-webkit-scrollbar-thumb {
+            background: rgba(97, 49, 116, 0.15);
+            border-radius: 4px;
+        }
+
+        /* Welcome card */
+        .welcome-card {
+            background: #faf8fc;
+            border-radius: 18px;
+            padding: 20px 20px;
+            border: 1px solid rgba(97, 49, 116, 0.08);
+            text-align: center;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .gold-circle {
+            width: 50px;
+            height: 50px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            box-shadow: 0 4px 14px rgba(241, 201, 1, 0.3);
+        }
+
+        .gold-circle svg { width: 24px; height: 24px; fill: #1a1a1a; }
+
+        .welcome-card h3 {
+            font-family: 'Tilt Warp', cursive;
+            font-size: 1rem;
+            color: #1a1a1a;
+            margin-bottom: 6px;
+        }
+
+        .welcome-card p {
+            font-size: 0.86rem;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            justify-content: center;
+            margin-top: 14px;
+        }
+
+        .chip {
+            background: rgba(97, 49, 116, 0.07);
+            border: 1.5px solid rgba(97, 49, 116, 0.18);
+            color: var(--primary-purple);
+            border-radius: 20px;
+            padding: 6px 13px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            /* Tap target mínimo 44px de altura total */
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .chip:hover, .chip:active {
+            background: var(--primary-purple);
+            color: white;
+            border-color: var(--primary-purple);
+        }
+
+        /* Messages */
+        .message {
+            display: flex;
+            gap: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .message.user { flex-direction: row-reverse; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.58rem;
+            font-weight: 700;
+            margin-top: 3px;
+            letter-spacing: 0.3px;
+        }
+
+        .message.bot  .msg-avatar { background: var(--primary-purple); color: white; }
+        .message.user .msg-avatar { background: var(--accent-gold); color: #1a1a1a; }
+
+        .msg-bubble {
+            max-width: 78%;
+            padding: 10px 15px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+        }
+
+        .message.bot  .msg-bubble {
+            background: #faf8fc;
+            color: #1a1a1a;
+            border-radius: 4px 16px 16px 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(97, 49, 116, 0.07);
+        }
+
+        .message.user .msg-bubble {
+            background: var(--primary-purple);
+            color: white;
+            border-radius: 16px 4px 16px 16px;
+        }
+
+        /* Markdown in bot */
+        .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+            font-family: 'Tilt Warp', cursive;
+            color: var(--primary-purple);
+            margin-bottom: 5px;
+            margin-top: 10px;
+        }
+        .msg-bubble h1:first-child,
+        .msg-bubble h2:first-child,
+        .msg-bubble h3:first-child { margin-top: 0; }
+        .msg-bubble h1 { font-size: 0.98rem; }
+        .msg-bubble h2 { font-size: 0.93rem; }
+        .msg-bubble h3 { font-size: 0.88rem; }
+        .msg-bubble p  { margin-bottom: 6px; }
+        .msg-bubble p:last-child { margin-bottom: 0; }
+        .msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin-bottom: 6px; }
+        .msg-bubble li { margin-bottom: 3px; }
+        .msg-bubble strong { font-weight: 700; }
+        .msg-bubble em { font-style: italic; color: var(--dark-purple); }
+        .msg-bubble code {
+            background: rgba(97, 49, 116, 0.1);
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-size: 0.82em;
+        }
+
+        /* Typing indicator */
+        .typing-wrap {
+            display: flex;
+            gap: 8px;
+            align-items: flex-end;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .typing-bubbles {
+            background: #faf8fc;
+            border-radius: 4px 16px 16px 16px;
+            padding: 12px 16px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(97, 49, 116, 0.07);
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background: var(--primary-purple);
+            border-radius: 50%;
+            opacity: 0.35;
+            animation: dotBounce 1.4s ease-in-out infinite;
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.18s; }
+        .dot:nth-child(3) { animation-delay: 0.36s; }
+
+        @keyframes dotBounce {
+            0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+            30%            { opacity: 1;    transform: translateY(-5px); }
+        }
+
+        /* ── INPUT AREA ──────────────────────────────────── */
+        .input-area {
+            padding: 12px 16px;
+            border-top: 1px solid rgba(97, 49, 116, 0.07);
+            background: #ffffff;
+            flex-shrink: 0;
+            /* Safe area para iPhone con notch */
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+            background: #f4f0f7;
+            border: 1.5px solid rgba(97, 49, 116, 0.15);
+            border-radius: 22px;
+            padding: 10px 16px;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            /* 16px mínimo en móvil: evita zoom automático en iOS */
+            font-size: 16px;
+            color: #1a1a1a;
+            resize: none;
+            outline: none;
+            min-height: 44px;
+            max-height: 120px;
+            overflow-y: auto;
+            line-height: 1.4;
+            transition: border-color 0.2s, background 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary-purple);
+            background: white;
+        }
+
+        .input-field::placeholder { color: #bbb; }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            background: var(--primary-purple);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(97, 49, 116, 0.28);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: var(--dark-purple);
+            transform: scale(1.06);
+        }
+
+        .send-btn:active:not(:disabled) { transform: scale(0.93); }
+
+        .send-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .send-btn svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
+
+        .input-hint {
+            font-size: 0.65rem;
+            color: #ccc;
+            text-align: center;
+            margin-top: 6px;
+            letter-spacing: 0.2px;
+        }
+
+        /* ── RESPONSIVE: tablet ──────────────────────────── */
+        @media (max-width: 768px) {
+            .main-container { padding: 12px; }
+            .chat-container { border-radius: 18px; }
+        }
+
+        /* ── RESPONSIVE: móvil ───────────────────────────── */
+        @media (max-width: 640px) {
+            :root { --header-h: 56px; }
+
+            .header { padding: 0 16px; }
+            .header img { height: 32px; }
+
+            .status-badge { right: 12px; padding: 4px 10px; font-size: 0.68rem; }
+
+            .main-container { padding: 8px; }
+            .chat-title { margin-bottom: 8px; }
+            .chat-title h1 { font-size: 1.05rem; }
+
+            .chat-container { border-radius: 16px; }
+            .chat-strip { padding: 10px 14px; gap: 10px; }
+            .strip-info p { display: none; } /* oculta subtítulo en móvil */
+
+            .messages-area { padding: 12px; gap: 10px; }
+
+            .msg-bubble { max-width: 88%; font-size: 0.86rem; }
+            .msg-avatar { width: 26px; height: 26px; font-size: 0.54rem; }
+
+            .welcome-card { padding: 16px; }
+            .welcome-card h3 { font-size: 0.92rem; }
+            .welcome-card p { font-size: 0.82rem; }
+            .gold-circle { width: 44px; height: 44px; }
+
+            .chip { font-size: 0.74rem; padding: 5px 11px; }
+
+            .input-area { padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+            .input-hint { display: none; } /* innecesario en táctil */
+        }
+
+        /* ── RESPONSIVE: muy pequeño ─────────────────────── */
+        @media (max-width: 380px) {
+            .status-badge .badge-label { display: none; }
+            .status-badge { padding: 4px 8px; }
+            .chat-title h1 { font-size: 0.95rem; }
+            .msg-bubble { max-width: 92%; }
+        }
+
+        /* ── Reducir movimiento ──────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+        <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png"
+             alt="Sistema CRECE – Andrés Giraldo">
+        <div class="status-badge">
+            <span class="status-dot"></span>
+            <span class="badge-label">Soporte activo</span>
+        </div>
+    </header>
+
+    <!-- ── MAIN ── -->
+    <main class="main-container">
+        <div class="chat-wrapper">
+
+            <div class="chat-title">
+                <h1>SOPORTE <span class="font-elegant">sistema</span> CRECE</h1>
+            </div>
+
+            <div class="chat-container">
+
+                <!-- Strip superior del chat -->
+                <div class="chat-strip">
+                    <div class="bot-avatar">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 16.5 13z"/>
+                        </svg>
+                    </div>
+                    <div class="strip-info">
+                        <h2>ASISTENTE CRECE</h2>
+                        <p>Tu guía inteligente del Sistema CRECE</p>
+                    </div>
+                    <div class="online-pill">
+                        <span class="online-dot"></span>
+                        En línea
+                    </div>
+                </div>
+
+                <!-- Área de mensajes -->
+                <div class="messages-area" id="messagesArea">
+
+                    <!-- Tarjeta de bienvenida -->
+                    <div class="welcome-card" id="welcomeCard">
+                        <div class="gold-circle">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.5-2.33 6.79-5 7.93-2.67-1.14-5-4.43-5-7.93V7.18L12 5z"/>
+                            </svg>
+                        </div>
+                        <h3>¡Hola! Soy el Asistente del Sistema CRECE</h3>
+                        <p>Pregúntame cualquier duda sobre el <strong>Sistema de Inversión Inmobiliaria CRECE</strong>, sus módulos, metodología o cómo comenzar tu camino como inversionista.</p>
+                        <div class="suggestions">
+                            <button class="chip" onclick="sendChip(this)">¿Qué es el Sistema CRECE?</button>
+                            <button class="chip" onclick="sendChip(this)">¿Cómo me registro?</button>
+                            <button class="chip" onclick="sendChip(this)">¿Qué incluye la comunidad?</button>
+                            <button class="chip" onclick="sendChip(this)">¿Cómo funciona el Taller?</button>
+                            <button class="chip" onclick="sendChip(this)">¿Cuánto cuesta?</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Input -->
+                <div class="input-area">
+                    <div class="input-row">
+                        <textarea
+                            id="messageInput"
+                            class="input-field"
+                            placeholder="Escribe tu pregunta sobre el Sistema CRECE…"
+                            rows="1"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                        </button>
+                    </div>
+                    <p class="input-hint">Enter para enviar &nbsp;·&nbsp; Shift+Enter para nueva línea</p>
+                </div>
+
+            </div><!-- /chat-container -->
+        </div><!-- /chat-wrapper -->
+    </main>
+
+</div><!-- /#app -->
+
+    <script>
+        const WEBHOOK_URL = 'https://joinsclee-n8n.juno8i.easypanel.host/webhook/f5135f88-2dc1-49d9-9986-deb14b58dff5';
+
+        let isProcessing = false;
+
+        // Session ID (persiste por pestaña)
+        function getSessionId() {
+            let id = sessionStorage.getItem('crece_support_session');
+            if (!id) {
+                id = 'crece_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('crece_support_session', id);
+            }
+            return id;
+        }
+
+        // Auto-resize textarea
+        const inputEl = document.getElementById('messageInput');
+        inputEl.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+        });
+
+        inputEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function sendChip(btn) {
+            inputEl.value = btn.textContent;
+            sendMessage();
+        }
+
+        function hideWelcome() {
+            const card = document.getElementById('welcomeCard');
+            if (card) card.remove();
+        }
+
+        function addMessage(text, role, useMarkdown) {
+            hideWelcome();
+            const area = document.getElementById('messagesArea');
+
+            const wrap = document.createElement('div');
+            wrap.className = `message ${role}`;
+
+            const av = document.createElement('div');
+            av.className = 'msg-avatar';
+            av.textContent = role === 'user' ? 'TÚ' : 'AI';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+
+            if (useMarkdown && typeof marked !== 'undefined') {
+                bubble.innerHTML = marked.parse(text);
+            } else {
+                bubble.innerHTML = text.replace(/\n/g, '<br>');
+            }
+
+            wrap.appendChild(av);
+            wrap.appendChild(bubble);
+            area.appendChild(wrap);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function showTyping() {
+            const area = document.getElementById('messagesArea');
+            const wrap = document.createElement('div');
+            wrap.className = 'typing-wrap';
+            wrap.id = 'typingWrap';
+            wrap.innerHTML = `
+                <div class="msg-avatar" style="background:var(--primary-purple);color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;margin-top:3px">AI</div>
+                <div class="typing-bubbles">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            `;
+            area.appendChild(wrap);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function hideTyping() {
+            const el = document.getElementById('typingWrap');
+            if (el) el.remove();
+        }
+
+        async function sendMessage() {
+            if (isProcessing) return;
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            isProcessing = true;
+            document.getElementById('sendBtn').disabled = true;
+            inputEl.disabled = true;
+            inputEl.value = '';
+            inputEl.style.height = 'auto';
+
+            addMessage(text, 'user', false);
+            showTyping();
+
+            try {
+                const res = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: text,
+                        sessionId: getSessionId(),
+                        timestamp: new Date().toISOString()
+                    })
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                const raw = await res.json();
+                const data = Array.isArray(raw) ? raw[0] : raw;
+
+                const reply =
+                    data.output          ||
+                    data.respuesta       ||
+                    data.respuesta_final ||
+                    data.response        ||
+                    data.message         ||
+                    data.text            ||
+                    'He recibido tu consulta. ¿Hay algo más en lo que pueda ayudarte?';
+
+                hideTyping();
+                addMessage(reply, 'bot', true);
+
+            } catch (err) {
+                hideTyping();
+                addMessage('Lo siento, hubo un problema de conexión. Por favor intenta de nuevo en un momento.', 'bot', false);
+            } finally {
+                isProcessing = false;
+                document.getElementById('sendBtn').disabled = false;
+                inputEl.disabled = false;
+                inputEl.focus();
+            }
+        }
+
+        window.addEventListener('load', () => inputEl.focus());
+    </script>
+
+</body>
+</html>
