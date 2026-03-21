@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HUMANOX · App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { colors: { gold: { DEFAULT: '#C8971A', light: '#E8B520' }, dk: { DEFAULT: '#0a0a0a', card: '#111111', b: '#1e1e1e' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    body {
+      background: #0a0a0a;
+      font-family: 'Inter', sans-serif;
+      color: #fff;
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #111;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 3px;
+    }
+
+    .g {
+      color: #C8971A;
+    }
+
+    .bg-dk {
+      background: #111111;
+    }
+
+    .brd {
+      border: 1px solid #2a2a2a;
+    }
+
+    .tab-btn {
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+      white-space: nowrap;
+      color: #666;
+      background: transparent;
+      border: 1px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: #C8971A;
+      background: rgba(200, 151, 26, .12);
+      border-color: rgba(200, 151, 26, .3);
+    }
+
+    .tab-btn:hover:not(.active) {
+      color: #aaa;
+      background: #1a1a1a;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .inp {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      width: 100%;
+      transition: border-color .2s;
+    }
+
+    .inp:focus {
+      outline: none;
+      border-color: #C8971A;
+    }
+
+    .inp::placeholder {
+      color: #444;
+    }
+
+    select.inp option {
+      background: #111;
+      color: #fff;
+    }
+
+    .tbl {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .tbl th {
+      background: #1a1a1a;
+      color: #C8971A;
+      text-align: left;
+      padding: 8px 10px;
+      font-weight: 600;
+      letter-spacing: .5px;
+      font-size: 11px;
+      border-bottom: 1px solid #2a2a2a;
+      white-space: nowrap;
+    }
+
+    .tbl td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1a1a1a;
+      vertical-align: middle;
+    }
+
+    .tbl tr:hover td {
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .tbl td input,
+    .tbl td select {
+      background: transparent;
+      border: none;
+      color: #fff;
+      width: 100%;
+      font-size: 12px;
+      padding: 2px 4px;
+    }
+
+    .tbl td input:focus,
+    .tbl td select:focus {
+      outline: 1px solid #C8971A;
+      border-radius: 3px;
+    }
+
+    .tbl td select option {
+      background: #111;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #C8971A, #E8B520);
+      color: #000;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      transition: opacity .2s;
+    }
+
+    .btn-gold:hover {
+      opacity: .85;
+    }
+
+    .btn-sm {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #aaa;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .btn-sm:hover {
+      border-color: #C8971A;
+      color: #C8971A;
+    }
+
+    .btn-del {
+      color: #ef4444;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 3px 6px;
+      font-size: 13px;
+      opacity: .6;
+    }
+
+    .btn-del:hover {
+      opacity: 1;
+    }
+
+    .kpi {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    .kpi-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: #C8971A;
+    }
+
+    .kpi-lbl {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .mod-header {
+      margin-bottom: 20px;
+    }
+
+    .mod-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #C8971A;
+    }
+
+    .mod-sub {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .saving {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: #1a1a1a;
+      border: 1px solid #C8971A;
+      color: #C8971A;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      z-index: 999;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .saving.show {
+      opacity: 1;
+    }
+
+    .star {
+      color: #C8971A;
+      font-size: 10px;
+    }
+
+    @media(max-width:768px) {
+      .tab-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Notif guardado -->
+  <div class="saving" id="saving">Guardando...</div>
+
+  <!-- HEADER -->
+  <header style="background:#0d0d0d;border-bottom:1px solid #1e1e1e;position:sticky;top:0;z-index:100;">
+    <div style="max-width:1400px;margin:0 auto;padding:0 16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:52px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+          <div style="border:1px solid #C8971A;padding:4px 12px;border-radius:6px;">
+            <span style="font-size:16px;font-weight:700;color:#C8971A;letter-spacing:3px;">HUMANOX</span>
+          </div>
+          <span id="user-email" style="font-size:11px;color:#444;display:none;"></span>
+        </div>
+        <div id="tabs-scroll" style="overflow-x:auto;flex:1;margin:0 12px;scrollbar-width:none;">
+          <div style="display:flex;gap:4px;padding:4px 0;min-width:max-content;">
+            <button class="tab-btn active" onclick="showTab('honrar')">H · Honrar</button>
+            <button class="tab-btn" onclick="showTab('realidad')">U · Realidad</button>
+            <button class="tab-btn" onclick="showTab('mentalidad')">M · Mentalidad</button>
+            <button class="tab-btn" onclick="showTab('gastos')">A · Gastos</button>
+            <button class="tab-btn" onclick="showTab('sistema')">N · Sistema</button>
+            <button class="tab-btn" onclick="showTab('disciplina')">O · Disciplina</button>
+            <button class="tab-btn" onclick="showTab('expansion')">X · Expansión</button>
+            <button class="tab-btn" onclick="showTab('dashboard')">Dashboard</button>
+            <button class="tab-btn" onclick="showTab('deudas')">Deudas</button>
+            <button class="tab-btn" onclick="showTab('hormiga')">Gastos Hormiga</button>
+            <button class="tab-btn" onclick="showTab('perfil')">Perfil Financiero</button>
+            <button class="tab-btn" onclick="showTab('negocios')">Negocios</button>
+            <button class="tab-btn" onclick="showTab('inversiones')">Inversiones</button>
+          </div>
+        </div>
+        <button onclick="logout()" class="btn-sm" style="flex-shrink:0;">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO -->
+  <main style="max-width:1400px;margin:0 auto;padding:24px 16px;">
+
+    <!-- ════════════════ H · HONRAR ════════════════ -->
+    <div id="tab-honrar" class="panel active">
+      <div class="mod-header">
+        <div class="mod-title">H · HONRAR A DIOS PRIMERO</div>
+        <div class="mod-sub">Fundamento espiritual del dinero · 12 semanas</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Fecha</th>
+              <th>¿Oré antes de decidir?</th>
+              <th>Versículo / Verdad</th>
+              <th>Reflexión personal</th>
+              <th>Decisión entregada a Dios</th>
+              <th>¿Paz al decidir?</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="honrar-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+        <button class="btn-gold" onclick="addRow('honrar')">+ Semana</button>
+        <div style="display:flex;gap:16px;margin-left:auto;">
+          <span style="font-size:12px;color:#666;">Semanas con oración: <span class="g"
+              id="honrar-oracion">0</span></span>
+          <span style="font-size:12px;color:#666;">Semanas con paz: <span class="g" id="honrar-paz">0</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ U · REALIDAD ════════════════ -->
+    <div id="tab-realidad" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">U · UBICAR TU REALIDAD FINANCIERA</div>
+        <div class="mod-sub">Diagnóstico honesto sin autoengaño</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl" id="realidad-tbl">
+          <thead>
+            <tr>
+              <th style="width:180px">Categoría</th>
+              <th>Ene</th>
+              <th>Feb</th>
+              <th>Mar</th>
+              <th>Abr</th>
+              <th>May</th>
+              <th>Jun</th>
+              <th>Jul</th>
+              <th>Ago</th>
+              <th>Sep</th>
+              <th>Oct</th>
+              <th>Nov</th>
+              <th>Dic</th>
+              <th style="color:#E8B520">TOTAL AÑO</th>
+            </tr>
+          </thead>
+          <tbody id="realidad-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════════════════ M · MENTALIDAD ════════════════ -->
+    <div id="tab-mentalidad" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">M · MENTALIDAD ORDENADA</div>
+        <div class="mod-sub">Reprogramar creencias sobre dinero, escasez, miedo y control</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Creencia detectada</th>
+              <th>Origen</th>
+              <th>Nueva verdad</th>
+              <th>Acción práctica</th>
+              <th>¿Se repite?</th>
+              <th>Ansiedad (1-5)</th>
+              <th>Paz (1-5)</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="mentalidad-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+        <button class="btn-gold" onclick="addRow('mentalidad')">+ Creencia</button>
+        <div style="display:flex;gap:16px;margin-left:auto;font-size:12px;color:#666;">
+          Creencias: <span class="g" id="m-total">0</span> &nbsp;|&nbsp;
+          Prom. ansiedad: <span class="g" id="m-ansiedad">0.0</span> &nbsp;|&nbsp;
+          Prom. paz: <span class="g" id="m-paz">0.0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ A · GASTOS ════════════════ -->
+    <div id="tab-gastos" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">A · ALINEAR GASTOS CON PROPÓSITO</div>
+        <div class="mod-sub">Gastar con intención, no emoción</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Categoría</th>
+              <th>Descripción</th>
+              <th>Monto</th>
+              <th>¿Necesario?</th>
+              <th>¿Alineado?</th>
+              <th>Decisión</th>
+              <th>Motivo emocional</th>
+              <th>Impacto anual</th>
+              <th>Notas</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="gastos-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn-gold" onclick="addRow('gastos')">+ Gasto</button>
+        <span style="font-size:12px;color:#666;margin-left:auto;align-self:center;">Total: <span class="g"
+            id="gastos-total">$0</span></span>
+      </div>
+    </div>
+
+    <!-- ════════════════ N · SISTEMA ════════════════ -->
+    <div id="tab-sistema" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">N · NUEVA ESTRUCTURA FINANCIERA</div>
+        <div class="mod-sub">Presupuesto simple, real y sostenible</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:24px;margin-bottom:24px;" class="sistema-grid">
+        <div class="kpi" style="align-self:start;">
+          <div style="font-size:12px;color:#666;margin-bottom:12px;">INGRESO MENSUAL PROYECTADO</div>
+          <input type="number" id="ingreso-mensual" class="inp" placeholder="0" oninput="calcSistema()"
+            style="font-size:20px;font-weight:700;color:#C8971A;">
+          <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;" id="pct-inputs"></div>
+          <div id="pct-warn" style="font-size:11px;color:#ef4444;margin-top:8px;display:none;">⚠ Los porcentajes no
+            suman 100%</div>
+        </div>
+        <div>
+          <div style="overflow-x:auto;">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>Categoría</th>
+                  <th>%</th>
+                  <th>Mensual</th>
+                  <th>Anual</th>
+                  <th>Estado</th>
+                  <th>Comentario</th>
+                  <th>Mes 1</th>
+                  <th>Mes 2</th>
+                  <th>Mes 3</th>
+                </tr>
+              </thead>
+              <tbody id="sistema-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ O · DISCIPLINA ════════════════ -->
+    <div id="tab-disciplina" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">O · OBEDECER CON DISCIPLINA</div>
+        <div class="mod-sub">Constancia semanal y hábitos financieros santos</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Sem.</th>
+              <th>Fecha</th>
+              <th>Hábito</th>
+              <th>Cumplido</th>
+              <th>Rev. gastos</th>
+              <th>Oración</th>
+              <th>Sin gasto impulsivo</th>
+              <th>Ahorro ($)</th>
+              <th>Puntaje</th>
+              <th>Ajuste</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="disciplina-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+        <button class="btn-gold" onclick="addRow('disciplina')">+ Semana</button>
+        <div style="margin-left:auto;display:flex;gap:16px;font-size:12px;color:#666;">
+          Puntaje total: <span class="g" id="d-total">0</span> &nbsp;|&nbsp;
+          Promedio: <span class="g" id="d-prom">0</span> &nbsp;|&nbsp;
+          Semanas: <span class="g" id="d-sem">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ X · EXPANSIÓN ════════════════ -->
+    <div id="tab-expansion" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">X · EXPANSIÓN CON PROPÓSITO</div>
+        <div class="mod-sub">Prosperidad con paz y misión</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Meta</th>
+              <th>Fecha objetivo</th>
+              <th>Monto meta</th>
+              <th>Monto actual</th>
+              <th>Brecha</th>
+              <th>Impacto</th>
+              <th>Acción semanal</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="expansion-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn-gold" onclick="addRow('expansion')">+ Meta</button>
+        <span style="font-size:12px;color:#666;margin-left:auto;align-self:center;">Metas activas: <span class="g"
+            id="exp-activas">0</span></span>
+      </div>
+    </div>
+
+    <!-- ════════════════ DASHBOARD ════════════════ -->
+    <div id="tab-dashboard" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">DASHBOARD HUMANOX</div>
+        <div class="mod-sub">Control integral del orden financiero</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+        <div class="kpi">
+          <div class="kpi-val" id="dash-balance">$0</div>
+          <div class="kpi-lbl">Balance anual</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="dash-deuda">$0</div>
+          <div class="kpi-lbl">Deuda total</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="dash-paz">0</div>
+          <div class="kpi-lbl">Semanas con paz</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+        <div class="kpi">
+          <div class="kpi-val" id="dash-gastos">$0</div>
+          <div class="kpi-lbl">Total gastos registrados</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="dash-disciplina">0.0</div>
+          <div class="kpi-lbl">Puntaje disciplina promedio</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="dash-metas">0</div>
+          <div class="kpi-lbl">Metas activas</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="bg-dk brd" style="border-radius:10px;padding:16px;">
+          <div style="font-size:12px;color:#C8971A;font-weight:600;margin-bottom:12px;">DISTRIBUCIÓN PRESUPUESTO</div>
+          <canvas id="chart-sistema" height="200"></canvas>
+        </div>
+        <div class="bg-dk brd" style="border-radius:10px;padding:16px;">
+          <div style="font-size:12px;color:#C8971A;font-weight:600;margin-bottom:12px;">RESUMEN DE GASTOS</div>
+          <canvas id="chart-gastos" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ DEUDAS ════════════════ -->
+    <div id="tab-deudas" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">GESTOR DE DEUDAS</div>
+        <div class="mod-sub">Basado en prioridad HUMANOX</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+        <div class="kpi">
+          <div class="kpi-val" id="deu-total">$0</div>
+          <div class="kpi-lbl">Deuda total</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="deu-cuota">$0</div>
+          <div class="kpi-lbl">Cuota mensual total</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-val" id="deu-interes">0.0%</div>
+          <div class="kpi-lbl">Interés promedio</div>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>A favor de</th>
+              <th>Contacto</th>
+              <th>Tipo</th>
+              <th>Monto total</th>
+              <th>Cuota/mes</th>
+              <th>Interés %</th>
+              <th>Cuotas</th>
+              <th>Saldo actual</th>
+              <th>Prioridad</th>
+              <th>Estrategia</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="deudas-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn-gold" onclick="addRow('deudas')">+ Deuda</button>
+      </div>
+    </div>
+
+    <!-- ════════════════ GASTOS HORMIGA ════════════════ -->
+    <div id="tab-hormiga" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">GASTOS HORMIGA</div>
+        <div class="mod-sub">10 días de rastreo · Adaptación del ejercicio original</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl" id="hormiga-tbl">
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th>Día 1</th>
+              <th>Día 2</th>
+              <th>Día 3</th>
+              <th>Día 4</th>
+              <th>Día 5</th>
+              <th>Día 6</th>
+              <th>Día 7</th>
+              <th>Día 8</th>
+              <th>Día 9</th>
+              <th>Día 10</th>
+              <th style="color:#E8B520">TOTAL</th>
+              <th>Ej. diario</th>
+              <th>Proy. mensual</th>
+            </tr>
+          </thead>
+          <tbody id="hormiga-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+        <button class="btn-gold" onclick="addRow('hormiga')">+ Concepto</button>
+        <span style="font-size:12px;color:#666;margin-left:auto;">Total 10 días: <span class="g"
+            id="hormiga-total">$0</span> · Impacto mensual: <span class="g" id="hormiga-mensual">$0</span></span>
+      </div>
+    </div>
+
+    <!-- ════════════════ PERFIL FINANCIERO ════════════════ -->
+    <div id="tab-perfil" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">PERFIL FINANCIERO</div>
+        <div class="mod-sub">Lo que el banco ve y lo que HUMANOX ordena</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+        <div>
+          <div style="font-size:11px;color:#C8971A;font-weight:700;letter-spacing:1px;margin-bottom:8px;">INGRESOS</div>
+          <div id="perfil-ingresos"></div>
+          <div style="margin-top:8px;font-size:13px;font-weight:600;">Total: <span class="g" id="p-ing-total">$0</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#C8971A;font-weight:700;letter-spacing:1px;margin-bottom:8px;">EGRESOS</div>
+          <div id="perfil-egresos"></div>
+          <div style="margin-top:8px;font-size:13px;font-weight:600;">Total: <span class="g" id="p-egr-total">$0</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#C8971A;font-weight:700;letter-spacing:1px;margin-bottom:8px;">ACTIVOS</div>
+          <div id="perfil-activos"></div>
+          <div style="margin-top:8px;font-size:13px;font-weight:600;">Total: <span class="g" id="p-act-total">$0</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:#C8971A;font-weight:700;letter-spacing:1px;margin-bottom:8px;">PASIVOS</div>
+          <div id="perfil-pasivos"></div>
+          <div style="margin-top:8px;font-size:13px;font-weight:600;">Total: <span class="g" id="p-pas-total">$0</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid #2a2a2a;display:flex;gap:24px;">
+        <span style="font-size:14px;color:#666;">Patrimonio neto: <span class="g"
+            style="font-size:18px;font-weight:700;" id="p-neto">$0</span></span>
+      </div>
+    </div>
+
+    <!-- ════════════════ NEGOCIOS ════════════════ -->
+    <div id="tab-negocios" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">NEGOCIOS</div>
+        <div class="mod-sub">Ideas, oportunidades y validación</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Idea / Negocio</th>
+              <th>Estado</th>
+              <th>Ingreso/mes</th>
+              <th>Costo/mes</th>
+              <th>Margen</th>
+              <th>Fecha inicio</th>
+              <th>Prioridad</th>
+              <th>Siguiente acción</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="negocios-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn-gold" onclick="addRow('negocios')">+ Idea</button>
+      </div>
+    </div>
+
+    <!-- ════════════════ INVERSIONES ════════════════ -->
+    <div id="tab-inversiones" class="panel">
+      <div class="mod-header">
+        <div class="mod-title">INVERSIONES</div>
+        <div class="mod-sub">Registro simple para pensar con orden</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Activo</th>
+              <th>Tipo</th>
+              <th>Fecha compra</th>
+              <th>Monto invertido</th>
+              <th>Valor actual</th>
+              <th>Resultado</th>
+              <th>% Retorno</th>
+              <th>Horizonte</th>
+              <th>Riesgo</th>
+              <th>Notas</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="inversiones-body"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+        <button class="btn-gold" onclick="addRow('inversiones')">+ Inversión</button>
+        <span style="font-size:12px;color:#666;margin-left:auto;">Invertido total: <span class="g"
+            id="inv-total">$0</span> · Valor actual: <span class="g" id="inv-actual">$0</span></span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ══════════════════════════════════════════════════════
+  SCRIPTS
+══════════════════════════════════════════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    /*
+    ══════════════════════════════════════════════
+      SQL PARA COPIAR EN SUPABASE SQL EDITOR
+      (Authentication > SQL Editor)
+    ══════════════════════════════════════════════
+    
+    -- HONRAR
+    create table honrar (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, semana int, fecha text, oracion text, versiculo text, reflexion text, decision text, paz text, created_at timestamptz default now());
+    alter table honrar enable row level security;
+    create policy "own" on honrar for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- REALIDAD
+    create table realidad (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, categoria text, tipo text, ene numeric default 0, feb numeric default 0, mar numeric default 0, abr numeric default 0, may numeric default 0, jun numeric default 0, jul numeric default 0, ago numeric default 0, sep numeric default 0, oct numeric default 0, nov numeric default 0, dic numeric default 0, created_at timestamptz default now());
+    alter table realidad enable row level security;
+    create policy "own" on realidad for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- MENTALIDAD
+    create table mentalidad (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, creencia text, origen text, nueva_verdad text, accion text, se_repite text, ansiedad int default 0, paz int default 0, created_at timestamptz default now());
+    alter table mentalidad enable row level security;
+    create policy "own" on mentalidad for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- GASTOS
+    create table gastos (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, fecha text, categoria text, descripcion text, monto numeric default 0, necesario text, alineado text, decision text, motivo text, impacto numeric default 0, notas text, created_at timestamptz default now());
+    alter table gastos enable row level security;
+    create policy "own" on gastos for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- SISTEMA
+    create table sistema (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, ingreso numeric default 0, categorias jsonb default '[]', created_at timestamptz default now());
+    alter table sistema enable row level security;
+    create policy "own" on sistema for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- DISCIPLINA
+    create table disciplina (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, semana int, fecha text, habito text, cumplido text, rev_gastos text, oracion text, sin_impulsivo text, ahorro numeric default 0, puntaje int default 0, ajuste text, created_at timestamptz default now());
+    alter table disciplina enable row level security;
+    create policy "own" on disciplina for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- EXPANSION
+    create table expansion (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, meta text, fecha_obj text, monto_meta numeric default 0, monto_actual numeric default 0, impacto text, accion text, created_at timestamptz default now());
+    alter table expansion enable row level security;
+    create policy "own" on expansion for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- DEUDAS
+    create table deudas (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, acreedor text, contacto text, tipo text, monto_total numeric default 0, cuota numeric default 0, interes numeric default 0, cuotas int default 0, saldo numeric default 0, prioridad int default 1, estrategia text, created_at timestamptz default now());
+    alter table deudas enable row level security;
+    create policy "own" on deudas for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- HORMIGA
+    create table hormiga (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, concepto text, d1 numeric default 0, d2 numeric default 0, d3 numeric default 0, d4 numeric default 0, d5 numeric default 0, d6 numeric default 0, d7 numeric default 0, d8 numeric default 0, d9 numeric default 0, d10 numeric default 0, created_at timestamptz default now());
+    alter table hormiga enable row level security;
+    create policy "own" on hormiga for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- PERFIL
+    create table perfil (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, tipo text, categoria text, valor numeric default 0, created_at timestamptz default now());
+    alter table perfil enable row level security;
+    create policy "own" on perfil for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- NEGOCIOS
+    create table negocios (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, idea text, estado text, ingreso numeric default 0, costo numeric default 0, fecha_inicio text, prioridad int default 1, siguiente text, created_at timestamptz default now());
+    alter table negocios enable row level security;
+    create policy "own" on negocios for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    -- INVERSIONES
+    create table inversiones (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users not null, activo text, tipo text, fecha_compra text, monto_inv numeric default 0, valor_actual numeric default 0, horizonte text, riesgo text, notas text, created_at timestamptz default now());
+    alter table inversiones enable row level security;
+    create policy "own" on inversiones for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+    
+    ══════════════════════════════════════════════
+    */
+
+    // ── CONFIG ───────────────────────────────────────────────
+    const SUPABASE_URL = 'https://xsnrgfvcvbsnkynjbxgb.supabase.co'
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzbnJnZnZjdmJzbmt5bmpieGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNDU1NTYsImV4cCI6MjA4OTYyMTU1Nn0.mU_wueJJOTSzKLZu4oz_pqVeAQU1KCYzyOonEvr_u1Q'
+    // ──────────────────────────────────────────────────────────
+
+    const { createClient } = supabase
+    const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+    let USER = null
+
+    // ── AUTH CHECK ────────────────────────────────────────────
+    sb.auth.getSession().then(({ data }) => {
+      if (!data.session) { window.location.href = 'index.html'; return }
+      USER = data.session.user
+      document.getElementById('user-email').textContent = USER.email
+      document.getElementById('user-email').style.display = 'inline'
+      loadAll()
+    })
+
+    async function logout() {
+      await sb.auth.signOut()
+      window.location.href = 'index.html'
+    }
+
+    // ── TABS ──────────────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+      document.getElementById('tab-' + name).classList.add('active')
+      event.currentTarget.classList.add('active')
+      if (name === 'dashboard') buildDashboard()
+    }
+
+    // ── SAVE INDICATOR ────────────────────────────────────────
+    let saveTimer
+    function flashSave() {
+      const el = document.getElementById('saving')
+      el.classList.add('show')
+      clearTimeout(saveTimer)
+      saveTimer = setTimeout(() => el.classList.remove('show'), 1500)
+    }
+
+    // ── UTILS ─────────────────────────────────────────────────
+    const fmt = v => isNaN(v) || v === '' ? '$0' : '$' + Number(v).toLocaleString('es-CO', { maximumFractionDigits: 0 })
+    function debounce(fn, ms = 600) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms) } }
+
+    // ── GENERIC UPSERT ────────────────────────────────────────
+    async function upsert(table, row) {
+      const { error } = await sb.from(table).upsert({ ...row, user_id: USER.id })
+      if (!error) flashSave()
+    }
+    async function del(table, id) {
+      await sb.from(table).delete().eq('id', id)
+      flashSave()
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  CARGA INICIAL
+    // ════════════════════════════════════════════════════════════
+    async function loadAll() {
+      await Promise.all([
+        loadHonrar(), loadRealidad(), loadMentalidad(), loadGastos(),
+        loadSistema(), loadDisciplina(), loadExpansion(), loadDeudas(),
+        loadHormiga(), loadPerfil(), loadNegocios(), loadInversiones()
+      ])
+    }
+
+    // ══ HONRAR ══════════════════════════════════════════════════
+    let honrarRows = []
+    async function loadHonrar() {
+      const { data } = await sb.from('honrar').select('*').eq('user_id', USER.id).order('semana')
+      honrarRows = data || []
+      if (!honrarRows.length) { addRow('honrar'); return }
+      renderHonrar()
+    }
+    function renderHonrar() {
+      const tb = document.getElementById('honrar-body')
+      tb.innerHTML = ''
+      honrarRows.forEach((r, i) => {
+        tb.insertAdjacentHTML('beforeend', `
+    <tr data-id="${r.id}">
+      <td style="color:#666;font-size:11px;">${r.semana || i + 1}</td>
+      <td><input class="inp" style="min-width:100px" value="${r.fecha || ''}" onchange="saveHonrar('${r.id}','fecha',this.value)"></td>
+      <td><select class="inp" onchange="saveHonrar('${r.id}','oracion',this.value)">
+        ${['', 'Sí', 'No'].map(o => `<option ${r.oracion === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input class="inp" style="min-width:160px" value="${r.versiculo || ''}" onchange="saveHonrar('${r.id}','versiculo',this.value)"></td>
+      <td><input class="inp" style="min-width:160px" value="${r.reflexion || ''}" onchange="saveHonrar('${r.id}','reflexion',this.value)"></td>
+      <td><input class="inp" style="min-width:160px" value="${r.decision || ''}" onchange="saveHonrar('${r.id}','decision',this.value)"></td>
+      <td><select class="inp" onchange="saveHonrar('${r.id}','paz',this.value)">
+        ${['', 'Sí', 'No'].map(o => `<option ${r.paz === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><button class="btn-del" onclick="delRow('honrar','${r.id}')">×</button></td>
+    </tr>`)
+      })
+      calcHonrar()
+    }
+    const saveHonrar = debounce(async (id, field, val) => {
+      const r = honrarRows.find(x => x.id === id)
+      if (r) { r[field] = val; await upsert('honrar', r); calcHonrar() }
+    })
+    function calcHonrar() {
+      document.getElementById('honrar-oracion').textContent = honrarRows.filter(r => r.oracion === 'Sí').length
+      document.getElementById('honrar-paz').textContent = honrarRows.filter(r => r.paz === 'Sí').length
+    }
+
+    // ══ REALIDAD ═════════════════════════════════════════════════
+    const REALIDAD_CATS = [
+      { cat: 'ENTRADAS', tipo: 'header' },
+      { cat: 'Salario', tipo: 'entrada' }, { cat: 'Negocios', tipo: 'entrada' },
+      { cat: 'Inversiones', tipo: 'entrada' }, { cat: 'Bienes raíces', tipo: 'entrada' }, { cat: 'Otros ingresos', tipo: 'entrada' },
+      { cat: 'SALIDAS - Necesidad', tipo: 'header' },
+      { cat: 'Vivienda', tipo: 'salida' }, { cat: 'Servicios', tipo: 'salida' }, { cat: 'Alimentación', tipo: 'salida' },
+      { cat: 'Transporte', tipo: 'salida' }, { cat: 'Educación', tipo: 'salida' }, { cat: 'Salud', tipo: 'salida' },
+      { cat: 'Seguros', tipo: 'salida' }, { cat: 'Suscripciones', tipo: 'salida' }, { cat: 'Gastos hormiga', tipo: 'salida' },
+      { cat: 'Negocio', tipo: 'salida' }, { cat: 'Otros gastos', tipo: 'salida' },
+      { cat: 'SALIDAS - Deudas', tipo: 'header' },
+      { cat: 'Tarjetas', tipo: 'deuda' }, { cat: 'Préstamos', tipo: 'deuda' }, { cat: 'Hipoteca', tipo: 'deuda' },
+      { cat: 'Vehículo', tipo: 'deuda' }, { cat: 'Crédito educativo', tipo: 'deuda' }, { cat: 'Cuota de paz/ahorro', tipo: 'deuda' }, { cat: 'Otros pagos', tipo: 'deuda' }
+    ]
+    const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+    let realidadData = {}
+    async function loadRealidad() {
+      const { data } = await sb.from('realidad').select('*').eq('user_id', USER.id)
+      realidadData = {}
+        ; (data || []).forEach(r => { realidadData[r.categoria] = r })
+      renderRealidad()
+    }
+    function renderRealidad() {
+      const tb = document.getElementById('realidad-body')
+      tb.innerHTML = ''
+      REALIDAD_CATS.forEach(({ cat, tipo }) => {
+        if (tipo === 'header') {
+          tb.insertAdjacentHTML('beforeend', `<tr><td colspan="14" style="background:#1a1a1a;color:#C8971A;font-size:11px;font-weight:700;letter-spacing:1px;padding:6px 10px;">${cat}</td></tr>`)
+          return
+        }
+        const r = realidadData[cat] || {}
+        const total = MESES.reduce((s, m) => s + (parseFloat(r[m]) || 0), 0)
+        const color = tipo === 'entrada' ? '#22c55e' : '#ef4444'
+        tb.insertAdjacentHTML('beforeend', `<tr>
+      <td style="color:#ccc;min-width:150px;">${cat}</td>
+      ${MESES.map(m => `<td><input type="number" style="min-width:70px;color:${color}" value="${r[m] || ''}" placeholder="0"
+        onchange="saveRealidad('${cat}','${m}',this.value)"></td>`).join('')}
+      <td style="color:${color};font-weight:600;">${fmt(total)}</td>
+    </tr>`)
+      })
+    }
+    const saveRealidad = debounce(async (cat, mes, val) => {
+      if (!realidadData[cat]) {
+        const newId = crypto.randomUUID()
+        realidadData[cat] = { id: newId, categoria: cat }
+      }
+      realidadData[cat][mes] = parseFloat(val) || 0
+      await upsert('realidad', realidadData[cat])
+      // Update total cell in row
+      const row = [...document.querySelectorAll('#realidad-body tr')].find(r => r.cells[0]?.textContent === cat)
+      if (row) {
+        const total = MESES.reduce((s, m) => s + (parseFloat(realidadData[cat][m]) || 0), 0)
+        row.cells[13].textContent = fmt(total)
+      }
+    })
+
+    // ══ MENTALIDAD ══════════════════════════════════════════════
+    let mentalidadRows = []
+    async function loadMentalidad() {
+      const { data } = await sb.from('mentalidad').select('*').eq('user_id', USER.id).order('created_at')
+      mentalidadRows = data || []
+      if (!mentalidadRows.length) { addRow('mentalidad'); return }
+      renderMentalidad()
+    }
+    function renderMentalidad() {
+      const tb = document.getElementById('mentalidad-body')
+      tb.innerHTML = ''
+      mentalidadRows.forEach((r, i) => {
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td style="color:#666;">${i + 1}</td>
+      <td><input class="inp" style="min-width:160px" value="${r.creencia || ''}" onchange="saveMentalidad('${r.id}','creencia',this.value)"></td>
+      <td><input class="inp" style="min-width:120px" value="${r.origen || ''}" onchange="saveMentalidad('${r.id}','origen',this.value)"></td>
+      <td><input class="inp" style="min-width:160px" value="${r.nueva_verdad || ''}" onchange="saveMentalidad('${r.id}','nueva_verdad',this.value)"></td>
+      <td><input class="inp" style="min-width:140px" value="${r.accion || ''}" onchange="saveMentalidad('${r.id}','accion',this.value)"></td>
+      <td><select class="inp" onchange="saveMentalidad('${r.id}','se_repite',this.value)">
+        ${['', 'Sí', 'No'].map(o => `<option ${r.se_repite === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input type="number" min="0" max="5" style="width:50px;color:#ef4444" value="${r.ansiedad || ''}" onchange="saveMentalidad('${r.id}','ansiedad',this.value)"></td>
+      <td><input type="number" min="0" max="5" style="width:50px;color:#22c55e" value="${r.paz || ''}" onchange="saveMentalidad('${r.id}','paz',this.value)"></td>
+      <td><button class="btn-del" onclick="delRow('mentalidad','${r.id}')">×</button></td>
+    </tr>`)
+      })
+      calcMentalidad()
+    }
+    const saveMentalidad = debounce(async (id, field, val) => {
+      const r = mentalidadRows.find(x => x.id === id)
+      if (r) { r[field] = field === 'ansiedad' || field === 'paz' ? parseInt(val) || 0 : val; await upsert('mentalidad', r); calcMentalidad() }
+    })
+    function calcMentalidad() {
+      const rows = mentalidadRows
+      document.getElementById('m-total').textContent = rows.length
+      document.getElementById('m-ansiedad').textContent = rows.length ? (rows.reduce((s, r) => s + (r.ansiedad || 0), 0) / rows.length).toFixed(1) : '0.0'
+      document.getElementById('m-paz').textContent = rows.length ? (rows.reduce((s, r) => s + (r.paz || 0), 0) / rows.length).toFixed(1) : '0.0'
+    }
+
+    // ══ GASTOS ═══════════════════════════════════════════════════
+    let gastosRows = []
+    const GASTOS_CATS = ['Vivienda', 'Alimentación', 'Transporte', 'Educación', 'Salud', 'Entretenimiento', 'Ropa', 'Servicios', 'Suscripciones', 'Gastos hormiga', 'Negocios', 'Otro']
+    async function loadGastos() {
+      const { data } = await sb.from('gastos').select('*').eq('user_id', USER.id).order('fecha', { ascending: false })
+      gastosRows = data || []
+      renderGastos()
+    }
+    function renderGastos() {
+      const tb = document.getElementById('gastos-body')
+      tb.innerHTML = ''
+      gastosRows.forEach(r => {
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td><input type="date" value="${r.fecha || ''}" onchange="saveGastos('${r.id}','fecha',this.value)"></td>
+      <td><select onchange="saveGastos('${r.id}','categoria',this.value)">
+        ${GASTOS_CATS.map(c => `<option ${r.categoria === c ? 'selected' : ''}>${c}</option>`).join('')}
+      </select></td>
+      <td><input class="inp" style="min-width:140px" value="${r.descripcion || ''}" onchange="saveGastos('${r.id}','descripcion',this.value)"></td>
+      <td><input type="number" style="min-width:80px;color:#ef4444" value="${r.monto || ''}" onchange="saveGastos('${r.id}','monto',this.value)"></td>
+      <td><select onchange="saveGastos('${r.id}','necesario',this.value)">
+        ${['', 'Sí', 'No'].map(o => `<option ${r.necesario === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><select onchange="saveGastos('${r.id}','alineado',this.value)">
+        ${['', 'Sí', 'No'].map(o => `<option ${r.alineado === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input class="inp" style="min-width:100px" value="${r.decision || ''}" onchange="saveGastos('${r.id}','decision',this.value)"></td>
+      <td><input class="inp" style="min-width:120px" value="${r.motivo || ''}" onchange="saveGastos('${r.id}','motivo',this.value)"></td>
+      <td><span style="color:#C8971A;">${fmt((r.monto || 0) * 12)}</span></td>
+      <td><input class="inp" style="min-width:100px" value="${r.notas || ''}" onchange="saveGastos('${r.id}','notas',this.value)"></td>
+      <td><button class="btn-del" onclick="delRow('gastos','${r.id}')">×</button></td>
+    </tr>`)
+      })
+      calcGastos()
+    }
+    const saveGastos = debounce(async (id, field, val) => {
+      const r = gastosRows.find(x => x.id === id)
+      if (r) { r[field] = field === 'monto' ? parseFloat(val) || 0 : val; await upsert('gastos', r); calcGastos() }
+    })
+    function calcGastos() {
+      document.getElementById('gastos-total').textContent = fmt(gastosRows.reduce((s, r) => s + (r.monto || 0), 0))
+    }
+
+    // ══ SISTEMA ══════════════════════════════════════════════════
+    const SISTEMA_CATS_DEFAULT = [
+      { cat: 'Diezmo / Generosidad', pct: 10, estado: '', comentario: '', m1: 0, m2: 0, m3: 0 },
+      { cat: 'Necesidades', pct: 55, estado: '', comentario: '', m1: 0, m2: 0, m3: 0 },
+      { cat: 'Deudas', pct: 15, estado: '', comentario: '', m1: 0, m2: 0, m3: 0 },
+      { cat: 'Ahorro / Fondo de paz', pct: 10, estado: '', comentario: '', m1: 0, m2: 0, m3: 0 },
+      { cat: 'Inversión', pct: 5, estado: '', comentario: '', m1: 0, m2: 0, m3: 0 },
+      { cat: 'Ocio / Flex', pct: 5, estado: '', comentario: '', m1: 0, m2: 0, m3: 0 },
+    ]
+    let sistemaId = null, sistemaCats = JSON.parse(JSON.stringify(SISTEMA_CATS_DEFAULT)), ingresoMensual = 0
+    async function loadSistema() {
+      const { data } = await sb.from('sistema').select('*').eq('user_id', USER.id).single()
+      if (data) {
+        sistemaId = data.id
+        ingresoMensual = data.ingreso || 0
+        sistemaCats = data.categorias || JSON.parse(JSON.stringify(SISTEMA_CATS_DEFAULT))
+      }
+      document.getElementById('ingreso-mensual').value = ingresoMensual || ''
+      renderSistema()
+    }
+    function renderSistema() {
+      // Porcentaje inputs
+      const pi = document.getElementById('pct-inputs')
+      pi.innerHTML = sistemaCats.map((c, i) => `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;color:#666;min-width:120px;">${c.cat}</span>
+      <input type="number" value="${c.pct}" min="0" max="100" style="width:60px;" class="inp"
+        oninput="sistemaCats[${i}].pct=parseFloat(this.value)||0;calcSistema()">
+      <span style="font-size:11px;color:#C8971A;">${fmt((ingresoMensual * c.pct / 100))}</span>
+    </div>`).join('')
+      // Tabla
+      const tb = document.getElementById('sistema-body')
+      tb.innerHTML = sistemaCats.map((c, i) => {
+        const mens = ingresoMensual * c.pct / 100
+        return `<tr>
+      <td style="color:#ccc;min-width:140px;">${c.cat}</td>
+      <td style="color:#C8971A;font-weight:600;">${c.pct}%</td>
+      <td style="color:#22c55e;font-weight:600;">${fmt(mens)}</td>
+      <td style="color:#666;">${fmt(mens * 12)}</td>
+      <td><select onchange="sistemaCats[${i}].estado=this.value;saveSistema()">
+        ${['', 'Al día', 'Atrasado', 'Excedido'].map(o => `<option ${c.estado === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input class="inp" style="min-width:120px" value="${c.comentario || ''}" onchange="sistemaCats[${i}].comentario=this.value;saveSistema()"></td>
+      <td><input type="number" value="${c.m1 || ''}" onchange="sistemaCats[${i}].m1=parseFloat(this.value)||0;saveSistema()"></td>
+      <td><input type="number" value="${c.m2 || ''}" onchange="sistemaCats[${i}].m2=parseFloat(this.value)||0;saveSistema()"></td>
+      <td><input type="number" value="${c.m3 || ''}" onchange="sistemaCats[${i}].m3=parseFloat(this.value)||0;saveSistema()"></td>
+    </tr>`
+      }).join('')
+      // Validar suma
+      const suma = sistemaCats.reduce((s, c) => s + (c.pct || 0), 0)
+      document.getElementById('pct-warn').style.display = Math.abs(suma - 100) > 0.01 ? 'block' : 'none'
+    }
+    function calcSistema() {
+      ingresoMensual = parseFloat(document.getElementById('ingreso-mensual').value) || 0
+      renderSistema()
+      saveSistema()
+    }
+    const saveSistema = debounce(async () => {
+      const row = { ingreso: ingresoMensual, categorias: sistemaCats, user_id: USER.id }
+      if (sistemaId) row.id = sistemaId
+      const { data, error } = await sb.from('sistema').upsert(row).select().single()
+      if (!error) { sistemaId = data.id; flashSave() }
+    })
+
+    // ══ DISCIPLINA ════════════════════════════════════════════════
+    const HABITOS_ROT = ['Revisión semanal', 'Presupuesto actualizado', 'Pago planificado', 'Ahorro realizado',
+      'Gasto impulsivo evitado', 'Oré antes de decidir', 'Presupuesto actualizado', 'Pago planificado',
+      'Revisión semanal', 'Ahorro realizado', 'Gasto impulsivo evitado', 'Oré antes de decidir']
+    let disciplinaRows = []
+    async function loadDisciplina() {
+      const { data } = await sb.from('disciplina').select('*').eq('user_id', USER.id).order('semana')
+      disciplinaRows = data || []
+      if (!disciplinaRows.length) { addRow('disciplina'); return }
+      renderDisciplina()
+    }
+    function renderDisciplina() {
+      const tb = document.getElementById('disciplina-body')
+      tb.innerHTML = ''
+      disciplinaRows.forEach((r, i) => {
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td style="color:#C8971A;font-weight:600;">${r.semana || i + 1}</td>
+      <td><input type="date" value="${r.fecha || ''}" onchange="saveDisciplina('${r.id}','fecha',this.value)"></td>
+      <td style="color:#666;font-size:11px;min-width:130px;">${r.habito || HABITOS_ROT[i] || ''}</td>
+      ${['cumplido', 'rev_gastos', 'oracion', 'sin_impulsivo'].map(f => `
+        <td><select onchange="saveDisciplina('${r.id}','${f}',this.value)">
+          ${['', 'Sí', 'No'].map(o => `<option ${r[f] === o ? 'selected' : ''}>${o}</option>`).join('')}
+        </select></td>`).join('')}
+      <td><input type="number" style="width:80px;color:#22c55e" value="${r.ahorro || ''}" onchange="saveDisciplina('${r.id}','ahorro',this.value)"></td>
+      <td style="color:#C8971A;font-weight:700;">${r.puntaje || 0}</td>
+      <td><input class="inp" style="min-width:120px" value="${r.ajuste || ''}" onchange="saveDisciplina('${r.id}','ajuste',this.value)"></td>
+      <td><button class="btn-del" onclick="delRow('disciplina','${r.id}')">×</button></td>
+    </tr>`)
+      })
+      calcDisciplina()
+    }
+    const saveDisciplina = debounce(async (id, field, val) => {
+      const r = disciplinaRows.find(x => x.id === id)
+      if (!r) return
+      r[field] = field === 'ahorro' ? parseFloat(val) || 0 : val
+      // Calcular puntaje (cada sí = 25 puntos sobre 4 campos)
+      const campos = ['cumplido', 'rev_gastos', 'oracion', 'sin_impulsivo']
+      r.puntaje = campos.filter(f => r[f] === 'Sí').length * 25
+      await upsert('disciplina', r)
+      // Actualizar puntaje en pantalla
+      const cell = document.querySelector(`tr[data-id="${id}"] td:nth-child(9)`)
+      if (cell) cell.textContent = r.puntaje
+      calcDisciplina()
+    })
+    function calcDisciplina() {
+      const rows = disciplinaRows
+      const total = rows.reduce((s, r) => s + (r.puntaje || 0), 0)
+      document.getElementById('d-total').textContent = total
+      document.getElementById('d-prom').textContent = rows.length ? Math.round(total / rows.length) : 0
+      document.getElementById('d-sem').textContent = rows.length
+    }
+
+    // ══ EXPANSIÓN ════════════════════════════════════════════════
+    let expansionRows = []
+    async function loadExpansion() {
+      const { data } = await sb.from('expansion').select('*').eq('user_id', USER.id).order('created_at')
+      expansionRows = data || []
+      if (!expansionRows.length) { addRow('expansion'); return }
+      renderExpansion()
+    }
+    function renderExpansion() {
+      const tb = document.getElementById('expansion-body')
+      tb.innerHTML = ''
+      expansionRows.forEach((r, i) => {
+        const brecha = (r.monto_meta || 0) - (r.monto_actual || 0)
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td style="color:#666;">${i + 1}</td>
+      <td><input class="inp" style="min-width:160px" value="${r.meta || ''}" onchange="saveExpansion('${r.id}','meta',this.value)"></td>
+      <td><input type="date" value="${r.fecha_obj || ''}" onchange="saveExpansion('${r.id}','fecha_obj',this.value)"></td>
+      <td><input type="number" style="color:#22c55e" value="${r.monto_meta || ''}" onchange="saveExpansion('${r.id}','monto_meta',this.value)"></td>
+      <td><input type="number" style="color:#C8971A" value="${r.monto_actual || ''}" onchange="saveExpansion('${r.id}','monto_actual',this.value)"></td>
+      <td style="color:${brecha > 0 ? '#ef4444' : '#22c55e'};font-weight:600;">${fmt(brecha)}</td>
+      <td><input class="inp" style="min-width:120px" value="${r.impacto || ''}" onchange="saveExpansion('${r.id}','impacto',this.value)"></td>
+      <td><input class="inp" style="min-width:160px" value="${r.accion || ''}" onchange="saveExpansion('${r.id}','accion',this.value)"></td>
+      <td><button class="btn-del" onclick="delRow('expansion','${r.id}')">×</button></td>
+    </tr>`)
+      })
+      document.getElementById('exp-activas').textContent = expansionRows.filter(r => r.meta).length
+    }
+    const saveExpansion = debounce(async (id, field, val) => {
+      const r = expansionRows.find(x => x.id === id)
+      if (r) { r[field] = ['monto_meta', 'monto_actual'].includes(field) ? parseFloat(val) || 0 : val; await upsert('expansion', r); renderExpansion() }
+    })
+
+    // ══ DEUDAS ════════════════════════════════════════════════════
+    let deudasRows = []
+    async function loadDeudas() {
+      const { data } = await sb.from('deudas').select('*').eq('user_id', USER.id).order('prioridad')
+      deudasRows = data || []
+      renderDeudas()
+    }
+    function renderDeudas() {
+      const tb = document.getElementById('deudas-body')
+      tb.innerHTML = ''
+      deudasRows.forEach(r => {
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td><input class="inp" style="min-width:120px" value="${r.acreedor || ''}" onchange="saveDeudas('${r.id}','acreedor',this.value)"></td>
+      <td><input class="inp" style="min-width:100px" value="${r.contacto || ''}" onchange="saveDeudas('${r.id}','contacto',this.value)"></td>
+      <td><select onchange="saveDeudas('${r.id}','tipo',this.value)">
+        ${['Tarjeta', 'Préstamo', 'Hipoteca', 'Vehículo', 'Educativo', 'Otro'].map(o => `<option ${r.tipo === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input type="number" style="color:#ef4444" value="${r.monto_total || ''}" onchange="saveDeudas('${r.id}','monto_total',this.value)"></td>
+      <td><input type="number" style="color:#ef4444" value="${r.cuota || ''}" onchange="saveDeudas('${r.id}','cuota',this.value)"></td>
+      <td><input type="number" style="max-width:60px" value="${r.interes || ''}" onchange="saveDeudas('${r.id}','interes',this.value)"></td>
+      <td><input type="number" style="max-width:60px" value="${r.cuotas || ''}" onchange="saveDeudas('${r.id}','cuotas',this.value)"></td>
+      <td><input type="number" style="color:#ef4444" value="${r.saldo || ''}" onchange="saveDeudas('${r.id}','saldo',this.value)"></td>
+      <td><select onchange="saveDeudas('${r.id}','prioridad',this.value)">
+        ${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${r.prioridad === n ? 'selected' : ''}>${n}</option>`).join('')}
+      </select></td>
+      <td><input class="inp" style="min-width:120px" value="${r.estrategia || ''}" onchange="saveDeudas('${r.id}','estrategia',this.value)"></td>
+      <td><button class="btn-del" onclick="delRow('deudas','${r.id}')">×</button></td>
+    </tr>`)
+      })
+      calcDeudas()
+    }
+    const saveDeudas = debounce(async (id, field, val) => {
+      const r = deudasRows.find(x => x.id === id)
+      const numFields = ['monto_total', 'cuota', 'interes', 'cuotas', 'saldo', 'prioridad']
+      if (r) { r[field] = numFields.includes(field) ? parseFloat(val) || 0 : val; await upsert('deudas', r); calcDeudas() }
+    })
+    function calcDeudas() {
+      const rows = deudasRows
+      document.getElementById('deu-total').textContent = fmt(rows.reduce((s, r) => s + (r.saldo || 0), 0))
+      document.getElementById('deu-cuota').textContent = fmt(rows.reduce((s, r) => s + (r.cuota || 0), 0))
+      const withInt = rows.filter(r => r.interes > 0)
+      document.getElementById('deu-interes').textContent = withInt.length ? (withInt.reduce((s, r) => s + r.interes, 0) / withInt.length).toFixed(1) + '%' : '0.0%'
+    }
+
+    // ══ GASTOS HORMIGA ═══════════════════════════════════════════
+    let hormigaRows = []
+    const HORMIGA_CATS_DEFAULT = ['Café', 'Snacks', 'Domicilios', 'Recargas', 'Apps', 'Transporte', 'Otros']
+    async function loadHormiga() {
+      const { data } = await sb.from('hormiga').select('*').eq('user_id', USER.id).order('created_at')
+      hormigaRows = data || []
+      if (!hormigaRows.length) {
+        // Seed default
+        HORMIGA_CATS_DEFAULT.forEach(c => addRow('hormiga', c))
+        return
+      }
+      renderHormiga()
+    }
+    function renderHormiga() {
+      const tb = document.getElementById('hormiga-body')
+      tb.innerHTML = ''
+      let grandTotal = 0
+      hormigaRows.forEach(r => {
+        const dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        const total = dias.reduce((s, d) => s + (r['d' + d] || 0), 0)
+        grandTotal += total
+        const ejDiario = total / 10
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td><input class="inp" style="min-width:100px" value="${r.concepto || ''}" onchange="saveHormiga('${r.id}','concepto',this.value)"></td>
+      ${dias.map(d => `<td><input type="number" style="width:60px" value="${r['d' + d] || ''}" placeholder="0" onchange="saveHormiga('${r.id}','d${d}',this.value)"></td>`).join('')}
+      <td style="color:#C8971A;font-weight:600;">${fmt(total)}</td>
+      <td style="color:#666;">${fmt(ejDiario)}</td>
+      <td style="color:#ef4444;">${fmt(ejDiario * 30)}</td>
+    </tr>`)
+      })
+      document.getElementById('hormiga-total').textContent = fmt(grandTotal)
+      document.getElementById('hormiga-mensual').textContent = fmt(grandTotal / 10 * 30)
+    }
+    const saveHormiga = debounce(async (id, field, val) => {
+      const r = hormigaRows.find(x => x.id === id)
+      if (r) { r[field] = field.startsWith('d') ? parseFloat(val) || 0 : val; await upsert('hormiga', r); renderHormiga() }
+    })
+
+    // ══ PERFIL FINANCIERO ════════════════════════════════════════
+    const PERFIL_CATS = {
+      ingresos: ['Salario', 'Bienes raíces', 'Negocios', 'Inversiones', 'Otros ingresos'],
+      egresos: ['Gastos básicos', 'Gastos financieros', 'Gastos variables', 'Gastos hormiga', 'Otros gastos'],
+      activos: ['Caja / banco', 'Inversiones', 'Vehículos', 'Propiedades', 'Otros activos'],
+      pasivos: ['Tarjetas', 'Préstamos', 'Vehículo', 'Hipoteca', 'Otros pasivos']
+    }
+    let perfilData = {}
+    async function loadPerfil() {
+      const { data } = await sb.from('perfil').select('*').eq('user_id', USER.id)
+      perfilData = {}
+        ; (data || []).forEach(r => { perfilData[r.tipo + '_' + r.categoria] = r })
+      renderPerfil()
+    }
+    function renderPerfil() {
+      const tipos = ['ingresos', 'egresos', 'activos', 'pasivos']
+      const ids = ['p-ing-total', 'p-egr-total', 'p-act-total', 'p-pas-total']
+      tipos.forEach((tipo, ti) => {
+        const el = document.getElementById('perfil-' + tipo)
+        let total = 0
+        el.innerHTML = PERFIL_CATS[tipo].map(cat => {
+          const key = tipo + '_' + cat
+          const r = perfilData[key]
+          const val = r ? r.valor : 0
+          total += val
+          return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:12px;color:#888;flex:1;">${cat}</span>
+        <input type="number" style="width:100px;" class="inp" value="${val || ''}" placeholder="0"
+          onchange="savePerfil('${tipo}','${cat}',this.value)">
+      </div>`
+        }).join('')
+        document.getElementById(ids[ti]).textContent = fmt(total)
+      })
+      const activos = PERFIL_CATS.activos.reduce((s, c) => s + (perfilData['activos_' + c]?.valor || 0), 0)
+      const pasivos = PERFIL_CATS.pasivos.reduce((s, c) => s + (perfilData['pasivos_' + c]?.valor || 0), 0)
+      const neto = activos - pasivos
+      const netoEl = document.getElementById('p-neto')
+      netoEl.textContent = fmt(neto)
+      netoEl.style.color = neto >= 0 ? '#22c55e' : '#ef4444'
+    }
+    const savePerfil = debounce(async (tipo, cat, val) => {
+      const key = tipo + '_' + cat
+      if (!perfilData[key]) perfilData[key] = { id: crypto.randomUUID(), tipo, categoria: cat }
+      perfilData[key].valor = parseFloat(val) || 0
+      await upsert('perfil', perfilData[key])
+      renderPerfil()
+    })
+
+    // ══ NEGOCIOS ═════════════════════════════════════════════════
+    let negociosRows = []
+    async function loadNegocios() {
+      const { data } = await sb.from('negocios').select('*').eq('user_id', USER.id).order('prioridad')
+      negociosRows = data || []
+      renderNegocios()
+    }
+    function renderNegocios() {
+      const tb = document.getElementById('negocios-body')
+      tb.innerHTML = ''
+      negociosRows.forEach(r => {
+        const margen = (r.ingreso || 0) - (r.costo || 0)
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td><input class="inp" style="min-width:160px" value="${r.idea || ''}" onchange="saveNegocios('${r.id}','idea',this.value)"></td>
+      <td><select onchange="saveNegocios('${r.id}','estado',this.value)">
+        ${['Idea', 'En prueba', 'Activo', 'Pausado', 'Descartado'].map(o => `<option ${r.estado === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input type="number" style="color:#22c55e" value="${r.ingreso || ''}" onchange="saveNegocios('${r.id}','ingreso',this.value)"></td>
+      <td><input type="number" style="color:#ef4444" value="${r.costo || ''}" onchange="saveNegocios('${r.id}','costo',this.value)"></td>
+      <td style="color:${margen >= 0 ? '#22c55e' : '#ef4444'};font-weight:600;">${fmt(margen)}</td>
+      <td><input type="date" value="${r.fecha_inicio || ''}" onchange="saveNegocios('${r.id}','fecha_inicio',this.value)"></td>
+      <td><select onchange="saveNegocios('${r.id}','prioridad',this.value)">
+        ${[1, 2, 3, 4, 5].map(n => `<option value="${n}" ${r.prioridad === n ? 'selected' : ''}>${n}</option>`).join('')}
+      </select></td>
+      <td><input class="inp" style="min-width:160px" value="${r.siguiente || ''}" onchange="saveNegocios('${r.id}','siguiente',this.value)"></td>
+      <td><button class="btn-del" onclick="delRow('negocios','${r.id}')">×</button></td>
+    </tr>`)
+      })
+    }
+    const saveNegocios = debounce(async (id, field, val) => {
+      const r = negociosRows.find(x => x.id === id)
+      if (r) { r[field] = ['ingreso', 'costo', 'prioridad'].includes(field) ? parseFloat(val) || 0 : val; await upsert('negocios', r); renderNegocios() }
+    })
+
+    // ══ INVERSIONES ══════════════════════════════════════════════
+    let inversionesRows = []
+    async function loadInversiones() {
+      const { data } = await sb.from('inversiones').select('*').eq('user_id', USER.id).order('fecha_compra', { ascending: false })
+      inversionesRows = data || []
+      renderInversiones()
+    }
+    function renderInversiones() {
+      const tb = document.getElementById('inversiones-body')
+      tb.innerHTML = ''
+      let totalInv = 0, totalAct = 0
+      inversionesRows.forEach(r => {
+        const resultado = (r.valor_actual || 0) - (r.monto_inv || 0)
+        const retorno = r.monto_inv > 0 ? ((r.valor_actual - r.monto_inv) / r.monto_inv * 100).toFixed(1) : '0.0'
+        totalInv += r.monto_inv || 0
+        totalAct += r.valor_actual || 0
+        tb.insertAdjacentHTML('beforeend', `<tr data-id="${r.id}">
+      <td><input class="inp" style="min-width:120px" value="${r.activo || ''}" onchange="saveInv('${r.id}','activo',this.value)"></td>
+      <td><select onchange="saveInv('${r.id}','tipo',this.value)">
+        ${['Acciones', 'CDT', 'Fondos', 'Cripto', 'Inmueble', 'Otro'].map(o => `<option ${r.tipo === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input type="date" value="${r.fecha_compra || ''}" onchange="saveInv('${r.id}','fecha_compra',this.value)"></td>
+      <td><input type="number" style="color:#C8971A" value="${r.monto_inv || ''}" onchange="saveInv('${r.id}','monto_inv',this.value)"></td>
+      <td><input type="number" style="color:#22c55e" value="${r.valor_actual || ''}" onchange="saveInv('${r.id}','valor_actual',this.value)"></td>
+      <td style="color:${resultado >= 0 ? '#22c55e' : '#ef4444'};font-weight:600;">${fmt(resultado)}</td>
+      <td style="color:${parseFloat(retorno) >= 0 ? '#22c55e' : '#ef4444'};">${retorno}%</td>
+      <td><select onchange="saveInv('${r.id}','horizonte',this.value)">
+        ${['Corto (<1a)', 'Mediano (1-5a)', 'Largo (>5a)'].map(o => `<option ${r.horizonte === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><select onchange="saveInv('${r.id}','riesgo',this.value)">
+        ${['Bajo', 'Medio', 'Alto'].map(o => `<option ${r.riesgo === o ? 'selected' : ''}>${o}</option>`).join('')}
+      </select></td>
+      <td><input class="inp" style="min-width:100px" value="${r.notas || ''}" onchange="saveInv('${r.id}','notas',this.value)"></td>
+      <td><button class="btn-del" onclick="delRow('inversiones','${r.id}')">×</button></td>
+    </tr>`)
+      })
+      document.getElementById('inv-total').textContent = fmt(totalInv)
+      document.getElementById('inv-actual').textContent = fmt(totalAct)
+    }
+    const saveInv = debounce(async (id, field, val) => {
+      const r = inversionesRows.find(x => x.id === id)
+      if (r) { r[field] = ['monto_inv', 'valor_actual'].includes(field) ? parseFloat(val) || 0 : val; await upsert('inversiones', r); renderInversiones() }
+    })
+
+    // ════════════════════════════════════════════════════════════
+    //  ADD ROW GENÉRICO
+    // ════════════════════════════════════════════════════════════
+    async function addRow(mod, defaultVal) {
+      const id = crypto.randomUUID()
+      const base = { id, user_id: USER.id }
+      const maps = {
+        honrar: () => { const sem = honrarRows.length + 1; const r = { ...base, semana: sem, versiculo: `Mt 6:33 / Busquen primero el Reino de Dios` }; honrarRows.push(r); return r },
+        mentalidad: () => { const r = { ...base }; mentalidadRows.push(r); return r },
+        gastos: () => { const r = { ...base, fecha: new Date().toISOString().split('T')[0] }; gastosRows.unshift(r); return r },
+        disciplina: () => { const sem = disciplinaRows.length + 1; const r = { ...base, semana: sem, habito: HABITOS_ROT[sem - 1] || '' }; disciplinaRows.push(r); return r },
+        expansion: () => { const r = { ...base }; expansionRows.push(r); return r },
+        deudas: () => { const r = { ...base, prioridad: 1 }; deudasRows.push(r); return r },
+        hormiga: () => { const r = { ...base, concepto: defaultVal || '' }; hormigaRows.push(r); return r },
+        negocios: () => { const r = { ...base, estado: 'Idea', prioridad: 1 }; negociosRows.push(r); return r },
+        inversiones: () => { const r = { ...base, tipo: 'Acciones', horizonte: 'Mediano (1-5a)', riesgo: 'Medio' }; inversionesRows.push(r); return r },
+      }
+      if (!maps[mod]) return
+      const row = maps[mod]()
+      await upsert(mod, row)
+      const renders = { honrar: renderHonrar, mentalidad: renderMentalidad, gastos: renderGastos, disciplina: renderDisciplina, expansion: renderExpansion, deudas: renderDeudas, hormiga: renderHormiga, negocios: renderNegocios, inversiones: renderInversiones }
+      if (renders[mod]) renders[mod]()
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  DELETE ROW
+    // ════════════════════════════════════════════════════════════
+    async function delRow(mod, id) {
+      const stores = { honrar: honrarRows, mentalidad: mentalidadRows, gastos: gastosRows, disciplina: disciplinaRows, expansion: expansionRows, deudas: deudasRows, hormiga: hormigaRows, negocios: negociosRows, inversiones: inversionesRows }
+      const renders = { honrar: renderHonrar, mentalidad: renderMentalidad, gastos: renderGastos, disciplina: renderDisciplina, expansion: renderExpansion, deudas: renderDeudas, hormiga: renderHormiga, negocios: renderNegocios, inversiones: renderInversiones }
+      const store = stores[mod]
+      if (!store) return
+      const idx = store.findIndex(r => r.id === id)
+      if (idx !== -1) store.splice(idx, 1)
+      await del(mod, id)
+      if (renders[mod]) renders[mod]()
+    }
+
+    // ════════════════════════════════════════════════════════════
+    //  DASHBOARD
+    // ════════════════════════════════════════════════════════════
+    let chartSistema, chartGastos
+    function buildDashboard() {
+      // KPIs
+      const totalGastos = gastosRows.reduce((s, r) => s + (r.monto || 0), 0)
+      const totalDeuda = deudasRows.reduce((s, r) => s + (r.saldo || 0), 0)
+      const semanaspaz = honrarRows.filter(r => r.paz === 'Sí').length
+      const promDisc = disciplinaRows.length ? disciplinaRows.reduce((s, r) => s + (r.puntaje || 0), 0) / disciplinaRows.length : 0
+      const metasActivas = expansionRows.filter(r => r.meta).length
+      const entradas = Object.values(realidadData).filter(r => r.tipo === 'entrada').reduce((s, r) => s + MESES.reduce((ms, m) => ms + (r[m] || 0), 0), 0)
+      const salidas = Object.values(realidadData).filter(r => r.tipo !== 'entrada' && r.tipo !== 'header').reduce((s, r) => s + MESES.reduce((ms, m) => ms + (r[m] || 0), 0), 0)
+
+      document.getElementById('dash-balance').textContent = fmt(entradas - salidas)
+      document.getElementById('dash-deuda').textContent = fmt(totalDeuda)
+      document.getElementById('dash-paz').textContent = semanaspaz
+      document.getElementById('dash-gastos').textContent = fmt(totalGastos)
+      document.getElementById('dash-disciplina').textContent = promDisc.toFixed(1)
+      document.getElementById('dash-metas').textContent = metasActivas
+
+      // Chart Sistema
+      const ctx1 = document.getElementById('chart-sistema').getContext('2d')
+      if (chartSistema) chartSistema.destroy()
+      chartSistema = new Chart(ctx1, {
+        type: 'doughnut',
+        data: {
+          labels: sistemaCats.map(c => c.cat),
+          datasets: [{ data: sistemaCats.map(c => c.pct), backgroundColor: ['#C8971A', '#E8B520', '#a07810', '#d4a820', '#8a6610', '#f0c830'], borderWidth: 0 }]
+        },
+        options: { plugins: { legend: { labels: { color: '#888', font: { size: 11 } } } }, cutout: '65%' }
+      })
+
+      // Chart Gastos por categoría
+      const ctx2 = document.getElementById('chart-gastos').getContext('2d')
+      if (chartGastos) chartGastos.destroy()
+      const byCat = {}
+      gastosRows.forEach(r => { byCat[r.categoria] = (byCat[r.categoria] || 0) + (r.monto || 0) })
+      const catKeys = Object.keys(byCat).slice(0, 8)
+      chartGastos = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: catKeys,
+          datasets: [{ data: catKeys.map(k => byCat[k]), backgroundColor: '#C8971A', borderRadius: 4 }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#1a1a1a' } },
+            y: { ticks: { color: '#666', font: { size: 10 } }, grid: { color: '#1a1a1a' } }
+          }
+        }
+      })
+    }
+
+    // ── CSS responsive para grid sistema ──
+    document.head.insertAdjacentHTML('beforeend', `<style>
+@media(max-width:768px){.sistema-grid{grid-template-columns:1fr!important;}}
+</style>`)
+  </script>
+</body>
+
+</html>

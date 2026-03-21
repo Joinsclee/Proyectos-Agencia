@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HUMANOX · Acceder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: { DEFAULT: '#C8971A', light: '#E8B520', dark: '#A07810' },
+            dark: { DEFAULT: '#0a0a0a', card: '#111111', border: '#1e1e1e' }
+          },
+          fontFamily: { sans: ['Inter', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: #0a0a0a;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .gold-border {
+      border: 1px solid #C8971A;
+    }
+
+    .gold-text {
+      color: #C8971A;
+    }
+
+    .input-dark {
+      background: #111111;
+      border: 1px solid #2a2a2a;
+      color: #fff;
+      transition: border-color 0.2s;
+    }
+
+    .input-dark:focus {
+      outline: none;
+      border-color: #C8971A;
+    }
+
+    .input-dark::placeholder {
+      color: #555;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #C8971A, #E8B520);
+      color: #000;
+      font-weight: 600;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-gold:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-gold:active {
+      transform: translateY(0);
+    }
+
+    .tab-active {
+      color: #C8971A;
+      border-bottom: 2px solid #C8971A;
+    }
+
+    .tab-inactive {
+      color: #666;
+      border-bottom: 2px solid transparent;
+    }
+
+    .error-msg {
+      color: #ef4444;
+      font-size: 0.85rem;
+    }
+
+    .success-msg {
+      color: #22c55e;
+      font-size: 0.85rem;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.4s ease;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-md fade-in">
+
+    <!-- Logo / Branding -->
+    <div class="text-center mb-8">
+      <div class="inline-block gold-border rounded-lg px-6 py-3 mb-4">
+        <h1 class="text-3xl font-bold gold-text tracking-widest">HUMANOX</h1>
+      </div>
+      <p class="text-gray-400 text-sm italic">El orden es el silencio donde Dios habla</p>
+    </div>
+
+    <!-- Card -->
+    <div class="bg-[#111111] rounded-xl p-8 gold-border">
+
+      <!-- Tabs Login / Registro -->
+      <div class="flex border-b border-[#2a2a2a] mb-6">
+        <button id="tab-login" onclick="showTab('login')"
+          class="flex-1 pb-3 text-sm font-medium tab-active transition-all">
+          Iniciar sesión
+        </button>
+        <button id="tab-registro" onclick="showTab('registro')"
+          class="flex-1 pb-3 text-sm font-medium tab-inactive transition-all">
+          Registrarse
+        </button>
+      </div>
+
+      <!-- Mensaje de estado -->
+      <div id="msg" class="hidden mb-4 text-center text-sm"></div>
+
+      <!-- Formulario Login -->
+      <form id="form-login" onsubmit="handleLogin(event)">
+        <div class="mb-4">
+          <label class="block text-gray-400 text-xs mb-2 uppercase tracking-wider">Correo electrónico</label>
+          <input type="email" id="login-email" placeholder="tu@correo.com"
+            class="input-dark w-full rounded-lg px-4 py-3 text-sm" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-400 text-xs mb-2 uppercase tracking-wider">Contraseña</label>
+          <input type="password" id="login-pass" placeholder="••••••••"
+            class="input-dark w-full rounded-lg px-4 py-3 text-sm" required>
+        </div>
+        <button type="submit" class="btn-gold w-full py-3 rounded-lg text-sm">
+          Entrar a HUMANOX
+        </button>
+      </form>
+
+      <!-- Formulario Registro -->
+      <form id="form-registro" class="hidden" onsubmit="handleRegistro(event)">
+        <div class="mb-4">
+          <label class="block text-gray-400 text-xs mb-2 uppercase tracking-wider">Nombre completo</label>
+          <input type="text" id="reg-nombre" placeholder="Tu nombre"
+            class="input-dark w-full rounded-lg px-4 py-3 text-sm" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-400 text-xs mb-2 uppercase tracking-wider">Correo electrónico</label>
+          <input type="email" id="reg-email" placeholder="tu@correo.com"
+            class="input-dark w-full rounded-lg px-4 py-3 text-sm" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-400 text-xs mb-2 uppercase tracking-wider">Contraseña</label>
+          <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres"
+            class="input-dark w-full rounded-lg px-4 py-3 text-sm" minlength="6" required>
+        </div>
+        <button type="submit" class="btn-gold w-full py-3 rounded-lg text-sm">
+          Crear mi cuenta
+        </button>
+      </form>
+
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-gray-600 text-xs mt-6">
+      Sistema de orden financiero · Método HUMANOX
+    </p>
+
+  </div>
+
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // ─── CONFIGURACIÓN SUPABASE ───────────────────────────────────────────────
+    // Reemplaza estos valores con los de tu proyecto en supabase.com
+    const SUPABASE_URL = 'https://xsnrgfvcvbsnkynjbxgb.supabase.co'
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzbnJnZnZjdmJzbmt5bmpieGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwNDU1NTYsImV4cCI6MjA4OTYyMTU1Nn0.mU_wueJJOTSzKLZu4oz_pqVeAQU1KCYzyOonEvr_u1Q'
+    // ──────────────────────────────────────────────────────────────────────────
+
+    const { createClient } = supabase
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    // Redirigir si ya está logueado
+    sb.auth.getSession().then(({ data }) => {
+      if (data.session) window.location.href = 'app.html'
+    })
+
+    // ─── TABS ─────────────────────────────────────────────────────────────────
+    function showTab(tab) {
+      const isLogin = tab === 'login'
+      document.getElementById('form-login').classList.toggle('hidden', !isLogin)
+      document.getElementById('form-registro').classList.toggle('hidden', isLogin)
+      document.getElementById('tab-login').className = `flex-1 pb-3 text-sm font-medium transition-all ${isLogin ? 'tab-active' : 'tab-inactive'}`
+      document.getElementById('tab-registro').className = `flex-1 pb-3 text-sm font-medium transition-all ${!isLogin ? 'tab-active' : 'tab-inactive'}`
+      clearMsg()
+    }
+
+    // ─── MENSAJES ─────────────────────────────────────────────────────────────
+    function showMsg(text, isError = true) {
+      const el = document.getElementById('msg')
+      el.textContent = text
+      el.className = `mb-4 text-center text-sm ${isError ? 'error-msg' : 'success-msg'}`
+      el.classList.remove('hidden')
+    }
+    function clearMsg() {
+      document.getElementById('msg').classList.add('hidden')
+    }
+
+    // ─── LOGIN ────────────────────────────────────────────────────────────────
+    async function handleLogin(e) {
+      e.preventDefault()
+      clearMsg()
+      const btn = e.target.querySelector('button[type=submit]')
+      btn.disabled = true
+      btn.textContent = 'Entrando...'
+
+      const email = document.getElementById('login-email').value.trim()
+      const password = document.getElementById('login-pass').value
+
+      const { error } = await sb.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        showMsg(traducirError(error.message))
+        btn.disabled = false
+        btn.textContent = 'Entrar a HUMANOX'
+      } else {
+        showMsg('¡Bienvenido! Redirigiendo...', false)
+        setTimeout(() => window.location.href = 'app.html', 800)
+      }
+    }
+
+    // ─── REGISTRO ─────────────────────────────────────────────────────────────
+    async function handleRegistro(e) {
+      e.preventDefault()
+      clearMsg()
+      const btn = e.target.querySelector('button[type=submit]')
+      btn.disabled = true
+      btn.textContent = 'Creando cuenta...'
+
+      const nombre = document.getElementById('reg-nombre').value.trim()
+      const email = document.getElementById('reg-email').value.trim()
+      const password = document.getElementById('reg-pass').value
+
+      const { data, error } = await sb.auth.signUp({
+        email,
+        password,
+        options: { data: { nombre } }
+      })
+
+      if (error) {
+        showMsg(traducirError(error.message))
+        btn.disabled = false
+        btn.textContent = 'Crear mi cuenta'
+        return
+      }
+
+      // Sin verificación de correo → sesión activa inmediatamente
+      if (data.session) {
+        showMsg('¡Cuenta creada! Redirigiendo...', false)
+        setTimeout(() => window.location.href = 'app.html', 800)
+      } else {
+        // Fallback: ya existe sesión o requiere verificación (si está habilitada en Supabase)
+        showMsg('Cuenta creada. Iniciando sesión...', false)
+        const { error: loginErr } = await sb.auth.signInWithPassword({ email, password })
+        if (!loginErr) {
+          setTimeout(() => window.location.href = 'app.html', 800)
+        } else {
+          showMsg('Revisa tu correo si se requiere confirmación o intenta iniciar sesión.')
+          btn.disabled = false
+          btn.textContent = 'Crear mi cuenta'
+        }
+      }
+    }
+
+    // ─── TRADUCIR ERRORES ─────────────────────────────────────────────────────
+    function traducirError(msg) {
+      if (msg.includes('Invalid login credentials')) return 'Correo o contraseña incorrectos.'
+      if (msg.includes('User already registered')) return 'Ya existe una cuenta con ese correo.'
+      if (msg.includes('Password should be at least')) return 'La contraseña debe tener al menos 6 caracteres.'
+      if (msg.includes('Unable to validate email')) return 'Correo electrónico inválido.'
+      if (msg.includes('Email rate limit exceeded')) return 'Demasiados intentos. Espera un momento.'
+      return msg
+    }
+  </script>
+</body>
+
+</html>
