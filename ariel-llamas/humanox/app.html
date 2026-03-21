@@ -286,10 +286,166 @@
       font-size: 10px;
     }
 
-    @media(max-width:768px) {
+    /* ── HEADER ─────────────────────────────────────── */
+    .hdr {
+      background: #0d0d0d;
+      border-bottom: 1px solid #1e1e1e;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .hdr-wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .hdr-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 52px;
+    }
+
+    .hdr-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .hdr-logo-box {
+      border: 1px solid #C8971A;
+      padding: 4px 12px;
+      border-radius: 6px;
+    }
+
+    .hdr-logo-txt {
+      font-size: 16px;
+      font-weight: 700;
+      color: #C8971A;
+      letter-spacing: 3px;
+    }
+
+    .hdr-email {
+      font-size: 11px;
+      color: #444;
+      display: none;
+    }
+
+    .hdr-tabs {
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-top: 1px solid #1e1e1e;
+    }
+
+    .hdr-tabs::-webkit-scrollbar { display: none; }
+
+    .hdr-tabs-inner {
+      display: flex;
+      gap: 4px;
+      padding: 6px 16px;
+      min-width: max-content;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── GRIDS ───────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .perfil-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* ── MOBILE ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .hdr-top {
+        height: 48px;
+      }
+
+      .hdr-logo-txt {
+        font-size: 13px;
+        letter-spacing: 2px;
+      }
+
+      .hdr-logo-box {
+        padding: 3px 8px;
+      }
+
+      .hdr-email {
+        display: none !important;
+      }
+
       .tab-btn {
-        padding: 6px 10px;
+        padding: 5px 10px;
         font-size: 11px;
+      }
+
+      main {
+        padding: 16px 12px !important;
+      }
+
+      .mod-title {
+        font-size: 15px;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .chart-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .perfil-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      .sistema-grid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .kpi-val {
+        font-size: 18px;
+      }
+
+      .saving {
+        top: auto;
+        bottom: 12px;
+        right: 12px;
+        left: 12px;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hdr-logo-txt {
+        font-size: 12px;
+        letter-spacing: 1px;
+      }
+
+      .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .kpi {
+        padding: 12px 14px;
       }
     }
   </style>
@@ -301,33 +457,33 @@
   <div class="saving" id="saving">Guardando...</div>
 
   <!-- HEADER -->
-  <header style="background:#0d0d0d;border-bottom:1px solid #1e1e1e;position:sticky;top:0;z-index:100;">
-    <div style="max-width:1400px;margin:0 auto;padding:0 16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;height:52px;">
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          <div style="border:1px solid #C8971A;padding:4px 12px;border-radius:6px;">
-            <span style="font-size:16px;font-weight:700;color:#C8971A;letter-spacing:3px;">HUMANOX</span>
+  <header class="hdr">
+    <div class="hdr-wrap">
+      <div class="hdr-top">
+        <div class="hdr-brand">
+          <div class="hdr-logo-box">
+            <span class="hdr-logo-txt">HUMANOX</span>
           </div>
-          <span id="user-email" style="font-size:11px;color:#444;display:none;"></span>
+          <span id="user-email" class="hdr-email"></span>
         </div>
-        <div id="tabs-scroll" style="overflow-x:auto;flex:1;margin:0 12px;scrollbar-width:none;">
-          <div style="display:flex;gap:4px;padding:4px 0;min-width:max-content;">
-            <button class="tab-btn active" onclick="showTab('honrar')">H · Honrar</button>
-            <button class="tab-btn" onclick="showTab('realidad')">U · Realidad</button>
-            <button class="tab-btn" onclick="showTab('mentalidad')">M · Mentalidad</button>
-            <button class="tab-btn" onclick="showTab('gastos')">A · Gastos</button>
-            <button class="tab-btn" onclick="showTab('sistema')">N · Sistema</button>
-            <button class="tab-btn" onclick="showTab('disciplina')">O · Disciplina</button>
-            <button class="tab-btn" onclick="showTab('expansion')">X · Expansión</button>
-            <button class="tab-btn" onclick="showTab('dashboard')">Dashboard</button>
-            <button class="tab-btn" onclick="showTab('deudas')">Deudas</button>
-            <button class="tab-btn" onclick="showTab('hormiga')">Gastos Hormiga</button>
-            <button class="tab-btn" onclick="showTab('perfil')">Perfil Financiero</button>
-            <button class="tab-btn" onclick="showTab('negocios')">Negocios</button>
-            <button class="tab-btn" onclick="showTab('inversiones')">Inversiones</button>
-          </div>
+        <button onclick="logout()" class="btn-sm hdr-exit">Salir</button>
+      </div>
+      <div id="tabs-scroll" class="hdr-tabs">
+        <div class="hdr-tabs-inner">
+          <button class="tab-btn active" onclick="showTab('honrar')">H · Honrar</button>
+          <button class="tab-btn" onclick="showTab('realidad')">U · Realidad</button>
+          <button class="tab-btn" onclick="showTab('mentalidad')">M · Mentalidad</button>
+          <button class="tab-btn" onclick="showTab('gastos')">A · Gastos</button>
+          <button class="tab-btn" onclick="showTab('sistema')">N · Sistema</button>
+          <button class="tab-btn" onclick="showTab('disciplina')">O · Disciplina</button>
+          <button class="tab-btn" onclick="showTab('expansion')">X · Expansión</button>
+          <button class="tab-btn" onclick="showTab('dashboard')">Dashboard</button>
+          <button class="tab-btn" onclick="showTab('deudas')">Deudas</button>
+          <button class="tab-btn" onclick="showTab('hormiga')">Gastos Hormiga</button>
+          <button class="tab-btn" onclick="showTab('perfil')">Perfil Financiero</button>
+          <button class="tab-btn" onclick="showTab('negocios')">Negocios</button>
+          <button class="tab-btn" onclick="showTab('inversiones')">Inversiones</button>
         </div>
-        <button onclick="logout()" class="btn-sm" style="flex-shrink:0;">Salir</button>
       </div>
     </div>
   </header>
@@ -577,7 +733,7 @@
         <div class="mod-title">DASHBOARD HUMANOX</div>
         <div class="mod-sub">Control integral del orden financiero</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+      <div class="kpi-grid" style="margin-bottom:20px;">
         <div class="kpi">
           <div class="kpi-val" id="dash-balance">$0</div>
           <div class="kpi-lbl">Balance anual</div>
@@ -591,7 +747,7 @@
           <div class="kpi-lbl">Semanas con paz</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;">
+      <div class="kpi-grid" style="margin-bottom:20px;">
         <div class="kpi">
           <div class="kpi-val" id="dash-gastos">$0</div>
           <div class="kpi-lbl">Total gastos registrados</div>
@@ -605,7 +761,7 @@
           <div class="kpi-lbl">Metas activas</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div class="chart-grid">
         <div class="bg-dk brd" style="border-radius:10px;padding:16px;">
           <div style="font-size:12px;color:#C8971A;font-weight:600;margin-bottom:12px;">DISTRIBUCIÓN PRESUPUESTO</div>
           <canvas id="chart-sistema" height="200"></canvas>
@@ -623,7 +779,7 @@
         <div class="mod-title">GESTOR DE DEUDAS</div>
         <div class="mod-sub">Basado en prioridad HUMANOX</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+      <div class="kpi-grid" style="margin-bottom:20px;">
         <div class="kpi">
           <div class="kpi-val" id="deu-total">$0</div>
           <div class="kpi-lbl">Deuda total</div>
@@ -704,7 +860,7 @@
         <div class="mod-title">PERFIL FINANCIERO</div>
         <div class="mod-sub">Lo que el banco ve y lo que HUMANOX ordena</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+      <div class="perfil-grid">
         <div>
           <div style="font-size:11px;color:#C8971A;font-weight:700;letter-spacing:1px;margin-bottom:8px;">INGRESOS</div>
           <div id="perfil-ingresos"></div>
