@@ -276,11 +276,11 @@
             <h1 class="text-3xl md:text-4xl font-bold mb-2 aura-gradient-text uppercase">SIMULADOR DE RENTABILIDAD CRECE
             </h1>
             <p class="text-lg font-semibold text-slate-700">INVERSIÓN EN INMUEBLES USADOS</p>
-            <p class="text-md text-slate-600 mb-4">Estrategia: Comprar con Financiación, Mejorar y Vender</p>
+            <p class="text-md text-slate-600 mb-4">Estrategia: Comprar, Mejorar y Vender</p>
             <div class="bg-slate-50 rounded-lg p-3 border border-slate-200 inline-block max-w-4xl">
                 <p class="text-sm text-slate-700">
                     <strong>OBJETIVO:</strong> Ayudar al inversionista a simular y analizar la rentabilidad de una
-                    estrategia orientada a adquirir un inmueble usado con financiación, realizar mejoras que incrementen
+                    estrategia orientada a adquirir un inmueble usado con o sin financiación, realizar mejoras que incrementen
                     su valor y venderlo posteriormente en un plazo inferior a un año.
                 </p>
             </div>
@@ -298,6 +298,7 @@
         <!-- 1. DATOS DE COMPRA -->
         <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-datos">
             <div class="section-header">📋 DATOS DE COMPRA DEL INMUEBLE</div>
+            <!-- Fila 1: Precio de Compra (solo) -->
             <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
@@ -314,6 +315,12 @@
                     </div>
                 </div>
                 <div class="field-item">
+                    <!-- Espacio vacío -->
+                </div>
+            </div>
+            <!-- Fila 2: Área del Inmueble | % Costos de Escrituración (Compra) -->
+            <div class="field-row">
+                <div class="field-item">
                     <label class="field-label">
                         Área del Inmueble (M²)
                         <span class="tooltip-trigger">
@@ -326,7 +333,22 @@
                         <span class="percent-symbol">M²</span>
                     </div>
                 </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        % Costos de Escrituración (Compra)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Porcentaje aplicado al precio de compra del inmueble para cubrir
+                                los costos de escrituración. Varía según la Ciudad y el País.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="porcentajeEscrituracionCompra" value="3.0" step="0.1">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
             </div>
+            <!-- Fila 3: Valor por M² | Costos de Escrituración por Compra -->
             <div class="field-row">
                 <div class="field-item">
                     <label class="field-label">
@@ -343,7 +365,11 @@
                     </div>
                 </div>
                 <div class="field-item">
-                    <!-- Espacio vacío -->
+                    <label class="field-label">Costos de Escrituración por Compra</label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costosEscrituracionCompra" readonly>
+                    </div>
                 </div>
             </div>
         </div>
@@ -421,7 +447,6 @@
                     <label class="field-label">Tasa Efectiva Mensual (E.M.)</label>
                     <div class="field-input-wrapper calculated">
                         <input type="text" id="tasaEM" readonly>
-                        <span class="percent-symbol">%</span>
                     </div>
                 </div>
             </div>
@@ -516,16 +541,8 @@
         <!-- 4. SALIDA POR VENTA -->
         <div class="glass rounded-3xl p-8 mb-6 border border-slate-100 section-venta">
             <div class="section-header">💰 SALIDA POR VENTA</div>
+            <!-- Fila 1: Mes Estimado de Venta (solo) -->
             <div class="field-row">
-                <!-- COLUMNA IZQUIERDA -->
-                <div class="field-item">
-                    <label class="field-label">Precio de Venta Esperado del Inmueble</label>
-                    <div class="field-input-wrapper">
-                        <span class="currency-symbol">$</span>
-                        <input type="text" id="precioVentaEsperado" value="260.000.000">
-                    </div>
-                </div>
-                <!-- COLUMNA DERECHA -->
                 <div class="field-item">
                     <label class="field-label">
                         Mes Estimado de Venta
@@ -539,85 +556,22 @@
                         <input type="number" id="mesEstimadoVenta" value="6">
                     </div>
                 </div>
-            </div>
-            <div class="field-row">
-                <!-- COLUMNA IZQUIERDA -->
                 <div class="field-item">
-                    <label class="field-label">
-                        Valorización Frente al Precio de Compra
-                        <span class="tooltip-trigger">
-                            i
-                            <span class="tooltip-text">Indica en qué porcentaje ha aumentado el valor del inmueble en
-                                comparación con el precio inicial de compra.</span>
-                        </span>
-                    </label>
-                    <div class="field-input-wrapper calculated">
-                        <input type="text" id="valorizacion" readonly>
-                        <span class="percent-symbol">%</span>
-                    </div>
-                </div>
-                <!-- COLUMNA DERECHA -->
-                <div class="field-item">
-                    <label class="field-label">
-                        Porcentaje de Costos de Escrituración
-                        <span class="tooltip-trigger">
-                            i
-                            <span class="tooltip-text">Porcentaje aplicado al precio de venta y compra del inmueble para
-                                cubrir los costos de escrituración. Varía según la Ciudad y el País.</span>
-                        </span>
-                    </label>
-                    <div class="field-input-wrapper">
-                        <input type="number" id="porcentajeEscrituracion" value="3.0" step="0.1">
-                        <span class="percent-symbol">%</span>
-                    </div>
+                    <!-- Espacio vacío -->
                 </div>
             </div>
+            <!-- Fila 2: Precio de Venta | Saldo del Crédito al Momento de la Venta -->
             <div class="field-row">
-                <!-- COLUMNA IZQUIERDA -->
                 <div class="field-item">
-                    <label class="field-label">Costo de Mejoras ó Remodelación</label>
+                    <label class="field-label">Precio de Venta Esperado del Inmueble</label>
                     <div class="field-input-wrapper">
                         <span class="currency-symbol">$</span>
-                        <input type="text" id="costoMejoras" value="10.000.000">
+                        <input type="text" id="precioVentaEsperado" value="260.000.000">
                     </div>
+                    <p id="warnPrecioVenta" class="hidden text-red-600 text-xs font-semibold mt-1">
+                        ⚠ El precio de venta no puede ser menor al Capital Total Invertido.
+                    </p>
                 </div>
-                <!-- COLUMNA DERECHA -->
-                <div class="field-item">
-                    <label class="field-label">Costos de Escrituración por Compra</label>
-                    <div class="field-input-wrapper calculated">
-                        <span class="currency-symbol">$</span>
-                        <input type="text" id="costosEscrituracionCompra" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="field-row">
-                <!-- COLUMNA IZQUIERDA -->
-                <div class="field-item">
-                    <label class="field-label">
-                        Costo de Tenencia Acumulado
-                        <span class="tooltip-trigger">
-                            i
-                            <span class="tooltip-text">Valor total de los costos de tenencia del inmueble y de las
-                                cuotas del crédito hipotecario pagadas desde la entrega del inmueble hasta su
-                                venta.</span>
-                        </span>
-                    </label>
-                    <div class="field-input-wrapper calculated">
-                        <span class="currency-symbol">$</span>
-                        <input type="text" id="costoTenenciaAcumulado" readonly>
-                    </div>
-                </div>
-                <!-- COLUMNA DERECHA -->
-                <div class="field-item">
-                    <label class="field-label">Costos de Escrituración por Venta</label>
-                    <div class="field-input-wrapper calculated">
-                        <span class="currency-symbol">$</span>
-                        <input type="text" id="costosEscrituracionVenta" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="field-row">
-                <!-- COLUMNA IZQUIERDA -->
                 <div class="field-item">
                     <label class="field-label">
                         Saldo del Crédito al Momento de la Venta
@@ -633,7 +587,71 @@
                         <input type="text" id="saldoCreditoVenta" readonly>
                     </div>
                 </div>
-                <!-- COLUMNA DERECHA -->
+            </div>
+            <!-- Fila 3: Valorización | % Costos de Escrituración (Venta) -->
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Valorización Frente al Precio de Compra
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Indica en qué porcentaje ha aumentado el valor del inmueble en
+                                comparación con el precio inicial de compra.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <input type="text" id="valorizacion" readonly>
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">
+                        % Costos de Escrituración (Venta)
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Porcentaje aplicado al precio de venta del inmueble para cubrir
+                                los costos de escrituración. Varía según la Ciudad y el País.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper">
+                        <input type="number" id="porcentajeEscrituracionVenta" value="2.0" step="0.1">
+                        <span class="percent-symbol">%</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Fila 4: Costo de Mejoras | Costos de Escrituración por Venta -->
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">Costo de Mejoras ó Remodelación</label>
+                    <div class="field-input-wrapper">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costoMejoras" value="10.000.000">
+                    </div>
+                </div>
+                <div class="field-item">
+                    <label class="field-label">Costos de Escrituración por Venta</label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costosEscrituracionVenta" readonly>
+                    </div>
+                </div>
+            </div>
+            <!-- Fila 5: Costo de Tenencia Acumulado | Otros Costos Venta -->
+            <div class="field-row">
+                <div class="field-item">
+                    <label class="field-label">
+                        Costo de Tenencia Acumulado
+                        <span class="tooltip-trigger">
+                            i
+                            <span class="tooltip-text">Valor total de los costos de tenencia del inmueble y de las
+                                cuotas del crédito hipotecario pagadas desde la entrega del inmueble hasta su
+                                venta.</span>
+                        </span>
+                    </label>
+                    <div class="field-input-wrapper calculated">
+                        <span class="currency-symbol">$</span>
+                        <input type="text" id="costoTenenciaAcumulado" readonly>
+                    </div>
+                </div>
                 <div class="field-item">
                     <label class="field-label">
                         Otros Costos Venta
@@ -671,6 +689,7 @@
                 de compra y los costos de la operación.
             </div>
             <div id="contenedorResultados">
+                <!-- Fila 1: CAPITAL TOTAL INVERTIDO (solo) -->
                 <div class="field-row">
                     <div class="field-item">
                         <label class="field-label">
@@ -685,20 +704,10 @@
                                 type="text" id="capitalTotalInvertido" readonly></div>
                     </div>
                     <div class="field-item">
-                        <label class="field-label">
-                            CAPITAL DE REINVERSIÓN
-                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
-                                i
-                                <span class="tooltip-text">Es el dinero que queda disponible después de cerrar una
-                                    inversión, pagando el saldo del crédito y los costos asociados a la venta. Este
-                                    capital se utiliza para seguir invirtiendo y hacer crecer el patrimonio de forma
-                                    progresiva dentro del Sistema CRECE.</span>
-                            </span>
-                        </label>
-                        <div class="field-input-wrapper calculated"><span class="currency-symbol">$</span><input
-                                type="text" id="capitalReinversion" readonly></div>
+                        <!-- Espacio vacío -->
                     </div>
                 </div>
+                <!-- Fila 2: GANANCIA | Rentabilidad sobre el Capital Invertido (ROI) -->
                 <div class="field-row">
                     <div class="field-item">
                         <label class="field-label">
@@ -714,15 +723,44 @@
                     </div>
                     <div class="field-item">
                         <label class="field-label">
-                            Rentabilidad (ROI)
+                            Rentabilidad sobre el Capital Invertido (ROI)
                             <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
                                 i
                                 <span class="tooltip-text">Mide la rentabilidad generada frente al capital invertido.
                                     Este indicador no tiene en cuenta el tiempo en que se obtiene el resultado.</span>
                             </span>
                         </label>
-                        <div class="field-input-wrapper calculated"><input type="text" id="roi" readonly><span
-                                class="percent-symbol">%</span></div>
+                        <div class="field-input-wrapper calculated"><input type="text" id="roi" readonly></div>
+                    </div>
+                </div>
+                <!-- Fila 3: CAPITAL DE REINVERSIÓN | Rentabilidad Efectiva Anual -->
+                <div class="field-row">
+                    <div class="field-item">
+                        <label class="field-label">
+                            CAPITAL DE REINVERSIÓN
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Es el dinero que queda disponible después de cerrar una
+                                    inversión, pagando el saldo del crédito y los costos asociados a la venta. Este
+                                    capital se utiliza para seguir invirtiendo y hacer crecer el patrimonio de forma
+                                    progresiva dentro del Sistema CRECE.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><span class="currency-symbol">$</span><input
+                                type="text" id="capitalReinversion" readonly></div>
+                    </div>
+                    <div class="field-item">
+                        <label class="field-label">
+                            Rentabilidad Efectiva Anual
+                            <span class="tooltip-trigger" style="background-color: #064e3b; color: #ecfdf5;">
+                                i
+                                <span class="tooltip-text">Porcentaje de ganancia o pérdida de una inversión expresado
+                                    en términos anuales, que permite comparar diferentes inversiones en la misma escala
+                                    de tiempo.</span>
+                            </span>
+                        </label>
+                        <div class="field-input-wrapper calculated"><input type="text" id="rentabilidadEfectivaAnual"
+                                readonly></div>
                     </div>
                 </div>
             </div>
@@ -905,9 +943,9 @@
             let pCompra = parseFormattedNumber(document.getElementById('precioCompra').value);
             let area = parseFloat(document.getElementById('areaM2').value) || 1;
 
-            // Unificado: % Escrituración
-            let perEscrituracion = parseFloat(document.getElementById('porcentajeEscrituracion').value) || 0;
-            let costosEscCompra = Math.round(pCompra * (perEscrituracion / 100));
+            // % Escrituración Compra (independiente)
+            let perEscrituracionCompra = parseFloat(document.getElementById('porcentajeEscrituracionCompra').value) || 0;
+            let costosEscCompra = Math.round(pCompra * (perEscrituracionCompra / 100));
 
             // Financiación
             let perFinanciacion = parseFloat(document.getElementById('porcentajeFinanciacion').value) || 0;
@@ -942,8 +980,9 @@
             let costoTenenciaAcum = (cuotaH + tenenciaMes) * mesVenta;
             let valorizacion = (pCompra > 0) ? ((pVenta / pCompra) - 1) : 0;
 
-            // Costos Escrituración Venta using UNIFIED percentage
-            let costosEscVenta = Math.round(pVenta * (perEscrituracion / 100));
+            // % Escrituración Venta (independiente)
+            let perEscrituracionVenta = parseFloat(document.getElementById('porcentajeEscrituracionVenta').value) || 0;
+            let costosEscVenta = Math.round(pVenta * (perEscrituracionVenta / 100));
 
             let otrosCostosVenta = parseFormattedNumber(document.getElementById('otrosCostosVenta').value);
 
@@ -963,6 +1002,14 @@
             // Capital Invertido: CI + Escrituras Compra + Mejoras + Tenencia Acumulada
             let capitalInv = vCI + costosEscCompra + costoMejoras + costoTenenciaAcum;
 
+            // Validación: precio de venta no puede ser menor al capital total invertido
+            const warnVenta = document.getElementById('warnPrecioVenta');
+            if (pVenta < capitalInv) {
+                warnVenta.classList.remove('hidden');
+            } else {
+                warnVenta.classList.add('hidden');
+            }
+
             // Capital de Reinversión: Venta - Saldo Credito - Costos Escrituración Venta - Otros Costos Venta
             let capitalReinv = pVenta - saldoCreditoVenta - costosEscVenta - otrosCostosVenta;
 
@@ -971,26 +1018,33 @@
 
             let roi = (capitalInv > 0) ? (ganancia / capitalInv) : 0;
 
+            // Rentabilidad Efectiva Anual: (Capital Reinversión / Capital Invertido)^(12 / mesVenta) - 1
+            let rea = 0;
+            if (capitalInv > 0 && mesVenta > 0) {
+                rea = Math.pow(capitalReinv / capitalInv, 12 / mesVenta) - 1;
+            }
+
             // Set Values
             document.getElementById('valorM2').value = formatNumberInput(Math.round(pCompra / area));
             document.getElementById('costosEscrituracionCompra').value = formatNumberInput(costosEscCompra);
             document.getElementById('valorCuotaInicial').value = formatNumberInput(vCI);
             document.getElementById('valorCredito').value = formatNumberInput(valorCredito);
 
-            document.getElementById('tasaEM').value = (tasaEM * 100).toFixed(2);
+            document.getElementById('tasaEM').value = (tasaEM * 100).toFixed(2) + '%';
             document.getElementById('cuotaMensual').value = formatNumberInput(cuotaH);
 
             document.getElementById('costoTotalTenenciaMensual').value = formatNumberInput(tenenciaMes);
 
             document.getElementById('costoTenenciaAcumulado').value = formatNumberInput(Math.round(costoTenenciaAcum));
-            document.getElementById('valorizacion').value = (valorizacion * 100).toFixed(2);
+            document.getElementById('valorizacion').value = (valorizacion * 100).toFixed(2) + '%';
             document.getElementById('costosEscrituracionVenta').value = formatNumberInput(costosEscVenta);
             document.getElementById('saldoCreditoVenta').value = formatNumberInput(Math.round(saldoCreditoVenta));
 
             document.getElementById('capitalTotalInvertido').value = formatNumberInput(Math.round(capitalInv));
             document.getElementById('ganancia').value = formatNumberInput(Math.round(ganancia));
             document.getElementById('capitalReinversion').value = formatNumberInput(Math.round(capitalReinv));
-            document.getElementById('roi').value = (roi * 100).toFixed(2);
+            document.getElementById('roi').value = (roi * 100).toFixed(2) + '%';
+            document.getElementById('rentabilidadEfectivaAnual').value = (rea * 100).toFixed(2) + '%';
 
             analizarResultados(roi * 100, mesVenta, Math.round(costoTenenciaAcum), Math.round(capitalInv));
         }
@@ -1109,7 +1163,7 @@
             doc.setFont('helvetica', 'normal');
             doc.text('INVERSIÓN EN INMUEBLES USADOS', 105, yPosition + 15, { align: 'center' });
             doc.setFontSize(10);
-            doc.text('Estrategia: Comprar con Financiación, Mejorar y Vender', 105, yPosition + 21, { align: 'center' });
+            doc.text('Estrategia: Comprar, Mejorar y Vender', 105, yPosition + 21, { align: 'center' });
             yPosition += 27;
 
             // Nombre del Proyecto (si se ingresó)
@@ -1136,13 +1190,13 @@
             }
 
             // Obtener valores actuales
-            // Obtener valores actuales (Updated for new layout IDs)
             const precioCompra = parseFormattedNumber(document.getElementById('precioCompra').value);
             const areaM2 = document.getElementById('areaM2').value;
             const valorM2 = document.getElementById('valorM2').value;
 
-            // Unified Escrituracion
-            const porcentajeEscrituracion = document.getElementById('porcentajeEscrituracion').value;
+            // % Escrituración (separados por compra y venta)
+            const porcentajeEscrituracionCompra = document.getElementById('porcentajeEscrituracionCompra').value;
+            const porcentajeEscrituracionVenta = document.getElementById('porcentajeEscrituracionVenta').value;
 
             const costoMejoras = parseFormattedNumber(document.getElementById('costoMejoras').value);
             const costosEscrituracionCompra = document.getElementById('costosEscrituracionCompra').value;
@@ -1173,6 +1227,8 @@
             const roi = document.getElementById('roi').value;
             const capitalReinversion = document.getElementById('capitalReinversion').value;
 
+            const rentabilidadEfectivaAnual = document.getElementById('rentabilidadEfectivaAnual').value;
+
             const capitalInvertidoNum = parseFormattedNumber(capitalTotalInvertido);
             const gananciaNum = parseFormattedNumber(ganancia);
             const roiNum = parseFloat(roi);
@@ -1189,7 +1245,9 @@
             const datosCompra = [
                 ['Precio de Compra', '$' + formatNumberInput(precioCompra.toString())],
                 ['Área del Inmueble (M²)', areaM2 + ' M²'],
-                ['Valor por M²', '$' + valorM2]
+                ['% Costos de Escrituración (Compra)', porcentajeEscrituracionCompra + '%'],
+                ['Valor por M²', '$' + valorM2],
+                ['Costos de Escrituración por Compra', '$' + costosEscrituracionCompra]
             ];
 
             doc.autoTable({
@@ -1209,7 +1267,8 @@
                     1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
                 },
                 didParseCell: function (data) {
-                    if ((data.row.index === 2 || data.row.index === 5 || data.row.index === 7 || data.row.index === 8) && data.column.index === 1) {
+                    // Row 3: Valor M², Row 4: Costos Esc. Compra (calculated)
+                    if ([3, 4].includes(data.row.index) && data.column.index === 1) {
                         data.cell.styles.fillColor = [232, 245, 233]; // Verde claro para calculados
                     }
                 }
@@ -1233,7 +1292,7 @@
                 ['Valor del Crédito Hipotecario', '$' + valorCredito],
                 ['Plazo del Crédito (Años)', plazoAnos + ' años'],
                 ['Tasa Efectiva Anual (E.A.)', tasaEA + '%'],
-                ['Tasa Efectiva Mensual (E.M.)', tasaEM + '%'],
+                ['Tasa Efectiva Mensual (E.M.)', tasaEM],
                 ['Cuota Mensual del Crédito (Sin Seguros)', '$' + cuotaMensual]
             ];
 
@@ -1316,14 +1375,14 @@
             yPosition += 12;
 
             const datosVenta = [
-                ['Precio de Venta Esperado', '$' + formatNumberInput(precioVentaEsperado.toString())],
-                ['Valorización Frente al Precio de Compra', valorizacion + '%'],
-                ['% Costos Escrituración', porcentajeEscrituracion + '%'],
-                ['Costo de Mejoras o Remodelación', '$' + formatNumberInput(costoMejoras.toString())],
-                ['Costos Escrituración por Venta', '$' + costosEscrituracionVenta],
-                ['Costo Tenencia Acumulado', '$' + costoTenenciaAcumulado],
-                ['Saldo Crédito al Momento Venta', '$' + saldoCreditoVenta],
                 ['Mes Estimado de Venta', mesEstimadoVenta + ' meses'],
+                ['Precio de Venta Esperado', '$' + formatNumberInput(precioVentaEsperado.toString())],
+                ['Saldo Crédito al Momento Venta', '$' + saldoCreditoVenta],
+                ['Valorización Frente al Precio de Compra', valorizacion],
+                ['% Costos de Escrituración (Venta)', porcentajeEscrituracionVenta + '%'],
+                ['Costo de Mejoras o Remodelación', '$' + formatNumberInput(costoMejoras.toString())],
+                ['Costos de Escrituración por Venta', '$' + costosEscrituracionVenta],
+                ['Costo Tenencia Acumulado', '$' + costoTenenciaAcumulado],
                 ['Otros Costos Venta', '$' + formatNumberInput(otrosCostosVenta.toString())]
             ];
 
@@ -1344,8 +1403,8 @@
                     1: { cellWidth: 70, halign: 'right', fontStyle: 'bold', textColor: colorPrimario }
                 },
                 didParseCell: function (data) {
-                    // Highlight Calculated: 1 (Val), 4 (Esc Venta), 5 (Tenencia), 6 (Saldo)
-                    if ([1, 4, 5, 6].includes(data.row.index) && data.column.index === 1) {
+                    // Highlight Calculated: 2 (Saldo), 3 (Valorización), 6 (Costos Esc Venta), 7 (Tenencia)
+                    if ([2, 3, 6, 7].includes(data.row.index) && data.column.index === 1) {
                         data.cell.styles.fillColor = [232, 245, 233];
                     }
                 }
@@ -1356,13 +1415,13 @@
             // Sección 5: RESULTADOS DE LA INVERSIÓN
             checkPageBreak(50);
             const yStartResultados = yPosition;
-            const tableHeight = 32; // Altura estimada para 4 filas
+            const tableHeight = 42; // Altura estimada para 5 filas
 
             // 1. Fondo de la sección
             doc.setFillColor(220, 252, 231); // #dcfce7
             doc.setDrawColor(134, 239, 172); // #86efac
             doc.setLineWidth(0.4);
-            doc.roundedRect(margenIzq, yStartResultados, anchoUtil, 10 + tableHeight, 2, 2, 'FD');
+            doc.roundedRect(margenIzq, yStartResultados, anchoUtil, 12 + tableHeight, 2, 2, 'FD');
 
             // 2. Cabecera de la sección
             doc.setFillColor(74, 222, 128); // #4ade80
@@ -1375,8 +1434,9 @@
             const datosResultado = [
                 ['CAPITAL TOTAL INVERTIDO', '$' + capitalTotalInvertido],
                 ['CAPITAL DE REINVERSIÓN', '$' + capitalReinversion],
-                ['GANANCIA NETA', '$' + ganancia],
-                ['ROI', roi + '%']
+                ['GANANCIA', '$' + ganancia],
+                ['Rentabilidad sobre el Capital Invertido (ROI)', roi],
+                ['Rentabilidad Efectiva Anual', rentabilidadEfectivaAnual]
             ];
 
             doc.autoTable({

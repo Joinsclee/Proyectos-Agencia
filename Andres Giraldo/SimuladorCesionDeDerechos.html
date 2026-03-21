@@ -639,7 +639,7 @@
                             class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800">
                         </div>
                     </div>
-                    <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-bold"
+                    <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-3 py-1 rounded-lg text-sm font-bold whitespace-nowrap"
                         id="indicadorTiempoCesion">
                         20 meses
                     </div>
@@ -976,7 +976,9 @@
             }
             porcentajePosicion = Math.min(porcentajePosicion, 100);
 
-            document.getElementById('indicadorPosicion').style.left = porcentajePosicion + '%';
+            // Clamp para evitar que el indicador se salga del borde
+            const posClamp = Math.max(5, Math.min(95, porcentajePosicion));
+            document.getElementById('indicadorPosicion').style.left = posClamp + '%';
             document.getElementById('indicadorTiempoCesion').textContent = mesVenta;
 
             // Actualizar punto en la gráfica
@@ -1627,6 +1629,18 @@
                 calcular();
             }
         });
+
+        // Validación: % Cuota Inicial máximo 100%
+        const cuotaInicialInput = document.getElementById('porcentajeCuotaInicial');
+        if (cuotaInicialInput) {
+            cuotaInicialInput.addEventListener('input', function () {
+                let val = parseFloat(this.value);
+                if (!isNaN(val) && val > 100) {
+                    this.value = 100;
+                    calcular();
+                }
+            });
+        }
 
         // Calcular al cargar la página
         window.addEventListener('load', calcular);

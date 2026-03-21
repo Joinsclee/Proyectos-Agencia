@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es" style="overflow-x: hidden;">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema CRECE: El Método de las Oportunidades de Inversión | Andrés Giraldo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:wght@400;700&family=Playfair+Display:ital,wght@1,700;1,800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-purple: #613174;
+            --secondary-green: #37ca37;
+            --accent-yellow: #f2ca04;
+        }
+
+        body {
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            color: #1a1a1a;
+            scroll-behavior: smooth;
+            overflow-x: hidden;
+        }
+
+        section {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        section>div {
+            max-width: 100%;
+        }
+
+        header {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        footer {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        .font-tilt {
+            font-family: 'Tilt Warp', cursive;
+        }
+
+        .font-elegant {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-weight: 700;
+            font-size: 1.15em;
+            display: inline-block;
+            color: var(--primary-purple);
+        }
+
+        .h1-hero {
+            text-align: center !important;
+            display: block;
+            width: 100%;
+            font-size: clamp(1.8rem, 5vw, 2.8rem) !important;
+        }
+
+        @media (min-width: 1280px) {
+            .h1-hero {
+                white-space: nowrap;
+                font-size: clamp(1.4rem, 2.1vw, 2.5rem) !important;
+            }
+        }
+
+        .bg-purple-gradient {
+            background: linear-gradient(135deg, #613174 0%, #4d265c 100%);
+        }
+
+        .btn-main {
+            background-color: var(--primary-purple);
+            transition: all 0.3s ease;
+            animation: pulse-shadow 2s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-main::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-main:hover::before {
+            left: 100%;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(158, 86, 189, 0.5);
+            animation: none;
+        }
+
+        @keyframes pulse-shadow {
+            0%, 100% { box-shadow: 0 8px 20px rgba(158, 86, 189, 0.3); }
+            50% { box-shadow: 0 8px 25px rgba(158, 86, 189, 0.5); }
+        }
+
+        .vsl-container {
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #registration-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        #registration-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            height: 90vh;
+            max-height: 750px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            flex-shrink: 0;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .btn-yellow {
+            position: relative;
+            overflow: hidden;
+            animation: pulse-shadow-yellow 2.5s ease-in-out infinite;
+        }
+
+        .btn-yellow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn-yellow:hover::before {
+            left: 100%;
+        }
+
+        .btn-yellow:hover {
+            animation: none;
+            box-shadow: 0 20px 40px rgba(242, 202, 4, 0.4) !important;
+        }
+
+        @keyframes pulse-shadow-yellow {
+            0%, 100% { box-shadow: 0 10px 25px rgba(242, 202, 4, 0.3); }
+            50% { box-shadow: 0 10px 30px rgba(242, 202, 4, 0.5); }
+        }
+
+        .day-card {
+            border-top: 4px solid var(--primary-purple);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .day-body {
+            flex: 1;
+        }
+
+        @media (min-width: 1024px) {
+            .day-header {
+                min-height: 215px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            @keyframes pulse-shadow {
+                0%, 100% { box-shadow: 0 5px 15px rgba(158, 86, 189, 0.3); }
+                50% { box-shadow: 0 5px 20px rgba(158, 86, 189, 0.4); }
+            }
+            @keyframes pulse-shadow-yellow {
+                0%, 100% { box-shadow: 0 5px 15px rgba(242, 202, 4, 0.3); }
+                50% { box-shadow: 0 5px 20px rgba(242, 202, 4, 0.4); }
+            }
+            .btn-main:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 10px 25px rgba(158, 86, 189, 0.4); }
+            .btn-yellow:hover { box-shadow: 0 10px 25px rgba(242, 202, 4, 0.4) !important; }
+            .btn-main:active, .btn-yellow:active { transform: scale(0.98); }
+            .modal-content { height: 95vh; max-height: none; border-radius: 16px; }
+            #registration-modal { padding: 0.5rem; }
+            .check-icon { width: 20px; height: 20px; min-width: 20px; font-size: 10px; flex-shrink: 0; }
+        }
+
+        @media (max-width: 480px) {
+            .modal-content { border-radius: 12px; }
+            #registration-modal { padding: 0.25rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .btn-main, .btn-yellow { animation: none; }
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+
+        * { box-sizing: border-box; }
+
+        .max-w-4xl, .max-w-6xl {
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .max-w-4xl, .max-w-6xl {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem;
+            }
+        }
+
+        html, body { max-width: 100%; overflow-x: hidden; }
+
+        #registration-modal { width: 100vw; height: 100vh; left: 0; right: 0; margin: 0; }
+    </style>
+</head>
+
+<body class="bg-white">
+
+    <!-- Modal para el Formulario -->
+    <div id="registration-modal">
+        <div class="modal-content flex flex-col">
+            <button onclick="closeModal()"
+                class="absolute top-4 right-4 z-50 bg-white border rounded-full p-2 shadow-lg hover:bg-gray-100 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="flex-1 overflow-auto bg-white pt-2">
+                <iframe src="https://link.elsistemacrece.com/widget/form/wJlJDmpPBrrmH8zDbBy3"
+                    style="width:100%;height:100%;border:none;" id="inline-wJlJDmpPBrrmH8zDbBy3"
+                    data-layout="{'id':'INLINE'}" data-trigger-type="alwaysShow" data-trigger-value=""
+                    data-activation-type="alwaysActivated" data-activation-value=""
+                    data-form-name="Form Registro Comunidad (1. Funnel Captación(Taller Crece))" data-height="645"
+                    data-layout-iframe-id="inline-wJlJDmpPBrrmH8zDbBy3" data-form-id="wJlJDmpPBrrmH8zDbBy3"
+                    title="Form Registro Comunidad (1. Funnel Captación(Taller Crece))"></iframe>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Hero Section -->
+    <section class="pt-6 pb-10 md:pb-14 bg-white">
+        <div class="max-w-7xl mx-auto px-4 text-center" style="text-align: center; margin-left: auto; margin-right: auto; width: 100%;">
+
+            <!-- Badge evento -->
+            <div class="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-full px-4 py-2 mb-8 text-center">
+                <span class="w-2 h-2 min-w-[8px] bg-[#37ca37] rounded-full animate-pulse"></span>
+                <span class="text-[#613174] font-bold text-[11px] sm:text-xs md:text-sm uppercase tracking-wider leading-tight">Taller online gratuito · 2 días · 21 y 22 de abril</span>
+            </div>
+
+            <h1 class="h1-hero font-tilt text-2xl sm:text-3xl md:text-4xl lg:text-4xl uppercase leading-tight mb-6 tracking-tight text-black">
+                SISTEMA CRECE: <span class="font-elegant lowercase">el método</span>
+                DE LAS <span class="font-elegant lowercase">oportunidades</span> DE INVERSIÓN
+            </h1>
+
+        </div>
+        <div class="max-w-4xl mx-auto px-4 text-center">
+
+            <p class="text-base md:text-xl text-gray-700 font-medium px-4 leading-snug max-w-2xl mx-auto">
+                Descubre el <strong>método</strong> para identificar <span class="font-elegant" style="font-size:1em; color: #613174;">oportunidades</span> reales de inversión
+                y desarrollar las <strong>3 habilidades fundamentales</strong> que te permitirán empezar a invertir con estrategia.
+            </p>
+            <p class="text-base md:text-lg text-[#613174] font-semibold mt-3 px-4">
+                Incluso si hoy no tienes experiencia ni grandes capitales.
+            </p>
+
+            <!-- VSL -->
+            <div class="vsl-container my-10 md:my-12">
+                <video controls playsinline controlsList="nodownload" oncontextmenu="return false;"
+                    poster="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69a06e0813b8426a22a9495e.png">
+                    <source
+                        src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/688c3527baf2af1c98a128b6.mp4"
+                        type="video/mp4">
+                    Tu navegador no soporta la reproducción de video.
+                </video>
+            </div>
+
+            <!-- CTA -->
+            <button onclick="openModal()"
+                class="btn-main text-white font-bold px-8 py-4 md:px-12 md:py-5 rounded-2xl text-lg md:text-2xl uppercase shadow-2xl hover:scale-[1.02] active:scale-95 transition-all w-full md:w-auto tracking-wide mb-6">
+                REGISTRARME GRATIS
+            </button>
+
+            <!-- Info bajo botón -->
+            <div class="flex flex-col items-center gap-2 text-sm md:text-base text-gray-600 font-medium">
+                <span class="font-bold text-gray-800">Taller online gratuito de 2 días | Inversión Estratégica en Bienes Raíces</span>
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-1">
+                    <span class="flex items-center gap-2">
+                        <span class="w-5 h-5 bg-[#37ca37] rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+                        Acceso a Comunidad Exclusiva
+                    </span>
+                    <span class="flex items-center gap-2">
+                        <span class="w-5 h-5 bg-[#37ca37] rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+                        Material de apoyo
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Beneficios del Evento -->
+    <section class="py-8 md:py-12 lg:py-14 bg-gray-50 border-t border-b">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white p-6 md:p-10 lg:p-12 rounded-2xl md:rounded-3xl shadow-lg border border-gray-100">
+                <h2 class="text-xl md:text-3xl font-bold mb-2 text-center leading-tight text-black">
+                    Lo que <span class="font-elegant" style="font-size: 1.05em;">aprenderás</span> en el evento
+                </h2>
+                <p class="text-center text-gray-400 text-sm md:text-base mb-10">Beneficios del Taller Online Gratuito</p>
+
+                <ul class="space-y-5 md:space-y-7 max-w-2xl mx-auto">
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+                            <strong>Descubrirás por qué dejar la "plata quieta" te hace perder valor.</strong> Y cómo los <span class="font-elegant lowercase" style="font-size: 1em;">bienes raíces</span> pueden convertirse en un refugio más inteligente para tu dinero.
+                        </p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+                            <strong>Dejarás atrás la confusión y empezarás a ver una ruta más clara.</strong> Entenderás cómo funciona la <span class="font-elegant lowercase" style="font-size: 1em;">Ruta de Inversión Inmobiliaria CRECE</span> para dejar de improvisar.
+                        </p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+                            <strong>Comprenderás cómo funciona el Sistema CRECE y las 3 habilidades que lo hacen posible.</strong> Descubrirás por qué detectar <span class="font-elegant lowercase" style="font-size: 1em;">oportunidades</span>, negociar bien y apalancarte con estrategia cambia por completo tu forma de invertir.
+                        </p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+                            <strong>Aprenderás la fórmula PMP para dejar de ser un comprador enamorado.</strong> Y empezar a detectar <span class="font-elegant lowercase" style="font-size: 1em;">oportunidades</span> reales de inversión con una mirada más estratégica.
+                        </p>
+                    </li>
+                    <li class="flex items-start gap-3 md:gap-4">
+                        <span class="check-icon bg-green-100 text-[#37ca37]">✔</span>
+                        <p class="text-gray-700 text-base md:text-lg leading-relaxed">
+                            <strong>Entenderás por qué el método CRECE puede abrirte la puerta a inversiones más inteligentes.</strong> Sin depender exclusivamente de tus propios recursos para empezar.
+                        </p>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- La Ruta de las 2 Clases -->
+    <section class="py-8 md:py-12 lg:py-14 bg-white">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="font-tilt text-2xl md:text-4xl uppercase tracking-tight text-black text-center px-2 mb-3">
+                LA <span class="font-elegant lowercase">ruta</span> DE LAS 2 CLASES
+            </h2>
+            <p class="text-center text-gray-400 text-sm md:text-base mb-12">Entregables del Lanzamiento</p>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+
+                <!-- Día 1 -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden day-card">
+                    <div class="bg-[#613174] text-white p-5 md:p-7 day-header">
+                        <p class="text-xs font-bold uppercase tracking-widest text-purple-300 mb-2">DÍA 1</p>
+                        <h3 class="font-tilt text-xl md:text-2xl uppercase leading-tight">
+                            La <span class="font-elegant lowercase" style="color: #f2ca04; font-size: 0.9em;">oportunidad</span>,<br>habilidades y método
+                        </h3>
+                        <p class="text-purple-200 text-sm mt-3 italic leading-snug">La base del inversionista es aprender a ver donde otros no ven</p>
+                    </div>
+                    <div class="p-5 md:p-7 day-body">
+                        <p class="text-gray-600 text-sm md:text-base mb-6 leading-relaxed">
+                            Entenderás por qué muchos quieren invertir, pero pocos saben los factores para detectar realmente <strong>una buena oportunidad</strong>.
+                        </p>
+                        <ul class="space-y-4 md:space-y-5">
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#613174] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">Los 3 modelos de inversión del Sistema CRECE</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Las principales vías para crear capital y generar ingresos, según tu realidad actual y tu objetivo de inversión.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#613174] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">El poder de las buenas oportunidades de inversión</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Por qué las oportunidades son el verdadero motor de un negocio rentable y cómo una buena oportunidad marca la diferencia entre CRECER o improvisar y estancarse.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#613174] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">Las 3 habilidades estratégicas del inversionista CRECE</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Los pilares del éxito inmobiliario: Detección de oportunidades, Negociación inteligente y Apalancamiento estratégico.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#613174] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">Qué es el Sistema CRECE y cómo organiza tu ruta de inversión</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Conecta el método con una estructura clara para avanzar con orden, visión y estrategia.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#613174] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">Tu punto de partida como inversionista</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">A pesar de que la realidad de cada persona es distinta, todos podemos iniciar, incluso si hoy no se tiene experiencia, ni grandes capitales.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Día 2 -->
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden day-card" style="border-top-color: #4d265c;">
+                    <div class="bg-[#4d265c] text-white p-5 md:p-7 day-header">
+                        <p class="text-xs font-bold uppercase tracking-widest text-purple-300 mb-2">DÍA 2</p>
+                        <h3 class="font-tilt text-xl md:text-2xl uppercase leading-tight">
+                            Taller <span class="font-elegant lowercase" style="color: #f2ca04; font-size: 0.9em;">práctico</span>:<br>de la oportunidad<br>a los números del negocio
+                        </h3>
+                        <p class="text-purple-200 text-sm mt-3 italic leading-snug">Cómo se ve una oportunidad real cuando se analiza con criterio y estrategia</p>
+                    </div>
+                    <div class="p-5 md:p-7 day-body">
+                        <p class="text-gray-600 text-sm md:text-base mb-6 leading-relaxed">
+                            Pasamos la teoría a un caso práctico, para que veas cómo se analiza una inversión inmobiliaria de manera realista, estratégica y no emocional.
+                        </p>
+                        <ul class="space-y-4 md:space-y-5">
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#4d265c] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">De la teoría a la calle: análisis de un caso real</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Cómo se detectó la oportunidad, qué señales la hacían valiosa y cómo se manejó estratégicamente la negociación.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#4d265c] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">Simulación de una inversión en vivo</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Para evaluar la rentabilidad antes de poner un solo peso.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#4d265c] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">Romperemos mitos y objeciones que frenan al inversionista</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Miedo a equivocarse, falta de tiempo y la idea de que sin gran capital no se puede empezar.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="check-icon bg-[#4d265c] text-white flex-shrink-0" style="width:22px;height:22px;font-size:10px;margin-top:2px;">✓</span>
+                                <div>
+                                    <p class="font-bold text-gray-800 text-sm md:text-base">El mapa de acción para dar tu siguiente paso</p>
+                                    <p class="text-gray-500 text-xs md:text-sm leading-snug mt-1">Te presentaremos el método y la ruta que tiene más sentido para ti dentro del Sistema CRECE.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Recursos Adicionales -->
+    <section class="py-8 md:py-12 lg:py-14 bg-purple-50 text-center">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="font-tilt text-2xl md:text-4xl uppercase tracking-tight text-black text-center px-2 mb-3">
+                RECURSOS <span class="font-elegant lowercase">adicionales</span> INCLUIDOS
+            </h2>
+            <p class="text-center text-gray-400 text-sm md:text-base mb-12">Todo lo que recibirás al registrarte</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 text-center">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
+                    <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-5 text-3xl">👥</div>
+                    <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
+                        Comunidad <span class="font-elegant capitalize" style="font-size: 0.9em;">Privada</span> CRECE
+                    </h3>
+                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">Acceso a nuestra Comunidad Privada CRECE, donde conectarás con otros futuros inversionistas.</p>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
+                    <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-5 text-3xl">📊</div>
+                    <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
+                        <span class="font-elegant capitalize" style="font-size: 0.9em;">Simulador</span> de Inversión CRECE
+                    </h3>
+                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">Tu herramienta antibalas contra los malos cálculos. Demostración y acceso incluidos.</p>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
+                    <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-5 text-3xl">📥</div>
+                    <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
+                        <span class="font-elegant capitalize" style="font-size: 0.9em;">Guía</span> Descargable PDF
+                    </h3>
+                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">El poder de las oportunidades y los beneficios de la inversión en bienes raíces, un recurso en PDF exclusivo para que avances con pasos seguros y comprendas por qué la inversión es el mejor vehículo para construir patrimonio.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Para quién sí / no -->
+    <section class="py-8 md:py-12 lg:py-14 bg-white text-gray-900">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="font-tilt text-2xl md:text-4xl uppercase tracking-tight text-black text-center px-2 mb-12">
+                ¿PARA QUIÉN <span class="font-elegant lowercase">es</span> ESTE EVENTO?
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 lg:gap-16 text-left">
+
+                <!-- Sí es para ti -->
+                <div>
+                    <h3 class="font-tilt text-2xl md:text-3xl font-bold mb-10 text-gray-900 tracking-tight">
+                        Esto <span class="font-elegant" style="color: var(--primary-purple); font-size: 0.95em;">sí</span> es para ti si...
+                    </h3>
+                    <ul class="space-y-4 md:space-y-5">
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-gray-700 leading-snug font-light text-sm md:text-base">Quieres aprender a identificar <span class="font-elegant" style="color: var(--primary-purple); font-size: 1.05em;">oportunidades reales</span> de inversión, en lugar de seguir mirando propiedades sin criterio.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-gray-700 leading-snug font-light text-sm md:text-base">Estás buscando un <span class="font-elegant" style="color: var(--primary-purple); font-size: 1.05em;">método claro</span> para empezar, aunque hoy no tengas experiencia ni grandes capitales.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-gray-700 leading-snug font-light text-sm md:text-base">Quieres construir criterio para analizar oportunidades, <span class="font-elegant" style="color: var(--primary-purple); font-size: 1.05em;">negociar mejor</span> y avanzar con más estrategia.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-gray-700 leading-snug font-light text-sm md:text-base">Te interesa descubrir las <span class="font-elegant" style="color: var(--primary-purple); font-size: 1.05em;">habilidades clave</span> del inversionista CRECE: detección de oportunidades, negociación inteligente y apalancamiento estratégico.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-[#37ca37] text-white mr-4">✓</span>
+                            <p class="text-gray-700 leading-snug font-light text-sm md:text-base">Sabes que necesitas un <span class="font-elegant" style="color: var(--primary-purple); font-size: 1.05em;">plan B</span>, pero no quieres improvisar ni cometer errores por falta de método.</p>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- No es para ti -->
+                <div class="pt-8 md:pt-0">
+                    <h3 class="font-tilt text-2xl md:text-3xl font-bold mb-10 text-gray-900 tracking-tight">
+                        Esto <span class="font-elegant" style="color: #ef4444; font-size: 0.95em;">no es</span> para ti si...
+                    </h3>
+                    <ul class="space-y-4 md:space-y-5">
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-gray-600 leading-snug font-light text-sm md:text-base">Estás buscando <span class="font-elegant" style="color: #ef4444; font-size: 1.05em;">dinero rápido</span> sin método, sin análisis y sin estrategia.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-gray-600 leading-snug font-light text-sm md:text-base">Quieres que alguien te diga qué comprar, sin aprender a <span class="font-elegant" style="color: #ef4444; font-size: 1.05em;">pensar como inversionista</span>.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-gray-600 leading-snug font-light text-sm md:text-base">Esperas <span class="font-elegant" style="color: #ef4444; font-size: 1.05em;">resultados</span> sin desarrollar habilidades ni asumir responsabilidad en tu proceso.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-gray-600 leading-snug font-light text-sm md:text-base">No estás dispuesto a aprender una forma más estratégica de ver las <span class="font-elegant" style="color: #ef4444; font-size: 1.05em;">oportunidades</span> de inversión.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="check-icon bg-red-500 text-white mr-4">✕</span>
+                            <p class="text-gray-600 leading-snug font-light text-sm md:text-base">Crees que invertir en bienes raíces es solo cuestión de tener <span class="font-elegant" style="color: #ef4444; font-size: 1.05em;">mucho dinero</span> o suerte.</p>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Bio Section -->
+    <section class="py-8 md:py-12 lg:py-14 bg-gray-50 overflow-hidden">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="text-center font-tilt text-3xl md:text-4xl font-bold mb-16 uppercase tracking-tighter text-black">
+                CONOCE A TU <span class="font-elegant" style="font-size: 0.9em;">mentor</span>: ANDRÉS GIRALDO
+            </h2>
+            <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+                <div class="w-full max-w-sm lg:w-2/5">
+                    <div class="relative group">
+                        <div class="absolute -inset-4 bg-purple-100 rounded-3xl transform -rotate-3 transition group-hover:rotate-0"></div>
+                        <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/686c48d02039a06fe1d76efc.jpeg"
+                            alt="Andrés Giraldo" class="relative rounded-2xl shadow-2xl w-full object-cover">
+                    </div>
+                </div>
+                <div class="w-full lg:w-3/5 text-left mt-8 lg:mt-0">
+                    <h3 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-6 text-black">Hola, <span class="font-elegant" style="font-size: 0.9em;">Soy Andrés Giraldo</span></h3>
+                    <div class="space-y-5 text-gray-700 leading-relaxed text-base md:text-lg font-light">
+                        <p class="font-bold text-black italic text-lg md:text-xl border-l-4 border-[#9e56bd] pl-6 leading-tight">
+                            "No nací siendo inversionista, me forjó la vida… y un terremoto."
+                        </p>
+                        <p>A mis <strong>23 años</strong>, perdí casi todo cuando el terremoto del Eje Cafetero (1999) destruyó gran parte de mi ciudad, mi hogar y el negocio familiar. En medio de esa crisis, entendí que la seguridad tradicional era una ilusión, por lo que decidí reconstruirme aprendiendo a identificar <span class="font-elegant" style="font-size: 0.9em;">verdaderas oportunidades</span>.</p>
+                        <p>Durante más de <strong>20 años</strong> he invertido en el sector inmobiliario y acompañado a otros a hacer lo mismo.</p>
+                        <p>Hoy, mi propósito es enseñarte a invertir con total <span class="font-elegant" style="font-size: 0.9em;">claridad y estrategia</span> a través del <span class="font-elegant" style="font-size: 0.9em;">Sistema de Inversión Inmobiliaria CRECE</span>, una metodología práctica, humana y comprobada que desarrollé para que cualquier persona, sin importar su punto de partida, pueda proteger sus ahorros, crear capital y construir un patrimonio sólido.</p>
+
+                        <div class="mt-6 pt-2">
+                            <button onclick="openModal()"
+                                class="btn-main text-white font-bold px-8 py-4 rounded-2xl text-lg uppercase shadow-xl hover:scale-[1.02] active:scale-95 transition-all w-full md:w-auto tracking-wide mb-4">
+                                REGISTRARME GRATIS
+                            </button>
+                            <p class="text-[#613174] font-bold text-lg md:text-xl mt-4 tracking-tight uppercase">
+                                <span class="font-elegant" style="font-size: 0.9em;">Te veo adentro.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA Section -->
+    <section class="py-10 md:py-14 lg:py-16 bg-purple-gradient text-white text-center relative overflow-hidden">
+        <div class="max-w-4xl mx-auto px-4 relative z-10 text-center">
+            <p class="text-purple-300 text-xs md:text-sm uppercase tracking-widest font-semibold mb-6">
+                Evento en vivo 100% online con materiales de apoyo y comunidad exclusiva · 21 y 22 de abril
+            </p>
+            <blockquote class="text-base md:text-xl lg:text-2xl text-white/90 italic leading-relaxed mb-10 max-w-3xl mx-auto font-light">
+                "Aprende a ver la inversión en bienes raíces con una nueva mirada y descubre cómo puede ayudarte a crear capital, avanzar hacia la generación de rentas y construir una ruta de inversión más clara, <strong class="not-italic" style="color: #f2ca04;">incluso sin dejar de hacer lo que haces</strong>."
+            </blockquote>
+            <button onclick="openModal()"
+                class="btn-yellow inline-block bg-[#f2ca04] text-black font-bold px-6 py-4 md:px-14 md:py-6 rounded-2xl text-base md:text-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl uppercase tracking-wider w-full sm:w-auto">
+                REGISTRARME GRATIS
+            </button>
+        </div>
+        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-[#191A1F] text-white">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-[10px] md:text-sm text-gray-400 leading-relaxed mb-8 max-w-5xl mx-auto">
+                DESCARGO DE RESPONSABILIDAD: Los testimonios, herramientas y ejemplos presentados en este sitio web son
+                experiencias reales, pero no garantizan resultados similares para todos los estudiantes. La información
+                aquí presentada es solo de carácter educativo y formativo. La inversión inmobiliaria conlleva riesgos.
+                CRECE SYSTEM LLC y Andrés Giraldo no proporcionan asesoría financiera, legal o contable. Este sitio no
+                es parte del sitio web de Facebook™ o Facebook™ Inc. Además, este sitio NO está respaldado por Facebook™
+                de ninguna manera. FACEBOOK™ es una marca registrada de FACEBOOK™, Inc. El uso de este sitio web está
+                sujeto a nuestros <a href="https://sistemacrece.com/terminos"
+                    class="underline hover:text-white transition-colors">Términos y Condiciones</a> y <a
+                    href="https://sistemacrece.com/politica-de-privacidad"
+                    class="underline hover:text-white transition-colors">Política de Privacidad</a>.
+            </p>
+            <p class="text-[10px] md:text-xs text-gray-500 uppercase tracking-widest font-medium">
+                &copy; 2026 ANDRÉS GIRALDO. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Form Script -->
+    <script src="https://link.elsistemacrece.com/js/form_embed.js"></script>
+    <script>
+        const modal = document.getElementById('registration-modal');
+        function openModal() { modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal() { modal.classList.remove('active'); document.body.style.overflow = 'auto'; }
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+        function equalizeHeaders() {
+            const headers = document.querySelectorAll('.day-header');
+            headers.forEach(h => h.style.minHeight = '');
+            if (window.innerWidth >= 1024 && headers.length === 2) {
+                const maxH = Math.max(...Array.from(headers).map(h => h.offsetHeight));
+                headers.forEach(h => h.style.minHeight = maxH + 'px');
+            }
+        }
+        window.addEventListener('load', equalizeHeaders);
+        window.addEventListener('resize', equalizeHeaders);
+    </script>
+
+</body>
+
+</html>
