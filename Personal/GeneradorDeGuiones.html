@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Guiones | Agencia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --purple: #613174;
+      --purple-dark: #4d265c;
+      --purple-light: #f3eaf6;
+      --purple-border: #d8b4e7;
+      --green: #16a34a;
+      --green-light: #f0fdf4;
+      --red: #dc2626;
+      --red-light: #fef2f2;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --radius-full: 9999px;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header */
+    .header {
+      background: white;
+      border-bottom: 1px solid var(--gray-200);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+    .header-sub { font-size: 12px; color: var(--gray-500); margin-top: 1px; }
+    .btn-settings {
+      background: none; border: none; cursor: pointer;
+      color: var(--gray-400); padding: 6px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s;
+      line-height: 0;
+    }
+    .btn-settings:hover { background: var(--gray-100); color: var(--gray-600); }
+
+    /* Warning banner */
+    .banner-warning {
+      max-width: 680px; margin: 16px auto 0; padding: 0 16px;
+    }
+    .banner-warning-inner {
+      background: #fff7ed; border: 1px solid #fed7aa;
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      font-size: 13px; color: #9a3412;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .banner-warning-inner a {
+      color: #9a3412; font-weight: 600; text-decoration: underline; cursor: pointer;
+    }
+
+    /* Main */
+    main { max-width: 680px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    /* Preset bar */
+    .preset-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+    .preset-select {
+      flex: 1; padding: 10px 14px; border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm); font-size: 13px; font-family: inherit;
+      background: white; color: var(--gray-700); cursor: pointer;
+      outline: none; transition: border-color 0.15s;
+    }
+    .preset-select:focus { border-color: var(--purple); }
+    .btn-save-preset {
+      padding: 10px 14px; background: white; border: 1px solid var(--gray-300);
+      border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+      color: var(--gray-700); cursor: pointer; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .btn-save-preset:hover { background: var(--gray-100); border-color: var(--gray-400); }
+
+    /* Card */
+    .card {
+      background: white; border: 1px solid var(--gray-200);
+      border-radius: var(--radius); padding: 20px;
+      box-shadow: var(--shadow-sm); margin-bottom: 12px;
+    }
+    .card-title {
+      font-size: 14px; font-weight: 600; color: var(--gray-900);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Form fields */
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label.field-label {
+      display: block; font-size: 13px; font-weight: 500;
+      color: var(--gray-700); margin-bottom: 5px;
+    }
+    .field-hint {
+      font-size: 11.5px; color: var(--gray-400); margin-top: 4px; line-height: 1.4;
+    }
+    input[type="text"], input[type="url"], textarea {
+      width: 100%; padding: 10px 14px;
+      border: 1px solid var(--gray-300); border-radius: var(--radius-sm);
+      font-size: 13.5px; font-family: inherit; color: var(--gray-900);
+      background: white; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
+    }
+    input[type="text"]:focus, input[type="url"]:focus, textarea:focus {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(97, 49, 116, 0.1);
+    }
+    input::placeholder, textarea::placeholder { color: var(--gray-400); }
+    textarea { resize: vertical; line-height: 1.5; }
+
+    /* Radio cards grid */
+    .radio-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .radio-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .radio-card {
+      border: 2px solid var(--gray-200); border-radius: var(--radius-sm);
+      padding: 10px 12px; cursor: pointer; transition: all 0.15s;
+      user-select: none;
+    }
+    .radio-card:hover { border-color: var(--purple-border); background: var(--purple-light); }
+    .radio-card.active { border-color: var(--purple); background: var(--purple-light); }
+    .radio-card-title { font-size: 13px; font-weight: 500; color: var(--gray-800); }
+    .radio-card-sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; line-height: 1.3; }
+
+    /* Checkbox row */
+    .checkbox-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 8px; cursor: pointer;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 16px; height: 16px; flex-shrink: 0;
+      accent-color: var(--purple); cursor: pointer;
+    }
+    .checkbox-row span { font-size: 12px; color: var(--gray-600); }
+
+    /* Prompt preview */
+    .prompt-preview-toggle {
+      background: none; border: none; cursor: pointer;
+      font-size: 12.5px; font-weight: 500; color: var(--purple);
+      display: flex; align-items: center; gap: 4px;
+      padding: 0; margin-top: 14px; transition: color 0.15s;
+    }
+    .prompt-preview-toggle:hover { color: var(--purple-dark); }
+    .prompt-preview-box {
+      margin-top: 10px; background: var(--gray-50);
+      border: 1px solid var(--gray-200); border-radius: var(--radius-sm);
+      padding: 12px;
+    }
+    .prompt-preview-text {
+      width: 100%; background: none; border: none; outline: none;
+      font-size: 11.5px; font-family: 'Menlo', monospace; color: var(--gray-600);
+      resize: none; line-height: 1.5;
+    }
+    .btn-copy-prompt {
+      background: none; border: none; cursor: pointer;
+      font-size: 11px; color: var(--purple); margin-top: 4px;
+      padding: 0; transition: color 0.15s;
+    }
+    .btn-copy-prompt:hover { color: var(--purple-dark); }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%; padding: 14px 20px;
+      background: var(--purple); color: white;
+      border: none; border-radius: var(--radius);
+      font-size: 15px; font-weight: 600;
+      font-family: inherit; cursor: pointer;
+      transition: all 0.2s; letter-spacing: 0.01em;
+      margin-top: 4px;
+    }
+    .btn-submit:hover:not(:disabled) { background: var(--purple-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+    .btn-submit:active:not(:disabled) { transform: scale(0.98); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .submit-note {
+      text-align: center; font-size: 11.5px; color: var(--gray-400);
+      margin-top: 8px; line-height: 1.4;
+    }
+
+    /* Result states */
+    .result-card { border-radius: var(--radius); padding: 24px; text-align: center; margin-top: 12px; }
+    .result-card.success { background: var(--green-light); border: 1px solid #bbf7d0; }
+    .result-card.error { background: var(--red-light); border: 1px solid #fecaca; }
+    .result-icon { font-size: 32px; margin-bottom: 10px; }
+    .result-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .result-card.success .result-title { color: var(--green); }
+    .result-card.error .result-title { color: var(--red); }
+    .result-msg { font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+    .result-card.success .result-msg { color: #15803d; }
+    .result-card.error .result-msg { color: #b91c1c; }
+    .btn-doc-link {
+      display: inline-block; background: var(--green); color: white;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 600; text-decoration: none;
+      transition: all 0.15s; margin-right: 8px;
+    }
+    .btn-doc-link:hover { background: #15803d; }
+    .btn-retry {
+      background: none; border: none; cursor: pointer;
+      font-size: 12px; color: var(--red); text-decoration: underline;
+      margin-top: 8px; display: block; width: fit-content; margin: 8px auto 0;
+    }
+
+    /* Settings modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: white; border-radius: var(--radius);
+      padding: 22px; width: 100%; max-width: 420px;
+      box-shadow: 0 20px 60px rgb(0 0 0 / 0.2);
+    }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-modal-save {
+      flex: 1; padding: 10px; background: var(--purple); color: white;
+      border: none; border-radius: var(--radius-sm); font-size: 13.5px;
+      font-weight: 600; font-family: inherit; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-modal-save:hover { background: var(--purple-dark); }
+    .btn-modal-cancel {
+      flex: 1; padding: 10px; background: white; color: var(--gray-700);
+      border: 1px solid var(--gray-300); border-radius: var(--radius-sm);
+      font-size: 13.5px; font-family: inherit; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-modal-cancel:hover { background: var(--gray-100); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      padding: 10px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500;
+      box-shadow: var(--shadow-md); z-index: 300;
+      animation: slideUp 0.2s ease-out;
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .toast.info { background: var(--gray-900); color: white; }
+    .toast.warn { background: #fef9c3; color: #713f12; border: 1px solid #fde047; }
+    .toast.ok { background: var(--green-light); color: var(--green); border: 1px solid #bbf7d0; }
+
+    /* Divider */
+    .divider { height: 1px; background: var(--gray-200); margin: 14px 0; }
+
+    /* Disabled input */
+    input:disabled { background: var(--gray-50); color: var(--gray-400); }
+
+    @media (max-width: 480px) {
+      .radio-grid { grid-template-columns: 1fr; }
+      .radio-grid.cols-3 { grid-template-columns: 1fr; }
+      .preset-bar { flex-direction: column; }
+      .btn-save-preset { text-align: center; }
+      main { padding: 16px 12px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Settings Modal -->
+  <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+    <div class="modal">
+      <div class="modal-title">⚙️ Configuración</div>
+      <div class="field">
+        <label class="field-label">URL del Webhook de n8n</label>
+        <input type="url" id="webhook-url-input" placeholder="https://tu-n8n.com/webhook/generar-guiones">
+        <div class="field-hint">La encuentras en n8n → Workflow → nodo Webhook → copia la URL de producción</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-save" onclick="saveSettings()">Guardar</button>
+        <button class="btn-modal-cancel" onclick="closeSettings()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div>
+        <div class="header-title">🎬 Generador de Guiones</div>
+        <div class="header-sub">Automatización de contenido orgánico para Instagram</div>
+      </div>
+      <button class="btn-settings" onclick="showSettings()" title="Configuración">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- No webhook warning -->
+  <div class="banner-warning" id="no-webhook-banner" style="display:none">
+    <div class="banner-warning-inner">
+      ⚠️ Configura la URL del webhook primero.
+      <a onclick="showSettings()">Abrir configuración →</a>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main>
+
+    <!-- Preset bar -->
+    <div class="preset-bar">
+      <select class="preset-select" id="preset-select" onchange="loadPreset(this.value)">
+        <option value="">📁 Cargar cliente guardado...</option>
+      </select>
+      <button class="btn-save-preset" onclick="savePreset()">💾 Guardar cliente</button>
+    </div>
+
+    <!-- Card: Cliente -->
+    <div class="card">
+      <div class="card-title">👤 Cliente</div>
+      <div class="field">
+        <label class="field-label">Nombre del cliente</label>
+        <input type="text" id="client-name" placeholder="Ej: Andrés Giraldo" oninput="updatePromptPreview()">
+      </div>
+    </div>
+
+    <!-- Card: Documentos -->
+    <div class="card">
+      <div class="card-title">📄 Documentos de Google</div>
+
+      <div class="field">
+        <label class="field-label">
+          Documento con las URLs seleccionadas
+          <span style="color:var(--purple);font-weight:400"> · fuente</span>
+        </label>
+        <input type="url" id="source-doc-url"
+          placeholder="https://docs.google.com/document/d/..."
+          oninput="syncSameDoc(); updatePromptPreview()">
+        <div class="field-hint">
+          El Google Doc donde están las URLs de los Reels de referencia (las 50 seleccionadas).
+          El sistema extrae automáticamente todas las URLs de Instagram que encuentre.
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">
+          Documento para guardar los guiones
+          <span style="color:var(--purple);font-weight:400"> · salida</span>
+        </label>
+        <input type="url" id="output-doc-url"
+          placeholder="https://docs.google.com/document/d/...">
+        <div class="field-hint">Los guiones generados se añadirán aquí, uno por uno.</div>
+        <label class="checkbox-row">
+          <input type="checkbox" id="same-doc-check" onchange="toggleSameDoc(this)">
+          <span>Usar el mismo documento de entrada y salida</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Card: Estilo -->
+    <div class="card">
+      <div class="card-title">🎨 Estilo del Cliente</div>
+
+      <!-- Tono -->
+      <div class="field">
+        <label class="field-label">Tono de voz</label>
+        <div class="radio-grid">
+          <div class="radio-card active" data-group="tone" data-value="educativo" onclick="selectCard(this)">
+            <div class="radio-card-title">📚 Educativo y experto</div>
+            <div class="radio-card-sub">Enseña con autoridad y conocimiento</div>
+          </div>
+          <div class="radio-card" data-group="tone" data-value="inspiracional" onclick="selectCard(this)">
+            <div class="radio-card-title">✨ Inspiracional</div>
+            <div class="radio-card-sub">Motiva y empodera a la audiencia</div>
+          </div>
+          <div class="radio-card" data-group="tone" data-value="directo" onclick="selectCard(this)">
+            <div class="radio-card-title">⚡ Directo y cercano</div>
+            <div class="radio-card-sub">Conversacional, va al grano</div>
+          </div>
+          <div class="radio-card" data-group="tone" data-value="entretenido" onclick="selectCard(this)">
+            <div class="radio-card-title">🎉 Entretenido</div>
+            <div class="radio-card-sub">Dinámico, energético y divertido</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Audiencia -->
+      <div class="field">
+        <label class="field-label">Audiencia objetivo</label>
+        <textarea id="audience" rows="2"
+          placeholder="Ej: Colombianos entre 30-50 años, profesionales con capacidad de ahorro, que quieren invertir en bienes raíces..."
+          oninput="updatePromptPreview()"></textarea>
+      </div>
+
+      <!-- Frases que usa -->
+      <div class="field">
+        <label class="field-label">Palabras o frases que el cliente usa</label>
+        <input type="text" id="key-phrases"
+          placeholder="Ej: plata quieta, bienes raíces, patrimonio, Sistema CRECE..."
+          oninput="updatePromptPreview()">
+        <div class="field-hint">Separa cada frase con una coma</div>
+      </div>
+
+      <!-- Frases que evita -->
+      <div class="field">
+        <label class="field-label">Palabras que NUNCA usa</label>
+        <input type="text" id="avoid-phrases"
+          placeholder="Ej: ROI, flujo de caja, inversión pasiva..."
+          oninput="updatePromptPreview()">
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Gancho -->
+      <div class="field">
+        <label class="field-label">Estilo del gancho (primeros 3 segundos)</label>
+        <div class="radio-grid">
+          <div class="radio-card active" data-group="hook" data-value="pregunta" onclick="selectCard(this)">
+            <div class="radio-card-title">❓ Pregunta directa</div>
+            <div class="radio-card-sub">"¿Sabes cuánto pierdes por...?"</div>
+          </div>
+          <div class="radio-card" data-group="hook" data-value="dato" onclick="selectCard(this)">
+            <div class="radio-card-title">📊 Dato sorprendente</div>
+            <div class="radio-card-sub">"El 90% de la gente no sabe que..."</div>
+          </div>
+          <div class="radio-card" data-group="hook" data-value="afirmacion" onclick="selectCard(this)">
+            <div class="radio-card-title">💥 Afirmación polémica</div>
+            <div class="radio-card-sub">"Todo lo que te enseñaron está mal"</div>
+          </div>
+          <div class="radio-card" data-group="hook" data-value="historia" onclick="selectCard(this)">
+            <div class="radio-card-title">📖 Historia personal</div>
+            <div class="radio-card-sub">"Yo también cometí este error..."</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duración -->
+      <div class="field">
+        <label class="field-label">Duración objetivo del Reel</label>
+        <div class="radio-grid cols-3">
+          <div class="radio-card active" data-group="duration" data-value="30s" onclick="selectCard(this)">
+            <div class="radio-card-title" style="text-align:center">⚡ 30 seg</div>
+            <div class="radio-card-sub" style="text-align:center">~75 palabras</div>
+          </div>
+          <div class="radio-card" data-group="duration" data-value="60s" onclick="selectCard(this)">
+            <div class="radio-card-title" style="text-align:center">📱 60 seg</div>
+            <div class="radio-card-sub" style="text-align:center">~150 palabras</div>
+          </div>
+          <div class="radio-card" data-group="duration" data-value="90s" onclick="selectCard(this)">
+            <div class="radio-card-title" style="text-align:center">🎬 90 seg</div>
+            <div class="radio-card-sub" style="text-align:center">~225 palabras</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompt preview -->
+      <button class="prompt-preview-toggle" onclick="togglePromptPreview()">
+        <span id="preview-arrow">▶</span> Ver prompt que se envía a GPT-4o
+      </button>
+      <div class="prompt-preview-box" id="prompt-preview-box" style="display:none">
+        <textarea class="prompt-preview-text" id="prompt-preview" rows="12" readonly></textarea>
+        <button class="btn-copy-prompt" onclick="copyPrompt()">📋 Copiar prompt</button>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <button class="btn-submit" id="submit-btn" onclick="submitForm()">
+      🚀 Generar Guiones de Contenido
+    </button>
+    <div class="submit-note">
+      El proceso puede tomar 30–60 minutos según la cantidad de URLs.<br>
+      Los guiones aparecerán en el Google Doc progresivamente.
+    </div>
+
+    <!-- Success -->
+    <div class="result-card success" id="success-card" style="display:none">
+      <div class="result-icon">✅</div>
+      <div class="result-title">¡Proceso iniciado!</div>
+      <div class="result-msg" id="success-msg">
+        Los guiones se están generando. Aparecerán en el Google Doc en los próximos minutos.
+      </div>
+      <a id="doc-link" href="#" target="_blank" class="btn-doc-link">📄 Abrir Google Doc</a>
+      <br>
+      <button class="btn-retry" onclick="resetForm()" style="color:var(--gray-500)">
+        ← Generar otro cliente
+      </button>
+    </div>
+
+    <!-- Error -->
+    <div class="result-card error" id="error-card" style="display:none">
+      <div class="result-icon">❌</div>
+      <div class="result-title">No se pudo iniciar</div>
+      <div class="result-msg" id="error-msg"></div>
+      <button class="btn-retry" onclick="hideError()">Reintentar</button>
+    </div>
+
+  </main>
+
+  <script>
+    // ─── State ────────────────────────────────────────────────
+    const sel = {
+      tone: 'educativo',
+      hook: 'pregunta',
+      duration: '30s'
+    };
+    let previewOpen = false;
+
+    // ─── Settings ─────────────────────────────────────────────
+    function showSettings() {
+      document.getElementById('settings-modal').classList.add('open');
+      document.getElementById('webhook-url-input').value = localStorage.getItem('n8n_webhook_url') || '';
+    }
+    function closeSettings() {
+      document.getElementById('settings-modal').classList.remove('open');
+    }
+    function saveSettings() {
+      const url = document.getElementById('webhook-url-input').value.trim();
+      if (url) {
+        localStorage.setItem('n8n_webhook_url', url);
+        document.getElementById('no-webhook-banner').style.display = 'none';
+      }
+      closeSettings();
+      toast('✅ Configuración guardada');
+    }
+
+    // ─── Radio cards ──────────────────────────────────────────
+    function selectCard(el) {
+      const group = el.dataset.group;
+      document.querySelectorAll(`[data-group="${group}"]`).forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      sel[group] = el.dataset.value;
+      updatePromptPreview();
+    }
+
+    // ─── Same doc toggle ──────────────────────────────────────
+    function toggleSameDoc(cb) {
+      const out = document.getElementById('output-doc-url');
+      if (cb.checked) {
+        out.value = document.getElementById('source-doc-url').value;
+        out.disabled = true;
+      } else {
+        out.disabled = false;
+      }
+    }
+    function syncSameDoc() {
+      if (document.getElementById('same-doc-check').checked) {
+        document.getElementById('output-doc-url').value =
+          document.getElementById('source-doc-url').value;
+      }
+    }
+
+    // ─── Prompt preview ───────────────────────────────────────
+    const TONE_MAP = {
+      educativo:    'educativo y experto, transmite autoridad y conocimiento',
+      inspiracional: 'inspiracional, motiva y empodera a la audiencia',
+      directo:      'directo y conversacional, como hablar de tú a tú',
+      entretenido:  'entretenido y dinámico, mantiene la atención con energía'
+    };
+    const HOOK_MAP = {
+      pregunta:   'Pregunta directa que genera curiosidad inmediata',
+      dato:       'Dato sorprendente o estadística impactante',
+      afirmacion: 'Afirmación controversial o contraintuitiva',
+      historia:   'Historia personal breve y cercana'
+    };
+    const DUR_MAP = {
+      '30s': '75 palabras (30 segundos hablando)',
+      '60s': '150 palabras (60 segundos hablando)',
+      '90s': '225 palabras (90 segundos hablando)'
+    };
+
+    function buildPrompt() {
+      const name      = document.getElementById('client-name').value   || '[Nombre del cliente]';
+      const audience  = document.getElementById('audience').value      || '[audiencia objetivo]';
+      const phrases   = document.getElementById('key-phrases').value   || '[frases características]';
+      const avoid     = document.getElementById('avoid-phrases').value || '[ninguna especificada]';
+
+      return `Eres un experto en creación de contenido para Reels de Instagram.
+Tu tarea es adaptar un guión al estilo y voz auténtica del cliente.
+
+CLIENTE: ${name}
+TONO: ${TONE_MAP[sel.tone]}
+AUDIENCIA: ${audience}
+
+VOCABULARIO QUE DEBES USAR:
+${phrases}
+
+VOCABULARIO QUE NUNCA DEBES USAR:
+${avoid}
+
+ESTILO DEL GANCHO: ${HOOK_MAP[sel.hook]}
+DURACIÓN MÁXIMA: ${DUR_MAP[sel.duration]}
+
+INSTRUCCIONES:
+1. Mantén la IDEA CENTRAL del video original
+2. Adapta el lenguaje completamente al estilo del cliente
+3. El gancho debe capturar atención en los primeros 3 segundos
+4. Termina con un CTA claro y específico
+5. Devuelve ÚNICAMENTE el guión adaptado, sin explicaciones ni comentarios`.trim();
+    }
+
+    function updatePromptPreview() {
+      if (previewOpen) {
+        document.getElementById('prompt-preview').value = buildPrompt();
+      }
+    }
+    function togglePromptPreview() {
+      previewOpen = !previewOpen;
+      document.getElementById('prompt-preview-box').style.display = previewOpen ? 'block' : 'none';
+      document.getElementById('preview-arrow').textContent = previewOpen ? '▼' : '▶';
+      if (previewOpen) document.getElementById('prompt-preview').value = buildPrompt();
+    }
+    function copyPrompt() {
+      navigator.clipboard.writeText(buildPrompt()).then(() => toast('📋 Prompt copiado'));
+    }
+
+    // ─── Presets ──────────────────────────────────────────────
+    function getPresets() {
+      try { return JSON.parse(localStorage.getItem('ag_presets') || '{}'); } catch { return {}; }
+    }
+    function refreshPresetList(selectVal) {
+      const presets = getPresets();
+      const sel_ = document.getElementById('preset-select');
+      sel_.innerHTML = '<option value="">📁 Cargar cliente guardado...</option>';
+      Object.keys(presets).forEach(k => {
+        const o = document.createElement('option');
+        o.value = k; o.textContent = k;
+        sel_.appendChild(o);
+      });
+      if (selectVal) sel_.value = selectVal;
+    }
+    function loadPreset(name) {
+      if (!name) return;
+      const p = getPresets()[name];
+      if (!p) return;
+      document.getElementById('client-name').value   = p.clientName || '';
+      document.getElementById('source-doc-url').value = p.sourceDocUrl || '';
+      document.getElementById('output-doc-url').value = p.outputDocUrl || '';
+      document.getElementById('audience').value       = p.audience || '';
+      document.getElementById('key-phrases').value    = p.keyPhrases || '';
+      document.getElementById('avoid-phrases').value  = p.avoidPhrases || '';
+      // Restore radio cards
+      ['tone','hook','duration'].forEach(group => {
+        const val = p[group];
+        if (!val) return;
+        document.querySelectorAll(`[data-group="${group}"]`).forEach(c => {
+          c.classList.toggle('active', c.dataset.value === val);
+        });
+        sel[group] = val;
+      });
+      updatePromptPreview();
+      toast(`✅ Cliente "${name}" cargado`, 'ok');
+    }
+    function savePreset() {
+      const name = document.getElementById('client-name').value.trim();
+      if (!name) { toast('⚠️ Escribe el nombre del cliente primero', 'warn'); return; }
+      const presets = getPresets();
+      presets[name] = {
+        clientName:   name,
+        sourceDocUrl: document.getElementById('source-doc-url').value,
+        outputDocUrl: document.getElementById('output-doc-url').value,
+        audience:     document.getElementById('audience').value,
+        keyPhrases:   document.getElementById('key-phrases').value,
+        avoidPhrases: document.getElementById('avoid-phrases').value,
+        tone: sel.tone, hook: sel.hook, duration: sel.duration
+      };
+      localStorage.setItem('ag_presets', JSON.stringify(presets));
+      refreshPresetList(name);
+      toast(`✅ Cliente "${name}" guardado`, 'ok');
+    }
+
+    // ─── Submit ───────────────────────────────────────────────
+    async function submitForm() {
+      const webhookUrl = localStorage.getItem('n8n_webhook_url');
+      if (!webhookUrl) {
+        showError('Configura la URL del webhook de n8n primero (⚙️ arriba a la derecha).');
+        showSettings();
+        return;
+      }
+
+      const clientName  = document.getElementById('client-name').value.trim();
+      const sourceUrl   = document.getElementById('source-doc-url').value.trim();
+      const outputUrl   = document.getElementById('output-doc-url').value.trim() || sourceUrl;
+
+      if (!clientName) { showError('Escribe el nombre del cliente.'); return; }
+      if (!sourceUrl)  { showError('Agrega el URL del documento con las URLs seleccionadas.'); return; }
+
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Iniciando...';
+
+      const payload = {
+        client_name:         clientName,
+        source_doc_url:      sourceUrl,
+        output_doc_url:      outputUrl,
+        client_style_prompt: buildPrompt()
+      };
+
+      try {
+        const res = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          throw new Error(`Error ${res.status}${txt ? ': ' + txt.slice(0,120) : ''}`);
+        }
+
+        const data = await res.json().catch(() => ({}));
+        showSuccess(outputUrl, data.mensaje || 'Los guiones se están generando en el Google Doc.');
+
+      } catch (err) {
+        let msg = err.message || 'Error desconocido';
+        if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+          msg = 'No se pudo conectar con n8n. Verifica que la URL del webhook sea correcta y que n8n esté activo.';
+        }
+        showError(msg);
+        btn.disabled = false;
+        btn.textContent = '🚀 Generar Guiones de Contenido';
+      }
+    }
+
+    function showSuccess(docUrl, msg) {
+      document.getElementById('success-card').style.display = 'block';
+      document.getElementById('error-card').style.display   = 'none';
+      document.getElementById('success-msg').textContent    = msg;
+      document.getElementById('doc-link').href              = docUrl;
+      document.getElementById('submit-btn').style.display   = 'none';
+      document.querySelector('.submit-note').style.display  = 'none';
+    }
+    function showError(msg) {
+      document.getElementById('error-msg').textContent    = msg;
+      document.getElementById('error-card').style.display = 'block';
+      document.getElementById('success-card').style.display = 'none';
+    }
+    function hideError() {
+      document.getElementById('error-card').style.display = 'none';
+    }
+    function resetForm() {
+      document.getElementById('success-card').style.display   = 'none';
+      document.getElementById('submit-btn').style.display     = '';
+      document.getElementById('submit-btn').disabled          = false;
+      document.getElementById('submit-btn').textContent       = '🚀 Generar Guiones de Contenido';
+      document.querySelector('.submit-note').style.display    = '';
+    }
+
+    // ─── Toast ────────────────────────────────────────────────
+    function toast(msg, type = 'info') {
+      const el = document.createElement('div');
+      el.className = `toast ${type}`;
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+
+    // ─── Init ─────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      refreshPresetList();
+      if (!localStorage.getItem('n8n_webhook_url')) {
+        document.getElementById('no-webhook-banner').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
