@@ -569,7 +569,7 @@
                         <input type="text" id="precioVentaEsperado" value="260.000.000">
                     </div>
                     <p id="warnPrecioVenta" class="hidden text-red-600 text-xs font-semibold mt-1">
-                        ⚠ El precio de venta no puede ser menor al Capital Total Invertido.
+                        ⚠ El precio de venta no puede ser menor al Precio de Compra Inicial.
                     </p>
                 </div>
                 <div class="field-item">
@@ -1002,9 +1002,9 @@
             // Capital Invertido: CI + Escrituras Compra + Mejoras + Tenencia Acumulada
             let capitalInv = vCI + costosEscCompra + costoMejoras + costoTenenciaAcum;
 
-            // Validación: precio de venta no puede ser menor al capital total invertido
+            // Validación: precio de venta no puede ser menor al precio de compra inicial
             const warnVenta = document.getElementById('warnPrecioVenta');
-            if (pVenta < capitalInv) {
+            if (pVenta < pCompra) {
                 warnVenta.classList.remove('hidden');
             } else {
                 warnVenta.classList.add('hidden');
@@ -1046,10 +1046,10 @@
             document.getElementById('roi').value = (roi * 100).toFixed(2) + '%';
             document.getElementById('rentabilidadEfectivaAnual').value = (rea * 100).toFixed(2) + '%';
 
-            analizarResultados(roi * 100, mesVenta, Math.round(costoTenenciaAcum), Math.round(capitalInv));
+            analizarResultados(roi * 100, mesVenta, Math.round(costoTenenciaAcum), Math.round(capitalInv), perFinanciacion);
         }
 
-        function analizarResultados(roiVal, meses, costoTenencia, capitalInv) {
+        function analizarResultados(roiVal, meses, costoTenencia, capitalInv, financiacion) {
             const map = document.getElementById('mapaRentabilidad');
             const resNeg = document.getElementById('resultadoNegativo');
 
@@ -1079,7 +1079,8 @@
                 posPunto = 50;
             } else {
                 titulo = "BAJO Retorno de la Inversión. Evalúa la rentabilidad y verifica el cumplimiento del objetivo.";
-                msg = `Con un tiempo de Inversión de ${meses} meses, esta operación se ubica en la Zona Naranja. Rentabilidad baja respecto al capital aportado, con costos que afectan significativamente la eficiencia de la inversión. 'La inversión trabaja más para el banco que para el inversionista.'<br><br><strong>Costo de Tenencia Actual: $${formatNumberInput(costoTenencia)} (${pctTenencia}% Del total de Capital Invertido)</strong>`;
+                const fraseCredito = (financiacion > 0) ? " 'La inversión trabaja más para el banco que para el inversionista.'" : "";
+                msg = `Con un tiempo de Inversión de ${meses} meses, esta operación se ubica en la Zona Naranja. Rentabilidad baja respecto al capital aportado, con costos que afectan significativamente la eficiencia de la inversión.${fraseCredito}<br><br><strong>Costo de Tenencia Actual: $${formatNumberInput(costoTenencia)} (${pctTenencia}% Del total de Capital Invertido)</strong>`;
                 colorCls = "bg-gradient-to-br from-orange-50 to-orange-100 border-orange-300";
                 posPunto = 85;
             }

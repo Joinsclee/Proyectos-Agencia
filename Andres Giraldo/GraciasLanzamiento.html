@@ -140,6 +140,44 @@
             border-radius: 16px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
             overflow: hidden;
+            position: relative;
+        }
+
+        .vsl-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+
+        .vsl-play-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .vsl-play-btn {
+            width: 72px;
+            height: 72px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .vsl-play-overlay:hover .vsl-play-btn {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        .vsl-play-btn svg {
+            margin-left: 5px;
         }
 
         video {
@@ -223,13 +261,37 @@
         }
 
         @media (max-width: 480px) {
-            .step-connector { max-width: 40px; }
-            .step-circle { width: 38px; height: 38px; min-width: 38px; font-size: 0.875rem; }
-            .btn-whatsapp { font-size: 1rem; padding: 1rem 1.5rem; gap: 0.625rem; }
+            .step-connector {
+                max-width: 40px;
+            }
+
+            .step-circle {
+                width: 38px;
+                height: 38px;
+                min-width: 38px;
+                font-size: 0.875rem;
+            }
+
+            .btn-whatsapp {
+                font-size: 0.95rem;
+                padding: 1rem 1.25rem;
+                gap: 0.5rem;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .step-label {
+                white-space: normal !important;
+                max-width: 62px;
+                text-align: center;
+                line-height: 1.25;
+            }
         }
 
         @media (max-width: 360px) {
-            .step-connector { max-width: 24px; }
+            .step-connector {
+                max-width: 20px;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -244,6 +306,124 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* ── CALENDARIO CRECE ── */
+        .crece-cal-border-card {
+            border-radius: 1.5rem;
+            background: white;
+            border: 1.5px solid #e9d5f5;
+            box-shadow: 0 4px 24px rgba(97, 49, 116, 0.08);
+        }
+
+        .crece-cal-day-event {
+            background-color: #613174;
+            color: white;
+            border-radius: 0.5rem;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 5px 15px -3px rgba(97, 49, 116, 0.45);
+            display: block;
+            font-weight: 700;
+        }
+
+        .crece-cal-wrapper:hover .crece-cal-day-event {
+            transform: scale(1.12);
+            background-color: #4d265c;
+            z-index: 20;
+            box-shadow: 0 10px 25px -5px rgba(97, 49, 116, 0.6);
+        }
+
+        .crece-cal-day-normal {
+            color: #374151;
+            border-radius: 0.5rem;
+        }
+
+        .crece-cal-tooltip {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #1a1a1a;
+            border: 1px solid #e9d5f5;
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: max-content;
+            max-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(97, 49, 116, 0.15);
+            pointer-events: none;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .crece-cal-wrapper:hover .crece-cal-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        /* Tooltip touch-active state */
+        .crece-cal-wrapper.tooltip-active .crece-cal-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        /* Smart tooltip positioning: left-edge columns */
+        .crece-cal-wrapper[data-col="0"] .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="1"] .crece-cal-tooltip {
+            left: 0;
+            transform: translateX(0);
+        }
+        .crece-cal-wrapper[data-col="0"]:hover .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="1"]:hover .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="0"].tooltip-active .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="1"].tooltip-active .crece-cal-tooltip {
+            transform: translateX(0) translateY(-4px);
+        }
+
+        /* Smart tooltip positioning: right-edge columns */
+        .crece-cal-wrapper[data-col="5"] .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="6"] .crece-cal-tooltip {
+            left: auto;
+            right: 0;
+            transform: translateX(0);
+        }
+        .crece-cal-wrapper[data-col="5"]:hover .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="6"]:hover .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="5"].tooltip-active .crece-cal-tooltip,
+        .crece-cal-wrapper[data-col="6"].tooltip-active .crece-cal-tooltip {
+            transform: translateX(0) translateY(-4px);
+        }
+
+        /* Calendar card mobile padding */
+        @media (max-width: 400px) {
+            .crece-cal-border-card {
+                padding: 1rem 0.625rem !important;
+            }
+        }
+
+        /* ── TIMEZONE CARDS ── */
+        .tz-card {
+            background: white;
+            border: 1.5px solid #f3e8ff;
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .tz-card:hover {
+            border-color: #c084fc;
+            box-shadow: 0 4px 16px rgba(97, 49, 116, 0.1);
+        }
     </style>
 </head>
 
@@ -255,13 +435,14 @@
     <section class="pt-8 pb-14 md:pb-20 bg-white">
 
         <!-- Título — contenedor ancho igual que registro -->
-        <div class="max-w-7xl mx-auto px-4 text-center" style="text-align: center; margin-left: auto; margin-right: auto; width: 100%;">
+        <div class="max-w-7xl mx-auto px-4 text-center"
+            style="text-align: center; margin-left: auto; margin-right: auto; width: 100%;">
             <!-- Badge -->
             <div
-                class="inline-flex items-center gap-2 bg-purple-50 border border-purple-200 rounded-full px-4 py-2 mb-8">
-                <span class="w-2 h-2 min-w-[8px] bg-[#37ca37] rounded-full animate-pulse"></span>
+                class="inline-flex flex-wrap items-center justify-center gap-2 bg-purple-50 border border-purple-200 rounded-full px-4 py-2 mb-8 max-w-full">
+                <span class="w-2 h-2 min-w-[8px] bg-[#37ca37] rounded-full animate-pulse flex-shrink-0"></span>
                 <span
-                    class="text-[#613174] font-bold text-[11px] sm:text-xs uppercase tracking-wider leading-tight">Sistema
+                    class="text-[#613174] font-bold text-[11px] sm:text-xs uppercase tracking-wider leading-tight text-center">Sistema
                     CRECE · Taller online gratuito · 21 y 22 de abril</span>
             </div>
 
@@ -287,7 +468,7 @@
                         </svg>
                     </div>
                     <span
-                        class="text-[11px] sm:text-xs font-bold text-[#37ca37] uppercase tracking-wider whitespace-nowrap">Registro
+                        class="step-label text-[11px] sm:text-xs font-bold text-[#37ca37] uppercase tracking-wider whitespace-nowrap">Registro
                         completado</span>
                 </div>
 
@@ -298,7 +479,7 @@
                 <div class="flex flex-col items-center gap-2 flex-shrink-0">
                     <div class="step-circle active">2</div>
                     <span
-                        class="text-[11px] sm:text-xs font-bold text-[#613174] uppercase tracking-wider whitespace-nowrap">Únete
+                        class="step-label text-[11px] sm:text-xs font-bold text-[#613174] uppercase tracking-wider whitespace-nowrap">Únete
                         al grupo</span>
                 </div>
 
@@ -323,14 +504,35 @@
         <!-- VSL — contenedor más ancho -->
         <div class="max-w-4xl mx-auto px-4 my-8 md:my-10">
             <div class="vsl-container">
-                <video controls playsinline controlsList="nodownload" oncontextmenu="return false;"
-                    poster="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69a06e0813b8426a22a9495e.png">
+                <div class="vsl-play-overlay" id="playOverlayGracias">
+                    <div class="vsl-play-btn">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#613174">
+                            <polygon points="5,3 19,12 5,21" />
+                        </svg>
+                    </div>
+                </div>
+                <video id="videoGracias" autoplay muted playsinline controlsList="nodownload"
+                    oncontextmenu="return false;">
                     <source
-                        src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/688c3527baf2af1c98a128b6.mp4"
+                        src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c6bf8731ffeb4ed7e4e9b6.mp4"
                         type="video/mp4">
                     Tu navegador no soporta la reproducción de video.
                 </video>
             </div>
+            <script>
+                (function () {
+                    var overlay = document.getElementById('playOverlayGracias');
+                    var video = document.getElementById('videoGracias');
+                    overlay.addEventListener('click', function () {
+                        overlay.classList.add('hidden');
+                        video.muted = false;
+                        video.controls = true;
+                        video.currentTime = 0;
+                        video.play();
+                    });
+                    video.addEventListener('pause', function () { overlay.classList.remove('hidden'); });
+                })();
+            </script>
         </div>
 
         <!-- CTA + Beneficios -->
@@ -340,7 +542,7 @@
                 <span>👇</span> Haz clic en el botón para terminar tu registro:
             </p>
 
-            <a href="#"
+            <a href="https://group.wha.link/azB22a"
                 class="btn-whatsapp inline-flex items-center justify-center gap-3 text-white font-bold px-8 py-5 md:px-14 md:py-6 rounded-2xl text-lg md:text-2xl uppercase shadow-2xl hover:scale-[1.02] active:scale-95 transition-all w-full sm:w-auto tracking-wide mb-10">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                     class="w-6 h-6 flex-shrink-0">
@@ -369,6 +571,156 @@
                         </p>
                     </li>
                 </ul>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Recursos Adicionales -->
+    <section class="py-8 md:py-12 lg:py-14 bg-purple-50 text-center">
+        <div class="max-w-6xl mx-auto px-4">
+            <h2 class="font-tilt text-2xl md:text-4xl uppercase tracking-tight text-black text-center px-2 mb-3">
+                RECURSOS <span class="font-elegant lowercase">adicionales</span> INCLUIDOS
+            </h2>
+            <p class="text-center text-gray-400 text-sm md:text-base mb-12">Todo lo que recibirás al registrarte</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 text-center">
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
+                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c6831bea111759ac985ec1.png"
+                        alt="Comunidad Privada CRECE"
+                        class="w-full max-w-[220px] object-contain mb-5 rounded-xl">
+                    <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
+                        Comunidad <span class="font-elegant capitalize" style="font-size: 0.9em;">Privada</span> CRECE
+                    </h3>
+                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">Acceso a nuestra Comunidad Privada CRECE, donde conectarás con otros futuros inversionistas.</p>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
+                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c419cda5f609718f422c90.png"
+                        alt="Simulador de Inversión CRECE"
+                        class="w-full max-w-[220px] object-contain mb-5 rounded-xl">
+                    <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
+                        <span class="font-elegant capitalize" style="font-size: 0.9em;">Simulador</span> de Inversión CRECE
+                    </h3>
+                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">Tu herramienta antibalas contra los malos cálculos. Demostración y acceso incluidos.</p>
+                </div>
+                <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
+                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c419cdff467045d9d05ef8.png"
+                        alt="Guía Descargable"
+                        class="w-full max-w-[220px] object-contain mb-5 rounded-xl">
+                    <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
+                        <span class="font-elegant capitalize" style="font-size: 0.9em;">Guía</span> Descargable
+                    </h3>
+                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">El poder de las oportunidades y los beneficios de la inversión en bienes raíces.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── CALENDARIO & HORARIOS ── -->
+    <section class="py-10 md:py-14 bg-gray-50 border-t border-purple-100">
+        <div class="max-w-3xl mx-auto px-4">
+
+            <!-- Título -->
+            <div class="text-center mb-8">
+                <p class="font-tilt text-xs uppercase tracking-widest text-[#613174] mb-2">Tu agenda</p>
+                <h2 class="text-2xl md:text-3xl font-bold text-black mb-1">
+                    Guarda estas <span class="font-elegant lowercase" style="font-size: 0.95em;">fechas</span>
+                </h2>
+                <p class="text-sm text-gray-500">Haz clic en el día para agregar a Google Calendar</p>
+            </div>
+
+            <!-- Calendario Abril 2026 -->
+            <div class="crece-cal-border-card p-5 md:p-7 mb-10">
+                <div class="flex items-center justify-center mb-5">
+                    <h3 class="font-tilt text-base uppercase tracking-widest text-[#613174]">ABRIL 2026</h3>
+                </div>
+                <!-- Cabecera días -->
+                <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center">
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-[#613174]">Lun
+                    </div>
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-[#613174]">Mar
+                    </div>
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-[#613174]">Mié
+                    </div>
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-[#613174]">Jue
+                    </div>
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-[#613174]">Vie
+                    </div>
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-[#613174]">Sáb
+                    </div>
+                    <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-[#613174]">Dom
+                    </div>
+                </div>
+                <!-- Grid -->
+                <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center" id="crece-calendar-grid"></div>
+                <!-- Leyenda -->
+                <div class="mt-5 flex justify-center">
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 rounded" style="background: #613174;"></div>
+                        <span class="text-xs font-medium text-gray-500">Día del taller · toca para agendar en Google Calendar</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horarios por país -->
+            <div class="text-center mb-6">
+                <p class="font-tilt text-xs uppercase tracking-widest text-[#613174] mb-1">Horarios</p>
+                <h3 class="text-xl md:text-2xl font-bold text-black">¿A qué hora es en tu país?</h3>
+                <p class="text-sm text-gray-500 mt-1">Los 2 días del taller, misma hora local</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="tz-card">
+                    <span class="text-2xl leading-none">🇨🇴</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-gray-800">Colombia</p>
+                        <p class="text-xs text-gray-400">COT · UTC−5</p>
+                    </div>
+                    <p class="font-tilt text-lg text-[#613174] whitespace-nowrap">7:00 PM</p>
+                </div>
+                <div class="tz-card">
+                    <span class="text-2xl leading-none">🇲🇽</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-gray-800">México</p>
+                        <p class="text-xs text-gray-400">CDT · UTC−5</p>
+                    </div>
+                    <p class="font-tilt text-lg text-[#613174] whitespace-nowrap">7:00 PM</p>
+                </div>
+                <div class="tz-card">
+                    <span class="text-2xl leading-none">🇺🇸</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-gray-800">EE.UU. (Este)</p>
+                        <p class="text-xs text-gray-400">EDT · UTC−4</p>
+                    </div>
+                    <p class="font-tilt text-lg text-[#613174] whitespace-nowrap">8:00 PM</p>
+                </div>
+                <div class="tz-card">
+                    <span class="text-2xl leading-none">🇦🇷</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-gray-800">Argentina</p>
+                        <p class="text-xs text-gray-400">ART · UTC−3</p>
+                    </div>
+                    <p class="font-tilt text-lg text-[#613174] whitespace-nowrap">9:00 PM</p>
+                </div>
+                <div class="tz-card">
+                    <span class="text-2xl leading-none">🇭🇳</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-gray-800">Honduras</p>
+                        <p class="text-xs text-gray-400">CST · UTC−6</p>
+                    </div>
+                    <p class="font-tilt text-lg text-[#613174] whitespace-nowrap">6:00 PM</p>
+                </div>
+                <div class="tz-card">
+                    <span class="text-2xl leading-none">🇪🇸</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-sm text-gray-800">España</p>
+                        <p class="text-xs text-gray-400">CEST · UTC+2</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-tilt text-lg text-[#613174] whitespace-nowrap">2:00 AM</p>
+                        <p class="text-[10px] text-gray-400">día siguiente</p>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -498,6 +850,91 @@
             }
 
             requestAnimationFrame(loop);
+        })();
+    </script>
+
+    <script>
+        /* ── Calendario CRECE - Abril 2026 ── */
+        (function () {
+            // Google Calendar links (base: 7 PM Colombia = 00:00 UTC día siguiente)
+            var gcal1 = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+                + '&text=CRECE+Clase+D%C3%ADa+1+%E2%80%93+El+M%C3%A9todo+de+las+Oportunidades+de+Inversi%C3%B3n'
+                + '&dates=20260422T000000Z%2F20260422T020000Z'
+                + '&details=Taller+online+gratuito+con+Andr%C3%A9s+Giraldo.+Clase+1+del+Sistema+CRECE.'
+                + '&location=Online+%E2%80%93+sistemacrece.com';
+            var gcal2 = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+                + '&text=CRECE+Taller+D%C3%ADa+2+%E2%80%93+El+M%C3%A9todo+de+las+Oportunidades+de+Inversi%C3%B3n'
+                + '&dates=20260423T000000Z%2F20260423T020000Z'
+                + '&details=Taller+online+gratuito+con+Andr%C3%A9s+Giraldo.+Clase+2+del+Sistema+CRECE.'
+                + '&location=Online+%E2%80%93+sistemacrece.com';
+
+            var events = {
+                21: { label: 'DÍA 1', title: 'Clase en vivo', gcal: gcal1 },
+                22: { label: 'DÍA 2', title: 'Taller práctico', gcal: gcal2 }
+            };
+
+            // Abril 2026: 30 días, empieza el miércoles (índice 2 en semana Lun-Dom)
+            var grid = document.getElementById('crece-calendar-grid');
+            var startIndex = 2;
+            var daysInApril = 30;
+
+            for (var i = 0; i < startIndex; i++) {
+                var empty = document.createElement('div');
+                grid.appendChild(empty);
+            }
+
+            for (var day = 1; day <= daysInApril; day++) {
+                var ev = events[day];
+                var col = (startIndex + day - 1) % 7;
+                var wrapper = document.createElement(ev ? 'a' : 'div');
+                wrapper.className = 'crece-cal-wrapper relative group';
+                wrapper.dataset.col = col;
+
+                if (ev) {
+                    wrapper.href = ev.gcal;
+                    wrapper.target = '_blank';
+                    wrapper.rel = 'noopener noreferrer';
+                    wrapper.innerHTML =
+                        '<div class="crece-cal-day-event" style="padding:0.35rem 0.2rem 0.3rem;">'
+                        + '<div class="text-xs sm:text-base font-bold leading-none">' + day + '</div>'
+                        + '<div style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;opacity:0.88;line-height:1;margin-top:2px;" class="sm:text-[9px]">' + ev.label + '</div>'
+                        + '</div>'
+                        + '<div class="crece-cal-tooltip">'
+                        + '<div class="text-[10px] font-black uppercase mb-1" style="color:#613174;">📅 ' + ev.label + '</div>'
+                        + '<div class="text-xs font-bold text-gray-800 leading-snug">' + ev.title + '</div>'
+                        + '<div class="text-[10px] text-gray-400 mt-1">Toca para agendar →</div>'
+                        + '</div>';
+
+                    // Touch support: tap once to preview tooltip, tap again to navigate
+                    wrapper.addEventListener('click', function (e) {
+                        var isTouchDevice = window.matchMedia('(hover: none)').matches;
+                        if (!isTouchDevice) return;
+                        if (!this.classList.contains('tooltip-active')) {
+                            e.preventDefault();
+                            document.querySelectorAll('.crece-cal-wrapper.tooltip-active').forEach(function (el) {
+                                el.classList.remove('tooltip-active');
+                            });
+                            this.classList.add('tooltip-active');
+                        }
+                        // second tap: allow navigation (default behavior)
+                    });
+                } else {
+                    wrapper.innerHTML = '<div class="crece-cal-day-normal" style="padding:0.5rem 0.2rem;">'
+                        + '<div class="text-xs sm:text-base">' + day + '</div>'
+                        + '</div>';
+                }
+
+                grid.appendChild(wrapper);
+            }
+
+            // Close tooltip when tapping outside the calendar
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.crece-cal-wrapper')) {
+                    document.querySelectorAll('.crece-cal-wrapper.tooltip-active').forEach(function (el) {
+                        el.classList.remove('tooltip-active');
+                    });
+                }
+            });
         })();
     </script>
 

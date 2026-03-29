@@ -645,6 +645,9 @@
                         <span class="currency-symbol">$</span>
                         <input type="text" id="precioVentaEsperado" value="363.422.743">
                     </div>
+                    <p id="warnPrecioVenta" class="hidden text-red-600 text-xs font-semibold mt-1">
+                        ⚠ El precio de venta no puede ser menor al Precio de Compra Inicial.
+                    </p>
                 </div>
                 <div class="field-item">
                     <label class="field-label">
@@ -1127,6 +1130,14 @@
             // Salida
             let pVenta = parseFormattedNumber(document.getElementById('precioVentaEsperado').value);
             let mesVenta = parseInt(document.getElementById('mesEstimadoVenta').value) || 0;
+
+            // Validación: precio de venta no puede ser menor al precio de compra inicial
+            const warnVenta = document.getElementById('warnPrecioVenta');
+            if (pVenta < pCompra) {
+                warnVenta.classList.remove('hidden');
+            } else {
+                warnVenta.classList.add('hidden');
+            }
             // Para coincidir con Excel: (Cuota_Exacta + Tenencia_Mes) * Meses_Venta, luego redondear
             let costoTenenciaAcum = Math.round((cuotaH_raw + tenenciaMes) * mesVenta);
 
@@ -1344,9 +1355,9 @@
             doc.text('SIMULADOR DE RENTABILIDAD CRECE', 105, yPosition + 8, { align: 'center' });
             doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
-            doc.text('PROYECTO INMOBILIARIO EN PLANOS - CRÉDITO HIPOTECARIO', 105, yPosition + 15, { align: 'center' });
+            doc.text('PROYECTO INMOBILIARIO EN PLANOS', 105, yPosition + 15, { align: 'center' });
             doc.setFontSize(10);
-            doc.text('Estrategia: Compro en Planos y Vendo en Inmueble Ya', 105, yPosition + 21, { align: 'center' });
+            doc.text('Estrategia: Compra en planos y venta del inmueble', 105, yPosition + 21, { align: 'center' });
             yPosition += 27;
 
             // Nombre del Proyecto (si se ingresó)
@@ -1922,7 +1933,7 @@
                 doc.setFontSize(8);
                 doc.setTextColor(...colorSecundario);
                 doc.setFont('helvetica', 'normal');
-                const footerText = 'Simulador Venta con Crédito - CRECE';
+                const footerText = 'Simulador Venta con Crédito';
                 doc.text(footerText, 105, 285, { align: 'center' });
                 doc.text('Página ' + i + ' de ' + pageCount, 105, 290, { align: 'center' });
             }

@@ -127,6 +127,44 @@
             border-radius: 16px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             overflow: hidden;
+            position: relative;
+        }
+
+        .vsl-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+
+        .vsl-play-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .vsl-play-btn {
+            width: 72px;
+            height: 72px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .vsl-play-overlay:hover .vsl-play-btn {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+        }
+
+        .vsl-play-btn svg {
+            margin-left: 5px;
         }
 
         video {
@@ -214,7 +252,6 @@
         }
 
         .day-card {
-            border-top: 4px solid var(--primary-purple);
             display: flex;
             flex-direction: column;
         }
@@ -257,6 +294,8 @@
         }
 
         * { box-sizing: border-box; }
+
+        h1, h2, h3, p, li { text-wrap: pretty; }
 
         .max-w-4xl, .max-w-6xl {
             width: 100%;
@@ -332,7 +371,7 @@
 
 
     <!-- Hero Section -->
-    <section class="pt-6 pb-10 md:pb-14 bg-white">
+    <section class="pt-4 pb-6 md:pb-8 bg-white">
         <div class="max-w-7xl mx-auto px-4 text-center" style="text-align: center; margin-left: auto; margin-right: auto; width: 100%;">
 
             <!-- Badge evento -->
@@ -355,15 +394,33 @@
             </p>
 
             <!-- VSL -->
-            <div class="vsl-container my-10 md:my-12">
-                <video controls playsinline controlsList="nodownload" oncontextmenu="return false;"
-                    poster="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69a06e0813b8426a22a9495e.png">
+            <div class="vsl-container my-5 md:my-7">
+                <div class="vsl-play-overlay" id="playOverlayRegistro">
+                    <div class="vsl-play-btn">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="#613174"><polygon points="5,3 19,12 5,21"/></svg>
+                    </div>
+                </div>
+                <video id="videoRegistro" autoplay muted playsinline controlsList="nodownload" oncontextmenu="return false;">
                     <source
-                        src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/688c3527baf2af1c98a128b6.mp4"
+                        src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c6bfe731ffeb2b69e4f8e2.mp4"
                         type="video/mp4">
                     Tu navegador no soporta la reproducción de video.
                 </video>
             </div>
+            <script>
+                (function () {
+                    var overlay = document.getElementById('playOverlayRegistro');
+                    var video = document.getElementById('videoRegistro');
+                    overlay.addEventListener('click', function () {
+                        overlay.classList.add('hidden');
+                        video.muted = false;
+                        video.controls = true;
+                        video.currentTime = 0;
+                        video.play();
+                    });
+                    video.addEventListener('pause', function () { overlay.classList.remove('hidden'); });
+                })();
+            </script>
 
             <!-- CTA -->
             <button onclick="openModal()"
@@ -373,7 +430,6 @@
 
             <!-- Info bajo botón -->
             <div class="flex flex-col items-center gap-2 text-sm md:text-base text-gray-600 font-medium">
-                <span class="font-bold text-gray-800">Taller online gratuito de 2 días | Inversión Estratégica en Bienes Raíces</span>
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-6 mt-1">
                     <span class="flex items-center gap-2">
                         <span class="w-5 h-5 bg-[#37ca37] rounded-full flex items-center justify-center text-white text-[10px] font-bold">✓</span>
@@ -395,7 +451,7 @@
                 <h2 class="text-xl md:text-3xl font-bold mb-2 text-center leading-tight text-black">
                     Lo que <span class="font-elegant" style="font-size: 1.05em;">aprenderás</span> en el evento
                 </h2>
-                <p class="text-center text-gray-400 text-sm md:text-base mb-10">Beneficios del Taller Online Gratuito</p>
+                <p class="text-center text-gray-400 text-sm md:text-base mb-10">Beneficios del taller online gratuito</p>
 
                 <ul class="space-y-5 md:space-y-7 max-w-2xl mx-auto">
                     <li class="flex items-start gap-3 md:gap-4">
@@ -439,18 +495,16 @@
             <h2 class="font-tilt text-2xl md:text-4xl uppercase tracking-tight text-black text-center px-2 mb-3">
                 LA <span class="font-elegant lowercase">ruta</span> DE LAS 2 CLASES
             </h2>
-            <p class="text-center text-gray-400 text-sm md:text-base mb-12">Entregables del Lanzamiento</p>
+            <p class="text-center text-gray-400 text-sm md:text-base mb-12">Entregables del lanzamiento</p>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
 
                 <!-- Día 1 -->
                 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden day-card">
-                    <div class="bg-[#613174] text-white p-5 md:p-7 day-header">
-                        <p class="text-xs font-bold uppercase tracking-widest text-purple-300 mb-2">DÍA 1</p>
-                        <h3 class="font-tilt text-xl md:text-2xl uppercase leading-tight">
-                            La <span class="font-elegant lowercase" style="color: #f2ca04; font-size: 0.9em;">oportunidad</span>,<br>habilidades y método
-                        </h3>
-                        <p class="text-purple-200 text-sm mt-3 italic leading-snug">La base del inversionista es aprender a ver donde otros no ven</p>
+                    <div class="day-header overflow-hidden">
+                        <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c6613f7cfa8f57031b1be7.png"
+                            alt="Miniatura Clase 1"
+                            class="w-full block">
                     </div>
                     <div class="p-5 md:p-7 day-body">
                         <p class="text-gray-600 text-sm md:text-base mb-6 leading-relaxed">
@@ -497,13 +551,11 @@
                 </div>
 
                 <!-- Día 2 -->
-                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden day-card" style="border-top-color: #4d265c;">
-                    <div class="bg-[#4d265c] text-white p-5 md:p-7 day-header">
-                        <p class="text-xs font-bold uppercase tracking-widest text-purple-300 mb-2">DÍA 2</p>
-                        <h3 class="font-tilt text-xl md:text-2xl uppercase leading-tight">
-                            Taller <span class="font-elegant lowercase" style="color: #f2ca04; font-size: 0.9em;">práctico</span>:<br>de la oportunidad<br>a los números del negocio
-                        </h3>
-                        <p class="text-purple-200 text-sm mt-3 italic leading-snug">Cómo se ve una oportunidad real cuando se analiza con criterio y estrategia</p>
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden day-card">
+                    <div class="day-header overflow-hidden">
+                        <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c66cf6b84af4b60b8c75a2.png"
+                            alt="Miniatura Clase 2"
+                            class="w-full block">
                     </div>
                     <div class="p-5 md:p-7 day-body">
                         <p class="text-gray-600 text-sm md:text-base mb-6 leading-relaxed">
@@ -556,25 +608,31 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-8 text-center">
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
-                    <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-5 text-3xl">👥</div>
+                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c6831bea111759ac985ec1.png"
+                        alt="Comunidad Privada CRECE"
+                        class="w-full max-w-[220px] object-contain mb-5 rounded-xl">
                     <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
                         Comunidad <span class="font-elegant capitalize" style="font-size: 0.9em;">Privada</span> CRECE
                     </h3>
                     <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">Acceso a nuestra Comunidad Privada CRECE, donde conectarás con otros futuros inversionistas.</p>
                 </div>
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
-                    <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-5 text-3xl">📊</div>
+                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c419cda5f609718f422c90.png"
+                        alt="Simulador de Inversión CRECE"
+                        class="w-full max-w-[220px] object-contain mb-5 rounded-xl">
                     <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
                         <span class="font-elegant capitalize" style="font-size: 0.9em;">Simulador</span> de Inversión CRECE
                     </h3>
                     <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">Tu herramienta antibalas contra los malos cálculos. Demostración y acceso incluidos.</p>
                 </div>
                 <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-purple-100 flex flex-col items-center">
-                    <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-5 text-3xl">📥</div>
+                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69c419cdff467045d9d05ef8.png"
+                        alt="Guía Descargable"
+                        class="w-full max-w-[220px] object-contain mb-5 rounded-xl">
                     <h3 class="font-tilt text-lg md:text-xl font-bold mb-3 uppercase text-black leading-tight">
-                        <span class="font-elegant capitalize" style="font-size: 0.9em;">Guía</span> Descargable PDF
+                        <span class="font-elegant capitalize" style="font-size: 0.9em;">Guía</span> Descargable
                     </h3>
-                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">El poder de las oportunidades y los beneficios de la inversión en bienes raíces, un recurso en PDF exclusivo para que avances con pasos seguros y comprendas por qué la inversión es el mejor vehículo para construir patrimonio.</p>
+                    <p class="text-gray-600 text-sm md:text-base font-medium leading-snug">El poder de las oportunidades y los beneficios de la inversión en bienes raíces.</p>
                 </div>
             </div>
         </div>
