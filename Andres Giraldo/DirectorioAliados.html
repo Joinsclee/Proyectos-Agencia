@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es" style="overflow-x:hidden;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Inmobiliario CRECE | Sistema CRECE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        /* ─── Variables ─────────────────────────────── */
+        :root {
+            --pp: #613174;
+            --gold: #F1C901;
+            --pp-dark: #4a2560;
+        }
+
+        /* ─── Reset base ────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body {
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+            font-family: 'Barlow Semi Condensed', sans-serif;
+            color: #1a1a1a;
+            background: #f7f4fa;
+        }
+
+        /* ─── GHL Full-width hack ───────────────────── */
+        .fw-block {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        /* ─── Typography ────────────────────────────── */
+        .font-tilt { font-family: 'Tilt Warp', cursive; }
+
+        /* ─── Hero ──────────────────────────────────── */
+        .hero-bg {
+            background: linear-gradient(135deg, #0f0a14 0%, #1e0a2e 40%, #2d1044 70%, #1a0528 100%);
+            overflow: hidden;
+        }
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 30% 40%, rgba(97,49,116,0.35) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 60%, rgba(241,201,1,0.08) 0%, transparent 50%);
+            animation: bgPulse 8s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes bgPulse {
+            0%   { transform: scale(1) rotate(0deg); }
+            100% { transform: scale(1.05) rotate(3deg); }
+        }
+
+        /* ─── Controls bar ──────────────────────────── */
+        .controls-bar {
+            background: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            box-shadow: 0 2px 20px rgba(97,49,116,0.10);
+            z-index: 100;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            margin-left: -50vw;
+        }
+        .controls-bar.is-sticky {
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin-left: 0;
+            width: 100% !important;
+            box-shadow: 0 4px 24px rgba(97,49,116,0.18);
+        }
+        #controls-spacer { display: none; }
+        #controls-spacer.active { display: block; }
+
+        /* ─── Tabs ──────────────────────────────────── */
+        .tab-btn {
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none;
+            font-family: inherit;
+        }
+        .tab-btn.active {
+            color: var(--pp);
+            border-bottom-color: var(--gold);
+        }
+        .tab-btn:hover:not(.active) { color: var(--pp); opacity: 0.75; }
+
+        /* ─── Search ────────────────────────────────── */
+        .search-wrap { position: relative; }
+        .search-input {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 12px 8px 34px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 500;
+            width: 100%;
+            transition: border-color 0.2s;
+            background: #fff;
+        }
+        .search-input:focus { outline: none; border-color: var(--pp); }
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px; height: 15px;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        /* ─── Sort ──────────────────────────────────── */
+        .sort-select {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            background: #fff;
+            cursor: pointer;
+            transition: border-color 0.2s;
+            white-space: nowrap;
+        }
+        .sort-select:focus { outline: none; border-color: var(--pp); }
+
+        /* ─── City pills ────────────────────────────── */
+        .cities-scroll {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--pp) #f0f0f0;
+        }
+        .cities-scroll::-webkit-scrollbar { height: 3px; }
+        .cities-scroll::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 99px; }
+        .cities-scroll::-webkit-scrollbar-thumb { background: var(--pp); border-radius: 99px; }
+        .city-pill {
+            cursor: pointer;
+            white-space: nowrap;
+            border: 2px solid #e5e7eb;
+            border-radius: 99px;
+            padding: 5px 14px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: inherit;
+            background: #fff;
+            color: #6b7280;
+            transition: all 0.18s;
+            flex-shrink: 0;
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+        }
+        .city-pill.active {
+            background: var(--pp) !important;
+            color: #fff !important;
+            border-color: var(--pp) !important;
+        }
+        .city-pill:hover:not(.active) {
+            border-color: var(--pp);
+            color: var(--pp);
+        }
+
+        /* ─── Content area ──────────────────────────── */
+        .content-area {
+            min-height: 60vh;
+            padding: 24px 16px 48px;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            margin-left: -50vw;
+        }
+
+        /* ─── Results info ──────────────────────────── */
+        .results-info {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* ─── Cards grid ────────────────────────────── */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        @media (max-width: 480px) {
+            .cards-grid { grid-template-columns: 1fr; gap: 12px; }
+        }
+
+        /* ─── Card ──────────────────────────────────── */
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #ede8f5;
+            transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+            overflow: hidden;
+        }
+        @media (hover: hover) {
+            .card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 36px rgba(97,49,116,0.14);
+                border-color: var(--pp);
+            }
+        }
+        .card-header {
+            background: linear-gradient(135deg, #faf5ff, #f5f0fb);
+            border-bottom: 1px solid #ede8f5;
+            padding: 12px 14px 10px;
+        }
+        .card-body { padding: 10px 14px 12px; }
+
+        /* ─── Badges ────────────────────────────────── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            padding: 3px 8px;
+            border-radius: 99px;
+            line-height: 1.3;
+        }
+        .badge-exp  { background: linear-gradient(135deg, #14532d, #16a34a); color: #fff; }
+
+        /* ─── Info rows ─────────────────────────────── */
+        .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+            font-size: 0.8rem;
+            color: #4b5563;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-icon {
+            flex-shrink: 0;
+            width: 14px; height: 14px;
+            margin-top: 2px;
+            color: var(--pp);
+        }
+        .web-link {
+            color: var(--pp);
+            font-weight: 600;
+            text-decoration: none;
+            word-break: break-all;
+            transition: color 0.15s;
+        }
+        .web-link:hover { color: #b8860b; text-decoration: underline; }
+
+        /* ─── Highlight ─────────────────────────────── */
+        mark.hl { background: rgba(241,201,1,0.35); border-radius: 2px; color: inherit; padding: 0 1px; }
+
+        /* ─── Empty state ───────────────────────────── */
+        .empty-state {
+            text-align: center;
+            padding: 64px 20px;
+            color: #9ca3af;
+        }
+
+        /* ─── Footer ────────────────────────────────── */
+        .site-footer {
+            background: linear-gradient(135deg, #0f0a14, #1e0a2e);
+            color: rgba(255,255,255,0.55);
+            text-align: center;
+            padding: 40px 16px;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            margin-left: -50vw;
+        }
+
+        /* ─── Mobile control row ────────────────────── */
+        .controls-inner { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+
+        /* Tab row */
+        .tab-row {
+            display: flex;
+            align-items: stretch;
+            border-bottom: 1px solid #f0f0f0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .tab-row::-webkit-scrollbar { display: none; }
+        .tab-row .tab-btn {
+            padding: 12px 10px;
+            font-size: 0.72rem;
+        }
+        @media (min-width: 640px) {
+            .tab-row .tab-btn { padding: 14px 18px; font-size: 0.82rem; }
+        }
+        .tab-right {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            flex-shrink: 0;
+        }
+        @media (max-width: 639px) {
+            .tab-right { display: none; }
+        }
+
+        /* Mobile search/sort row */
+        .mobile-filter-row {
+            display: none;
+            gap: 8px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        @media (max-width: 639px) {
+            .mobile-filter-row { display: flex; }
+        }
+        .mobile-filter-row .search-wrap { flex: 1; }
+        .mobile-filter-row .sort-select { flex-shrink: 0; font-size: 0.72rem; padding: 8px 6px; }
+
+        /* City pills row */
+        .pill-row { padding: 8px 0 4px; }
+
+        /* ─── Tab subtitle ──────────────────────────── */
+        .tab-subtitle {
+            padding: 10px 0 2px;
+            font-size: 0.82rem;
+            color: #6b7280;
+            font-weight: 500;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        /* ─── Action buttons on cards ───────────────── */
+        .card-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .card-actions a {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 7px 8px;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.18s;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .btn-phone {
+            background: linear-gradient(135deg, var(--pp), var(--pp-dark));
+            color: #fff !important;
+        }
+        .btn-phone:hover { opacity: 0.88; }
+        .btn-web {
+            background: linear-gradient(135deg, #F1C901, #d4a800);
+            color: #1a1a1a !important;
+        }
+        .btn-web:hover { opacity: 0.88; }
+
+        /* ─── Portal cards (bancos/radar) ───────────── */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        @media (max-width: 480px) {
+            .portal-grid { grid-template-columns: 1fr; gap: 14px; }
+        }
+        .portal-card {
+            background: #fff;
+            border-radius: 14px;
+            border: 2px solid #ede8f5;
+            padding: 24px 20px;
+            text-align: center;
+            transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+        }
+        @media (hover: hover) {
+            .portal-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 36px rgba(97,49,116,0.16);
+                border-color: var(--pp);
+            }
+        }
+        .portal-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0 0 6px;
+        }
+        .portal-card .portal-domain {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-bottom: 14px;
+        }
+        .portal-card .btn-visit {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 24px;
+            border-radius: 99px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--pp), var(--pp-dark));
+            color: #fff;
+            transition: opacity 0.18s, transform 0.18s;
+        }
+        .portal-card .btn-visit:hover {
+            opacity: 0.88;
+            transform: scale(1.03);
+        }
+
+        /* ─── RESPONSIVE ENHANCEMENTS ───────────── */
+
+        /* Hero stats dividers hide when wrapped */
+        .stat-divider { width:1px; background:rgba(255,255,255,0.15); align-self:stretch; min-height:30px; }
+
+        @media (max-width: 480px) {
+            .stat-divider { display: none; }
+            .hero-bg { padding: 40px 14px 36px !important; }
+            .hero-stats { gap: 16px 24px !important; }
+            .hero-stats > div { min-width: 60px; }
+            .content-area { padding: 16px 10px 36px !important; }
+            .portal-card { padding: 18px 14px !important; }
+            .portal-card .btn-visit { padding: 9px 18px; font-size: 0.78rem; }
+            .site-footer { padding: 28px 14px !important; }
+            .card-actions { flex-direction: column; }
+            .card-actions a { padding: 10px 8px; font-size: 0.78rem; }
+            .tab-btn { font-size: 0.68rem !important; padding: 10px 8px !important; }
+        }
+
+        @media (max-width: 360px) {
+            .hero-stats { gap: 12px 18px !important; }
+            .cards-grid { gap: 10px; }
+            .card-header { padding: 10px 12px 8px; }
+            .card-body { padding: 8px 12px 10px; }
+            .city-pill { padding: 4px 10px; font-size: 0.72rem; min-height: 30px; }
+        }
+
+        /* Tablet range */
+        @media (min-width: 481px) and (max-width: 768px) {
+            .cards-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+            .portal-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero-bg fw-block" style="position:relative; padding: 60px 16px 56px;">
+    <div style="position:relative; z-index:10; max-width:900px; margin:0 auto; text-align:center;">
+        <div style="display:inline-block; background:linear-gradient(90deg,#F1C901,#e6b800); color:#1a1a1a; font-weight:700; font-size:0.7rem; padding:5px 16px; border-radius:99px; margin-bottom:18px; letter-spacing:0.1em; text-transform:uppercase;">
+            Sistema CRECE &middot; Radar Inmobiliario
+        </div>
+        <h1 class="font-tilt" style="color:#fff; font-size:clamp(2rem,7vw,4rem); line-height:1.1; margin:0 0 16px;">
+            Radar<br><span style="color:var(--gold);">Inmobiliario CRECE</span>
+        </h1>
+        <p style="color:rgba(255,255,255,0.7); font-size:clamp(0.95rem,2.5vw,1.15rem); max-width:620px; margin:0 auto 32px; font-weight:400; line-height:1.5;">
+            Acceso exclusivo a tu red de contactos estrat&eacute;gicos y activos bancarios en las principales ciudades de Colombia
+        </p>
+        <!-- Stats -->
+        <div class="hero-stats" style="display:flex; flex-wrap:wrap; justify-content:center; gap:24px 36px;">
+            <div style="text-align:center;">
+                <div class="font-tilt" style="color:var(--gold); font-size:clamp(2rem,6vw,3.2rem); line-height:1;">352</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;">Inmobiliarias</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div style="text-align:center;">
+                <div class="font-tilt" style="color:var(--gold); font-size:clamp(2rem,6vw,3.2rem); line-height:1;">244</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;">Constructoras</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div style="text-align:center;">
+                <div class="font-tilt" style="color:var(--gold); font-size:clamp(2rem,6vw,3.2rem); line-height:1;">6</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;">Bancos</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div style="text-align:center;">
+                <div class="font-tilt" style="color:var(--gold); font-size:clamp(2rem,6vw,3.2rem); line-height:1;">18</div>
+                <div style="color:rgba(255,255,255,0.55); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; margin-top:4px;">Ciudades</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ CONTROLS BAR ═══════════ -->
+<div class="controls-bar" id="controlsBar">
+    <div class="controls-inner">
+
+        <!-- Row 1: Tabs + Desktop search/sort -->
+        <div class="tab-row">
+            <button class="tab-btn active" onclick="switchTab('inmo')" id="tab-inmo" aria-label="Inmobiliarias">
+                &#127970; Inmobiliarias
+            </button>
+            <button class="tab-btn" onclick="switchTab('const')" id="tab-const" aria-label="Constructoras">
+                &#127959;&#65039; Constructoras
+            </button>
+            <button class="tab-btn" onclick="switchTab('bancos')" id="tab-bancos" aria-label="Oportunidades de Bancos">
+                &#127974; Oportunidades de Bancos
+            </button>
+            <button class="tab-btn" onclick="switchTab('radar')" id="tab-radar" aria-label="Radar de Mercado">
+                &#128202; Radar de Mercado
+            </button>
+            <!-- Desktop: search + sort in same row as tabs -->
+            <div class="tab-right" id="tabRight">
+                <div class="search-wrap" style="width:220px;">
+                    <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+                    <input type="text" id="searchInput" placeholder="Buscar..." class="search-input" oninput="renderCards()" autocomplete="off" />
+                </div>
+                <select id="sortSelect" class="sort-select" onchange="renderCards()">
+                    <option value="default">Ordenar</option>
+                    <option value="alpha">A &rarr; Z</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tab subtitle -->
+        <div class="tab-subtitle" id="tabSubtitle"></div>
+
+        <!-- Row 2: Mobile-only search + sort -->
+        <div class="mobile-filter-row" id="mobileFilterRow">
+            <div class="search-wrap">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/></svg>
+                <input type="text" id="searchInputMobile" placeholder="Buscar empresa, ciudad..." class="search-input" oninput="onMobileSearch()" autocomplete="off" />
+            </div>
+            <select id="sortSelectMobile" class="sort-select" onchange="onMobileSort()">
+                <option value="default">&#8595; Ord.</option>
+                <option value="alpha">A&rarr;Z</option>
+            </select>
+        </div>
+
+        <!-- Row 3: City pills -->
+        <div class="pill-row" id="pillRow">
+            <div class="cities-scroll">
+            <button class="city-pill active" onclick="selectCity('all')" id="city-all">Todas las ciudades</button>
+            <button class="city-pill" onclick="selectCity('Armenia')" id="city-Armenia">Armenia</button>
+            <button class="city-pill" onclick="selectCity('Cali')" id="city-Cali">Cali</button>
+            <button class="city-pill" onclick="selectCity('Bogotá')" id="city-Bogota">Bogotá</button>
+            <button class="city-pill" onclick="selectCity('Manizales')" id="city-Manizales">Manizales</button>
+            <button class="city-pill" onclick="selectCity('Pereira')" id="city-Pereira">Pereira</button>
+            <button class="city-pill" onclick="selectCity('Medellín')" id="city-Medellin">Medellín</button>
+            <button class="city-pill" onclick="selectCity('Barranquilla')" id="city-Barranquilla">Barranquilla</button>
+            <button class="city-pill" onclick="selectCity('Bucaramanga')" id="city-Bucaramanga">Bucaramanga</button>
+            <button class="city-pill" onclick="selectCity('Nariño y Pasto')" id="city-Narino-y-Pasto">Nariño y Pasto</button>
+            <button class="city-pill" onclick="selectCity('Cartagena')" id="city-Cartagena">Cartagena</button>
+            <button class="city-pill" onclick="selectCity('Montería')" id="city-Monteria">Montería</button>
+            <button class="city-pill" onclick="selectCity('Valledupar')" id="city-Valledupar">Valledupar</button>
+            <button class="city-pill" onclick="selectCity('Santa Marta')" id="city-Santa-Marta">Santa Marta</button>
+            <button class="city-pill" onclick="selectCity('Tunja')" id="city-Tunja">Tunja</button>
+            <button class="city-pill" onclick="selectCity('Palmira')" id="city-Palmira">Palmira</button>
+            <button class="city-pill" onclick="selectCity('Tuluá')" id="city-Tulua">Tuluá</button>
+            <button class="city-pill" onclick="selectCity('Popayán')" id="city-Popayan">Popayán</button>
+            <button class="city-pill" onclick="selectCity('Cúcuta')" id="city-Cucuta">Cúcuta</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- Spacer that activates when bar becomes fixed -->
+<div id="controls-spacer"></div>
+
+<!-- ═══════════ MAIN CONTENT ═══════════ -->
+<div class="content-area">
+    <div style="max-width:1280px; margin:0 auto;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:8px;">
+            <div class="results-info" id="resultsInfo">Cargando...</div>
+        </div>
+        <div class="cards-grid" id="cardsGrid"></div>
+        <div id="portalGrid" style="display:none;"></div>
+        <div class="empty-state" id="emptyState" style="display:none;">
+            <div style="font-size:2.5rem; margin-bottom:12px;">🔍</div>
+            <div style="font-size:1.1rem; font-weight:600; color:#6b7280;">Sin resultados</div>
+            <div style="font-size:0.85rem; color:#9ca3af; margin-top:6px;">Intenta con otro término o selecciona otra ciudad</div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="site-footer fw-block">
+    <div class="font-tilt" style="color:#fff; font-size:1.5rem; margin-bottom:12px;">Sistema <span style="color:var(--gold);">CRECE</span></div>
+    <p style="font-size:0.82rem; max-width:800px; margin:0 auto 12px; line-height:1.6; color:rgba(255,255,255,0.65);">
+        ⚠️ <strong>Aviso Importante:</strong> Las herramientas, listados y contactos aquí presentados son recursos educativos diseñados para facilitar tu análisis. El Sistema CRECE y Andrés Giraldo no intervienen, ni se hacen responsables por los negocios o contratos celebrados entre los estudiantes y las entidades aquí mencionadas (bancos, constructoras o inmobiliarias). Esta plataforma no emite recomendaciones de inversión personalizadas. Te recomendamos siempre validar la información y realizar tu propia verificación legal antes de cualquier transacción.
+    </p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════ */
+const DATA_INMO  = {"Armenia": [{"nombre": "Tu red de contactos estratégicos para detectar y captar oportunidades de inversión en el mercado de inmuebles usados", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "Exclusión de Reponsabilidad - Nota al Pie de página", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "⚠️ Aviso Importante: Las herramientas, listados y contactos aquí presentados son recursos educativos diseñados para facilitar tu análisis. El Sistema CRECE y Andrés Giraldo no intervienen, ni se hacen responsables por los negocios o contratos celebrados entre los estudiantes y las entidades aquí mencionadas (bancos, constructoras o inmobiliarias).", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "Esta plataforma no emite recomendaciones de inversión personalizadas. Te recomendamos siempre validar la información y realizar tu propia verificación legal antes de cualquier transacción.", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "LISTADO ARMENIA INMOBILIARIAS FINCA RAIZ", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "CONTACTAR", "direccion": "DIRECCION", "correo": "CORREO", "web": "CONTACTAR VIA WEB"}, {"nombre": "INMOBILIARIA JULIAN JIMENEZ", "telefono": "3122185082", "direccion": "CRA 14 No 22-31", "correo": "jujiga79@hotmail.com", "web": "https://julianjimenez.co"}, {"nombre": "INMOBILIARIA L 3", "telefono": "3228473738", "direccion": "CRA 15 No 5 NORTE 55", "correo": "gerencialtres@hotmail.com", "web": "https://ltres.co"}, {"nombre": "MILLAN Y ASOCIADOS PROPIEDAD RAIZ", "telefono": "6068808383", "direccion": "CRA 16 No 19-23", "correo": "arrendamientos@millanenlinea.com", "web": "https://millanenlinea.com"}, {"nombre": "AXM AGENCIA INMOBILIARIA", "telefono": "3213903234", "direccion": "CRA 16 No 20-06", "correo": "axmagenciainmo@gmail.com", "web": "https://axminmobiliaria.com"}, {"nombre": "THE KEY INMOBILIARIA", "telefono": "3188565911", "direccion": "CRA 14 No 14N-34 LC 2", "correo": "yenifer.lopez@thekeyinmobiliaria.com", "web": "www.thekeyinmobiliaria.com"}, {"nombre": "ARRIENDO SEGURO DEL EJE", "telefono": "3003393681", "direccion": "CALLE 11 No 13-04 LC 3", "correo": "arriendoseguro.eje@gmail.com", "web": "http://arriendosegurodeleje.com"}, {"nombre": "VORTIKA INMOBILIARIA", "telefono": "3183474324", "direccion": "CALLE 6 NORTE 14-36", "correo": "bienesraices@vortika.co", "web": "https://vortika.co"}, {"nombre": "ORGANIZACIÓN INMOBILIARIA GESTION  Y PROYECTOS SAS", "telefono": "3134015595", "direccion": "CRA 71 No 48A-55", "correo": "comercial@gestioninmobiliaria.com.co", "web": "http://gestioninmobiliaria.com.co"}, {"nombre": "INMOBILIARIA INVERTIR BIEN", "telefono": "3128836434", "direccion": "CALLE 11A No 22-18", "correo": "arrendamientos1@invertirbieninmobiliaria.com", "web": "http://invertirbieninmobiliaria.com"}, {"nombre": "MAREL GRUPO INMOBILIARIO", "telefono": "3043402555", "direccion": "CALLE 23 NORTE No 14-35", "correo": "clientes@marelgrupo.com", "web": "http://marelgrupo.com"}, {"nombre": "INNOVA PROPIEDAD RAIZ", "telefono": "3173171585", "direccion": "CRA 21 No 18-13", "correo": "contacto@innovapropiedadraiz.com", "web": "https://innovapropiedadraiz.com"}, {"nombre": "VR SERVICIOS INMOBILIARIOS", "telefono": "3128673734", "direccion": "CRA 6 No 15-11", "correo": "vanessaramosinmobiliaria@gmail.com", "web": "http://vanessaramosinmobiliaria.com"}, {"nombre": "INMOBILIARIA MADRE TIERRA", "telefono": "3103715943", "direccion": "CALLE 9 No 17-35", "correo": "inmobiliariamadretierra@gmail.com", "web": "https://www.inmobiliariamadretierra.com.co"}, {"nombre": "YEFERSON GIRALDO PROPIEDAD RAIZ", "telefono": "3117113473", "direccion": "CALLE 20 No 2-62", "correo": "yeffersongiraldopropiedadraiz@gmail.com", "web": "http://ygbpropiedadraiz.com"}, {"nombre": "HEREDIA PROYECTOS INMOBILIARIOS", "telefono": "3152820892", "direccion": "CRA 10 No 15 NORTE -01", "correo": "gerencia@herediaproyectosinmobiliarios.com", "web": "http://herediaproyectosinmobiliarios.com"}, {"nombre": "LISTADO ARMENIA INMOBILIARIAS MITULA", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "GRUPO INMOBILIARIO BENAGO", "telefono": "3146007563", "direccion": "CRA 14A No 10N-36", "correo": "ventas@inmobiliariabenago.com", "web": "https://inmobiliariabenago.com"}, {"nombre": "INMOBILIARIA LONDOÑO RAMIREZ", "telefono": "67445986", "direccion": "CRA 15 No19-21", "correo": "londonoramirez82@gmail.com", "web": "https://inmobiliarialondonoramirez.com"}, {"nombre": "BURITICA BIENES RAICES", "telefono": "3166752734", "direccion": "CRA 15 No 8-43 LC 2", "correo": "https://www.buriticabienesraices.", "web": "https://www.buriticabienesraices.com"}, {"nombre": "HABITAR INMOBILIARIA QUINDIO", "telefono": "3209929718", "direccion": "CALLE 5 NORTE No 17-37", "correo": "notificaciones@habitarinmopbiliaria.co", "web": "https://habitarinmobiliaria.co"}, {"nombre": "INMOBILIARIA BIENES Y VALORES", "telefono": "3113150378", "direccion": "CALLE 22 No 13-13 CC BARILOCHE", "correo": "bienesyvalores@hotmail.com", "web": "http://inmobiliariabienesyvalores.com"}, {"nombre": "INMOBILIARIA PANORAMICA", "telefono": "3106702070", "direccion": "AV BOLIVAR No 16 NORTE", "correo": "info@panaramicainmobiliaria.com", "web": "https://inmopanoramica.com"}, {"nombre": "RAUL MEJIA ISAZA INMOBILIARIA", "telefono": "3154015585", "direccion": "CALLE 19 No 14-27 EDIF SURAMERICA OF 502", "correo": "raulmejiainmobiliaria@gmail.com", "web": "http://raulmejiainmobiliaria.com"}, {"nombre": "SURESPALDO AIS", "telefono": "3008146515", "direccion": "CALLE 22 No 15-53 EDIFICIO AIDAOF 502", "correo": "surespaldo@hotmail.com", "web": "http://surespaldo.com.co"}, {"nombre": "INMOBILIARIA ARD ASESORAR", "telefono": "3022409094", "direccion": "CALLE 19 No 12-41 CC ALTAVISTA MEZANINE 5", "correo": "arrendamientos@asesorarcolombia.com", "web": "http://asesorarcolombia.com"}, {"nombre": "INMOBILIARIA VIVENTI", "telefono": "3005793002", "direccion": "CRA 14 No 15 NORTE 08 OF 305", "correo": "info@inmobiliariaviventi.co", "web": "http://inmobiliariaviventi.co"}, {"nombre": "LA TORRE DE INVERSIONES SAS", "telefono": "3227707049", "direccion": "CALLE 16 NORTE 14-57 LC 2", "correo": "gerencia@ltinversiones.com", "web": "http://ltinversiones.com"}], "Cali": [{"nombre": "BIENCO INMOBILIARIA", "telefono": "3208899956", "direccion": "AV 5 NORTE No 22N-28", "correo": "contactenos@bienco.com.co", "web": "https://bienco.com.co"}, {"nombre": "4M BIENES RAICES S.A.S", "telefono": "3108463068", "direccion": "AV 2H NORTE 52A NORTE -05", "correo": "inmobiliaria4mbr@gmail.com", "web": "https://www.m4propiedades.cl"}, {"nombre": "GRUPO CASAR INMOBILIARIA", "telefono": "3163859753", "direccion": "CRA 54 No 7-135 LOCAL 2", "correo": "administracion@grupocasar.com", "web": "https://grupocasar.com"}, {"nombre": "PROBIENES INMOBILIARIA", "telefono": "3157658882", "direccion": "CALLE  67 NORTE COMUNA 4", "correo": "servicioalcliente@probienesinmobiliaria.com.co", "web": "https://www.probienesinmobiliaria.com.co"}, {"nombre": "SELL HOUSE INMOBILIARIA", "telefono": "3107288753", "direccion": "CALLE 42 No 4-08 COMUNA 4", "correo": "gerentesellhouse@hotmail.com", "web": "https://sellhouseinmobiliaria.com"}, {"nombre": "B &M INVERSIONES INMOBILIARIAS", "telefono": "3154362925", "direccion": "AV 4 NORTE No 23B N-16 2 PISO", "correo": "contacto@byminmobiliaria.com", "web": "https://www.byminmobiliaria.com"}, {"nombre": "NARANJO INMOBILIARIA LTDA", "telefono": "3167050331", "direccion": "CALLE 11 1-07 OFICINA 620", "correo": "info@naranjoltda.com", "web": "https://naranjoltda.com"}, {"nombre": "INMOBILIARIA FENIX DEL VALLE", "telefono": "3172208389", "direccion": "CR 23 No 28-08", "correo": "inmobiliarfenix@hotmail.com", "web": "https://inmobiliariafenix.net"}, {"nombre": "ARKIDECON REAL STATE SAS", "telefono": "3054859060", "direccion": "AVENIDA 3 OESTE No 10-40 SANTA RITA", "correo": "arkidecon@gmail.com", "web": "https://arkidecon.com.co"}, {"nombre": "INMWEBLES SAS", "telefono": "3152563700", "direccion": "CALLE 15 No 3-20 EDIF BELLEZA PLAZA", "correo": "iwgerencia@gmail.com", "web": "https://inmwebles.co"}, {"nombre": "UNISA INMOBILIARIA", "telefono": "3186155207", "direccion": "CALLE 38 NORTE No 4N-170", "correo": "centrodeservicios@gestion.unisa.com.co", "web": "https://unisa.com.co"}, {"nombre": "HOLGUIN Y HOLGUIN SAS", "telefono": "3122983362", "direccion": "CALLE 26 NORTE No 5", "correo": "servicioalcliente@holguinyholguin.com", "web": "https://holguinyholguin.com"}, {"nombre": "MASTERHOUSE INMOBILIARIA", "telefono": "3175177481", "direccion": "CALLE 9B No 32-36", "correo": "gerencia@masterhouseinmobiliaria.com", "web": "https://masterhouseinmobiliaria.com"}, {"nombre": "SAUCEDO Y SAUCEDO INMOBILIARIA", "telefono": "(602)5245545", "direccion": "AV 4 NORTE No 6N- 67 OFINA 810", "correo": "portales@saucedoysaucedo.com", "web": "https://saucedoysaucedo.com"}, {"nombre": "LISTADO CALI INMOBILIARIAS FINCA RAIZ", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "SEKTOR IN NEGOCIOS INMOBILIARIOS", "telefono": "3105489502", "direccion": "CRA 101 No 11-50 BALCON CAMPESTRE", "correo": "aparcerisas@sektor-in.com", "web": "https://www.sektor-in.com"}, {"nombre": "AG GRUPO MOBILIARIO SAS", "telefono": "3183001064", "direccion": "CRA 4C No 59C BIS-05 COMUNA5", "correo": "gerencia@propiedadesycapitales.org", "web": "https://aginmobiliarios.inmo.co"}, {"nombre": "RENT & SALE INMOBILIARIA R & M", "telefono": "3177370350", "direccion": "CALLE 86 No 38-155 LOCAL 5", "correo": "rent.saleinmobiliaria@gmail.com", "web": "https://www.rm-inmobiliaria.com"}, {"nombre": "UNIDAD INMOBILIARIA", "telefono": "3183016228", "direccion": "CRA 34 No 5-25", "correo": "gerencia@unidadinmobiliaria.org", "web": "https://unidadinmobiliaria.org"}, {"nombre": "INMOBILIARIA LW SAS", "telefono": "3147575767", "direccion": "CRA 9 No 15-40", "correo": "comercial@inmobiliarialw.com", "web": "https://inmobiliarialw.com"}, {"nombre": "BR INMOBILIARIA SAS", "telefono": "3155771383", "direccion": "AV ROOSEVELT No 31-44 OFICINA 202", "correo": "ingo@brinmobiliaria.com.co", "web": "https://brinmobiliaria.com.co"}, {"nombre": "SUMA INMOBILIARIA SAS", "telefono": "25532727", "direccion": "AV ROOSEVELT No 39-25 OFI 202", "correo": "info@sumaserviciosinmobiliarios.com", "web": "https://www.sumaserviciosinmobiliarios.com"}, {"nombre": "MULTIBIENES INMOBILIARIA  LTDA", "telefono": "25587676", "direccion": "CRA 26 No 6A-08", "correo": "auxarrendamientos@multibienesltda.com", "web": "https://multibienesltda.com"}, {"nombre": "MULTIGESTION LTDA", "telefono": "3117645323", "direccion": "CRA 100 No 11-60", "correo": "arrendamientos@multigestion.co", "web": "https://www.multigestion.co"}, {"nombre": "VELOZA INMOBILIARIA", "telefono": "3136726374", "direccion": "CRA 42 No 9C-37", "correo": "inmobiliaria.veloza@hotmail.com", "web": "https://inmobiliariaveloza.com"}, {"nombre": "ADMINISTRADORA TEQUENDAMA", "telefono": "3006097492", "direccion": "CALLE 5 No  45-20 OF 58", "correo": "admonteq@yahoo.com", "web": "https://admonteq.com"}, {"nombre": "EMPORIO BIENES CAPITALES S.A.S", "telefono": "3178254178", "direccion": "CRA 85A No 14A-60 COMUNA 17", "correo": "servicioalcliente@emporiobienes.com", "web": "https://emporiobienes.com"}], "Bogotá": [{"nombre": "INMOBILIARIA R Y R", "telefono": "3208370382", "direccion": "CALLE 105A No14-92 OFICINAS 305 Y 306 EDIF T P F", "correo": "bogota@inmobiliariarr.com", "web": "http://inmobiliariarr.com"}, {"nombre": "RV INMOBILIARIA", "telefono": "6012573700", "direccion": "CRA 15 N No 86-31", "correo": "portales@rvinmobiliaria.com", "web": "https://rvinmobiliaria.com"}, {"nombre": "INMOBILIARIA DISEÑANDO FUTURO", "telefono": "3144702486", "direccion": "CRA 46 No 22B-20 TEUSAQUILLO", "correo": "director@disefuturo.com", "web": "https://disefuturo.com"}, {"nombre": "HOME PRO", "telefono": "3102591815", "direccion": "CRA 49B No 93-38", "correo": "info@homepro.com.es", "web": "https://www.homepro.com.es"}, {"nombre": "INMOBILIARIA BOGOTA S.A.S", "telefono": "6013500696", "direccion": "CRA 13 No 28-01 PISO 2", "correo": "coordinador.engativa@inmobiliariabogota.com", "web": "https://www.inmobiliariabogota.com"}, {"nombre": "INMOBILIARIA RUBEN QUIROGA", "telefono": "6019178460", "direccion": "CRA 17 No 15-07 SUR", "correo": "arrendamientos@rubenquiroga.com", "web": "https://rubenquiroga.co"}, {"nombre": "AGUDELO Y ASOCIADOS BIENES RAICES", "telefono": "3152126830", "direccion": "CALLE 57B SUR No 66-85", "correo": "agudeloyasociadosbienesraices@gmail.com", "web": "https://www.agudeloyasociadosbienesraices.com"}, {"nombre": "EUGENIO SUAREZ SANDOVAL SAS", "telefono": "3115131254", "direccion": "cra 8 No 16-88", "correo": "eugeniossycia@hotmail.com", "web": "https://www.essycia.com.co"}, {"nombre": "ZALA COLOMBIA CONSULTORES", "telefono": "6013001955", "direccion": "CRA 7 No 74B-56 OFICINA 1209", "correo": "djimenez@zala.com.co", "web": "https://zala.com.co"}, {"nombre": "INMOBILIARIA COLOMBIA  LTDA", "telefono": "6043411602", "direccion": "CRA 13 No 13.117 OFICINA 304", "correo": "inmobiliariacolombialimitada@yahoo.com", "web": "https://inmobiliariacolombialimitada.com"}, {"nombre": "PASEO ESPAÑA ASESORIAS INMOBILIARIAS ABOGADOS", "telefono": "3213705561", "direccion": "CRA 53 No 128C-16", "correo": "gerencia@paseoespanabogota.com", "web": "https://www.paseoespanainmobiliaria.com"}, {"nombre": "ARVAL BIENES RAICES SAS", "telefono": "3108563682", "direccion": "CRA 69B No 24B-55", "correo": "info@arvalbr.com", "web": "https://www.arvalbr.com"}, {"nombre": "REENTI SAS", "telefono": "3118464430", "direccion": "CALLLE  63 No 11- 45 OF 602", "correo": "hola@reenti.co", "web": "https://reenti.co"}, {"nombre": "METRO NEGOCIOS INMOBILIARIOS", "telefono": "3002852120", "direccion": "CRA 70 C No 80-48 LOCAL 45", "correo": "contacto@metronegociosinmobiliarios.com", "web": "https://www.metronegociosinmobiliarios.com"}, {"nombre": "LISTADO BOGOTA INMOBILIARIAS MITULA", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "SUS LLAVES INMOBILIARIA", "telefono": "3002667540", "direccion": "PINAR DE SUBA", "correo": "susllavesinmobiliaria@gmail.com", "web": "https://susllavesinmobiliaria.com"}, {"nombre": "RICHOUSE INMOBILIARIA", "telefono": "6019178426", "direccion": "CALLE 79A No 18-41 EDIF MONSERRATE OF 202", "correo": "atencionalcliente@richouseinmobiliaria.com", "web": "https://www.richouseinmobiliaria.com"}, {"nombre": "GRUPO ITINERANTE CONSTRUCTORA INMOBILIARIA SAS", "telefono": "3212366780", "direccion": "DIVER PLAZA TORRE 2OFICINA 304", "correo": "gerencia@grupoitinerante.com", "web": "https://grupoitinerante.com"}, {"nombre": "AE INMOBILIARIA SAS", "telefono": "6016192370", "direccion": "CALLE 125 No 19-89  OFICINA 103", "correo": "aeinltda@yahoo.com", "web": "https://aeinmobiliaria.com"}, {"nombre": "DRELO INMOBILIARIA", "telefono": "3105846511", "direccion": "CRA 45 No 104B-28", "correo": "info@drelo.co", "web": "https://drelo.co"}, {"nombre": "INMOBILIARIA RODRIGUEZ Y ASOCIADOS", "telefono": "3185784621", "direccion": "CRA 71D No 2B-13", "correo": "inmobiliariarodriguez.a@gmail.com", "web": "https://inmobiliariara.domusweb.co"}, {"nombre": "INMOBILIARIA CAPRI LTDA", "telefono": "3237977085", "direccion": "CALLE 77 No 14-19 OF 203", "correo": "info@inmobiliariacapri.com", "web": "https://inmobiliariacapri.com.co"}, {"nombre": "FINCASA INMOBILIARIA SALITRE SAS", "telefono": "3143137167", "direccion": "AV LA ESPERANZA No 72B-09", "correo": "FincasainmobiliariaSalitre@gmail.com", "web": "https://www.fincasainmobiliaria.com"}, {"nombre": "INMOBILIARIA VIRVIESCAS PINZON LTDA", "telefono": "3197957517", "direccion": "CALLE 24D No75-32 OF 201", "correo": "arriendos@virviescaspinzonltda.com.co", "web": "https://virviescaspinzonltda.com.co"}, {"nombre": "MOX VIVIENDA", "telefono": "3208845217", "direccion": "CALLE 163B No 48-80", "correo": "clientes@moxvivienda.com", "web": "https://moxvivienda.com"}, {"nombre": "BIENES Y PROYECTOS INMOBILIARIOS SAS", "telefono": "3015377184", "direccion": "CRA 69A No 23C-75", "correo": "inmuebles@bienesyproyectos.com", "web": "https://bypinmobiliarios.com"}, {"nombre": "QUANTUM INMOBILIARIA & CIA  LTDA", "telefono": "3213054750", "direccion": "CRA 97 No 72-73 OF 101", "correo": "comercial@quantuminmobiliaria.com", "web": "https://quantuminmobiliaria.com"}, {"nombre": "MULTIKASA INMOBILIARIA", "telefono": "3105848530", "direccion": "TRANV 77 No 7A-10 OF CASA 29", "correo": "multikasainmobiliaria@gmail.com", "web": "https://www.multikasainmobiliaria.com"}, {"nombre": "REDSOLUTION INMOBILIARIA Y NEGOCIOS", "telefono": "3103258265", "direccion": "TRANSVERSAL 23 No 95-06  OFICINA 601", "correo": "comercial@red-solutions.com", "web": "https://red-solutions.com"}, {"nombre": "INMOBILIARIA COBRAC SAS", "telefono": "3009124896", "direccion": "CALLE No 17-25 PISO 2", "correo": "info@cobracs.com.co", "web": "https://inmobiliariacobracs.com"}, {"nombre": "BIENES RAICES LIBERTAD", "telefono": "3214861762", "direccion": "AV CALLE 26 No 102-20 OFICINA 303", "correo": "info@bienesraiceslibertad.com", "web": "https://bienesraiceslibertad.com"}, {"nombre": "TU LUGAR IDEAL INMOBILIARIA", "telefono": "3133704820", "direccion": "CALLE 93 No 17-49 OF 403", "correo": "gerenciacomercial@tulugarideal.co", "web": "https://tulugarideal.com.co"}], "Manizales": [{"nombre": "BRANDO & CIA", "telefono": "3206726641", "direccion": "CRA 23C No 62-72", "correo": "atencionenlinea@brando.com.co", "web": "https://brando.com.co"}, {"nombre": "JNQ INMOBILIARIA", "telefono": "3127770350", "direccion": "CRA 24 No 20-48", "correo": "jnqenlace@gmail.com", "web": "https://www.jnqinmobiliaria.com.co"}, {"nombre": "STAR INMOBILIARIA", "telefono": "3148014286", "direccion": "CALLE 22 No 22-26 OF 902", "correo": "info@starinmobiliaria.com", "web": "https://www.starinmobiliaria.com"}, {"nombre": "INMOBILIARIA JORGE GIRALDO & CIA", "telefono": "3108934261", "direccion": "CALLE 23 No 21-41 LOCAL 5", "correo": "jorgegiraldoycia@gmail.com", "web": "https://jorgegiraldo.com"}, {"nombre": "INMOBILIARIA GIRALDO CASTAÑO", "telefono": "3104008161", "direccion": "CALLE 62 No 23-61 OF 504", "correo": "inmobiliariagiraldocastano@gmail.com", "web": "https://inmobiliariagiraldo.co"}, {"nombre": "MILLAN&ASOCIADOS PROPIEDAD RAIZ", "telefono": "6068808383", "direccion": "CALLE 21 No 21 - 45", "correo": "arrendamientos@millanenlinea.com", "web": "https://millanenlinea.com"}, {"nombre": "AF CAPITAL INMOBILIARIO", "telefono": "3186585089", "direccion": "CALLE 62 No 23-61 OF 405", "correo": "capitalinmobiliariomanizales@gmail.com", "web": "https://propiedades.afcapitalinmobiliario.com"}, {"nombre": "INMOBILIARIA MANIZALES", "telefono": "3156701419", "direccion": "CALLE 62 No 23-61 704", "correo": "inmobiliariamanizales088@gmail.com", "web": "https://inmobiliariamanizales.com"}, {"nombre": "INFIBANK INMOBILIARIA", "telefono": "3128799100", "direccion": "CALLE 62 No 23-61 OF 404", "correo": "directorcomercial@infibank.com.co", "web": "https://infibank.com.co"}, {"nombre": "VISION &ASESORIA INMOBILIARIA", "telefono": "3147720745", "direccion": "CALLE 64A No21-50 OFI 806", "correo": "vasesoriainmobiliaria@gmail.com", "web": "https://visionasesoria.com"}, {"nombre": "DAKA SERVICIOS FINANCIAEROS E INMOBILIARIOS", "telefono": "3168754354", "direccion": "CRA 23 No 62-39 OF 401B", "correo": "gerencia@dakahogar.com", "web": "https://inmobiliariadaka.com"}, {"nombre": "ADMINISTRA BIENES RAICES SAS", "telefono": "3206358000", "direccion": "CRA 27A No 66-30 LOC 737", "correo": "info@administrabienesraices.com", "web": "https://administrabienesraices.com"}, {"nombre": "LISTADO MANIZALES INMOBILIARIAS MITULA", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "CASTRO ROSERO INMOBILIARIA", "telefono": "3128057747", "direccion": "CALLE 62 No 23-61", "correo": "gerencia@castrorosero.com", "web": "https://castrorosero.com"}, {"nombre": "INMOBILIARIA VISTAS SAS", "telefono": "3014671842", "direccion": "CALLE 56A No 23B-133", "correo": "gerencia@vistainmobiliariasas.com", "web": "https://vistainmobiliaria.inmo.co"}, {"nombre": "VISION Y ASESORIA INMOBILIARIA", "telefono": "3147720745", "direccion": "CALLE 64 No21-50 OF 806", "correo": "vasesoriainmobiliaria@gmail.com", "web": "https://visionasesoria.com"}, {"nombre": "INMOBILIARIA LINDEROS", "telefono": "3104670266", "direccion": "CRA 24B No 61A-30", "correo": "inmobiliarialinderos@gmail.com", "web": "https://linderosinmobiliaria.inmo.co"}, {"nombre": "BRANDO & CIA", "telefono": "3206726641", "direccion": "CRA 23C No 62-72", "correo": "atencionenlinea@brando.com.co", "web": "https://brando.com.co"}, {"nombre": "CENTRO DE NEGOCIOS INMOBILIARIOS", "telefono": "3207329391", "direccion": "CRA 24 No 21-52 LOCAL 10-11", "correo": "centroinmobiliariodecaldas@hotmail.com", "web": "https://centroinmobiliariodecaldas.inmo.co"}, {"nombre": "INMOBILIARIA DEL CAFÉ", "telefono": "3127722191", "direccion": "CRA 24 No 21-21 OF 204", "correo": "quindioinmobiliariadelcafe@gmail.com", "web": "https://inmobiliariadelcafe.com"}, {"nombre": "GRUPO REPUBLICA", "telefono": "3054099259", "direccion": "CALLE 62 No 23-61 OF 305", "correo": "contactosgruporepublica@yahoo.com", "web": "https://gruporepublica.com.co"}], "Pereira": [{"nombre": "CASTELLON INMOBILIARIA", "telefono": "3175018052", "direccion": "CRA 13 AV CIRCUNVALAR 9-26 LOCAL 5", "correo": "gerencia@castellon.co", "web": "https://inmobiliariacastellon.com"}, {"nombre": "URBE DEL CAFÉ", "telefono": "3108235281", "direccion": "CALLE 23 No 6-59", "correo": "urbecafetero@hotmail.com", "web": "https://inmobiliariadelcafe.com"}, {"nombre": "INVIERTA INMOBILIARIA", "telefono": "3142864249", "direccion": "CALLE 14 No 16-47", "correo": "comercial@invierta.com.co", "web": "https://inviertainmobiliaria.com"}, {"nombre": "RENTAR INMOBILIARIA", "telefono": "3009121600", "direccion": "CALLE 12 No 13-54", "correo": "contacto@rentarinmobiliaria.com", "web": "https://rentarinmobiliaria.com"}, {"nombre": "INMOBILIARIA GESTIONAR LEGAL", "telefono": "3128931702", "direccion": "CRA 7 No 18-80 OF 703", "correo": "gestionar@gmail.com", "web": "https://gestionamosinmobiliarialegal.com"}, {"nombre": "ENTORNO SOLUCIONES INMOBILIARIAS INTEGRALES S.A.S", "telefono": "3155652446", "direccion": "CALLE 20 Np 6- 20 LOCAL 12", "correo": "coordinadoracomercial@entornoinmobiliaria.com", "web": "https://www.entornoinmobiliaria.com"}, {"nombre": "EJE INMOBILIARIO SAS", "telefono": "3116095369", "direccion": "CALLE 19 No 9-50", "correo": "ejeinmobiliario@gmail.com", "web": "https://ejeinmobiliariomanizales.com"}, {"nombre": "CONTINENTAL GRUPO INMOBILIARIO", "telefono": "3010151079", "direccion": "CRA 16 BIS No 8-89", "correo": "administracion@continentalgi.co", "web": "https://continentalgi.co"}, {"nombre": "SOE INMOBILIARIA", "telefono": "3165264390", "direccion": "CALLE 14 No 23-72 OF 708", "correo": "mariasoe40@gmail.com", "web": "https://soeinmobiliaria.com"}, {"nombre": "SOLUCIONES INMOBILIARIAS COLOMBIA", "telefono": "3165880823", "direccion": "CRA 28 No13-45", "correo": "info@sicolombia.co", "web": "https://sicolombia.co"}, {"nombre": "INMOGESTION COLOMBIA", "telefono": "3206644100", "direccion": "CRA 11 No 12-31", "correo": "info@sicolombia.co", "web": "https://inmogestioncolombia.com"}, {"nombre": "OV SERVICIOS INMOBILIARIOS", "telefono": "3104581487", "direccion": "CALLE 19 No 12-69", "correo": "ovserviciosinmobiliarios@gmail.com", "web": "https://ovserviciosinmobiliarios.inmo.co"}, {"nombre": "HL ASESORIAS  S.A.S", "telefono": "3113855192", "direccion": "CLUB RESIDENCIAL EL NOGAL APTO 1212", "correo": "coordinadorcomercial@hlasesorias.com", "web": "https://hlasesorias.com"}, {"nombre": "LISTADO PEREIRA INMOBILIARIAS MITULA", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "RITEMAR", "telefono": "3166211054", "direccion": "CRA 8 No 18-67", "correo": "ricardo@ritemar.co", "web": "https://www.ritemar.co"}, {"nombre": "EN LLAVE INMOBILIARIA", "telefono": "3147277799", "direccion": "CRA 24 No 22-02 OF 1104", "correo": "ventas@enllave.com", "web": "https://www.enllave.com"}, {"nombre": "STANZA INMOBILIARIA", "telefono": "3202160414", "direccion": "AV 30 DE AGOSTO 73-51 LOCAL 21", "correo": "gerencia@stanzainmobiliaria.com", "web": "https://stanzainmobiliaria.com"}, {"nombre": "VALOR URBANO", "telefono": "3128466501", "direccion": "CALLE 17 No 8-24 PISO 2", "correo": "info@valorurbano.com", "web": "https://www.valorurbano.com"}, {"nombre": "GESTIGLOVAR INMOBILIARIA ENE EL EXTERIOR", "telefono": "3167171117", "direccion": "CRA 8 No 18-60  OFICINA 410", "correo": "gloriavargas@gestiglovar.com", "web": "https://www.gestiglovar.com"}, {"nombre": "INFINIT INMOBILIARIA", "telefono": "3103523986", "direccion": "CC FIDUCENTRO LC D 215-42 ROJO", "correo": "infinitinmobiliaria@gmail.com", "web": "https://infinitinmobiliaria.com"}, {"nombre": "PEREIRA INMOBILIARIA", "telefono": "3225304842", "direccion": "AV 30 DE AGOSTO 68-125 CAÑAVERAL LC 25", "correo": "informacion@pereirainmobiliariasas.com", "web": "https://pereirainmobiliaria.com"}, {"nombre": "INMOBILIARIA VISOS SAS", "telefono": "3137320831", "direccion": "AVENIDA SUR No 25-57 LA LORENA II", "correo": "inmobiliariavisos@gmail.com", "web": "https://inmobiliariavisos.com"}, {"nombre": "ASERTIVA INMOBILIARIA", "telefono": "3136303663", "direccion": "CRA 14 No 13-69 BARRIO LOS ALPES", "correo": "asistente@assertivainmobiliaria.com", "web": "https://assertivainmobiliaria.com"}, {"nombre": "JARAMILLO BOLIVAR INMOBILIARIA", "telefono": "3216030049", "direccion": "CALLE 23 No 7-69 EDF MONTERREY", "correo": "jaramillobolivarinmobiliaria@gmail.com", "web": "https://jaramillobolivarinmobiliaria.com"}, {"nombre": "LONJICAFE", "telefono": "3023950015", "direccion": "CRA 7 No 18-21 L205", "correo": "info@lonjicafe.com", "web": "https://lonjicafe.com"}, {"nombre": "ARRENADAMIENTOS LA SEXTA", "telefono": "3127027583", "direccion": "CALLE 19 No 8-34 of 1002", "correo": "ayal6@hotmail.com", "web": "https://www.arrendamientoslasexta.com"}, {"nombre": "RAMIREZ NAVARRO INMOBILIARIA", "telefono": "3013877508", "direccion": "CRA 17 No 9-20 LOCAL 4", "correo": "info@ramireznavarro.com", "web": "https://ramireznavarro.com"}], "Medellín": [{"nombre": "CWK INMOBILIARIO", "telefono": "3012498026", "direccion": "ALTO DE LAS PALMAS OF 302", "correo": "cwkinmobiliario@gmail.com", "web": "https://cwkinmobiliario.com"}, {"nombre": "ZONICA INMOBILIARIA", "telefono": "3137919527", "direccion": "CRA 7 No 23 SUR - 56", "correo": "gerencia@zonikainmobiliaria.com", "web": "https://zonikainmobiliaria.com"}, {"nombre": "CENTURY 21 LA HEREDAD", "telefono": "3122170604", "direccion": "CALLE 35A No 80-LAURELES", "correo": "comercial@c21laheredad.com", "web": "https://century21laheredad.com"}, {"nombre": "INMOBILIAR ATHENAS", "telefono": "3226094726", "direccion": "CRA 25 No 25-11", "correo": "ventas@inmobiliariaathena.com", "web": "https://atenasinmobiliaria.com"}, {"nombre": "STAR GROUP INMOBILIARIA", "telefono": "3244300581", "direccion": "CALLE 32 No 75-31", "correo": "comercial1@stargroupinmobiliaria.com", "web": "https://stargroupinmobiliaria.com"}, {"nombre": "MAXIBIENES INMOBILIARIA", "telefono": "604-4445230", "direccion": "AV SAN JUAN 71-22", "correo": "info@maxibienes.com", "web": "https://maxibienes.com"}, {"nombre": "ARRENDAMIENTOS MERINO HERMANOS", "telefono": "3232900631", "direccion": "CALLE 44 No 78-35", "correo": "arriendos@merinohermanos.com.co", "web": "https://merinohermanos.com.co"}, {"nombre": "PEREZ AMOBLADOS SAS", "telefono": "3148927318", "direccion": "CALLE 37 EL POBLADO", "correo": "perezamoblados@gmail.com", "web": "https://perezamoblados.com"}, {"nombre": "INMOBILIAR ZAR", "telefono": "312756811", "direccion": "CRA 43 No 31-124", "correo": "inmobiliariazarmedellin@gmail.com", "web": "http://inmobiliariazar.com"}, {"nombre": "LA LONJA PROPIEDAD RAIZ", "telefono": "3107932337", "direccion": "CRA 46 No 53-48 LC 107", "correo": "servicioalcliente@lalonjapropiedadraiz.com", "web": "https://www.lalonjapropiedadraiz.com"}, {"nombre": "NEXT CAPITAL SAS", "telefono": "3045506515", "direccion": "CRA 43B No 16-41", "correo": "comercial@nexcapital.co", "web": "https://nexcapital.co"}, {"nombre": "INVERSIONES INMOBILIARIAS", "telefono": "3148293246", "direccion": "CALLE 53 No 45-112 OF 1802", "correo": "info@inversionesinmobiliarias.co", "web": "https://inversionesinmobiliarias.co"}, {"nombre": "LISTADO MEDELLIN INMOBILIARIAS FINCA RAIZ", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "ARRENDAMIENTO METROPOLIS SAS", "telefono": "3104253969", "direccion": "CALLE 48 No 42-41OF 228", "correo": "arrendamientosmetropolis208@gmail.com", "web": "https://www.arrendamientosmetropolis.com.co"}, {"nombre": "ARRENDAMIENTOS VILLACRUZ", "telefono": "3116050515", "direccion": "CALLE 44 No 78-29", "correo": "citasweb@arrendamientosvillacruz.com.co", "web": "https://www.arrendamientosvillacruz.com.co"}, {"nombre": "ARRENDAMIENTOS SANTA FE", "telefono": "6044484015", "direccion": "CALLE 44 No 71-34", "correo": "arrendar04@arrendamientossantafe.com", "web": "https://www.arrendamientossantafe.com"}, {"nombre": "ARRENDAMIENTO EL CASTILLO S.A.S", "telefono": "6042385343", "direccion": "CRA 77 No 30A-21", "correo": "coordinacionpropiedades@arrendamientoselcastillo.co", "web": "https://www.arrendamientoselcastillo.com.co"}, {"nombre": "BIENCO S.A.S", "telefono": "3208899956", "direccion": "AV 5 NORTE No 22-28", "correo": "contactenos@bienco.com.co", "web": "https://bienco.com.co"}, {"nombre": "ARRENDAMIENTOS DIAMANTE", "telefono": "3229412639", "direccion": "TV 42B No 63C-159", "correo": "info@arrendamientosdiamante.com", "web": "https://arrendamientosdiamante.com.co"}, {"nombre": "OPORTUNIDAD INMOBILIARIA", "telefono": "3126639912", "direccion": "CRA 65 No 49B-21 LOC 109", "correo": "gerencia@oinmobiliaria.com", "web": "https://www.oportunidadinmobiliaria.com"}, {"nombre": "GRUPO EMPRESARIAL MI", "telefono": "3187403144", "direccion": "CRA 81A No 42B-34", "correo": "info@grupoempresarialmi.com", "web": "https://grupoempresarialmi.com"}, {"nombre": "LA PALMA INMOBILIARIA", "telefono": "3244290040", "direccion": "CALLE 54 No 43-70", "correo": "info@lapalmainmobiliaria.com", "web": "https://lapalmainmobiliaria.com.co"}, {"nombre": "CUADRA POR CUADRA INMOBILIARIA", "telefono": "3173003586", "direccion": "CRA 51 No 50-21 PISO 15", "correo": "comercial@cudraporcuadra.com", "web": "https://cuadraporcuadrainmobiliaria.com"}, {"nombre": "PETRA INMOBILIARIA", "telefono": "3244539175", "direccion": "CRA 74 No 49B-17", "correo": "info@escobarvanegas.com", "web": "https://petrainmobiliaria.com"}, {"nombre": "ARRENDAMIENTO ALNAGO", "telefono": "3007703625", "direccion": "CALLE 47 No 42-54 LC 105", "correo": "asesorlaureles1@alnago.com", "web": "https://alnago.com"}, {"nombre": "DUQUE GIRALDO  Y CIA S.A.S", "telefono": "3148126709", "direccion": "CRA 43 No 16-41 OF 505", "correo": "duque@duquegiraldo.com", "web": "https://duquegiraldo.com"}, {"nombre": "ILAN INMOBILIARIA", "telefono": "3175172847", "direccion": "CRA 39 No 8-14", "correo": "info@ilaninmobiliaria.co", "web": "https://ilaninmobiliaria.co"}, {"nombre": "MERINO HERMANOS Y CIA  LTDA", "telefono": "3116615145", "direccion": "CRA 43B No 25 EL POBLADO", "correo": "comercial@merinohermanos.com.co", "web": "https://merinohermanos.com"}], "Barranquilla": [{"nombre": "ARIZA Y CORREA INMOBILIARIA", "telefono": "3023706380", "direccion": "CRA 49C No 74-136 N CENTRO HISTORICO", "correo": "contacto@arizaycorrea.com", "web": "https://arizaycorrea.com"}, {"nombre": "ALFREDO CASTRO Y CIA SAS", "telefono": "3156839116", "direccion": "CRA 46 No 70-195", "correo": "arriendos@alfredodecastrop.com", "web": "https://alfredodecastrop.com"}, {"nombre": "CONINSA RAMON H.S.A", "telefono": "3241000075", "direccion": "CALLE 55 No 45-55", "correo": "digitalbarranquilla@coninsa.co", "web": "https://coninsa.co"}, {"nombre": "SALES INMOBILIARIA", "telefono": "3153367500", "direccion": "CALLE  74 No 57-71 NORTE", "correo": "publicidad@sales.com.co", "web": "https://www.sales.com.co"}, {"nombre": "FINANCAR SAS", "telefono": "3150385777", "direccion": "CALLE 53 No 110-ESQUINA LC 7", "correo": "ejecutivat.i.c@financar.com.co", "web": "https://financar.com.co"}, {"nombre": "ALIADOS INMOBILIARIOS S.A", "telefono": "6053225010", "direccion": "CRA 59 No 75-29", "correo": "coordinadorcomercial@aliadosinmobiliariossa.com", "web": "https://aliadosinmobiliariossa.com"}, {"nombre": "ACE INMOBILIARIA", "telefono": "3008619747", "direccion": "CRA 31 No 70B-06", "correo": "ayeinmobiliariasas@gmail.com", "web": "https://aceinmobiliariasas.com"}, {"nombre": "ASESORA INMOBILIARIA DEL CARIBE S.AS", "telefono": "3012924451", "direccion": "CRA 60 No 70-52", "correo": "operativocomercial@inmobiliariasesorar.com", "web": "https://inmobiliariasesorar.com"}, {"nombre": "INMOBILIARIA INURBANAS S.A.S", "telefono": "3005865750", "direccion": "CRA 64 No 90-25", "correo": "infoinurbanas@gmail.com", "web": "https://inurbanas.com"}, {"nombre": "SOLUCIONES INMOBILIARIAS TANIS SAS", "telefono": "3124449090", "direccion": "CRA 13 No 142-51", "correo": "arrendamiento@inmobiliariatanis.com", "web": "https://inmobiliariatanis.com"}, {"nombre": "IGAMA S.A", "telefono": "3234802793", "direccion": "CRA 52 No 75-111 NORTE OF 806", "correo": "arriendos2@igama.co", "web": "https://igama.com.co"}, {"nombre": "ISSA SAIEH  INMOBILIARIA", "telefono": "3182543374", "direccion": "CALLE 70 No 57-25", "correo": "Infoinurbanas@gmail.com", "web": "https://issasaieh.com"}, {"nombre": "LINESCO INMOBILIARIA", "telefono": "3106312277", "direccion": "CRA 44 No 79-07", "correo": "linescocomercial@gmail.com", "web": "https://linescoinmobiliaria.com"}, {"nombre": "INMOBILIARIA FLOREZ REYES", "telefono": "3043929061", "direccion": "TV 44 No 104-30", "correo": "estudiosinmobiliariaflorezr@gmail.com", "web": "https://inmobiliariaflorezreyes.com"}, {"nombre": "LISTADO BARRANQUILLA INMOBILIARIAS MITULA", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "INMOBILIARIA COSTA CARIBE", "telefono": "3046849919", "direccion": "CALLE 76 No 49B-20", "correo": "inmobiliariacostacaribe@gmail.com", "web": "https://inmobiliariaregioncaribe.com"}, {"nombre": "RV INMOBILIARIA", "telefono": "3132573700", "direccion": "CRA 53 No 75-143 NORTE", "correo": "servicioalcliente@rvinmobiliaria.com", "web": "https://rvinmobiliaria.com"}, {"nombre": "D CASA INMOBILIARIA", "telefono": "3187173316", "direccion": "CRA 57 No 81-167 NORTE", "correo": "info@decasasinmobiliaria.com", "web": "https://decasasinmobiliaria.com"}, {"nombre": "IMPULSO URBANO", "telefono": "3168782847", "direccion": "CALLE 77 No 57-103", "correo": "info@impulsourbano.com", "web": "https://impulsourbano.com"}, {"nombre": "GRUPO BELTRAN", "telefono": "3174284918", "direccion": "CRA 53 No 100-50", "correo": "mbeltran@grupobeltran.co", "web": "https://grupobeltran.com.co"}, {"nombre": "CASARRIENDOS SAS", "telefono": "3135890809", "direccion": "CRA 43 No 87-51 NORTE", "correo": "info@casarriendos.com", "web": "https://casarriendos.com"}, {"nombre": "NOVA INMOBILIAR SAS", "telefono": "3162920256", "direccion": "CALLE 106 No 50-67OF 207", "correo": "comercial@i-nova.co", "web": "https://www.inmobiliarianova.com.co"}, {"nombre": "INURBANA SAS", "telefono": "3004492999", "direccion": "CRA 64 No 90-25 PISO 2", "correo": "ricardoafarah@inurbanas.com", "web": "https://inurbanas.com"}, {"nombre": "IRIA GOMEZ AGENTE INMOBILIARIA", "telefono": "3208465791", "direccion": "CALLE 135 No 55 06", "correo": "iriamariela@gmail.com", "web": "https://iriagomez.com"}, {"nombre": "ARENAS INMOBILIARIA", "telefono": "3175897970", "direccion": "CRA 58 No 75-78", "correo": "servicioalcliente@rvinmobiliaria.com", "web": "https://arenasinmobiliaria.co"}, {"nombre": "INMOBILIARIA MCHAILEH Y CIA SAS", "telefono": "3853201", "direccion": "CR 51B No 76-27 OF 204", "correo": "comunicaciones@mchaileh.com", "web": "https://mchaileh.com"}, {"nombre": "INVERGLOBAL INMOBILIARIA", "telefono": "3104559431", "direccion": "CR 51b No 82-254 OF 45", "correo": "inversionesasesoriasglobal@gmail.com", "web": "https://www.inverglobalinmobiliaria.co"}, {"nombre": "INMUEBLES 360", "telefono": "3102260413", "direccion": "CRA 45 No 80-82", "correo": "infoinmuebles360@gmail.com", "web": "https://www.inmuebles360.co"}, {"nombre": "INMOBILIARIA ARGUELLEZ", "telefono": "3173837504", "direccion": "CRA 47 93 No 107", "correo": "claudia.delahoz@arguelle.com", "web": "https://arguelle.com"}], "Bucaramanga": [{"nombre": "INMOBILIARIA NUEVO HORIZONTE", "telefono": "3503447920", "direccion": "CRA 24 No 34-47 OF 103", "correo": "contacto@nuevohorizonteinmobiliario.com", "web": "https://nuevohorizonteinmobiliaria.com"}, {"nombre": "CENTRAL DE NEGOCIOS INMOBILIAIROS", "telefono": "3183122893", "direccion": "CALLE 53 No 35A-10 OF 101", "correo": "comercial@cninmobiiarios.com", "web": "https://cninmobiliarios.com.co"}, {"nombre": "AVICAL INMOBILIARIA S.A.S", "telefono": "3196983571", "direccion": "CALLE 34 No 26-18", "correo": "arriendos.avicalinmobiliaria@gmail.com", "web": "http://avicalinmobiliaria.com"}, {"nombre": "INMOBILIARIA  Y CONSULTORES HYD", "telefono": "3209194787", "direccion": "CALLE 36 No 14-42", "correo": "info@hydinmobiliaria.co", "web": "https://www.hydinmobiliaria.co"}, {"nombre": "INMOBILIARIA DOMINGUEZ PARRA", "telefono": "6852828", "direccion": "CRA 19 No 36-20 LOCAL 216", "correo": "canalelectronico@dominguezparra.com.co.", "web": "https://dominguezparra.com"}, {"nombre": "PILONIETA ASOCIADOS  SAS", "telefono": "3163099489", "direccion": "CALLE 38 No 32-51 OF 1", "correo": "contactopilonietaasociados.com", "web": "https://www.pilonietaasociados.com"}, {"nombre": "PROFESIONALES EN ADMINISTRACION DE BIENES RAICES", "telefono": "6573630", "direccion": "CRA 28 No 49-30", "correo": "serviciocliente@probienesinmobiliaria.com.co", "web": "https://www.probienesinmobiliaria.com.co"}, {"nombre": "GIORGI INMOBILIARIA SAS", "telefono": "3302016279", "direccion": "CRA 25 No 24-19", "correo": "info@inmobiliariagiorgi.com", "web": "https://www.inmobiliariagiorgi.com"}, {"nombre": "GESTORA INMOBILIARIA DE SANTANDER S.A.S", "telefono": "318 6227976", "direccion": "CALLE 35 No 29-34 OF 210", "correo": "gestorainmobiliariacomercial@gmail.com.", "web": "https://www.gestoraenlinea.com"}, {"nombre": "LISTADO BUCARAMANGA INMOBILIARIAS FINCA RAIZ", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "METROPOLITAN  NEGOCIOS NEGOCIOS INMOBILIARIOS", "telefono": "3133501662", "direccion": "CRA 14 No 30-29 OFICINA 117", "correo": "metropolitan.negociosinmo@gmail.com", "web": "https://www.inmobiliariametropolitanabga.com"}, {"nombre": "INMOBILIARIA QUINTA 22", "telefono": "3188833464", "direccion": "CALLE 35 No 19-41 OF 118", "correo": "direccionservicios@quinta22.co", "web": "https://inmobiliariaquinta22.com.co"}, {"nombre": "FINCAR LTDA", "telefono": "6971707", "direccion": "CALLE 36 No 22-40", "correo": "fincar@fincarltda.com", "web": "https://fincarltda.com"}, {"nombre": "ASECASA INMOBILIARIA", "telefono": "3163001720", "direccion": "CRA 29 No 49-52", "correo": "asecasa@hotmail.com", "web": "https://www.asecasa.com"}, {"nombre": "INMOBILIARIA GUZMAN DUARTE", "telefono": "3185000719", "direccion": "CENTRO COMERCIAL PANAMA PISO 3 OF 304", "correo": "inmobiliariaguzmanduarte@outlook.com", "web": "https://inmobiliariaguzmanduarte.inmo.co"}, {"nombre": "INMOBILIARIA REYCO SAS", "telefono": "3134225649", "direccion": "CRA 31 No 52B-23", "correo": "reyco@inmobiliariareyco.com", "web": "https://inmobiliariareyco.com"}, {"nombre": "GESTION URBANA SA", "telefono": "6358989", "direccion": "CRA 34 No 52-56", "correo": "recepcionsur@geurbana.com", "web": "https://gestionurbanainmobiliaria.com.co"}, {"nombre": "INMOBILIARIA URBACON DE COLOMBIA", "telefono": "3167907697", "direccion": "PLAZA MAYOR ENTRADA 12 OF120", "correo": "inmobiliariaurbacon@outlook.com", "web": "https://urbacon.com.co"}, {"nombre": "SITUARSE INMOBILIARIA", "telefono": "3174298247", "direccion": "CRA 22 No 36-16 OF 102", "correo": "comercial@situarseinmobiliaria.com", "web": "https://www.situarseinmobiliaria.com"}, {"nombre": "INMOBILIARIA CAÑAVERAL PARQUE SAS", "telefono": "7174035", "direccion": "CALLE 42 No 29-147", "correo": "canaveralparque-comer@hotmail.com", "web": "https://www.inmobiliariacanaveralparque.com"}, {"nombre": "INMOBILIARIA CLAVIJO TORRES LTDA", "telefono": "3162682342", "direccion": "CALLE 36 No 21-71", "correo": "contacto@inmobiliariaclavijo.com", "web": "https://inmobiliariaclavijo.com"}, {"nombre": "INMOBILIARIA CORVIVIENDAS", "telefono": "3176405855", "direccion": "CRA 28 No 34-03", "correo": "comercial@corviviendas.com", "web": "https://www.corviviendas.com"}, {"nombre": "INMOBILIARIA E INGENIERIA AJC LTDA", "telefono": "6320900", "direccion": "CRA 23 No 35-75", "correo": "cirogomez@inajc.com", "web": "https://www.inajc.com"}, {"nombre": "INMOBILIARIA RUIZ PEREA SAS", "telefono": "3153731374", "direccion": "CRA 25 No 30-81", "correo": "gerencia@iruizperea.com", "web": "https://www.iruizperea.com"}, {"nombre": "INMOBILIARIA PRESTIGIO", "telefono": "3005873495", "direccion": "CRA 29 No 45-94", "correo": "inmobiliariaprestigio@gmail.com", "web": "https://inmobiliariaprestigio.com"}], "Nariño y Pasto": [{"nombre": "J Y C INMOBILIARIA", "telefono": "3128509460", "direccion": "CALLE 19 No 31B-44", "correo": "atencionalcliente@inmobiliariajya.com", "web": "https://jycinmobiliaria.com.co"}, {"nombre": "GUILLERMO ORTIZ INMOBILIARIA", "telefono": "(602)7213949", "direccion": "CRA 29 No 19-83", "correo": "comercialpasto@guillermoortiz.co", "web": "https://guillermoortiz.co"}, {"nombre": "MAS INMOBILIARIA", "telefono": "3187129035", "direccion": "CRA 29 No 15-74", "correo": "masfb7@gmail.com", "web": "https://masinmobiliaria.net"}, {"nombre": "HBB INMOBILIARIA Y ASOCIADOS", "telefono": "3136939233", "direccion": "CALLE 18 No 30-72", "correo": "serviciohbb@asociados.com", "web": "https://hbinmobiliaria.com.co"}, {"nombre": "PRAGA INMOBILIARIA", "telefono": "3158329581", "direccion": "CRA 25 No 15-62 OF 301", "correo": "pragainmobiliariaph@gmail.com", "web": "https://inmobiliariapraga.com"}, {"nombre": "INMOBIKIARIA MARTINEZ", "telefono": "3013118100", "direccion": "CALLE 19 No 31-10 LOCAL 1", "correo": "comercial.martinezinm@gmail.com", "web": "https://www.martinezinm.com"}, {"nombre": "INMOBILIARIA PUNTO FIANZA", "telefono": "3174298619", "direccion": "CALLE 20 No 31B-40OF 302", "correo": "gerencia@puntofianza.com", "web": "https://puntofianza.com"}, {"nombre": "RENTACASAS INMOBILIARIA", "telefono": "3155610266", "direccion": "CRA 31C No 19A-33", "correo": "info@rentacasa.com.co", "web": "https://inmobiliariarentacasa.com"}, {"nombre": "INMOBILIARIA NUEVA EPOCA", "telefono": "3104268420", "direccion": "CALLE No 31 ESQUINA  LAS CUADRAS", "correo": "contacto@inmobiliarianuevaepoca.com", "web": "https://inmobiliarianuevaepoca.com"}, {"nombre": "TRUJILLO INMOBILIARIA", "telefono": "3015002980", "direccion": "CALLE 19 No 31-22", "correo": "trujilloinmobiliaria4@gmail.com", "web": "https://trujilloinmobiliaria.com"}, {"nombre": "AGENCIA INMOBILIARIA DE NARIÑO", "telefono": "3155904061", "direccion": "CALLE 20 No 29-07 OFICINA 101B", "correo": "info@aidenar.com", "web": "https://aidenar.com"}, {"nombre": "CHAVES Y RENGIFO NEGOCIOS INMOBILIARIOS", "telefono": "3208566335", "direccion": "CRA 6C No 132-94 ETAPA 1 OF 204", "correo": "c.chaves@chrnegociosinmobiliarios.com", "web": "https://www.chrnegociosinmobiliarios.com"}], "Cartagena": [{"nombre": "INMOBILIARIA INVERFIN SAS", "telefono": "3107319884", "direccion": "CRA 13 No 7 -06", "correo": "mercadeoinverfin@gmail.com", "web": "https://inverfin.com.co"}, {"nombre": "INMOBILIARIA BOZZIMBETT S.A.S", "telefono": "3107356853", "direccion": "CRA 2 No 9-96", "correo": "directorcomercial@bozzimbett.com", "web": "https://bozzimbett.com"}, {"nombre": "SOLUCIONES COMERCIALES Y CONSTRUCTIVAS S.A.S", "telefono": "3137499769", "direccion": "CRA  25 No 3- 45OF 434", "correo": "sucasacomercial@gmail.com", "web": "http://www.solucionesconstructivas.co"}, {"nombre": "ASESORAR INMOBILIARIA DE COLOMBIA S.A.S", "telefono": "3103950927", "direccion": "CALLE 6 No 4-20 LOCAL 108", "correo": "admon@asesorinmobiliaria.com", "web": "https://asesoriainmobiliaria.com"}, {"nombre": "INMOBILIARIA SEGRERA MUTIS S.A.S", "telefono": "3205311624", "direccion": "CRA 2 No 8-16 LOCAL 316", "correo": "info@segreramutis.co", "web": "https://segreramutis.co"}, {"nombre": "GRUPO ARENAS INMOBILIARIA", "telefono": "3150385777", "direccion": "CRA 2 No 12-161 BOCAGRANDE", "correo": "auxiliar@arenassa.com", "web": "https://arenasinmobiliaria.co"}, {"nombre": "DAVILA & DAVILA", "telefono": "3017684408", "direccion": "CENTRO COMERCIAL OFICINA 1C-32", "correo": "infodavilaydavila@gmail.com", "web": "https://www.davilaydavila.com"}, {"nombre": "INMOBILIARIA ARAUJO Y SEGOVIA", "telefono": "3232540699", "direccion": "CALLE 32A No 8A-50CONCASA PISO 2", "correo": "info@araujoysegovia.com", "web": "https://www.araujoysegovia.com"}, {"nombre": "INMOBILIARIA ABITARE", "telefono": "(605)6931105", "direccion": "MANGA CALLE 27 No 20-03 LOCAL 4", "correo": "info@abitare.com.co", "web": "https://www.abitare.com.co"}, {"nombre": "ER INVERSIONES INMOBILIARIAS", "telefono": "3164722670", "direccion": "CALLE 26 No 20-92 EDIFICIO OPALO APTO 802", "correo": "gerencia@erinmobiliaria.co", "web": "https://erinmobiliaria.co"}, {"nombre": "LLAVE MAESTRA INMOBILIARIA", "telefono": "3226716245", "direccion": "KILOMETRO 8 VIA AL MAR  SERENA DEL MAR", "correo": "inmobiliaria.llavemaestra@gmail.com", "web": "https://llavemaestrainmobiliaria.com.co"}, {"nombre": "INMOBILIARIA CARTAGENA LTDA", "telefono": "3176684314", "direccion": "PLAZA DE LA ADUANA EDIFICIO ANDIAN OF 203", "correo": "gtatism@inmobiliariacartagena.com", "web": "https://www.inmobiliariacartagena.com"}, {"nombre": "INMOBILIARI INURBANAS", "telefono": "3158007683", "direccion": "AV DANIEL LEMAITRE CRA 32 No 9-45", "correo": "infoinurbanas@gmail.com", "web": "https://inurbanas.com"}, {"nombre": "LISTADO CARTAGENA INMOBILIARIAS  MITULA", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "INMOBILIARIA NICANOR CARAZO", "telefono": "3046482304", "direccion": "OFICINA VIRTUAL CARTAGENA DE INDIAS", "correo": "nicanor.carazo@gmail.com", "web": "https://nicanorcarazorealtor.com"}, {"nombre": "AGUAMARINA INMOBILIARIA", "telefono": "604471712", "direccion": "EDIFICIO LEQUERICA OF 313", "correo": "reservas@aguamarinainmobiliaria.com", "web": "https://www.aguamarinainmobiliaria.com"}, {"nombre": "INMOBILIARIA GRG", "telefono": "3166275212", "direccion": "CRA 9A No 20 EDIFICIO  CONCASA OF 1001", "correo": "info@inmobiliariagrg.co", "web": "https://inmobiliariagrg.com"}, {"nombre": "INFINITA INMOBILIARIA", "telefono": "3043726436", "direccion": "TV 42 No 26A-32", "correo": "Elkin0681@gmail.com", "web": "https://infinitainmobiliaria.com"}, {"nombre": "INMOBILIARIA CARTAGENA", "telefono": "3126787081", "direccion": "EDIFICIO ANDIAN OF 203-204", "correo": "administrativa@inmobiliariacartagena.com", "web": "https://www.inmobiliariacartagena.com"}, {"nombre": "ATELIER INMOBILIARIA", "telefono": "3126560326", "direccion": "OFICINA VIRTUAL CARTAGENA DE INDIAS", "correo": "ximena@atalierinmobiliario.com", "web": "https://atelierinmobiliario.com"}, {"nombre": "INMOBILIARIA DIAZ RUIZ", "telefono": "3145382902", "direccion": "CRA 3 No 5 -104 LOCAL 101", "correo": "inmobiliariadiazruiz@gmail.com", "web": "https://www.inmobiliariadiazruiz.com"}, {"nombre": "SK&C SU CASA INMOBILIRIA", "telefono": "3114186049", "direccion": "MANGA AV 3 CALLE 28 No 24-79 EDIF IMAN", "correo": "sucasacomercial@gmail.com", "web": "https://sucasainmobiliaria.com.co"}, {"nombre": "AGENTES INMOBILIARIOS CARTAGENA", "telefono": "3169485348", "direccion": "URBANIZACION EL NOGAL VILLA RUBIA", "correo": "corporativo@acagentesinmobiliarios.com", "web": "https://acagentesinmobiliarios.com"}, {"nombre": "WILSON FRANCO INMOBILIARIA", "telefono": "3184167890", "direccion": "AV PEDRO DE HEREDIA", "correo": "inmobiliaria@wilsonfranco.co", "web": "https://wilsonfranco.co"}, {"nombre": "IBRA GOMEZ BROKER INMOBILIARIA", "telefono": "3001163462", "direccion": "CRA 66 No 31B-107", "correo": "ibra@ibragomez.com", "web": "https://ibragomezbroker.com"}, {"nombre": "SOMOS BROKERS INMOBILIARIOS", "telefono": "3007714355", "direccion": "CALLE 2 No 10-53 local 1", "correo": "somosbrokersinmobiliarios@gmail.com", "web": "https://www.somosbrokers.com"}, {"nombre": "INVERSIONES EN BIENES Y RAICES FAMA S.A.S", "telefono": "3016988554", "direccion": "CRA 57 No 9-29", "correo": "gerencia@inmobiliariafama.com", "web": "https://inmobiliariafama.com"}], "Montería": [{"nombre": "INMONTERIA ASESORIAS INMOBILIARIAS DE COLOMBIA", "telefono": "3205548556", "direccion": "CALLE 63 No 6-51", "correo": "inmonteria.inmobiliaria@gmail.com", "web": "https://inmonteriainmobiliaria.com.co"}, {"nombre": "ARRIENDA BIEN INMOBILIARIA LTDA", "telefono": "3178541134", "direccion": "CALLE 30 No 3-10 LOCAL 101", "correo": "arriendabienmonteria@gmail.com", "web": "https://www.arriendabienltda.com"}, {"nombre": "INMOBILIARIA HADDAD", "telefono": "3174340920", "direccion": "CALLE 46 No 4-104 LOCAL 109", "correo": "administracion@inmobiliariahaddad.co", "web": "https://inmuebles.inmobiliariahaddad.co"}, {"nombre": "KAYROS INMOBILIARIA", "telefono": "3042424422", "direccion": "CALLE 41 No  16A BIS- 105 LOCAL 1 EDS PRIMAX LA 41", "correo": "Ccomercial@kayros.in", "web": "https://inmobiliaria.kayros.in"}, {"nombre": "MI PROPIEDAD INMOBILIARIA", "telefono": "3146320112", "direccion": "CALLE 64 A No 3-73", "correo": "comercial.mipropiedad@gmail.com", "web": "https://mipropiedad.inmo.co"}, {"nombre": "AVAC HOME INMOBILIARIA", "telefono": "3118665579", "direccion": "CRA 6 No 62B-32 OFICINA 620", "correo": "avachomeinmobiliaria@gmail.com", "web": "https://avachome.com"}, {"nombre": "GRUPO TC CORREDORES INMOBILIARIOS", "telefono": "3242024726", "direccion": "LINEA VIRTUAL", "correo": "tcbienesraices@outlook.com", "web": "http://tcbienesraices.com"}, {"nombre": "R Y R BIENES RAICES INMOBILIARIA", "telefono": "3006393809", "direccion": "CALLE 36 No 14C-12", "correo": "monteria@inmobiliariarr.com", "web": "http://inmobiliariarr.com"}, {"nombre": "BOHIO CONSULTORES INMOBILIARIOS", "telefono": "3217403356", "direccion": "CALLE 29 No 2- ESQUINA CENTRO", "correo": "arriendos@bohioconsultores.com", "web": "https://bohioconsultores.com"}, {"nombre": "CORD INMOBILIARIA", "telefono": "3126829814", "direccion": "CRA 5 No 34-54", "correo": "administracion@cordinmobiliaria.com", "web": "https://cordinmobiliaria.com"}, {"nombre": "HERENCIA INMOBILIARIA BIENES RAICES", "telefono": "3008535703", "direccion": "BARRIO LA ESPERANZA A 5 MINUTOS DEL CENTRO", "correo": "herenciainmobiliaria@gmail.com", "web": "https://www.herenciabienesraices.com"}, {"nombre": "SCINMOBILIARIA CONSTRUCCIONES", "telefono": "3022092382", "direccion": "CRA 3W No 21-93", "correo": "scinmobiliariaconstrucciones@gmail.com", "web": "https://scredinmobiliaria.com"}, {"nombre": "MYM INMOBILIARIA", "telefono": "3017294539", "direccion": "CRA 6 No 65-24 OFICINA 504", "correo": "mymconstruccionesventas@gmail.com", "web": "https://myminmobiliariamonteria.com"}], "Valledupar": [{"nombre": "VIVA INMOBILIARIA", "telefono": "3012669690", "direccion": "CALLE 16 ESTE No 6-54", "correo": "inmueblesviva@gmail.com", "web": "https://vivainmobiliaria.co"}, {"nombre": "DONDE VIVIR INMOBILIARIA SAS", "telefono": "3187161326", "direccion": "CRA 12 No 14-05 LOCAL 3", "correo": "info@dondevivir.co", "web": "https://dondevivir.co"}, {"nombre": "INMOBILIARIA FINASER", "telefono": "3013712042", "direccion": "CALLE 16 No 9-30 OF 704", "correo": "inmobiliaria_finaser@hotmail.com", "web": "https://finaser.com.co"}, {"nombre": "INMOBILIARIA MARBAL SAS", "telefono": "3209778066", "direccion": "CRA 11A No 13C-56 EDIFICIO MANAURE OF 202", "correo": "inmobiliariamarbal@gmail.com", "web": "https://inmobiliariamarbal.com"}, {"nombre": "ARAZI GESTION INMOBILIARIA", "telefono": "3206996777", "direccion": "CALLE 16A No 9-50 LOCAL 3", "correo": "info@arazi.com.co", "web": "https://arazi.com.co"}, {"nombre": "ARRENDAVENTAS LTDA", "telefono": "3216602374", "direccion": "CRA 12 No 15-44 CENTRO", "correo": "info@arrendaventas.com.co", "web": "https://www.arrendaventas.com.co"}], "Santa Marta": [{"nombre": "PORTAL 23 INMOBILIARIA", "telefono": "3004402121", "direccion": "CALLE 121 No 2-20", "correo": "inmobiliariaportal23@gmail.com", "web": "https://www.portal23inmobiliaria.com"}, {"nombre": "BEDVIAJES SAS ALQUILER DE APARTAMENTOS", "telefono": "3162955702", "direccion": "CALLE 13 No 2-11 GAIRA", "correo": "bebviajes@hotmail.com", "web": "https://bedviajes.com"}, {"nombre": "MABARA INVERSIONES INMOBILIARIAS", "telefono": "3008318618", "direccion": "ALTOS DE SANTARITA APARTAMENTO 303", "correo": "marthapropiedades@gmail.com", "web": "https://mabara.inmo.co"}, {"nombre": "JLS SOLUCIONES INMOBILIARIAS", "telefono": "3043782942", "direccion": "CALLE 24 No 8A-45", "correo": "jls.inmobiliariacomercial@gmail.com", "web": "https://jlsinmobiliaria.com"}, {"nombre": "ASESORA INMOBILIARIA LILIANA JARAMILLO", "telefono": "3157480102", "direccion": "CRA 14 No 8-36", "correo": "yiyajaramillodc@gmail.com", "web": "https://yiyajaramillo61.com"}, {"nombre": "SHAMA INMOBILIARIA S.A.S", "telefono": "3022176750", "direccion": "CRA 3 No 17-27 EDIF REX OFI 206", "correo": "gerenciashamainmobiliaria@gmail.com", "web": "https://shamainmobiliaria.com"}, {"nombre": "COLPROPERTY MANAGEMENT SAS", "telefono": "3153645789", "direccion": "CALLE 16 No 5-61 OF 202", "correo": "vgranados@colpropertymanagement.com.co", "web": "https://colpropertymanagement.co"}, {"nombre": "SANTA MARTA INMOBILIARIA", "telefono": "3205734337", "direccion": "CALLE 23 No 6 - 18 LOCAL 60", "correo": "santamarta@santamartainmobiliaria.co", "web": "https://santamartainmobiliaria.co"}, {"nombre": "SANTA MARCA FINCA RAIZ INMOBILIARIA", "telefono": "3167155112", "direccion": "CRA 15 No 2-65 OFICINA 404", "correo": "ventas@santamarcafincaraiz.com", "web": "https://santamarcafincaraiz.com"}, {"nombre": "PROPIEDADES Y NEGOCIOS DE COLOMBIA S.A.S", "telefono": "3184562556", "direccion": "CALLE 24 No 4-24 of 602", "correo": "gerenciaproynecol@gmail.com", "web": "https://propiedadesynegociosdecolombia.com.co"}, {"nombre": "CARIBE INMOBILIARIO", "telefono": "3027438105", "direccion": "CRA 4A No 10A-30", "correo": "info@caribeinmobiliario.co", "web": "https://caribeinmobiliario.co"}, {"nombre": "GRUPO SOBRENATURAL INMOBILIARIA", "telefono": "3004994252", "direccion": "CALLE 4 No  11-03 COMUNA 3", "correo": "inmobiliariasobrenatural @gmail.com", "web": "https://sobrenaturalinmobiliaria.com"}, {"nombre": "FULL PROPIERTY INMOBILIARIA", "telefono": "3008472383", "direccion": "CRA 84B No 7-95", "correo": "fullpropiertyinmobiliaria@gmail.com", "web": "https://fullproperty.inmo.co"}, {"nombre": "LISTADO SANTA MARTA INMOBILIARIAS MITULA Y FINCA RAIZ", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "SUMMER INMOBILIARIA", "telefono": "3187117671", "direccion": "BELLO HORIZONTE", "correo": "summer.inmobiliaria@gmail.com", "web": "https://summerinmobiliaria.com"}, {"nombre": "INMOBILIARIA 2000 LTDA", "telefono": "54310036", "direccion": "CALLE 22 No 3-105", "correo": "info@inmobiliaria2000.net", "web": "https://inmobiliaria2000.co"}, {"nombre": "ELITE PROPIEDAD INMOBILIARIA", "telefono": "3022890348", "direccion": "URBANIZACION VILLAS ALEJANDRIA MZS CASA 17", "correo": "elitepropiedad@gmail.com", "web": "https://elitepropiedadinmobiliaria.inmo.co"}, {"nombre": "RENTKASAS", "telefono": "3154621061", "direccion": "MANZANA 3 CASA 4 SEGUNDO PISO", "correo": "mayerestrepo11@gmail.com", "web": "https://rentkasa.com"}, {"nombre": "TAYRONA INMOBILIARIA", "telefono": "3504499894", "direccion": "CALLE 26A No 3-55 EDIFICIO PRADO OFI 407", "correo": "contacto@tayronainmobiliaria.com", "web": "https://tayronainmobiliaria.com"}], "Tunja": [{"nombre": "INMOBILIARIA LOS LANCEROS", "telefono": "3188707894", "direccion": "CALLE 28 No 9-26", "correo": "inmobloslancerosboy@hotmail.com", "web": "https://loslancerosinmobiliaria.com"}, {"nombre": "ATOS INMOBILIARIA", "telefono": "(608)7405835", "direccion": "AV UNIVERSITARIA No 39-77 LOCAL 1-004", "correo": "direccioncomercial@atosinmobiliaria.com", "web": "https://www.atosinmobiliaria.com"}, {"nombre": "INMOBILIARIA MAFE", "telefono": "3112137974", "direccion": "CRA 10N No 15-24", "correo": "inmobiliariamafetunja@gmail.com", "web": "https://inmobiliariamafetunja.com"}, {"nombre": "INMOBILIARIA ESKALA", "telefono": "3108161315", "direccion": "CRA 1F No 4-195", "correo": "inf@inmobiliariaeskala.com", "web": "https://www.inmobiliariaeskala.com"}, {"nombre": "INMOBILIARIA ENTORNO URBANO", "telefono": "3102070632", "direccion": "AV NORTE 47A-40 LOCAL 130B", "correo": "contacto@entornourbano.co", "web": "https://entornourbano.co"}], "Palmira": [{"nombre": "INMOBILIARA FORZA C Y C", "telefono": "3167585807", "direccion": "CALLE 25 No 23-30 LOCAL 110-111", "correo": "comercial@inmobiliariaforza.com.co", "web": "https://inmobiliariaforza.com.co"}, {"nombre": "RED INMOBILIARIA JESUS EIDER AMAYA", "telefono": "3155577164", "direccion": "CALLE 60 No 98C-43", "correo": "redinmobiliaria19@gmail.com", "web": "https://redinmobiliaria1.com"}, {"nombre": "MARTIN ARANGO INMOBILIARIA", "telefono": "3185833016", "direccion": "CALLE 33 No 25-38", "correo": "comercial@inmobiliariamartinarango.com", "web": "https://inmobiliariamartinarango.com"}, {"nombre": "INMOBILIARIA DESCANSEMOS", "telefono": "3123723988", "direccion": "CALLE 11 No 53-14", "correo": "descansemos@gmail.com", "web": "https://www.descansemos.com"}, {"nombre": "BIENES RAICES DE COLOMBIA TODO EN PROPIEDADES", "telefono": "3001465991", "direccion": "CALLE 46 No 1D2-12 SALOMIA", "correo": "inmobiliaria_martin_arango@yahoo.com", "web": "https://bienesraicesencolombia.com"}, {"nombre": "BYM INVERSIONES INMOBILIARIA", "telefono": "3155891836", "direccion": "AV 4 NORTE No 23 -BN-16 PISO 2", "correo": "contacto@byinmobiliaria.com", "web": "https://www.byminmobiliaria.com"}, {"nombre": "IDEAL HOME INMOBILIARIA", "telefono": "3184267727", "direccion": "AV 6A No 28 NORTE 24", "correo": "info@idealhomeinmobiliaria.com.co", "web": "http://www.idealhomeinmobiliaria.com"}, {"nombre": "EVALUACIONES INMOBILIARIAS", "telefono": "3146456522", "direccion": "CRA 19 No 8-109", "correo": "evaluacionesinmobiliaria@hotmail.com", "web": "https://evaluacionesinmobiliarias.com"}, {"nombre": "INMOBILIARIA CORDILLERA", "telefono": "3148924122", "direccion": "CALLE 9 No 46-69 OF 203", "correo": "inmocordillera@hotmail.com", "web": "http://www.inmobiliariacordillera.co"}, {"nombre": "JM INMOBILIARIA SAS", "telefono": "3009121380", "direccion": "AV 4 NORTE No 12", "correo": "digital@minmobiliaria.com.co", "web": "https://jminmobiliaria.co"}], "Tuluá": [{"nombre": "ASESORES INMOBILIARIOS TULUA", "telefono": "3175010351", "direccion": "CALLE 29 No 25-65", "correo": "acinmobiliariatulua@gmail.com", "web": "https://www.acinmobiliariatulua.com"}, {"nombre": "CASAS BLUEASESORES INMOBILIARIOS", "telefono": "3173663612", "direccion": "CRA 23 No 24-43 OFICINA 207", "correo": "casablue10@ gmail.com", "web": "http://casasblueinmobiliaria.com"}, {"nombre": "FORZA INMOBILIARIA C Y C", "telefono": "3167585807", "direccion": "CALLE 25 No 23-30 CC LOCAL 110", "correo": "comercial@inmobiliariaforza.com.co", "web": "https://inmobiliariaforza.com.co"}, {"nombre": "TEAM HOUSE INMOBILIARIA", "telefono": "31741248032", "direccion": "CRA 35  No 25-16", "correo": "asistente.administrativo@teamhouseinmobiliaria.com.co", "web": "https://teamhouseinmobiliaria.com.co"}], "Popayán": [{"nombre": "GRUPO ALZZA CONTRUCTORA", "telefono": "3136223839", "direccion": "CALLE 10 NORTE 6A-No117", "correo": "gerencia@grupoalzza.co", "web": "https://grupoalzzasas.com"}, {"nombre": "INMOBILIARIA RANKING", "telefono": "3014884399", "direccion": "CALLE 31 NORTE No 14-108", "correo": "ssantiagoprado232@gmail.com", "web": "https://inmobiliariaranking.com"}, {"nombre": "77 STREET INMOBILIARIA", "telefono": "3148933961", "direccion": "CRA 8 No 3-57 OFICINA 203", "correo": "inmobiliaria77street@outlook.com", "web": "https://www.77streetinmobiliaria.com"}, {"nombre": "INMOBILIARIA URBIN SAS", "telefono": "3002050249", "direccion": "CALLE 43 NORTE No 7-56", "correo": "urbin.sas@gmail.com", "web": "https://www.urbinsas.com"}, {"nombre": "GEAS MULTISERVICIOS SAS", "telefono": "3196628041", "direccion": "CALLE 19 No 11-58", "correo": "geaninversionesinmobiliarias@gmail.com", "web": "https://geainmobiliaria.co"}, {"nombre": "NEXA INMUBILIARIA", "telefono": "3174782610", "direccion": "CALLE 7 NORTE No 7-56 COMUNA 1", "correo": "info@nexainmobiliariasas.com", "web": "https://inmobiliarianexa.com"}, {"nombre": "LUXA INMOBILIARIA", "telefono": "3148779909", "direccion": "CRA 6A No 19A - 05 LOCAL", "correo": "luxainmobiliaria@gmail.com", "web": "http://luxa.com.co"}, {"nombre": "SUPRAI NMOBILIARIA", "telefono": "3105117275", "direccion": "CALLE 64N", "correo": "hola@suprainmobiliaria.co", "web": "https://suprainmobiliaria.co"}, {"nombre": "BROKER BIENES RAICES", "telefono": "3217618265", "direccion": "CALLE 31 NORTE No 6- 81 PORTON DE LA HACIENDA", "correo": "brokerbienesraices00@gmail.com", "web": "https://brokercol.com"}, {"nombre": "HABITAT INMUEBLES POPAYAN", "telefono": "3166289389", "direccion": "CRA 9 No 3 NORTE -39", "correo": "contacto@inmhabitat.com", "web": "https://www.inmhabitat.com"}], "Cúcuta": [{"nombre": "INMOBILIARIA PITA IBIZA", "telefono": "3502830888", "direccion": "CALLE 17 No 1E-13 LOCAL 5", "correo": "atencionalcliente@pitaibizainmobiliaria.com", "web": "https://pitaibizainmobiliaria.com.co"}, {"nombre": "RENTA BIEN SAS", "telefono": "5718371", "direccion": "AVENIDA 0 No 17-93", "correo": "rentabienmantenimiento@gmail.com", "web": "https://rentabien.com.co"}, {"nombre": "INMOBILIARIA ARCOS", "telefono": "3175177257", "direccion": "AV 0 No 11-30 CC GRAN BULEVAR LOC 236", "correo": "info@inmobiliariaarco.com.co", "web": "https://inmobiliariaarcos.com.co"}, {"nombre": "INMOBILIARIA VIVI PORTILLA", "telefono": "3219284417", "direccion": "AV 0 No 5-58", "correo": "contabilidadvivportilla@gmail.com", "web": "https://viviportillainmobiliaria.com"}, {"nombre": "INMOBILIARIA PROVASE SAS", "telefono": "3143941701", "direccion": "CALLE 17 No 0-29", "correo": "recepcioninmobiliariaprovase@gmail.com", "web": "https://inmobiliariaprovase.com"}, {"nombre": "HC ASESORIA INMOBILIARIA", "telefono": "3102039500", "direccion": "CALLE 15  No 1E-19", "correo": "info@hcasesoriainmobiliaria.com", "web": "https://hcasesoriainmobiliaria.com"}, {"nombre": "CAOBA PROPIEDAD RAIZ", "telefono": "3005128458", "direccion": "CALLE 9 No 4-52", "correo": "info@grupoCAOBA.com.co", "web": "https://grupocaoba.com.co"}, {"nombre": "INMOBILIARIA TONCHALA", "telefono": "3157113210", "direccion": "AV 0 No 17-35", "correo": "direccionarriendo@inmobiliariatonchala.com.co", "web": "https://inmobiliariatonchala.com.co"}, {"nombre": "INMOBILIARIA  LTDA", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "LISTADO CUCUTA  INMOBILIARIAS FINCA RAIZ", "telefono": "", "direccion": "", "correo": "", "web": ""}, {"nombre": "INMOBILIARIA", "telefono": "TELEFONO", "direccion": "DIRECCION", "correo": "CORREO", "web": "PAGINA WEB"}, {"nombre": "RENTA MAS INMOBILIARIA", "telefono": "3228206162", "direccion": "AV O No 17-77", "correo": "comercial@rentamas.co", "web": "https://rentamas.com.co"}, {"nombre": "INMOBILIARIA PAISAJE URBANO", "telefono": "3174049231", "direccion": "CALLE 18 No 0-50", "correo": "info@paisajeurbano.com.co", "web": "https://paisajeurbano.com.co"}, {"nombre": "VIVIENDAS Y VALORES SAS", "telefono": "(607)5888002", "direccion": "CALLE 11 No 1E-145", "correo": "mercadeo@ viviendasyvalores.com.co", "web": "https://viviendasyvalores.com.co"}]};
+const DATA_CONST = {"Armenia": [{"nombre": "CONSTRUCTORA BUEN DIA LOPEZ", "telefono": "301126760", "direccion": "AV BOLIVAR 52 NORTE 00 FRENTE A LA B. DE ORO NEGRO", "experiencia": 37, "correo": "construccionebuendia@telecom.com.co", "web": "https://constructorabuendia.com"}, {"nombre": "CONSTRUCTORA GRUPO HERMON", "telefono": "3104934700", "direccion": "CRA 15 No 10N-63 OFICINA 01", "experiencia": 20, "correo": "contacto@grupohermon.co", "web": "https://grupohermon.co"}, {"nombre": "CONSTRUCTORA CAMU", "telefono": "606-7411538", "direccion": "CALLE 21 No 16-46 PISO 10", "experiencia": 40, "correo": "camu@constructoracamu.com", "web": "https://constructoracamu.com"}, {"nombre": "CONSTRUCTORA INNOVA", "telefono": "3108299306", "direccion": "CRA 14 No 8N-67 PISO 4 OF 413", "experiencia": 15, "correo": "gerenciacomercialgrupoinnova@gmail.com", "web": "https://innovaarquitectura.com.co"}, {"nombre": "CONSTRUCTORA 1A", "telefono": "6067416445", "direccion": "CALLE 1 No 12-30 LOCA L 3C", "experiencia": 8, "correo": "servicioalcliente@constructora1a.com", "web": "https://www.constructora1a.com"}, {"nombre": "CONSTRUCTORA SERENITY HOMES", "telefono": "3052029295", "direccion": "CRA 13 No 17 NORTE 51 EL NOGAL", "experiencia": 21, "correo": "serenity@geoproyectos.co", "web": "https://serenitycasas.com"}, {"nombre": "CONSTRUCTORA BOLIVAR", "telefono": "3152302121", "direccion": "CRA 18 No 70-02", "experiencia": 40, "correo": "servicioalcliente@constructorabolivar.com", "web": "https://www.constructorabolivar.com"}, {"nombre": "CONSTRUCTORA CENTENARIO", "telefono": "3117355497", "direccion": "CRA 13 No 8N-67 OFICINA 402", "experiencia": 40, "correo": "comercial@constructoracentenario.com", "web": "https://constructoracentenario.com"}, {"nombre": "CONSTRUCTORA SORIANO", "telefono": "3104142708", "direccion": "CENTENARIO MALL CRA 6A-7-05 SOTANO 2 LOCAL 22C", "experiencia": 20, "correo": "ventas@constructorasoriano.com", "web": "https://www.constructorasoriano.com"}, {"nombre": "CONSTRUCCIONES PALACIOS", "telefono": "3186811425", "direccion": "AZAHAR  HOME SUITES KM 5.6 VIA ARMENIA- CLUB CAMPESTRE", "experiencia": 50, "correo": "ventas@construccionespalacios.com", "web": "https://construccionespalacios.com"}, {"nombre": "INGENIA CONSTRUCCIONES", "telefono": "3152226323", "direccion": "CALLE 50 No 53-70", "experiencia": 37, "correo": "ventas@ingeniaconstrucciones.com.co", "web": "https://ingeniaconstrucciones.co"}, {"nombre": "DELTORO CONSTRUCTORA", "telefono": "3147728226", "direccion": "CRA 14 No 46N-41 MALL ZONA ORO", "experiencia": 28, "correo": "ventas@deltoro.com.co", "web": "https://deltoro.com.co"}, {"nombre": "GRUPO RIO ESPEJO", "telefono": "3116689592", "direccion": "CALLE 4 NORTE No 15-13", "experiencia": 20, "correo": "sistemas@gruporioespejo.com", "web": "https://www.gruporioespejo.com"}, {"nombre": "CVA CONSTRUCTORA", "telefono": "3188889090", "direccion": "CRA 15 No 15-04 OF 504", "experiencia": 28, "correo": "contacto@cvaconstructora.com", "web": "https://cvaconstructora.com"}, {"nombre": "CONSTRUCTORA VORTIKA", "telefono": "3183474324", "direccion": "CALLE 6 NORTE 14-36", "experiencia": 12, "correo": "info@vortika.co", "web": "https://vortika.co"}], "Cali": [{"nombre": "CONSTRUCTORA MELENDEZ", "telefono": "3057473002", "direccion": "CALLE 16 No 100A-123", "experiencia": 63, "correo": "ghcomunicaciones@constructoramelendez.com", "web": "https://constructoramelendez.com"}, {"nombre": "CONSTRUCTORA CON CALI COLOMBIA S.A.S", "telefono": "(602)3302548", "direccion": "CALLE 5 No 66B-75 COMUNA 17", "experiencia": 13, "correo": "info@concali.com", "web": "https://www.concali.com"}, {"nombre": "CONSTRUCTORA CONCIVILES", "telefono": "3009121842", "direccion": "CALLE 19 NORTE No 2-29 OF 2202", "experiencia": 73, "correo": "protecciondedatos@conciviles.com", "web": "https://www.conciviles.com"}, {"nombre": "CONSTRUCTORA EL CASTILLO", "telefono": "3117397665", "direccion": "HOLGUINESTRADE CENTER  LOCAL 166", "experiencia": 18, "correo": "servicioalcliente@constructoraelcastillo.co", "web": "https://constructoraelcastillo.co"}, {"nombre": "CONSTRUCTORA SOLANILLAS", "telefono": "3176574848", "direccion": "AV GUADALUPE CRA 56 No 1B-281", "experiencia": 25, "correo": "servicioalcliente@solanillas.com", "web": "https://solanillas.com"}, {"nombre": "CONSTRUCTORA PRODESA", "telefono": "3241000060", "direccion": "CRA No 106-280 OF 4A", "experiencia": 32, "correo": "info@prodesa.com", "web": "https://prodesa.com"}, {"nombre": "CONSTRUCTORA MARVAL", "telefono": "24850540", "direccion": "CRA 100 No 11-60 LOCAL 209", "experiencia": 40, "correo": "servicioalclientecali@marval.com.co", "web": "https://marval.com.co"}, {"nombre": "CONSTRUCTURA SUDAMERICANA", "telefono": "3102247929", "direccion": "CALLE 48N No 5BN-57 BARRIO LA FLORA", "experiencia": 10, "correo": "comercial@constructorasudamericana.com", "web": "https://constructorasudamericana.com"}, {"nombre": "CONSTRUCTORA JARAMILLO MORA", "telefono": "3174008888", "direccion": "CALLE 44 AN No 4N-133", "experiencia": 29, "correo": "serviciocliente@jaramillomora.com", "web": "https://www.jaramillomora.com"}, {"nombre": "CONSTRUCTORA INDICO", "telefono": "3183839538", "direccion": "CRA 4 OESTE No 7-109", "experiencia": 20, "correo": "servicioalcliente@constructoraindico.co", "web": "https://constructoraindico.com.co"}, {"nombre": "CONSTRUCTORA NORMANDIA", "telefono": "(602)6689090", "direccion": "AVENIDA 9N No 15N-05", "experiencia": 44, "correo": "servicioalcliente@constructoranormandia.com", "web": "https://constructoranormandia.com"}, {"nombre": "H & C PROYECTOS DE INGENIERIA SAS", "telefono": "(602) 4672131", "direccion": "CALLE 99 No 49-38", "experiencia": 19, "correo": "info@hycproyectos.com", "web": "https://www.hycproyectos.com"}, {"nombre": "CONSTRUCTORA JM", "telefono": "3009121380", "direccion": "AVENIDA 4N No 9N-12", "experiencia": 32, "correo": "digital@jminmobiliaria.com.co", "web": "https://jminmobiliaria.co"}], "Bogotá": [{"nombre": "CONSTRUCTORA CONSUCASA", "telefono": "3102120020", "direccion": "CALLE 135 No 17A-24", "experiencia": 45, "correo": "comercial@sucasa.co", "web": "https://www.consucasa.co"}, {"nombre": "CONSTRUCTORA IDAHO", "telefono": "(601)9157149", "direccion": "CRA 13  No 93-35 OFICINA 6", "experiencia": 10, "correo": "idahosas.formacion@gmail.com", "web": "https://contructoraidahosas.godaddysites.com"}, {"nombre": "CONSTRUCTORA POLARIS", "telefono": "(601)8122258", "direccion": "CALLE 147 No 17-78 OFI 304", "experiencia": 15, "correo": "contacto@polarisconstructora.com", "web": "https://polarisconstructora.com"}, {"nombre": "CONSTRUCTORA ARTIS", "telefono": "3232540755", "direccion": "CRA 7 No 155C-30 PISO 16", "experiencia": 41, "correo": "contacto@artisurbano.com", "web": "https://www.artisurbano.com"}, {"nombre": "CONSTRUCTORA CAPITAL", "telefono": "(601)4430700", "direccion": "CALLE 122 No 23-55", "experiencia": 30, "correo": "centrodeventas@constructoracapital.com", "web": "https://www.constructoracapital.com"}, {"nombre": "CONSTRUCTORA AMBIENTTI", "telefono": "(601)6466202", "direccion": "CRA 16A No 78-11 PISO 6", "experiencia": 24, "correo": "compras@ambietti.com.co", "web": "https://ambientti.com.co"}, {"nombre": "CONSTRUCTORA PROMEXPORT", "telefono": "(601)4661775", "direccion": "CRA 17 No 120-05 PISO 1", "experiencia": 31, "correo": "dircomercial@inversionespromexport.com", "web": "https://inversionesyconstruccionespromexport.com"}, {"nombre": "AR CONSTRUCCIONES", "telefono": "3218562681", "direccion": "CALLE 99 No 14-49 TORRE EAR", "experiencia": 45, "correo": "mloaiza@arconstrucciones.com", "web": "https://www.arconstrucciones.com"}, {"nombre": "CONSTRUCTORA ALCABAMA", "telefono": "3009121770", "direccion": "CRA 7 No 155C-30 TORRE E PISO 35", "experiencia": 41, "correo": "somos@alcabama.com.co", "web": "https://www.alcabama.com"}, {"nombre": "CONSTRUCTORA ARRECIFE", "telefono": "(601)2144371", "direccion": "CALLE 104 No 14A-45 OF 602", "experiencia": 44, "correo": "infoventas@arrecife.com.co", "web": "https://arrecife.com.co"}, {"nombre": "CONSTRUCTORA CONINSA", "telefono": "(601) 9158441", "direccion": "CALLE 55 No 45-55", "experiencia": 50, "correo": "serviciocliente@coninsa.co", "web": "https://www.coninsa.co"}, {"nombre": "CONSTRUCTORA CONALTURA CONSTRUCCION Y VIVIENDA", "telefono": "(601)4321600", "direccion": "CRA 19 No 82-85 OF 704", "experiencia": 33, "correo": "experienciadelcliente@conaltura.com", "web": "https://www.conaltura.com"}, {"nombre": "CONSTRUCTORA AKILA", "telefono": "(601)8706633", "direccion": "CENTRO EMPRESARIAL OXUS OF 405", "experiencia": 14, "correo": "akila@akila.com.co", "web": "https://akila.com.co"}, {"nombre": "INGENAL ARQUITECTURA Y CONSTRUCCION", "telefono": "(601) 7954665", "direccion": "CRA 9 No 80-45 PISO 10", "experiencia": 20, "correo": "ingenal@ingenal.com.co", "web": "https://www.ingenal.com.co"}, {"nombre": "DEEB ASOCIADOS Y CONSTRUCTORES", "telefono": "3125239598", "direccion": "TRANSVERSAL 22 No 98-82 OFI 602", "experiencia": 48, "correo": "info@deebasoc.com", "web": "https://www.deebasoc.com"}, {"nombre": "CONSTRUCTORA ARQUITECTURA VALOR", "telefono": "(601)4040984", "direccion": "CRA 16 No 97-37", "experiencia": 39, "correo": "atencionalcliente@grupovalor.com.co", "web": "https://arquitecturavalor.com"}, {"nombre": "CONSTRUCTORA KOVOK SAS", "telefono": "(601)6204886", "direccion": "CRA 7B No 124-97", "experiencia": 20, "correo": "info@kovok.co", "web": "https://www.kovok.co"}, {"nombre": "LAS GALIAS CONSTRUCTORA", "telefono": "3009130004", "direccion": "AVENIDA CRA 9 No 102-67 PISO 6", "experiencia": 15, "correo": "centrodetramites@galias.com.co", "web": "https://www.galias.com.co"}, {"nombre": "D & C CONSTRUCTORA", "telefono": "(601)4769777", "direccion": "CALLE 104  No  14A-45 OFI 601", "experiencia": 23, "correo": "comercial@dycproyectos.com", "web": "https://www.dycproyectos.com"}, {"nombre": "CAMARTH CONSTRUCCIONES", "telefono": "3217554917", "direccion": "CALLE 127A No 7-19 OFICINA 504", "experiencia": 10, "correo": "info@camarth.com", "web": "https://www.camarth.com"}, {"nombre": "CONSTRUCTORA VAVILCO", "telefono": "(601)6204886", "direccion": "CRA  7B No 124-97", "experiencia": 30, "correo": "info@vavildo.com", "web": "https://www.vavilco.com"}, {"nombre": "CONSTRUCTORA E INMOBILIARIA ACTUAL", "telefono": "(601)7940210", "direccion": "CRA 7 No 156-10", "experiencia": 10, "correo": "servicioalcliente@iactual.co", "web": "https://iactual.co"}, {"nombre": "INGEURBE CONSTRUCTORA", "telefono": "(601)7701699", "direccion": "CALLE 72 No 7-64 PISO 2", "experiencia": 40, "correo": "experienciadeservicio@notificaciones.co", "web": "https://ingeurbe.com"}, {"nombre": "CASA CONCRETO CONSTRUCTORA", "telefono": "3114959840", "direccion": "AV CARACAS No 38-56 SUR", "experiencia": 19, "correo": "macondo@casaconcreto.com.co", "web": "https://www.casaconcreto.com.co"}, {"nombre": "CONSTRUCTORA OPEN BUILDING S.A.S", "telefono": "3212641191", "direccion": "CALLE 55 No 7-29 OF 703", "experiencia": 19, "correo": "ventas@constructoraopen.com.co", "web": "https://constructoraopen.com.co"}, {"nombre": "INVERSIONES Y CONSTRUCCIONES INCOL S.A.S", "telefono": "3157823949", "direccion": "CRA 8 No 69-33", "experiencia": 56, "correo": "ventas@incol.com.co", "web": "https://www.incol.com.co"}, {"nombre": "CONSTRUCTORA KUMAN", "telefono": "(601)7420038", "direccion": "CALLE 93 No 11-11 OF 701", "experiencia": 7, "correo": "contacto@kuman.co", "web": "https://kuman.co"}, {"nombre": "CONSTRUCTORA MENDEBAL", "telefono": "3204069317", "direccion": "CALLE 70B No 8-11", "experiencia": 39, "correo": "sawert.lopez@mendebal.com", "web": "https://www.mendebal.com"}, {"nombre": "CONSTRUCIONES BUEN VIVIR", "telefono": "(601)7460395", "direccion": "AV CRA 45 No 108A-50 OF 403", "experiencia": 17, "correo": "servicoalcliente@buenvivirconstrucciones", "web": "https://www.buenvivir.co"}, {"nombre": "CONSTRUCTORA OSPINA ASOCIADOS S.A.S", "telefono": "3219215860", "direccion": "CRA 67 No 167-61 OF 505", "experiencia": 12, "correo": "contacto@constructoraospina.com", "web": "https://www.constructoraospina.com"}, {"nombre": "CONSTRUCTORA MAZ PROYECTOS INMOBILIARIOS S.A.S", "telefono": "3125880459", "direccion": "CALLE 82 No 11-37 OF 213", "experiencia": 20, "correo": "servicioalcliente@maz.com.co", "web": ""}, {"nombre": "CONSTRUCTORA ARQUITECTURA Y CONCRETO", "telefono": "(601)6108555", "direccion": "CRA 11 No 82-01 OF 601", "experiencia": 35, "correo": "postventasbogota@arquitecturayconcreto.com", "web": "https://www.arquitecturayconcreto.com"}, {"nombre": "CONSTRUCTORA CUSEZAR", "telefono": "3102162469", "direccion": "AV CALLE 116 No 7-15 PISO 1 LC3", "experiencia": 69, "correo": "atencionalcliente@cusezar.com", "web": "https://cusezar.com"}, {"nombre": "CONSTRUCTORA CONURBES S.A.S", "telefono": "3212312788", "direccion": "CALLE 64 No 113D-10 LOCAL 11", "experiencia": 18, "correo": "contacto@conurbes.com", "web": "https://www.conurbes.com"}, {"nombre": "CLV ARQUITECTURA Y CONSTRUCCION", "telefono": "3137194700", "direccion": "CRA 14A No 127-15 OF 705", "experiencia": 14, "correo": "info@clvayc.com", "web": "https://clvayc.com.co"}, {"nombre": "CONSTRUCTORA VERING", "telefono": "(601)6722057", "direccion": "CALLE 166 No 19-31", "experiencia": 37, "correo": "servicioalcliente@vering.com.co", "web": "https://www.vering.com.co"}], "Manizales": [{"nombre": "CONSTRUCTORA BERLIN", "telefono": "3126824036", "direccion": "EDIFICIO PORTAL DEL CABLE -LOCAL 12", "experiencia": 33, "correo": "mercadeo@constructoraberlin.com", "web": "https://www.constructoraberlin.com"}, {"nombre": "CONSTRUCTORA J Y P", "telefono": "3158915618", "direccion": "CRA 23 No 70B-57 LOCAL 17", "experiencia": 26, "correo": "compras@jypcontructora.com", "web": "https://www.constructorajyp.com"}, {"nombre": "CONSTRUCTORA A&C MANIZALES", "telefono": "3214816701", "direccion": "AV SANTANDER No 59-11", "experiencia": 7, "correo": "ventas@constructora-ayc.com", "web": "https://constructora-ayc.com"}, {"nombre": "CONSTRUCTORA TRUJILLO GUTIERREZ", "telefono": "3159260222", "direccion": "CRA 23C No 62-06 OFI 303", "experiencia": 11, "correo": "administrativa@trujillogutierrez.com.co", "web": "https://trujillogutierrez.com.co"}, {"nombre": "CONSTRUCTORA OBELISCO", "telefono": "3205799151", "direccion": "CRA 21 No 64A-33 OFICINA 811", "experiencia": 35, "correo": "dcomercial@constructoraobelisco.com", "web": "https://constructoraobelisco.com"}, {"nombre": "CONSTRUCTORA INCO", "telefono": "3137344756", "direccion": "CRA 23 BIS No 73-81", "experiencia": 7, "correo": "info@incoingenieriasas.com", "web": "https://incoingenieriasas.com"}, {"nombre": "FDF CONSTRUCCIONES", "telefono": "3116599787", "direccion": "CALLE 71A No 17A-34", "experiencia": 10, "correo": "info@dfconstrucciones.co", "web": "https://www.dfconstrucciones.co"}, {"nombre": "CONSTRUCTORA MIRADOR DE CASTILLA", "telefono": "3164149926", "direccion": "CALLE 23 No 21-41 OFICINA 1202", "experiencia": 6, "correo": "ventas@constructoramiradordecastilla.com", "web": "https://constructoramiradordecastilla.com"}, {"nombre": "CONSTRUCTORA ECHEVERRI GIRALDO", "telefono": "3104242068", "direccion": "CRA 21 No 30-03 OFI 707", "experiencia": 37, "correo": "NO TIENE", "web": "https://echeverrigiraldo.com"}, {"nombre": "CFC&A CONSTRUCCIONES", "telefono": "(606)8756633", "direccion": "AV SANTANDER No 62-39 PISO 1", "experiencia": 23, "correo": "nelly.lara@cfcya.co", "web": "https://www.cfcya.co"}, {"nombre": "CONSTRUCTORA COPROGEN", "telefono": "(606)8775353", "direccion": "CALLE 11A No 8B-03", "experiencia": 16, "correo": "coprogensa@gmail.com", "web": "https://coprogen.com.co"}, {"nombre": "PRANHA URBANO", "telefono": "3147917023", "direccion": "CRA 24 No 62-53", "experiencia": 25, "correo": "clientes@pranhaurbano.com", "web": "https://pranhaurbano.com"}, {"nombre": "CONSTRUCTORA HUNGRIA", "telefono": "3023380018", "direccion": "CALLE 85 No 25-120  EXPOFERIAS", "experiencia": 10, "correo": "comercial1@constructorahungria.com.co", "web": "https://constructorahungria.com.co"}, {"nombre": "CONSTRUCTORA GRUPO INTI", "telefono": "3004964245", "direccion": "CRA 21 No 63-17 BARRIO LAS RAMBLAS", "experiencia": 15, "correo": "gerentecomercial@grupointi.co", "web": "https://grupointi.com"}, {"nombre": "ARIAH CONSTRUCTORA", "telefono": "3106506726", "direccion": "CRA 23 No 62-72 OF 901", "experiencia": 9, "correo": "ariahconstructora@gmail.com", "web": "https://ariahconstructora.co"}, {"nombre": "C & A CONSTRUCTORES", "telefono": "3013147133", "direccion": "CRA 84A No 71-05", "experiencia": 10, "correo": "ventas@caconstructores.com", "web": "https://caconstructores.com"}], "Pereira": [{"nombre": "CONSTRUCTORA GERENCIAR", "telefono": "3052011000", "direccion": "AV LAS AMERICAS No 55-07", "experiencia": 35, "correo": "NO", "web": "https://gerenciar.com.co"}, {"nombre": "CONSTRUCTORA ASUL", "telefono": "3113889868", "direccion": "CARRERA 12N No 3-23", "experiencia": 29, "correo": "servicioalcliente@asul.co", "web": "https://www.asul.com.co"}, {"nombre": "CONSTRUCTORA URBANIZAR PEREIRA", "telefono": "3147010900", "direccion": "CRA 11 No 48-110", "experiencia": 15, "correo": "info@urbanizar.com.co", "web": "https://urbanizar.com.co"}, {"nombre": "CONSTRUCTORA SALAZAR E HIJOS S.A.S", "telefono": "(606)3213677", "direccion": "CALLE 13B No 27-31", "experiencia": 12, "correo": "inmobiliariasalazarehijos@gmail.com", "web": "https://www.constructoralfsalazar.com"}, {"nombre": "CONSTRUCTORA CENTURY SUITES", "telefono": "3052028020", "direccion": "CRA 10 No 52-149", "experiencia": 40, "correo": "century@geoproyectos.co", "web": "https://century.com.co"}, {"nombre": "CONSTRUCTORA ARQ", "telefono": "3137101146", "direccion": "CALLE 12 No 12-37 PISO 1", "experiencia": 10, "correo": "dcomercial@constructoraarq.com", "web": "https://www.constructoraarq.com"}, {"nombre": "CONSTRUCTORA PALO DE AGUA", "telefono": "3186085598", "direccion": "CRA 7 No 19 -28 OFICINA 12", "experiencia": 13, "correo": "comunicaciones@constructorapalodeagua.com", "web": "https://constructorapalodeagua.com"}, {"nombre": "CONSTRUCTORA CFC&A", "telefono": "3148901302", "direccion": "CALLE 5 No 13-124", "experiencia": 25, "correo": "NO", "web": "https://www.cfcya.com"}, {"nombre": "MOVITIERRA CONSTRUCCIONES", "telefono": "(606)3400001", "direccion": "CRA 14 No 98-15", "experiencia": 23, "correo": "servicioalcliente@movitierra.com", "web": "https://movitierra.com"}, {"nombre": "CONSTRUCTORA MUKALA", "telefono": "3135467112", "direccion": "CALLE 11 No 14B-33", "experiencia": 8, "correo": "mukalaconstrucciones@outlook.com", "web": "https://mukalaconstructora.com"}, {"nombre": "PROYECTOS URBANOS", "telefono": "3226011919", "direccion": "CC CERRITOS MALL 3 PISO 3", "experiencia": 13, "correo": "comercial@proyectosurbanos.comco", "web": "https://proyectosurbanos.com.co"}, {"nombre": "CONSTRUCTORA NUCLEO", "telefono": "3217014036", "direccion": "CRA 15 No 12-33", "experiencia": 30, "correo": "servicioalcliente@nucleoconstructora.com", "web": "https://www.nucleoconstructora.com"}, {"nombre": "DAMUR CONSTRUCTORA", "telefono": "3128803121", "direccion": "CALLE 21 No CRA 31A", "experiencia": 15, "correo": "gerencia@damurconstructora.com", "web": "https://www.damurconstructora.com"}, {"nombre": "RSI CONSTRUCTORA", "telefono": "3158660783", "direccion": "AV 30 DE AGOSTO  CR 13No 68-173", "experiencia": 38, "correo": "constructorarsi@outlook.com", "web": "https://constructorarsi.com"}, {"nombre": "CONSTRUCTORA ARIVA", "telefono": "3116022679", "direccion": "CALLE 5 No 19-30", "experiencia": 24, "correo": "contacto@ariva.co", "web": "https://www.ariva.co"}, {"nombre": "RAIZ CONSTRUCTORA", "telefono": "3127669976", "direccion": "CRA 15 No 15-50 LOCAL 103", "experiencia": 35, "correo": "contacto@raizconstructora.com.co", "web": "https://raizconstructora.com.co"}, {"nombre": "CONSTRUCTORA IARCO", "telefono": "(606)63212323", "direccion": "CALLE 14 No 23-26 LOCAL 300", "experiencia": 20, "correo": "coordinacion.comercial@iarco.com.co", "web": "https://www.iarco.com.co"}, {"nombre": "CONSTRUCTORA METRO CUBICO.CO", "telefono": "3122602191", "direccion": "CALLE 11 No 24-68", "experiencia": 10, "correo": "proyecto@metrocubico.co", "web": "https://metrocubico.co"}, {"nombre": "INMORIOJA CONSTRUTORA", "telefono": "3163364777", "direccion": "CRA 6 No 16-62", "experiencia": 30, "correo": "comercial@inmorioja.com", "web": "http://www.inmorioja.co"}], "Medellín": [{"nombre": "CONSTRUCTORA CENTRO SUR", "telefono": "3185351494", "direccion": "CRA 48 No 48 SUR 75 OF 146", "experiencia": 23, "correo": "canaldigtal@centrosur.co", "web": "https://www.centrosur.com"}, {"nombre": "CONSTRUCTORA TIERRA GRATA", "telefono": "3115091168", "direccion": "CRA 35 No 15B-143 LOCAL 114", "experiencia": 55, "correo": "tierragrata@tierragrata.co", "web": "https://tierragrata.co"}, {"nombre": "CONSTRUCTORA INGENIERIA Y VIVIENDA", "telefono": "(604)3124592", "direccion": "CRA 35 No 15B-143", "experiencia": 20, "correo": "ventasplazakahuana@ingenieriayvivienda.com", "web": "https://www.ingenieriayvivienda.com"}, {"nombre": "CONSTRUCTORA BIENES Y BIENES", "telefono": "(604)3118500", "direccion": "CALLE 8 No 43A-48", "experiencia": 38, "correo": "SIN CORREO", "web": "https://bienesybienes.com"}, {"nombre": "CONSTRUCTORA CONINSA S.A.S", "telefono": "(604)2004424", "direccion": "CALLE 55 No 45-55", "experiencia": 50, "correo": "constactodigital@coninsa.co", "web": "https://www.coninsa.co"}, {"nombre": "CONSTRUCTORA CREARCIMIENTOS S.A.S", "telefono": "(604)4482227", "direccion": "EDIF CAMPESTE No 16-43", "experiencia": 22, "correo": "comercial@crearcimientos.com", "web": "https://crearcimientos.com"}, {"nombre": "CONSTRUCIONES EL CONDOR", "telefono": "(604)4480029", "direccion": "CRA 25 No 3-45 PISO 3", "experiencia": 44, "correo": "servicioalcliente@deceval.com.co", "web": "https://elcondor.com"}, {"nombre": "ARQUITECTOS E INGENIEROS ASOCIADOS  S.A (A.I.A.S.A.)", "telefono": "3216457559", "direccion": "CALLE 16 SUR No 48A-32", "experiencia": 75, "correo": "servicioalcliente@aia.com.co", "web": "https://aia.com.co"}, {"nombre": "ARQUITECTURA Y CONCRETO S.A.S", "telefono": "(604)3123618", "direccion": "CALLE 3 SUR No 43A-52", "experiencia": 33, "correo": "serviciopostventas@arquitecturayconcreto.com", "web": "https://arquitecturayconcreto.com"}, {"nombre": "CONCONCRETO S.A", "telefono": "(604)2043707", "direccion": "CALLE 43A No 18 SUR-135 4TO PISO", "experiencia": 62, "correo": "servicioalclientr@conconcreto.com", "web": "https://conconcreto.com"}, {"nombre": "CONSTRUCTORA ASCENSO SAS", "telefono": "(604)5944684", "direccion": "CALLE 2 No 20-50", "experiencia": 9, "correo": "info@ascenso.co", "web": "https://www.ascenso.co"}, {"nombre": "CONSTRUCTORA CAPITAL", "telefono": "(604)4487440", "direccion": "CALLE 19 43G-169 OF 601", "experiencia": 28, "correo": "centrodeventas@constructoracapital.com", "web": "https://www.constructoracapital.com"}, {"nombre": "CONSTRUCTORA LONDOÑO GOMEZ", "telefono": "(604)3111616", "direccion": "CALLE 7D No 43A-99 PISO 8", "experiencia": 51, "correo": "info@londonogomez.com", "web": "https://londonogomez.com"}, {"nombre": "CONSTRUCTORA COLPATRIA", "telefono": "3213923797", "direccion": "CRA 43B No 16-41 OF 1505", "experiencia": 44, "correo": "servicioalcliente@constructoracolpatria.com", "web": "https://www.constructoracolpatria.com"}], "Barranquilla": [{"nombre": "CONSTRUCTORA MI HOGAR S.A", "telefono": "3217722936", "direccion": "CALLE 110 No 6R-440 AV CIRCUNVALAR", "experiencia": 15, "correo": "info@constructoramihogar.com", "web": "https://constructoramihogar.com"}, {"nombre": "CONSTRUCTORA A.F.C S.A", "telefono": "(605)3225519", "direccion": "CRA 9G No 110 No 87 LOCAL 28", "experiencia": 17, "correo": "contactcenter@acfcia .com", "web": "https://acfsas.co"}, {"nombre": "CONSTRUCTORA VILLA LINDA S.A.S", "telefono": "3116735618", "direccion": "CRA 58 No 68-14", "experiencia": 30, "correo": "servicioalcliente@villalinda.com", "web": "https://constructoravillalinda.com.co"}, {"nombre": "AG CONSTRUCTORA", "telefono": "3117362052", "direccion": "CRA 9 No 70A-75", "experiencia": 10, "correo": "cccomercial@agcvonstructora.com.co", "web": "https://agconstructora.com"}, {"nombre": "CONSTRUCTORA INVERCONE S.A.S.", "telefono": "3218098572", "direccion": "CALLE  66 No 63-25", "experiencia": 10, "correo": "ventas@invercone.com", "web": "https://invercone.com"}, {"nombre": "CONSTRUCTORA CHERENEK Y ASOCIADOS SAS", "telefono": "(605)3776024", "direccion": "CRA 44 No 84-103", "experiencia": 30, "correo": "constructoramcherenek@hotmail.com", "web": "https://cherenek.com.co"}, {"nombre": "CONSTRUCTORA DA SILVA", "telefono": "3015723434", "direccion": "CALLE 94 No 51B-43", "experiencia": 35, "correo": "comercial@equipodasilva.com", "web": "https:elkindasilva.com"}, {"nombre": "CONSTRUCCIONES E INVERSIONES BETA SAS", "telefono": "(605)3928444", "direccion": "CRA 24 No 81-11", "experiencia": 41, "correo": "consibe@consibe.com", "web": "https://consinbe.com"}, {"nombre": "SOLIDER CONSTRUCTORA S.A.S", "telefono": "(605)3856045", "direccion": "CRA 55 No 100-51", "experiencia": 13, "correo": "comercial1@soliderconstructora.com", "web": "https://soliderconstructora.com"}, {"nombre": "CONSTRUCTORA RIOMAR DEL CARIBE S.A.S", "telefono": "3303866007", "direccion": "CRA 51 No 75-185", "experiencia": 20, "correo": "construriomar@hotmail.com", "web": "https://riomarsas.com"}, {"nombre": "CONSTRUCTORA IMPULSO URBANO", "telefono": "3015817384", "direccion": "CALLE 77B No 57-103 OFI 308", "experiencia": 14, "correo": "info@impulsourbano.com", "web": "https://www.impulsourbano.com"}, {"nombre": "CONSTRUCTORA MISA CONSTRUCCIONES SAS", "telefono": "3003081827", "direccion": "CRA 61B No 72-86", "experiencia": 7, "correo": "info@misaconstrucciones.com", "web": "https://www.misaconstrucciones.com"}, {"nombre": "JET INGENIERIA SAS", "telefono": "3006818556", "direccion": "CALLE 76 No 65-35", "experiencia": 18, "correo": "contacto@jetingenieria.com", "web": "https://jeting.org"}, {"nombre": "HGL CONSTRUCTORES", "telefono": "3175100255", "direccion": "CRA 45 No 80 -285 OFI 205", "experiencia": 20, "correo": "comercial@hglconstructores.com", "web": "https://www.hglconstructores.com"}, {"nombre": "HALBAR CONSTRUCCIONES", "telefono": "3005060706", "direccion": "CALLE 117 No 42B-25 OF 204", "experiencia": 10, "correo": "construcionesyasesoriashalbar@gmail.com", "web": "https://halbar.com.co"}, {"nombre": "CONSTRUCTORA RUMIE S.A.S", "telefono": "(605)3685103", "direccion": "CALLE 74 No 50-53 OFICINA 304", "experiencia": 21, "correo": "presidencia@constructorarumie.com", "web": "http://constructora-rumie-sas.webnode.com.co"}, {"nombre": "CONSTRUCTORA ABENTO", "telefono": "(605)3604200", "direccion": "CALLE 77 No 62-40 OF 201", "experiencia": 13, "correo": "contacto@abento.co", "web": "https://abento.co"}, {"nombre": "CONSTRUCTORA COVEIN", "telefono": "(605)3532164", "direccion": "CRA 68 No 75-102", "experiencia": 30, "correo": "informacion@convein.com.co", "web": "https://www.covein.com.co"}, {"nombre": "L Y M CONSTRUCTORA", "telefono": "(605)3091003", "direccion": "CRA 53 No 74-86", "experiencia": 10, "correo": "asistente@constructoralym.com.co", "web": "http://constructoralym.com.co"}, {"nombre": "CONSTRUCTORA B&A INGENIERIA Y CONSTRUCCIONES", "telefono": "(605)3682929", "direccion": "CALLE 77B No 57-103 OFICINA 506", "experiencia": 25, "correo": "laurabotero@bya-ingenieria-com", "web": "https://bya-ingenieria.com"}], "Bucaramanga": [{"nombre": "CONSTRUCTORA JK SALCEDO", "telefono": "(607)6322250", "direccion": "CRA 25 No 33-06", "experiencia": 28, "correo": "gerenciacomercial@ksalcedo.com", "web": "https://www.constructorajksalcedo.com"}, {"nombre": "CONSTRUCTORA MARDEL", "telefono": "3185147068", "direccion": "CALLE 70 No 44W-176", "experiencia": 35, "correo": "contacto@mardel.com .co", "web": "https://mardel.co"}, {"nombre": "CONSTRUCTORA ANDES", "telefono": "3186904216", "direccion": "CALLE 53 No 35-33 OF 704", "experiencia": 15, "correo": "directorcomercial@cla.com.co", "web": "https://andesconstructora.co"}, {"nombre": "CONSTRUCTORA CONSUEGRA SANTOS S.A.S", "telefono": "3202307035", "direccion": "CALLE 36 No 34-42", "experiencia": 44, "correo": "ventas@consuegrasantos.com", "web": "https://consuegrasantos.com"}, {"nombre": "CONSTRUCTORA COINVENCOL", "telefono": "(607)6950909", "direccion": "CRA 25 No 35-71 LOCAL 101", "experiencia": 22, "correo": "directoradministrativo@coinvencol.com.co", "web": "https://coinvecol.com.co"}, {"nombre": "CONSTRUCTORA MADE", "telefono": "(607)6325186", "direccion": "CALLE 36 No 31-39 OF 122", "experiencia": 30, "correo": "info@grupomadeurdivar.com", "web": "https://constructoramade.com"}, {"nombre": "CONSTRUCTORA VALDERRAMA", "telefono": "3013305001", "direccion": "CALLE 42 No 33-20 of 905", "experiencia": 27, "correo": "contacto@constructoravalderrama.com.co", "web": "https://constructoravalderrama.com"}, {"nombre": "CONSTRUCTORA GRUPO DOMUS", "telefono": "3202117500", "direccion": "CRA 29 No 50-45", "experiencia": 13, "correo": "asesoriadigital@grupodomus.co", "web": "https://grupodomus.com.co"}, {"nombre": "CONSTRUCTORA MUISCA", "telefono": "3102287674", "direccion": "CRA 29 No 53-20", "experiencia": 15, "correo": "contacto@muiscaconstrucciones.com", "web": "https://muiscaconstrucciones.com"}, {"nombre": "HG CONSTRUCTORA", "telefono": "(607)6433300", "direccion": "CENTRO COMERCIAL CABECERA IV ETAPA OF 401", "experiencia": 53, "correo": "coordinador.contablehg@hgconstructora.com.co", "web": "https://www.hgconstructora.com"}, {"nombre": "MI CASA CONSTRUCTORA S.A.S", "telefono": "3023404801", "direccion": "CALLE 46 No 35A-06 OFICINA 503", "experiencia": 10, "correo": "micasaconstructoras.a.s@gmail.com", "web": "https://micasaconstructora.com"}, {"nombre": "CONSTRUCTORA CUBYCO", "telefono": "314960655", "direccion": "CALLE 37 No 34-35", "experiencia": 10, "correo": "notificaciones@cubyco.co", "web": "https://cubyco.co"}, {"nombre": "PCG CONSTRUCCIONES", "telefono": "3004790782", "direccion": "CALLE 30A No 30-18", "experiencia": 19, "correo": "contacto@pcgconstructora.com", "web": "https://pcgconstructora.com"}, {"nombre": "SUMAS CONSTRUCCIONES S.A.S", "telefono": "3209643035", "direccion": "CRA 27 No 29-145 OFI 1408", "experiencia": 13, "correo": "recepcion@sumas.com.co", "web": "https://sumas.com.co"}, {"nombre": "GRUPO EMPRESARIAL URBACOLOMBIA", "telefono": "(607)6806001", "direccion": "CALLE 54 No 23-46", "experiencia": 11, "correo": "info@urbacolombia.com", "web": "https://www.urbacolombia.com"}, {"nombre": "INGENIERIA Y CONSTRUCCION OTACC", "telefono": "(607)6435677", "direccion": "CALLE 49 No 27A-34", "experiencia": 56, "correo": "cliente@otacc.com", "web": "http://www.otacc.com"}, {"nombre": "CONSTRUCTORA ZABDI SAS", "telefono": "3176466904", "direccion": "CRA 26 No 36-14 OFI 701", "experiencia": 10, "correo": "contacto@zabdi.com.co", "web": "https://zabdi.com.co"}, {"nombre": "CONSTRUCTORA URBAMARES", "telefono": "3017403151", "direccion": "CALLE 36 No  20-28 OF 207", "experiencia": 30, "correo": "ventas@urbamares.com", "web": "https://urbamares.com"}, {"nombre": "FENIX CONSTRUCCIONES S.A", "telefono": "(607)6456228", "direccion": "CRA 26 No 36-14", "experiencia": 40, "correo": "NO TIENE", "web": "https://fenixconstrucciones.com"}, {"nombre": "CONSTRUCTORA MAX CASA", "telefono": "3012659001", "direccion": "CALLE 34 No 28-60", "experiencia": 20, "correo": "ventas@constructoramaxcasa.com", "web": "https://constructoramaxcasa.com"}, {"nombre": "CONSTRUCTORA MAESTRO CONSTRUCTOR", "telefono": "3003904086", "direccion": "CALLE 6 No 10-36 LOCAL 208", "experiencia": 15, "correo": "maestroconstructor377@gmail.com", "web": "https://maestroconstructor.com.co"}, {"nombre": "GRUPO INGECAR CONSTRUCCIONES", "telefono": "(607)6971911", "direccion": "CRA 28 No 50-43 OFI 301", "experiencia": 50, "correo": "comercial@grupoingecar.com", "web": "https://www.ingecar.co"}, {"nombre": "CONSTRUCTORA VALU LTDA", "telefono": "3214739074", "direccion": "CALLE 51A No 31-138", "experiencia": 17, "correo": "valu@constructoravalu.com", "web": "https://www.constructoravalu.com.co"}, {"nombre": "CONSTRUCTORA INNOVA S.A.S.", "telefono": "(607)6047290", "direccion": "CALLE 36 No 27-71 OFICINA 708", "experiencia": 10, "correo": "innovaconstructora400@gmail.com", "web": "https://constructorainnova.com"}], "Nariño y Pasto": [{"nombre": "CONSTRUCTORA CADEL S.A.S", "telefono": "3113951898", "direccion": "CRA 24A No 10 SUR -41 EDIFICIO KMINARI L-4", "experiencia": 20, "correo": "ventas@construccionescadel.com", "web": "https://construccionescadel.com"}, {"nombre": "PLATAFORMA CONSTRUCTORES S.A.S", "telefono": "(602)7332111", "direccion": "CALLE 21 No 41-80 MORASURCO", "experiencia": 25, "correo": "info@plataformaconstructores.com", "web": "https://plataformaconstructores.com"}, {"nombre": "CONSTRUCTORA MATISSE S.A", "telefono": "3147757363", "direccion": "CRA 32A No 20-43 PISO 2", "experiencia": 15, "correo": "ventas@constructoramatisse.com", "web": "https://www.constructoramatisse.com"}, {"nombre": "CONSTRUCTORA ENRIQUEZ ASOCIADOS S.A.S", "telefono": "3016859085", "direccion": "CALLE 12A No 47-47", "experiencia": 40, "correo": "constructoracomercialcea@gmail.com", "web": "https://constructoraenriquezasociados.com"}, {"nombre": "EW ELITE CONSTRUCCIONES SAS", "telefono": "3175007000", "direccion": "CALLE 18 No 57-09", "experiencia": 16, "correo": "auxewelite@gmail.com", "web": "https://ewelite.com"}, {"nombre": "MMAS CONSTRUCTORES", "telefono": "3017895667", "direccion": "EDIFICIO CAMARA DE COMERCIO OF 604", "experiencia": 15, "correo": "info@mmasconstructores.com", "web": "https://mmasconstructores.com"}, {"nombre": "DOS CONSTRUCTORES S.A.S", "telefono": "3184243983", "direccion": "CALLE 19 No 31B-37", "experiencia": 21, "correo": "ventas@dosconstructores.com", "web": "https://www.dosconstructores.com"}, {"nombre": "CONSTRUCTORA RUMIPAMBA", "telefono": "3053520049", "direccion": "CRA 26 No 18-16 OF", "experiencia": 8, "correo": "constructorarumipamba@gmail.com", "web": "https://www.constructorarumipamba.com"}, {"nombre": "CONSTRUCTORA FAINCO S.A.S", "telefono": "3122571082", "direccion": "CALLE 19 No 31B-57", "experiencia": 3, "correo": "administracion@fainco.com.co", "web": "https://fainco.com.co"}, {"nombre": "DOYCA CONSTRUCCIONES", "telefono": "3182407247", "direccion": "CALLE 16 No 30A-21 LOCAL 2", "experiencia": 10, "correo": "bosquesdelacolina01@gmail.com", "web": "https://doycaconstrucciones.com"}], "Cartagena": [{"nombre": "CONSTRUCTORA VIA GRUPO", "telefono": "3008139753", "direccion": "CRA 3 No 9-148 PISO 4", "experiencia": 38, "correo": "info@viagrupo.co", "web": "https://viagrupo.com"}, {"nombre": "FIDCON CONSTRUCCIONES", "telefono": "3008139753", "direccion": "SANTA MONICA CARTAGENA", "experiencia": 11, "correo": "sevicioalcliente@fdincon.com", "web": "https://www.fdincon.com"}, {"nombre": "CONSTRUCTORA JEMUR", "telefono": "(605)6781548", "direccion": "CARRERA 2 No 11-41 OFICINA 2303", "experiencia": 34, "correo": "info@conjemur.com", "web": "https://conjemur.com"}, {"nombre": "CONSTRUCTORA SAME", "telefono": "3126212362", "direccion": "CALLE 57B No 5A-07", "experiencia": 30, "correo": "comunicacionesamesas@gmail.com", "web": "https://samesas.com.co"}, {"nombre": "CONSTRUCTORA GRUPO AREA", "telefono": "3145960863", "direccion": "BOCAGRANDE AV SAN MARTIN No 11-41", "experiencia": 22, "correo": "info@grupoarea.es", "web": "https://grupoarea.com.co"}, {"nombre": "HABITAR CONSTRUCCIONES", "telefono": "3232898026", "direccion": "AV CRISANTO LUQUE DIAGONAL 22 No 45-55", "experiencia": 15, "correo": "info@habitar.com.co", "web": "https://www.habitar.com.co"}, {"nombre": "CONSTRUCTORA MOVICON SAS", "telefono": "(605)6610006", "direccion": "TRANVERSAL 54 No 91-95", "experiencia": 43, "correo": "movicon@movinconsas.com", "web": "https://moviconsas.com"}, {"nombre": "CONSTRUCTORA MOSEL SAS", "telefono": "(605)6431978", "direccion": "CRA 3 No 46A-51 CENTRO LAGUNA 46", "experiencia": 30, "correo": "integrado@constructoramosel", "web": "https://www.moselsas.com.co"}, {"nombre": "CONSTRUCTORA BARAJAS", "telefono": "(605)6428183", "direccion": "PLAZA COMERCIAL LAS RAMBLAS L 101", "experiencia": 15, "correo": "info@araujoysegovia.com", "web": "http://proyectos.barajas.com.co"}, {"nombre": "CONSTRUCTORA CH PEREIRA S.A.S", "telefono": "(605)6698165", "direccion": "CALLE SAN ANTONIO No 54-138", "experiencia": 40, "correo": "contacto@chpereira.com", "web": "http://www.chpereira.com"}], "Montería": [{"nombre": "CONSTRUCTORA AZUL URBANO", "telefono": "3107353906", "direccion": "CRA 8 No 45-35 OFICINA 929", "experiencia": 15, "correo": "comercial@azulurbano.com", "web": "https://www.azulurbano.com"}, {"nombre": "CONSTRUCTORA JIPG", "telefono": "(604)7826058", "direccion": "CRA 2 No 31-48", "experiencia": 25, "correo": "info@constructorajipg.com", "web": "https://www.constructorajipg.com"}, {"nombre": "CONSTRUCTORA AL CIELO", "telefono": "3012739900", "direccion": "CALLE 61 No 7-75", "experiencia": 18, "correo": "dir.ventas@alcieloconstructora.com", "web": "https://alcieloconstructora.com"}, {"nombre": "CONSTRUCTORA CONFUTURO", "telefono": "3013685137", "direccion": "CRA 4 No 49-120", "experiencia": 18, "correo": "recepcion@constructoraconfuturo.com", "web": "https://constructoraconfuturo.com.co"}, {"nombre": "CONSTRUCTORA H&F LTDA", "telefono": "3135169198", "direccion": "CALLE 62 No 6-13 LOCAL 132", "experiencia": 21, "correo": "contacto@constructorahf.cl", "web": "https://www.constructorahyf.com.co"}, {"nombre": "CONSTRUCTORA CONCRETAR", "telefono": "(604)7816770", "direccion": "CALLE 33 No 3-45", "experiencia": 13, "correo": "constructoraconcretarsas@hotmail.com", "web": "https://constructoraconcretarsas.com"}, {"nombre": "CONSTRUCTORA ARQUICIVILES S.A.S", "telefono": "(604)7827750", "direccion": "CRA 5 No 34-54 CENTRO", "experiencia": 27, "correo": "info@grupoarquiciviles.com", "web": "https://www.arquiciviles.com"}, {"nombre": "CONSTRUCTORA CONSTRUARK SOLUCIONES", "telefono": "3117614765", "direccion": "CRA 14 CALLE 56", "experiencia": 13, "correo": "ventas@construark.com.co", "web": "https://construark.com.co"}, {"nombre": "CONSTRUCTORA DE CORDOBA", "telefono": "3148545750", "direccion": "CRA 4 No 18-39", "experiencia": 18, "correo": "comercial@constructoradecordoba.com", "web": "https://constructoradecordoba.com"}, {"nombre": "GILA CONSTRUCTORES", "telefono": "3148085715", "direccion": "CALLE 42A No 15D-06", "experiencia": 14, "correo": "NO REGISTRA", "web": "https://www.gilaconstructores.com"}], "Valledupar": [{"nombre": "CONSTRUCTORA MPL S.A.S", "telefono": "3152130997", "direccion": "CRA 10 No 16B-47", "experiencia": 10, "correo": "ventas@cosntructoramplsas.com", "web": "https://www.constructoramplsas.com"}, {"nombre": "CONSTRUCTORA MAYA Y ASOCIADOS", "telefono": "3215570289", "direccion": "CRA 11 No 15-41", "experiencia": 32, "correo": "contacto@mayaasociados.co", "web": "https://mayaasociados.co"}, {"nombre": "CONSTRUCTORA MAYALES", "telefono": "3185606239", "direccion": "CRA 10 No 168-43", "experiencia": 40, "correo": "ventas@mayales.com", "web": "https://mayales.com"}, {"nombre": "CONSTRUCTORA MS S.A.S", "telefono": "3205846328", "direccion": "CALLE 49 No 29-23", "experiencia": 25, "correo": "asesorcomercial@msconstrucciones.com.co", "web": "https://msconstrucciones.com.co"}, {"nombre": "CONSTRUCTORA CARVAJAL Y SOTO SAS", "telefono": "3126647821", "direccion": "CRA 12 No 14-108 OF  202", "experiencia": 24, "correo": "info@carvajalysoto.com", "web": "https://carvajalysoto.com"}, {"nombre": "CONSTRUCTORA TERRANOVA", "telefono": "3164204644", "direccion": "CALLE 1 No 23-230", "experiencia": 7, "correo": "ventas@construccionesterranova.com", "web": "https://construccionesterranova.com"}, {"nombre": "CONSTRUCTORA CASTRO DE  QUINTERO", "telefono": "3508381770", "direccion": "CALLE 15 No 4-38 OFICINA 102", "experiencia": 28, "correo": "NO", "web": "https://cdeq.com.co"}, {"nombre": "CONSTRUCTORA CONSTRUVID", "telefono": "3216995348", "direccion": "CRA 11 No 13B-54", "experiencia": 11, "correo": "servicioalcliente@construvid.com", "web": "https://construvid.com"}, {"nombre": "CONSTRUCTORA LINDARAJA SAS", "telefono": "3205682696", "direccion": "CALLE 16 B No 12 -29", "experiencia": 20, "correo": "atencionalcliente@constructoralindaraja.com", "web": "https://www.constructoralindaraja.com"}, {"nombre": "CONSTRUCTORA A&O PROYECTOS", "telefono": "3188373130", "direccion": "CRA 12  No 8-30", "experiencia": 4, "correo": "info@aoproyectos.com", "web": "https://aoproyectos.com"}, {"nombre": "CONSTRUCTORA CASA NUEVA", "telefono": "3156495895", "direccion": "CALLE 1N No 19B-10", "experiencia": 9, "correo": "micasaconstructoras.a.s@gmail.com", "web": "https://casanuevaconstructora.co"}], "Santa Marta": [{"nombre": "CONSTRUCTORA MIPKO", "telefono": "3188565215", "direccion": "CALLE 24 No 2-66", "experiencia": 38, "correo": "info@mipko.co", "web": "https://mipko.co"}, {"nombre": "CONSTRUCTORA JIMENEZ", "telefono": "3104653387", "direccion": "CALLE 24 No 2-66 OFICINA 810", "experiencia": 36, "correo": "info@jimenezconstructores.com", "web": "https://jimenezconstructores.com"}, {"nombre": "CNSTRUCTORA VIVES", "telefono": "3106149157", "direccion": "CALLE 15 No 1C-54 CENTRO", "experiencia": 35, "correo": "directoracomercial@constructoravives.com", "web": "https://constructoravives.com"}, {"nombre": "CONSTRUCTORA CONSTRUSERVI DE LA COSTA", "telefono": "3244354274", "direccion": "CALLE 49A No 23-14", "experiencia": 40, "correo": "construservinbdelacosta@gmail.com", "web": "https://construservinbdela.com"}, {"nombre": "CONSTRUCTORA INFANTE VIVES", "telefono": "3176667338", "direccion": "CRA 2B No 26-49 PISO 2", "experiencia": 30, "correo": "constructora@cifantevives.com", "web": "https://cinfantevives.com"}, {"nombre": "CONSTRUCTORA CARPOLO", "telefono": "3162722542", "direccion": "CALLE 42 No CRA 34 -48", "experiencia": 15, "correo": "constructoracarpolosas@hotmail.com", "web": "https://constructoracarpolo.com"}, {"nombre": "CONSTRUCTORA RMBI", "telefono": "3014539082", "direccion": "CALLE 10 No 34B - 05", "experiencia": 12, "correo": "rmbisasconstructora@gmail.com", "web": "https://rmbiconstructora.com"}, {"nombre": "CONSTRUCTORA NATURA S.A.S", "telefono": "3112121105", "direccion": "CARRERA 13 No 97-76 OF 402", "experiencia": 27, "correo": "servicioalcliente@constructoranatura.com", "web": "https://www.constructoranatura.com"}, {"nombre": "CONSTRUCTORA PLASMA Y ARQUITECTOS", "telefono": "", "direccion": "CALLE 17 No 9-45", "experiencia": 14, "correo": "", "web": ""}], "Tunja": [{"nombre": "CONSTRUCTORA CIMENTARQ", "telefono": "3114458832", "direccion": "CRA 8 No 21-67 LOCAL 2", "experiencia": 30, "correo": "contacto@cimentarq.com.co", "web": "https://cimentarq.com.co"}, {"nombre": "CONSTRUCTORA ALMA INGENIERIAS DE COLOMBIA", "telefono": "3106006036", "direccion": "CRA 1F No 39-76", "experiencia": 6, "correo": "almaingenieriacolombia@gmail.com", "web": "https://www.almaingenieria.com.co"}, {"nombre": "CONSTRUCTORA CER", "telefono": "3232301109", "direccion": "CRA 1F no 40-149 OFICINA 512", "experiencia": 20, "correo": "mtcer@cerconstructora.com", "web": "https://cerconstructora.com"}, {"nombre": "CONSTRUCTORA ALCABAMA", "telefono": "3009121770", "direccion": "CRA 7 No 155C-30", "experiencia": 41, "correo": "somos@alcabama.com.co", "web": "https://www.alcabama.com"}, {"nombre": "CONSTRUCTORA MV GRUPO CONSTRUCTOR", "telefono": "3173625943", "direccion": "CALLE 41 No 1C-48", "experiencia": 18, "correo": "info@mvgrupoconstructor.com", "web": "https://mvgrupoconstructor.com"}], "Palmira": [{"nombre": "CONSTRUCTORA CADENA LOPEZ & CIA", "telefono": "(602)22844157", "direccion": "CRA 39 No T23-87", "experiencia": 25, "correo": "gerenciacomercial@gacadenalopez.com", "web": "https://gacadenalopez.com"}, {"nombre": "KONSTRUIR INGENIERIA S.A", "telefono": "3106728571", "direccion": "CALLE 21A No 10-60", "experiencia": 15, "correo": "konstruiring@gmail.com", "web": "https://www.konstruiringenieriasa.com"}, {"nombre": "SOCIEDAD CONSTRUCTORA DE ALTAMIRA Y CIA S.A.S", "telefono": "3183227927", "direccion": "CALLE 30 No 28-78 oficina 404", "experiencia": 17, "correo": "info@altamiraycia.com", "web": "https://www.constructoraaltamira.com"}, {"nombre": "CONSTRUCTORA GUERRERO RENDON", "telefono": "3244422577", "direccion": "CRA 32 No 8-05", "experiencia": 20, "correo": "info@constructoraguerrerorendon.com", "web": "https://constructoraguerrerorendon.com"}, {"nombre": "CONSTRUCTORA MORENO TAFUR S.A", "telefono": "(602)2871582", "direccion": "CALLE 31 No 30-19 OFICINA 401", "experiencia": 19, "correo": "ventas@morenotafur.com", "web": "https://morenotafurt.com"}, {"nombre": "CONSTRUCTORA MAS INGENIERIA", "telefono": "3123068594", "direccion": "CRA 19 No 95-35", "experiencia": 15, "correo": "info@mas-ingenieria.com.co", "web": "https://www.mas-ingenieria.com.co"}, {"nombre": "CONSTRUCTORA GRUPO RADA", "telefono": "(602)2859111", "direccion": "CALLE 21 No 24-29", "experiencia": 30, "correo": "oficina@gruporada.es", "web": "https://www.gruporadasas.com"}, {"nombre": "CONSTRUCTORA MARTIN ARANGO", "telefono": "3185833016", "direccion": "CALLE No 33 No  25-58", "experiencia": 18, "correo": "comercial@constructoramartinarango.com", "web": "https://constructoramartinarango.com"}], "Tuluá": [{"nombre": "GALINDO CONSTRUCTORES", "telefono": "3108403913", "direccion": "CRA 5 No 5-13", "experiencia": 6, "correo": "constructora@galindoconstrucciones.com", "web": "https://galindoconstrucciones.com"}, {"nombre": "CONSTRUCTORA LA MANSION", "telefono": "3217466367", "direccion": "CRA 27 No 30-16", "experiencia": 20, "correo": "hola@lamansion.com.co", "web": "https://www.lamansioninversiones.com"}, {"nombre": "CONATRUCTORA LA CIMA", "telefono": "(602)2316114", "direccion": "CRA 40 No 37-51", "experiencia": 30, "correo": "proyectos@constructoracima.cl", "web": "https://www.lacimaconstrucciones.com"}, {"nombre": "CONSTRUCTORA PROVIDENCIA S.A", "telefono": "3178670884", "direccion": "TRES ESQUINAS No 20", "experiencia": 9, "correo": "contacto@constructoraprovidiencia.com", "web": "https://constructoraprovidencia.com"}, {"nombre": "CONSTRUCTORES PROACTIVOS", "telefono": "3187923263", "direccion": "CRA 25 No 29-20 Local 1", "experiencia": 35, "correo": "ventas@consultoresproactivos.com", "web": "https://consultoresproactivos.com"}], "Popayán": [{"nombre": "GRUPO EMPRESARIAL DIC", "telefono": "3142334296", "direccion": "CALLE 14 No 8-54", "experiencia": 10, "correo": "mercadeoyventas@constructoradic.com", "web": "https://www.constructoradic.com"}, {"nombre": "CONSTRUCTORA ARINSA", "telefono": "3176578520", "direccion": "CRA 9 No 24 AN-21OF 301", "experiencia": 26, "correo": "servicioalcliente@constructoraarinsa.com", "web": "https://constructoraarinsa.com"}, {"nombre": "CONSTRUCTORA MEDECONS", "telefono": "3175099156", "direccion": "CALLE 3 No 5-56 OFICINA 104", "experiencia": 30, "correo": "info@constructoramadecons.com", "web": "https://constructoramadecons.com"}, {"nombre": "CONSTRUCTORA GRACOL", "telefono": "3173680919", "direccion": "CALLE 34N No CRA 13 ESQUINA", "experiencia": 22, "correo": "servicioalcliente@gracolsas.com", "web": "https://constructoragracol.com"}, {"nombre": "CONSTRUCTORA OPEN HOUSE", "telefono": "3042840500", "direccion": "CRA 6A No 14N-25", "experiencia": 8, "correo": "info@constructoraopenhuse.com", "web": "https://open-house.com.co"}, {"nombre": "CONSTRUCTORA PRODIGYO", "telefono": "3162918400", "direccion": "CALLE 35 NORTE CERRITOS DE LA PAZ OFICINA 1", "experiencia": 14, "correo": "contacto@grupoprodigyo.com", "web": "https://www.grupoprodigyo.com"}, {"nombre": "CONSTRUCTORA CUIDAD VERDE", "telefono": "3175384432", "direccion": "CALLE 16N No 9-44", "experiencia": 12, "correo": "info@constructoracuidadverde.com", "web": "http://www.constructoracuidadverde.com"}, {"nombre": "CONSTRUCTORA GRUPO ALZZA", "telefono": "3136223839", "direccion": "CALLE 10 N No 6A-117", "experiencia": 7, "correo": "constructor@grupoalzza.cl", "web": "https://grupoalzzasas.com"}], "Cúcuta": [{"nombre": "CONSTRUCTORA CELES GROUP", "telefono": "3222710595", "direccion": "CALLE 13 No 1E-87", "experiencia": 34, "correo": "servicioalcliente@celeusgroup.co", "web": "https://www.celeusgroup.com"}, {"nombre": "CONSTRUCTORA MONAPE", "telefono": "3125629521", "direccion": "AV DEMETRIO MENDOZA DIAGONAL4 No 5-40", "experiencia": 15, "correo": "servicioalcliente@constructoramonape.com", "web": "https://constructoramonape.com"}, {"nombre": "CONSTRUCTORA YADEL", "telefono": "3188042478", "direccion": "AV 1AE No 18-15 LOS CAOBOS", "experiencia": 32, "correo": "constactarpqr.sy@gmail.com", "web": "https://constructorayadel.com.co"}, {"nombre": "CONSTRUCTORA POVOS", "telefono": "3044570897", "direccion": "CALLE 11 No 4-39 LOCAL 325", "experiencia": 5, "correo": "contacto@constructorapovos.com", "web": "https://constructorapovos.com"}, {"nombre": "CONSTRUCTORA GRUPO CAOBA", "telefono": "3005128458", "direccion": "CALLE 9 No 4-52 LOCAL 246", "experiencia": 30, "correo": "info2@grupocaoba.com.co", "web": "https://grupocaoba.com.co"}, {"nombre": "CONSTRUCTORA VILLA DEL RODEO", "telefono": "(607)5009618", "direccion": "CALLE 21A No 0B-19", "experiencia": 7, "correo": "promotorventas@constructoravilladelrodeo.com", "web": "https://www.constructoravillasdelrodeo.com"}, {"nombre": "CONSTRUCTORA MORESA", "telefono": "3208032646", "direccion": "CALLE 18A NORTE No 18E-59", "experiencia": 29, "correo": "info@constructoramoresa.com", "web": "https://www.constructoramoresa.com"}, {"nombre": "CONSTRUCTORA PAISAJE URBANO", "telefono": "(607)5784890", "direccion": "CALLE 18 No 0-50", "experiencia": 20, "correo": "info@paisajeurbano.com.co", "web": "https://paisajeurbano.com.co"}, {"nombre": "CONSTRUCTORA VERTICES URBANOS", "telefono": "3174004579", "direccion": "CALLE 11 No 2E-15 OFICINA 203", "experiencia": 10, "correo": "infoverticesurbanos@gmail.com", "web": "https://verticesurbanos.com"}, {"nombre": "CONSTRUCTORA LL SAS", "telefono": "3105522646", "direccion": "CALLE 12A No 4-19 OF 302", "experiencia": 11, "correo": "constructorallsas@gmail.com", "web": "https://constructorallsas.com.co"}, {"nombre": "ARQUITECTOS E INGENIEROS CONSTRUCTORES", "telefono": "3245671430", "direccion": "CALLE 21A NORTE ESQUINA OFICINA 252", "experiencia": 23, "correo": "administracion@vmconstructores.com.co", "web": "https://vmconstructores.com.co"}]};
+
+const DATA_BANCOS = [
+  {name:"Portal Davivienda", url:"https://bienesalalcancedetodos.davivienda.com/"},
+  {name:"Portal Bancolombia", url:"https://inmobiliariotu360.bancolombia.com/"},
+  {name:"Inmuebles Grupo Aval", url:"https://www.avalvc.com.co/portal-inmobiliario"},
+  {name:"Inmuebles BBVA", url:"https://www.bbva.com.co/personas/promocion/remates.html"},
+  {name:"Banco Caja Social", url:"https://www.bancocajasocial.com/creditos-de-vivienda/credito-hipotecario/oferta-de-inmuebles/"},
+  {name:"Banco Itaú", url:"https://banco.itau.co/web/personas/informacion-de-interes/bienes-a-la-venta"}
+];
+
+const DATA_RADAR = [
+  {name:"Finca Raíz", url:"https://www.fincaraiz.com.co/"},
+  {name:"Metrocuadrado", url:"https://www.metrocuadrado.com/"},
+  {name:"Ciencuadras", url:"https://www.ciencuadras.com/"},
+  {name:"Mercadolibre", url:"https://www.mercadolibre.com.co/c/inmuebles#menu=categories"},
+  {name:"Habi - Vivienda Usada", url:"https://habi.co/venta-apartamentos"},
+  {name:"La Haus - Vivienda Nueva", url:"https://www.lahaus.com/"}
+];
+
+let activeTab  = 'inmo';
+let activeCity = 'all';
+
+const TAB_SUBTITLES = {
+    inmo: 'Tu red de contactos estratégicos para detectar y captar oportunidades de inversión en el mercado de inmuebles usados',
+    const: 'Catálogo de constructoras con proyectos de inmuebles nuevos en preventa/fiducia para maximizar tu rentabilidad desde el inicio',
+    bancos: 'Acceso exclusivo a la red de activos bancarios. El atajo directo para ejecutar tu estrategia del Sistema Crece',
+    radar: 'Usa los portales masivos como un profesional: extrayendo datos, comparando precios, aplicando filtros y detectando oportunidades'
+};
+
+/* ═══════════════════════════════════════════
+   GHL-SAFE STICKY CONTROLS
+═══════════════════════════════════════════ */
+(function(){
+    const bar    = document.getElementById('controlsBar');
+    const spacer = document.getElementById('controls-spacer');
+    let barTop = 0;
+
+    function recalc() {
+        if (bar.classList.contains('is-sticky')) {
+            bar.classList.remove('is-sticky');
+            spacer.classList.remove('active');
+        }
+        barTop = bar.getBoundingClientRect().top + window.pageYOffset;
+        onScroll();
+    }
+
+    function onScroll() {
+        if (window.pageYOffset >= barTop) {
+            if (!bar.classList.contains('is-sticky')) {
+                spacer.style.height = bar.offsetHeight + 'px';
+                spacer.classList.add('active');
+                bar.classList.add('is-sticky');
+            }
+        } else {
+            bar.classList.remove('is-sticky');
+            spacer.classList.remove('active');
+        }
+    }
+
+    window.addEventListener('scroll', onScroll, {passive:true});
+    window.addEventListener('resize', recalc);
+    requestAnimationFrame(recalc);
+})();
+
+/* ═══════════════════════════════════════════
+   SYNC DUAL INPUTS (desktop <-> mobile)
+═══════════════════════════════════════════ */
+function onMobileSearch() {
+    document.getElementById('searchInput').value = document.getElementById('searchInputMobile').value;
+    renderCards();
+}
+function onMobileSort() {
+    document.getElementById('sortSelect').value = document.getElementById('sortSelectMobile').value;
+    renderCards();
+}
+
+/* ═══════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════ */
+function esc(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function hlText(text, q) {
+    if (!q || !text) return esc(text);
+    const e = esc(text);
+    const rx = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    return e.replace(rx, '<mark class="hl">$1</mark>');
+}
+function cleanUrl(u) {
+    if (!u) return '#';
+    u = u.trim();
+    return u.startsWith('http') ? u : 'https://' + u;
+}
+function domain(u) {
+    try { return new URL(cleanUrl(u)).hostname.replace('www.',''); } catch(e) { return u; }
+}
+function isValid(v) { return v && v !== 'None' && v !== 'NO' && v !== 'NO ' && v !== 'NO TIENE' && v.trim() !== ''; }
+function cleanPhone(p) {
+    if (!p) return '';
+    return String(p).replace(/[^0-9+()-]/g, '').trim();
+}
+
+/* ═══════════════════════════════════════════
+   ICON SNIPPETS
+═══════════════════════════════════════════ */
+const ICON_PHONE = '<svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>';
+const ICON_LOC   = '<svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+const ICON_MAIL  = '<svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>';
+const ICON_WEB   = '<svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>';
+
+/* ═══════════════════════════════════════════
+   CARD BUILDERS
+═══════════════════════════════════════════ */
+function buildInmoCard(item, q) {
+    const phone = esc(String(item.telefono || '').trim());
+    const dir   = isValid(item.direccion)  ? esc(item.direccion.trim())  : '';
+    const email = isValid(item.correo)     ? esc(item.correo.trim())     : '';
+    const web   = isValid(item.web)        ? item.web.trim()             : '';
+
+    const phoneClean = cleanPhone(item.telefono);
+    const hasPhone = phone.length > 0;
+    const hasWeb   = web.length > 0;
+
+    let actions = '';
+    if (hasPhone || hasWeb) {
+        actions = '<div class="card-actions">';
+        if (hasPhone) actions += `<a href="tel:${phoneClean}" class="btn-phone">&#128222; Contactar</a>`;
+        if (hasWeb)   actions += `<a href="${cleanUrl(web)}" target="_blank" rel="noopener noreferrer" class="btn-web">&#127760; Contactar vía Web</a>`;
+        actions += '</div>';
+    }
+
+    return `<div class="card">
+        <div class="card-header">
+            <div style="font-weight:700;font-size:0.85rem;color:#1f2937;line-height:1.3;margin-bottom:4px;">${hlText(item.nombre,q)}</div>
+        </div>
+        <div class="card-body">
+            ${phone ? `<div class="info-row">${ICON_PHONE}<a href="tel:${phoneClean}" style="color:inherit;font-weight:600;text-decoration:none;">${hlText(phone,q)}</a></div>` : ''}
+            ${dir   ? `<div class="info-row">${ICON_LOC}<span>${dir}</span></div>` : ''}
+            ${email ? `<div class="info-row">${ICON_MAIL}<a href="mailto:${email}" class="web-link" style="font-size:0.75rem;">${hlText(email,q)}</a></div>` : ''}
+            ${web   ? `<div class="info-row">${ICON_WEB}<a href="${cleanUrl(web)}" target="_blank" rel="noopener noreferrer" class="web-link">${domain(web)}</a></div>` : ''}
+            ${actions}
+        </div>
+    </div>`;
+}
+
+function buildConstCard(item, q) {
+    const exp   = item.experiencia || 0;
+    const phone = esc(String(item.telefono || '').trim());
+    const dir   = isValid(item.direccion) ? esc(item.direccion.trim()) : '';
+    const email = isValid(item.correo)    ? esc(item.correo.trim())    : '';
+    const web   = isValid(item.web)       ? item.web.trim()            : '';
+
+    const bExp  = exp  > 0 ? `<span class="badge badge-exp">&#127942; ${exp} años</span>` : '';
+
+    const phoneClean = cleanPhone(item.telefono);
+    const hasPhone = phone.length > 0;
+    const hasWeb   = web.length > 0;
+
+    let actions = '';
+    if (hasPhone || hasWeb) {
+        actions = '<div class="card-actions">';
+        if (hasPhone) actions += `<a href="tel:${phoneClean}" class="btn-phone">&#128222; Contactar</a>`;
+        if (hasWeb)   actions += `<a href="${cleanUrl(web)}" target="_blank" rel="noopener noreferrer" class="btn-web">&#127760; Contactar vía Web</a>`;
+        actions += '</div>';
+    }
+
+    return `<div class="card">
+        <div class="card-header">
+            <div style="font-weight:700;font-size:0.85rem;color:#1f2937;line-height:1.3;margin-bottom:6px;">${hlText(item.nombre,q)}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px;">${bExp}</div>
+        </div>
+        <div class="card-body">
+            ${phone ? `<div class="info-row">${ICON_PHONE}<a href="tel:${phoneClean}" style="color:inherit;font-weight:600;text-decoration:none;">${hlText(phone,q)}</a></div>` : ''}
+            ${dir   ? `<div class="info-row">${ICON_LOC}<span>${dir}</span></div>` : ''}
+            ${email ? `<div class="info-row">${ICON_MAIL}<a href="mailto:${email}" class="web-link" style="font-size:0.75rem;">${hlText(email,q)}</a></div>` : ''}
+            ${web   ? `<div class="info-row">${ICON_WEB}<a href="${cleanUrl(web)}" target="_blank" rel="noopener noreferrer" class="web-link">${domain(web)}</a></div>` : ''}
+            ${actions}
+        </div>
+    </div>`;
+}
+
+function buildPortalCard(item) {
+    return `<div class="portal-card">
+        <h3>${esc(item.name)}</h3>
+        <div class="portal-domain">${domain(item.url)}</div>
+        <a href="${item.url}" target="_blank" rel="noopener noreferrer" class="btn-visit">&#127760; Visitar Portal</a>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════ */
+function renderCards() {
+    // Update subtitle
+    document.getElementById('tabSubtitle').textContent = TAB_SUBTITLES[activeTab] || '';
+
+    // Portal tabs (bancos / radar)
+    if (activeTab === 'bancos' || activeTab === 'radar') {
+        document.getElementById('cardsGrid').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'none';
+        const portalGrid = document.getElementById('portalGrid');
+        portalGrid.style.display = 'block';
+
+        const data = activeTab === 'bancos' ? DATA_BANCOS : DATA_RADAR;
+        const label = activeTab === 'bancos' ? 'portales bancarios' : 'portales de mercado';
+        document.getElementById('resultsInfo').textContent = data.length + ' ' + label;
+
+        portalGrid.innerHTML = '<div class="portal-grid">' + data.map(buildPortalCard).join('') + '</div>';
+        return;
+    }
+
+    // Regular tabs (inmo / const)
+    document.getElementById('portalGrid').style.display = 'none';
+    document.getElementById('cardsGrid').style.display = '';
+
+    const q    = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+    const sort = document.getElementById('sortSelect').value;
+    const data = activeTab === 'inmo' ? DATA_INMO : DATA_CONST;
+
+    // Gather items
+    let items = [];
+    if (activeCity === 'all') {
+        Object.entries(data).forEach(([city, arr]) => arr.forEach(it => items.push({...it, _city: city})));
+    } else {
+        (data[activeCity] || []).forEach(it => items.push({...it, _city: activeCity}));
+    }
+
+    // Remove placeholder rows
+    items = items.filter(it => it.nombre && it.nombre.length > 3 && it.telefono);
+
+    // Filter
+    if (q) {
+        items = items.filter(it => {
+            return [it.nombre, it.telefono, it.correo, it.web, it.direccion, it._city]
+                .join(' ').toLowerCase().includes(q);
+        });
+    }
+
+    // Sort
+    if (sort === 'alpha') {
+        items.sort((a,b) => a.nombre.localeCompare(b.nombre,'es'));
+    } else {
+        if (activeTab === 'inmo') items.sort((a,b) => (a.nombre || '').localeCompare(b.nombre || '', 'es'));
+        else items.sort((a,b) => (b.experiencia||0)-(a.experiencia||0));
+    }
+
+    // Update sort label
+    const sel = document.getElementById('sortSelect');
+    sel.options[0].text = activeTab === 'inmo' ? 'A → Z' : 'Más experiencia';
+    document.getElementById('sortSelectMobile').options[0].text = activeTab === 'inmo' ? 'A→Z' : '↓ Exp.';
+
+    // Results info
+    const label = activeTab === 'inmo' ? 'inmobiliarias' : 'constructoras';
+    const cityLabel = activeCity === 'all' ? 'todas las ciudades' : activeCity;
+    document.getElementById('resultsInfo').textContent =
+        items.length + ' ' + label + ' · ' + cityLabel + (q ? ' · "' + q + '"' : '');
+
+    // Render cards
+    const grid  = document.getElementById('cardsGrid');
+    const empty = document.getElementById('emptyState');
+    if (items.length === 0) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+    empty.style.display = 'none';
+    const build = activeTab === 'inmo' ? buildInmoCard : buildConstCard;
+    const chunk = 60;
+    grid.innerHTML = items.slice(0, chunk).map(it => build(it, q)).join('');
+    if (items.length > chunk) {
+        let i = chunk;
+        function renderNext() {
+            if (i >= items.length) return;
+            const end = Math.min(i + chunk, items.length);
+            grid.innerHTML += items.slice(i, end).map(it => build(it, q)).join('');
+            i = end;
+            requestAnimationFrame(renderNext);
+        }
+        requestAnimationFrame(renderNext);
+    }
+}
+
+/* ═══════════════════════════════════════════
+   TAB SWITCH
+═══════════════════════════════════════════ */
+function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tab-inmo').classList.toggle('active', tab === 'inmo');
+    document.getElementById('tab-const').classList.toggle('active', tab === 'const');
+    document.getElementById('tab-bancos').classList.toggle('active', tab === 'bancos');
+    document.getElementById('tab-radar').classList.toggle('active', tab === 'radar');
+
+    // Show/hide controls not relevant for portal tabs
+    const isPortal = (tab === 'bancos' || tab === 'radar');
+    document.getElementById('pillRow').style.display = isPortal ? 'none' : '';
+    document.getElementById('tabRight').style.display = isPortal ? 'none' : '';
+    document.getElementById('mobileFilterRow').style.display = '';
+    if (isPortal) {
+        document.getElementById('mobileFilterRow').style.display = 'none';
+    }
+
+    renderCards();
+}
+
+/* ═══════════════════════════════════════════
+   CITY SELECT
+═══════════════════════════════════════════ */
+function selectCity(city) {
+    activeCity = city;
+    document.querySelectorAll('.city-pill').forEach(b => b.classList.remove('active'));
+    const slug = city === 'all' ? 'all' : city
+        .replace(/ /g,'-')
+        .replace(/[áÁ]/g,'a').replace(/[éÉ]/g,'e')
+        .replace(/[íÍ]/g,'i').replace(/[óÓ]/g,'o')
+        .replace(/[úÚ]/g,'u').replace(/[ñÑ]/g,'n');
+    const btn = document.getElementById('city-' + slug);
+    if (btn) {
+        btn.classList.add('active');
+        btn.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+    }
+    renderCards();
+}
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', renderCards);
+</script>
+</body>
+</html>

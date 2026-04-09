@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Evolución | Clase Online Gratuita</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        serif: ["Playfair Display", "serif"],
+                    },
+                    colors: {
+                        background: "hsl(0 0% 98%)",
+                        foreground: "hsl(0 0% 10%)",
+                        primary: {
+                            DEFAULT: "hsl(38 43% 60%)",
+                            foreground: "hsl(0 0% 10%)",
+                        },
+                        muted: {
+                            DEFAULT: "hsl(0 0% 94%)",
+                            foreground: "hsl(0 0% 40%)",
+                        }
+                    },
+                    keyframes: {
+                        "button-bounce-soft": {
+                            "0%, 100%": {
+                                transform: "translateY(0)",
+                                boxShadow: "0 0 0 0 hsl(38 43% 60% / 0)"
+                            },
+                            "50%": {
+                                transform: "translateY(-3px)",
+                                boxShadow: "0 12px 24px -6px hsl(38 43% 60% / 0.35)"
+                            },
+                        }
+                    },
+                    animation: {
+                        "button-bounce-soft": "button-bounce-soft 6s infinite ease-in-out",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+
+        @layer base {
+            body {
+                @apply bg-background text-foreground font-sans;
+            }
+        }
+
+        .vsl-container {
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .vsl-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: opacity 0.3s;
+        }
+
+        .vsl-play-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .vsl-play-btn {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        @media (min-width: 768px) {
+            .vsl-play-btn { width: 72px; height: 72px; }
+        }
+
+        .vsl-play-overlay:hover .vsl-play-btn {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+        }
+
+        .vsl-play-btn svg {
+            margin-left: 5px;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #registration-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #registration-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 550px;
+            height: 90vh;
+            max-height: 600px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .modal-content { height: 95vh; max-height: none; border-radius: 16px; }
+            #registration-modal { padding: 0.5rem; }
+        }
+
+        @media (max-width: 480px) {
+            .modal-content { border-radius: 12px; }
+            #registration-modal { padding: 0.25rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+        }
+
+        html, body { max-width: 100%; overflow-x: hidden; }
+
+        section {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        section > div {
+            max-width: 100%;
+        }
+
+        footer {
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+        }
+
+        #registration-modal {
+            width: 100vw;
+            height: 100vh;
+            left: 0;
+            right: 0;
+            margin: 0;
+        }
+
+        @media (max-width: 640px) {
+            .vsl-container { border-radius: 12px; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Modal para el Formulario -->
+    <div id="registration-modal">
+        <div class="modal-content flex flex-col">
+            <button onclick="closeModal()"
+                class="absolute top-4 right-4 z-50 bg-white border rounded-full p-2 shadow-lg hover:bg-gray-100 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="flex-1 overflow-auto bg-white pt-10 md:pt-12">
+                <iframe
+                    src="https://link.cleesaas.com/widget/form/bMSAI5yCGf2hz7Jw4Vp6"
+                    style="width:100%;height:100%;border:none;border-radius:5px"
+                    id="inline-bMSAI5yCGf2hz7Jw4Vp6"
+                    data-layout="{'id':'INLINE'}"
+                    data-trigger-type="alwaysShow"
+                    data-trigger-value=""
+                    data-activation-type="alwaysActivated"
+                    data-activation-value=""
+                    data-deactivation-type="neverDeactivate"
+                    data-deactivation-value=""
+                    data-form-name="Form Evento: OVEJAS VOLADORAS - 2026 - 2"
+                    data-height="460"
+                    data-layout-iframe-id="inline-bMSAI5yCGf2hz7Jw4Vp6"
+                    data-form-id="bMSAI5yCGf2hz7Jw4Vp6"
+                    title="Form Evento: OVEJAS VOLADORAS - 2026 - 2"
+                ></iframe>
+                <script src="https://link.cleesaas.com/js/form_embed.js"></script>
+            </div>
+        </div>
+    </div>
+
+    <div class="min-h-screen selection:bg-primary/30">
+
+        <!-- Hero Section -->
+        <section class="pt-8 md:pt-16 pb-8 md:pb-12 px-6">
+            <div class="max-w-4xl mx-auto text-center">
+
+                <!-- Logo -->
+                <div class="mb-8 flex flex-col items-center justify-center gap-4">
+                    <div class="w-20 h-20 overflow-hidden rounded-full border-2 border-primary/20 shadow-lg bg-black flex items-center justify-center p-1">
+                        <img src="https://vibe.filesafe.space/1775682063663501102/attachments/e2ea9e7d-2b24-4514-bb28-a0a45a9b3002.jpg"
+                            alt="Ovejas Voladoras" class="w-full h-full object-contain rounded-full" />
+                    </div>
+                </div>
+
+                <!-- Badge -->
+                <span class="inline-block px-4 py-1.5 text-xs md:text-sm font-medium tracking-widest text-primary border border-primary/30 rounded-full uppercase bg-primary/5 mb-8">
+                    CLASE ONLINE GRATUITA &middot; EN VIVO
+                </span>
+
+                <!-- Titulo principal -->
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-foreground leading-tight mb-6 uppercase">
+                    LA EVOLUCI&Oacute;N
+                </h1>
+
+                <!-- Subtitulo -->
+                <p class="text-lg md:text-2xl font-semibold text-foreground/80 max-w-3xl mx-auto mb-4 leading-snug">
+                    C&oacute;mo vender tu conocimiento en la era de la IA &mdash; o quedarte fuera del mercado para siempre.
+                </p>
+
+                <!-- Descripcion -->
+                <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
+                    El mercado de la educaci&oacute;n digital cambi&oacute;. Lo que funcionaba en 2023 ya no vende. Y lo que viene ahora lo cambia todo.
+                </p>
+
+                <!-- VSL -->
+                <div class="vsl-container my-6 md:my-8 max-w-3xl mx-auto">
+                    <div class="vsl-play-overlay" id="playOverlay">
+                        <div class="vsl-play-btn">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="hsl(38 43% 60%)"><polygon points="5,3 19,12 5,21"/></svg>
+                        </div>
+                    </div>
+                    <video id="videoHero" autoplay muted playsinline controlsList="nodownload" oncontextmenu="return false;">
+                        <source src="" type="video/mp4">
+                        Tu navegador no soporta la reproducci&oacute;n de video.
+                    </video>
+                </div>
+
+                <!-- Darwin Quote -->
+                <div class="flex items-center justify-center gap-4 max-w-2xl mx-auto my-8 px-4">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Charles_Darwin_seated_crop.jpg/220px-Charles_Darwin_seated_crop.jpg"
+                        alt="Charles Darwin"
+                        class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-primary/20 flex-shrink-0" />
+                    <blockquote class="text-sm md:text-base italic text-muted-foreground text-left leading-snug">
+                        &ldquo;No sobrevive la especie m&aacute;s inteligente ni la m&aacute;s fuerte. Sobrevive la que mejor se adapta al cambio.&rdquo;
+                        <span class="not-italic font-medium text-foreground">&mdash; Charles Darwin</span>
+                    </blockquote>
+                </div>
+
+                <!-- CTA Button -->
+                <button onclick="openModal()"
+                    class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
+                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                    QUIERO EVOLUCIONAR
+                </button>
+            </div>
+        </section>
+
+        <!-- El Mercado Ha Cambiado -->
+        <section class="py-12 md:py-16 px-6 bg-muted/50">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-10 tracking-wide md:whitespace-nowrap">
+                    EL MERCADO HA CAMBIADO. <span class="font-serif italic text-primary">&iquest;T&uacute; tambi&eacute;n?</span>
+                </h2>
+
+                <div class="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed">
+                    <p>Hace tres a&ntilde;os, publicar contenido constante era suficiente para construir autoridad. Hace dos, tener seguidores era suficiente para vender. Hace uno, tener un curso grabado era suficiente para monetizar.</p>
+                    <p class="font-semibold text-foreground text-lg md:text-xl">Hoy, nada de eso basta.</p>
+                    <p>La IA democratiz&oacute; la creaci&oacute;n de contenido. Cualquier persona puede generar un curso en horas, publicar 30 reels al mes sin aparecer y construir una web entera sin saber c&oacute;digo.</p>
+                    <p>&iquest;El resultado? Un mercado que no es m&aacute;s competitivo. <strong>Es m&aacute;s saturado.</strong></p>
+                    <p class="font-bold text-foreground text-center text-lg md:text-xl py-2">M&aacute;s ruido. Menos confianza. M&aacute;s oferta. Menos atenci&oacute;n.</p>
+                    <p>Y en ese contexto, el que sobrevive no es el que tiene m&aacute;s seguidores. Es el que tiene la <strong>oferta correcta</strong>, construida para este nuevo momento.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- En Esta Clase Vas a Descubrir -->
+        <section class="py-12 md:py-16 px-6">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-12 uppercase tracking-wide">
+                    EN ESTA CLASE VAS A <span class="font-serif italic normal-case text-primary">descubrir</span>
+                </h2>
+
+                <div class="space-y-8">
+                    <!-- Item 1 -->
+                    <div class="flex items-start gap-4 md:gap-5">
+                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">1</span>
+                        <div>
+                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">Por qu&eacute; el ebook, el curso pregrabado y el &ldquo;contenido educativo&rdquo; solos ya no venden &mdash; y qu&eacute; lo est&aacute; reemplazando.</p>
+                            <p class="text-muted-foreground text-sm md:text-base italic">Spoiler: el mercado no quiere m&aacute;s informaci&oacute;n. Quiere resultados con menos esfuerzo, en menos tiempo.</p>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="flex items-start gap-4 md:gap-5">
+                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">2</span>
+                        <div>
+                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">Las 3 formas de educaci&oacute;n digital que est&aacute;n dominando el mercado ahora mismo:</p>
+                            <p class="text-muted-foreground text-sm md:text-base">Comunidades con acompa&ntilde;amiento. Formaci&oacute;n intensiva en vivo. MiniApps que entregan el resultado sin que el cliente tenga que pensar.</p>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="flex items-start gap-4 md:gap-5">
+                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">3</span>
+                        <div>
+                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">C&oacute;mo usar la IA como copiloto &mdash; no como director creativo.</p>
+                            <p class="text-muted-foreground text-sm md:text-base italic">La IA como asistente que amplifica tu esencia. No como sustituto que la borra. Porque el mercado ya detecta qu&eacute; tiene alma y qu&eacute; no.</p>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="flex items-start gap-4 md:gap-5">
+                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">4</span>
+                        <div>
+                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">La estructura de una oferta que s&iacute; vende en 2025:</p>
+                            <p class="text-muted-foreground text-sm md:text-base">Con resultado medible, veh&iacute;culo diferenciado y una promesa que no se parece a lo que todos est&aacute;n diciendo.</p>
+                        </div>
+                    </div>
+
+                    <!-- Item 5 -->
+                    <div class="flex items-start gap-4 md:gap-5">
+                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">5</span>
+                        <div>
+                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">Tu hoja de ruta para lanzar tu primera oferta evolucionada en los pr&oacute;ximos 90 d&iacute;as.</p>
+                            <p class="text-muted-foreground text-sm md:text-base">Con o sin audiencia. Con o sin experiencia previa vendiendo online.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA -->
+                <div class="text-center mt-12">
+                    <button onclick="openModal()"
+                        class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
+                        <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                        QUIERO EVOLUCIONAR
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Para Quien Si / No -->
+        <section class="py-12 md:py-16 px-6 bg-muted/50">
+            <div class="max-w-4xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+
+                    <!-- Si es para ti -->
+                    <div>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-8 uppercase tracking-wide">
+                            ESTO ES PARA TI <span class="font-serif italic normal-case text-primary">si&hellip;</span>
+                        </h3>
+                        <ul class="space-y-5">
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Ya tienes conocimiento y vocaci&oacute;n de ense&ntilde;ar, pero sientes que el mercado est&aacute; muy saturado y no sabes c&oacute;mo diferenciarte.</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Has intentado vender antes &mdash; contenido, cursos, talleres &mdash; y los resultados no acompa&ntilde;aron.</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Sabes que la IA es una herramienta poderosa, pero no quieres que te quite la esencia ni te convierta en uno m&aacute;s del mont&oacute;n.</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Est&aacute;s listo para entender qu&eacute; viene ahora y construir desde ah&iacute; &mdash; no desde lo que funcionaba hace tres a&ntilde;os.</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Quieres que tu negocio educativo sea un activo real: con comunidad, acompa&ntilde;amiento y tecnolog&iacute;a que trabaje para ti.</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- No es para ti -->
+                    <div>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-8 uppercase tracking-wide">
+                            NO ES PARA TI <span class="font-serif italic normal-case text-red-500">si&hellip;</span>
+                        </h3>
+                        <ul class="space-y-5">
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Todav&iacute;a no tienes claro de qu&eacute; hablar&iacute;as ni a qui&eacute;n ayudar&iacute;as (para eso existe la membres&iacute;a Ovejas Voladoras).</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Buscas un hack r&aacute;pido sin trabajo interno ni estrategia real.</p>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
+                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Crees que la IA va a hacer todo por ti &mdash; el pensamiento, la diferenciaci&oacute;n y la venta. Eso no existe.</p>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Quienes Lo Imparten -->
+        <section class="py-12 md:py-16 px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-14 uppercase tracking-wide">
+                    QUI&Eacute;NES LO <span class="font-serif italic normal-case text-primary">imparten</span>
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+
+                    <!-- Andy Molina -->
+                    <div class="text-center">
+                        <div class="w-36 h-36 md:w-44 md:h-44 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
+                            <!-- TODO: Reemplazar con foto de Instagram de Andy -->
+                            <img src="https://vibe.filesafe.space/1775682063663501102/attachments/e2ea9e7d-2b24-4514-bb28-a0a45a9b3002.jpg"
+                                alt="Andy Molina"
+                                class="w-full h-full object-cover" />
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-1 uppercase">Andy Molina</h3>
+                        <p class="text-primary font-medium text-sm mb-4 tracking-wide">Fundadora de Ovejas Voladoras</p>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">
+                            Autora de <em>La culpa no es del lunes</em>. Creadora del M&eacute;todo P+H=T.
+                            Era abogada en una de las mejores empresas de Colombia. Le ofrecieron triplicar su salario. Renunci&oacute;. Porque ten&iacute;a todo menos lo que importaba: prop&oacute;sito.
+                        </p>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3">
+                            Hoy vive de ense&ntilde;ar lo que sabe. Ha acompa&ntilde;ado a cientos de personas a construir proyectos digitales reales desde su autenticidad &mdash; sin pose, sin f&oacute;rmulas m&aacute;gicas, sin prometer atajos que no existen.
+                        </p>
+                    </div>
+
+                    <!-- Cristhian Fonseca -->
+                    <div class="text-center">
+                        <div class="w-36 h-36 md:w-44 md:h-44 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
+                            <!-- TODO: Reemplazar con foto de Instagram de Cristhian -->
+                            <img src=""
+                                alt="Cristhian Fonseca"
+                                class="w-full h-full object-cover bg-muted" />
+                        </div>
+                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-1 uppercase">Cristhian Fonseca</h3>
+                        <p class="text-primary font-medium text-sm mb-4 tracking-wide">Estratega &amp; Fundador de JoinsClee</p>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">
+                            Especialista en lanzamientos de comunidades educativas online y arquitectura de ofertas digitales.
+                        </p>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3">
+                            Ha construido el sistema detr&aacute;s de Ovejas Voladoras: la estrategia, la oferta, la infraestructura y los procesos que convierten conocimiento en negocio. Sabe lo que funciona en el mercado ahora mismo porque lo est&aacute; ejecutando en tiempo real.
+                        </p>
+                    </div>
+
+                </div>
+
+                <p class="text-center text-muted-foreground italic mt-10 text-base md:text-lg font-serif">
+                    Dos perspectivas. Una sola direcci&oacute;n: que salgas de esta clase con claridad y con el primer paso dado.
+                </p>
+            </div>
+        </section>
+
+        <!-- Horario -->
+        <section class="py-12 md:py-16 px-6 bg-muted/50">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-2xl md:text-4xl font-serif font-bold mb-10 uppercase tracking-wide">
+                    HORARIO
+                </h2>
+
+                <p class="text-primary font-semibold text-sm uppercase tracking-widest mb-8">EN VIVO</p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5 text-sm md:text-base max-w-2xl mx-auto mb-10">
+                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Colombia</p>
+                        <p class="font-bold text-foreground text-sm md:text-base">7:00 PM</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">M&eacute;xico (CDMX)</p>
+                        <p class="font-bold text-foreground text-sm md:text-base">6:00 PM</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Argentina</p>
+                        <p class="font-bold text-foreground text-sm md:text-base">9:00 PM</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Chile</p>
+                        <p class="font-bold text-foreground text-sm md:text-base">9:00 PM</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Espa&ntilde;a</p>
+                        <p class="font-bold text-foreground text-sm md:text-base">1:00 AM <span class="text-[9px] md:text-xs font-normal">(d&iacute;a sig.)</span></p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">USA (Miami/NY)</p>
+                        <p class="font-bold text-foreground text-sm md:text-base">7:00 PM</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10 col-span-2 sm:col-span-1">
+                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">USA (Los &Aacute;ngeles)</p>
+                        <p class="font-bold text-foreground text-sm md:text-base">4:00 PM</p>
+                    </div>
+                </div>
+
+                <button onclick="openModal()"
+                    class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
+                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                    QUIERO EVOLUCIONAR
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="py-8 px-6 text-center">
+            <p class="text-[10px] md:text-xs text-muted-foreground leading-relaxed mb-6 max-w-4xl mx-auto">
+                DESCARGO DE RESPONSABILIDAD: La informaci&oacute;n presentada en este evento es de car&aacute;cter educativo y formativo. Los resultados pueden variar seg&uacute;n la situaci&oacute;n individual de cada persona. Ovejas Voladoras y sus representantes no garantizan resultados espec&iacute;ficos. Este sitio no es parte del sitio web de Facebook&trade; o Facebook&trade; Inc. Adem&aacute;s, este sitio NO est&aacute; respaldado por Facebook&trade; de ninguna manera. FACEBOOK&trade; es una marca registrada de FACEBOOK&trade;, Inc.
+            </p>
+            <p class="text-sm text-muted-foreground mb-2">Copyright 2026 OVEJAS VOLADORAS | LA EVOLUCI&Oacute;N - All rights reserved.</p>
+            <div class="flex justify-center gap-4 text-xs text-muted-foreground underline underline-offset-4">
+                <a href="#" class="hover:text-foreground transition-colors">Privacidad</a>
+                <a href="#" class="hover:text-foreground transition-colors">T&eacute;rminos</a>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // VSL play/pause
+        (function () {
+            var overlay = document.getElementById('playOverlay');
+            var video = document.getElementById('videoHero');
+            if (overlay && video) {
+                overlay.addEventListener('click', function () {
+                    overlay.classList.add('hidden');
+                    video.muted = false;
+                    video.controls = true;
+                    video.currentTime = 0;
+                    video.play();
+                });
+                video.addEventListener('pause', function () { overlay.classList.remove('hidden'); });
+            }
+        })();
+
+        // Modal
+        var modal = document.getElementById('registration-modal');
+        function openModal() { modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
+        function closeModal() { modal.classList.remove('active'); document.body.style.overflow = 'auto'; }
+        modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+    </script>
+
+</body>
+
+</html>

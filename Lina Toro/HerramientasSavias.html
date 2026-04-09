@@ -1,0 +1,2668 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Herramientas Savias · Lina Toro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ─── GHL / CONTAINER RESET ─── */
+    html {
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    body {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden;
+    }
+
+    :root {
+      --verde: #9caf88;
+      --verde-hover: #8a9d76;
+      --verde-claro: #f4f6f2;
+      --negro: #1a1a1a;
+      --texto: #444;
+      --texto-suave: #888;
+      --border: #e8eae6;
+      --blanco: #fff;
+      --radius: 14px;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fafaf8;
+      color: var(--texto);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    em {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: var(--verde);
+    }
+
+    /* ─── FULL-BLEED (GHL compat) ─── */
+    .top-bar,
+    .app-header {
+      width: 100vw;
+      position: relative;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .top-bar {
+      background: var(--negro);
+      color: #fff;
+      text-align: center;
+      padding: 10px 20px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .8rem;
+      letter-spacing: .8px;
+    }
+
+    .app-header {
+      background: var(--blanco);
+      border-bottom: 1px solid var(--border);
+      padding: 22px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 72px;
+      height: 72px;
+      background: var(--verde-claro);
+      border-radius: 14px;
+      border: 1px solid rgba(156, 175, 136, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .brand h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--negro);
+    }
+
+    .brand span {
+      font-size: .95rem;
+      color: var(--texto-suave);
+      display: block;
+    }
+
+    /* ─── LAYOUT ─── */
+    .app-body {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 32px 24px 60px;
+    }
+
+    /* ─── CARDS ─── */
+    .card {
+      background: var(--blanco);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--negro);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: var(--verde);
+      border-radius: 2px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    /* ─── FORM FIELDS ─── */
+    .field {
+      margin-bottom: 14px;
+    }
+
+    .field label {
+      display: block;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--texto-suave);
+      margin-bottom: 5px;
+      letter-spacing: .3px;
+      text-transform: uppercase;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: .95rem;
+      color: var(--negro);
+      background: var(--blanco);
+      transition: border-color .2s;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--verde);
+    }
+
+    .field input[type="range"] {
+      border: none;
+      padding: 0;
+      margin-top: 4px;
+      accent-color: var(--verde);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ─── TOGGLE BUTTONS ─── */
+    .toggle-group {
+      display: flex;
+      gap: 0;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 9px 6px;
+      text-align: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .82rem;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--texto-suave);
+      transition: background .2s, color .2s;
+      min-width: 120px;
+    }
+
+    .toggle-btn.active {
+      background: var(--verde);
+      color: #fff;
+    }
+
+    .toggle-btn:hover:not(.active) {
+      background: var(--verde-claro);
+    }
+
+    /* ─── RESULT BOXES ─── */
+    .result-box {
+      background: var(--verde-claro);
+      border: 1px solid rgba(156, 175, 136, .3);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .result-val {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--negro);
+    }
+
+    .result-val.big {
+      font-size: 2.2rem;
+    }
+
+    .result-label {
+      font-size: .75rem;
+      color: var(--texto-suave);
+      margin-top: 2px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .results-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .results-row.cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    /* ─── BUTTONS ─── */
+    .btn-primary {
+      background: var(--negro);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 32px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background .2s, transform .2s;
+    }
+
+    .btn-primary:hover {
+      background: #333;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--verde-claro);
+      color: var(--negro);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .9rem;
+      padding: 10px 24px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background .2s, transform .2s;
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+      transform: translateY(-1px);
+    }
+
+    .btn-back {
+      background: none;
+      border: none;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .9rem;
+      color: var(--texto-suave);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 0;
+      margin-bottom: 20px;
+      transition: color .2s;
+    }
+
+    .btn-back:hover {
+      color: var(--negro);
+    }
+
+    /* ─── BADGES ─── */
+    .badge {
+      display: inline-block;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .85rem;
+      padding: 8px 20px;
+      border-radius: 100px;
+      margin-top: 12px;
+    }
+
+    .badge-green {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .badge-yellow {
+      background: #fff8e1;
+      color: #f57f17;
+    }
+
+    .badge-red {
+      background: #fce4ec;
+      color: #c62828;
+    }
+
+    .badge-verde {
+      background: var(--verde-claro);
+      color: var(--verde-hover);
+      border: 1px solid rgba(156, 175, 136, .3);
+    }
+
+    /* ─── MENU GRID ─── */
+    .menu-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 28px;
+    }
+
+    .menu-card {
+      background: var(--blanco);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+      text-align: left;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      border-color: var(--verde);
+    }
+
+    .menu-card-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--verde-claro);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 14px;
+    }
+
+    .menu-card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--negro);
+      margin-bottom: 6px;
+    }
+
+    .menu-card p {
+      font-size: .85rem;
+      color: var(--texto-suave);
+      line-height: 1.5;
+    }
+
+    /* ─── VIEWS ─── */
+    .view {
+      display: none;
+      animation: fadeIn .3s ease;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ─── SELECTABLE CARDS ─── */
+    .select-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .select-card {
+      background: var(--blanco);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s;
+      text-align: center;
+    }
+
+    .select-card:hover {
+      border-color: var(--verde);
+      background: var(--verde-claro);
+    }
+
+    .select-card.selected {
+      border-color: var(--verde);
+      background: var(--verde-claro);
+      transform: scale(1.02);
+    }
+
+    .select-card h4 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--negro);
+      margin-bottom: 4px;
+    }
+
+    .select-card p {
+      font-size: .78rem;
+      color: var(--texto-suave);
+      line-height: 1.4;
+    }
+
+    /* ─── STEP INDICATOR ─── */
+    .steps-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 28px;
+    }
+
+    .step-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: .85rem;
+      color: var(--texto-suave);
+      background: var(--blanco);
+      transition: all .3s;
+    }
+
+    .step-circle.active {
+      border-color: var(--verde);
+      background: var(--verde);
+      color: #fff;
+    }
+
+    .step-circle.done {
+      border-color: var(--verde);
+      background: var(--verde-claro);
+      color: var(--verde);
+    }
+
+    .step-line {
+      width: 60px;
+      height: 2px;
+      background: var(--border);
+      transition: background .3s;
+    }
+
+    .step-line.done {
+      background: var(--verde);
+    }
+
+    /* ─── RECIPE CARD ─── */
+    .recipe-card {
+      background: var(--verde-claro);
+      border: 1px solid rgba(156, 175, 136, .3);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 16px;
+    }
+
+    .recipe-card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--negro);
+      margin-bottom: 4px;
+    }
+
+    .recipe-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(156, 175, 136, .2);
+      font-size: .9rem;
+    }
+
+    .recipe-row:last-child {
+      border-bottom: none;
+    }
+
+    .recipe-row strong {
+      color: var(--negro);
+      font-weight: 600;
+    }
+
+    .recipe-steps {
+      margin-top: 16px;
+    }
+
+    .recipe-steps ol {
+      padding-left: 20px;
+    }
+
+    .recipe-steps li {
+      margin-bottom: 8px;
+      font-size: .88rem;
+      line-height: 1.5;
+    }
+
+    .consejo-box {
+      background: var(--blanco);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .consejo-box .icon {
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .consejo-box p {
+      font-size: .85rem;
+      line-height: 1.5;
+    }
+
+    .consejo-box strong {
+      font-family: 'Outfit', sans-serif;
+      color: var(--verde-hover);
+    }
+
+    /* ─── FORMULADOR PHASES ─── */
+    .fm-phase {
+      background: var(--verde-claro);
+      border: 1px solid rgba(156, 175, 136, .3);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .fm-phase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .fm-phase-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: .95rem;
+      color: var(--negro);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .fm-phase-pct {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--verde-hover);
+    }
+
+    .fm-row {
+      display: grid;
+      grid-template-columns: 1fr 80px 32px;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(156, 175, 136, .15);
+    }
+
+    .fm-row:last-child {
+      border-bottom: none;
+    }
+
+    .fm-row select,
+    .fm-row input {
+      padding: 8px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-family: 'Inter', sans-serif;
+      font-size: .85rem;
+      color: var(--negro);
+      background: var(--blanco);
+    }
+
+    .fm-row select:focus,
+    .fm-row input:focus {
+      outline: none;
+      border-color: var(--verde);
+    }
+
+    .fm-row input[type=number] {
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .fm-row-hint {
+      font-size: .72rem;
+      color: var(--texto-suave);
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    .fm-add-btn {
+      background: var(--blanco);
+      border: 1.5px dashed var(--verde);
+      border-radius: 8px;
+      padding: 8px;
+      width: 100%;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .82rem;
+      color: var(--verde-hover);
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background .2s;
+    }
+
+    .fm-add-btn:hover {
+      background: var(--verde);
+      color: #fff;
+    }
+
+    .fm-remove-btn {
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 4px;
+      transition: color .2s;
+      line-height: 1;
+    }
+
+    .fm-remove-btn:hover {
+      color: #c62828;
+    }
+
+    .fm-phase-note {
+      font-size: .78rem;
+      color: var(--texto-suave);
+      margin-top: 8px;
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    .fm-gram-col {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .85rem;
+      color: var(--negro);
+      text-align: center;
+      min-width: 50px;
+    }
+
+    /* ─── COLLECTION SUMMARY ─── */
+    /* ─── PORTFOLIO PDF OUTPUT ─── */
+    .pdf-wrap {
+      margin-top: 24px;
+    }
+
+    .pdf-sheet {
+      background: var(--blanco);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 40px rgba(0,0,0,.08);
+      overflow: hidden;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    .pdf-header {
+      background: var(--negro);
+      color: #fff;
+      padding: 32px 36px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pdf-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--verde);
+    }
+
+    .pdf-brand-name {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      letter-spacing: -.5px;
+    }
+
+    .pdf-subtitle {
+      font-family: 'Outfit', sans-serif;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--verde);
+      font-weight: 600;
+    }
+
+    .pdf-body {
+      padding: 32px 36px;
+    }
+
+    .pdf-section {
+      margin-bottom: 28px;
+    }
+
+    .pdf-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .pdf-section-label {
+      font-family: 'Outfit', sans-serif;
+      font-size: .7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--verde);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .pdf-audience-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pdf-audience-badge {
+      background: var(--negro);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .82rem;
+      padding: 6px 18px;
+      border-radius: 100px;
+    }
+
+    .pdf-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .pdf-tag {
+      display: inline-block;
+      background: var(--verde-claro);
+      border: 1px solid rgba(156, 175, 136, .25);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: .75rem;
+      color: var(--verde-hover);
+    }
+
+    .pdf-product {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .pdf-product:last-child {
+      border-bottom: none;
+    }
+
+    .pdf-product-num {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      background: var(--verde);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: .85rem;
+      margin-top: 2px;
+    }
+
+    .pdf-product-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: .95rem;
+      color: var(--negro);
+    }
+
+    .pdf-product-desc {
+      font-size: .83rem;
+      color: var(--texto-suave);
+      margin-top: 2px;
+    }
+
+    /* ─── SKINSOLVER → FORMULADOR LINK ─── */
+    .pdf-product.clickable-product {
+      cursor: pointer;
+      border-radius: 10px;
+      padding: 14px;
+      transition: background .2s, box-shadow .2s;
+      position: relative;
+    }
+
+    .pdf-product.clickable-product:hover {
+      background: var(--verde-claro);
+      box-shadow: 0 2px 8px rgba(156, 175, 136, .18);
+    }
+
+    .btn-formular {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      padding: 5px 12px;
+      background: var(--verde-claro);
+      color: var(--verde-hover);
+      border: 1px solid rgba(156, 175, 136, .35);
+      border-radius: 6px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, color .2s;
+    }
+
+    .btn-formular:hover {
+      background: var(--verde);
+      color: #fff;
+    }
+
+    .skin-next-step {
+      background: linear-gradient(135deg, var(--verde-claro), #fff);
+      border: 1.5px solid rgba(156, 175, 136, .4);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: box-shadow .2s, border-color .2s;
+    }
+
+    .skin-next-step:hover {
+      box-shadow: 0 4px 16px rgba(156, 175, 136, .25);
+      border-color: var(--verde);
+    }
+
+    .skin-next-step-icon {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      background: var(--verde);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .skin-next-step h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--negro);
+      margin-bottom: 2px;
+    }
+
+    .skin-next-step p {
+      font-size: .83rem;
+      color: var(--texto-suave);
+      line-height: 1.4;
+    }
+
+    .pdf-palette-card {
+      border-radius: 10px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .pdf-palette-swatch {
+      width: 42px;
+      height: 42px;
+      min-width: 42px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,.08);
+    }
+
+    .pdf-palette-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--negro);
+    }
+
+    .pdf-palette-notes {
+      font-size: .83rem;
+      color: var(--texto-suave);
+      font-style: italic;
+    }
+
+    .pdf-footer-bar {
+      background: var(--verde-claro);
+      border-top: 1px solid var(--border);
+      padding: 20px 36px;
+      text-align: center;
+    }
+
+    .pdf-footer-text {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--verde-hover);
+      line-height: 1.5;
+    }
+
+    .pdf-footer-small {
+      font-family: 'Outfit', sans-serif;
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--texto-suave);
+      margin-top: 8px;
+    }
+
+    .pdf-actions {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .pdf-actions button {
+      background: var(--negro);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 36px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: background .2s, transform .15s;
+    }
+
+    .pdf-actions button:hover {
+      background: #333;
+      transform: translateY(-1px);
+    }
+
+    .pdf-actions button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    @media (max-width: 600px) {
+      .pdf-header { padding: 24px 20px 20px; }
+      .pdf-body { padding: 24px 20px; }
+      .pdf-footer-bar { padding: 16px 20px; }
+      .pdf-brand-name { font-size: 1.6rem; }
+    }
+
+    /* ─── QUIZ OPTION CARDS ─── */
+    .quiz-options {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .quiz-option {
+      background: var(--blanco);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s;
+      text-align: left;
+    }
+
+    .quiz-option:hover {
+      border-color: var(--verde);
+      background: var(--verde-claro);
+    }
+
+    .quiz-option.selected {
+      border-color: var(--verde);
+      background: var(--verde-claro);
+    }
+
+    .quiz-option h4 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--negro);
+      margin-bottom: 4px;
+    }
+
+    .quiz-option p {
+      font-size: .85rem;
+      color: var(--texto-suave);
+    }
+
+    /* ─── RECOMMENDATION CARD ─── */
+    .reco-card {
+      background: linear-gradient(135deg, var(--verde-claro), #fff);
+      border: 2px solid var(--verde);
+      border-radius: var(--radius);
+      padding: 36px;
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .reco-card .plan-name {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.8rem;
+      color: var(--verde-hover);
+      margin-bottom: 8px;
+    }
+
+    .reco-card .plan-desc {
+      font-size: .95rem;
+      color: var(--texto);
+      line-height: 1.6;
+      max-width: 500px;
+      margin: 0 auto 20px;
+    }
+
+    /* ─── SLIDER DISPLAY ─── */
+    .slider-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-display input[type="range"] {
+      flex: 1;
+    }
+
+    .slider-val {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--verde-hover);
+      min-width: 50px;
+      text-align: right;
+    }
+
+    /* ─── CHECKBOX GROUP ─── */
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .88rem;
+      cursor: pointer;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      accent-color: var(--verde);
+      width: 16px;
+      height: 16px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 700px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .select-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .fm-row {
+        grid-template-columns: 1fr 70px 28px;
+      }
+
+      .fm-phase {
+        padding: 14px;
+      }
+
+      .results-row {
+        grid-template-columns: 1fr;
+      }
+
+      .results-row.cols-3 {
+        grid-template-columns: 1fr;
+      }
+
+      .checkbox-group {
+        grid-template-columns: 1fr;
+      }
+
+      .brand h1 {
+        font-size: 1.3rem;
+      }
+
+      .brand-icon {
+        width: 56px;
+        height: 56px;
+      }
+
+      .app-header {
+        padding: 16px 20px;
+      }
+
+      .toggle-group {
+        flex-wrap: wrap;
+      }
+
+      .toggle-btn {
+        min-width: 0;
+        flex-basis: 48%;
+      }
+
+      .recipe-row {
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .reco-card {
+        padding: 24px;
+      }
+
+      .steps-indicator {
+        gap: 0;
+      }
+      .step-line {
+        min-width: 20px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .app-body {
+        padding: 16px 12px;
+      }
+
+      .top-bar {
+        font-size: .7rem;
+        padding: 8px 12px;
+      }
+
+      .brand h1 {
+        font-size: 1.1rem;
+      }
+
+      .brand span {
+        font-size: .8rem;
+      }
+
+      .brand-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+      }
+
+      .btn-primary, .btn-secondary {
+        font-size: .85rem;
+        padding: 10px 20px;
+      }
+
+      .toggle-btn {
+        flex-basis: 100%;
+        padding: 10px;
+      }
+
+      .quiz-option {
+        padding: 14px;
+      }
+
+      .quiz-option h4 {
+        font-size: .9rem;
+      }
+
+      .reco-card .plan-name {
+        font-size: 1.4rem;
+      }
+
+      .reco-card .plan-desc {
+        font-size: .85rem;
+      }
+
+      .pdf-brand-name {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+  <style media="print">
+    /* Hide everything except the PDF sheet when printing */
+    body * { visibility: hidden !important; }
+    .pdf-sheet, .pdf-sheet * { visibility: visible !important; }
+    .pdf-sheet {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      border: none !important;
+      box-shadow: none !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+    }
+    .pdf-actions { display: none !important; }
+    .btn-back { display: none !important; }
+    @page { margin: 10mm; size: A4 portrait; }
+  </style>
+</head>
+
+<body>
+
+  <!-- ─── HEADER ─── -->
+  <div class="top-bar">SAVIAS · HERRAMIENTAS DE COSMÉTICA ARTESANAL</div>
+  <div class="app-header">
+    <div class="brand">
+      <div class="brand-icon">🍃</div>
+      <div>
+        <h1>Herramientas Savias</h1>
+        <span>Tu laboratorio digital de <em>cosmética artesanal</em></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-body">
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- MENU VIEW -->
+    <!-- ════════════════════════════════════════ -->
+    <div id="view-menu" class="view active">
+      <div class="menu-grid">
+        <div class="menu-card" onclick="showApp('creaprecio')">
+          <div class="menu-card-icon">💰</div>
+          <h3>CreaPrecio</h3>
+          <p>Simulador de rentabilidad artesanal. Calcula el precio ideal para tus productos.</p>
+        </div>
+        <div class="menu-card" onclick="showApp('fitomatch')">
+          <div class="menu-card-icon">🌿</div>
+          <h3>FitoMatch</h3>
+          <p>Diseñador de extractos botánicos. Encuentra la planta perfecta para tu fórmula.</p>
+        </div>
+        <div class="menu-card" onclick="showApp('formulador')">
+          <div class="menu-card-icon">🧪</div>
+          <h3>Formulador</h3>
+          <p>Selecciona un tipo de producto y obtén la fórmula base con porcentajes e ingredientes.</p>
+        </div>
+        <div class="menu-card" onclick="showApp('portfolio')">
+          <div class="menu-card-icon">🎨</div>
+          <h3>SkinSolver</h3>
+          <p>Identifica un problema de piel y obtén una línea de productos recomendada.</p>
+        </div>
+        <div class="menu-card" onclick="showApp('saviaspath')">
+          <div class="menu-card-icon">🧭</div>
+          <h3>SaviasPath</h3>
+          <p>Descubre tu ruta ideal de formación en cosmética artesanal.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- APP 1: CreaPrecio -->
+    <!-- ════════════════════════════════════════ -->
+    <div id="view-creaprecio" class="view">
+      <button class="btn-back" onclick="showMenu()">&#8592; Volver</button>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">CreaPrecio — Simulador de Rentabilidad</div>
+
+        <div class="toggle-group" id="cp-type-group">
+          <button class="toggle-btn active" onclick="setCpType(this,'jaboneria')">Jabonería</button>
+          <button class="toggle-btn" onclick="setCpType(this,'cosmetica')">Cosmética</button>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Costo ingredientes del lote ($)</label>
+            <input type="number" id="cp-ingredientes" placeholder="0" min="0" oninput="calcPrecio()">
+          </div>
+          <div class="field">
+            <label>Costo empaque por unidad ($)</label>
+            <input type="number" id="cp-empaque" placeholder="0" min="0" oninput="calcPrecio()">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Unidades producidas por lote</label>
+            <input type="number" id="cp-unidades" placeholder="0" min="1" oninput="calcPrecio()">
+          </div>
+          <div class="field">
+            <label>Horas invertidas en el lote</label>
+            <input type="number" id="cp-horas" placeholder="0" min="0" step="0.5" oninput="calcPrecio()">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Valor de tu hora ($)</label>
+            <input type="number" id="cp-valorhora" value="15000" min="0" oninput="calcPrecio()">
+          </div>
+          <div class="field">
+            <label>Otros costos ($)</label>
+            <input type="number" id="cp-otros" value="0" min="0" oninput="calcPrecio()">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Margen de ganancia</label>
+          <div class="slider-display">
+            <input type="range" id="cp-margen" min="0" max="300" value="100" style="accent-color:var(--verde);background:linear-gradient(to right, #e07c5a 0%, #f0c040 17%, #9caf88 33%, #2d7a2d 100%)" oninput="calcPrecio(); document.getElementById('cp-margen-val').textContent=this.value+'%'">
+            <span class="slider-val" id="cp-margen-val">100%</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.65rem;color:#bbb;font-weight:600;text-transform:uppercase;margin-top:4px">
+            <span style="color:#e07c5a">0% Costo</span>
+            <span style="color:#f0c040">50% Mín</span>
+            <span style="color:#9caf88">100% Ideal</span>
+            <span style="color:#2d7a2d">200%+</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Resultados</div>
+        <div class="result-box">
+          <div class="result-label">Precio de Venta Sugerido (PVP)</div>
+          <div class="result-val big" id="cp-pvp">$0</div>
+        </div>
+        <div class="results-row">
+          <div class="result-box">
+            <div class="result-label">Costo real por unidad</div>
+            <div class="result-val" id="cp-costo-u">$0</div>
+          </div>
+          <div class="result-box">
+            <div class="result-label">Ganancia neta por unidad</div>
+            <div class="result-val" id="cp-ganancia-u">$0</div>
+          </div>
+        </div>
+        <div class="results-row">
+          <div class="result-box" style="grid-column:1/-1">
+            <div class="result-label">Ganancia total del lote</div>
+            <div class="result-val" id="cp-ganancia-lote">$0</div>
+          </div>
+        </div>
+        <div style="text-align:center">
+          <span class="badge badge-verde" id="cp-badge" style="display:none"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- APP 2: FitoMatch -->
+    <!-- ════════════════════════════════════════ -->
+    <div id="view-fitomatch" class="view">
+      <button class="btn-back" onclick="showMenu()">&#8592; Volver</button>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">FitoMatch — Diseñador de Extractos Botánicos</div>
+
+        <div class="field">
+          <label>Objetivo para piel o cabello</label>
+          <select id="fm-objetivo" onchange="updateFito()">
+            <option value="">Selecciona un objetivo...</option>
+            <option value="acne">Piel con acné</option>
+            <option value="seca">Piel seca o deshidratada</option>
+            <option value="madura">Piel madura / anti-edad</option>
+            <option value="manchas">Manchas o hiperpigmentación</option>
+            <option value="cabello-seco">Cabello seco o dañado</option>
+            <option value="cabello-graso">Cabello graso</option>
+            <option value="cuero-cabelludo">Cuero cabelludo irritado</option>
+            <option value="sensible">Piel sensible o irritada</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Formato de extracción</label>
+          <div class="toggle-group" id="fm-format-group">
+            <button class="toggle-btn active" onclick="setFitoFormat(this,'oleato')">Oleato (aceite)</button>
+            <button class="toggle-btn" onclick="setFitoFormat(this,'glicerinado')">Extracto Glicerinado</button>
+            <button class="toggle-btn" onclick="setFitoFormat(this,'infusion')">Infusión Acuosa</button>
+            <button class="toggle-btn" onclick="setFitoFormat(this,'tintura')">Tintura Hidroalcohólica</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="fm-result" style="display:none"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- APP 3: Formulador (Interactive Wizard) -->
+    <!-- ════════════════════════════════════════ -->
+    <div id="view-formulador" class="view">
+      <button class="btn-back" onclick="showMenu()">&#8592; Volver</button>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">Formulador — Crea tu Fórmula Paso a Paso</div>
+
+        <!-- Step Indicator -->
+        <div class="steps-indicator">
+          <div class="step-circle active" id="fm-s1">1</div>
+          <div class="step-line" id="fm-l1"></div>
+          <div class="step-circle" id="fm-s2">2</div>
+          <div class="step-line" id="fm-l2"></div>
+          <div class="step-circle" id="fm-s3">3</div>
+        </div>
+
+        <!-- STEP 1: Tipo de producto + lote -->
+        <div id="fm-step1" class="fm-step">
+          <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem;color:var(--negro);margin-bottom:4px">¿Qué quieres <em>crear</em>?</h3>
+          <p style="font-size:.85rem;color:var(--texto-suave);margin-bottom:16px">Elige el tipo de producto y define el tamaño de tu lote. Te guiaremos fase por fase.</p>
+
+          <div class="field">
+            <label>Tipo de producto</label>
+            <select id="form-tipo" onchange="fmSelectProduct()">
+              <option value="">Selecciona un producto...</option>
+              <option value="crema-facial">Crema facial hidratante</option>
+              <option value="mantequilla-corporal">Mantequilla corporal</option>
+              <option value="balsamo-labial">Bálsamo labial</option>
+              <option value="serum-facial">Sérum facial</option>
+              <option value="shampoo-solido">Shampoo sólido</option>
+              <option value="locion-corporal">Loción corporal ligera</option>
+              <option value="exfoliante">Exfoliante corporal</option>
+              <option value="jabon-cp">Jabón Cold Process</option>
+            </select>
+          </div>
+
+          <div id="fm-product-info" style="display:none">
+            <div class="consejo-box" style="margin-bottom:16px">
+              <span class="icon">🧪</span>
+              <div>
+                <strong id="fm-info-title"></strong>
+                <p style="margin-top:4px" id="fm-info-desc"></p>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Nombre de tu receta</label>
+                <input type="text" id="fm-recipe-name" placeholder="Ej: Crema Hidratante Lavanda">
+              </div>
+              <div class="field">
+                <label>Tamaño del lote (gramos)</label>
+                <input type="number" id="fm-batch-size" value="100" min="10" max="10000">
+              </div>
+            </div>
+
+            <div style="text-align:right;margin-top:16px">
+              <button class="btn-primary" onclick="fmGoStep(2)">Formular &#8594;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Fases e ingredientes -->
+        <div id="fm-step2" class="fm-step" style="display:none">
+          <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem;color:var(--negro);margin-bottom:4px">Arma tu <em>fórmula</em></h3>
+          <p style="font-size:.85rem;color:var(--texto-suave);margin-bottom:8px">Ajusta los porcentajes de cada ingrediente. Los sugeridos son una guía — personaliza a tu gusto.</p>
+
+          <!-- Barra de progreso total -->
+          <div style="margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-size:.75rem;font-weight:700;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.3px">Total de la fórmula</span>
+              <span style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem" id="fm-total-pct">0%</span>
+            </div>
+            <div style="background:var(--border);border-radius:6px;height:10px;overflow:hidden">
+              <div id="fm-total-bar" style="height:100%;border-radius:6px;transition:width .3s,background .3s;width:0%"></div>
+            </div>
+            <div id="fm-total-msg" style="font-size:.75rem;margin-top:4px;color:var(--texto-suave)"></div>
+          </div>
+
+          <!-- Fases dinámicas -->
+          <div id="fm-phases-container"></div>
+
+          <div style="display:flex;justify-content:space-between;margin-top:20px">
+            <button class="btn-secondary" onclick="fmGoStep(1)">&#8592; Anterior</button>
+            <button class="btn-primary" id="fm-btn-finish" onclick="fmGoStep(3)">Ver resultado &#10024;</button>
+          </div>
+        </div>
+
+        <!-- STEP 3: Resultado final -->
+        <div id="fm-step3" class="fm-step" style="display:none">
+          <div id="fm-final-output"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:20px">
+            <button class="btn-secondary" onclick="fmGoStep(2)">&#8592; Editar fórmula</button>
+            <button class="btn-primary" onclick="window.print()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Descargar PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- APP 4: SkinSolver -->
+    <!-- ════════════════════════════════════════ -->
+    <div id="view-portfolio" class="view">
+      <button class="btn-back" onclick="showMenu()">&#8592; Volver</button>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">SkinSolver — Soluciones por Problema de Piel</div>
+        <p style="font-size:.88rem;color:var(--texto-suave);margin-bottom:16px">Selecciona un problema de piel y obtén una línea de productos recomendada con ingredientes activos clave.</p>
+
+        <div class="field">
+          <label>Problema de piel</label>
+          <select id="skin-problem" onchange="showSkinSolution()">
+            <option value="">Selecciona un problema...</option>
+            <option value="acne">Acné y piel grasa</option>
+            <option value="rosacea">Rosácea y enrojecimiento</option>
+            <option value="eczema">Eczema y dermatitis</option>
+            <option value="arrugas">Arrugas y envejecimiento</option>
+            <option value="manchas">Manchas e hiperpigmentación</option>
+            <option value="seca">Piel seca y deshidratada</option>
+            <option value="sensible">Piel sensible y reactiva</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="skin-result"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════ -->
+    <!-- APP 5: SaviasPath (embeddable: ?app=saviaspath) -->
+    <!-- ════════════════════════════════════════ -->
+    <div id="view-saviaspath" class="view">
+      <button class="btn-back sp-back-btn" onclick="showMenu()">&#8592; Volver</button>
+
+      <div class="card">
+        <div class="card-title">SaviasPath — Descubre tu Ruta Ideal</div>
+
+        <div id="sp-q1" class="sp-question">
+          <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem;color:var(--negro);margin-bottom:4px">¿Cuál es tu nivel de <em>experiencia</em>?</h3>
+          <p style="font-size:.85rem;color:var(--texto-suave);margin-bottom:12px">Pregunta 1 de 3</p>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="spAnswer(1,'principiante',this)">
+              <h4>Principiante</h4>
+              <p>Nunca he hecho jabones ni cosmética</p>
+            </div>
+            <div class="quiz-option" onclick="spAnswer(1,'intermedia',this)">
+              <h4>Intermedia</h4>
+              <p>He hecho jabones o productos básicos</p>
+            </div>
+            <div class="quiz-option" onclick="spAnswer(1,'avanzada',this)">
+              <h4>Avanzada</h4>
+              <p>Ya tengo experiencia y quiero profesionalizarme</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="sp-q2" class="sp-question" style="display:none">
+          <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem;color:var(--negro);margin-bottom:4px">¿Cuál es tu <em>objetivo</em> principal?</h3>
+          <p style="font-size:.85rem;color:var(--texto-suave);margin-bottom:12px">Pregunta 2 de 3</p>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="spAnswer(2,'hobby',this)">
+              <h4>Hobby</h4>
+              <p>Quiero crear productos para mí y mi familia</p>
+            </div>
+            <div class="quiz-option" onclick="spAnswer(2,'negocio',this)">
+              <h4>Negocio</h4>
+              <p>Quiero vender y generar ingresos</p>
+            </div>
+            <div class="quiz-option" onclick="spAnswer(2,'profesional',this)">
+              <h4>Profesional</h4>
+              <p>Quiero crear una marca seria y escalable</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="sp-q3" class="sp-question" style="display:none">
+          <h3 style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem;color:var(--negro);margin-bottom:4px">¿Cuánto <em>tiempo</em> puedes dedicar?</h3>
+          <p style="font-size:.85rem;color:var(--texto-suave);margin-bottom:12px">Pregunta 3 de 3</p>
+          <div class="quiz-options">
+            <div class="quiz-option" onclick="spAnswer(3,'poco',this)">
+              <h4>Poco</h4>
+              <p>2-3 horas a la semana</p>
+            </div>
+            <div class="quiz-option" onclick="spAnswer(3,'moderado',this)">
+              <h4>Moderado</h4>
+              <p>5-8 horas a la semana</p>
+            </div>
+            <div class="quiz-option" onclick="spAnswer(3,'intensivo',this)">
+              <h4>Intensivo</h4>
+              <p>Más de 10 horas a la semana</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="sp-result"></div>
+      </div>
+    </div>
+
+  </div><!-- /app-body -->
+
+  <script>
+    // ════════════════════════════════════════
+    // NAVIGATION
+    // ════════════════════════════════════════
+    var isEmbedMode = false;
+
+    function showApp(id) {
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      document.getElementById('view-' + id).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showMenu() {
+      if (isEmbedMode) return;
+      document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+      document.getElementById('view-menu').classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Embed mode: ?app=saviaspath opens directly without header/menu
+    (function checkEmbed() {
+      var params = new URLSearchParams(window.location.search);
+      var app = params.get('app');
+      if (app) {
+        isEmbedMode = true;
+        document.querySelector('.top-bar').style.display = 'none';
+        document.querySelector('.app-header').style.display = 'none';
+        document.querySelectorAll('.btn-back').forEach(function(b) { b.style.display = 'none'; });
+        document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+        var target = document.getElementById('view-' + app);
+        if (target) target.classList.add('active');
+      }
+    })();
+
+    // ════════════════════════════════════════
+    // APP 1: CreaPrecio
+    // ════════════════════════════════════════
+    var cpProductType = 'jaboneria';
+
+    function setCpType(btn, type) {
+      cpProductType = type;
+      document.querySelectorAll('#cp-type-group .toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      calcPrecio();
+    }
+
+    function num(id) {
+      var v = parseFloat(document.getElementById(id).value);
+      return isNaN(v) ? 0 : v;
+    }
+
+    function fmt(n) {
+      return '$' + Math.round(n).toLocaleString('es-CO');
+    }
+
+    function calcPrecio() {
+      var ingredientes = num('cp-ingredientes');
+      var empaque = num('cp-empaque');
+      var unidades = num('cp-unidades');
+      var horas = num('cp-horas');
+      var valorHora = num('cp-valorhora');
+      var margen = num('cp-margen');
+      var otros = num('cp-otros');
+
+      if (unidades <= 0) {
+        document.getElementById('cp-pvp').textContent = '$0';
+        document.getElementById('cp-costo-u').textContent = '$0';
+        document.getElementById('cp-ganancia-u').textContent = '$0';
+        document.getElementById('cp-ganancia-lote').textContent = '$0';
+        document.getElementById('cp-badge').style.display = 'none';
+        return;
+      }
+
+      var costoManoObra = horas * valorHora;
+      var costoTotalLote = ingredientes + (empaque * unidades) + costoManoObra + otros;
+      var costoUnidad = costoTotalLote / unidades;
+      var pvp = costoUnidad * (1 + margen / 100);
+      var gananciaU = pvp - costoUnidad;
+      var gananciaLote = gananciaU * unidades;
+
+      document.getElementById('cp-pvp').textContent = fmt(pvp);
+      document.getElementById('cp-costo-u').textContent = fmt(costoUnidad);
+      document.getElementById('cp-ganancia-u').textContent = fmt(gananciaU);
+      document.getElementById('cp-ganancia-lote').textContent = fmt(gananciaLote);
+
+      var badge = document.getElementById('cp-badge');
+      badge.style.display = 'inline-block';
+      if (margen >= 100) {
+        badge.textContent = 'Excelente rentabilidad';
+        badge.className = 'badge badge-green';
+      } else if (margen >= 50) {
+        badge.textContent = 'Buena rentabilidad';
+        badge.className = 'badge badge-green';
+      } else if (margen > 0) {
+        badge.textContent = 'Rentabilidad ajustada';
+        badge.className = 'badge badge-yellow';
+      } else {
+        badge.textContent = 'Sin margen de ganancia';
+        badge.className = 'badge badge-red';
+      }
+    }
+
+    // ════════════════════════════════════════
+    // APP 2: FitoMatch
+    // ════════════════════════════════════════
+    var fitoData = {
+      acne: {
+        oleato: { planta: 'Caléndula', porque: 'Antiinflamatoria y cicatrizante, ideal para calmar brotes de acné', vehiculo: 'Aceite de jojoba', proporcion: '1:5', tiempo: '21 días', consejo: 'El aceite de jojoba regula la producción de sebo sin obstruir poros. Aplica unas gotas sobre piel limpia en las noches.' },
+        glicerinado: { planta: 'Hamamelis', porque: 'Astringente natural que reduce poros y controla el exceso de grasa', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:4', tiempo: '15 días', consejo: 'Usa el extracto glicerinado como tónico facial después de limpiar tu rostro. Puedes añadirlo a tus fórmulas de serums.' },
+        infusion: { planta: 'Manzanilla + Árbol de té', porque: 'La manzanilla calma la inflamación y el árbol de té combate las bacterias causantes del acné', vehiculo: 'Agua destilada', proporcion: '1:10', tiempo: '15-20 minutos', consejo: 'Usa como fase acuosa en cremas o como tónico refrigerado. No reutilices después de 3 días en nevera.' },
+        tintura: { planta: 'Propóleo', porque: 'Antibacteriano y cicatrizante potente de origen apícola', vehiculo: 'Alcohol 70° + agua', proporcion: '1:5', tiempo: '30 días', consejo: 'Añade unas gotas a tus formulaciones o aplica localmente con un hisopo sobre granos activos.' }
+      },
+      seca: {
+        oleato: { planta: 'Rosa mosqueta', porque: 'Rica en ácidos grasos esenciales y vitamina A, regenera la piel seca', vehiculo: 'Aceite de almendras', proporcion: '1:4', tiempo: '28 días', consejo: 'Aplica el oleato sobre piel húmeda para sellar la hidratación. Excelente como base para bálsamos labiales.' },
+        glicerinado: { planta: 'Avena', porque: 'Emoliente natural que forma una película protectora sobre la piel', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:3', tiempo: '14 días', consejo: 'Ideal para agregar a cremas corporales. La avena coloidal en glicerina potencia la hidratación profunda.' },
+        infusion: { planta: 'Malva', porque: 'Mucílagos naturales que hidratan y suavizan la piel reseca', vehiculo: 'Agua destilada', proporcion: '1:8', tiempo: '20 minutos', consejo: 'Congela en cubitos para aplicar como calmante refrescante. Úsala como fase acuosa en emulsiones hidratantes.' },
+        tintura: { planta: 'Centella asiática', porque: 'Estimula la producción de colágeno y repara la barrera cutánea', vehiculo: 'Alcohol 60° + agua', proporcion: '1:5', tiempo: '21 días', consejo: 'Incorpórala en serums al 3-5%. La centella es un ingrediente estrella en cosmética coreana por su poder reparador.' }
+      },
+      madura: {
+        oleato: { planta: 'Romero', porque: 'Antioxidante potente que combate los radicales libres y tonifica', vehiculo: 'Aceite de argán', proporcion: '1:5', tiempo: '28 días', consejo: 'Combina este oleato con unas gotas de vitamina E para un sérum anti-edad casero de alta eficacia.' },
+        glicerinado: { planta: 'Ginkgo biloba', porque: 'Mejora la microcirculación y aporta luminosidad a pieles maduras', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:4', tiempo: '21 días', consejo: 'Añádelo a tus contornos de ojos caseros. El ginkgo reactiva la circulación en zonas delicadas.' },
+        infusion: { planta: 'Rosa', porque: 'Tonificante, hidratante y con propiedades antioxidantes suaves', vehiculo: 'Agua destilada', proporcion: '1:8', tiempo: '15 minutos', consejo: 'Usa como agua floral en spray facial. Guarda en nevera y consume en 5 días para mantener sus propiedades.' },
+        tintura: { planta: 'Centella asiática', porque: 'Estimula la síntesis de colágeno y mejora la elasticidad de la piel', vehiculo: 'Alcohol 60°', proporcion: '1:5', tiempo: '30 días', consejo: 'La tintura de centella es un activo premium. Úsala al 2-5% en serums nocturnos para resultados visibles.' }
+      },
+      manchas: {
+        oleato: { planta: 'Cúrcuma', porque: 'Inhibidor natural de la melanina con potente efecto anti-manchas', vehiculo: 'Aceite de rosa mosqueta', proporcion: '1:6', tiempo: '21 días', consejo: 'La cúrcuma puede teñir. Filtra muy bien el oleato y úsalo siempre de noche. Complementa con protector solar.' },
+        glicerinado: { planta: 'Regaliz', porque: 'Contiene glabridina, un despigmentante natural comparable a la hidroquinona', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:4', tiempo: '15 días', consejo: 'Aplica sobre las manchas con constancia durante al menos 8 semanas. Es un ingrediente estrella en cosmética asiática.' },
+        infusion: { planta: 'Perejil', porque: 'Rico en vitamina C y ácido fólico, aclara manchas gradualmente', vehiculo: 'Agua destilada', proporcion: '1:10', tiempo: '20 minutos', consejo: 'Usa la infusión como mascarilla con algodón sobre las manchas. Aplica de noche y siempre complementa con SPF.' },
+        tintura: { planta: 'Bearberry (Uva ursi)', porque: 'Contiene arbutina, un despigmentante natural seguro y efectivo', vehiculo: 'Alcohol 70°', proporcion: '1:5', tiempo: '28 días', consejo: 'La arbutina es un ingrediente aprobado en cosmética profesional. Úsala al 2-4% en serums despigmentantes.' }
+      },
+      'cabello-seco': {
+        oleato: { planta: 'Romero + Lavanda', porque: 'El romero estimula el folículo y la lavanda calma el cuero cabelludo', vehiculo: 'Aceite de coco', proporcion: '1:4', tiempo: '21 días', consejo: 'Aplica como pre-shampoo masajeando el cuero cabelludo. Deja actuar mínimo 30 minutos antes de lavar.' },
+        glicerinado: { planta: 'Sábila (Aloe)', porque: 'Hidratación profunda, sella cutículas y aporta brillo natural', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:3', tiempo: '14 días', consejo: 'Añade a tu acondicionador habitual o úsalo como leave-in diluido en agua de rosas.' },
+        infusion: { planta: 'Ortiga', porque: 'Fortalece el cabello debilitado gracias a su alto contenido mineral', vehiculo: 'Agua destilada', proporcion: '1:8', tiempo: '20 minutos', consejo: 'Usa como último enjuague después del acondicionador. No es necesario aclarar. Aporta brillo y fuerza.' },
+        tintura: { planta: 'Cola de caballo', porque: 'Rica en sílice, mineral esencial para la estructura del cabello', vehiculo: 'Alcohol 60°', proporcion: '1:5', tiempo: '21 días', consejo: 'Añade unas gotas a tu champú o aplica diluida en tónico capilar. La sílice repara fibras dañadas.' }
+      },
+      'cabello-graso': {
+        oleato: { planta: 'Romero', porque: 'Regula la producción de sebo y estimula la circulación capilar', vehiculo: 'Aceite de jojoba', proporcion: '1:5', tiempo: '21 días', consejo: 'El jojoba imita el sebo natural. Paradójicamente, aplicar un aceite similar al sebo ayuda a regular su producción.' },
+        glicerinado: { planta: 'Salvia', porque: 'Astringente natural que controla la grasa y purifica el cuero cabelludo', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:4', tiempo: '15 días', consejo: 'Incorpora a tónicos capilares o champús artesanales. La salvia también ayuda con el olor del cuero cabelludo.' },
+        infusion: { planta: 'Menta', porque: 'Refrescante, antiséptica y astringente que controla el exceso de grasa', vehiculo: 'Agua destilada', proporcion: '1:10', tiempo: '15 minutos', consejo: 'Usa como enjuague final con agua fría. La sensación refrescante indica que está activando la microcirculación.' },
+        tintura: { planta: 'Romero', porque: 'Potente regulador sebáceo con efecto tónico sobre el folículo', vehiculo: 'Alcohol 70°', proporcion: '1:5', tiempo: '28 días', consejo: 'Aplica unas gotas directamente sobre el cuero cabelludo limpio. Masajea suavemente y no enjuagues.' }
+      },
+      'cuero-cabelludo': {
+        oleato: { planta: 'Caléndula', porque: 'Cicatrizante y antiinflamatoria, alivia la irritación y descamación', vehiculo: 'Aceite de oliva', proporcion: '1:4', tiempo: '21 días', consejo: 'Aplica con suaves masajes circulares sobre el cuero cabelludo irritado. Deja actuar toda la noche con gorro.' },
+        glicerinado: { planta: 'Manzanilla', porque: 'Calmante suave que alivia el prurito y la inflamación', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:3', tiempo: '14 días', consejo: 'Mezcla con aloe vera gel para crear un calmante capilar de efecto inmediato. Ideal para después de tintes.' },
+        infusion: { planta: 'Lavanda', porque: 'Antiséptica suave, relajante y regeneradora del cuero cabelludo', vehiculo: 'Agua destilada', proporcion: '1:8', tiempo: '20 minutos', consejo: 'Usa como enjuague final tibio. El aroma de lavanda además ayuda a reducir el estrés que causa la irritación.' },
+        tintura: { planta: 'Caléndula', porque: 'Concentrado antiinflamatorio para casos de irritación persistente', vehiculo: 'Alcohol 60°', proporcion: '1:5', tiempo: '21 días', consejo: 'Diluye en agua antes de aplicar para evitar resecar. Aplica con gotero directamente en zonas afectadas.' }
+      },
+      sensible: {
+        oleato: { planta: 'Manzanilla', porque: 'El azuleno y bisabolol calman las pieles más reactivas', vehiculo: 'Aceite de almendras', proporcion: '1:5', tiempo: '28 días', consejo: 'La manzanilla en almendras es la combinación más segura para pieles sensibles. Realiza siempre prueba de parche.' },
+        glicerinado: { planta: 'Avena + Caléndula', porque: 'Dúo calmante que protege y repara la barrera cutánea dañada', vehiculo: 'Glicerina vegetal + agua destilada (1:1)', proporcion: '1:3', tiempo: '14 días', consejo: 'Esta combinación es segura incluso para bebés. Ideal como base para cremas corporales hipoalergénicas.' },
+        infusion: { planta: 'Tilo', porque: 'Emoliente y calmante suave, perfecto para pieles que reaccionan a todo', vehiculo: 'Agua destilada', proporcion: '1:8', tiempo: '15 minutos', consejo: 'El tilo es tan suave que se usa en infusiones para bebés. Perfecto como agua micelar natural.' },
+        tintura: { planta: 'Manzanilla', porque: 'Concentrado antiinflamatorio para tratar brotes de sensibilidad', vehiculo: 'Alcohol 50°', proporcion: '1:5', tiempo: '21 días', consejo: 'Usa alcohol de baja graduación para pieles sensibles. Diluye siempre antes de aplicar directamente sobre la piel.' }
+      }
+    };
+
+    var fitoFormat = 'oleato';
+
+    function setFitoFormat(btn, format) {
+      fitoFormat = format;
+      document.querySelectorAll('#fm-format-group .toggle-btn').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      updateFito();
+    }
+
+    function updateFito() {
+      var obj = document.getElementById('fm-objetivo').value;
+      var container = document.getElementById('fm-result');
+
+      if (!obj) {
+        container.style.display = 'none';
+        return;
+      }
+
+      var d = fitoData[obj][fitoFormat];
+      if (!d) {
+        container.style.display = 'none';
+        return;
+      }
+
+      var formatNames = { oleato: 'Oleato (aceite)', glicerinado: 'Extracto Glicerinado', infusion: 'Infusión Acuosa', tintura: 'Tintura Hidroalcohólica' };
+
+      var steps = '';
+      if (fitoFormat === 'oleato') {
+        steps = '<ol><li>Seca la planta durante 24-48 horas para eliminar humedad (evita moho).</li><li>Coloca la planta seca en un frasco de vidrio esterilizado.</li><li>Cubre completamente con el aceite vehículo en proporción ' + d.proporcion + '.</li><li>Cierra herméticamente y almacena en lugar oscuro y fresco.</li><li>Agita suavemente el frasco cada 2-3 días.</li><li>Después de ' + d.tiempo + ', filtra con tela de algodón o manta cielo.</li><li>Envasa en frasco ámbar y etiqueta con fecha.</li></ol>';
+      } else if (fitoFormat === 'glicerinado') {
+        steps = '<ol><li>Pica finamente la planta fresca o seca.</li><li>Prepara la mezcla de ' + d.vehiculo + '.</li><li>Coloca la planta en frasco de vidrio y añade el vehículo en proporción ' + d.proporcion + '.</li><li>Cierra y almacena en lugar oscuro, agitando cada 2 días.</li><li>Después de ' + d.tiempo + ', filtra cuidadosamente.</li><li>Envasa en frasco con gotero y etiqueta.</li></ol>';
+      } else if (fitoFormat === 'infusion') {
+        steps = '<ol><li>Hierve el agua destilada y retira del fuego.</li><li>Añade la planta en proporción ' + d.proporcion + '.</li><li>Tapa y deja reposar durante ' + d.tiempo + '.</li><li>Filtra con colador fino o tela de algodón.</li><li>Deja enfriar completamente antes de usar.</li><li>Conserva en nevera máximo 3-5 días.</li></ol>';
+      } else {
+        steps = '<ol><li>Pica la planta seca finamente.</li><li>Coloca en frasco de vidrio esterilizado.</li><li>Cubre con ' + d.vehiculo + ' en proporción ' + d.proporcion + '.</li><li>Cierra herméticamente y almacena en lugar oscuro.</li><li>Agita el frasco cada 2-3 días durante todo el proceso.</li><li>Después de ' + d.tiempo + ', filtra con tela o papel filtro.</li><li>Envasa en frasco ámbar con gotero y etiqueta.</li></ol>';
+      }
+
+      container.innerHTML =
+        '<div class="recipe-card">' +
+        '<h3>🌿 ' + d.planta + '</h3>' +
+        '<p style="font-size:.88rem;color:var(--texto);margin-bottom:16px">' + d.porque + '</p>' +
+        '<div class="recipe-row"><strong>Formato</strong><span>' + formatNames[fitoFormat] + '</span></div>' +
+        '<div class="recipe-row"><strong>Vehículo / Solvente</strong><span>' + d.vehiculo + '</span></div>' +
+        '<div class="recipe-row"><strong>Proporción</strong><span>' + d.proporcion + ' (planta : vehículo)</span></div>' +
+        '<div class="recipe-row"><strong>Tiempo de maceración</strong><span>' + d.tiempo + '</span></div>' +
+        '<div class="recipe-steps"><strong style="font-family:Outfit,sans-serif;color:var(--negro);font-size:.9rem">Método paso a paso</strong>' + steps + '</div>' +
+        '<div style="margin-top:16px"><strong style="font-family:Outfit,sans-serif;color:var(--negro);font-size:.85rem">Tip de uso final</strong><p style="font-size:.85rem;margin-top:4px;color:var(--texto)">' + d.consejo + '</p></div>' +
+        '</div>' +
+        '<div class="consejo-box" style="margin-top:12px">' +
+        '<span class="icon">🍃</span>' +
+        '<div><strong>Consejo Savias:</strong><p style="margin-top:4px">Siempre etiqueta tus extractos con: nombre de la planta, vehículo, fecha de elaboración y fecha de caducidad estimada. La trazabilidad es clave en la cosmética artesanal profesional.</p></div>' +
+        '</div>';
+
+      container.style.display = 'block';
+    }
+
+    // ════════════════════════════════════════
+    // APP 3: Formulador (Interactive Wizard)
+    // ════════════════════════════════════════
+    var formulasDB = {
+      'crema-facial': {
+        nombre: 'Crema Facial Hidratante', tipo: 'Emulsión O/W', dificultad: 'Intermedia',
+        descripcion: 'Emulsión aceite-en-agua ideal para hidratar sin engrasar. Requiere emulsionante y calentamiento de ambas fases.',
+        fases: [
+          { id:'acuosa', nombre:'Fase Acuosa (A)', nota:'Calentar a 70-75°C', color:'#e3f2fd',
+            sugeridos: [
+              { nombre:'Agua destilada', pct:68, hint:'Base de la emulsión' },
+              { nombre:'Glicerina vegetal', pct:4, hint:'Humectante' },
+              { nombre:'Alantoína', pct:0.5, hint:'Calmante' }
+            ],
+            opciones: ['Agua destilada','Hidrolato de rosa','Hidrolato de manzanilla','Hidrolato de lavanda','Glicerina vegetal','Alantoína','Pantenol','Ácido hialurónico','Urea']
+          },
+          { id:'oleosa', nombre:'Fase Oleosa (B)', nota:'Calentar a 70-75°C por separado', color:'#fff8e1',
+            sugeridos: [
+              { nombre:'Aceite de almendras', pct:10, hint:'Emoliente principal' },
+              { nombre:'Manteca de karité', pct:4, hint:'Nutritiva' },
+              { nombre:'Olivem 1000', pct:5, hint:'Emulsionante' },
+              { nombre:'Alcohol cetílico', pct:1.5, hint:'Co-emulsionante' }
+            ],
+            opciones: ['Aceite de almendras','Aceite de jojoba','Aceite de argán','Aceite de rosa mosqueta','Aceite de coco fraccionado','Manteca de karité','Manteca de cacao','Escualano','Olivem 1000','BTMS 50','Cera emulsionante','Montanov 68','Alcohol cetílico','Ácido esteárico']
+          },
+          { id:'fria', nombre:'Fase Fría (C)', nota:'Agregar bajo 40°C', color:'#f3e5f5',
+            sugeridos: [
+              { nombre:'Vitamina E', pct:0.5, hint:'Antioxidante' },
+              { nombre:'Aceite esencial', pct:0.5, hint:'Aroma' },
+              { nombre:'Cosgard', pct:0.8, hint:'Conservante' }
+            ],
+            opciones: ['Vitamina E','Cosgard','Sharomix','Aceite esencial de lavanda','Aceite esencial de rosa','Aceite esencial de manzanilla','Aceite esencial de árbol de té','Fragancia cosmética','Extracto de centella','Extracto de caléndula','Niacinamida','Ácido kójico']
+          }
+        ],
+        pasos: ['Calentar fase A a 70-75°C.','Calentar fase B a 70-75°C por separado.','Verter fase A sobre fase B lentamente, batiendo con minipimer.','Batir 3-5 min hasta emulsión homogénea.','Enfriar a 40°C batiendo suavemente.','Agregar fase C y mezclar bien.','Medir pH (ideal 5.0-5.5). Envasar.'],
+        consejo: 'Si usas ácido hialurónico, prediluirlo en agua tibia la noche anterior. Nunca calentar.'
+      },
+      'mantequilla-corporal': {
+        nombre: 'Mantequilla Corporal', tipo: 'Anhidra (sin agua)', dificultad: 'Básica',
+        descripcion: 'Producto sin agua a base de mantecas y aceites. No necesita conservante ni emulsionante.',
+        fases: [
+          { id:'oleosa', nombre:'Fase Oleosa', nota:'Derretir a baño maría (máx 60°C)', color:'#fff8e1',
+            sugeridos: [
+              { nombre:'Manteca de karité', pct:45, hint:'Base nutritiva' },
+              { nombre:'Manteca de cacao', pct:18, hint:'Firmeza' },
+              { nombre:'Aceite de coco', pct:18, hint:'Absorción rápida' },
+              { nombre:'Aceite de almendras', pct:17, hint:'Emoliente ligero' }
+            ],
+            opciones: ['Manteca de karité','Manteca de cacao','Manteca de mango','Aceite de coco','Aceite de almendras','Aceite de jojoba','Aceite de argán','Aceite de aguacate','Cera de abejas','Escualano']
+          },
+          { id:'fria', nombre:'Fase Fría', nota:'Agregar después de batir', color:'#f3e5f5',
+            sugeridos: [
+              { nombre:'Vitamina E', pct:0.5, hint:'Antioxidante' },
+              { nombre:'Aceite esencial', pct:1.5, hint:'Aroma' }
+            ],
+            opciones: ['Vitamina E','Aceite esencial de lavanda','Aceite esencial de vainilla','Aceite esencial de naranja','Aceite esencial de rosa','Mica cosmética','Fragancia cosmética']
+          }
+        ],
+        pasos: ['Derretir mantecas y aceite de coco a baño maría.','Retirar del calor y agregar aceites líquidos.','Refrigerar 30-45 min hasta semi-sólido.','Batir con batidora 5-8 min hasta textura cremosa.','Agregar fase fría, batir 1 min más.','Envasar.'],
+        consejo: 'Sin agua = sin conservante necesario. La textura varía con la temperatura ambiente.'
+      },
+      'balsamo-labial': {
+        nombre: 'Bálsamo Labial', tipo: 'Anhidro', dificultad: 'Básica',
+        descripcion: 'Mezcla sencilla de ceras, mantecas y aceites que solidifica al enfriar. Ideal para empezar.',
+        fases: [
+          { id:'base', nombre:'Ingredientes', nota:'Derretir todo a baño maría', color:'#fff8e1',
+            sugeridos: [
+              { nombre:'Cera de abejas', pct:22, hint:'Estructura' },
+              { nombre:'Manteca de karité', pct:28, hint:'Nutritiva' },
+              { nombre:'Aceite de coco', pct:25, hint:'Hidratación' },
+              { nombre:'Aceite de almendras', pct:22, hint:'Suavidad' },
+              { nombre:'Vitamina E', pct:1, hint:'Antioxidante' },
+              { nombre:'Aceite esencial de menta', pct:0.5, hint:'Frescura' }
+            ],
+            opciones: ['Cera de abejas','Cera de candelilla','Cera de soja','Manteca de karité','Manteca de cacao','Manteca de mango','Aceite de coco','Aceite de almendras','Aceite de jojoba','Aceite de ricino','Aceite de argán','Vitamina E','Aceite esencial de menta','Aceite esencial de naranja','Aceite esencial de vainilla','Mica cosmética','Saborizante labial']
+          }
+        ],
+        pasos: ['Derretir ceras y mantecas a baño maría.','Agregar aceites, mezclar bien.','Retirar del fuego, agregar vitamina E y esencia.','Verter rápidamente en tubos/tarros.','Dejar enfriar sin mover (1 hora).'],
+        consejo: 'Muy duro → más aceite. Muy blando → más cera. Puedes añadir mica para dar color.'
+      },
+      'serum-facial': {
+        nombre: 'Sérum Facial', tipo: 'Gel acuoso', dificultad: 'Intermedia',
+        descripcion: 'Formulación de base acuosa con activos concentrados. Textura ligera y de rápida absorción.',
+        fases: [
+          { id:'acuosa', nombre:'Fase Acuosa', nota:'No calentar — mezclar a temperatura ambiente', color:'#e3f2fd',
+            sugeridos: [
+              { nombre:'Agua destilada', pct:87, hint:'Base' },
+              { nombre:'Glicerina vegetal', pct:4, hint:'Humectante' },
+              { nombre:'Ácido hialurónico', pct:0.2, hint:'Hidratación profunda' },
+              { nombre:'Pantenol', pct:2, hint:'Reparador' }
+            ],
+            opciones: ['Agua destilada','Hidrolato de rosa','Hidrolato de hamamelis','Glicerina vegetal','Ácido hialurónico','Pantenol','Niacinamida','Alantoína','Extracto de centella','Extracto de regaliz','Urea']
+          },
+          { id:'oleosa', nombre:'Fase Oleosa Ligera', nota:'Mezclar por separado y añadir', color:'#fff8e1',
+            sugeridos: [
+              { nombre:'Aceite de jojoba', pct:2.5, hint:'Seborregulador' },
+              { nombre:'Vitamina E', pct:0.5, hint:'Antioxidante' }
+            ],
+            opciones: ['Aceite de jojoba','Escualano','Aceite de rosa mosqueta','Aceite de argán','Vitamina E','Vitamina C (oil-soluble)']
+          },
+          { id:'conserv', nombre:'Conservante', nota:'Agregar al final', color:'#f3e5f5',
+            sugeridos: [
+              { nombre:'Cosgard', pct:0.8, hint:'Preservante' }
+            ],
+            opciones: ['Cosgard','Sharomix','Geogard Ultra']
+          }
+        ],
+        pasos: ['Disolver ácido hialurónico en agua tibia (dejar hidratar 2h o toda la noche).','Agregar glicerina y activos acuosos.','Mezclar fase oleosa por separado.','Incorporar fase oleosa a la acuosa.','Agregar conservante, ajustar pH (5.0-5.5).','Envasar en frasco con gotero.'],
+        consejo: 'Nunca calentar el ácido hialurónico. Usar envase opaco para proteger activos sensibles a la luz.'
+      },
+      'shampoo-solido': {
+        nombre: 'Shampoo Sólido', tipo: 'Tensioactivo sólido', dificultad: 'Intermedia',
+        descripcion: 'Barra limpiadora a base de tensioactivos sólidos. Ecológica y de larga duración.',
+        fases: [
+          { id:'base', nombre:'Ingredientes', nota:'Derretir manteca primero, luego agregar polvos', color:'#e8f5e9',
+            sugeridos: [
+              { nombre:'SCI (Sodium Cocoyl Isethionate)', pct:52, hint:'Tensioactivo principal' },
+              { nombre:'SLSA', pct:12, hint:'Co-tensioactivo, espuma' },
+              { nombre:'Manteca de cacao', pct:12, hint:'Acondicionante' },
+              { nombre:'Almidón de maíz', pct:7, hint:'Textura' },
+              { nombre:'Aceite de coco', pct:7, hint:'Nutrición' },
+              { nombre:'Pantenol', pct:2, hint:'Fortalecimiento' },
+              { nombre:'Aceite esencial de romero', pct:1.5, hint:'Aroma y estimulante' }
+            ],
+            opciones: ['SCI (Sodium Cocoyl Isethionate)','SLSA','SCS','Manteca de cacao','Manteca de karité','Almidón de maíz','Aceite de coco','Aceite de argán','Aceite de ricino','Pantenol','Proteína de seda','Aceite esencial de romero','Aceite esencial de menta','Aceite esencial de lavanda','Aceite esencial de cedro','Arcilla verde','Arcilla blanca','Carbón activado']
+          }
+        ],
+        pasos: ['Derretir manteca a baño maría (máx 50°C).','Agregar SCI y mezclar (usar mascarilla).','Incorporar SLSA y almidón.','Retirar del calor, agregar aceite y pantenol.','Bajo 40°C, agregar aceite esencial.','Prensar en molde. Secar 24-48h.'],
+        consejo: 'Usar mascarilla al manipular polvos de SCI/SLSA. Necesita 48h de secado antes de usar.'
+      },
+      'locion-corporal': {
+        nombre: 'Loción Corporal Ligera', tipo: 'Emulsión O/W ligera', dificultad: 'Intermedia',
+        descripcion: 'Versión más ligera de una crema, con más agua y menos aceites. Absorción rápida.',
+        fases: [
+          { id:'acuosa', nombre:'Fase Acuosa', nota:'Calentar a 70-75°C', color:'#e3f2fd',
+            sugeridos: [
+              { nombre:'Agua destilada', pct:75, hint:'Base' },
+              { nombre:'Glicerina', pct:3, hint:'Humectante' },
+              { nombre:'Alantoína', pct:0.3, hint:'Calmante' }
+            ],
+            opciones: ['Agua destilada','Hidrolato de rosa','Hidrolato de lavanda','Glicerina vegetal','Alantoína','Pantenol','Ácido hialurónico']
+          },
+          { id:'oleosa', nombre:'Fase Oleosa', nota:'Calentar a 70-75°C', color:'#fff8e1',
+            sugeridos: [
+              { nombre:'Aceite de almendras', pct:10, hint:'Emoliente' },
+              { nombre:'Olivem 1000', pct:5, hint:'Emulsionante' },
+              { nombre:'Alcohol cetílico', pct:1, hint:'Textura sedosa' }
+            ],
+            opciones: ['Aceite de almendras','Aceite de jojoba','Aceite de coco fraccionado','Aceite de girasol','Manteca de karité','Escualano','Olivem 1000','BTMS 50','Cera emulsionante','Alcohol cetílico','Ácido esteárico']
+          },
+          { id:'fria', nombre:'Fase Fría', nota:'Bajo 40°C', color:'#f3e5f5',
+            sugeridos: [
+              { nombre:'Aceite esencial', pct:0.8, hint:'Aroma' },
+              { nombre:'Vitamina E', pct:0.5, hint:'Antioxidante' },
+              { nombre:'Cosgard', pct:0.8, hint:'Conservante' }
+            ],
+            opciones: ['Vitamina E','Cosgard','Sharomix','Aceite esencial de lavanda','Aceite esencial de naranja','Aceite esencial de ylang ylang','Fragancia cosmética','Extracto de centella']
+          }
+        ],
+        pasos: ['Calentar fase A a 70-75°C.','Calentar fase B a 70-75°C.','Verter A sobre B batiendo con minipimer 3-4 min.','Enfriar batiendo suavemente hasta 40°C.','Agregar fase C.','Envasar.'],
+        consejo: 'Más agua = más ligera. Para pieles secas, agrega un poco de manteca de karité en fase oleosa.'
+      },
+      'exfoliante': {
+        nombre: 'Exfoliante Corporal', tipo: 'Anhidro con partículas', dificultad: 'Básica',
+        descripcion: 'Mezcla de agente exfoliante con aceites. Sin agua = sin conservante. Muy fácil de hacer.',
+        fases: [
+          { id:'base', nombre:'Ingredientes', nota:'Mezclar todo a temperatura ambiente (derretir coco si es necesario)', color:'#fff8e1',
+            sugeridos: [
+              { nombre:'Azúcar morena', pct:55, hint:'Exfoliante' },
+              { nombre:'Aceite de coco', pct:28, hint:'Vehículo' },
+              { nombre:'Aceite de almendras', pct:13, hint:'Emoliente' },
+              { nombre:'Vitamina E', pct:0.5, hint:'Antioxidante' },
+              { nombre:'Aceite esencial', pct:1, hint:'Aroma' }
+            ],
+            opciones: ['Azúcar morena','Azúcar blanca','Sal marina','Sal del Himalaya','Café molido','Aceite de coco','Aceite de almendras','Aceite de oliva','Aceite de girasol','Manteca de karité','Miel','Vitamina E','Aceite esencial de lavanda','Aceite esencial de menta','Aceite esencial de naranja','Aceite esencial de café','Cúrcuma en polvo','Carbón activado']
+          }
+        ],
+        pasos: ['Derretir aceite de coco si está sólido.','Mezclar aceites y vitamina E.','Incorporar el exfoliante gradualmente.','Agregar aceite esencial.','Envasar en tarro de boca ancha.'],
+        consejo: 'Azúcar = piel sensible (se disuelve). Sal = exfoliación intensa. Café = anticelulítico.'
+      },
+      'jabon-cp': {
+        nombre: 'Jabón Cold Process', tipo: 'Saponificación en frío', dificultad: 'Avanzada',
+        descripcion: 'Jabón artesanal real por saponificación. Requiere NaOH (sosa cáustica) — usar con precaución y EPP.',
+        fases: [
+          { id:'aceites', nombre:'Aceites / Grasas', nota:'Calentar a 40-45°C', color:'#fff8e1',
+            sugeridos: [
+              { nombre:'Aceite de oliva', pct:45, hint:'Suavidad' },
+              { nombre:'Aceite de coco', pct:25, hint:'Dureza y espuma' },
+              { nombre:'Manteca de karité', pct:15, hint:'Cremosidad' },
+              { nombre:'Aceite de ricino', pct:5, hint:'Espuma estable' }
+            ],
+            opciones: ['Aceite de oliva','Aceite de coco','Aceite de palma','Manteca de karité','Manteca de cacao','Aceite de ricino','Aceite de girasol','Aceite de aguacate','Aceite de almendras','Sebo','Manteca de cerdo']
+          },
+          { id:'lejia', nombre:'Solución de Lejía', nota:'Preparar en lugar ventilado — exotérmica', color:'#ffebee',
+            sugeridos: [
+              { nombre:'NaOH (Sosa cáustica)', pct:0, hint:'Calcular con SAP calculator' },
+              { nombre:'Agua destilada', pct:0, hint:'33% del peso de aceites' }
+            ],
+            opciones: ['NaOH (Sosa cáustica)','Agua destilada','Leche de cabra (congelada)','Cerveza (desgasificada)','Infusión herbal']
+          },
+          { id:'aditivos', nombre:'Aditivos (a la traza)', nota:'Agregar cuando alcance consistencia de pudín', color:'#f3e5f5',
+            sugeridos: [
+              { nombre:'Aceite esencial', pct:2.5, hint:'Aroma' },
+              { nombre:'Sobreengrasado extra', pct:5, hint:'Aceite sin saponificar' }
+            ],
+            opciones: ['Aceite esencial de lavanda','Aceite esencial de romero','Aceite esencial de menta','Aceite esencial de naranja','Aceite esencial de cedro','Arcilla blanca','Arcilla verde','Arcilla rosa','Carbón activado','Avena molida','Cúrcuma','Miel','Leche en polvo','Mica cosmética','Óxido de hierro']
+          }
+        ],
+        pasos: ['Pesar aceites y calentar a 40-45°C.','Preparar solución NaOH+agua con EPP (guantes, gafas, manga larga).','Cuando ambas estén a 35-45°C, verter lejía sobre aceites.','Batir con minipimer hasta la traza.','Agregar aditivos.','Verter en molde, tapar con film y toalla 24-48h.','Desmoldar, cortar, curar 4-6 semanas.'],
+        consejo: 'OBLIGATORIO usar calculadora SAP para el NaOH. NUNCA improvisar cantidades. Usar EPP siempre.'
+      }
+    };
+
+    var fmCurrentProduct = null;
+    var fmRowId = 0;
+
+    function fmSelectProduct() {
+      var tipo = document.getElementById('form-tipo').value;
+      var info = document.getElementById('fm-product-info');
+      if (!tipo || !formulasDB[tipo]) {
+        info.style.display = 'none';
+        fmCurrentProduct = null;
+        return;
+      }
+      fmCurrentProduct = formulasDB[tipo];
+      document.getElementById('fm-info-title').textContent = fmCurrentProduct.nombre + ' — ' + fmCurrentProduct.tipo;
+      document.getElementById('fm-info-desc').textContent = fmCurrentProduct.descripcion + ' Dificultad: ' + fmCurrentProduct.dificultad + '.';
+      info.style.display = 'block';
+    }
+
+    function fmGoStep(step) {
+      if (step === 2 && !fmCurrentProduct) return;
+
+      document.querySelectorAll('.fm-step').forEach(function(s) { s.style.display = 'none'; });
+      document.getElementById('fm-step' + step).style.display = 'block';
+
+      for (var i = 1; i <= 3; i++) {
+        var circle = document.getElementById('fm-s' + i);
+        var line = document.getElementById('fm-l' + (i - 1));
+        circle.className = 'step-circle';
+        if (i < step) { circle.classList.add('done'); circle.innerHTML = '&#10003;'; }
+        else if (i === step) { circle.classList.add('active'); circle.textContent = i; }
+        else { circle.textContent = i; }
+        if (line) line.className = 'step-line' + (i <= step ? ' done' : '');
+      }
+
+      if (step === 2) fmBuildPhases();
+      if (step === 3) fmBuildResult();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function fmBuildPhases() {
+      var container = document.getElementById('fm-phases-container');
+      if (container.children.length > 0) { fmRecalcTotal(); return; } // Already built, just update
+
+      var html = '';
+      fmCurrentProduct.fases.forEach(function(fase, fi) {
+        html += '<div class="fm-phase" id="fm-phase-' + fi + '" style="border-left:4px solid ' + fase.color + '">';
+        html += '<div class="fm-phase-header">';
+        html += '<div class="fm-phase-title">' + fase.nombre + '</div>';
+        html += '<div class="fm-phase-pct" id="fm-phase-pct-' + fi + '">0%</div>';
+        html += '</div>';
+        if (fase.nota) html += '<p class="fm-phase-note">' + fase.nota + '</p>';
+        html += '<div id="fm-rows-' + fi + '">';
+
+        // Pre-populate with suggested ingredients
+        fase.sugeridos.forEach(function(s) {
+          fmRowId++;
+          html += fmRowHTML(fi, fmRowId, s.nombre, s.pct, s.hint, fase.opciones);
+        });
+
+        html += '</div>';
+        html += '<button class="fm-add-btn" onclick="fmAddRow(' + fi + ')">+ Agregar ingrediente</button>';
+        html += '</div>';
+      });
+
+      container.innerHTML = html;
+      fmRecalcTotal();
+    }
+
+    function fmRowHTML(phaseIdx, rowId, selectedName, pct, hint, opciones) {
+      var optionsHTML = '<option value="">Selecciona...</option>';
+      opciones.forEach(function(o) {
+        optionsHTML += '<option value="' + o + '"' + (o === selectedName ? ' selected' : '') + '>' + o + '</option>';
+      });
+      // Add custom option
+      var isCustom = selectedName && opciones.indexOf(selectedName) === -1;
+      if (isCustom) {
+        optionsHTML += '<option value="' + selectedName + '" selected>' + selectedName + '</option>';
+      }
+      optionsHTML += '<option value="__custom__">+ Otro ingrediente...</option>';
+
+      var h = '<div class="fm-row" id="fm-row-' + rowId + '" data-phase="' + phaseIdx + '">';
+      h += '<div><select onchange="fmIngredientChange(this,' + rowId + ',' + phaseIdx + ')">' + optionsHTML + '</select>';
+      if (hint) h += '<div class="fm-row-hint">' + hint + '</div>';
+      h += '</div>';
+      h += '<input type="number" value="' + (pct || 0) + '" min="0" max="100" step="0.1" oninput="fmRecalcTotal()" style="width:80px">';
+      h += '<button class="fm-remove-btn" onclick="fmRemoveRow(' + rowId + ')" title="Eliminar">&times;</button>';
+      h += '</div>';
+      return h;
+    }
+
+    function fmIngredientChange(sel, rowId, phaseIdx) {
+      if (sel.value === '__custom__') {
+        var custom = prompt('Nombre del ingrediente:');
+        if (custom && custom.trim()) {
+          var opt = document.createElement('option');
+          opt.value = custom.trim();
+          opt.textContent = custom.trim();
+          opt.selected = true;
+          sel.insertBefore(opt, sel.querySelector('option[value="__custom__"]'));
+        } else {
+          sel.value = '';
+        }
+      }
+    }
+
+    function fmAddRow(phaseIdx) {
+      fmRowId++;
+      var fase = fmCurrentProduct.fases[phaseIdx];
+      var container = document.getElementById('fm-rows-' + phaseIdx);
+      var div = document.createElement('div');
+      div.innerHTML = fmRowHTML(phaseIdx, fmRowId, '', 0, '', fase.opciones);
+      // Extract the inner fm-row div
+      var row = div.firstElementChild;
+      container.appendChild(row);
+    }
+
+    function fmRemoveRow(rowId) {
+      var row = document.getElementById('fm-row-' + rowId);
+      if (row) { row.remove(); fmRecalcTotal(); }
+    }
+
+    function fmRecalcTotal() {
+      var grandTotal = 0;
+      var batchSize = parseFloat(document.getElementById('fm-batch-size').value) || 100;
+
+      fmCurrentProduct.fases.forEach(function(fase, fi) {
+        var phaseTotal = 0;
+        var rows = document.querySelectorAll('#fm-rows-' + fi + ' .fm-row');
+        rows.forEach(function(row) {
+          var inp = row.querySelector('input[type=number]');
+          phaseTotal += parseFloat(inp.value) || 0;
+        });
+        grandTotal += phaseTotal;
+        var el = document.getElementById('fm-phase-pct-' + fi);
+        if (el) el.textContent = phaseTotal.toFixed(1) + '%';
+      });
+
+      // Update total bar
+      var totalEl = document.getElementById('fm-total-pct');
+      var barEl = document.getElementById('fm-total-bar');
+      var msgEl = document.getElementById('fm-total-msg');
+      totalEl.textContent = grandTotal.toFixed(1) + '%';
+
+      var pctWidth = Math.min(grandTotal, 105);
+      barEl.style.width = pctWidth + '%';
+
+      if (Math.abs(grandTotal - 100) <= 1) {
+        barEl.style.background = 'var(--verde)';
+        totalEl.style.color = 'var(--verde-hover)';
+        msgEl.textContent = 'La fórmula está balanceada.';
+        msgEl.style.color = 'var(--verde-hover)';
+      } else if (grandTotal < 100) {
+        barEl.style.background = '#f0c040';
+        totalEl.style.color = '#b36b10';
+        msgEl.textContent = 'Faltan ' + (100 - grandTotal).toFixed(1) + '% — agrega más ingredientes o ajusta porcentajes.';
+        msgEl.style.color = '#b36b10';
+      } else {
+        barEl.style.background = '#e07c5a';
+        totalEl.style.color = '#c62828';
+        msgEl.textContent = 'Excediste por ' + (grandTotal - 100).toFixed(1) + '% — reduce algún ingrediente.';
+        msgEl.style.color = '#c62828';
+      }
+    }
+
+    function fmBuildResult() {
+      var recipeName = document.getElementById('fm-recipe-name').value || fmCurrentProduct.nombre;
+      var batchSize = parseFloat(document.getElementById('fm-batch-size').value) || 100;
+      var today = new Date();
+      var dateStr = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
+
+      var html = '<div class="pdf-sheet" id="fm-pdf-sheet">';
+
+      // Header
+      html += '<div class="pdf-header">';
+      html += '<div class="pdf-subtitle">Fórmula Artesanal · ' + fmCurrentProduct.tipo + '</div>';
+      html += '<div class="pdf-brand-name">' + recipeName + '</div>';
+      html += '</div>';
+
+      // Body
+      html += '<div class="pdf-body">';
+
+      // KPI badges
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">';
+      html += '<span class="badge badge-verde">Lote: ' + batchSize + 'g</span>';
+      html += '<span class="badge badge-verde">Dificultad: ' + fmCurrentProduct.dificultad + '</span>';
+      html += '<span class="badge badge-verde">' + dateStr + '</span>';
+      html += '</div>';
+
+      // Phases with ingredients
+      fmCurrentProduct.fases.forEach(function(fase, fi) {
+        html += '<div class="pdf-section">';
+        html += '<div class="pdf-section-label">' + fase.nombre + '</div>';
+
+        var rows = document.querySelectorAll('#fm-rows-' + fi + ' .fm-row');
+        rows.forEach(function(row) {
+          var sel = row.querySelector('select');
+          var inp = row.querySelector('input[type=number]');
+          var name = sel ? sel.value : '';
+          var pct = parseFloat(inp.value) || 0;
+          if (!name || pct <= 0) return;
+
+          var grams = (pct / 100 * batchSize).toFixed(1);
+          html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">';
+          html += '<span style="font-weight:500;color:var(--negro)">' + name + '</span>';
+          html += '<span style="font-family:Outfit,sans-serif;font-weight:600;color:var(--verde-hover)">' + pct + '% <span style="color:var(--texto-suave);font-weight:400;font-size:.8rem">(' + grams + 'g)</span></span>';
+          html += '</div>';
+        });
+
+        if (fase.nota) {
+          html += '<p style="font-size:.78rem;color:var(--texto-suave);margin-top:8px;font-style:italic">' + fase.nota + '</p>';
+        }
+        html += '</div>';
+      });
+
+      // Process steps
+      html += '<div class="pdf-section">';
+      html += '<div class="pdf-section-label">Proceso Paso a Paso</div>';
+      html += '<ol style="padding-left:20px">';
+      fmCurrentProduct.pasos.forEach(function(p) {
+        html += '<li style="margin-bottom:8px;font-size:.88rem;line-height:1.5">' + p + '</li>';
+      });
+      html += '</ol>';
+      html += '</div>';
+
+      html += '</div>'; // pdf-body
+
+      // Footer
+      html += '<div class="pdf-footer-bar">';
+      html += '<div class="pdf-footer-text">' + fmCurrentProduct.consejo + '</div>';
+      html += '<div class="pdf-footer-small">Creado con Herramientas Savias · Formulador</div>';
+      html += '</div>';
+
+      html += '</div>'; // pdf-sheet
+
+      document.getElementById('fm-final-output').innerHTML = html;
+    }
+
+    // ════════════════════════════════════════
+    // APP 4: SkinSolver
+    // ════════════════════════════════════════
+    var skinDB = {
+      acne: {
+        titulo: 'Acné y Piel Grasa',
+        descripcion: 'Rutina enfocada en controlar sebo, combatir bacterias y calmar inflamación sin resecar.',
+        productos: [
+          { nombre: 'Jabón facial de carbón activado + árbol de té', tipo: 'Limpiador', ingredientes: 'Carbón activado, aceite esencial de árbol de té, arcilla verde', porque: 'El carbón absorbe impurezas, el árbol de té es antibacteriano natural' },
+          { nombre: 'Tónico de hamamelis y manzanilla', tipo: 'Tónico', ingredientes: 'Hidrolato de hamamelis, extracto de manzanilla, alantoína', porque: 'Astringente suave que cierra poros sin irritar' },
+          { nombre: 'Sérum de niacinamida + zinc', tipo: 'Tratamiento', ingredientes: 'Niacinamida 5%, zinc PCA, ácido hialurónico', porque: 'Regula sebo, reduce poros y calma inflamación' },
+          { nombre: 'Crema gel ligera de aloe', tipo: 'Hidratante', ingredientes: 'Aloe vera, jojoba, centella asiática', porque: 'Hidratación no comedogénica que repara la barrera cutánea' }
+        ],
+        activos: ['Árbol de té', 'Niacinamida', 'Zinc PCA', 'Centella asiática', 'Ácido salicílico (BHA)'],
+        evitar: ['Aceites comedogénicos (coco en rostro)', 'Productos muy grasos', 'Exfoliación excesiva']
+      },
+      rosacea: {
+        titulo: 'Rosácea y Enrojecimiento',
+        descripcion: 'Rutina ultra-suave para calmar enrojecimiento, fortalecer capilares y reducir sensibilidad.',
+        productos: [
+          { nombre: 'Limpiador cremoso de avena', tipo: 'Limpiador', ingredientes: 'Avena coloidal, manzanilla, glicerina', porque: 'Limpieza suave sin irritar ni alterar el pH' },
+          { nombre: 'Agua termal de manzanilla', tipo: 'Tónico', ingredientes: 'Hidrolato de manzanilla, bisabolol, pantenol', porque: 'Calma al instante el enrojecimiento' },
+          { nombre: 'Sérum de centella asiática', tipo: 'Tratamiento', ingredientes: 'Centella asiática 5%, alantoína, ácido hialurónico', porque: 'Repara la barrera cutánea y fortalece capilares' },
+          { nombre: 'Crema barrera con ceramidas', tipo: 'Hidratante', ingredientes: 'Manteca de karité, escualano, ceramidas, avena', porque: 'Crea una barrera protectora contra irritantes externos' }
+        ],
+        activos: ['Centella asiática', 'Bisabolol', 'Avena coloidal', 'Pantenol', 'Ceramidas'],
+        evitar: ['Alcohol en alta concentración', 'Fragancias sintéticas', 'Exfoliantes agresivos', 'Aceites esenciales mentolados']
+      },
+      eczema: {
+        titulo: 'Eczema y Dermatitis',
+        descripcion: 'Rutina reparadora y protectora para pieles con eccema, priorizando la restauración de la barrera cutánea.',
+        productos: [
+          { nombre: 'Jabón surgras de caléndula', tipo: 'Limpiador', ingredientes: 'Caléndula, aceite de oliva, sobreengrasado 8%', porque: 'Limpia sin eliminar los lípidos naturales de la piel' },
+          { nombre: 'Oleato de caléndula', tipo: 'Tratamiento', ingredientes: 'Caléndula macerada en aceite de almendras', porque: 'Antiinflamatorio y cicatrizante natural' },
+          { nombre: 'Bálsamo reparador nocturno', tipo: 'Reparador', ingredientes: 'Manteca de karité, cera de abejas, vitamina E, caléndula', porque: 'Sella la hidratación y permite la reparación nocturna' },
+          { nombre: 'Mantequilla corporal de avena', tipo: 'Hidratante', ingredientes: 'Avena coloidal, manteca de karité, aceite de coco, alantoína', porque: 'Hidratación profunda y alivio del prurito' }
+        ],
+        activos: ['Caléndula', 'Avena coloidal', 'Alantoína', 'Manteca de karité', 'Vitamina E'],
+        evitar: ['Sulfatos', 'Fragancias', 'Conservantes agresivos', 'Lana/lanolina (algunos pacientes)']
+      },
+      arrugas: {
+        titulo: 'Arrugas y Envejecimiento',
+        descripcion: 'Rutina anti-edad con activos que estimulan colágeno, hidratan en profundidad y protegen del daño oxidativo.',
+        productos: [
+          { nombre: 'Limpiador de rosa y aceite de argán', tipo: 'Limpiador', ingredientes: 'Hidrolato de rosa, aceite de argán, glicerina', porque: 'Limpia sin resecar, deja la piel tonificada' },
+          { nombre: 'Sérum de vitamina C + ácido hialurónico', tipo: 'Tratamiento', ingredientes: 'Vitamina C (ascorbil glucósido) 10%, ácido hialurónico, vitamina E', porque: 'Antioxidante potente que estimula colágeno y da luminosidad' },
+          { nombre: 'Crema nutritiva de rosa mosqueta', tipo: 'Hidratante', ingredientes: 'Rosa mosqueta, manteca de karité, retinol natural, CoQ10', porque: 'Regenera la piel y mejora la elasticidad' },
+          { nombre: 'Contorno de ojos de ginkgo biloba', tipo: 'Contorno', ingredientes: 'Ginkgo biloba, cafeína, péptidos, escualano', porque: 'Activa microcirculación y reduce bolsas y ojeras' }
+        ],
+        activos: ['Vitamina C', 'Retinol/Bakuchiol', 'Ácido hialurónico', 'Péptidos', 'Rosa mosqueta'],
+        evitar: ['Sol sin protección', 'Productos irritantes combinados', 'Exfoliación excesiva']
+      },
+      manchas: {
+        titulo: 'Manchas e Hiperpigmentación',
+        descripcion: 'Rutina despigmentante gradual con activos que inhiben la melanina de forma segura.',
+        productos: [
+          { nombre: 'Limpiador enzimático de papaya', tipo: 'Limpiador', ingredientes: 'Extracto de papaya, ácido láctico suave, glicerina', porque: 'Exfoliación enzimática suave que renueva la piel' },
+          { nombre: 'Sérum despigmentante de regaliz', tipo: 'Tratamiento', ingredientes: 'Extracto de regaliz (glabridina), niacinamida, vitamina C', porque: 'Triple acción despigmentante sin irritar' },
+          { nombre: 'Crema iluminadora de cúrcuma', tipo: 'Hidratante', ingredientes: 'Cúrcuma, aceite de rosa mosqueta, ácido kójico', porque: 'Unifica el tono y previene nuevas manchas' },
+          { nombre: 'Protector solar mineral', tipo: 'Protección', ingredientes: 'Óxido de zinc, vitamina E, manteca de karité', porque: 'INDISPENSABLE: sin protección solar todo tratamiento es inútil' }
+        ],
+        activos: ['Niacinamida', 'Vitamina C', 'Arbutina', 'Ácido kójico', 'Extracto de regaliz'],
+        evitar: ['Exposición solar sin SPF', 'Hidroquinona sin supervisión', 'Mezclar muchos ácidos']
+      },
+      seca: {
+        titulo: 'Piel Seca y Deshidratada',
+        descripcion: 'Rutina profundamente hidratante y nutritiva para restaurar la humedad y la barrera lipídica.',
+        productos: [
+          { nombre: 'Limpiador cremoso de miel', tipo: 'Limpiador', ingredientes: 'Miel, aceite de almendras, avena, glicerina', porque: 'Limpia sin eliminar los aceites naturales' },
+          { nombre: 'Sérum de ácido hialurónico + pantenol', tipo: 'Hidratante', ingredientes: 'Ácido hialurónico 1%, pantenol 3%, glicerina', porque: 'Hidratación en múltiples capas de la piel' },
+          { nombre: 'Crema rica de karité y rosa mosqueta', tipo: 'Nutritiva', ingredientes: 'Manteca de karité, rosa mosqueta, ceramidas, escualano', porque: 'Nutrición profunda y reparación de la barrera' },
+          { nombre: 'Aceite facial nocturno', tipo: 'Tratamiento', ingredientes: 'Aceite de argán, jojoba, vitamina E, lavanda', porque: 'Sella la hidratación durante la noche' }
+        ],
+        activos: ['Ácido hialurónico', 'Ceramidas', 'Escualano', 'Manteca de karité', 'Pantenol'],
+        evitar: ['Limpiadores con sulfatos', 'Alcohol denat.', 'Agua muy caliente en el rostro']
+      },
+      sensible: {
+        titulo: 'Piel Sensible y Reactiva',
+        descripcion: 'Rutina minimalista con ingredientes probados que calman y protegen sin provocar reacción.',
+        productos: [
+          { nombre: 'Agua micelar de tilo', tipo: 'Limpiador', ingredientes: 'Infusión de tilo, glicerina, polisorbato 20', porque: 'Limpieza suavísima sin frotar ni enjuagar' },
+          { nombre: 'Tónico calmante de centella', tipo: 'Tónico', ingredientes: 'Centella asiática, bisabolol, pantenol, alantoína', porque: 'Cuatro calmantes en uno: reduce cualquier irritación' },
+          { nombre: 'Crema barrera minimalista', tipo: 'Hidratante', ingredientes: 'Manteca de karité, escualano, avena coloidal, ceramidas', porque: 'Menos de 10 ingredientes, máxima protección' },
+          { nombre: 'Aceite calmante de manzanilla', tipo: 'SOS', ingredientes: 'Oleato de manzanilla en aceite de almendras', porque: 'Alivio inmediato para momentos de crisis' }
+        ],
+        activos: ['Centella asiática', 'Bisabolol', 'Avena coloidal', 'Pantenol', 'Escualano'],
+        evitar: ['Fragancias', 'Colorantes', 'Alcohol denat.', 'Ácidos en alta concentración', 'Retinol sin adaptación']
+      }
+    };
+
+    // Mapeo de tipo de producto SkinSolver → clave del Formulador
+    var skinToFormuladorMap = {
+      'Limpiador': 'jabon-cp',
+      'Tónico': 'serum-facial',
+      'Tratamiento': 'serum-facial',
+      'Hidratante': 'crema-facial',
+      'Reparador': 'mantequilla-corporal',
+      'Contorno': 'crema-facial',
+      'Protección': 'crema-facial',
+      'Nutritiva': 'crema-facial',
+      'SOS': 'mantequilla-corporal'
+    };
+
+    function goToFormulador(formuladorKey, recipeName) {
+      // Navegar al Formulador
+      showApp('formulador');
+
+      // Pre-seleccionar el tipo de producto
+      var selectEl = document.getElementById('form-tipo');
+      if (selectEl && formuladorKey) {
+        selectEl.value = formuladorKey;
+        fmSelectProduct();
+      }
+
+      // Pre-llenar el nombre de la receta
+      setTimeout(function() {
+        var nameInput = document.getElementById('fm-recipe-name');
+        if (nameInput && recipeName) {
+          nameInput.value = recipeName;
+        }
+      }, 100);
+    }
+
+    function showSkinSolution() {
+      var problem = document.getElementById('skin-problem').value;
+      var container = document.getElementById('skin-result');
+
+      if (!problem || !skinDB[problem]) {
+        container.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      var d = skinDB[problem];
+      var html = '';
+
+      // Descripción
+      html += '<div class="card" style="margin-bottom:16px">';
+      html += '<div class="card-title">' + d.titulo + '</div>';
+      html += '<p style="font-size:.9rem;color:var(--texto);line-height:1.6">' + d.descripcion + '</p>';
+      html += '</div>';
+
+      // Productos recomendados como PDF sheet
+      html += '<div class="pdf-wrap">';
+      html += '<div class="pdf-sheet" id="skin-pdf-content">';
+      html += '<div class="pdf-header">';
+      html += '<div class="pdf-subtitle">Rutina Recomendada</div>';
+      html += '<div class="pdf-brand-name">' + d.titulo + '</div>';
+      html += '</div>';
+      html += '<div class="pdf-body">';
+
+      // Productos (clickeables → Formulador)
+      html += '<div class="pdf-section">';
+      html += '<div class="pdf-section-label">Línea de Productos Sugerida</div>';
+      html += '<p style="font-size:.78rem;color:var(--verde-hover);margin-bottom:10px;font-style:italic">Haz clic en un producto para ir al Formulador con el paso a paso</p>';
+      d.productos.forEach(function(p, i) {
+        var fKey = skinToFormuladorMap[p.tipo] || 'crema-facial';
+        var escapedName = p.nombre.replace(/'/g, "\\'");
+        html += '<div class="pdf-product clickable-product" onclick="goToFormulador(\'' + fKey + '\', \'' + escapedName + '\')">';
+        html += '<div class="pdf-product-num">' + (i + 1) + '</div>';
+        html += '<div style="flex:1">';
+        html += '<div class="pdf-product-name">' + p.nombre + '</div>';
+        html += '<div class="pdf-product-desc"><strong>' + p.tipo + '</strong> — ' + p.porque + '</div>';
+        html += '<div style="margin-top:6px"><span style="font-size:.75rem;color:var(--verde-hover);font-family:Outfit,sans-serif;font-weight:600">Ingredientes clave:</span> <span style="font-size:.82rem;color:var(--texto-suave)">' + p.ingredientes + '</span></div>';
+        html += '<button class="btn-formular" onclick="event.stopPropagation(); goToFormulador(\'' + fKey + '\', \'' + escapedName + '\')">';
+        html += '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>';
+        html += 'Formular este producto';
+        html += '</button>';
+        html += '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+
+      // Activos estrella
+      html += '<div class="pdf-section">';
+      html += '<div class="pdf-section-label">Activos Estrella</div>';
+      html += '<div class="pdf-tags">';
+      d.activos.forEach(function(a) {
+        html += '<span class="pdf-tag">' + a + '</span>';
+      });
+      html += '</div>';
+      html += '</div>';
+
+      // Evitar
+      html += '<div class="pdf-section">';
+      html += '<div class="pdf-section-label">Evitar</div>';
+      html += '<div class="pdf-tags">';
+      d.evitar.forEach(function(e) {
+        html += '<span class="pdf-tag" style="background:#fce4ec;color:#c62828;border-color:rgba(198,40,40,.15)">' + e + '</span>';
+      });
+      html += '</div>';
+      html += '</div>';
+
+      html += '</div>';
+
+      // Footer
+      var today = new Date();
+      var dateStr = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
+      html += '<div class="pdf-footer-bar">';
+      html += '<div class="pdf-footer-text">Cada piel es única. Realiza siempre una <em>prueba de parche</em> antes de incorporar nuevos activos.</div>';
+      html += '<div class="pdf-footer-small">Creado con Herramientas Savias · ' + dateStr + '</div>';
+      html += '</div>';
+
+      html += '</div>';
+
+      // Download button
+      html += '<div class="pdf-actions">';
+      html += '<button onclick="window.print()">';
+      html += '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+      html += 'Descargar PDF';
+      html += '</button>';
+      html += '</div>';
+
+      // Banner: Tu siguiente paso → Formulador
+      html += '<div class="skin-next-step" onclick="showApp(\'formulador\')">';
+      html += '<div class="skin-next-step-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>';
+      html += '<div>';
+      html += '<h4>Tu siguiente paso: el Formulador</h4>';
+      html += '<p>Ya sabes qué productos necesitas. Ahora crea la fórmula paso a paso con cantidades exactas, fases e instrucciones.</p>';
+      html += '</div>';
+      html += '</div>';
+
+      html += '</div>';
+
+      container.innerHTML = html;
+      container.style.display = 'block';
+      window.scrollTo({ top: container.offsetTop - 20, behavior: 'smooth' });
+    }
+
+    // ════════════════════════════════════════
+    // APP 5: SaviasPath
+    // ════════════════════════════════════════
+    var spAnswers = {};
+
+    function spAnswer(q, val, el) {
+      spAnswers[q] = val;
+
+      var parent = el.closest('.sp-question');
+      parent.querySelectorAll('.quiz-option').forEach(function (o) { o.classList.remove('selected'); });
+      el.classList.add('selected');
+
+      setTimeout(function () {
+        if (q < 3) {
+          parent.style.display = 'none';
+          document.getElementById('sp-q' + (q + 1)).style.display = 'block';
+        } else {
+          parent.style.display = 'none';
+          spShowResult();
+        }
+      }, 300);
+    }
+
+    function spShowResult() {
+      var score = 0;
+      // Score system: higher = more advanced
+      var vals = {
+        principiante: 0, intermedia: 1, avanzada: 2,
+        hobby: 0, negocio: 1, profesional: 2,
+        poco: 0, moderado: 1, intensivo: 2
+      };
+
+      score = (vals[spAnswers[1]] || 0) + (vals[spAnswers[2]] || 0) + (vals[spAnswers[3]] || 0);
+
+      var plan, desc;
+
+      if (spAnswers[1] === 'avanzada' || spAnswers[2] === 'profesional' || spAnswers[3] === 'intensivo' || score >= 5) {
+        plan = 'Plan VIP';
+        desc = 'Tu ambición necesita mentoría directa. El <strong>Plan VIP</strong> incluye todo el método EVA más acompañamiento personalizado de Lina para lanzar tu marca al mercado.';
+      } else if (score >= 2) {
+        plan = 'Plan Premium';
+        desc = 'Estás lista para ir más allá. El <strong>Plan Premium</strong> te lleva de la jabonería a la cosmética completa con el método EVA, incluyendo cremas, serums y más.';
+      } else {
+        plan = 'Plan Standard';
+        desc = 'Tu ruta ideal es empezar con jabonería artesanal. El <strong>Plan Standard</strong> te da las bases sólidas para crear productos hermosos y seguros desde casa.';
+      }
+
+      document.getElementById('sp-result').innerHTML =
+        '<div class="reco-card">' +
+        '<p style="font-size:.8rem;color:var(--texto-suave);text-transform:uppercase;letter-spacing:1px;font-family:Outfit,sans-serif;margin-bottom:4px">Tu ruta recomendada</p>' +
+        '<div class="plan-name">🍃 ' + plan + '</div>' +
+        '<p class="plan-desc">' + desc + '</p>' +
+        '<a href="#" class="btn-primary" style="text-decoration:none">Ver ' + plan + ' &#8594;</a>' +
+        '<br><button class="btn-secondary" style="margin-top:12px" onclick="spReset()">Repetir quiz</button>' +
+        '</div>';
+    }
+
+    function spReset() {
+      spAnswers = {};
+      document.querySelectorAll('.sp-question').forEach(function (q, i) {
+        q.style.display = i === 0 ? 'block' : 'none';
+        q.querySelectorAll('.quiz-option').forEach(function (o) { o.classList.remove('selected'); });
+      });
+      document.getElementById('sp-result').innerHTML = '';
+    }
+  </script>
+
+</body>
+
+</html>
