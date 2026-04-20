@@ -57,63 +57,7 @@
             }
         }
 
-        .vsl-container {
-            aspect-ratio: 16 / 9;
-            background-color: #000;
-            border-radius: 16px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .vsl-play-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            z-index: 10;
-            transition: opacity 0.3s;
-        }
-
-        .vsl-play-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .vsl-play-btn {
-            width: 56px;
-            height: 56px;
-            background: rgba(255, 255, 255, 0.92);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        @media (min-width: 768px) {
-            .vsl-play-btn { width: 72px; height: 72px; }
-        }
-
-        .vsl-play-overlay:hover .vsl-play-btn {
-            transform: scale(1.1);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
-        }
-
-        .vsl-play-btn svg {
-            margin-left: 5px;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        #registration-modal {
+#registration-modal {
             display: none;
             position: fixed;
             inset: 0;
@@ -164,6 +108,14 @@
 
         html, body { max-width: 100%; overflow-x: hidden; }
 
+        /* Agrandar un poco los acentos dorados en cursiva dentro de títulos */
+        h1 span.italic.text-primary,
+        h2 span.italic.text-primary,
+        h3 span.italic.text-primary {
+            font-size: 1.15em;
+            line-height: 1;
+        }
+
         section {
             width: 100vw;
             position: relative;
@@ -194,9 +146,276 @@
             margin: 0;
         }
 
-        @media (max-width: 640px) {
-            .vsl-container { border-radius: 12px; }
+        /* ===== LIVE DOT (grabando) ===== */
+        .live-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            position: relative;
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            animation: live-pulse 1.6s infinite;
         }
+        @keyframes live-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); transform: scale(1); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
+        }
+
+        /* ===== COUNTDOWN BANNER ===== */
+        .countdown-banner {
+            position: relative;
+            width: 100vw;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+            max-width: 100vw;
+            z-index: 5;
+            background: linear-gradient(135deg, hsl(0 0% 10%) 0%, hsl(0 0% 18%) 100%);
+            color: white;
+            text-align: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid hsl(38 43% 60% / 0.4);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .countdown-banner .banner-text {
+            color: hsl(38 43% 75%);
+        }
+
+        .countdown-boxes {
+            display: inline-flex;
+            gap: 0.6rem;
+            align-items: center;
+        }
+
+        .countdown-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 48px;
+        }
+
+        .countdown-box .number {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            color: hsl(38 43% 65%);
+        }
+
+        .countdown-box .label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            opacity: 0.75;
+            margin-top: 3px;
+            color: white;
+        }
+
+        .countdown-separator {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: hsl(38 43% 60%);
+            opacity: 0.55;
+            margin-top: -10px;
+        }
+
+        @media (max-width: 480px) {
+            .countdown-banner { padding: 0.4rem 0.5rem; }
+            .countdown-box .number { font-size: 1.2rem; }
+            .countdown-box { min-width: 38px; }
+            .countdown-banner .banner-text { font-size: 0.65rem; }
+        }
+
+        /* ===== HERO - DESKTOP: imagen fija a pantalla completa ===== */
+        .hero-fixed {
+            position: relative;
+            width: 100vw;
+            left: 50%;
+            right: 50%;
+            margin-left: -50vw;
+            margin-right: -50vw;
+            max-width: 100vw;
+            height: calc(100vh - 70px);
+            min-height: 600px;
+            overflow: hidden;
+            background: hsl(0 0% 8%);
+        }
+
+        .section-dark {
+            background: hsl(0 0% 8%) !important;
+            color: hsl(0 0% 95%);
+        }
+        .section-dark h1,
+        .section-dark h2,
+        .section-dark h3,
+        .section-dark p,
+        .section-dark li,
+        .section-dark blockquote,
+        .section-dark strong,
+        .section-dark em {
+            color: hsl(0 0% 95%);
+        }
+        .section-dark .text-foreground,
+        .section-dark .text-foreground\/85 {
+            color: hsl(0 0% 98%) !important;
+        }
+        .section-dark .text-muted-foreground {
+            color: hsl(0 0% 70%) !important;
+        }
+        .section-dark .text-primary {
+            color: hsl(38 60% 70%) !important;
+        }
+        .section-dark .bg-white,
+        .section-dark .bg-white * {
+            color: hsl(0 0% 10%) !important;
+        }
+        .section-dark .bg-white .text-muted-foreground {
+            color: hsl(0 0% 40%) !important;
+        }
+        .section-dark .bg-white .text-primary {
+            color: hsl(38 43% 50%) !important;
+        }
+
+        .hero-bg-image-desktop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: 75% 20%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero-fixed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(to top, hsl(0 0% 98%) 0%, rgba(255, 255, 255, 0) 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .hero-copy-wrapper {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .hero-copy {
+            width: 100%;
+            max-width: 640px;
+            padding: 1.75rem 2.25rem 2rem;
+            margin-left: 4vw;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+            text-align: center;
+            border: 1px solid hsl(38 43% 88%);
+        }
+
+        @media (min-width: 1440px) {
+            .hero-copy {
+                margin-left: calc((100vw - 1280px) / 2);
+            }
+        }
+
+        .hero-mobile-section { display: none; }
+
+        .hero-spacer { display: none; }
+
+        .main-content {
+            position: relative;
+            background: hsl(0 0% 98%);
+        }
+
+        .main-content > section,
+        .main-content > footer {
+            position: relative;
+        }
+
+        /* ===== MOVIL: imagen vertical como fondo fijo ===== */
+        @media (max-width: 1023px) {
+            .hero-fixed {
+                position: relative;
+                height: auto;
+                min-height: 0;
+                top: 0;
+                overflow: visible;
+                background: transparent;
+            }
+            .hero-fixed::after { display: none; }
+            .hero-bg-image-desktop { display: none; }
+
+            .hero-mobile-section {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100vh;
+                z-index: 0;
+                overflow: hidden;
+                padding-top: 55px;
+                background: hsl(0 0% 8%);
+            }
+            .hero-mobile-section img {
+                width: 100%;
+                height: 100%;
+                display: block;
+                object-fit: cover;
+                object-position: top center;
+            }
+
+            .hero-copy-wrapper {
+                height: auto;
+                display: block;
+                background: transparent;
+                position: relative;
+                z-index: 3;
+                padding-top: 34vh;
+            }
+            .hero-copy {
+                margin: 0 auto;
+                padding: 1.5rem 1.25rem 1.75rem;
+                max-width: 100%;
+                border-radius: 1.5rem 1.5rem 0 0;
+                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+                background: rgba(255, 255, 255, 0.97);
+                backdrop-filter: blur(12px);
+                border: none;
+            }
+            .hero-copy h1 {
+                font-size: 3rem !important;
+                line-height: 1.05;
+            }
+            .hero-spacer { display: none; }
+
+            .main-content {
+                position: relative;
+                z-index: 2;
+                background: hsl(0 0% 98%);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-copy-wrapper { padding-top: 34vh; }
+            .hero-copy { padding: 1.25rem 1rem 1.5rem; }
+            .hero-copy h1 { font-size: 2.5rem !important; }
+        }
+
     </style>
 </head>
 
@@ -206,381 +425,693 @@
         <div class="modal-content flex flex-col">
             <button onclick="closeModal()"
                 class="absolute top-4 right-4 z-50 bg-white border rounded-full p-2 shadow-lg hover:bg-gray-100 transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
             <div class="flex-1 overflow-auto bg-white pt-10 md:pt-12">
-                <iframe
-                    src="https://link.cleesaas.com/widget/form/bMSAI5yCGf2hz7Jw4Vp6"
-                    style="width:100%;height:100%;border:none;border-radius:5px"
-                    id="inline-bMSAI5yCGf2hz7Jw4Vp6"
-                    data-layout="{'id':'INLINE'}"
-                    data-trigger-type="alwaysShow"
-                    data-trigger-value=""
-                    data-activation-type="alwaysActivated"
-                    data-activation-value=""
-                    data-deactivation-type="neverDeactivate"
-                    data-deactivation-value=""
-                    data-form-name="Form Evento: OVEJAS VOLADORAS - 2026 - 2"
-                    data-height="460"
-                    data-layout-iframe-id="inline-bMSAI5yCGf2hz7Jw4Vp6"
-                    data-form-id="bMSAI5yCGf2hz7Jw4Vp6"
-                    title="Form Evento: OVEJAS VOLADORAS - 2026 - 2"
-                ></iframe>
+                <iframe src="https://link.cleesaas.com/widget/form/bMSAI5yCGf2hz7Jw4Vp6"
+                    style="width:100%;height:100%;border:none;border-radius:5px" id="inline-bMSAI5yCGf2hz7Jw4Vp6"
+                    data-layout="{'id':'INLINE'}" data-trigger-type="alwaysShow" data-trigger-value=""
+                    data-activation-type="alwaysActivated" data-activation-value=""
+                    data-deactivation-type="neverDeactivate" data-deactivation-value=""
+                    data-form-name="Form Evento: OVEJAS VOLADORAS - 2026 - 2" data-height="460"
+                    data-layout-iframe-id="inline-bMSAI5yCGf2hz7Jw4Vp6" data-form-id="bMSAI5yCGf2hz7Jw4Vp6"
+                    title="Form Evento: OVEJAS VOLADORAS - 2026 - 2"></iframe>
                 <script src="https://link.cleesaas.com/js/form_embed.js"></script>
             </div>
         </div>
     </div>
 
-    <div class="min-h-screen selection:bg-primary/30">
+    <div class="selection:bg-primary/30">
 
-        <!-- Hero Section -->
-        <section class="pt-8 md:pt-16 pb-8 md:pb-12 px-6">
-            <div class="max-w-4xl mx-auto text-center">
-
-                <!-- Logo -->
-                <div class="mb-8 flex flex-col items-center justify-center gap-4">
-                    <div class="w-20 h-20 overflow-hidden rounded-full border-2 border-primary/20 shadow-lg bg-black flex items-center justify-center p-1">
-                        <img src="https://vibe.filesafe.space/1775682063663501102/attachments/e2ea9e7d-2b24-4514-bb28-a0a45a9b3002.jpg"
-                            alt="Ovejas Voladoras" class="w-full h-full object-contain rounded-full" />
-                    </div>
+        <!-- ===== COUNTDOWN BANNER ===== -->
+        <div class="countdown-banner">
+            <p class="banner-text text-[0.7rem] md:text-xs uppercase tracking-widest font-semibold mb-1">La clase
+                comienza en</p>
+            <div class="countdown-boxes">
+                <div class="countdown-box">
+                    <span class="number" id="cd-days">00</span>
+                    <span class="label">D&iacute;as</span>
                 </div>
-
-                <!-- Badge -->
-                <span class="inline-block px-4 py-1.5 text-xs md:text-sm font-medium tracking-widest text-primary border border-primary/30 rounded-full uppercase bg-primary/5 mb-8">
-                    CLASE ONLINE GRATUITA &middot; EN VIVO
-                </span>
-
-                <!-- Titulo principal -->
-                <h1 class="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-foreground leading-tight mb-6 uppercase">
-                    LA EVOLUCI&Oacute;N
-                </h1>
-
-                <!-- Subtitulo -->
-                <p class="text-lg md:text-2xl font-semibold text-foreground/80 max-w-3xl mx-auto mb-4 leading-snug">
-                    C&oacute;mo vender tu conocimiento en la era de la IA &mdash; o quedarte fuera del mercado para siempre.
-                </p>
-
-                <!-- Descripcion -->
-                <p class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-                    El mercado de la educaci&oacute;n digital cambi&oacute;. Lo que funcionaba en 2023 ya no vende. Y lo que viene ahora lo cambia todo.
-                </p>
-
-                <!-- VSL -->
-                <div class="vsl-container my-6 md:my-8 max-w-3xl mx-auto">
-                    <div class="vsl-play-overlay" id="playOverlay">
-                        <div class="vsl-play-btn">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="hsl(38 43% 60%)"><polygon points="5,3 19,12 5,21"/></svg>
-                        </div>
-                    </div>
-                    <video id="videoHero" autoplay muted playsinline controlsList="nodownload" oncontextmenu="return false;">
-                        <source src="" type="video/mp4">
-                        Tu navegador no soporta la reproducci&oacute;n de video.
-                    </video>
+                <span class="countdown-separator">:</span>
+                <div class="countdown-box">
+                    <span class="number" id="cd-hours">00</span>
+                    <span class="label">Horas</span>
                 </div>
-
-                <!-- Darwin Quote -->
-                <div class="flex items-center justify-center gap-4 max-w-2xl mx-auto my-8 px-4">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Charles_Darwin_seated_crop.jpg/220px-Charles_Darwin_seated_crop.jpg"
-                        alt="Charles Darwin"
-                        class="w-12 h-12 md:w-14 md:h-14 rounded-full object-cover border-2 border-primary/20 flex-shrink-0" />
-                    <blockquote class="text-sm md:text-base italic text-muted-foreground text-left leading-snug">
-                        &ldquo;No sobrevive la especie m&aacute;s inteligente ni la m&aacute;s fuerte. Sobrevive la que mejor se adapta al cambio.&rdquo;
-                        <span class="not-italic font-medium text-foreground">&mdash; Charles Darwin</span>
-                    </blockquote>
+                <span class="countdown-separator">:</span>
+                <div class="countdown-box">
+                    <span class="number" id="cd-mins">00</span>
+                    <span class="label">Min</span>
                 </div>
-
-                <!-- CTA Button -->
-                <button onclick="openModal()"
-                    class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
-                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
-                    QUIERO EVOLUCIONAR
-                </button>
-            </div>
-        </section>
-
-        <!-- El Mercado Ha Cambiado -->
-        <section class="py-12 md:py-16 px-6 bg-muted/50">
-            <div class="max-w-3xl mx-auto">
-                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-10 tracking-wide md:whitespace-nowrap">
-                    EL MERCADO HA CAMBIADO. <span class="font-serif italic text-primary">&iquest;T&uacute; tambi&eacute;n?</span>
-                </h2>
-
-                <div class="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed">
-                    <p>Hace tres a&ntilde;os, publicar contenido constante era suficiente para construir autoridad. Hace dos, tener seguidores era suficiente para vender. Hace uno, tener un curso grabado era suficiente para monetizar.</p>
-                    <p class="font-semibold text-foreground text-lg md:text-xl">Hoy, nada de eso basta.</p>
-                    <p>La IA democratiz&oacute; la creaci&oacute;n de contenido. Cualquier persona puede generar un curso en horas, publicar 30 reels al mes sin aparecer y construir una web entera sin saber c&oacute;digo.</p>
-                    <p>&iquest;El resultado? Un mercado que no es m&aacute;s competitivo. <strong>Es m&aacute;s saturado.</strong></p>
-                    <p class="font-bold text-foreground text-center text-lg md:text-xl py-2">M&aacute;s ruido. Menos confianza. M&aacute;s oferta. Menos atenci&oacute;n.</p>
-                    <p>Y en ese contexto, el que sobrevive no es el que tiene m&aacute;s seguidores. Es el que tiene la <strong>oferta correcta</strong>, construida para este nuevo momento.</p>
+                <span class="countdown-separator">:</span>
+                <div class="countdown-box">
+                    <span class="number" id="cd-secs">00</span>
+                    <span class="label">Seg</span>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- En Esta Clase Vas a Descubrir -->
-        <section class="py-12 md:py-16 px-6">
-            <div class="max-w-3xl mx-auto">
-                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-12 uppercase tracking-wide">
-                    EN ESTA CLASE VAS A <span class="font-serif italic normal-case text-primary">descubrir</span>
-                </h2>
+        <!-- ===== HERO ===== -->
+        <div class="hero-fixed">
+            <!-- Imagen de fondo desktop -->
+            <img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69dd60dd328c56e1a0454b2a.png"
+                alt="La Evolución - Ovejas Voladoras" class="hero-bg-image-desktop">
 
-                <div class="space-y-8">
-                    <!-- Item 1 -->
-                    <div class="flex items-start gap-4 md:gap-5">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">1</span>
-                        <div>
-                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">Por qu&eacute; el ebook, el curso pregrabado y el &ldquo;contenido educativo&rdquo; solos ya no venden &mdash; y qu&eacute; lo est&aacute; reemplazando.</p>
-                            <p class="text-muted-foreground text-sm md:text-base italic">Spoiler: el mercado no quiere m&aacute;s informaci&oacute;n. Quiere resultados con menos esfuerzo, en menos tiempo.</p>
+            <!-- Imagen móvil vertical -->
+            <div class="hero-mobile-section">
+                <img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69dd60ddcaf24b80a0fa7690.png"
+                    alt="La Evolución - Ovejas Voladoras">
+            </div>
+
+            <div class="hero-copy-wrapper">
+                <div class="hero-copy">
+                    <!-- Badge -->
+                    <span
+                        class="inline-block px-4 py-1.5 text-[10px] sm:text-xs font-medium tracking-widest text-primary border border-primary/30 rounded-full uppercase bg-primary/5 mb-5">
+                        CLASE ONLINE GRATUITA &middot; EN VIVO &middot; 2 HORAS
+                    </span>
+
+                    <!-- Titulo principal -->
+                    <img src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69debdbe190683601a2ebf3f.png"
+                        alt="La Evolución - Masterclass por Andy & Cristhian"
+                        class="mx-auto mb-4 md:mb-6 w-full max-w-[320px] md:max-w-[440px] lg:max-w-[520px] h-auto">
+
+                    <!-- Subtitulo -->
+                    <p class="text-lg md:text-xl lg:text-2xl font-bold text-foreground mb-2 leading-snug">
+                        C&oacute;mo vender tus servicios o cursos en un mercado saturado de IA.
+                    </p>
+                    <p class="text-base md:text-lg font-serif italic text-primary mb-5 leading-snug">
+                        En 2026 publicar m&aacute;s, tener seguidores y hacer cursos grabados dej&oacute; de ser
+                        suficiente.
+                    </p>
+
+                    <!-- Bloque fecha/hora estilo evento -->
+                    <div
+                        class="flex items-stretch justify-center gap-0 mb-5 rounded-xl overflow-hidden border border-primary/30 shadow-md max-w-md mx-auto">
+                        <div
+                            class="bg-primary text-primary-foreground px-4 py-3 flex flex-col items-center justify-center min-w-[88px]">
+                            <span
+                                class="text-[9px] uppercase tracking-widest font-semibold opacity-80">Mi&eacute;rcoles</span>
+                            <span class="text-3xl md:text-4xl font-serif font-bold leading-none mt-1">29</span>
+                            <span class="text-[10px] uppercase tracking-widest font-semibold opacity-90 mt-0.5">Abril
+                                2026</span>
+                        </div>
+                        <div class="bg-white px-4 py-3 flex flex-col items-center justify-center flex-1">
+                            <span class="text-[11px] md:text-xs uppercase tracking-widest text-muted-foreground font-semibold inline-flex items-center gap-1.5 leading-none">
+                                <span class="live-dot"></span>En vivo
+                            </span>
+                            <span
+                                class="text-xl md:text-2xl font-serif font-bold text-foreground leading-none mt-1">7:00
+                                PM</span>
+                            <span class="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">COL &middot; 2
+                                horas</span>
                         </div>
                     </div>
 
-                    <!-- Item 2 -->
-                    <div class="flex items-start gap-4 md:gap-5">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">2</span>
-                        <div>
-                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">Las 3 formas de educaci&oacute;n digital que est&aacute;n dominando el mercado ahora mismo:</p>
-                            <p class="text-muted-foreground text-sm md:text-base">Comunidades con acompa&ntilde;amiento. Formaci&oacute;n intensiva en vivo. MiniApps que entregan el resultado sin que el cliente tenga que pensar.</p>
-                        </div>
+                    <!-- Darwin Quote -->
+                    <div class="flex items-center justify-center gap-3 md:gap-4 mb-6 px-2">
+                        <img src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69dd01f6a73b3b41c04e116e.jpg"
+                            alt="Charles Darwin" style="object-position: center 25%;"
+                            class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border-2 border-primary/30 shadow-md flex-shrink-0" />
+                        <blockquote class="text-xs md:text-sm italic text-muted-foreground text-left leading-snug">
+                            &ldquo;No sobrevive la especie m&aacute;s inteligente ni la m&aacute;s fuerte. Sobrevive la
+                            que mejor se adapta al cambio.&rdquo;
+                            <span class="not-italic font-medium text-foreground block mt-0.5">Charles Darwin</span>
+                        </blockquote>
                     </div>
 
-                    <!-- Item 3 -->
-                    <div class="flex items-start gap-4 md:gap-5">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">3</span>
-                        <div>
-                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">C&oacute;mo usar la IA como copiloto &mdash; no como director creativo.</p>
-                            <p class="text-muted-foreground text-sm md:text-base italic">La IA como asistente que amplifica tu esencia. No como sustituto que la borra. Porque el mercado ya detecta qu&eacute; tiene alma y qu&eacute; no.</p>
-                        </div>
-                    </div>
-
-                    <!-- Item 4 -->
-                    <div class="flex items-start gap-4 md:gap-5">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">4</span>
-                        <div>
-                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">La estructura de una oferta que s&iacute; vende en 2025:</p>
-                            <p class="text-muted-foreground text-sm md:text-base">Con resultado medible, veh&iacute;culo diferenciado y una promesa que no se parece a lo que todos est&aacute;n diciendo.</p>
-                        </div>
-                    </div>
-
-                    <!-- Item 5 -->
-                    <div class="flex items-start gap-4 md:gap-5">
-                        <span class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">5</span>
-                        <div>
-                            <p class="font-semibold text-foreground text-base md:text-lg mb-1">Tu hoja de ruta para lanzar tu primera oferta evolucionada en los pr&oacute;ximos 90 d&iacute;as.</p>
-                            <p class="text-muted-foreground text-sm md:text-base">Con o sin audiencia. Con o sin experiencia previa vendiendo online.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- CTA -->
-                <div class="text-center mt-12">
+                    <!-- CTA Button -->
                     <button onclick="openModal()"
                         class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
-                        <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
-                        QUIERO EVOLUCIONAR
+                        <span
+                            class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                        REG&Iacute;STRATE GRATIS
                     </button>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Para Quien Si / No -->
-        <section class="py-12 md:py-16 px-6 bg-muted/50">
-            <div class="max-w-4xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+        <!-- Espaciador para empujar el contenido bajo el hero fijo -->
+        <div class="hero-spacer"></div>
 
-                    <!-- Si es para ti -->
-                    <div>
-                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-8 uppercase tracking-wide">
-                            ESTO ES PARA TI <span class="font-serif italic normal-case text-primary">si&hellip;</span>
-                        </h3>
-                        <ul class="space-y-5">
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Ya tienes conocimiento y vocaci&oacute;n de ense&ntilde;ar, pero sientes que el mercado est&aacute; muy saturado y no sabes c&oacute;mo diferenciarte.</p>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Has intentado vender antes &mdash; contenido, cursos, talleres &mdash; y los resultados no acompa&ntilde;aron.</p>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Sabes que la IA es una herramienta poderosa, pero no quieres que te quite la esencia ni te convierta en uno m&aacute;s del mont&oacute;n.</p>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Est&aacute;s listo para entender qu&eacute; viene ahora y construir desde ah&iacute; &mdash; no desde lo que funcionaba hace tres a&ntilde;os.</p>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Quieres que tu negocio educativo sea un activo real: con comunidad, acompa&ntilde;amiento y tecnolog&iacute;a que trabaje para ti.</p>
-                            </li>
-                        </ul>
+        <!-- ===== CONTENIDO PRINCIPAL (sube y tapa al hero) ===== -->
+        <div class="main-content">
+
+            <!-- El Mercado Está Saturado -->
+            <section class="py-12 md:py-16 px-6">
+                <div class="max-w-3xl mx-auto">
+                    <h2
+                        class="text-2xl md:text-[1.875rem] lg:text-4xl font-serif font-bold text-center mb-4 tracking-wide">
+                        <span class="md:whitespace-nowrap">EL MERCADO NO EST&Aacute; M&Aacute;S COMPETITIVO.</span> <br
+                            class="hidden md:block">EST&Aacute; M&Aacute;S SATURADO.
+                    </h2>
+                    <div class="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed mt-10">
+                        <p>Hace tres a&ntilde;os, publicar contenido constante era suficiente para construir autoridad.
+                            Hace dos, tener seguidores era suficiente para vender. Hace uno, tener un curso grabado era
+                            suficiente para monetizar.</p>
+                        <p class="font-semibold text-foreground text-lg md:text-xl">Hoy, nada de eso basta.</p>
+                        <p>La IA democratiz&oacute; la creaci&oacute;n de contenido de una forma que nadie
+                            anticip&oacute; completamente. Hoy cualquier persona puede generar un curso completo en
+                            horas, publicar treinta reels al mes sin aparecer ni una sola vez y construir una web entera
+                            sin saber una l&iacute;nea de c&oacute;digo.</p>
+                        <p>El resultado no es m&aacute;s competencia. Es m&aacute;s ruido. M&aacute;s oferta. Menos
+                            atenci&oacute;n. Menos confianza.</p>
+                        <p>Y en ese contexto, quien sobrevive no es quien tiene m&aacute;s seguidores ni m&aacute;s
+                            contenido. Es quien tiene la <strong>oferta correcta</strong>, construida para este momento.
+                        </p>
+                        <p class="font-bold text-foreground text-center text-lg md:text-xl py-2">La pregunta ya no es si
+                            tienes conocimiento. La pregunta es si sabes empaquetarlo de una forma que el mercado de
+                            2026 quiera comprar.</p>
                     </div>
-
-                    <!-- No es para ti -->
-                    <div>
-                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-8 uppercase tracking-wide">
-                            NO ES PARA TI <span class="font-serif italic normal-case text-red-500">si&hellip;</span>
-                        </h3>
-                        <ul class="space-y-5">
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Todav&iacute;a no tienes claro de qu&eacute; hablar&iacute;as ni a qui&eacute;n ayudar&iacute;as (para eso existe la membres&iacute;a Ovejas Voladoras).</p>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Buscas un hack r&aacute;pido sin trabajo interno ni estrategia real.</p>
-                            </li>
-                            <li class="flex items-start gap-3">
-                                <span class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
-                                <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Crees que la IA va a hacer todo por ti &mdash; el pensamiento, la diferenciaci&oacute;n y la venta. Eso no existe.</p>
-                            </li>
-                        </ul>
-                    </div>
-
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Quienes Lo Imparten -->
-        <section class="py-12 md:py-16 px-6">
-            <div class="max-w-4xl mx-auto">
-                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-14 uppercase tracking-wide">
-                    QUI&Eacute;NES LO <span class="font-serif italic normal-case text-primary">imparten</span>
-                </h2>
+            <!-- Por Qué El Modelo Ya No Escala -->
+            <section class="py-12 md:py-16 px-6 section-dark">
+                <div class="max-w-3xl mx-auto">
+                    <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-10 uppercase tracking-wide">
+                        &iquest;POR QU&Eacute; EL MODELO QUE USABAS <span
+                            class="font-serif italic normal-case text-primary">ya
+                            no escala</span>?
+                    </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
-
-                    <!-- Andy Molina -->
-                    <div class="text-center">
-                        <div class="w-36 h-36 md:w-44 md:h-44 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
-                            <!-- TODO: Reemplazar con foto de Instagram de Andy -->
-                            <img src="https://vibe.filesafe.space/1775682063663501102/attachments/e2ea9e7d-2b24-4514-bb28-a0a45a9b3002.jpg"
-                                alt="Andy Molina"
-                                class="w-full h-full object-cover" />
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-1 uppercase">Andy Molina</h3>
-                        <p class="text-primary font-medium text-sm mb-4 tracking-wide">Fundadora de Ovejas Voladoras</p>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">
-                            Autora de <em>La culpa no es del lunes</em>. Creadora del M&eacute;todo P+H=T.
-                            Era abogada en una de las mejores empresas de Colombia. Le ofrecieron triplicar su salario. Renunci&oacute;. Porque ten&iacute;a todo menos lo que importaba: prop&oacute;sito.
-                        </p>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3">
-                            Hoy vive de ense&ntilde;ar lo que sabe. Ha acompa&ntilde;ado a cientos de personas a construir proyectos digitales reales desde su autenticidad &mdash; sin pose, sin f&oacute;rmulas m&aacute;gicas, sin prometer atajos que no existen.
-                        </p>
+                    <div class="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed">
+                        <p class="font-semibold text-foreground">Seamos honestos.</p>
+                        <p>Si llevas meses, o a&ntilde;os, publicando sin ver ingresos proporcionales al esfuerzo, no es
+                            culpa tuya. Es que el modelo con el que intentas vender fue dise&ntilde;ado para un mercado
+                            que ya no existe.</p>
+                        <p>El ebook que cualquier IA genera en 20 minutos. El curso grabado que nadie termina. Los bonos
+                            que son m&aacute;s cursos que nadie termina. El embudo que convert&iacute;a al 3% y ahora
+                            convierte al 0.8%.</p>
+                        <p>Eso no es un problema de copy ni de dise&ntilde;o ni de anuncios. <strong>Es un problema de
+                                modelo.</strong></p>
+                        <p>Y el modelo tiene soluci&oacute;n. Pero no es la que la mayor&iacute;a del mercado
+                            est&aacute; vendiendo.</p>
                     </div>
-
-                    <!-- Cristhian Fonseca -->
-                    <div class="text-center">
-                        <div class="w-36 h-36 md:w-44 md:h-44 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
-                            <!-- TODO: Reemplazar con foto de Instagram de Cristhian -->
-                            <img src=""
-                                alt="Cristhian Fonseca"
-                                class="w-full h-full object-cover bg-muted" />
-                        </div>
-                        <h3 class="text-xl md:text-2xl font-serif font-bold mb-1 uppercase">Cristhian Fonseca</h3>
-                        <p class="text-primary font-medium text-sm mb-4 tracking-wide">Estratega &amp; Fundador de JoinsClee</p>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">
-                            Especialista en lanzamientos de comunidades educativas online y arquitectura de ofertas digitales.
-                        </p>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3">
-                            Ha construido el sistema detr&aacute;s de Ovejas Voladoras: la estrategia, la oferta, la infraestructura y los procesos que convierten conocimiento en negocio. Sabe lo que funciona en el mercado ahora mismo porque lo est&aacute; ejecutando en tiempo real.
-                        </p>
-                    </div>
-
                 </div>
+            </section>
 
-                <p class="text-center text-muted-foreground italic mt-10 text-base md:text-lg font-serif">
-                    Dos perspectivas. Una sola direcci&oacute;n: que salgas de esta clase con claridad y con el primer paso dado.
+            <!-- Lo Que Viene Ahora -->
+            <section class="py-12 md:py-16 px-6">
+                <div class="max-w-3xl mx-auto">
+                    <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-10 uppercase tracking-wide">
+                        LO QUE VIENE AHORA: <span class="font-serif italic normal-case text-primary">&iquest;y por
+                            qu&eacute;
+                            est&aacute;s a tiempo?</span>
+                    </h2>
+
+                    <div class="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed mb-10">
+                        <p>El mercado en ingl&eacute;s lo vivi&oacute; hace 18 meses. El mercado en espa&ntilde;ol lo
+                            est&aacute; viviendo ahora mismo. Y quien lo entiende hoy tiene una ventana de
+                            posicionamiento que se cierra con cada mes que pasa.</p>
+                        <p class="font-semibold text-foreground">Los tres modelos que est&aacute;n dominando la
+                            educaci&oacute;n digital en 2026:</p>
+                    </div>
+
+                    <div class="space-y-8">
+                        <div class="flex items-start gap-4 md:gap-5">
+                            <span
+                                class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">1</span>
+                            <div>
+                                <p class="font-semibold text-foreground text-base md:text-lg mb-1">1. Comunidades con
+                                    acompa&ntilde;amiento activo</p>
+                                <p class="text-muted-foreground text-sm md:text-base">No un grupo de Facebook lleno de
+                                    notificaciones. Una comunidad con sesiones semanales en vivo, soporte real y
+                                    personas en exactamente tu mismo punto de avance. La conexi&oacute;n humana se
+                                    convirti&oacute; en el nuevo lujo, y quien la entrega gana.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 md:gap-5">
+                            <span
+                                class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">2</span>
+                            <div>
+                                <p class="font-semibold text-foreground text-base md:text-lg mb-1">2. Formaci&oacute;n
+                                    intensiva en vivo con m&eacute;todo propio</p>
+                                <p class="text-muted-foreground text-sm md:text-base">No el m&eacute;todo de nadie
+                                    m&aacute;s empaquetado con tu nombre encima. Tu metodolog&iacute;a, construida desde
+                                    tu historia de vida, tu talento y tu perspectiva &uacute;nica, que ninguna IA puede
+                                    generar y ning&uacute;n competidor puede copiar. Irrepetible por dise&ntilde;o.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 md:gap-5">
+                            <span
+                                class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">3</span>
+                            <div>
+                                <p class="font-semibold text-foreground text-base md:text-lg mb-1">3. MiniApps de IA que
+                                    entregan el resultado</p>
+                                <p class="text-muted-foreground text-sm md:text-base">Aqu&iacute; es donde el juego
+                                    cambia por completo. Una MiniApp no es una app compleja. No requiere programar. No
+                                    requiere equipo t&eacute;cnico. Es tu metodolog&iacute;a empaquetada en una
+                                    herramienta interactiva que tu cliente usa (no estudia) para obtener el resultado
+                                    que prometes.</p>
+                                <p class="text-muted-foreground text-sm md:text-base mt-2">No aprende tu m&eacute;todo.
+                                    Lo experimenta. Obtiene el resultado en minutos en lugar de en semanas.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 space-y-4 text-base md:text-lg text-muted-foreground leading-relaxed">
+                        <p class="font-bold text-foreground">Y no es una cosa o la otra, es una cosa y la otra. La
+                            uni&oacute;n de todo esto es la clave en 2026.</p>
+                        <p>No te vamos a explicar c&oacute;mo funciona. Te vamos a mostrar c&oacute;mo se hace.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Qué Vas a Ver en Esta Clase -->
+            <section class="py-12 md:py-16 px-6 section-dark">
+                <div class="max-w-3xl mx-auto">
+                    <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-12 uppercase tracking-wide">
+                        QU&Eacute; VAS A VER EN ESTA <span class="font-serif italic normal-case text-primary">clase de 2
+                            horas</span>
+                    </h2>
+
+                    <div class="space-y-10">
+                        <!-- Parte 1 -->
+                        <div class="flex items-start gap-4 md:gap-5">
+                            <span
+                                class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">1</span>
+                            <div>
+                                <p class="font-semibold text-foreground text-base md:text-lg mb-2">PARTE 1: El
+                                    diagn&oacute;stico que nadie quiere hacer pero todos necesitan <span
+                                        class="text-muted-foreground font-normal">(30 min)</span></p>
+                                <p class="text-muted-foreground text-sm md:text-base">Por qu&eacute; tu oferta actual no
+                                    est&aacute; convirtiendo aunque tu contenido sea bueno. El diagn&oacute;stico exacto
+                                    del problema (no t&aacute;ctico, sino estructural) que explica por qu&eacute; el
+                                    esfuerzo no est&aacute; siendo proporcional al resultado. Con datos reales del
+                                    mercado hispanohablante.</p>
+                                <p class="text-muted-foreground text-sm md:text-base italic mt-2">Si esto te genera
+                                    incomodidad, es porque es exactamente para ti.</p>
+                            </div>
+                        </div>
+
+                        <!-- Parte 2 -->
+                        <div class="flex items-start gap-4 md:gap-5">
+                            <span
+                                class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">2</span>
+                            <div>
+                                <p class="font-semibold text-foreground text-base md:text-lg mb-2">PARTE 2: Los tres
+                                    modelos que est&aacute;n ganando ahora, explicados con ejemplos reales <span
+                                        class="text-muted-foreground font-normal">(30 min)</span></p>
+                                <p class="text-muted-foreground text-sm md:text-base">Vas a ver la diferencia entre una
+                                    oferta del modelo viejo y una oferta del modelo nuevo. Lado a lado. Sin rodeos. Te
+                                    llevar&aacute;s herramientas para crear la tuya.</p>
+                            </div>
+                        </div>
+
+                        <!-- Parte 3 -->
+                        <div class="flex items-start gap-4 md:gap-5">
+                            <span
+                                class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">3</span>
+                            <div>
+                                <p class="font-semibold text-foreground text-base md:text-lg mb-2">PARTE 3:
+                                    Construcci&oacute;n en vivo de una MiniApp de IA <span
+                                        class="text-muted-foreground font-normal">(40 min)</span></p>
+                                <p class="text-muted-foreground text-sm md:text-base">Esta es la parte que no vas a ver
+                                    en ning&uacute;n otro evento.</p>
+                                <p class="text-muted-foreground text-sm md:text-base mt-2">Cristhian Fonseca va a
+                                    construir una MiniApp en directo (desde cero, con herramientas de IA accesibles, sin
+                                    c&oacute;digo), mientras Andy muestra c&oacute;mo esa herramienta transforma la
+                                    conversaci&oacute;n de venta de &ldquo;&iquest;por qu&eacute; deber&iacute;a pagarte
+                                    a ti?&rdquo; a &ldquo;&iquest;cu&aacute;ndo empezamos?&rdquo;</p>
+                                <p class="text-muted-foreground text-sm md:text-base mt-2">Vas a ver qu&eacute; es una
+                                    MiniApp en la pr&aacute;ctica. C&oacute;mo se construye. Qu&eacute; tipo de
+                                    resultado entrega. Y por qu&eacute; hace que tu oferta sea incomparable frente a
+                                    cualquier curso o programa que compita contigo.</p>
+                                <p class="text-muted-foreground text-sm md:text-base mt-2">Adem&aacute;s, antes de la
+                                    clase recibir&aacute;s acceso a una <strong class="text-foreground">Herramienta que
+                                        construye tu MiniApp</strong> (con el m&eacute;todo que vamos a mostrar) para
+                                    que durante la clase puedas empezar a construir la tuya en tiempo real mientras
+                                    nosotros construimos la nuestra.</p>
+                            </div>
+                        </div>
+
+                        <!-- Parte 4 -->
+                        <div class="flex items-start gap-4 md:gap-5">
+                            <span
+                                class="flex-shrink-0 w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">4</span>
+                            <div>
+                                <p class="font-semibold text-foreground text-base md:text-lg mb-2">PARTE 4: La hoja de
+                                    ruta de los 90 d&iacute;as</p>
+                                <p class="text-muted-foreground text-sm md:text-base">Al cierre de la clase vas a ver
+                                    exactamente c&oacute;mo puedes tener los tres pilares del nuevo modelo construidos
+                                    en 90 d&iacute;as: con acompa&ntilde;amiento real, con m&eacute;todo propio
+                                    documentado y con tus MiniApps funcionales y listas para vender.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CTA -->
+                    <div class="text-center mt-12">
+                        <button onclick="openModal()"
+                            class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
+                            <span
+                                class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                            REG&Iacute;STRATE GRATIS
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Para Quien Si / No -->
+            <section class="py-12 md:py-16 px-6">
+                <div class="max-w-4xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+
+                        <!-- Si es para ti -->
+                        <div>
+                            <h3 class="text-xl md:text-2xl font-serif font-bold mb-8 uppercase tracking-wide">
+                                ESTO ES PARA TI <span
+                                    class="font-serif italic normal-case text-primary">si&hellip;</span>
+                            </h3>
+                            <ul class="space-y-5">
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Llevas tiempo
+                                        intentando vender tu conocimiento y los resultados no son proporcionales al
+                                        esfuerzo que metes.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Ya tienes algo
+                                        (clientes, experiencia, conocimiento, sesiones), pero sientes que el modelo no
+                                        te permite crecer sin multiplicar las horas.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Ves
+                                        c&oacute;mo la IA lo est&aacute; cambiando todo y no sabes si eso te amenaza o
+                                        te favorece. Y necesitas entenderlo para dejar de adivinar.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Tienes el
+                                        talento pero no la arquitectura que lo convierte en un negocio del que vivir de
+                                        forma predecible.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Est&aacute;s
+                                        harto de cursos que compras con esperanza y terminas en el mismo sitio.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold mt-0.5">&check;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Quieres salir
+                                        al mercado con algo diferente: no una versi&oacute;n mejorada de lo que todos
+                                        ofrecen, sino algo que haga que la competencia parezca irrelevante.</p>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- No es para ti -->
+                        <div>
+                            <h3 class="text-xl md:text-2xl font-serif font-bold mb-8 uppercase tracking-wide">
+                                NO ES PARA TI <span class="font-serif italic normal-case text-red-500">si&hellip;</span>
+                            </h3>
+                            <ul class="space-y-5">
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Todav&iacute;a
+                                        no tienes claro de qu&eacute; hablar&iacute;as ni a qui&eacute;n
+                                        ayudar&iacute;as. Para eso existe la Membres&iacute;a de Ovejas Voladoras:
+                                        empieza ah&iacute;.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Buscas un
+                                        truco r&aacute;pido sin trabajo real detr&aacute;s. Esta clase va a durar dos
+                                        horas y va a requerir que pienses, no que tomes notas.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Crees que la
+                                        IA va a pensar por ti, diferenciarte sola y vender en tu nombre. No funciona
+                                        as&iacute;. Y en esta clase te vamos a explicar exactamente por qu&eacute;.</p>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">&times;</span>
+                                    <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Esperas
+                                        inspiraci&oacute;n. Aqu&iacute; vas a encontrar diagn&oacute;stico,
+                                        demostraci&oacute;n y una decisi&oacute;n que tomar.</p>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quienes Lo Imparten -->
+            <section class="py-12 md:py-16 px-6 section-dark">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-14 uppercase tracking-wide">
+                        QUI&Eacute;NES LO <span class="font-serif italic normal-case text-primary">imparten</span>
+                    </h2>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
+
+                        <!-- Andy Molina -->
+                        <div class="text-center">
+                            <div
+                                class="w-36 h-36 md:w-44 md:h-44 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
+                                <img src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69dd01f6caf24b80a0e09200.png"
+                                    alt="Andy Molina" class="w-full h-full object-cover" />
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-serif font-bold mb-1 uppercase">Andy Molina</h3>
+                            <p class="text-primary font-medium text-sm mb-4 tracking-wide">Fundadora de Ovejas Voladoras
+                            </p>
+                            <p
+                                class="text-muted-foreground text-sm md:text-base leading-relaxed text-justify hyphens-auto">
+                                Autora de <em>La culpa no es del lunes</em>. Creadora del M&eacute;todo P+H=T.
+                                Era abogada en una de las mejores empresas de Colombia. Le ofrecieron triplicar su
+                                salario. Renunci&oacute;. Porque ten&iacute;a todo menos lo que importaba:
+                                prop&oacute;sito.
+                            </p>
+                            <p
+                                class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3 text-justify hyphens-auto">
+                                Hoy vive de ense&ntilde;ar lo que sabe. Ha acompa&ntilde;ado a cientos de personas a
+                                construir proyectos digitales reales desde su autenticidad. Sin
+                                f&oacute;rmulas copiadas de otro. Sin prometer atajos que no existen.
+                            </p>
+                            <p
+                                class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3 text-justify hyphens-auto">
+                                Cuando Andy habla de construir un negocio desde la autenticidad no lo hace desde la
+                                teor&iacute;a. Lo hace desde haber tomado exactamente la decisi&oacute;n que le
+                                est&aacute; pidiendo a otros que tomen.
+                            </p>
+                        </div>
+
+                        <!-- Cristhian Fonseca -->
+                        <div class="text-center">
+                            <div
+                                class="w-36 h-36 md:w-44 md:h-44 mx-auto mb-6 rounded-full overflow-hidden border-4 border-primary/20 shadow-xl">
+                                <img src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69dd01f602cd38b17c2def7f.png"
+                                    alt="Cristhian Fonseca" class="w-full h-full object-cover" />
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-serif font-bold mb-1 uppercase">Cristhian Fonseca</h3>
+                            <p class="text-primary font-medium text-sm mb-4 tracking-wide">Estratega &amp; Fundador de
+                                JoinsClee</p>
+                            <p
+                                class="text-muted-foreground text-sm md:text-base leading-relaxed text-justify hyphens-auto">
+                                Especialista en arquitectura de ofertas educativas y lanzamientos de comunidades en
+                                espa&ntilde;ol.
+                            </p>
+                            <p
+                                class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3 text-justify hyphens-auto">
+                                Ha construido el sistema detr&aacute;s de Ovejas Voladoras: la estrategia, la oferta, la
+                                infraestructura y los procesos que convierten conocimiento en negocio. Es el responsable
+                                de que lo que Andy ense&ntilde;a tenga la estructura para llegar al mercado y venderse.
+                            </p>
+                            <p
+                                class="text-muted-foreground text-sm md:text-base leading-relaxed mt-3 text-justify hyphens-auto">
+                                En esta clase Cristhian va a hacer algo que no se suele hacer en eventos gratuitos:
+                                mostrar en directo c&oacute;mo se construye una MiniApp funcional con IA, sin
+                                c&oacute;digo y sin equipo t&eacute;cnico.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <p class="text-center text-muted-foreground italic mt-10 text-base md:text-lg font-serif">
+                        Dos perspectivas. Una sola direcci&oacute;n: que salgas de esta clase con el diagn&oacute;stico
+                        claro, la soluci&oacute;n en la mano y la decisi&oacute;n tomada.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Recurso Exclusivo -->
+            <section class="py-12 md:py-16 px-6">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h2 class="text-2xl md:text-4xl font-serif font-bold mb-4 uppercase tracking-wide">
+                        RECURSO EXCLUSIVO <span class="font-serif italic normal-case text-primary">para
+                            registrados</span>
+                    </h2>
+
+                    <p class="text-lg md:text-xl font-bold text-foreground mb-6">HERRAMIENTAS PARA CREAR TU MINIAPP</p>
+
+                    <div
+                        class="space-y-4 text-base md:text-lg text-muted-foreground leading-relaxed text-left max-w-2xl mx-auto">
+                        <p>Antes de la clase vas a recibir acceso a un <strong class="text-foreground">Agente de IA
+                                entrenado</strong> con el m&eacute;todo que vamos a mostrar en directo.</p>
+                        <p>Este agente te va a guiar paso a paso para que durante la clase (mientras Cristhian construye
+                            la suya) t&uacute; empieces a construir la tuya.</p>
+                        <p>No necesitas saber de tecnolog&iacute;a. No necesitas haber hecho nada similar antes. Solo
+                            necesitas tener claro de qu&eacute; hablas y a qui&eacute;n ayudas.</p>
+                        <p class="font-semibold text-foreground">El agente hace el resto.</p>
+                        <p class="text-sm italic">Lo recibes &uacute;nicamente por el grupo de WhatsApp exclusivo del
+                            evento. M&aacute;s informaci&oacute;n en la siguiente p&aacute;gina despu&eacute;s de
+                            registrarte.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Horario -->
+            <section class="py-12 md:py-16 px-6 section-dark">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h2 class="text-2xl md:text-4xl font-serif font-bold mb-6 uppercase tracking-wide">
+                        HORARIO
+                    </h2>
+
+                    <div class="inline-flex flex-col items-center gap-1 mb-8">
+                        <p class="text-xs uppercase tracking-widest text-muted-foreground font-medium">Mi&eacute;rcoles
+                        </p>
+                        <p class="text-3xl md:text-5xl font-serif font-bold text-primary leading-none">29 DE ABRIL</p>
+                        <p class="text-xs uppercase tracking-widest text-muted-foreground font-medium mt-1">2026</p>
+                    </div>
+
+                    <p class="text-primary font-semibold text-sm uppercase tracking-widest mb-8">EN VIVO &middot; 2
+                        HORAS</p>
+
+                    <div
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5 text-sm md:text-base max-w-2xl mx-auto mb-10">
+                        <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                            <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Colombia</p>
+                            <p class="font-bold text-foreground text-sm md:text-base">7:00 PM</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                            <p class="text-[10px] md:text-xs text-muted-foreground mb-1">M&eacute;xico (CDMX)</p>
+                            <p class="font-bold text-foreground text-sm md:text-base">6:00 PM</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                            <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Argentina</p>
+                            <p class="font-bold text-foreground text-sm md:text-base">9:00 PM</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                            <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Chile</p>
+                            <p class="font-bold text-foreground text-sm md:text-base">9:00 PM</p>
+                        </div>
+                        <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                            <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Espa&ntilde;a</p>
+                            <p class="font-bold text-foreground text-sm md:text-base">1:00 AM <span
+                                    class="text-[9px] md:text-xs font-normal">(d&iacute;a sig.)</span></p>
+                        </div>
+                        <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
+                            <p class="text-[10px] md:text-xs text-muted-foreground mb-1">USA (Miami/NY)</p>
+                            <p class="font-bold text-foreground text-sm md:text-base">7:00 PM</p>
+                        </div>
+                        <div
+                            class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10 col-span-2 sm:col-span-1">
+                            <p class="text-[10px] md:text-xs text-muted-foreground mb-1">USA (Los &Aacute;ngeles)</p>
+                            <p class="font-bold text-foreground text-sm md:text-base">4:00 PM</p>
+                        </div>
+                    </div>
+
+                    <button onclick="openModal()"
+                        class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
+                        <span
+                            class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                        REG&Iacute;STRATE GRATIS
+                    </button>
+
+                    <p class="text-muted-foreground italic mt-8 text-sm md:text-base font-serif max-w-2xl mx-auto">
+                        La clase es gratuita. Es en vivo. Dura dos horas y no habr&aacute; repetici&oacute;n. Si llevas
+                        tiempo con el talento guardado esperando el momento correcto: este es.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="py-8 px-6 text-center">
+                <p class="text-[10px] md:text-xs text-muted-foreground leading-relaxed mb-6 max-w-4xl mx-auto">
+                    DESCARGO DE RESPONSABILIDAD: La informaci&oacute;n presentada en este evento es de car&aacute;cter
+                    educativo y formativo. Los resultados pueden variar seg&uacute;n la situaci&oacute;n individual de
+                    cada persona. Ovejas Voladoras y sus representantes no garantizan resultados espec&iacute;ficos.
+                    Este sitio no es parte del sitio web de Facebook&trade; o Facebook&trade; Inc. Adem&aacute;s, este
+                    sitio NO est&aacute; respaldado por Facebook&trade; de ninguna manera. FACEBOOK&trade; es una marca
+                    registrada de FACEBOOK&trade;, Inc.
                 </p>
-            </div>
-        </section>
-
-        <!-- Horario -->
-        <section class="py-12 md:py-16 px-6 bg-muted/50">
-            <div class="max-w-3xl mx-auto text-center">
-                <h2 class="text-2xl md:text-4xl font-serif font-bold mb-10 uppercase tracking-wide">
-                    HORARIO
-                </h2>
-
-                <p class="text-primary font-semibold text-sm uppercase tracking-widest mb-8">EN VIVO</p>
-
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5 text-sm md:text-base max-w-2xl mx-auto mb-10">
-                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
-                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Colombia</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">7:00 PM</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
-                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">M&eacute;xico (CDMX)</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">6:00 PM</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
-                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Argentina</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">9:00 PM</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
-                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Chile</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">9:00 PM</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
-                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Espa&ntilde;a</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">1:00 AM <span class="text-[9px] md:text-xs font-normal">(d&iacute;a sig.)</span></p>
-                    </div>
-                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10">
-                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">USA (Miami/NY)</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">7:00 PM</p>
-                    </div>
-                    <div class="bg-white rounded-xl p-3 md:p-4 shadow-sm border border-primary/10 col-span-2 sm:col-span-1">
-                        <p class="text-[10px] md:text-xs text-muted-foreground mb-1">USA (Los &Aacute;ngeles)</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">4:00 PM</p>
-                    </div>
+                <p class="text-sm text-muted-foreground mb-2">Copyright 2026 OVEJAS VOLADORAS | LA EVOLUCI&Oacute;N -
+                    All rights reserved.</p>
+                <div class="flex justify-center gap-4 text-xs text-muted-foreground underline underline-offset-4">
+                    <a href="#" class="hover:text-foreground transition-colors">Privacidad</a>
+                    <a href="#" class="hover:text-foreground transition-colors">T&eacute;rminos</a>
                 </div>
+            </footer>
 
-                <button onclick="openModal()"
-                    class="inline-flex items-center justify-center bg-primary text-primary-foreground hover:bg-primary/90 text-base md:text-lg px-8 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wider w-full sm:w-auto active:scale-95">
-                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
-                    QUIERO EVOLUCIONAR
-                </button>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="py-8 px-6 text-center">
-            <p class="text-[10px] md:text-xs text-muted-foreground leading-relaxed mb-6 max-w-4xl mx-auto">
-                DESCARGO DE RESPONSABILIDAD: La informaci&oacute;n presentada en este evento es de car&aacute;cter educativo y formativo. Los resultados pueden variar seg&uacute;n la situaci&oacute;n individual de cada persona. Ovejas Voladoras y sus representantes no garantizan resultados espec&iacute;ficos. Este sitio no es parte del sitio web de Facebook&trade; o Facebook&trade; Inc. Adem&aacute;s, este sitio NO est&aacute; respaldado por Facebook&trade; de ninguna manera. FACEBOOK&trade; es una marca registrada de FACEBOOK&trade;, Inc.
-            </p>
-            <p class="text-sm text-muted-foreground mb-2">Copyright 2026 OVEJAS VOLADORAS | LA EVOLUCI&Oacute;N - All rights reserved.</p>
-            <div class="flex justify-center gap-4 text-xs text-muted-foreground underline underline-offset-4">
-                <a href="#" class="hover:text-foreground transition-colors">Privacidad</a>
-                <a href="#" class="hover:text-foreground transition-colors">T&eacute;rminos</a>
-            </div>
-        </footer>
+        </div><!-- fin main-content -->
 
     </div>
 
     <script>
-        // VSL play/pause
-        (function () {
-            var overlay = document.getElementById('playOverlay');
-            var video = document.getElementById('videoHero');
-            if (overlay && video) {
-                overlay.addEventListener('click', function () {
-                    overlay.classList.add('hidden');
-                    video.muted = false;
-                    video.controls = true;
-                    video.currentTime = 0;
-                    video.play();
-                });
-                video.addEventListener('pause', function () { overlay.classList.remove('hidden'); });
-            }
-        })();
-
         // Modal
         var modal = document.getElementById('registration-modal');
         function openModal() { modal.classList.add('active'); document.body.style.overflow = 'hidden'; }
         function closeModal() { modal.classList.remove('active'); document.body.style.overflow = 'auto'; }
         modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeModal(); });
+
+        // Countdown - 29 de abril 2026, 7:00 PM Colombia (UTC-5)
+        (function () {
+            var target = new Date('2026-04-30T00:00:00Z').getTime(); // 7PM COL = 00:00 UTC del 30
+            var daysEl = document.getElementById('cd-days');
+            var hoursEl = document.getElementById('cd-hours');
+            var minsEl = document.getElementById('cd-mins');
+            var secsEl = document.getElementById('cd-secs');
+
+            function pad(n) { return String(n).padStart(2, '0'); }
+
+            function update() {
+                var now = Date.now();
+                var diff = target - now;
+
+                if (diff <= 0) {
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minsEl.textContent = '00';
+                    secsEl.textContent = '00';
+                    var bt = document.querySelector('.banner-text');
+                    if (bt) bt.textContent = 'La clase ya comenzo';
+                    return;
+                }
+
+                var d = Math.floor(diff / 86400000);
+                var h = Math.floor((diff % 86400000) / 3600000);
+                var m = Math.floor((diff % 3600000) / 60000);
+                var s = Math.floor((diff % 60000) / 1000);
+
+                daysEl.textContent = pad(d);
+                hoursEl.textContent = pad(h);
+                minsEl.textContent = pad(m);
+                secsEl.textContent = pad(s);
+            }
+
+            update();
+            setInterval(update, 1000);
+        })();
     </script>
 
 </body>

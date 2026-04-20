@@ -646,7 +646,7 @@
 
     .fm-row {
       display: grid;
-      grid-template-columns: 1fr 80px 32px;
+      grid-template-columns: 1fr 80px 60px 32px;
       gap: 8px;
       align-items: center;
       padding: 8px 0;
@@ -729,13 +729,32 @@
       line-height: 1.4;
     }
 
+    .fm-row-header {
+      border-bottom: 1.5px solid var(--border) !important;
+      padding: 0 0 6px !important;
+    }
+
+    .fm-row-header span {
+      font-size: .7rem;
+      font-weight: 700;
+      color: var(--texto-suave);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+    }
+
+    .fm-row-header span:nth-child(2),
+    .fm-row-header span:nth-child(3) {
+      text-align: center;
+    }
+
     .fm-gram-col {
       font-family: 'Outfit', sans-serif;
       font-weight: 600;
-      font-size: .85rem;
-      color: var(--negro);
+      font-size: .8rem;
+      color: var(--verde-hover);
       text-align: center;
-      min-width: 50px;
+      min-width: 45px;
+      white-space: nowrap;
     }
 
     /* ─── COLLECTION SUMMARY ─── */
@@ -1187,7 +1206,7 @@
       }
 
       .fm-row {
-        grid-template-columns: 1fr 70px 28px;
+        grid-template-columns: 1fr 65px 50px 28px;
       }
 
       .fm-phase {
@@ -1331,7 +1350,7 @@
   <div class="top-bar">SAVIAS · HERRAMIENTAS DE COSMÉTICA ARTESANAL</div>
   <div class="app-header">
     <div class="brand">
-      <div class="brand-icon">🍃</div>
+      <div class="brand-icon" style="background:transparent;border:none;padding:0;overflow:hidden;"><img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="Lina Toro" style="width:100%;height:100%;object-fit:contain;border-radius:10px;"></div>
       <div>
         <h1>Herramientas Savias</h1>
         <span>Tu laboratorio digital de <em>cosmética artesanal</em></span>
@@ -1536,6 +1555,8 @@
               <option value="shampoo-solido">Shampoo sólido</option>
               <option value="locion-corporal">Loción corporal ligera</option>
               <option value="exfoliante">Exfoliante corporal</option>
+              <option value="limpiador-polvo">Limpiador facial en polvo</option>
+              <option value="limpiador-polvo-enzimatico">Limpiador facial en polvo (enzimático)</option>
               <option value="jabon-cp">Jabón Cold Process</option>
             </select>
           </div>
@@ -1556,7 +1577,7 @@
               </div>
               <div class="field">
                 <label>Tamaño del lote (gramos)</label>
-                <input type="number" id="fm-batch-size" value="100" min="10" max="10000">
+                <input type="number" id="fm-batch-size" value="100" min="10" max="10000" oninput="fmRecalcTotal()">
               </div>
             </div>
 
@@ -1627,6 +1648,7 @@
             <option value="manchas">Manchas e hiperpigmentación</option>
             <option value="seca">Piel seca y deshidratada</option>
             <option value="sensible">Piel sensible y reactiva</option>
+            <option value="normal-mixta">Piel normal / mixta</option>
           </select>
         </div>
       </div>
@@ -2098,6 +2120,41 @@
         pasos: ['Derretir aceite de coco si está sólido.','Mezclar aceites y vitamina E.','Incorporar el exfoliante gradualmente.','Agregar aceite esencial.','Envasar en tarro de boca ancha.'],
         consejo: 'Azúcar = piel sensible (se disuelve). Sal = exfoliación intensa. Café = anticelulítico.'
       },
+      'limpiador-polvo': {
+        nombre: 'Limpiador Facial en Polvo', tipo: 'Polvo limpiador (sin agua)', dificultad: 'Básica',
+        descripcion: 'Limpiador suave en polvo que se activa con agua al momento de usar. Sin conservantes. Mezclar en seco.',
+        fases: [
+          { id:'base', nombre:'Ingredientes', nota:'Mezclar todos los polvos en seco — tamizar para homogeneizar', color:'#fce4ec',
+            sugeridos: [
+              { nombre:'Fécula de maíz', pct:40, hint:'Base suavizante' },
+              { nombre:'Caolín', pct:35, hint:'Arcilla limpiadora suave' },
+              { nombre:'SCI (Sodium Cocoyl Isethionate)', pct:20, hint:'Tensioactivo suave, espuma' },
+              { nombre:'Polvo de rosas', pct:5, hint:'Calmante y aroma natural' }
+            ],
+            opciones: ['SCI (Sodium Cocoyl Isethionate)','Fécula de maíz','Caolín','Arcilla blanca','Arcilla rosa','Polvo de rosas','Polvo de avena','Polvo de manzanilla','Leche en polvo','Almidón de arroz','Carbón activado','Mica cosmética']
+          }
+        ],
+        pasos: ['Pesar cada ingrediente por separado.','Tamizar el caolín y la fécula para eliminar grumos.','Rallar o triturar el SCI en polvo fino (usar mascarilla).','Mezclar todos los polvos en un bowl.','Tamizar la mezcla completa 2-3 veces para homogeneizar.','Envasar en tarro con tapa.'],
+        consejo: 'Para usar: tomar una cucharadita en la palma, agregar unas gotas de agua, frotar y aplicar en el rostro. Enjuagar con agua tibia.'
+      },
+      'limpiador-polvo-enzimatico': {
+        nombre: 'Limpiador Facial en Polvo (Enzimático)', tipo: 'Polvo limpiador enzimático (sin agua)', dificultad: 'Básica',
+        descripcion: 'Limpiador en polvo con papaína (enzima de papaya) para exfoliación enzimática suave. Ideal para luminosidad y renovación celular.',
+        fases: [
+          { id:'base', nombre:'Ingredientes', nota:'Mezclar todos los polvos en seco — tamizar para homogeneizar', color:'#fce4ec',
+            sugeridos: [
+              { nombre:'Fécula de maíz', pct:35, hint:'Base suavizante' },
+              { nombre:'Caolín', pct:30, hint:'Arcilla limpiadora suave' },
+              { nombre:'SCI (Sodium Cocoyl Isethionate)', pct:20, hint:'Tensioactivo suave, espuma' },
+              { nombre:'Polvo de rosas', pct:10, hint:'Calmante y aroma natural' },
+              { nombre:'Papaína', pct:5, hint:'Enzima exfoliante (de papaya)' }
+            ],
+            opciones: ['SCI (Sodium Cocoyl Isethionate)','Fécula de maíz','Caolín','Arcilla blanca','Arcilla rosa','Polvo de rosas','Papaína','Bromelina','Polvo de avena','Polvo de manzanilla','Leche en polvo','Almidón de arroz','Carbón activado','Mica cosmética']
+          }
+        ],
+        pasos: ['Pesar cada ingrediente por separado.','Tamizar el caolín y la fécula para eliminar grumos.','Rallar o triturar el SCI en polvo fino (usar mascarilla).','Mezclar todos los polvos EXCEPTO la papaína.','Tamizar la mezcla 2-3 veces para homogeneizar.','Agregar la papaína al final y mezclar suavemente (no tamizar — es delicada).','Envasar en tarro con tapa hermética.'],
+        consejo: 'La papaína es una enzima sensible al calor — nunca calentar. Al activarse con agua tibia, exfolia suavemente disolviendo células muertas. Usar 1-2 veces por semana. Para uso diario, elegir la versión sin enzima.'
+      },
       'jabon-cp': {
         nombre: 'Jabón Cold Process', tipo: 'Saponificación en frío', dificultad: 'Avanzada',
         descripcion: 'Jabón artesanal real por saponificación. Requiere NaOH (sosa cáustica) — usar con precaución y EPP.',
@@ -2146,6 +2203,8 @@
       document.getElementById('fm-info-title').textContent = fmCurrentProduct.nombre + ' — ' + fmCurrentProduct.tipo;
       document.getElementById('fm-info-desc').textContent = fmCurrentProduct.descripcion + ' Dificultad: ' + fmCurrentProduct.dificultad + '.';
       info.style.display = 'block';
+      // Limpiar fases previas para que se reconstruyan con el nuevo producto
+      document.getElementById('fm-phases-container').innerHTML = '';
     }
 
     function fmGoStep(step) {
@@ -2181,6 +2240,7 @@
         html += '<div class="fm-phase-pct" id="fm-phase-pct-' + fi + '">0%</div>';
         html += '</div>';
         if (fase.nota) html += '<p class="fm-phase-note">' + fase.nota + '</p>';
+        html += '<div class="fm-row fm-row-header"><span>Ingrediente</span><span>%</span><span>Gramos</span><span></span></div>';
         html += '<div id="fm-rows-' + fi + '">';
 
         // Pre-populate with suggested ingredients
@@ -2215,6 +2275,7 @@
       if (hint) h += '<div class="fm-row-hint">' + hint + '</div>';
       h += '</div>';
       h += '<input type="number" value="' + (pct || 0) + '" min="0" max="100" step="0.1" oninput="fmRecalcTotal()" style="width:80px">';
+      h += '<span class="fm-gram-col" id="fm-gram-' + rowId + '">0g</span>';
       h += '<button class="fm-remove-btn" onclick="fmRemoveRow(' + rowId + ')" title="Eliminar">&times;</button>';
       h += '</div>';
       return h;
@@ -2252,6 +2313,7 @@
     }
 
     function fmRecalcTotal() {
+      if (!fmCurrentProduct) return;
       var grandTotal = 0;
       var batchSize = parseFloat(document.getElementById('fm-batch-size').value) || 100;
 
@@ -2260,7 +2322,11 @@
         var rows = document.querySelectorAll('#fm-rows-' + fi + ' .fm-row');
         rows.forEach(function(row) {
           var inp = row.querySelector('input[type=number]');
-          phaseTotal += parseFloat(inp.value) || 0;
+          var pctVal = parseFloat(inp.value) || 0;
+          phaseTotal += pctVal;
+          var rowId = row.id.replace('fm-row-', '');
+          var gramEl = document.getElementById('fm-gram-' + rowId);
+          if (gramEl) gramEl.textContent = (pctVal / 100 * batchSize).toFixed(1) + 'g';
         });
         grandTotal += phaseTotal;
         var el = document.getElementById('fm-phase-pct-' + fi);
@@ -2454,12 +2520,24 @@
         ],
         activos: ['Centella asiática', 'Bisabolol', 'Avena coloidal', 'Pantenol', 'Escualano'],
         evitar: ['Fragancias', 'Colorantes', 'Alcohol denat.', 'Ácidos en alta concentración', 'Retinol sin adaptación']
+      },
+      'normal-mixta': {
+        titulo: 'Piel Normal / Mixta',
+        descripcion: 'Rutina equilibrada para mantener la piel sana, controlar el brillo en zona T y nutrir las áreas secas.',
+        productos: [
+          { nombre: 'Limpiador facial en polvo de rosas y caolín', tipo: 'Limpiador', formuladorKey: 'limpiador-polvo-enzimatico', ingredientes: 'SCI, fécula de maíz, caolín, polvo de rosas, papaína', porque: 'Limpieza suave que equilibra sin resecar ni engrasar — se activa con agua al momento de usar' },
+          { nombre: 'Tónico equilibrante de rosa y hamamelis', tipo: 'Tónico', ingredientes: 'Hidrolato de rosa, hidrolato de hamamelis, glicerina, alantoína', porque: 'Equilibra el pH, cierra poros en zona T y calma las áreas secas' },
+          { nombre: 'Sérum ligero de niacinamida + hialurónico', tipo: 'Tratamiento', ingredientes: 'Niacinamida 4%, ácido hialurónico, pantenol, extracto de centella', porque: 'Regula sebo en zona T, hidrata sin engrasar y mejora la textura general' },
+          { nombre: 'Crema hidratante ligera de jojoba', tipo: 'Hidratante', ingredientes: 'Aceite de jojoba, aloe vera, escualano, vitamina E', porque: 'El jojoba imita el sebo natural — hidrata zonas secas sin saturar la zona T' }
+        ],
+        activos: ['Niacinamida', 'Aceite de jojoba', 'Ácido hialurónico', 'Centella asiática', 'Aloe vera'],
+        evitar: ['Productos muy grasos en toda la cara', 'Limpiadores agresivos con sulfatos', 'Exceso de exfoliación']
       }
     };
 
     // Mapeo de tipo de producto SkinSolver → clave del Formulador
     var skinToFormuladorMap = {
-      'Limpiador': 'jabon-cp',
+      'Limpiador': 'limpiador-polvo',
       'Tónico': 'serum-facial',
       'Tratamiento': 'serum-facial',
       'Hidratante': 'crema-facial',
@@ -2523,7 +2601,7 @@
       html += '<div class="pdf-section-label">Línea de Productos Sugerida</div>';
       html += '<p style="font-size:.78rem;color:var(--verde-hover);margin-bottom:10px;font-style:italic">Haz clic en un producto para ir al Formulador con el paso a paso</p>';
       d.productos.forEach(function(p, i) {
-        var fKey = skinToFormuladorMap[p.tipo] || 'crema-facial';
+        var fKey = p.formuladorKey || skinToFormuladorMap[p.tipo] || 'crema-facial';
         var escapedName = p.nombre.replace(/'/g, "\\'");
         html += '<div class="pdf-product clickable-product" onclick="goToFormulador(\'' + fKey + '\', \'' + escapedName + '\')">';
         html += '<div class="pdf-product-num">' + (i + 1) + '</div>';

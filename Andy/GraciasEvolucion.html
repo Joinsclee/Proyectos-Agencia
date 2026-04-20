@@ -155,6 +155,100 @@
             border-radius: 2px;
         }
 
+        /* ── Calendario Evolucion ── */
+        .evo-cal-border-card {
+            border-radius: 1.5rem;
+            background: white;
+            border: 1.5px solid hsl(38, 43%, 85%);
+            box-shadow: 0 4px 24px hsl(38, 43%, 60% / 0.08);
+        }
+
+        .evo-cal-day-event {
+            background-color: hsl(38, 43%, 60%);
+            color: hsl(0, 0%, 10%);
+            border-radius: 0.5rem;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            box-shadow: 0 5px 15px -3px hsl(38, 43%, 60% / 0.45);
+            display: block;
+            font-weight: 700;
+        }
+
+        .evo-cal-wrapper:hover .evo-cal-day-event {
+            transform: scale(1.12);
+            background-color: hsl(38, 43%, 50%);
+            z-index: 20;
+            box-shadow: 0 10px 25px -5px hsl(38, 43%, 60% / 0.6);
+        }
+
+        .evo-cal-day-normal {
+            color: #374151;
+            border-radius: 0.5rem;
+        }
+
+        .evo-cal-tooltip {
+            position: absolute;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fff;
+            color: #1a1a1a;
+            border: 1px solid hsl(38, 43%, 85%);
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: max-content;
+            max-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s ease;
+            z-index: 100;
+            box-shadow: 0 10px 30px hsl(38, 43%, 60% / 0.15);
+            pointer-events: none;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .evo-cal-wrapper:hover .evo-cal-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        .evo-cal-wrapper.tooltip-active .evo-cal-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-4px);
+        }
+
+        /* Smart tooltip: left-edge columns */
+        .evo-cal-wrapper[data-col="0"] .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="1"] .evo-cal-tooltip {
+            left: 0; transform: translateX(0);
+        }
+        .evo-cal-wrapper[data-col="0"]:hover .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="1"]:hover .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="0"].tooltip-active .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="1"].tooltip-active .evo-cal-tooltip {
+            transform: translateX(0) translateY(-4px);
+        }
+
+        /* Smart tooltip: right-edge columns */
+        .evo-cal-wrapper[data-col="5"] .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="6"] .evo-cal-tooltip {
+            left: auto; right: 0; transform: translateX(0);
+        }
+        .evo-cal-wrapper[data-col="5"]:hover .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="6"]:hover .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="5"].tooltip-active .evo-cal-tooltip,
+        .evo-cal-wrapper[data-col="6"].tooltip-active .evo-cal-tooltip {
+            transform: translateX(0) translateY(-4px);
+        }
+
+        @media (max-width: 400px) {
+            .evo-cal-border-card { padding: 1rem 0.625rem !important; }
+        }
+
         html, body { max-width: 100%; overflow-x: hidden; }
 
         section {
@@ -191,7 +285,8 @@
 
 <body>
     <!-- Confetti Canvas -->
-    <canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+    <canvas id="confetti-canvas"
+        style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
 
     <div class="min-h-screen selection:bg-primary/30">
 
@@ -202,7 +297,10 @@
                     <!-- Step 1 - Done -->
                     <div class="flex flex-col items-center gap-1.5">
                         <div class="step-circle done">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
                         </div>
                         <span class="text-xs text-muted-foreground font-medium">Registro</span>
                     </div>
@@ -223,114 +321,298 @@
             <div class="max-w-3xl mx-auto text-center">
 
                 <!-- Badge -->
-                <span class="inline-block px-4 py-1.5 text-xs font-medium tracking-widest text-primary border border-primary/30 rounded-full uppercase bg-primary/5 mb-6">
-                    PASO 2/2 PARA COMPLETAR TU REGISTRO
+                <span
+                    class="inline-block px-4 py-1.5 text-xs font-medium tracking-widest text-primary border border-primary/30 rounded-full uppercase bg-primary/5 mb-6">
+                    PASO 2/2 &middot; COMPLETA TU REGISTRO AHORA
                 </span>
 
                 <!-- Titulo -->
-                <h1 class="text-3xl md:text-5xl lg:text-6xl font-serif font-bold text-foreground leading-tight mb-8 uppercase">
-                    LA EVOLUCI&Oacute;N
-                </h1>
+                <img src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69debdbe190683601a2ebf3f.png"
+                    alt="La Evolución - Masterclass por Andy & Cristhian"
+                    class="mx-auto mb-6 w-full max-w-[320px] md:max-w-[440px] lg:max-w-[520px] h-auto">
+
+                <!-- Subheadline -->
+                <p class="text-lg md:text-2xl font-semibold text-foreground/85 max-w-2xl mx-auto mb-2 leading-snug">
+                    Lo que viene ahora es lo que va a marcar la diferencia entre los que lleguen a la clase y salgan con algo, y los que lleguen, escuchen y vuelvan a casa igual.
+                </p>
 
                 <!-- VSL -->
                 <div class="vsl-container my-6 md:my-8 max-w-2xl mx-auto">
                     <div class="vsl-play-overlay" id="playOverlay">
                         <div class="vsl-play-btn">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="hsl(38 43% 60%)"><polygon points="5,3 19,12 5,21"/></svg>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="hsl(38 43% 60%)">
+                                <polygon points="5,3 19,12 5,21" />
+                            </svg>
                         </div>
                     </div>
-                    <video id="videoGracias" autoplay muted playsinline controlsList="nodownload" oncontextmenu="return false;">
-                        <source src="" type="video/mp4">
+                    <video id="videoGracias" autoplay muted loop playsinline preload="auto"
+                        controlsList="nodownload noremoteplayback noplaybackrate" disablepictureinpicture
+                        oncontextmenu="return false;">
+                        <source src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69e003492b7a6ecd79e6c722.mp4" type="video/mp4">
                         Tu navegador no soporta la reproducci&oacute;n de video.
                     </video>
                 </div>
 
                 <!-- CTA WhatsApp -->
-                <a href="#"
+                <a href="https://group.wha.link/bk6lra" target="_blank" rel="noopener"
                     class="inline-flex items-center justify-center gap-2 md:gap-3 bg-whatsapp hover:bg-whatsapp-dark text-white text-sm md:text-lg px-6 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wide md:tracking-wider mt-4 shadow-lg w-full sm:w-auto active:scale-95">
-                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                    <span
+                        class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
                     <!-- WhatsApp icon -->
-                    <svg class="w-5 h-5 md:w-[22px] md:h-[22px] flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    <svg class="w-5 h-5 md:w-[22px] md:h-[22px] flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
                     UNIRME AL GRUPO DE WHATSAPP
                 </a>
-                <p class="text-xs md:text-sm text-muted-foreground italic mt-3">El acceso a los materiales exclusivos llega &uacute;nicamente por aqu&iacute;</p>
+                <p class="text-xs md:text-sm text-muted-foreground italic mt-3">El acceso a los materiales exclusivos
+                    llega &uacute;nicamente por aqu&iacute;</p>
+            </div>
+        </section>
+
+        <!-- Por qué el grupo no es opcional -->
+        <section class="py-12 md:py-16 px-6">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-10 uppercase tracking-wide leading-snug">
+                    POR QU&Eacute; EL GRUPO DE WHATSAPP <span class="font-serif italic normal-case text-primary">no es opcional</span>
+                </h2>
+                <div class="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
+                    <p>La mayor&iacute;a de los eventos gratuitos te mandan un enlace por email el d&iacute;a del evento. Eso es todo.</p>
+                    <p class="font-semibold text-foreground">Este no funciona as&iacute;.</p>
+                    <p>El enlace de acceso a la clase no llega por email. Llega exclusivamente por el grupo de WhatsApp que creamos para esta edici&oacute;n. <strong>Sin grupo, sin acceso a la clase.</strong></p>
+                    <p>Pero eso es lo de menos.</p>
+                    <p>Lo que realmente cambia lo que vas a sacar de estas dos horas llega tambi&eacute;n por ese canal. Y es lo que va a hacer que llegues preparado para trabajar, no a escuchar.</p>
+                </div>
             </div>
         </section>
 
         <!-- Lo que recibes en WhatsApp -->
         <section class="py-12 md:py-16 px-6 bg-muted/50">
             <div class="max-w-3xl mx-auto">
-                <h2 class="text-lg md:text-3xl font-serif font-bold text-center mb-10 md:mb-12 uppercase tracking-wide leading-snug">
-                    LO QUE RECIBES &Uacute;NICAMENTE EN EL <span class="font-serif italic normal-case text-primary">grupo de WhatsApp</span>
+                <h2
+                    class="text-lg md:text-3xl font-serif font-bold text-center mb-10 md:mb-12 uppercase tracking-wide leading-snug">
+                    LO QUE RECIBES &Uacute;NICAMENTE EN EL <span
+                        class="font-serif italic normal-case text-primary">grupo de WhatsApp</span>
                 </h2>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
 
-                    <!-- Guias -->
-                    <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-primary/10">
+                    <!-- Agente Constructor MiniApp (destacado) -->
+                    <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border-2 border-primary/40 md:col-span-2 relative">
                         <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="10" rx="2" />
+                                <circle cx="12" cy="5" r="2" />
+                                <path d="M12 7v4" />
+                                <line x1="8" y1="16" x2="8" y2="16" />
+                                <line x1="16" y1="16" x2="16" y2="16" />
+                            </svg>
                         </div>
-                        <h3 class="font-semibold text-foreground text-base md:text-lg mb-2">Gu&iacute;as exclusivas de preparaci&oacute;n</h3>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Documentos concretos para que llegues con tu oferta ya pensada, no con la idea en la cabeza.</p>
+                        <h3 class="font-semibold text-foreground text-base md:text-lg mb-2">Agente Constructor de tu MiniApp</h3>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed mb-2">La herramienta de IA entrenada con el m&eacute;todo que vamos a mostrar en directo. &Uacute;sala durante la clase para construir tu propia MiniApp mientras Cristhian construye la suya en pantalla. <strong>Sin c&oacute;digo. Sin experiencia previa.</strong> Solo necesitas saber de qu&eacute; hablas y a qui&eacute;n ayudas.</p>
+                        <p class="text-foreground italic text-sm md:text-base font-medium">Este es el recurso m&aacute;s valioso que vas a recibir antes de la clase. Ll&eacute;valo preparado.</p>
                     </div>
 
-                    <!-- IA -->
+                    <!-- Guias de diagnostico -->
                     <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-primary/10">
                         <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                            </svg>
                         </div>
-                        <h3 class="font-semibold text-foreground text-base md:text-lg mb-2">Asistentes de IA entrenados para ti</h3>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Herramientas dise&ntilde;adas para que en minutos tengas claridad sobre tu nicho, tu promesa y tu diferenciador. Sin pantalla en blanco. Sin par&aacute;lisis.</p>
+                        <h3 class="font-semibold text-foreground text-base md:text-lg mb-2">Gu&iacute;as de diagn&oacute;stico de oferta</h3>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Documentos concretos para que llegues a la clase con tu situaci&oacute;n ya analizada, no con la idea flotando en la cabeza. Cu&aacute;l es tu modelo actual, d&oacute;nde est&aacute; el bloqueo espec&iacute;fico y qu&eacute; tipo de MiniApp encajar&iacute;a mejor con lo que t&uacute; haces.</p>
                     </div>
 
                     <!-- Pildoras -->
                     <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-primary/10">
                         <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="23 7 16 12 23 17 23 7" />
+                                <rect width="15" height="14" x="1" y="5" rx="2" ry="2" />
+                            </svg>
                         </div>
                         <h3 class="font-semibold text-foreground text-base md:text-lg mb-2">P&iacute;ldoras pregrabadas de Andy y Cristhian</h3>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Videos cortos que se van desbloqueando antes del evento. Cada uno con un prop&oacute;sito: que llegues preparado para trabajar, no para escuchar.</p>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">Videos cortos que se van desbloqueando en los d&iacute;as previos al evento. Cada uno tiene un solo objetivo: que cuando llegues a la clase no llegues desde cero. Llegues con contexto. Llegues con preguntas reales. Llegues listo para aplicar, no para consumir.</p>
                     </div>
 
                     <!-- Acceso directo -->
                     <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-primary/10">
                         <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
                         </div>
                         <h3 class="font-semibold text-foreground text-base md:text-lg mb-2">Acceso directo el d&iacute;a de la clase</h3>
-                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">El enlace para entrar en vivo llega solo por WhatsApp. Sin grupo, sin clase.</p>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">El enlace para entrar en vivo llega &uacute;nicamente por este canal. No por email. No en la confirmaci&oacute;n de registro. Solo por WhatsApp, el d&iacute;a de la clase, a la hora del evento.</p>
+                    </div>
+
+                    <!-- Privacidad total -->
+                    <div class="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-primary/10">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="hsl(38 43% 60%)"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-foreground text-base md:text-lg mb-2">Privacidad total</h3>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed">El grupo es exclusivo para registrados. Solo hablan Andy, Cristhian y el equipo. Tu n&uacute;mero nadie lo ve. No hay spam. No hay notificaciones de otros miembros. Solo lo que necesitas, cuando lo necesitas.</p>
                     </div>
 
                 </div>
 
-                <!-- Nota de privacidad -->
-                <p class="text-center text-muted-foreground italic text-sm mt-10 max-w-xl mx-auto leading-relaxed">
-                    El grupo es exclusivo para registrados. Solo hablan Andy, Cristhian y el equipo. Nadie ve tu n&uacute;mero. No hay spam. Solo lo que necesitas para aprovechar esta clase al m&aacute;ximo.
+                <!-- Nota clave -->
+                <p class="text-center text-foreground italic text-sm md:text-base mt-10 max-w-2xl mx-auto leading-relaxed font-medium">
+                    Si no entras al grupo ahora, no recibes el Agente Constructor, ni las gu&iacute;as, ni las p&iacute;ldoras, ni el enlace del evento. Todo llega por aqu&iacute; y solo por aqu&iacute;.
                 </p>
 
                 <!-- CTA WhatsApp -->
                 <div class="text-center mt-8">
-                    <a href="#"
+                    <a href="https://group.wha.link/bk6lra" target="_blank" rel="noopener"
                         class="inline-flex items-center justify-center gap-2 md:gap-3 bg-whatsapp hover:bg-whatsapp-dark text-white text-sm md:text-lg px-6 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wide md:tracking-wider shadow-lg w-full sm:w-auto active:scale-95">
-                        <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
-                        <svg class="w-5 h-5 md:w-[22px] md:h-[22px] flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                        <span
+                            class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                        <svg class="w-5 h-5 md:w-[22px] md:h-[22px] flex-shrink-0" viewBox="0 0 24 24"
+                            fill="currentColor">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
                         UNIRME AL GRUPO DE WHATSAPP
                     </a>
                 </div>
             </div>
         </section>
 
-        <!-- Horario -->
+        <!-- Qué pasa exactamente en el grupo -->
         <section class="py-12 md:py-16 px-6">
-            <div class="max-w-3xl mx-auto text-center">
-                <h2 class="text-xl md:text-3xl font-serif font-bold mb-8 uppercase tracking-wide">
-                    HORARIO DE LA <span class="font-serif italic normal-case text-primary">clase</span>
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-6 uppercase tracking-wide leading-snug">
+                    &iquest;QU&Eacute; PASA EXACTAMENTE <span class="font-serif italic normal-case text-primary">en el grupo?</span>
+                </h2>
+                <div class="space-y-4 text-base md:text-lg text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
+                    <p>El grupo no es un canal de difusi&oacute;n con frases motivacionales y emojis de fuego.</p>
+                    <p>Es el espacio donde en los d&iacute;as previos a la clase vamos preparando el terreno para que el evento sea de verdad productivo.</p>
+                </div>
+
+                <div class="space-y-5 max-w-2xl mx-auto">
+                    <div class="flex items-start gap-4 md:gap-5 bg-white rounded-2xl p-5 md:p-6 border border-primary/10 shadow-sm">
+                        <span class="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs uppercase tracking-tight leading-none text-center">D&iacute;a<br>1</span>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed"><strong class="text-foreground">D&iacute;a 1 post-registro:</strong> recibes el Agente Constructor de tu MiniApp con instrucciones de c&oacute;mo usarlo antes y durante la clase.</p>
+                    </div>
+                    <div class="flex items-start gap-4 md:gap-5 bg-white rounded-2xl p-5 md:p-6 border border-primary/10 shadow-sm">
+                        <span class="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs uppercase tracking-tight leading-none text-center">D&iacute;as<br>2&amp;3</span>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed"><strong class="text-foreground">D&iacute;as 2 y 3:</strong> se desbloquean las primeras p&iacute;ldoras de Andy y Cristhian con el diagn&oacute;stico del mercado y las preguntas que tienes que hacerte antes de llegar.</p>
+                    </div>
+                    <div class="flex items-start gap-4 md:gap-5 bg-white rounded-2xl p-5 md:p-6 border border-primary/10 shadow-sm">
+                        <span class="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs uppercase tracking-tight leading-none text-center">D&iacute;a<br>4</span>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed"><strong class="text-foreground">D&iacute;a 4:</strong> recibes la gu&iacute;a de diagn&oacute;stico de tu oferta actual para que llegues con claridad sobre d&oacute;nde est&aacute; el problema espec&iacute;fico en tu caso.</p>
+                    </div>
+                    <div class="flex items-start gap-4 md:gap-5 bg-white rounded-2xl p-5 md:p-6 border-2 border-primary/40 shadow-sm">
+                        <span class="flex-shrink-0 w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px] uppercase tracking-tight leading-none text-center">EN<br>VIVO</span>
+                        <p class="text-muted-foreground text-sm md:text-base leading-relaxed"><strong class="text-foreground">El d&iacute;a de la clase:</strong> el enlace de acceso en vivo llega por aqu&iacute;, a la hora del evento. <strong class="text-foreground">Sin grupo, sin acceso.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Un mensaje de Andy -->
+        <section class="py-12 md:py-16 px-6 bg-muted/50">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="text-2xl md:text-4xl font-serif font-bold text-center mb-10 uppercase tracking-wide leading-snug">
+                    UN MENSAJE DE ANDY <span class="font-serif italic normal-case text-primary">antes de que entres</span>
                 </h2>
 
-                <p class="text-primary font-semibold text-sm uppercase tracking-widest mb-8">EN VIVO</p>
+                <div class="bg-white rounded-2xl p-6 md:p-10 shadow-sm border border-primary/10">
+                    <div class="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
+                        <p>Antes de que hagas clic en el bot&oacute;n quiero que sepas algo.</p>
+                        <p>Esta clase la hacemos porque creemos que el mercado est&aacute; en un momento de cambio real, y que la mayor&iacute;a de las personas que tienen conocimiento y vocaci&oacute;n de ense&ntilde;ar no tienen la informaci&oacute;n correcta sobre lo que est&aacute; pasando ni sobre lo que viene.</p>
+                        <p>No es una clase para vender. Bueno, s&iacute; hay una oferta al final. Una que tiene <strong class="text-foreground">20 plazas</strong> y que si es para ti vas a quererla. Pero la clase en s&iacute; es de verdad. Dos horas de trabajo real, diagn&oacute;stico honesto y una demostraci&oacute;n en vivo que no vas a ver en ning&uacute;n otro evento gratuito del mercado.</p>
+                        <p>Llega con preguntas reales. Con tu situaci&oacute;n real. Con el proyecto que llevas tiempo intentando construir.</p>
+                        <p class="font-semibold text-foreground">Eso es lo que hace que dos horas valgan m&aacute;s que cualquier curso que hayas comprado.</p>
+                        <p>Te veo dentro.</p>
+                        <p class="font-serif text-xl md:text-2xl text-foreground italic">Andy</p>
+                    </div>
+                </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5 text-sm md:text-base max-w-2xl mx-auto">
+                <!-- CTA WhatsApp -->
+                <div class="text-center mt-10">
+                    <a href="https://group.wha.link/bk6lra" target="_blank" rel="noopener"
+                        class="inline-flex items-center justify-center gap-2 md:gap-3 bg-whatsapp hover:bg-whatsapp-dark text-white text-sm md:text-lg px-6 md:px-10 py-4 md:py-5 rounded-full font-semibold transition-all duration-300 animate-button-bounce-soft hover:-translate-y-1 group relative overflow-hidden cursor-pointer uppercase tracking-wide md:tracking-wider shadow-lg w-full sm:w-auto active:scale-95">
+                        <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-[150%] group-hover:translate-x-[150%] transition-transform duration-1000 ease-in-out"></span>
+                        <svg class="w-5 h-5 md:w-[22px] md:h-[22px] flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                        UNIRME AL GRUPO DE WHATSAPP AHORA
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Calendario & Horarios -->
+        <section class="py-12 md:py-16 px-6">
+            <div class="max-w-3xl mx-auto">
+
+                <!-- Titulo -->
+                <div class="text-center mb-8">
+                    <p class="text-xs uppercase tracking-widest text-primary font-semibold mb-2">Tu agenda</p>
+                    <h2 class="text-xl md:text-3xl font-serif font-bold mb-1 uppercase tracking-wide">
+                        GUARDA ESTA <span class="font-serif italic normal-case text-primary">fecha</span>
+                    </h2>
+                    <p class="text-sm text-muted-foreground">Haz clic en el d&iacute;a para agregar a Google Calendar
+                    </p>
+                </div>
+
+                <!-- Calendario Abril 2026 -->
+                <div class="evo-cal-border-card p-5 md:p-7 mb-10">
+                    <div class="flex items-center justify-center mb-5">
+                        <h3 class="text-sm md:text-base uppercase tracking-widest text-primary font-bold">ABRIL 2026
+                        </h3>
+                    </div>
+                    <!-- Cabecera dias -->
+                    <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center">
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-primary">Lun
+                        </div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-primary">Mar
+                        </div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-primary">
+                            Mi&eacute;</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-primary">Jue
+                        </div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-primary">Vie
+                        </div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-primary">
+                            S&aacute;b</div>
+                        <div class="text-[10px] sm:text-xs font-bold uppercase tracking-widest py-1 text-primary">Dom
+                        </div>
+                    </div>
+                    <!-- Grid generado por JS -->
+                    <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center" id="evo-calendar-grid"></div>
+                    <!-- Leyenda -->
+                    <div class="mt-5 flex justify-center">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded" style="background: hsl(38, 43%, 60%);"></div>
+                            <span class="text-xs font-medium text-muted-foreground">D&iacute;a de la clase &middot; toca
+                                para agendar en Google Calendar</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horarios por pais -->
+                <div class="text-center mb-6">
+                    <p class="text-xs uppercase tracking-widest text-primary font-semibold mb-1">Horarios</p>
+                    <h3 class="text-lg md:text-2xl font-serif font-bold uppercase tracking-wide">&iquest;A QU&Eacute;
+                        HORA ES EN TU <span class="font-serif italic normal-case text-primary">pa&iacute;s</span>?</h3>
+                </div>
+
+                <div
+                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-5 text-sm md:text-base max-w-2xl mx-auto">
                     <div class="bg-muted/50 rounded-xl p-3 md:p-4 border border-primary/10">
                         <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Colombia</p>
                         <p class="font-bold text-foreground text-sm md:text-base">7:00 PM</p>
@@ -349,7 +631,8 @@
                     </div>
                     <div class="bg-muted/50 rounded-xl p-3 md:p-4 border border-primary/10">
                         <p class="text-[10px] md:text-xs text-muted-foreground mb-1">Espa&ntilde;a</p>
-                        <p class="font-bold text-foreground text-sm md:text-base">1:00 AM <span class="text-[9px] md:text-xs font-normal">(d&iacute;a sig.)</span></p>
+                        <p class="font-bold text-foreground text-sm md:text-base">1:00 AM <span
+                                class="text-[9px] md:text-xs font-normal">(d&iacute;a sig.)</span></p>
                     </div>
                     <div class="bg-muted/50 rounded-xl p-3 md:p-4 border border-primary/10">
                         <p class="text-[10px] md:text-xs text-muted-foreground mb-1">USA (Miami/NY)</p>
@@ -365,7 +648,8 @@
 
         <!-- Footer -->
         <footer class="py-8 px-6 text-center">
-            <p class="text-sm text-muted-foreground mb-2">Copyright 2026 OVEJAS VOLADORAS | LA EVOLUCI&Oacute;N - All rights reserved.</p>
+            <p class="text-sm text-muted-foreground mb-2">Copyright 2026 OVEJAS VOLADORAS | LA EVOLUCI&Oacute;N - All
+                rights reserved.</p>
             <div class="flex justify-center gap-4 text-xs text-muted-foreground underline underline-offset-4">
                 <a href="#" class="hover:text-foreground transition-colors">Privacidad</a>
                 <a href="#" class="hover:text-foreground transition-colors">T&eacute;rminos</a>
@@ -375,20 +659,99 @@
     </div>
 
     <script>
-        // VSL play/pause
+            // VSL play/pause
+            (function () {
+                var overlay = document.getElementById('playOverlay');
+                var video = document.getElementById('videoGracias');
+                if (overlay && video) {
+                    overlay.addEventListener('click', function () {
+                        overlay.classList.add('hidden');
+                        video.loop = false;
+                        video.muted = false;
+                        video.controls = true;
+                        video.currentTime = 0;
+                        var p = video.play();
+                        if (p && typeof p.catch === 'function') { p.catch(function () {}); }
+                    });
+                    video.addEventListener('pause', function () { overlay.classList.remove('hidden'); });
+                    video.addEventListener('ended', function () { overlay.classList.remove('hidden'); });
+                }
+            })();
+
+        /* ── Calendario Evolucion - Abril 2026 ── */
         (function () {
-            var overlay = document.getElementById('playOverlay');
-            var video = document.getElementById('videoGracias');
-            if (overlay && video) {
-                overlay.addEventListener('click', function () {
-                    overlay.classList.add('hidden');
-                    video.muted = false;
-                    video.controls = true;
-                    video.currentTime = 0;
-                    video.play();
-                });
-                video.addEventListener('pause', function () { overlay.classList.remove('hidden'); });
+            // TODO: Actualizar fecha cuando se defina. Actualmente: 24 de abril 2026
+            // Google Calendar link (7 PM Colombia = 00:00 UTC dia siguiente)
+            var gcalLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
+                + '&text=La+Evoluci%C3%B3n+%E2%80%93+Clase+en+Vivo+con+Andy+Molina+y+Cristhian+Fonseca'
+                + '&dates=20260429T000000Z%2F20260429T020000Z'
+                + '&details=Clase+online+gratuita.+C%C3%B3mo+vender+tu+conocimiento+en+la+era+de+la+IA.+Ovejas+Voladoras.'
+                + '&location=Online+%E2%80%93+Ovejas+Voladoras';
+
+            var events = {
+                29: { label: 'CLASE', title: 'La Evoluci\u00f3n en vivo', gcal: gcalLink }
+            };
+
+            // Abril 2026: 30 dias, empieza el miercoles (indice 2 en semana Lun-Dom)
+            var grid = document.getElementById('evo-calendar-grid');
+            if (!grid) return;
+            var startIndex = 2;
+            var daysInApril = 30;
+
+            for (var i = 0; i < startIndex; i++) {
+                var empty = document.createElement('div');
+                grid.appendChild(empty);
             }
+
+            for (var day = 1; day <= daysInApril; day++) {
+                var ev = events[day];
+                var col = (startIndex + day - 1) % 7;
+                var wrapper = document.createElement(ev ? 'a' : 'div');
+                wrapper.className = 'evo-cal-wrapper relative group';
+                wrapper.dataset.col = col;
+
+                if (ev) {
+                    wrapper.href = ev.gcal;
+                    wrapper.target = '_blank';
+                    wrapper.rel = 'noopener noreferrer';
+                    wrapper.innerHTML =
+                        '<div class="evo-cal-day-event" style="padding:0.35rem 0.2rem 0.3rem;">'
+                        + '<div class="text-xs sm:text-base font-bold leading-none">' + day + '</div>'
+                        + '<div style="font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.04em;opacity:0.88;line-height:1;margin-top:2px;" class="sm:text-[9px]">' + ev.label + '</div>'
+                        + '</div>'
+                        + '<div class="evo-cal-tooltip">'
+                        + '<div class="text-[10px] font-black uppercase mb-1" style="color:hsl(38,43%,60%);">\ud83d\udcc5 ' + ev.label + '</div>'
+                        + '<div class="text-xs font-bold text-gray-800 leading-snug">' + ev.title + '</div>'
+                        + '<div class="text-[10px] text-gray-400 mt-1">Toca para agendar \u2192</div>'
+                        + '</div>';
+
+                    wrapper.addEventListener('click', function (e) {
+                        var isTouchDevice = window.matchMedia('(hover: none)').matches;
+                        if (!isTouchDevice) return;
+                        if (!this.classList.contains('tooltip-active')) {
+                            e.preventDefault();
+                            document.querySelectorAll('.evo-cal-wrapper.tooltip-active').forEach(function (el) {
+                                el.classList.remove('tooltip-active');
+                            });
+                            this.classList.add('tooltip-active');
+                        }
+                    });
+                } else {
+                    wrapper.innerHTML = '<div class="evo-cal-day-normal" style="padding:0.5rem 0.2rem;">'
+                        + '<div class="text-xs sm:text-base">' + day + '</div>'
+                        + '</div>';
+                }
+
+                grid.appendChild(wrapper);
+            }
+
+            document.addEventListener('click', function (e) {
+                if (!e.target.closest('.evo-cal-wrapper')) {
+                    document.querySelectorAll('.evo-cal-wrapper.tooltip-active').forEach(function (el) {
+                        el.classList.remove('tooltip-active');
+                    });
+                }
+            });
         })();
 
         // Confetti animation

@@ -393,6 +393,24 @@
       background: #eaf0e4;
     }
 
+    .rescale-preset-btn {
+      background: var(--blanco);
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--texto);
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+
+    .rescale-preset-btn:hover {
+      border-color: var(--verde);
+      background: #eaf0e4;
+    }
+
     .btn-del {
       background: none;
       border: none;
@@ -987,6 +1005,52 @@
         margin-top: 10px;
       }
 
+      /* ── Reescalar lote: apilado en móvil ── */
+      #rescale-section {
+        padding: 14px !important;
+      }
+
+      .rescale-input-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+      }
+
+      .rescale-label {
+        font-size: .82rem !important;
+      }
+
+      .rescale-field {
+        width: 100% !important;
+      }
+
+      #rescale-target {
+        font-size: 16px !important;
+        width: 100% !important;
+        min-height: 44px;
+        flex: 1;
+      }
+
+      .rescale-btn {
+        width: 100% !important;
+        justify-content: center;
+        min-height: 44px;
+      }
+
+      .rescale-presets {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+      }
+
+      .rescale-preset-btn {
+        padding: 10px 8px !important;
+        font-size: .82rem !important;
+        min-height: 44px;
+        text-align: center;
+        width: 100%;
+      }
+
       /* ── Perfil de ácidos grasos ── */
       .fa-grid {
         gap: 6px;
@@ -1040,6 +1104,20 @@
 
       .fa-grid {
         grid-template-columns: 1fr;
+      }
+
+      /* ── Reescalar: presets 2 columnas en pantallas muy pequeñas ── */
+      .rescale-presets {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+
+      #rescale-section {
+        padding: 12px 10px !important;
+      }
+
+      .rescale-preset-btn {
+        padding: 10px 6px !important;
+        font-size: .78rem !important;
       }
     }
 
@@ -1181,6 +1259,33 @@
           <label>Peso Total de Aceites (g) · Escala</label>
           <input type="number" id="total-oils" placeholder="500" value="500" oninput="calcular()">
         </div>
+      </div>
+
+      <!-- REESCALAR LOTE -->
+      <div id="rescale-section" class="no-print" style="margin-top:16px;padding:16px;background:var(--verde-claro);border:1.5px solid rgba(156,175,136,.35);border-radius:10px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:1.1rem;">⚖️</span>
+          <span style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.9rem;color:var(--negro);">Reescalar Tamaño del Lote</span>
+        </div>
+        <p style="font-size:.78rem;color:var(--texto-suave);margin-bottom:10px;">Cambia el peso total de aceites y todos los ingredientes se ajustarán proporcionalmente.</p>
+        <div class="rescale-input-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span class="rescale-label" style="font-size:.85rem;color:var(--texto);">Nuevo peso total de aceites:</span>
+          <div class="rescale-field" style="display:flex;align-items:center;gap:4px;">
+            <input type="number" id="rescale-target" placeholder="500" min="1" step="1" style="width:100px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.95rem;color:var(--negro);background:var(--blanco);">
+            <span style="font-size:.85rem;font-weight:700;color:var(--negro);">g</span>
+          </div>
+          <button class="btn-add rescale-btn" onclick="rescalarLote()" style="margin-top:0;">⚖️ Reescalar</button>
+        </div>
+        <div class="rescale-presets" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+          <button onclick="rescalarPreset(250)" class="rescale-preset-btn">250 g</button>
+          <button onclick="rescalarPreset(500)" class="rescale-preset-btn">500 g</button>
+          <button onclick="rescalarPreset(1000)" class="rescale-preset-btn">1 kg</button>
+          <button onclick="rescalarPreset(1500)" class="rescale-preset-btn">1.5 kg</button>
+          <button onclick="rescalarPreset(2000)" class="rescale-preset-btn">2 kg</button>
+          <button onclick="rescalarPreset(3000)" class="rescale-preset-btn">3 kg</button>
+          <button onclick="rescalarPreset(5000)" class="rescale-preset-btn">5 kg</button>
+        </div>
+        <div id="rescale-alert" class="alert alert-ok" style="display:none;margin-top:10px;"></div>
       </div>
     </div>
 
@@ -1792,6 +1897,79 @@
     }
 
     function updateSEOptions() { /* Could update SE dropdown here */ }
+
+    // ═══════════════════════════════════════════════
+    // REESCALAR LOTE
+    // ═══════════════════════════════════════════════
+    function rescalarPreset(target) {
+      document.getElementById('rescale-target').value = target;
+      rescalarLote();
+    }
+
+    function rescalarLote() {
+      const targetInput = document.getElementById('rescale-target');
+      const target = parseFloat(targetInput.value);
+      if (!target || target <= 0) {
+        alert('Ingresa un peso objetivo válido.');
+        return;
+      }
+
+      const currentTotal = getTotalOilG();
+      if (currentTotal <= 0) {
+        alert('Agrega aceites a la receta antes de reescalar.');
+        return;
+      }
+
+      const ratio = target / currentTotal;
+
+      // Reescalar aceites
+      document.querySelectorAll('#oils-tbody tr').forEach(tr => {
+        const id = tr.id.replace('oil-row-', '');
+        const gEl = document.getElementById(`oil-g-${id}`);
+        if (!gEl) return;
+        const g = parseFloat(gEl.value) || 0;
+        gEl.value = Math.round(g * ratio * 10) / 10;
+      });
+
+      // Reescalar aditivos especiales
+      SPECIAL_ADDS.forEach((a, i) => {
+        const el = document.getElementById(`sadd-${i}`);
+        if (!el) return;
+        const g = parseFloat(el.value) || 0;
+        if (g > 0) el.value = Math.round(g * ratio * 10) / 10;
+      });
+
+      // Reescalar aditivos personalizados
+      document.querySelectorAll('#custom-adds-list .custom-add-row').forEach(div => {
+        const gInput = div.querySelector('.grams-input');
+        if (!gInput) return;
+        const g = parseFloat(gInput.value) || 0;
+        if (g > 0) gInput.value = Math.round(g * ratio * 10) / 10;
+      });
+
+      // Reescalar SE
+      document.querySelectorAll('#se-tbody tr').forEach(tr => {
+        const id = tr.id.replace('se-row-', '');
+        const gEl = document.getElementById(`se-g-${id}`);
+        if (!gEl) return;
+        const g = parseFloat(gEl.value) || 0;
+        if (g > 0) gEl.value = Math.round(g * ratio * 10) / 10;
+      });
+
+      // Actualizar campo "Peso Total de Aceites"
+      document.getElementById('total-oils').value = Math.round(target);
+
+      // Recalcular
+      calcular();
+      calcSE();
+
+      // Mostrar alerta de confirmación
+      const alertEl = document.getElementById('rescale-alert');
+      const factorPct = (ratio * 100).toFixed(0);
+      alertEl.textContent = `✓ Receta reescalada: ${currentTotal.toFixed(0)} g → ${target.toFixed(0)} g de aceites (factor: ${factorPct}%)`;
+      alertEl.style.display = 'block';
+      setTimeout(() => { alertEl.style.display = 'none'; }, 5000);
+    }
 
     function calcSE() {
       const sf = parseFloat(document.getElementById('sf').value) || 5;
