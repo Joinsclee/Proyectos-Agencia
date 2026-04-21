@@ -62,43 +62,101 @@
             }
         }
 
-        /* Placeholder del video de la clase */
-        .video-placeholder {
+        /* Miniatura clickeable de la clase (YouTube) */
+        .video-thumb {
+            position: relative;
+            display: block;
             width: 100%;
-            max-width: 780px;
-            margin: 0 auto 2rem auto;
             aspect-ratio: 16 / 9;
-            background: linear-gradient(135deg, #f0edf2 0%, #e8e1ed 100%);
-            border: 2px dashed var(--primary-purple);
             border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary-purple);
-            text-align: center;
-            padding: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(97, 49, 116, 0.25);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #000;
         }
 
-        .video-placeholder .play-icon {
-            width: 72px;
-            height: 72px;
-            border-radius: 9999px;
-            background: var(--primary-purple);
+        .video-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease, filter 0.3s ease;
+        }
+
+        .video-thumb::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.55) 100%);
+            transition: background 0.3s ease;
+        }
+
+        /* Botón estilo YouTube */
+        .video-thumb .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 96px;
+            height: 68px;
+            border-radius: 18px;
+            background: rgba(33, 33, 33, 0.75);
             color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 10px 30px rgba(97, 49, 116, 0.3);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+            z-index: 2;
+            transition: background 0.25s ease, transform 0.3s ease;
+        }
+
+        .video-thumb .play-icon svg {
+            width: 36px;
+            height: 36px;
+            fill: #fff;
+            margin-left: 2px;
+        }
+
+        .video-thumb:hover .play-icon {
+            background: #FF0000;
+        }
+
+        .video-thumb .class-label {
+            position: absolute;
+            left: 1rem;
+            bottom: 1rem;
+            z-index: 2;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-size: 1rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .video-thumb:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(97, 49, 116, 0.4);
+        }
+
+        .video-thumb:hover img {
+            transform: scale(1.05);
+        }
+
+        .video-thumb:hover .play-icon {
+            transform: translate(-50%, -50%) scale(1.08);
+            background: #FF0000;
         }
 
         @media (max-width: 640px) {
-            .video-placeholder .play-icon {
-                width: 56px;
-                height: 56px;
-                font-size: 1.5rem;
+            .video-thumb .play-icon {
+                width: 72px;
+                height: 50px;
+                border-radius: 14px;
+            }
+            .video-thumb .play-icon svg {
+                width: 26px;
+                height: 26px;
             }
         }
 
@@ -774,6 +832,56 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* Botón flotante de WhatsApp */
+        .whatsapp-float {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 9999px;
+            background: #25D366;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+            z-index: 1000;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: wa-pulse 2.2s ease-in-out infinite;
+        }
+
+        .whatsapp-float svg {
+            width: 34px;
+            height: 34px;
+            fill: #fff;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.08);
+            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.6);
+            animation: none;
+        }
+
+        @keyframes wa-pulse {
+            0%, 100% { box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45); }
+            50% { box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45), 0 0 0 14px rgba(37, 211, 102, 0); }
+            25% { box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45), 0 0 0 0 rgba(37, 211, 102, 0.5); }
+        }
+
+        @media (max-width: 640px) {
+            .whatsapp-float {
+                width: 54px;
+                height: 54px;
+                right: 16px;
+                bottom: 16px;
+            }
+            .whatsapp-float svg {
+                width: 30px;
+                height: 30px;
+            }
+        }
     </style>
 </head>
 
@@ -833,24 +941,34 @@
             </h1>
 
             <p class="text-base md:text-xl text-gray-700 italic mb-8 max-w-3xl mx-auto">
-                En solo <strong>5 semanas</strong> y sin depender exclusivamente de tu propio dinero.
+                En solo <strong>5 semanas</strong> y sin depender solo de tu propio dinero.
             </p>
 
-            <!-- Espacio para las dos clases -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 max-w-[900px] mx-auto mb-8">
-                <div class="video-placeholder" style="margin:0;max-width:none;">
-                    <div class="play-icon"><i data-lucide="play" style="width:32px;height:32px;fill:#fff;"></i></div>
-                    <p class="font-bold text-base md:text-lg">CLASE 1</p>
-                    <p class="text-sm opacity-80 mt-1">Video de la primera clase</p>
-                </div>
-                <div class="video-placeholder" style="margin:0;max-width:none;">
-                    <div class="play-icon"><i data-lucide="play" style="width:32px;height:32px;fill:#fff;"></i></div>
-                    <p class="font-bold text-base md:text-lg">CLASE 2</p>
-                    <p class="text-sm opacity-80 mt-1">Video de la segunda clase</p>
-                </div>
+            <!-- Enlaces a las clases en YouTube -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-[1200px] mx-auto mb-8 px-2">
+                <a href="https://www.youtube.com/watch?v=2KPCksMT4y8" target="_blank" rel="noopener"
+                    class="video-thumb" aria-label="Ver Clase 1 en YouTube">
+                    <img src="https://img.youtube.com/vi/2KPCksMT4y8/maxresdefault.jpg"
+                        onerror="this.onerror=null;this.src='https://img.youtube.com/vi/2KPCksMT4y8/hqdefault.jpg';"
+                        alt="Miniatura Clase 1" loading="lazy">
+                    <div class="play-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                    <span class="class-label">Clase 1</span>
+                </a>
+                <a href="https://www.youtube.com/watch?v=M4qM0S17TM4" target="_blank" rel="noopener"
+                    class="video-thumb" aria-label="Ver Clase 2 en YouTube">
+                    <img src="https://img.youtube.com/vi/M4qM0S17TM4/maxresdefault.jpg"
+                        onerror="this.onerror=null;this.src='https://img.youtube.com/vi/M4qM0S17TM4/hqdefault.jpg';"
+                        alt="Miniatura Clase 2" loading="lazy">
+                    <div class="play-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                    </div>
+                    <span class="class-label">Clase 2</span>
+                </a>
             </div>
 
-            <a href="#precio"
+            <a href="https://sistemacrece.com/checkout-msc" target="_blank" rel="noopener"
                 class="btn-main inline-block font-bold px-8 py-5 md:px-12 md:py-6 rounded-2xl text-lg md:text-xl tracking-wide uppercase">
                 Sí, quiero acceder al Sistema CRECE
             </a>
@@ -1139,6 +1257,21 @@
                     </div>
                 </div>
 
+                <!-- Grupo de WhatsApp privado -->
+                <div class="accordion-item reveal">
+                    <div class="accordion-trigger">
+                        <div class="flex items-center gap-4 flex-1">
+                            <span class="icon-box"><i data-lucide="message-circle"></i></span>
+                            <span class="text-base md:text-xl font-bold text-gray-900">Grupo de WhatsApp privado para alumnos de la mentoría</span>
+                        </div>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <p class="mt-2">Canal directo para resolver dudas, compartir oportunidades y mantener el impulso junto a Andrés y el resto de la comunidad CRECE.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Equipos de inversión -->
                 <div class="accordion-item reveal">
                     <div class="accordion-trigger">
@@ -1178,10 +1311,8 @@
                                         superar bloqueos para que no te quedes solo con la teoría.</div>
                                 </li>
                                 <li class="flex items-start gap-4">
-                                    <span class="icon-box-sm"><i data-lucide="gavel"></i></span>
-                                    <div class="pt-1"><strong class="text-[#613174]">Taller Jurídico · Cómo comprar con
-                                            seguridad y evitar riesgos:</strong> junto a un abogado experto, entenderás
-                                        cómo analizar inmuebles con deudas, hipotecas o embargos.</div>
+                                    <span class="icon-box-sm"><i data-lucide="megaphone"></i></span>
+                                    <div class="pt-1"><strong class="text-[#613174]">Masterclass · Cómo Vender tu Inmueble 3x Más Rápido con Publicidad Digital en Meta:</strong> aprende a usar Facebook e Instagram Ads para atraer compradores reales, sin depender de corredores ni regalar comisiones. Monta campañas desde cero, redacta anuncios que conecten, segmenta con precisión y filtra prospectos para no perder tiempo con curiosos. <em>El tiempo en venta es dinero que se evapora: cierra más rápido y protege el margen de tu inversión.</em></div>
                                 </li>
                                 <li class="flex items-start gap-4">
                                     <span class="icon-box-sm"><i data-lucide="building-2"></i></span>
@@ -1261,14 +1392,27 @@
             </div>
 
             <div class="price-card p-7 md:p-12 text-center">
-                <p class="text-[#613174] font-bold uppercase tracking-wider text-sm md:text-base mb-3">Acceso Único</p>
+                <p class="text-[#613174] font-bold uppercase tracking-wider text-sm md:text-base mb-5">Todo lo que incluye</p>
+                <ul class="text-left max-w-xl mx-auto space-y-3 mb-8 text-gray-700 text-base md:text-lg">
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Mentoría completa Sistema CRECE con Andrés Giraldo.</li>
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Acceso a comunidad con todas las herramientas por 6 meses.</li>
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Grupo de WhatsApp privado con Andrés.</li>
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> 5 simuladores de inversión.</li>
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> 2 checklists para detección y evaluación de oportunidades.</li>
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> 3 tutores virtuales siempre disponibles.</li>
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Radar de oportunidades en Colombia.</li>
+                    <li class="flex gap-3"><span class="text-[#f2ca04] font-bold">★</span> Biblioteca de contratos listos para usar <em class="text-gray-500">(Bono)</em>.</li>
+                    <li class="flex gap-3"><span class="text-[#f2ca04] font-bold">★</span> 3 talleres estratégicos adicionales <em class="text-gray-500">(Bono)</em>.</li>
+                    <li class="flex gap-3"><span class="text-[#f2ca04] font-bold">★</span> Acceso a ser parte de equipos de inversión <em class="text-gray-500">(Bono)</em>.</li>
+                </ul>
+                <p class="text-[#613174] font-bold uppercase tracking-wider text-sm md:text-base mb-3">Sólo por un valor de</p>
                 <div class="flex items-baseline justify-center gap-2 mb-2">
                     <span class="font-tilt text-5xl md:text-7xl text-[#613174]">$448</span>
                     <span class="text-2xl md:text-3xl font-bold text-gray-600">USD</span>
                 </div>
-                <p class="text-gray-500 text-sm md:text-base mb-8">Pago único · Acceso completo al Sistema CRECE</p>
+                <p class="text-gray-500 text-sm md:text-base mb-8">Pago único · Acceso completo al Sistema CRECE por 6 meses</p>
 
-                <a href="#"
+                <a href="https://sistemacrece.com/checkout-msc" target="_blank" rel="noopener"
                     class="btn-yellow inline-block font-extrabold px-8 py-5 md:px-12 md:py-6 rounded-2xl text-lg md:text-xl uppercase tracking-wide w-full md:w-auto">
                     Sí, quiero unirme al Sistema CRECE
                 </a>
@@ -1361,7 +1505,7 @@
             </div>
 
             <div class="text-center mt-10">
-                <a href="#precio"
+                <a href="https://sistemacrece.com/checkout-msc" target="_blank" rel="noopener"
                     class="btn-main inline-block font-bold px-8 py-4 md:px-10 md:py-5 rounded-2xl text-base md:text-lg uppercase tracking-wide">
                     Quiero mis bonos de acción rápida
                 </a>
@@ -1406,7 +1550,7 @@
                             con tanto esfuerzo has construido, y tomes <span class="font-elegant"
                                 style="font-size:0.95em;">el control de tu futuro financiero</span>.</p>
                         <div class="mt-6 pt-2">
-                            <a href="#precio"
+                            <a href="https://sistemacrece.com/checkout-msc" target="_blank" rel="noopener"
                                 class="btn-main inline-block font-bold px-8 py-4 rounded-2xl text-base md:text-lg tracking-wide uppercase">
                                 Quiero unirme al Sistema CRECE
                             </a>
@@ -1445,7 +1589,7 @@
                 proceso.</p>
 
             <div class="mt-10">
-                <a href="#precio"
+                <a href="https://sistemacrece.com/checkout-msc" target="_blank" rel="noopener"
                     class="btn-main inline-block font-bold px-8 py-5 md:px-12 md:py-6 rounded-2xl text-lg md:text-xl uppercase tracking-wide">
                     Estoy listo · Quiero invertir con estrategia
                 </a>
@@ -1557,6 +1701,14 @@
         // Inicializar iconos Lucide
         if (window.lucide) { lucide.createIcons(); }
     </script>
+
+    <!-- Botón flotante de WhatsApp -->
+    <a href="https://wha.link/eE8Ekd" target="_blank" rel="noopener"
+        class="whatsapp-float" aria-label="Contactar por WhatsApp">
+        <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/>
+        </svg>
+    </a>
 
 </body>
 
