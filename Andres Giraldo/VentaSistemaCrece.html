@@ -160,6 +160,86 @@
             }
         }
 
+        /* Botón miniatura (reset) */
+        button.video-thumb {
+            border: 0;
+            padding: 0;
+            cursor: pointer;
+            font: inherit;
+            color: inherit;
+        }
+
+        /* Modal de video */
+        .video-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 1rem;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .video-modal.is-open {
+            display: flex;
+            opacity: 1;
+        }
+
+        .video-modal__content {
+            position: relative;
+            width: 100%;
+            max-width: 1100px;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-modal__content > div,
+        #videoModalPlayer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-modal__content iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            display: block;
+        }
+
+        .video-modal__close {
+            position: absolute;
+            top: -44px;
+            right: 0;
+            background: transparent;
+            border: 0;
+            color: #fff;
+            font-size: 1.75rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            transition: background 0.2s ease;
+        }
+
+        .video-modal__close:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        @media (max-width: 640px) {
+            .video-modal__close {
+                top: -40px;
+                font-size: 1.5rem;
+            }
+        }
+
         .font-tilt {
             font-family: 'Tilt Warp', cursive;
         }
@@ -390,6 +470,93 @@
             line-height: 1.7;
         }
 
+        .kit-split {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            align-items: start;
+            margin-top: 0.5rem;
+        }
+
+        .kit-split-media {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        @media (min-width: 768px) {
+            .kit-split {
+                grid-template-columns: 1fr 1fr;
+                gap: 2rem;
+            }
+
+            .kit-split--reverse .kit-split-text {
+                order: 2;
+            }
+
+            .kit-split--reverse .kit-split-media {
+                order: 1;
+            }
+        }
+
+        .kit-mockup {
+            display: block;
+            max-width: 180px;
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .kit-mockup--xs { max-width: 120px; }
+        .kit-mockup--sm { max-width: 150px; }
+        .kit-mockup--md { max-width: 220px; }
+        .kit-mockup--lg { max-width: 260px; }
+
+        .kit-split--center-media .kit-split-media {
+            align-self: center;
+        }
+
+        .kit-split-text,
+        .kit-split-text p,
+        .kit-split-text li {
+            text-align: left;
+            text-justify: none;
+        }
+
+        .tutor-mockup {
+            display: block;
+            max-width: 110px;
+            width: 100%;
+            height: auto;
+            margin: 0.5rem auto 0 auto;
+            border-radius: 8px;
+        }
+
+        .tutors-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .tutors-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .tutor-card {
+            background: #faf7fc;
+            border: 1px solid #ece3f2;
+            border-radius: 14px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .tutor-card .icon-box-sm {
+            margin: 0 auto 0.5rem auto;
+        }
+
         /* Fase number badge */
         .fase-badge {
             background: linear-gradient(135deg, #f2ca04, #f4a04d);
@@ -422,6 +589,31 @@
             background: #fff7e0;
             border: 2px dashed var(--accent-yellow);
             border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .bonus-card .countdown-wrapper {
+            margin-top: auto;
+        }
+
+        .bonus-mockup-frame {
+            height: 170px;
+            margin: 1.25rem auto 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .bonus-mockup {
+            max-height: 100%;
+            max-width: 220px;
+            width: auto;
+            height: auto;
+            display: block;
+            object-fit: contain;
         }
 
         /* ========= TIMELINE RUTA FASES ========= */
@@ -944,10 +1136,10 @@
                 En solo <strong>5 semanas</strong> y sin depender solo de tu propio dinero.
             </p>
 
-            <!-- Enlaces a las clases en YouTube -->
+            <!-- Clases embebidas (modal) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8 max-w-[1200px] mx-auto mb-8 px-2">
-                <a href="https://www.youtube.com/watch?v=2KPCksMT4y8" target="_blank" rel="noopener"
-                    class="video-thumb" aria-label="Ver Clase 1 en YouTube">
+                <button type="button" data-video-id="2KPCksMT4y8"
+                    class="video-thumb" aria-label="Reproducir Clase 1">
                     <img src="https://img.youtube.com/vi/2KPCksMT4y8/maxresdefault.jpg"
                         onerror="this.onerror=null;this.src='https://img.youtube.com/vi/2KPCksMT4y8/hqdefault.jpg';"
                         alt="Miniatura Clase 1" loading="lazy">
@@ -955,9 +1147,9 @@
                         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </div>
                     <span class="class-label">Clase 1</span>
-                </a>
-                <a href="https://www.youtube.com/watch?v=M4qM0S17TM4" target="_blank" rel="noopener"
-                    class="video-thumb" aria-label="Ver Clase 2 en YouTube">
+                </button>
+                <button type="button" data-video-id="M4qM0S17TM4"
+                    class="video-thumb" aria-label="Reproducir Clase 2">
                     <img src="https://img.youtube.com/vi/M4qM0S17TM4/maxresdefault.jpg"
                         onerror="this.onerror=null;this.src='https://img.youtube.com/vi/M4qM0S17TM4/hqdefault.jpg';"
                         alt="Miniatura Clase 2" loading="lazy">
@@ -965,7 +1157,15 @@
                         <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                     </div>
                     <span class="class-label">Clase 2</span>
-                </a>
+                </button>
+            </div>
+
+            <!-- Modal reproductor -->
+            <div id="videoModal" class="video-modal" role="dialog" aria-modal="true" aria-label="Reproductor de video">
+                <div class="video-modal__content">
+                    <button type="button" class="video-modal__close" aria-label="Cerrar video">&times;</button>
+                    <div id="videoModalPlayer"></div>
+                </div>
             </div>
 
             <a href="https://sistemacrece.com/checkout-msc" target="_blank" rel="noopener"
@@ -1118,6 +1318,9 @@
                         semanas</strong>, con acompañamiento directo donde formamos las bases y avanzamos a la
                     implementación.
                 </p>
+                <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90dc1b1e594157522ca84.png"
+                    alt="Ruta Mentoría Sistema CRECE" loading="lazy"
+                    class="block mx-auto mb-5 w-full max-w-3xl h-auto rounded-2xl">
                 <div class="bg-white/10 backdrop-blur rounded-2xl p-5 md:p-6 border border-white/20">
                     <p class="text-white font-bold text-base md:text-lg mb-2">Acceso a la Comunidad CRECE VIP por 6 meses</p>
                     <p class="text-white/85 text-sm md:text-base">
@@ -1128,11 +1331,39 @@
         </div>
     </section>
 
-    <!-- ============= BONOS INCLUIDOS ============= -->
+    <!-- ============= DESCARGA TEMARIO ============= -->
     <section force-full-width class="force-full-width py-14 md:py-20 bg-gray-50 border-t border-b border-gray-100">
         <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-purple-gradient text-white rounded-3xl p-7 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-8 text-center md:text-left reveal">
+                <div class="shrink-0">
+                    <span class="icon-box" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);">
+                        <i data-lucide="file-down"></i>
+                    </span>
+                </div>
+                <div class="flex-1">
+                    <span class="fase-badge" style="background:var(--accent-yellow);color:#1a1a1a;">TEMARIO COMPLETO</span>
+                    <h3 class="font-tilt text-xl md:text-3xl mt-3 mb-2 uppercase tracking-wide">Descarga el temario de la Mentoría</h3>
+                    <p class="text-white/90 text-base md:text-lg leading-relaxed">
+                        Revisa <strong>sesión por sesión</strong> todo lo que vas a aprender en las 5 semanas del Sistema CRECE y compártelo con tu pareja o socio antes de decidir.
+                    </p>
+                </div>
+                <div class="shrink-0 w-full md:w-auto">
+                    <a href="https://drive.google.com/file/d/1ibkHRvL3GzrsO3dvYxywOcj4Ig9ln1G5/view?usp=sharing"
+                        target="_blank" rel="noopener"
+                        class="btn-yellow inline-flex items-center justify-center gap-2 font-extrabold px-6 py-4 md:px-8 md:py-5 rounded-2xl text-base md:text-lg uppercase tracking-wide w-full md:w-auto">
+                        <i data-lucide="download" style="width:20px;height:20px;"></i>
+                        Descargar temario (PDF)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============= KIT DEL INVERSIONISTA ============= -->
+    <section force-full-width class="force-full-width py-14 md:py-20 bg-white border-t border-b border-gray-100">
+        <div class="max-w-4xl mx-auto px-4">
             <div class="text-center mb-12">
-                <span class="fase-badge">BONOS INCLUIDOS</span>
+                <span class="fase-badge">KIT DEL INVERSIONISTA</span>
                 <h2 class="section-title text-gray-900 mt-4 mb-3" style="font-size: clamp(1.6rem, 3.2vw, 2.4rem);">
                     Kit del Inversionista <span class="font-elegant">CRECE</span>
                 </h2>
@@ -1142,6 +1373,34 @@
             </div>
 
             <div class="space-y-4">
+                <!-- Validador de Oportunidades Inmobiliarias CRECE -->
+                <div class="accordion-item reveal">
+                    <div class="accordion-trigger">
+                        <div class="flex items-center gap-4 flex-1">
+                            <span class="icon-box"><i data-lucide="shield-check"></i></span>
+                            <span class="text-base md:text-xl font-bold text-gray-900">Validador de Oportunidades
+                                Inmobiliarias CRECE</span>
+                        </div>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="kit-split kit-split--reverse">
+                                <div class="kit-split-text">
+                                    <p>La herramienta de <strong>decisión inicial</strong> del inversionista CRECE
+                                        para detectar riesgos, analizar comparables, calcular <strong>precio objetivo
+                                            de compra</strong> y validar si un inmueble realmente representa una
+                                        oportunidad de inversión.</p>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e956bcb0e5e2bb7ff032d6.png"
+                                        alt="Mockup Validador de Oportunidades Inmobiliarias CRECE"
+                                        class="kit-mockup kit-mockup--lg" loading="lazy">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Simuladores -->
                 <div class="accordion-item reveal">
                     <div class="accordion-trigger">
@@ -1153,16 +1412,27 @@
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-body">
-                            <ul class="space-y-3 mt-2">
-                                <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Haz los números
-                                    correctos sin ser experto financiero.</li>
-                                <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Evalúa diferentes
-                                    estrategias: comprar para vender, comprar para alquilar, proyectos en planos.</li>
-                                <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Sabe
-                                    <strong>antes de invertir</strong> si un negocio vale la pena o no.</li>
-                                <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Estructura
-                                    inversiones con claridad.</li>
-                            </ul>
+                            <div class="kit-split">
+                                <div class="kit-split-text">
+                                    <ul class="space-y-3">
+                                        <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span><span>Haz
+                                                los números correctos sin ser experto financiero.</span></li>
+                                        <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span><span>Evalúa
+                                                diferentes estrategias: comprar para vender, comprar para alquilar,
+                                                proyectos en planos.</span></li>
+                                        <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span><span>Sabe
+                                                <strong>antes de invertir</strong> si un negocio vale la pena o
+                                                no.</span></li>
+                                        <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span><span>Estructura
+                                                inversiones con claridad.</span></li>
+                                    </ul>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e902182db6a3cb826923d7.png"
+                                        alt="Mockup Simuladores de Inversión CRECE" class="kit-mockup"
+                                        loading="lazy">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1178,13 +1448,23 @@
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-body">
-                            <ul class="space-y-3 mt-2">
-                                <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Tu checklist para
-                                    la <strong>detección de oportunidades</strong> y análisis de mercado de inmuebles.
-                                </li>
-                                <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Guía para evaluar
-                                    inmuebles <strong>antes y durante las visitas</strong>.</li>
-                            </ul>
+                            <div class="kit-split kit-split--reverse">
+                                <div class="kit-split-text">
+                                    <ul class="space-y-3">
+                                        <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span><span>Tu
+                                                checklist para la <strong>detección de oportunidades</strong> y
+                                                análisis de mercado de inmuebles.</span></li>
+                                        <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span><span>Guía
+                                                para evaluar inmuebles <strong>antes y durante las
+                                                    visitas</strong>.</span></li>
+                                    </ul>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218f3c67cd0153727ad.png"
+                                        alt="Mockup Checklists CRECE" class="kit-mockup kit-mockup--sm"
+                                        loading="lazy">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1199,27 +1479,19 @@
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-body">
-                            <p class="mt-2">Acceso exclusivo a tu red de <strong>contactos estratégicos y activos
-                                    bancarios</strong> en las principales ciudades de Colombia, con un listado de
-                                inmobiliarias y constructoras para facilitar tu acceso a oportunidades reales.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Biblioteca de contratos -->
-                <div class="accordion-item reveal">
-                    <div class="accordion-trigger">
-                        <div class="flex items-center gap-4 flex-1">
-                            <span class="icon-box"><i data-lucide="book-open-text"></i></span>
-                            <span class="text-base md:text-xl font-bold text-gray-900">Biblioteca de Contratos
-                                CRECE</span>
-                        </div>
-                    </div>
-                    <div class="accordion-content">
-                        <div class="accordion-body">
-                            <p class="mt-2">Minutas listas para usar: <strong>promesas de compraventa, arrendamientos
-                                    residenciales/comerciales</strong> y más. <em>¡No improvises tus documentos!</em>
-                            </p>
+                            <div class="kit-split">
+                                <div class="kit-split-text">
+                                    <p>Acceso exclusivo a tu red de <strong>contactos estratégicos y activos
+                                            bancarios</strong> en las principales ciudades de Colombia, con un listado
+                                        de inmobiliarias y constructoras para facilitar tu acceso a oportunidades
+                                        reales.</p>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218717d5dd4e1161213.png"
+                                        alt="Mockup Radar de Oportunidades CRECE" class="kit-mockup kit-mockup--md"
+                                        loading="lazy">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1235,24 +1507,29 @@
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-body">
-                            <ul class="space-y-4 mt-2">
-                                <li class="flex items-start gap-4">
+                            <div class="tutors-grid">
+                                <div class="tutor-card">
                                     <span class="icon-box-sm"><i data-lucide="scale"></i></span>
-                                    <div class="pt-1"><strong class="text-[#613174]">Tutor legal:</strong> resuelve
-                                        dudas jurídicas y aspectos legales de tus inversiones.</div>
-                                </li>
-                                <li class="flex items-start gap-4">
+                                    <p><strong class="text-[#613174]">Tutor legal:</strong> resuelve dudas jurídicas y
+                                        aspectos legales de tus inversiones.</p>
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e902189ff45b49cc83e218.png"
+                                        alt="Mockup Tutor Legal CRECE" class="tutor-mockup" loading="lazy">
+                                </div>
+                                <div class="tutor-card">
                                     <span class="icon-box-sm"><i data-lucide="landmark"></i></span>
-                                    <div class="pt-1"><strong class="text-[#613174]">Tutor tributario y
-                                            contable:</strong> aclara temas de impuestos, dudas tributarias y contables.
-                                    </div>
-                                </li>
-                                <li class="flex items-start gap-4">
+                                    <p><strong class="text-[#613174]">Tutor tributario y contable:</strong> aclara
+                                        temas de impuestos, dudas tributarias y contables.</p>
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218b1e59415751f7710.png"
+                                        alt="Mockup Tutor Tributario CRECE" class="tutor-mockup" loading="lazy">
+                                </div>
+                                <div class="tutor-card">
                                     <span class="icon-box-sm"><i data-lucide="compass"></i></span>
-                                    <div class="pt-1"><strong class="text-[#613174]">Tutor CRECE:</strong> comprende a
-                                        fondo la metodología y el método CRECE.</div>
-                                </li>
-                            </ul>
+                                    <p><strong class="text-[#613174]">Tutor CRECE:</strong> comprende a fondo la
+                                        metodología y el método CRECE.</p>
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218a1636a6c65399a1c.png"
+                                        alt="Mockup Tutor CRECE" class="tutor-mockup" loading="lazy">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1267,60 +1544,139 @@
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-body">
-                            <p class="mt-2">Canal directo para resolver dudas, compartir oportunidades y mantener el impulso junto a Andrés y el resto de la comunidad CRECE.</p>
+                            <div class="kit-split kit-split--reverse">
+                                <div class="kit-split-text">
+                                    <p>Canal directo para resolver dudas, compartir oportunidades y mantener el
+                                        impulso junto a Andrés y el resto de la comunidad CRECE.</p>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218b1e59415751f770e.png"
+                                        alt="Mockup Grupo de WhatsApp privado CRECE"
+                                        class="kit-mockup" style="max-width:130px;" loading="lazy">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Equipos de inversión -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ============= BONOS INCLUIDOS ============= -->
+    <section force-full-width class="force-full-width py-14 md:py-20 bg-white border-t border-b border-gray-100">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="text-center mb-12">
+                <span class="fase-badge" style="background:linear-gradient(135deg,#f2ca04,#f97316);color:#fff;">BONOS INCLUIDOS</span>
+                <h2 class="section-title text-gray-900 mt-4 mb-3" style="font-size: clamp(1.6rem, 3.2vw, 2.4rem);">
+                    Bonos <span class="font-elegant">exclusivos</span> de la Mentoría
+                </h2>
+                <p class="text-gray-600 text-base md:text-lg max-w-2xl mx-auto">
+                    Regalos adicionales para potenciar tus resultados desde el primer día.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- Bono: Biblioteca de contratos -->
                 <div class="accordion-item reveal">
                     <div class="accordion-trigger">
                         <div class="flex items-center gap-4 flex-1">
-                            <span class="icon-box"><i data-lucide="users"></i></span>
-                            <span class="text-base md:text-xl font-bold text-gray-900">Sé parte de Equipos de Inversión
-                                CRECE</span>
+                            <span class="icon-box" style="background:linear-gradient(135deg,#f2ca04,#f97316);"><i data-lucide="book-open-text"></i></span>
+                            <span class="text-base md:text-xl font-bold text-gray-900">Biblioteca de Contratos listos para usar <em class="text-gray-500 font-normal">(Bono)</em></span>
                         </div>
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-body">
-                            <p class="mt-2">En la Mentoría CRECE <strong>no caminas solo</strong>. Fomentamos la
-                                creación de <strong>alianzas estratégicas entre alumnos</strong>, para que puedan unir
-                                esfuerzos, complementar habilidades y avanzar con mayor seguridad en sus inversiones.
-                            </p>
+                            <div class="kit-split">
+                                <div class="kit-split-text">
+                                    <p>Minutas listas para usar: <strong>promesas de compraventa, arrendamientos
+                                            residenciales/comerciales</strong> y más.
+                                        <em>¡No improvises tus documentos!</em></p>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218b1e59415751f770f.png"
+                                        alt="Mockup Biblioteca de Contratos CRECE" class="kit-mockup"
+                                        loading="lazy">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Sesiones y talleres -->
+                <!-- Bono: 3 Talleres estratégicos -->
                 <div class="accordion-item reveal">
                     <div class="accordion-trigger">
                         <div class="flex items-center gap-4 flex-1">
-                            <span class="icon-box"><i data-lucide="graduation-cap"></i></span>
-                            <span class="text-base md:text-xl font-bold text-gray-900">Sesión de Acompañamiento y
-                                Talleres Estratégicos CRECE</span>
+                            <span class="icon-box" style="background:linear-gradient(135deg,#f2ca04,#f97316);"><i data-lucide="graduation-cap"></i></span>
+                            <span class="text-base md:text-xl font-bold text-gray-900">3 Talleres estratégicos adicionales <em class="text-gray-500 font-normal">(Bono)</em></span>
                         </div>
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-body">
-                            <p class="mt-2 mb-4">Incluye <strong>3 sesiones grupales en vivo</strong>:</p>
-                            <ul class="space-y-4">
-                                <li class="flex items-start gap-4">
-                                    <span class="icon-box-sm"><i data-lucide="life-buoy"></i></span>
-                                    <div class="pt-1"><strong class="text-[#613174]">Sesión de Acompañamiento · Avanzar
-                                            y Aplicar:</strong> revisamos tus avances, resolvemos dudas y te ayudamos a
-                                        superar bloqueos para que no te quedes solo con la teoría.</div>
-                                </li>
-                                <li class="flex items-start gap-4">
-                                    <span class="icon-box-sm"><i data-lucide="megaphone"></i></span>
-                                    <div class="pt-1"><strong class="text-[#613174]">Masterclass · Cómo Vender tu Inmueble 3x Más Rápido con Publicidad Digital en Meta:</strong> aprende a usar Facebook e Instagram Ads para atraer compradores reales, sin depender de corredores ni regalar comisiones. Monta campañas desde cero, redacta anuncios que conecten, segmenta con precisión y filtra prospectos para no perder tiempo con curiosos. <em>El tiempo en venta es dinero que se evapora: cierra más rápido y protege el margen de tu inversión.</em></div>
-                                </li>
-                                <li class="flex items-start gap-4">
-                                    <span class="icon-box-sm"><i data-lucide="building-2"></i></span>
-                                    <div class="pt-1"><strong class="text-[#613174]">Taller Inversión en Proyectos sobre
-                                            Planos y Cesión de Derechos:</strong> descubre cómo funciona esta estrategia
-                                        para identificar oportunidades incluso sin grandes ahorros iniciales.</div>
-                                </li>
-                            </ul>
+                            <div class="kit-split kit-split--reverse kit-split--center-media">
+                                <div class="kit-split-text">
+                                    <p class="mb-4">Incluye <strong>3 sesiones grupales en vivo</strong>:</p>
+                                    <ul class="space-y-4">
+                                        <li class="flex items-start gap-4">
+                                            <span class="icon-box-sm"><i data-lucide="life-buoy"></i></span>
+                                            <div class="pt-1"><strong class="text-[#613174]">Sesión de Acompañamiento
+                                                    · Avanzar y Aplicar:</strong> revisamos tus avances, resolvemos
+                                                dudas y te ayudamos a superar bloqueos para que no te quedes solo con
+                                                la teoría.</div>
+                                        </li>
+                                        <li class="flex items-start gap-4">
+                                            <span class="icon-box-sm"><i data-lucide="megaphone"></i></span>
+                                            <div class="pt-1"><strong class="text-[#613174]">Masterclass · Cómo Vender
+                                                    tu Inmueble 3x Más Rápido con Publicidad Digital en Meta:</strong>
+                                                aprende a usar Facebook e Instagram Ads para atraer compradores
+                                                reales, sin depender de corredores ni regalar comisiones. Monta
+                                                campañas desde cero, redacta anuncios que conecten, segmenta con
+                                                precisión y filtra prospectos para no perder tiempo con curiosos.
+                                                <em>El tiempo en venta es dinero que se evapora: cierra más rápido y
+                                                    protege el margen de tu inversión.</em></div>
+                                        </li>
+                                        <li class="flex items-start gap-4">
+                                            <span class="icon-box-sm"><i data-lucide="building-2"></i></span>
+                                            <div class="pt-1"><strong class="text-[#613174]">Taller Inversión en
+                                                    Proyectos sobre Planos y Cesión de Derechos:</strong> descubre
+                                                cómo funciona esta estrategia para identificar oportunidades incluso
+                                                sin grandes ahorros iniciales.</div>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e923bbf3c67cd01540d7b0.png"
+                                        alt="Mockup Talleres Estratégicos CRECE" class="kit-mockup"
+                                        style="max-width:330px;" loading="lazy">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bono: Equipos de inversión -->
+                <div class="accordion-item reveal">
+                    <div class="accordion-trigger">
+                        <div class="flex items-center gap-4 flex-1">
+                            <span class="icon-box" style="background:linear-gradient(135deg,#f2ca04,#f97316);"><i data-lucide="users"></i></span>
+                            <span class="text-base md:text-xl font-bold text-gray-900">Acceso a ser parte de equipos de inversión <em class="text-gray-500 font-normal">(Bono)</em></span>
+                        </div>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="kit-split">
+                                <div class="kit-split-text">
+                                    <p>En la Mentoría CRECE <strong>no caminas solo</strong>. Fomentamos la creación
+                                        de <strong>alianzas estratégicas entre alumnos</strong>, para que puedan unir
+                                        esfuerzos, complementar habilidades y avanzar con mayor seguridad en sus
+                                        inversiones.</p>
+                                </div>
+                                <div class="kit-split-media">
+                                    <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e958f438e07b348490e1ee.png"
+                                        alt="Mockup Equipos de Inversión CRECE" class="kit-mockup"
+                                        style="max-width:150px;" loading="lazy">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1398,6 +1754,7 @@
                     <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Acceso a comunidad con todas las herramientas por 6 meses.</li>
                     <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Grupo de WhatsApp privado con Andrés.</li>
                     <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> 5 simuladores de inversión.</li>
+                    <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Validador de Oportunidades Inmobiliarias CRECE.</li>
                     <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> 2 checklists para detección y evaluación de oportunidades.</li>
                     <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> 3 tutores virtuales siempre disponibles.</li>
                     <li class="flex gap-3"><span class="text-[#37ca37] font-bold">✓</span> Radar de oportunidades en Colombia.</li>
@@ -1460,6 +1817,36 @@
                             cupos</span>
                         <span class="text-gray-500">Valor real: <strong>$100 USD</strong></span>
                     </div>
+
+                    <div class="bonus-mockup-frame">
+                        <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218a48992f689a57dab.png"
+                            alt="Mockup Sesión de Diagnóstico 1 a 1 CRECE" class="bonus-mockup" loading="lazy">
+                    </div>
+
+                    <div class="countdown-wrapper" id="countdown-24h">
+                        <div class="countdown-label">
+                            <i data-lucide="alarm-clock"></i>
+                            <span>Esta oferta expira en</span>
+                        </div>
+                        <div class="countdown-grid">
+                            <div class="countdown-box">
+                                <span class="countdown-num" id="cd24-days">00</span>
+                                <span class="countdown-unit">Días</span>
+                            </div>
+                            <div class="countdown-box">
+                                <span class="countdown-num" id="cd24-hours">00</span>
+                                <span class="countdown-unit">Horas</span>
+                            </div>
+                            <div class="countdown-box">
+                                <span class="countdown-num" id="cd24-mins">00</span>
+                                <span class="countdown-unit">Min</span>
+                            </div>
+                            <div class="countdown-box">
+                                <span class="countdown-num" id="cd24-secs">00</span>
+                                <span class="countdown-unit">Seg</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bonus-card p-7 md:p-8">
@@ -1475,6 +1862,11 @@
                     <div class="flex items-center gap-3 text-xs md:text-sm">
                         <span class="bg-red-100 text-red-700 font-bold px-3 py-1 rounded-full">Tiempo limitado</span>
                         <span class="text-gray-500">Valor real: <strong>$290 USD</strong></span>
+                    </div>
+
+                    <div class="bonus-mockup-frame">
+                        <img src="https://assets.cdn.filesafe.space/e3ptBMQArqbC3YL2ik2n/media/69e90218a1636a6c65399a08.png"
+                            alt="Mockup 6 meses extra Comunidad CRECE VIP" class="bonus-mockup" loading="lazy">
                     </div>
 
                     <div class="countdown-wrapper" id="countdown-48h">
@@ -1625,7 +2017,7 @@
         // >>> MODIFICAR AQUÍ LA FECHA DE CIERRE (zona Colombia, UTC-5) <<<
         // Formato: 'AAAA-MM-DDTHH:MM:SS-05:00'
         (function () {
-            const deadline = new Date('2026-04-30T23:59:00-05:00').getTime();
+            const deadline = new Date('2026-04-24T23:59:00-05:00').getTime();
             const daysEl = document.getElementById('cd-days');
             const hoursEl = document.getElementById('cd-hours');
             const minsEl = document.getElementById('cd-mins');
@@ -1654,11 +2046,45 @@
             setInterval(tick, 1000);
         })();
 
+        // Contador bono 24 horas (fecha fija para todos los visitantes)
+        // >>> MODIFICAR AQUÍ LA FECHA DE CIERRE (zona Colombia, UTC-5) <<<
+        // Formato: 'AAAA-MM-DDTHH:MM:SS-05:00'
+        (function () {
+            const deadline = new Date('2026-04-23T23:59:00-05:00').getTime();
+            const daysEl = document.getElementById('cd24-days');
+            const hoursEl = document.getElementById('cd24-hours');
+            const minsEl = document.getElementById('cd24-mins');
+            const secsEl = document.getElementById('cd24-secs');
+            if (!daysEl) return;
+            const pad = (n) => String(n).padStart(2, '0');
+
+            function tick() {
+                const diff = deadline - Date.now();
+                if (diff <= 0) {
+                    daysEl.textContent = '00';
+                    hoursEl.textContent = '00';
+                    minsEl.textContent = '00';
+                    secsEl.textContent = '00';
+                    return;
+                }
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                daysEl.textContent = pad(d);
+                hoursEl.textContent = pad(h);
+                minsEl.textContent = pad(m);
+                secsEl.textContent = pad(s);
+            }
+            tick();
+            setInterval(tick, 1000);
+        })();
+
         // Contador hero sticky (fecha fija para todos los visitantes)
         // >>> MODIFICAR AQUÍ LA FECHA DE CIERRE (zona Colombia, UTC-5) <<<
         // Formato: 'AAAA-MM-DDTHH:MM:SS-05:00'
         (function () {
-            const deadline = new Date('2026-04-30T23:59:00-05:00').getTime();
+            const deadline = new Date('2026-04-26T23:59:00-05:00').getTime();
             const d1 = document.getElementById('hcd-days');
             const h1 = document.getElementById('hcd-hours');
             const m1 = document.getElementById('hcd-mins');
@@ -1700,6 +2126,45 @@
 
         // Inicializar iconos Lucide
         if (window.lucide) { lucide.createIcons(); }
+
+        // Reproductor modal de YouTube (evita que el tráfico se vaya a YouTube)
+        (function () {
+            const modal = document.getElementById('videoModal');
+            if (!modal) return;
+            const playerContainer = document.getElementById('videoModalPlayer');
+            const closeBtn = modal.querySelector('.video-modal__close');
+
+            function openVideo(videoId) {
+                playerContainer.innerHTML =
+                    '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(videoId) +
+                    '?autoplay=1&rel=0&modestbranding=1" ' +
+                    'title="Reproductor de video" ' +
+                    'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+                    'allowfullscreen></iframe>';
+                modal.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeVideo() {
+                modal.classList.remove('is-open');
+                playerContainer.innerHTML = '';
+                document.body.style.overflow = '';
+            }
+
+            document.querySelectorAll('button.video-thumb[data-video-id]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    openVideo(btn.getAttribute('data-video-id'));
+                });
+            });
+
+            closeBtn.addEventListener('click', closeVideo);
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closeVideo();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && modal.classList.contains('is-open')) closeVideo();
+            });
+        })();
     </script>
 
     <!-- Botón flotante de WhatsApp -->

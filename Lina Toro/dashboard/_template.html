@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Universo Lina Toro · Acceso Privado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<style>
+  :root{
+    --sage:#9caf88;
+    --sage-dark:#7d9169;
+    --sage-soft:#e8ede1;
+    --cream:#f4f6f2;
+    --ink:#1a1a1a;
+    --ink-soft:#3a3a3a;
+    --muted:#6b7164;
+    --border:#dfe3d8;
+    --bg:#fafaf7;
+    --white:#ffffff;
+    --danger:#b85c5c;
+    --success:#6b8e5a;
+    --radius:14px;
+    --radius-lg:20px;
+    --shadow-sm:0 2px 8px rgba(60,70,50,.06);
+    --shadow:0 12px 32px -12px rgba(60,70,50,.18);
+    --shadow-lg:0 24px 60px -20px rgba(60,70,50,.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{width:100%;overflow-x:hidden}
+  body{width:100% !important;max-width:100% !important;overflow-x:hidden;margin:0 !important}
+
+  /* ============ FULL-BLEED (escapa de contenedores GHL) ============ */
+  .full-bleed{
+    width:100vw;
+    position:relative;
+    left:50%;
+    margin-left:-50vw;
+    margin-right:-50vw;
+    right:50%;
+    transform:translateX(0);
+  }
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--sage-dark);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  input,select,textarea{font-family:inherit}
+
+  /* ============ AUTH LAYOUT ============ */
+  .auth-shell{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    background:var(--bg);
+  }
+  .auth-hero{
+    position:relative;
+    background:linear-gradient(135deg,#9caf88 0%,#7d9169 100%);
+    color:#fff;
+    padding:3rem 3.5rem;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    overflow:hidden;
+  }
+  .auth-hero-video{
+    position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;
+    z-index:0;
+  }
+
+  .auth-form-inner{
+    width:100%;max-width:440px;
+    display:flex;flex-direction:column;
+  }
+  .auth-form-header{
+    margin-bottom:2.2rem;
+    text-align:center;
+  }
+  .auth-form-logo{
+    width:96px;height:96px;border-radius:22px;
+    background:var(--cream);
+    border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;padding:14px;
+    margin:0 auto 1.4rem;
+    box-shadow:0 8px 28px -12px rgba(60,70,50,.18);
+  }
+  .auth-form-logo img{width:100%;height:100%;object-fit:contain;display:block}
+  .auth-form-title{
+    font-family:'Playfair Display',serif;
+    font-weight:700;
+    font-size:2rem;line-height:1.2;
+    color:var(--ink);
+    letter-spacing:-.5px;
+  }
+  .auth-form-title em{font-style:italic;font-weight:500;color:var(--sage-dark)}
+  .auth-hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(255,255,255,.18), transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(255,255,255,.12), transparent 40%);
+    pointer-events:none;
+  }
+  .auth-hero-brand{position:relative;z-index:1}
+  .auth-hero-brand .brand-mark{
+    display:inline-flex;align-items:center;gap:.6rem;
+    font-family:'Playfair Display',serif;font-style:italic;
+    font-size:1.15rem;opacity:.95;
+  }
+  .brand-dot{width:10px;height:10px;border-radius:50%;background:#f4f6f2}
+  .brand-logo-badge{
+    width:36px;height:36px;border-radius:10px;
+    background:#fff;border:1px solid var(--border);
+    display:inline-flex;align-items:center;justify-content:center;
+    overflow:hidden;flex:none;
+  }
+  .brand-logo-badge img{width:100%;height:100%;object-fit:contain;padding:4px}
+  .auth-hero-logo{
+    display:inline-flex;align-items:center;gap:.8rem;
+    margin-bottom:1.25rem;
+    background:rgba(255,255,255,.95);
+    padding:.55rem .9rem .55rem .55rem;
+    border-radius:100px;
+    box-shadow:0 4px 20px -6px rgba(0,0,0,.15);
+  }
+  .auth-hero-logo .logo-img{
+    width:38px;height:38px;border-radius:50%;
+    background:#fff;display:inline-flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .auth-hero-logo .logo-img img{width:100%;height:100%;object-fit:contain;padding:3px}
+  .auth-hero-logo .logo-name{
+    font-family:'Playfair Display',serif;font-style:italic;
+    color:var(--sage-dark);font-size:.95rem;font-weight:500;
+    letter-spacing:.3px;padding-right:.3rem;
+  }
+  .auth-hero-content{position:relative;z-index:1}
+  .auth-hero h1{
+    font-family:'Playfair Display',serif;
+    font-size:3.2rem;line-height:1.05;font-weight:700;
+    margin-bottom:1rem;letter-spacing:-.5px;
+  }
+  .auth-hero h1 em{font-style:italic;font-weight:500}
+  .auth-hero p.lead{
+    font-size:1.1rem;line-height:1.6;max-width:440px;
+    opacity:.92;font-weight:300;
+  }
+  .auth-hero .features{
+    display:flex;flex-direction:column;gap:.85rem;
+    margin-top:2rem;
+  }
+  .auth-hero .feat{
+    display:flex;align-items:center;gap:.85rem;
+    font-size:.95rem;opacity:.95;
+  }
+  .auth-hero .feat svg{flex:none;opacity:.9}
+  .auth-hero-foot{position:relative;z-index:1;font-size:.85rem;opacity:.75}
+
+  .auth-form-wrap{
+    display:flex;align-items:center;justify-content:center;
+    padding:3rem 2rem;
+  }
+  .auth-card{
+    width:100%;max-width:440px;
+  }
+  .auth-card .eyebrow{
+    font-family:'Playfair Display',serif;font-style:italic;
+    color:var(--sage-dark);font-size:1rem;margin-bottom:.5rem;
+  }
+  .auth-card h2{
+    font-family:'Outfit',sans-serif;font-weight:600;
+    font-size:2rem;color:var(--ink);letter-spacing:-.5px;
+    margin-bottom:.5rem;
+  }
+  .auth-card .sub{color:var(--muted);font-size:.95rem;margin-bottom:2rem}
+
+  .field{margin-bottom:1.1rem}
+  .field label{
+    display:block;font-size:.82rem;font-weight:500;
+    color:var(--ink-soft);margin-bottom:.4rem;
+    letter-spacing:.2px;
+  }
+  .field input{
+    width:100%;
+    padding:.9rem 1rem;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    font-size:.95rem;
+    background:var(--white);
+    color:var(--ink);
+    transition:all .2s ease;
+  }
+  .field input:focus{
+    outline:none;
+    border-color:var(--sage);
+    box-shadow:0 0 0 4px rgba(156,175,136,.15);
+  }
+  .field input::placeholder{color:#b0b5a8}
+
+  .field-row{display:flex;justify-content:space-between;align-items:center;margin:-.4rem 0 1rem;font-size:.85rem}
+  .field-row a{color:var(--sage-dark);font-weight:500}
+
+  .btn{
+    width:100%;
+    padding:.95rem 1.2rem;
+    border-radius:10px;
+    font-size:.95rem;
+    font-weight:600;
+    letter-spacing:.2px;
+    transition:all .2s ease;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:.5rem;
+  }
+  .btn-primary{
+    background:var(--ink);
+    color:#fff;
+  }
+  .btn-primary:hover{background:#000;transform:translateY(-1px);box-shadow:var(--shadow)}
+  .btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+  .btn-ghost{
+    background:transparent;color:var(--ink-soft);
+    border:1.5px solid var(--border);
+  }
+  .btn-ghost:hover{border-color:var(--sage);color:var(--sage-dark);background:var(--sage-soft)}
+  .btn-sage{background:var(--sage);color:#fff}
+  .btn-sage:hover{background:var(--sage-dark)}
+
+  .divider{
+    text-align:center;margin:1.5rem 0;position:relative;
+    font-size:.8rem;color:var(--muted);
+  }
+  .divider::before,.divider::after{
+    content:"";position:absolute;top:50%;width:calc(50% - 30px);
+    height:1px;background:var(--border);
+  }
+  .divider::before{left:0}
+  .divider::after{right:0}
+
+  .switch-auth{
+    text-align:center;margin-top:1.8rem;
+    color:var(--muted);font-size:.9rem;
+  }
+  .switch-auth a{color:var(--sage-dark);font-weight:600;cursor:pointer}
+
+  .alert{
+    padding:.85rem 1rem;border-radius:10px;
+    font-size:.88rem;margin-bottom:1.2rem;
+    display:none;
+  }
+  .alert.show{display:block}
+  .alert.error{background:#fdecec;color:var(--danger);border-left:3px solid var(--danger)}
+  .alert.success{background:#e9f1e3;color:var(--success);border-left:3px solid var(--success)}
+
+  .spinner{
+    width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;
+    animation:spin .7s linear infinite;
+    display:none;
+  }
+  .spinner.show{display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ============ APP SHELL (DASHBOARD) ============ */
+  .app-shell{display:none;min-height:100vh}
+  .app-shell.active{display:block}
+
+  .topbar{
+    background:var(--white);
+    border-bottom:1px solid var(--border);
+    padding:1rem 2rem;
+    display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;z-index:20;
+    backdrop-filter:blur(10px);
+    background:rgba(255,255,255,.92);
+  }
+  .topbar .brand{
+    display:flex;align-items:center;gap:.6rem;
+    font-family:'Playfair Display',serif;font-style:italic;
+    color:var(--ink);font-size:1.15rem;
+    cursor:pointer;
+  }
+  .topbar .brand .brand-dot{background:var(--sage)}
+  .topbar-right{display:flex;align-items:center;gap:1rem}
+  .user-chip{
+    display:flex;align-items:center;gap:.6rem;
+    padding:.45rem .85rem .45rem .45rem;
+    background:var(--cream);
+    border:1px solid var(--border);
+    border-radius:100px;
+    font-size:.85rem;color:var(--ink-soft);
+    cursor:pointer;transition:all .2s;
+  }
+  .user-chip:hover{border-color:var(--sage);background:var(--sage-soft)}
+  .user-chip .avatar{
+    width:30px;height:30px;border-radius:50%;
+    background:linear-gradient(135deg,var(--sage),var(--sage-dark));
+    color:#fff;display:grid;place-items:center;
+    font-weight:600;font-size:.85rem;
+  }
+  .user-menu{
+    position:absolute;top:calc(100% + 10px);right:0;
+    background:#fff;border:1px solid var(--border);
+    border-radius:12px;box-shadow:var(--shadow);
+    min-width:220px;padding:.5rem;
+    display:none;z-index:30;
+  }
+  .user-menu.show{display:block}
+  .user-menu button{
+    width:100%;text-align:left;padding:.7rem .9rem;
+    border-radius:8px;font-size:.9rem;color:var(--ink-soft);
+    display:flex;align-items:center;gap:.7rem;
+  }
+  .user-menu button:hover{background:var(--cream);color:var(--ink)}
+  .user-menu .sep{height:1px;background:var(--border);margin:.4rem 0}
+
+  .user-chip-wrap{position:relative}
+
+  .dash-main{padding:3rem 2rem;max-width:1200px;margin:0 auto}
+  .dash-hello{margin-bottom:2.5rem}
+  .dash-hello .eyebrow{
+    font-family:'Playfair Display',serif;font-style:italic;
+    color:var(--sage-dark);font-size:1rem;margin-bottom:.3rem;
+  }
+  .dash-hello h1{
+    font-family:'Outfit',sans-serif;font-weight:600;
+    font-size:2.4rem;color:var(--ink);letter-spacing:-.5px;
+  }
+  .dash-hello p{color:var(--muted);margin-top:.4rem;max-width:640px}
+
+  .apps-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:1.5rem;
+  }
+  .app-card{
+    background:#fff;border:1px solid var(--border);
+    border-radius:var(--radius-lg);padding:1.8rem;
+    transition:all .3s ease;cursor:pointer;
+    position:relative;overflow:hidden;
+    display:flex;flex-direction:column;gap:1rem;
+  }
+  .app-card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:3px;
+    background:linear-gradient(90deg,var(--sage),var(--sage-dark));
+    transform:scaleX(0);transform-origin:left;
+    transition:transform .4s ease;
+  }
+  .app-card:hover{
+    border-color:var(--sage);
+    box-shadow:var(--shadow-lg);
+    transform:translateY(-4px);
+  }
+  .app-card:hover::before{transform:scaleX(1)}
+  .app-card .icon{
+    width:54px;height:54px;border-radius:14px;
+    background:var(--sage-soft);color:var(--sage-dark);
+    display:grid;place-items:center;
+  }
+  .app-card h3{
+    font-family:'Outfit',sans-serif;font-weight:600;
+    font-size:1.3rem;color:var(--ink);letter-spacing:-.3px;
+  }
+  .app-card p{color:var(--muted);font-size:.92rem;line-height:1.55}
+  .app-card .cta{
+    margin-top:auto;display:inline-flex;align-items:center;gap:.4rem;
+    color:var(--sage-dark);font-weight:600;font-size:.88rem;
+  }
+  .app-card .cta svg{transition:transform .25s}
+  .app-card:hover .cta svg{transform:translateX(4px)}
+
+  /* ============ APP VIEWER ============ */
+  .app-viewer{
+    position:fixed;inset:0;background:var(--bg);
+    z-index:50;display:none;flex-direction:column;
+  }
+  .app-viewer.show{display:flex}
+  .viewer-bar{
+    background:#fff;border-bottom:1px solid var(--border);
+    padding:.9rem 1.5rem;display:flex;align-items:center;gap:1rem;
+  }
+  .viewer-bar .back{
+    display:inline-flex;align-items:center;gap:.5rem;
+    padding:.55rem 1rem;border-radius:8px;
+    color:var(--ink-soft);font-size:.88rem;font-weight:500;
+    border:1px solid var(--border);background:#fff;
+    transition:all .2s;
+  }
+  .viewer-bar .back:hover{border-color:var(--sage);color:var(--sage-dark);background:var(--sage-soft)}
+  .viewer-bar .title{
+    font-family:'Outfit',sans-serif;font-weight:600;
+    color:var(--ink);font-size:1.05rem;
+  }
+  .viewer-frame{flex:1;width:100%;border:none;background:#fff}
+
+  /* ============ PROFILE MODAL ============ */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(26,26,26,.55);
+    backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;
+    z-index:60;padding:2rem;
+  }
+  .modal-backdrop.show{display:flex}
+  .modal{
+    background:#fff;border-radius:var(--radius-lg);
+    max-width:480px;width:100%;padding:2.2rem;
+    box-shadow:var(--shadow-lg);
+    max-height:90vh;overflow-y:auto;
+  }
+  .modal h3{
+    font-family:'Outfit',sans-serif;font-weight:600;
+    font-size:1.5rem;color:var(--ink);margin-bottom:.3rem;
+  }
+  .modal .sub{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem}
+  .modal-actions{display:flex;gap:.7rem;margin-top:1.2rem}
+  .modal-actions .btn{flex:1}
+
+  /* ============ RESPONSIVE ============ */
+  /* Tablet large */
+  @media (max-width:1100px){
+    .dash-main{max-width:none}
+    .apps-grid{grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
+  }
+
+  /* Tablet */
+  @media (max-width:900px){
+    .auth-shell{grid-template-columns:1fr}
+    .auth-hero{display:none}
+    .auth-form-wrap{padding:2rem 1.5rem;min-height:100vh}
+    .auth-card h2{font-size:1.5rem}
+    .auth-form-title{font-size:1.5rem}
+    .auth-form-header{margin-bottom:1.6rem}
+    .auth-form-logo{width:80px;height:80px;border-radius:18px;padding:12px}
+    .dash-main{padding:1.8rem 1.1rem}
+    .dash-hello h1{font-size:1.7rem}
+    .dash-hello{margin-bottom:1.6rem}
+    .topbar{padding:.85rem 1.1rem}
+    .topbar .brand{font-size:1rem;gap:.5rem}
+    .brand-logo-badge{width:32px;height:32px;border-radius:9px}
+    .user-chip span:not(.avatar){display:none}
+    .user-chip{padding:.35rem}
+    .apps-grid{grid-template-columns:1fr;gap:1rem}
+    .app-card{padding:1.4rem}
+    .viewer-bar{padding:.7rem .9rem}
+    .viewer-bar .title{font-size:.95rem}
+  }
+
+  /* Móvil */
+  @media (max-width:520px){
+    .auth-form-wrap{padding:1.5rem 1.1rem}
+    .auth-form-title{font-size:1.35rem}
+    .auth-form-logo{width:72px;height:72px;border-radius:16px}
+    .auth-card h2{font-size:1.35rem}
+    .field input{padding:.85rem .9rem;font-size:16px}
+    .btn{padding:.9rem 1rem;font-size:.92rem}
+    .dash-main{padding:1.4rem .9rem}
+    .dash-hello h1{font-size:1.45rem}
+    .dash-hello p{font-size:.9rem}
+    .topbar{padding:.7rem .9rem}
+    .topbar .brand{font-size:.9rem}
+    .brand-logo-badge{width:28px;height:28px;border-radius:8px}
+    .app-card{padding:1.2rem;border-radius:16px}
+    .app-card h3{font-size:1.15rem}
+    .app-card p{font-size:.88rem}
+    .modal{padding:1.6rem 1.3rem;border-radius:16px}
+    .viewer-bar{padding:.6rem .7rem;gap:.6rem}
+    .viewer-bar .back{padding:.45rem .7rem;font-size:.82rem}
+    .viewer-bar .title{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  }
+
+  /* Móvil pequeño */
+  @media (max-width:360px){
+    .auth-form-wrap{padding:1.2rem .9rem}
+    .auth-form-title{font-size:1.2rem}
+    .topbar{padding:.6rem .7rem}
+    .topbar .brand{font-size:.82rem;letter-spacing:0}
+  }
+
+  /* ============ ONBOARDING ============ */
+  .onb-shell{
+    position:fixed;inset:0;z-index:70;
+    background:linear-gradient(135deg, #f4f6f2 0%, #ffffff 55%, #e8ede1 100%);
+    display:none;align-items:center;justify-content:center;
+    padding:2rem 1.5rem;overflow-y:auto;
+  }
+  .onb-shell.show{display:flex}
+  .onb-card{
+    background:#fff;border-radius:24px;
+    box-shadow:0 40px 80px -30px rgba(60,70,50,.25);
+    max-width:560px;width:100%;
+    overflow:hidden;
+    border:1px solid var(--border);
+  }
+  .onb-top{
+    background:linear-gradient(135deg,#9caf88 0%,#7d9169 100%);
+    padding:2.5rem 2rem 2rem;
+    text-align:center;color:#fff;
+    position:relative;overflow:hidden;
+  }
+  .onb-top::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,.2), transparent 50%),
+      radial-gradient(circle at 70% 80%, rgba(255,255,255,.12), transparent 50%);
+  }
+  .onb-logo{position:relative;z-index:1;margin-bottom:1rem;display:flex;justify-content:center}
+  .onb-logo .logo-badge{
+    width:60px;height:60px;border-radius:16px;
+    background:#fff;display:inline-flex;align-items:center;justify-content:center;
+    overflow:hidden;box-shadow:0 6px 24px -8px rgba(0,0,0,.25);
+  }
+  .onb-logo .logo-badge img{width:100%;height:100%;object-fit:contain;padding:6px}
+  .onb-top h2{
+    position:relative;z-index:1;
+    font-family:'Playfair Display',serif;font-weight:700;
+    font-size:2rem;line-height:1.15;letter-spacing:-.3px;
+  }
+  .onb-top h2 em{font-style:italic;font-weight:500}
+  .onb-top p{
+    position:relative;z-index:1;
+    font-size:1rem;opacity:.93;margin-top:.6rem;max-width:420px;margin-left:auto;margin-right:auto;
+  }
+  .onb-body{padding:2rem 2.2rem}
+  .onb-step{display:none}
+  .onb-step.active{display:block;animation:fadeSlide .35s ease}
+  @keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .onb-feature-list{display:flex;flex-direction:column;gap:1rem;margin-top:.25rem}
+  .onb-feature{
+    display:flex;gap:1rem;align-items:flex-start;
+    padding:1rem 1.1rem;
+    background:var(--cream);
+    border:1px solid var(--border);
+    border-radius:14px;
+    transition:all .2s;
+  }
+  .onb-feature:hover{border-color:var(--sage);background:var(--sage-soft)}
+  .onb-feature .ico{
+    width:40px;height:40px;border-radius:10px;flex:none;
+    background:#fff;color:var(--sage-dark);
+    display:grid;place-items:center;
+    border:1px solid var(--border);
+  }
+  .onb-feature h4{
+    font-family:'Outfit',sans-serif;font-weight:600;
+    font-size:1rem;color:var(--ink);margin-bottom:.15rem;
+  }
+  .onb-feature p{font-size:.88rem;color:var(--muted);line-height:1.5}
+
+  .onb-tips{display:flex;flex-direction:column;gap:.85rem;margin-top:.25rem}
+  .onb-tip{
+    display:flex;gap:.85rem;align-items:flex-start;
+    font-size:.93rem;color:var(--ink-soft);line-height:1.55;
+  }
+  .onb-tip .num{
+    width:28px;height:28px;border-radius:50%;flex:none;
+    background:var(--sage);color:#fff;
+    display:grid;place-items:center;
+    font-family:'Outfit',sans-serif;font-weight:600;font-size:.82rem;
+  }
+  .onb-tip strong{color:var(--ink);font-weight:600}
+
+  .onb-nav{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:2rem;gap:1rem;
+  }
+  .onb-dots{display:flex;gap:.45rem}
+  .onb-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--border);transition:all .25s;
+  }
+  .onb-dot.active{background:var(--sage-dark);width:24px;border-radius:100px}
+  .onb-actions{display:flex;gap:.6rem}
+  .onb-actions .btn{width:auto;padding:.8rem 1.5rem;font-size:.92rem}
+  .onb-skip{
+    background:transparent;border:none;
+    color:var(--muted);font-size:.85rem;cursor:pointer;
+    padding:.5rem 0;
+  }
+  .onb-skip:hover{color:var(--ink-soft);text-decoration:underline}
+
+  @media (max-width:600px){
+    .onb-top{padding:2rem 1.5rem 1.7rem}
+    .onb-top h2{font-size:1.6rem}
+    .onb-body{padding:1.5rem 1.4rem}
+    .onb-nav{flex-direction:column-reverse;align-items:stretch}
+    .onb-actions{justify-content:space-between}
+    .onb-actions .btn{flex:1}
+  }
+
+  /* ============ FLOATING BUTTONS + CHAT ============ */
+  .fab-stack{
+    position:fixed;right:24px;bottom:24px;z-index:120;
+    display:flex;flex-direction:column;gap:14px;align-items:flex-end;
+    pointer-events:none;
+  }
+  .fab-stack > *{pointer-events:auto}
+  .fab{
+    width:60px;height:60px;border-radius:50%;border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 12px 32px -8px rgba(60,70,50,.35), 0 4px 12px -4px rgba(60,70,50,.2);
+    transition:transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s ease;
+    position:relative;
+  }
+  .fab:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 18px 40px -10px rgba(60,70,50,.45)}
+  .fab:active{transform:translateY(-1px) scale(1.01)}
+  .fab-skool{
+    background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);color:#fff;
+  }
+  .fab-skool svg{width:28px;height:28px}
+  .fab-chat{
+    background:linear-gradient(135deg,#9caf88 0%,#7d9169 100%);color:#fff;
+  }
+  .fab-chat svg{width:28px;height:28px}
+  .fab-chat .pulse{
+    position:absolute;inset:-4px;border-radius:50%;
+    background:rgba(157,175,136,.5);
+    animation:fabPulse 2.4s ease-out infinite;z-index:-1;
+  }
+  @keyframes fabPulse{
+    0%{transform:scale(1);opacity:.6}
+    100%{transform:scale(1.7);opacity:0}
+  }
+  .fab-tip{
+    position:absolute;right:74px;top:50%;transform:translateY(-50%);
+    background:#1a1a1a;color:#fff;padding:8px 14px;border-radius:8px;
+    font-size:13px;font-weight:500;white-space:nowrap;letter-spacing:.2px;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;
+  }
+  .fab:hover .fab-tip{opacity:1}
+
+  /* Chat panel */
+  .chat-panel{
+    position:fixed;right:24px;bottom:104px;
+    width:400px;max-width:calc(100vw - 32px);
+    height:620px;max-height:calc(100vh - 140px);
+    background:#fff;border-radius:20px;
+    box-shadow:0 24px 60px -12px rgba(60,70,50,.35), 0 8px 20px -8px rgba(60,70,50,.2);
+    display:none;flex-direction:column;overflow:hidden;
+    z-index:121;
+    transform:translateY(20px) scale(.96);opacity:0;
+    transition:transform .28s cubic-bezier(.4,0,.2,1), opacity .2s ease;
+    border:1px solid rgba(157,175,136,.15);
+  }
+  .chat-panel.show{display:flex;transform:translateY(0) scale(1);opacity:1}
+  .chat-header{
+    background:linear-gradient(135deg,#9caf88 0%,#7d9169 100%);
+    padding:18px 20px;color:#fff;display:flex;align-items:center;gap:12px;
+  }
+  .chat-avatar{
+    width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,.95);
+    padding:6px;display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .chat-avatar img{width:100%;height:100%;object-fit:contain}
+  .chat-header-info{flex:1;min-width:0}
+  .chat-header-name{
+    font-family:Georgia,serif;font-style:italic;font-size:18px;line-height:1.1;
+    margin-bottom:2px;
+  }
+  .chat-header-status{
+    font-size:12px;opacity:.9;display:flex;align-items:center;gap:6px;
+  }
+  .chat-header-status::before{
+    content:"";width:7px;height:7px;border-radius:50%;background:#a4d68b;
+    box-shadow:0 0 0 0 rgba(164,214,139,.7);animation:dotPulse 1.8s infinite;
+  }
+  @keyframes dotPulse{
+    0%{box-shadow:0 0 0 0 rgba(164,214,139,.7)}
+    70%{box-shadow:0 0 0 8px rgba(164,214,139,0)}
+    100%{box-shadow:0 0 0 0 rgba(164,214,139,0)}
+  }
+  .chat-close{
+    width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;
+    background:rgba(255,255,255,.15);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s;
+  }
+  .chat-close:hover{background:rgba(255,255,255,.28)}
+
+  .chat-body{
+    flex:1;overflow-y:auto;padding:20px 18px 12px;
+    background:linear-gradient(180deg,#fafaf7 0%,#f4f6f2 100%);
+    scroll-behavior:smooth;
+  }
+  .chat-body::-webkit-scrollbar{width:6px}
+  .chat-body::-webkit-scrollbar-thumb{background:rgba(157,175,136,.35);border-radius:3px}
+
+  .chat-msg{
+    display:flex;gap:10px;margin-bottom:14px;animation:msgIn .3s ease both;
+  }
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .chat-msg.user{flex-direction:row-reverse}
+  .chat-bubble{
+    max-width:78%;padding:11px 15px;border-radius:16px;
+    font-size:14.5px;line-height:1.55;color:#1a1a1a;
+    word-wrap:break-word;
+  }
+  .chat-bubble.user-bubble{white-space:pre-wrap}
+  .chat-bubble p{margin:0 0 .55em}
+  .chat-bubble p:last-child{margin-bottom:0}
+  .chat-bubble strong{font-weight:600;color:#1a1a1a}
+  .chat-bubble em{font-style:italic}
+  .chat-bubble ul,.chat-bubble ol{margin:.3em 0 .55em;padding-left:1.3em}
+  .chat-bubble li{margin:.18em 0}
+  .chat-bubble li > ul,.chat-bubble li > ol{margin:.15em 0}
+  .chat-bubble code{
+    background:rgba(157,175,136,.18);padding:1px 5px;border-radius:4px;
+    font-family:'SF Mono',Menlo,Monaco,monospace;font-size:.92em;
+  }
+  .chat-bubble a{color:#7d9169;text-decoration:underline}
+  .chat-bubble h1,.chat-bubble h2,.chat-bubble h3{
+    font-family:Georgia,serif;font-weight:600;margin:.45em 0 .3em;line-height:1.2;
+  }
+  .chat-bubble h3{font-size:1.05em}
+  .chat-bubble blockquote{
+    border-left:3px solid #9caf88;padding-left:10px;margin:.4em 0;color:#5a6053;
+  }
+  .chat-msg.lina .chat-bubble{
+    background:#fff;border:1px solid rgba(157,175,136,.18);
+    border-top-left-radius:4px;
+    box-shadow:0 2px 8px -2px rgba(60,70,50,.06);
+  }
+  .chat-msg.user .chat-bubble{
+    background:#1a1a1a;color:#fff;border-top-right-radius:4px;
+  }
+  .chat-msg-avatar{
+    width:30px;height:30px;border-radius:50%;flex-shrink:0;
+    background:#fff;padding:4px;border:1px solid rgba(157,175,136,.2);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .chat-msg-avatar img{width:100%;height:100%;object-fit:contain}
+  .chat-msg.user .chat-msg-avatar{display:none}
+
+  .chat-typing{
+    display:inline-flex;gap:4px;padding:6px 0;
+  }
+  .chat-typing span{
+    width:7px;height:7px;border-radius:50%;background:#9caf88;
+    animation:typing 1.2s infinite ease-in-out;
+  }
+  .chat-typing span:nth-child(2){animation-delay:.15s}
+  .chat-typing span:nth-child(3){animation-delay:.3s}
+  @keyframes typing{
+    0%,60%,100%{transform:translateY(0);opacity:.5}
+    30%{transform:translateY(-5px);opacity:1}
+  }
+
+  .chat-suggestions{
+    padding:6px 18px 16px;display:flex;flex-wrap:wrap;gap:8px;
+    background:linear-gradient(180deg,transparent,#f4f6f2);
+  }
+  .chat-suggestion{
+    background:#fff;border:1px solid rgba(157,175,136,.3);color:#3a3a3a;
+    padding:7px 12px;border-radius:14px;font-size:12.5px;cursor:pointer;
+    transition:all .18s;font-family:inherit;
+  }
+  .chat-suggestion:hover{border-color:#9caf88;background:#f4f6f2;transform:translateY(-1px)}
+
+  .chat-input-wrap{
+    padding:12px 14px 14px;background:#fff;border-top:1px solid rgba(157,175,136,.15);
+  }
+  .chat-input-row{
+    display:flex;gap:8px;align-items:flex-end;
+    background:#fafaf7;border:1px solid rgba(157,175,136,.25);
+    border-radius:14px;padding:6px 6px 6px 14px;
+    transition:border-color .2s, box-shadow .2s;
+  }
+  .chat-input-row:focus-within{
+    border-color:#9caf88;box-shadow:0 0 0 3px rgba(157,175,136,.15);
+  }
+  .chat-input{
+    flex:1;border:none;background:transparent;outline:none;resize:none;
+    font-family:inherit;font-size:14.5px;line-height:1.45;color:#1a1a1a;
+    padding:8px 0;max-height:96px;min-height:22px;
+  }
+  .chat-input::placeholder{color:#a8aea0}
+  .chat-send{
+    width:38px;height:38px;border-radius:10px;border:none;cursor:pointer;
+    background:linear-gradient(135deg,#9caf88 0%,#7d9169 100%);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s, opacity .15s;flex-shrink:0;
+  }
+  .chat-send:hover:not(:disabled){transform:scale(1.05)}
+  .chat-send:disabled{opacity:.4;cursor:not-allowed}
+  .chat-disclaimer{
+    font-size:11px;color:#8a9080;text-align:center;margin-top:8px;
+  }
+
+  @media(max-width:520px){
+    .chat-panel{
+      right:12px;left:12px;bottom:90px;width:auto;
+      height:min(620px, calc(100vh - 110px));
+    }
+    .fab-stack{right:14px;bottom:14px;gap:12px}
+    .fab{width:54px;height:54px}
+    .fab-tip{display:none}
+  }
+
+  /* ============ INTRO / LOADER ============ */
+  .boot{
+    position:fixed;inset:0;background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    z-index:100;transition:opacity .4s ease;
+  }
+  .boot.hide{opacity:0;pointer-events:none}
+  .boot .loader{
+    width:34px;height:34px;border:3px solid var(--sage-soft);
+    border-top-color:var(--sage-dark);border-radius:50%;
+    animation:spin .7s linear infinite;
+  }
+</style>
+</head>
+<body>
+
+<div class="boot" id="boot"><div class="loader"></div></div>
+
+<!-- ============================= AUTH VIEW ============================= -->
+<div class="auth-shell full-bleed" id="view-auth">
+  <aside class="auth-hero">
+    <video class="auth-hero-video" id="heroVideo" autoplay loop muted playsinline preload="auto"></video>
+  </aside>
+
+  <section class="auth-form-wrap">
+
+    <div class="auth-form-inner">
+      <div class="auth-form-header">
+        <div class="auth-form-logo">
+          <img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="Savias" />
+        </div>
+        <h1 class="auth-form-title">Un espacio <em>íntimo</em> para tu práctica jabonera.</h1>
+      </div>
+
+    <!-- LOGIN -->
+    <div class="auth-card" id="card-login">
+      <div class="eyebrow">Bienvenida de vuelta</div>
+      <h2>Ingresa a tu espacio</h2>
+      <p class="sub">Accede a tus herramientas con el correo que usaste al registrarte.</p>
+      <div class="alert" id="alert-login"></div>
+      <form id="form-login" novalidate>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <div class="field-row">
+          <span></span>
+          <a data-nav="forgot">¿Olvidaste tu contraseña?</a>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <span class="txt">Iniciar sesión</span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+      <div class="switch-auth">¿Aún no tienes cuenta? <a data-nav="register">Crea la tuya</a></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-card" id="card-register" style="display:none">
+      <div class="eyebrow">Te damos la bienvenida</div>
+      <h2>Crea tu cuenta</h2>
+      <p class="sub">En un minuto tendrás acceso a todas las herramientas.</p>
+      <div class="alert" id="alert-register"></div>
+      <form id="form-register" novalidate>
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" name="name" placeholder="Tu nombre" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" minlength="8" required />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <span class="txt">Crear mi cuenta</span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+      <div class="switch-auth">¿Ya tienes cuenta? <a data-nav="login">Inicia sesión</a></div>
+    </div>
+
+    <!-- FORGOT -->
+    <div class="auth-card" id="card-forgot" style="display:none">
+      <div class="eyebrow">Recuperar acceso</div>
+      <h2>¿Olvidaste tu contraseña?</h2>
+      <p class="sub">Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
+      <div class="alert" id="alert-forgot"></div>
+      <form id="form-forgot" novalidate>
+        <div class="field">
+          <label>Correo electrónico</label>
+          <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <span class="txt">Enviar enlace</span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+      <div class="switch-auth"><a data-nav="login">Volver al inicio de sesión</a></div>
+    </div>
+
+    <!-- RESET (cuando Supabase redirige con token en URL) -->
+    <div class="auth-card" id="card-reset" style="display:none">
+      <div class="eyebrow">Nueva contraseña</div>
+      <h2>Elige una contraseña</h2>
+      <p class="sub">Ingresa una nueva contraseña para tu cuenta.</p>
+      <div class="alert" id="alert-reset"></div>
+      <form id="form-reset" novalidate>
+        <div class="field">
+          <label>Nueva contraseña</label>
+          <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+        </div>
+        <div class="field">
+          <label>Confirmar contraseña</label>
+          <input type="password" name="password2" minlength="8" required />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <span class="txt">Guardar contraseña</span>
+          <span class="spinner"></span>
+        </button>
+      </form>
+    </div>
+
+    </div><!-- /auth-form-inner -->
+  </section>
+</div>
+
+<!-- ============================= APP SHELL ============================= -->
+<div class="app-shell full-bleed" id="view-app">
+  <header class="topbar">
+    <div class="brand" onclick="goHome()"><span class="brand-logo-badge"><img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="Savias" /></span> Savias · Lina Toro</div>
+    <div class="topbar-right">
+      <div class="user-chip-wrap">
+        <button class="user-chip" id="userChip">
+          <span class="avatar" id="userAvatar">·</span>
+          <span id="userName">Mi cuenta</span>
+        </button>
+        <div class="user-menu" id="userMenu">
+          <button onclick="openChangePass()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Cambiar contraseña
+          </button>
+          <div class="sep"></div>
+          <button onclick="doLogout()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <div class="dash-hello">
+      <div class="eyebrow">Tu espacio privado</div>
+      <h1 id="helloName">Hola</h1>
+      <p>Estas son las herramientas que Lina ha preparado para acompañar tu proceso. Elige una para comenzar.</p>
+    </div>
+
+    <div class="apps-grid">
+      <div class="app-card" onclick="openApp('precios')">
+        <div class="icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>Calculadora de Precios</h3>
+        <p>Calcula el precio justo de tus productos considerando ingredientes, tiempo, empaque y márgenes. Genera informes PDF profesionales.</p>
+        <span class="cta">Abrir herramienta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+
+      <div class="app-card" onclick="openApp('saponi')">
+        <div class="icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg>
+        </div>
+        <h3>Calculadora de Saponificación</h3>
+        <p>Formula con precisión. Ajusta grasas, hidróxidos y descuento de sosa para obtener jabones perfectos.</p>
+        <span class="cta">Abrir herramienta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+
+      <div class="app-card" onclick="openApp('creaprecio')">
+        <div class="icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="10" y2="10"/><line x1="12" y1="10" x2="14" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="10" y2="14"/><line x1="12" y1="14" x2="14" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="14" y2="18"/></svg>
+        </div>
+        <h3>CreaPrecio</h3>
+        <p>Simulador rápido de rentabilidad artesanal. Calcula el precio ideal de tus productos en segundos.</p>
+        <span class="cta">Abrir herramienta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+
+      <div class="app-card" onclick="openApp('fitomatch')">
+        <div class="icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M7 7a5 5 0 0 1 10 0c0 4-5 7-5 7s-5-3-5-7z"/><path d="M5 14c3 0 5 2 7 2s4-2 7-2"/><path d="M5 18c3 0 5 2 7 2s4-2 7-2"/></svg>
+        </div>
+        <h3>FitoMatch</h3>
+        <p>Diseñador de extractos botánicos. Encuentra la planta perfecta para tu fórmula según objetivo y formato.</p>
+        <span class="cta">Abrir herramienta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+
+      <div class="app-card" onclick="openApp('formulador')">
+        <div class="icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6v2l-2 3v4l5 8a2 2 0 0 1-1.7 3H7.7A2 2 0 0 1 6 19l5-8V8L9 5z"/></svg>
+        </div>
+        <h3>Formulador</h3>
+        <p>Asistente paso a paso. Elige un producto, ajusta fases e ingredientes y obtén tu fórmula completa en PDF.</p>
+        <span class="cta">Abrir herramienta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+
+      <div class="app-card" onclick="openApp('portfolio')">
+        <div class="icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><circle cx="7.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="10.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="13.5" cy="14.5" r=".5" fill="currentColor"/><circle cx="16.5" cy="11.5" r=".5" fill="currentColor"/></svg>
+        </div>
+        <h3>SkinSolver</h3>
+        <p>Soluciones por problema de piel. Identifica el caso y obtén la línea de productos recomendada con activos clave.</p>
+        <span class="cta">Abrir herramienta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+
+      <div class="app-card" onclick="openApp('saviaspath')">
+        <div class="icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        </div>
+        <h3>SaviasPath</h3>
+        <p>Quiz rápido que te recomienda la ruta de formación ideal según tu experiencia, objetivos y tiempo disponible.</p>
+        <span class="cta">Abrir herramienta <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============================= APP VIEWER ============================= -->
+<div class="app-viewer" id="viewer">
+  <div class="viewer-bar">
+    <button class="back" onclick="closeApp()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Volver
+    </button>
+    <div class="title" id="viewerTitle">Herramienta</div>
+  </div>
+  <iframe class="viewer-frame" id="viewerFrame" sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-popups"></iframe>
+</div>
+
+<!-- ============================= FLOATING BUTTONS ============================= -->
+<div class="fab-stack" id="fabStack" style="display:none">
+  <a class="fab fab-skool" id="fabSkool" href="#" target="_blank" rel="noopener" aria-label="Ir a la comunidad Skool">
+    <span class="fab-tip">Comunidad SAVIAS</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  </a>
+  <button class="fab fab-chat" id="fabChat" type="button" aria-label="Abrir chat con Lina">
+    <span class="pulse"></span>
+    <span class="fab-tip">Chatea con Lina</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  </button>
+</div>
+
+<!-- ============================= CHAT PANEL ============================= -->
+<div class="chat-panel" id="chatPanel" role="dialog" aria-label="Chat con Lina">
+  <div class="chat-header">
+    <div class="chat-avatar">
+      <img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="Savias" />
+    </div>
+    <div class="chat-header-info">
+      <div class="chat-header-name">Lina</div>
+      <div class="chat-header-status">En línea para ti</div>
+    </div>
+    <button class="chat-close" id="chatClose" type="button" aria-label="Cerrar chat">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="chat-body" id="chatBody"></div>
+  <div class="chat-suggestions" id="chatSuggestions">
+    <button class="chat-suggestion" type="button" data-q="¿Cómo uso la Calculadora de Saponificación?">¿Cómo uso la saponificación?</button>
+    <button class="chat-suggestion" type="button" data-q="¿Para qué sirve FitoMatch?">¿Qué es FitoMatch?</button>
+    <button class="chat-suggestion" type="button" data-q="¿Cómo calculo el precio de mis jabones?">Calcular precios</button>
+  </div>
+  <div class="chat-input-wrap">
+    <form class="chat-input-row" id="chatForm">
+      <textarea class="chat-input" id="chatInput" rows="1" placeholder="Escríbele a Lina..." maxlength="1000"></textarea>
+      <button class="chat-send" type="submit" id="chatSend" aria-label="Enviar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </form>
+    <div class="chat-disclaimer">Lina te responde con cariño 💚 Para casos personales, escríbele en Skool.</div>
+  </div>
+</div>
+
+<!-- ============================= CHANGE PASS MODAL ============================= -->
+<div class="modal-backdrop" id="modalChangePass">
+  <div class="modal">
+    <h3>Cambiar contraseña</h3>
+    <p class="sub">Ingresa tu nueva contraseña. Se cerrará la sesión después del cambio.</p>
+    <div class="alert" id="alert-change"></div>
+    <form id="form-change" novalidate>
+      <div class="field">
+        <label>Nueva contraseña</label>
+        <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+      </div>
+      <div class="field">
+        <label>Confirmar contraseña</label>
+        <input type="password" name="password2" minlength="8" required />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="closeChangePass()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <span class="txt">Guardar</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================= ONBOARDING ============================= -->
+<div class="onb-shell" id="onboarding">
+  <div class="onb-card">
+    <div class="onb-top">
+      <div class="onb-logo"><span class="logo-badge"><img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="Savias" /></span></div>
+      <h2 id="onbTitle">Bienvenida, <em>alma jabonera</em>.</h2>
+      <p id="onbSubtitle">Estás a un paso de tu espacio privado. Te cuento en un minuto cómo aprovecharlo al máximo.</p>
+    </div>
+
+    <div class="onb-body">
+      <!-- Paso 1 -->
+      <div class="onb-step active" data-step="1">
+        <div class="onb-tips">
+          <div class="onb-tip">
+            <div class="num">1</div>
+            <div><strong>Este es tu espacio.</strong> Todas las herramientas que Lina ha preparado para tu práctica — en un solo lugar, sin anuncios, sin distracciones.</div>
+          </div>
+          <div class="onb-tip">
+            <div class="num">2</div>
+            <div><strong>Accede desde cualquier dispositivo.</strong> Tu cuenta te acompaña en el móvil, la tablet o el ordenador del taller.</div>
+          </div>
+          <div class="onb-tip">
+            <div class="num">3</div>
+            <div><strong>Tus datos, seguros.</strong> Nada de lo que calcules o explores se comparte. Es solo tuyo.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div class="onb-step" data-step="2">
+        <div class="onb-feature-list">
+          <div class="onb-feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div>
+              <h4>Calculadora de Precios</h4>
+              <p>Define el precio justo de tus productos considerando ingredientes, tiempo, empaque y margen.</p>
+            </div>
+          </div>
+          <div class="onb-feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2v7.31"/><path d="M14 9.3V2"/><path d="M8.5 2h7"/><path d="M14 9.3a6.5 6.5 0 1 1-4 0"/></svg></div>
+            <div>
+              <h4>Calculadora de Saponificación</h4>
+              <p>Formula con precisión. Ajusta grasas, hidróxidos y descuento de sosa con total seguridad.</p>
+            </div>
+          </div>
+          <div class="onb-feature">
+            <div class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19.2 2.96a1 1 0 0 1 1.8.8c-.5 7.58-5.5 12.24-10 12.24z"/><path d="M2 22c1.5-2 3-4.5 4-7"/></svg></div>
+            <div>
+              <h4>Herramientas de Savias</h4>
+              <p>Biblioteca de savias y sus propiedades, para encontrar la combinación perfecta para cada intención.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div class="onb-step" data-step="3">
+        <div class="onb-tips">
+          <div class="onb-tip">
+            <div class="num">✓</div>
+            <div><strong>Tu correo es tu llave.</strong> Úsalo para volver a entrar cuando quieras.</div>
+          </div>
+          <div class="onb-tip">
+            <div class="num">✓</div>
+            <div><strong>¿Olvidaste la contraseña?</strong> En la pantalla de login tienes un enlace para recuperarla. También puedes cambiarla desde tu perfil, arriba a la derecha.</div>
+          </div>
+          <div class="onb-tip">
+            <div class="num">✓</div>
+            <div><strong>Para empezar:</strong> elige una herramienta en el panel principal. Puedes volver al inicio en cualquier momento desde el logo.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="onb-nav">
+        <div class="onb-dots">
+          <div class="onb-dot active" data-dot="1"></div>
+          <div class="onb-dot" data-dot="2"></div>
+          <div class="onb-dot" data-dot="3"></div>
+        </div>
+        <div class="onb-actions">
+          <button class="btn btn-ghost" id="onbPrev" style="display:none" onclick="onbPrev()">Atrás</button>
+          <button class="btn btn-primary" id="onbNext" onclick="onbNext()">Continuar</button>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:.5rem">
+        <button class="onb-skip" onclick="onbFinish()">Saltar presentación</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Storage for embedded apps (base64) -->
+<script type="text/plain" id="app-precios">__APP_PRECIOS__</script>
+<script type="text/plain" id="app-saponi">__APP_SAPONI__</script>
+<script type="text/plain" id="app-savias">__APP_SAVIAS__</script>
+
+<script>
+/* ============ CONFIG ============ */
+// Video del hero (login). Sube savias.mp4 a la biblioteca de GHL y pega aquí su URL.
+// Si se deja vacío, el hero usa el gradiente sage como fallback.
+const SAVIAS_VIDEO_URL = 'https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69ebf1b19fe87a9994c25eba.mp4';
+
+const SUPABASE_URL = 'https://cojwzekyeehqtxdvoldj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvand6ZWt5ZWVocXR4ZHZvbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTA2MjYsImV4cCI6MjA5MjYyNjYyNn0.qlTIaARvrrXHPGjPR6STbybmLA9Jn2r_R04xaZxnU4k';
+const WELCOME_FN_URL = `${SUPABASE_URL}/functions/v1/send-welcome-email`;
+const CHAT_FN_URL    = `${SUPABASE_URL}/functions/v1/chat-lina`;
+const SKOOL_URL      = 'https://www.skool.com/savias-8385';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'pkce' }
+});
+
+const APPS = {
+  precios:   { title:'Calculadora de Precios',           srcId:'app-precios' },
+  saponi:    { title:'Calculadora de Saponificación',    srcId:'app-saponi' },
+  creaprecio:{ title:'CreaPrecio',                       srcId:'app-savias', saviasApp:'creaprecio' },
+  fitomatch: { title:'FitoMatch',                        srcId:'app-savias', saviasApp:'fitomatch' },
+  formulador:{ title:'Formulador',                       srcId:'app-savias', saviasApp:'formulador' },
+  portfolio: { title:'SkinSolver',                       srcId:'app-savias', saviasApp:'portfolio' },
+  saviaspath:{ title:'SaviasPath',                       srcId:'app-savias', saviasApp:'saviaspath' }
+};
+
+/* ============ HELPERS ============ */
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+function showAlert(id, msg, type='error'){
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `alert show ${type}`;
+}
+function clearAlert(id){ const el=document.getElementById(id); el.className='alert'; el.textContent=''; }
+function setLoading(form, on){
+  const btn = form.querySelector('button[type="submit"]');
+  const sp  = btn.querySelector('.spinner');
+  const txt = btn.querySelector('.txt');
+  btn.disabled = on;
+  if(sp)  sp.classList.toggle('show', on);
+  if(txt) txt.style.opacity = on ? .6 : 1;
+}
+function showAuthCard(name){
+  ['login','register','forgot','reset'].forEach(n=>{
+    const c = document.getElementById(`card-${n}`);
+    if(c) c.style.display = (n===name) ? 'block' : 'none';
+  });
+}
+function initials(name, email){
+  const src = (name||'').trim() || (email||'').trim();
+  const parts = src.split(/\s+/);
+  if(parts.length>=2) return (parts[0][0]+parts[1][0]).toUpperCase();
+  return (src[0]||'·').toUpperCase();
+}
+
+/* ============ AUTH FLOWS ============ */
+async function handleLogin(e){
+  e.preventDefault();
+  clearAlert('alert-login');
+  const f = e.target;
+  setLoading(f,true);
+  const { email, password } = Object.fromEntries(new FormData(f));
+  const { data, error } = await sb.auth.signInWithPassword({ email:email.trim().toLowerCase(), password });
+  setLoading(f,false);
+  if(error){ showAlert('alert-login', traducirError(error.message)); return; }
+  enterApp(data.session);
+}
+
+async function handleRegister(e){
+  e.preventDefault();
+  clearAlert('alert-register');
+  const f = e.target;
+  setLoading(f,true);
+  const { name, email, password } = Object.fromEntries(new FormData(f));
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanName  = (name||'').trim();
+
+  const { data, error } = await sb.auth.signUp({
+    email: cleanEmail,
+    password,
+    options:{ data:{ full_name: cleanName } }
+  });
+
+  if(error){ setLoading(f,false); showAlert('alert-register', traducirError(error.message)); return; }
+
+  // Sin verificación: si Supabase devuelve sesión entramos directo; si no, intentamos login.
+  let session = data.session;
+  if(!session){
+    const login = await sb.auth.signInWithPassword({ email:cleanEmail, password });
+    if(login.error){
+      setLoading(f,false);
+      showAlert('alert-register', 'Cuenta creada. Inicia sesión para continuar.', 'success');
+      setTimeout(()=>showAuthCard('login'), 1200);
+      return;
+    }
+    session = login.data.session;
+  }
+
+  // Enviar welcome email (no bloqueante)
+  sendWelcomeEmail(cleanEmail, cleanName).catch(console.warn);
+
+  setLoading(f,false);
+  enterApp(session, { showOnboarding:true });
+}
+
+async function handleForgot(e){
+  e.preventDefault();
+  clearAlert('alert-forgot');
+  const f = e.target;
+  setLoading(f,true);
+  const { email } = Object.fromEntries(new FormData(f));
+  const { error } = await sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  setLoading(f,false);
+  if(error){ showAlert('alert-forgot', traducirError(error.message)); return; }
+  showAlert('alert-forgot', 'Te enviamos un enlace. Revisa tu correo (y spam por si acaso).', 'success');
+}
+
+async function handleReset(e){
+  e.preventDefault();
+  clearAlert('alert-reset');
+  const f = e.target;
+  const { password, password2 } = Object.fromEntries(new FormData(f));
+  if(password !== password2){ showAlert('alert-reset','Las contraseñas no coinciden.'); return; }
+  setLoading(f,true);
+  const { error } = await sb.auth.updateUser({ password });
+  setLoading(f,false);
+  if(error){ showAlert('alert-reset', traducirError(error.message)); return; }
+  showAlert('alert-reset','Contraseña actualizada. Iniciando sesión...', 'success');
+  setTimeout(async ()=>{
+    const { data:{ session } } = await sb.auth.getSession();
+    if(session) enterApp(session); else showAuthCard('login');
+  }, 900);
+}
+
+async function handleChange(e){
+  e.preventDefault();
+  clearAlert('alert-change');
+  const f = e.target;
+  const { password, password2 } = Object.fromEntries(new FormData(f));
+  if(password !== password2){ showAlert('alert-change','Las contraseñas no coinciden.'); return; }
+  setLoading(f,true);
+  const { error } = await sb.auth.updateUser({ password });
+  setLoading(f,false);
+  if(error){ showAlert('alert-change', traducirError(error.message)); return; }
+  showAlert('alert-change','Contraseña actualizada. Cerrando sesión...', 'success');
+  setTimeout(doLogout, 1200);
+}
+
+async function doLogout(){
+  await sb.auth.signOut();
+  location.reload();
+}
+
+function traducirError(msg=''){
+  const m = msg.toLowerCase();
+  if(m.includes('invalid login')) return 'Correo o contraseña incorrectos.';
+  if(m.includes('user already registered')) return 'Ya existe una cuenta con ese correo.';
+  if(m.includes('password should be')) return 'La contraseña debe tener al menos 8 caracteres.';
+  if(m.includes('email rate limit')) return 'Demasiados intentos. Espera unos minutos.';
+  if(m.includes('unable to validate email')) return 'Correo inválido.';
+  return msg || 'Ocurrió un error. Intenta de nuevo.';
+}
+
+/* ============ WELCOME EMAIL ============ */
+async function sendWelcomeEmail(email, name){
+  try{
+    const res = await fetch(WELCOME_FN_URL, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ email, name })
+    });
+    if(!res.ok) console.warn('welcome email fallo', await res.text());
+  }catch(err){ console.warn('welcome email error', err); }
+}
+
+/* ============ APP VIEWER ============ */
+function openApp(key){
+  const app = APPS[key]; if(!app) return;
+  const raw = document.getElementById(app.srcId).textContent.trim();
+  let html;
+  try{
+    html = decodeURIComponent(escape(atob(raw)));
+  }catch(e){
+    html = atob(raw);
+  }
+
+  // Si es un sub-app de "Herramientas Savias", inyectamos un script que
+  // fuerza la activación del sub-app concreto (equivalente a ?app=xxx).
+  if(app.saviasApp){
+    const target = JSON.stringify(app.saviasApp);
+    const forceScript = `\n<script>(function(){\n  var target = ${target};\n  function activate(){\n    if(!target) return;\n    document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });\n    var t = document.getElementById('view-'+target);\n    if(t) t.classList.add('active');\n    var tb = document.querySelector('.top-bar'); if(tb) tb.style.display='none';\n    var ah = document.querySelector('.app-header'); if(ah) ah.style.display='none';\n    document.querySelectorAll('.btn-back').forEach(function(b){ b.style.display='none'; });\n    document.querySelectorAll('.sp-back-btn').forEach(function(b){ b.style.display='none'; });\n  }\n  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', activate);\n  else setTimeout(activate, 10);\n})();<\/script>\n`;
+    html = html.replace('</body>', forceScript + '</body>');
+  }
+
+  const frame = document.getElementById('viewerFrame');
+  frame.srcdoc = html;
+  document.getElementById('viewerTitle').textContent = app.title;
+  document.getElementById('viewer').classList.add('show');
+}
+function closeApp(){
+  document.getElementById('viewer').classList.remove('show');
+  document.getElementById('viewerFrame').srcdoc = '';
+}
+function goHome(){ closeApp(); }
+
+/* ============ CHANGE PASSWORD MODAL ============ */
+function openChangePass(){
+  closeUserMenu();
+  clearAlert('alert-change');
+  document.getElementById('form-change').reset();
+  document.getElementById('modalChangePass').classList.add('show');
+}
+function closeChangePass(){ document.getElementById('modalChangePass').classList.remove('show'); }
+
+/* ============ USER MENU ============ */
+function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('show'); }
+function closeUserMenu(){ document.getElementById('userMenu').classList.remove('show'); }
+
+/* ============ VIEW SWITCHING ============ */
+function enterApp(session, opts={}){
+  const user = session.user;
+  const name = user.user_metadata?.full_name || user.email.split('@')[0];
+  const firstName = name.split(' ')[0];
+  document.getElementById('helloName').textContent = `Hola, ${firstName}`;
+  document.getElementById('userName').textContent = name;
+  document.getElementById('userAvatar').textContent = initials(name, user.email);
+  document.getElementById('view-auth').style.display = 'none';
+  document.getElementById('view-app').classList.add('active');
+  setTimeout(applyFullBleed, 0);
+  showFabs(firstName);
+
+  const onboarded = user.user_metadata?.onboarded === true;
+  if(!onboarded){
+    startOnboarding(firstName);
+  }
+}
+
+function showFabs(firstName){
+  const stack = document.getElementById('fabStack');
+  if(stack) stack.style.display = 'flex';
+  const skool = document.getElementById('fabSkool');
+  if(skool) skool.href = SKOOL_URL;
+  initChat(firstName);
+}
+function hideFabs(){
+  const stack = document.getElementById('fabStack');
+  if(stack) stack.style.display = 'none';
+  closeChat();
+}
+
+/* ============ ONBOARDING ============ */
+let onbStep = 1;
+const ONB_TOTAL = 3;
+
+function startOnboarding(firstName){
+  onbStep = 1;
+  const title = document.getElementById('onbTitle');
+  if(firstName) title.innerHTML = `Bienvenida, <em>${firstName}</em>.`;
+  renderOnbStep();
+  document.getElementById('onboarding').classList.add('show');
+}
+function renderOnbStep(){
+  document.querySelectorAll('.onb-step').forEach(s=>s.classList.toggle('active', Number(s.dataset.step)===onbStep));
+  document.querySelectorAll('.onb-dot').forEach(d=>d.classList.toggle('active', Number(d.dataset.dot)===onbStep));
+  document.getElementById('onbPrev').style.display = onbStep>1 ? 'inline-flex' : 'none';
+  document.getElementById('onbNext').textContent = onbStep===ONB_TOTAL ? 'Explorar herramientas' : 'Continuar';
+  const sub = document.getElementById('onbSubtitle');
+  if(onbStep===1) sub.textContent = 'Estás a un paso de tu espacio privado. Te cuento en un minuto cómo aprovecharlo al máximo.';
+  else if(onbStep===2) sub.textContent = 'Estas son las tres herramientas esenciales que encontrarás en tu panel.';
+  else sub.textContent = 'Tres cosas prácticas antes de empezar.';
+}
+function onbNext(){
+  if(onbStep<ONB_TOTAL){ onbStep++; renderOnbStep(); }
+  else onbFinish();
+}
+function onbPrev(){ if(onbStep>1){ onbStep--; renderOnbStep(); } }
+
+async function onbFinish(){
+  document.getElementById('onboarding').classList.remove('show');
+  // Marcar en Supabase (no bloqueante)
+  try { await sb.auth.updateUser({ data:{ onboarded:true } }); } catch(e){ console.warn('onboarded flag error', e); }
+}
+
+/* ============ FULL-BLEED FIX (GHL containers) ============ */
+function applyFullBleed(){
+  const els = document.querySelectorAll('.full-bleed');
+  const vw = window.innerWidth || document.documentElement.clientWidth;
+  els.forEach(el => {
+    el.style.width=''; el.style.marginLeft=''; el.style.marginRight='';
+    el.style.left=''; el.style.right=''; el.style.transform='';
+    const rect = el.getBoundingClientRect();
+    const offLeft = rect.left;
+    if(Math.abs(offLeft) > 1 || Math.abs(vw - rect.right) > 1){
+      el.style.position='relative';
+      el.style.marginLeft = (-offLeft) + 'px';
+      el.style.width = vw + 'px';
+      el.style.left='0';
+      el.style.right='0';
+      el.style.transform='none';
+    }
+  });
+}
+
+/* Mover overlays al <body> para escapar contenedores transformados de GHL */
+function reparentOverlays(){
+  ['viewer','modalChangePass','onboarding','boot'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && el.parentNode !== document.body){
+      document.body.appendChild(el);
+    }
+  });
+}
+
+window.addEventListener('resize', applyFullBleed);
+window.addEventListener('orientationchange', applyFullBleed);
+
+/* ============ HERO VIDEO ============ */
+function initHeroVideo(){
+  const v = document.getElementById('heroVideo');
+  if(!v) return;
+  if(!SAVIAS_VIDEO_URL){
+    v.remove();
+    const ov = document.querySelector('.auth-hero-video-overlay');
+    if(ov) ov.remove();
+    return;
+  }
+  v.src = SAVIAS_VIDEO_URL;
+  v.play().catch(()=>{ /* autoplay bloqueado, se mostrará en loop con gesture */ });
+}
+
+/* ============ BOOT ============ */
+document.addEventListener('DOMContentLoaded', async ()=>{
+  reparentOverlays();
+  applyFullBleed();
+  initHeroVideo();
+  // nav links
+  document.body.addEventListener('click', e=>{
+    const a = e.target.closest('[data-nav]');
+    if(a){ e.preventDefault(); showAuthCard(a.dataset.nav); }
+  });
+
+  // forms
+  $('#form-login').addEventListener('submit', handleLogin);
+  $('#form-register').addEventListener('submit', handleRegister);
+  $('#form-forgot').addEventListener('submit', handleForgot);
+  $('#form-reset').addEventListener('submit', handleReset);
+  $('#form-change').addEventListener('submit', handleChange);
+
+  // user menu
+  $('#userChip').addEventListener('click', e=>{ e.stopPropagation(); toggleUserMenu(); });
+  document.addEventListener('click', e=>{
+    if(!e.target.closest('.user-chip-wrap')) closeUserMenu();
+  });
+
+  // close modal on backdrop click
+  $('#modalChangePass').addEventListener('click', e=>{
+    if(e.target.id==='modalChangePass') closeChangePass();
+  });
+
+  // escape cierra
+  document.addEventListener('keydown', e=>{
+    if(e.key==='Escape'){
+      if(document.getElementById('modalChangePass').classList.contains('show')) closeChangePass();
+      else if(document.getElementById('viewer').classList.contains('show')) closeApp();
+      else closeUserMenu();
+    }
+  });
+
+  // Sesión existente o flujo de recuperación
+  const hash = window.location.hash || '';
+  const isRecovery = hash.includes('type=recovery') || new URL(window.location.href).searchParams.get('type')==='recovery';
+
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(event === 'PASSWORD_RECOVERY'){
+      document.getElementById('view-auth').style.display = 'grid';
+      document.getElementById('view-app').classList.remove('active');
+      hideFabs();
+      showAuthCard('reset');
+      document.getElementById('boot').classList.add('hide');
+    }
+  });
+
+  const { data:{ session } } = await sb.auth.getSession();
+
+  if(isRecovery){
+    showAuthCard('reset');
+  } else if(session){
+    enterApp(session);
+  } else {
+    showAuthCard('login');
+  }
+
+  setTimeout(()=>document.getElementById('boot').classList.add('hide'), 250);
+});
+
+/* ============================= CHAT LINA ============================= */
+const chatState = {
+  open: false,
+  initialized: false,
+  conversationId: null,
+  history: [],     // [{role:'user'|'assistant', content:string}]
+  busy: false,
+  firstName: '',
+};
+
+function initChat(firstName){
+  chatState.firstName = firstName || '';
+  if(chatState.initialized) return;
+  chatState.initialized = true;
+
+  document.getElementById('fabChat').addEventListener('click', toggleChat);
+  document.getElementById('chatClose').addEventListener('click', closeChat);
+  document.getElementById('chatForm').addEventListener('submit', onChatSubmit);
+
+  const ta = document.getElementById('chatInput');
+  ta.addEventListener('input', ()=>{
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, 96) + 'px';
+  });
+  ta.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      onChatSubmit(e);
+    }
+  });
+
+  document.querySelectorAll('.chat-suggestion').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const q = btn.dataset.q;
+      if(!q) return;
+      ta.value = q;
+      onChatSubmit(new Event('submit'));
+    });
+  });
+
+  // Mensaje de bienvenida
+  renderGreeting(firstName);
+}
+
+function renderGreeting(firstName){
+  const name = firstName ? `, ${firstName}` : '';
+  const greet = `Hola hermosa${name} 🤍 Soy Lina y estoy aquí para acompañarte. Pregúntame por cualquier herramienta del dashboard o por dudas de tu práctica jabonera.\n\n¿En qué te puedo ayudar hoy?`;
+  appendMessage('lina', greet);
+}
+
+function toggleChat(){
+  if(chatState.open) closeChat();
+  else openChat();
+}
+
+function openChat(){
+  const panel = document.getElementById('chatPanel');
+  panel.classList.add('show');
+  chatState.open = true;
+  setTimeout(()=>document.getElementById('chatInput').focus(), 280);
+}
+
+function closeChat(){
+  const panel = document.getElementById('chatPanel');
+  if(panel) panel.classList.remove('show');
+  chatState.open = false;
+}
+
+function renderMarkdown(text){
+  if(!window.marked) return text.replace(/\n/g,'<br>');
+  try{
+    return window.marked.parse(text, { breaks:true, gfm:true });
+  }catch(_){ return text.replace(/\n/g,'<br>'); }
+}
+
+function setBubbleContent(bubble, text, who){
+  if(who === 'user'){
+    bubble.textContent = text;
+  } else {
+    bubble.innerHTML = renderMarkdown(text);
+  }
+}
+
+function appendMessage(who, text){
+  const body = document.getElementById('chatBody');
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-msg ' + (who === 'user' ? 'user' : 'lina');
+
+  if(who !== 'user'){
+    const av = document.createElement('div');
+    av.className = 'chat-msg-avatar';
+    av.innerHTML = '<img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="" />';
+    wrap.appendChild(av);
+  }
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble' + (who === 'user' ? ' user-bubble' : '');
+  bubble.dataset.raw = text;
+  setBubbleContent(bubble, text, who);
+  wrap.appendChild(bubble);
+
+  body.appendChild(wrap);
+  body.scrollTop = body.scrollHeight;
+  return bubble;
+}
+
+function appendTyping(){
+  const body = document.getElementById('chatBody');
+  const wrap = document.createElement('div');
+  wrap.className = 'chat-msg lina';
+  wrap.id = 'chatTyping';
+  wrap.innerHTML = '<div class="chat-msg-avatar"><img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="" /></div><div class="chat-bubble"><div class="chat-typing"><span></span><span></span><span></span></div></div>';
+  body.appendChild(wrap);
+  body.scrollTop = body.scrollHeight;
+  return wrap;
+}
+
+function removeTyping(){
+  const t = document.getElementById('chatTyping');
+  if(t) t.remove();
+}
+
+function hideSuggestions(){
+  const s = document.getElementById('chatSuggestions');
+  if(s) s.style.display = 'none';
+}
+
+async function onChatSubmit(e){
+  if(e && e.preventDefault) e.preventDefault();
+  if(chatState.busy) return;
+
+  const ta = document.getElementById('chatInput');
+  const message = ta.value.trim();
+  if(!message) return;
+
+  hideSuggestions();
+  appendMessage('user', message);
+  chatState.history.push({ role:'user', content: message });
+  ta.value = '';
+  ta.style.height = 'auto';
+
+  const typing = appendTyping();
+  chatState.busy = true;
+  document.getElementById('chatSend').disabled = true;
+
+  try{
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session){
+      removeTyping();
+      appendMessage('lina', 'Hermosa, tu sesión expiró. Refresca la página y vuelve a entrar 🌿');
+      return;
+    }
+
+    const res = await fetch(CHAT_FN_URL, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        message,
+        conversationId: chatState.conversationId,
+        history: chatState.history.slice(0, -1).slice(-10),
+      }),
+    });
+
+    if(!res.ok || !res.body){
+      removeTyping();
+      const errText = await res.text().catch(()=> '');
+      console.error('chat error', res.status, errText);
+      appendMessage('lina', 'Mi amor, tuve un tropiezo respondiendo. Intenta de nuevo en un momentico 💚');
+      return;
+    }
+
+    removeTyping();
+    const bubble = appendMessage('lina', '');
+    let assistantText = '';
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, { stream:true });
+      const events = buf.split('\n\n');
+      buf = events.pop() || '';
+      for(const evt of events){
+        const lines = evt.split('\n');
+        let eventName = 'message';
+        let dataStr = '';
+        for(const line of lines){
+          if(line.startsWith('event:')) eventName = line.slice(6).trim();
+          else if(line.startsWith('data:')) dataStr += line.slice(5).trim();
+        }
+        if(!dataStr) continue;
+        try{
+          const data = JSON.parse(dataStr);
+          if(eventName === 'meta' && data.conversationId){
+            chatState.conversationId = data.conversationId;
+          } else if(data.delta){
+            assistantText += data.delta;
+            bubble.innerHTML = renderMarkdown(assistantText);
+            const body = document.getElementById('chatBody');
+            body.scrollTop = body.scrollHeight;
+          }
+        } catch(_){}
+      }
+    }
+
+    if(assistantText){
+      chatState.history.push({ role:'assistant', content: assistantText });
+    }
+  } catch(err){
+    console.error('chat error', err);
+    removeTyping();
+    appendMessage('lina', 'Hermosa, no pude conectarme ahora. Inténtalo en un momento 🌿');
+  } finally {
+    chatState.busy = false;
+    document.getElementById('chatSend').disabled = false;
+    document.getElementById('chatInput').focus();
+  }
+}
+</script>
+
+</body>
+</html>

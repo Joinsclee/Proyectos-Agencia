@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico Rápido de un Inmueble Usado | CRECE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,700;1,800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{
+  --primary-purple:#613174;
+  --primary-purple-dark:#4a2459;
+  --primary-purple-light:#7d4292;
+  --accent-gold:#F1C901;
+  --accent-gold-dark:#c9a700;
+  --bg:#f7f5fa;
+  --card:#ffffff;
+  --text:#1a1a1a;
+  --text-soft:#5a5a6a;
+  --border:#e6e2ec;
+  --green:#16a34a;
+  --green-bg:#dcfce7;
+  --yellow:#ca8a04;
+  --yellow-bg:#fef9c3;
+  --orange:#ea580c;
+  --orange-bg:#ffedd5;
+  --red:#dc2626;
+  --red-bg:#fee2e2;
+  --blue:#1d4ed8;
+  --blue-bg:#dbeafe;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:'Barlow Semi Condensed',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.45;
+}
+h1,h2,h3,h4{font-family:'Tilt Warp',cursive;font-weight:400;letter-spacing:.3px;margin:0}
+.italic-emph{font-family:'Playfair Display',serif;font-style:italic;color:var(--primary-purple)}
+.app{max-width:1100px;margin:0 auto;padding:24px 16px 80px}
+header.brand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;padding:20px 0 32px}
+header.brand img{height:72px;width:auto;object-fit:contain}
+header.brand h1{font-size:30px;color:var(--primary-purple);line-height:1.15}
+header.brand .subtitle{font-size:15px;color:var(--text-soft);max-width:680px}
+header.brand .objective{
+  background:linear-gradient(135deg,#fff,#fdfaff);
+  border:1px solid var(--border);
+  border-left:4px solid var(--accent-gold);
+  border-radius:14px;padding:14px 18px;font-size:14px;color:var(--text-soft);max-width:760px;text-align:left
+}
+.section{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:22px;
+  margin-bottom:22px;
+  box-shadow:0 4px 12px rgba(97,49,116,0.05);
+}
+.section-title{
+  display:flex;align-items:center;gap:10px;
+  font-size:18px;color:var(--primary-purple);
+  border-bottom:2px solid var(--accent-gold);
+  padding-bottom:10px;margin-bottom:18px;
+}
+.section-title .num{
+  background:var(--primary-purple);color:#fff;border-radius:50%;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-family:'Barlow Semi Condensed';font-weight:700;
+}
+.grid{display:grid;gap:14px}
+.grid.cols-2{grid-template-columns:repeat(2,1fr)}
+.grid.cols-3{grid-template-columns:repeat(3,1fr)}
+.grid.cols-4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:720px){
+  .grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}
+  header.brand h1{font-size:24px}
+  .section{padding:16px}
+}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600;color:var(--text-soft)}
+.field .input-wrap{
+  display:flex;align-items:center;gap:6px;
+  background:#fff;border:1.5px solid var(--border);border-radius:10px;
+  padding:10px 12px;transition:.15s;
+}
+.field .input-wrap:focus-within{border-color:var(--primary-purple);box-shadow:0 0 0 3px rgba(97,49,116,.12)}
+.field input,.field select{
+  flex:1;border:0;outline:0;background:transparent;
+  font:inherit;font-size:15px;font-weight:500;color:var(--text);min-width:0;
+}
+.field select{cursor:pointer}
+.field .symbol{font-weight:700;color:var(--text-soft);font-size:14px}
+.field.calculated .input-wrap{background:#faf7fd;border-style:dashed;border-color:#cdb8d8}
+.field.calculated input{font-weight:700;color:var(--primary-purple)}
+.muted{color:var(--text-soft);font-size:13px}
+
+.q-row{
+  display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;
+  padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fdfcff;margin-bottom:8px;
+}
+.q-row .q-text{font-size:14px}
+.q-row select{padding:6px 10px;border-radius:8px;border:1.5px solid var(--border);font:inherit;background:#fff}
+.q-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;text-align:center;min-width:80px}
+.tag-ok{background:var(--green-bg);color:var(--green)}
+.tag-alert{background:var(--yellow-bg);color:var(--yellow)}
+.tag-strong{background:var(--red-bg);color:var(--red)}
+.tag-pending{background:#eef0f4;color:#64748b}
+
+.diag-summary{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;
+}
+.diag-card{
+  background:#faf7fd;border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;
+}
+.diag-card .lbl{font-size:11px;color:var(--text-soft);text-transform:uppercase;letter-spacing:.5px}
+.diag-card .val{font-size:22px;font-weight:800;color:var(--primary-purple);font-family:'Tilt Warp',cursive}
+.diag-result{
+  margin-top:14px;padding:14px;border-radius:12px;font-size:16px;font-weight:700;text-align:center;
+}
+.diag-result.descartar{background:var(--red-bg);color:var(--red);border:2px solid #fca5a5}
+.diag-result.cautela{background:var(--orange-bg);color:var(--orange);border:2px solid #fdba74}
+.diag-result.seguir{background:var(--green-bg);color:var(--green);border:2px solid #86efac}
+.descartar-msg{
+  margin-top:14px;padding:14px;border-radius:10px;background:#fff7f7;border:1px dashed #fca5a5;color:#7f1d1d;font-size:14px;
+}
+
+.market-table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px}
+.market-table{width:100%;border-collapse:collapse;font-size:13px;min-width:760px}
+.market-table th,.market-table td{padding:8px;border-bottom:1px solid var(--border);text-align:center;vertical-align:middle}
+.market-table th{background:#f5eefa;color:var(--primary-purple);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+.market-table td input,.market-table td select{
+  width:100%;border:1px solid transparent;background:#fff;padding:6px 8px;border-radius:6px;font:inherit;font-size:13px;text-align:center;
+}
+.market-table td input:focus,.market-table td select:focus{border-color:var(--primary-purple);outline:0}
+.market-table td.calc{background:#faf7fd;font-weight:700;color:var(--primary-purple)}
+.market-table .row-actions{display:flex;gap:4px;justify-content:center}
+.btn{
+  border:0;cursor:pointer;font:inherit;font-weight:700;border-radius:10px;padding:10px 16px;font-size:14px;
+  transition:.15s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--primary-purple);color:#fff}
+.btn-primary:hover{background:var(--primary-purple-dark)}
+.btn-gold{background:var(--accent-gold);color:#1a1a1a}
+.btn-gold:hover{background:var(--accent-gold-dark)}
+.btn-ghost{background:#fff;color:var(--primary-purple);border:1.5px solid var(--primary-purple)}
+.btn-ghost:hover{background:#f5eefa}
+.btn-danger{background:#fff;color:var(--red);border:1.5px solid #fca5a5;padding:6px 10px;font-size:12px}
+.btn-danger:hover{background:var(--red-bg)}
+.btn-edit{background:#fff;color:var(--blue);border:1.5px solid #93c5fd;padding:6px 10px;font-size:12px}
+.btn-edit:hover{background:var(--blue-bg)}
+.market-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+.classif-pill{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;white-space:nowrap}
+.cl-fuerte{background:var(--green-bg);color:var(--green)}
+.cl-oport{background:#d1fae5;color:#047857}
+.cl-mercado{background:#e5e7eb;color:#374151}
+.cl-atencion{background:var(--yellow-bg);color:var(--yellow)}
+.cl-sobreprecio{background:var(--orange-bg);color:var(--orange)}
+.cl-sobrev{background:var(--red-bg);color:var(--red)}
+
+.zone-card{
+  border-radius:14px;padding:20px;text-align:center;border:2px solid;
+}
+.zone-verde{background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-color:#16a34a;color:#14532d}
+.zone-amarillo{background:linear-gradient(135deg,#fef9c3,#fef08a);border-color:#ca8a04;color:#713f12}
+.zone-naranja{background:linear-gradient(135deg,#ffedd5,#fed7aa);border-color:#ea580c;color:#7c2d12}
+.zone-card .zone-label{font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.85}
+.zone-card .zone-title{font-size:24px;font-family:'Tilt Warp',cursive;margin:6px 0}
+.zone-card .zone-range{font-size:13px;margin-bottom:10px;opacity:.8}
+.zone-card .zone-text{font-size:14px;line-height:1.55}
+
+.disclaimer{
+  margin-top:24px;padding:16px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;font-size:13px;color:#7c2d12;
+}
+.hidden{display:none !important}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:720px){.row-2{grid-template-columns:1fr}}
+
+.pill-wrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.type-pill{
+  cursor:pointer;border:1.5px solid var(--border);background:#fff;padding:10px 14px;border-radius:999px;
+  font-weight:600;font-size:14px;color:var(--text-soft);transition:.15s;
+}
+.type-pill.active{background:var(--primary-purple);color:#fff;border-color:var(--primary-purple)}
+.type-pill:hover{border-color:var(--primary-purple)}
+
+.metric-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:720px){.metric-grid{grid-template-columns:1fr}}
+.metric{
+  background:#faf7fd;border:1px solid var(--border);border-radius:10px;padding:12px;
+}
+.metric .lbl{font-size:12px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.metric .val{font-size:18px;font-weight:800;color:var(--primary-purple);margin-top:4px;font-family:'Tilt Warp',cursive}
+.metric.highlight{background:linear-gradient(135deg,#f1c90122,#f1c90111);border-color:var(--accent-gold)}
+.metric.highlight .val{color:var(--primary-purple-dark)}
+.help-text{font-size:12px;color:var(--text-soft);margin-top:4px}
+
+.diag-mercado{
+  border-radius:12px;padding:14px;text-align:center;font-weight:700;font-size:18px;margin-top:10px;
+}
+.dm-fuerte{background:var(--green-bg);color:var(--green);border:2px solid #86efac}
+.dm-oport{background:#d1fae5;color:#047857;border:2px solid #6ee7b7}
+.dm-mercado{background:#e5e7eb;color:#374151;border:2px solid #cbd5e1}
+.dm-atencion{background:var(--yellow-bg);color:var(--yellow);border:2px solid #fde68a}
+.dm-sobreprecio{background:var(--orange-bg);color:var(--orange);border:2px solid #fdba74}
+.dm-sobrev{background:var(--red-bg);color:var(--red);border:2px solid #fca5a5}
+
+.analysis-text{
+  margin-top:12px;padding:12px;border-radius:10px;background:#fafafa;border:1px solid var(--border);font-size:14px;
+}
+.reform-tip{font-size:12px;color:var(--text-soft);margin-top:6px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header class="brand">
+  <img src="https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png" alt="Andrés Giraldo - CRECE">
+  <h1>Validador de Oportunidades Inmobiliarias <span class="italic-emph">CRECE</span></h1>
+  <div class="subtitle">Análisis Inicial y Comparativo · Diagnóstico de un Inmueble Usado</div>
+  <div class="objective">
+    <strong>Objetivo:</strong> Ayudar al inversionista a determinar, de forma inicial y comparativa, si un inmueble puede representar una oportunidad de inversión a partir del precio de mercado de la zona, los factores de negociación y un precio objetivo de compra.
+  </div>
+</header>
+
+<!-- 1. Tipo de inmueble + ubicación -->
+<section class="section">
+  <div class="section-title"><span class="num">1</span> Selecciona el tipo de inmueble</div>
+  <div class="pill-wrap" id="typeSelector">
+    <button type="button" class="type-pill active" data-type="casa">Casa</button>
+    <button type="button" class="type-pill" data-type="apartamento">Apartamento</button>
+    <button type="button" class="type-pill" data-type="local">Local</button>
+    <button type="button" class="type-pill" data-type="oficina">Oficina</button>
+    <button type="button" class="type-pill" data-type="lote">Lote</button>
+    <button type="button" class="type-pill" data-type="parqueadero">Parqueadero</button>
+  </div>
+  <div class="field" style="margin-top:18px">
+    <label for="ubicacion">Ubicación del Inmueble</label>
+    <div class="input-wrap"><input id="ubicacion" type="text" placeholder="Ciudad, barrio, dirección…"></div>
+  </div>
+</section>
+
+<!-- 2. Datos del inmueble -->
+<section class="section">
+  <div class="section-title"><span class="num">2</span> Datos del inmueble</div>
+  <div class="grid cols-2" id="datosInmueble"></div>
+</section>
+
+<!-- 3. Diagnóstico inicial -->
+<section class="section" id="seccionDiagnostico">
+  <div class="section-title"><span class="num">3</span> Diagnóstico inicial</div>
+  <div id="preguntasDiagnostico"></div>
+  <div class="diag-summary">
+    <div class="diag-card"><div class="lbl">Alertas Fuertes</div><div class="val" id="cntFuerte">0</div></div>
+    <div class="diag-card"><div class="lbl">Alertas</div><div class="val" id="cntAlerta">0</div></div>
+    <div class="diag-card"><div class="lbl">OK</div><div class="val" id="cntOk">0</div></div>
+  </div>
+  <div class="diag-result" id="diagResult">Responde las preguntas para obtener el diagnóstico.</div>
+  <div class="descartar-msg hidden" id="descartarMsg">
+    ⚠ <strong>Descartar inmueble preliminarmente.</strong> Si el inmueble presenta al menos una alerta fuerte, considere descartarlo, ya que esa condición puede afectar de forma importante su viabilidad como oportunidad de inversión. Hasta aquí se realiza el análisis.
+  </div>
+</section>
+
+<!-- 4. Análisis de mercado -->
+<section class="section" id="seccionMercado">
+  <div class="section-title"><span class="num">4</span> Análisis de mercado de la zona</div>
+  <p class="muted" style="margin-top:-6px;margin-bottom:14px">
+    Registra inmuebles ubicados en la misma zona y con características similares al inmueble analizado, con el fin de comparar precios y detectar oportunidades.
+  </p>
+  <div class="market-table-wrap">
+    <table class="market-table">
+      <thead><tr id="marketTableHead"></tr></thead>
+      <tbody id="marketTableBody"></tbody>
+    </table>
+  </div>
+  <div class="market-actions">
+    <button type="button" class="btn btn-ghost" id="btnAddRow">+ Agregar inmueble</button>
+  </div>
+</section>
+
+<!-- 5. Diagnóstico de precio -->
+<section class="section" id="seccionPrecio">
+  <div class="section-title"><span class="num">5</span> Diagnóstico de precio frente al mercado</div>
+  <div class="metric-grid">
+    <div class="metric"><div class="lbl">Precio Promedio de Mercado por m²</div><div class="val" id="mPromedio">$0</div></div>
+    <div class="metric"><div class="lbl">Precio Actual del Inmueble por m²</div><div class="val" id="mActualM2">$0</div></div>
+    <div class="metric"><div class="lbl">Menor Precio por m² Encontrado</div><div class="val" id="mMenor">—</div></div>
+    <div class="metric"><div class="lbl">Mayor Precio por m² Encontrado</div><div class="val" id="mMayor">—</div></div>
+    <div class="metric"><div class="lbl">Variación frente al Promedio (%)</div><div class="val" id="mVarPct">0%</div></div>
+    <div class="metric"><div class="lbl">Diferencia frente al Mercado ($)</div><div class="val" id="mDifPesos">$0</div></div>
+  </div>
+  <div class="diag-mercado dm-mercado" id="diagMercado">Diagnóstico: —</div>
+  <div class="analysis-text" id="analisisMercado"></div>
+</section>
+
+<!-- 6. Factores de negociación -->
+<section class="section" id="seccionFactores">
+  <div class="section-title"><span class="num">6</span> Factores de negociación</div>
+  <div class="grid cols-2">
+    <div class="field">
+      <label>Motivo de venta</label>
+      <div class="input-wrap"><select id="motivoVenta"></select></div>
+    </div>
+    <div class="field">
+      <label>Tiempo en venta</label>
+      <div class="input-wrap"><select id="tiempoVenta"></select></div>
+    </div>
+    <div class="field full-width" style="grid-column:1/-1">
+      <label>Tipo de reforma</label>
+      <div class="input-wrap"><select id="tipoReforma"></select></div>
+      <div class="reform-tip" id="reformaDef"></div>
+    </div>
+    <div class="field">
+      <label>Costo Estimado de Reforma <span class="muted">(editable)</span></label>
+      <div class="input-wrap"><span class="symbol">$</span><input id="costoReforma" type="text" inputmode="numeric"></div>
+      <div class="help-text" id="costoReformaHint"></div>
+    </div>
+    <div class="field calculated">
+      <label>Margen potencial de negociación</label>
+      <div class="input-wrap"><input id="margenNeg" readonly><span class="symbol">%</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. Estimación de la oferta de compra -->
+<section class="section" id="seccionOferta">
+  <div class="section-title"><span class="num">7</span> Estimación de la oferta de compra</div>
+  <div class="metric-grid">
+    <div class="metric"><div class="lbl">Precio Actual del Inmueble</div><div class="val" id="oPrecioActual">$0</div></div>
+    <div class="metric"><div class="lbl">Descuento a Negociar ($)</div><div class="val" id="oDescuento">$0</div></div>
+    <div class="metric"><div class="lbl">Precio Promedio de Mercado</div><div class="val" id="oPromedio">$0</div></div>
+    <div class="metric"><div class="lbl">% Descuento sobre Precio Actual</div><div class="val" id="oDescPctActual">0%</div></div>
+    <div class="metric"><div class="lbl">Variación frente al Mercado (%)</div><div class="val" id="oVarMercado">0%</div></div>
+    <div class="metric"><div class="lbl">% Descuento Frente al Mercado</div><div class="val" id="oDescPctMercado">0%</div></div>
+    <div class="metric"><div class="lbl">Diferencia frente al Mercado ($)</div><div class="val" id="oDifMercado">$0</div></div>
+    <div class="metric highlight"><div class="lbl">Precio Objetivo de Compra</div><div class="val" id="oPrecioObjetivo">$0</div></div>
+  </div>
+</section>
+
+<!-- 8. Resultado final -->
+<section class="section" id="seccionResultado">
+  <div class="section-title"><span class="num">8</span> Resultado final de la negociación</div>
+  <div class="field" style="max-width:380px">
+    <label>Precio Negociado de Compra</label>
+    <div class="input-wrap"><span class="symbol">$</span><input id="precioNegociado" type="text" inputmode="numeric" placeholder="0"></div>
+  </div>
+  <div class="metric-grid" style="margin-top:14px">
+    <div class="metric"><div class="lbl">Ahorro Logrado ($)</div><div class="val" id="rAhorro">$0</div></div>
+    <div class="metric"><div class="lbl">Descuento frente al Mercado ($)</div><div class="val" id="rDescMercado">$0</div></div>
+    <div class="metric highlight"><div class="lbl">% de Ahorro frente al Mercado</div><div class="val" id="rPctAhorro">0%</div></div>
+  </div>
+</section>
+
+<!-- 9. Conclusiones -->
+<section class="section" id="seccionConclusiones">
+  <div class="section-title"><span class="num">9</span> Conclusiones</div>
+  <div id="zoneCard"></div>
+</section>
+
+<section class="section" style="display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;background:linear-gradient(135deg,#fdfaff,#f5eefa);">
+  <div class="field" style="width:100%;max-width:420px">
+    <label>Nombre del proyecto / referencia (opcional)</label>
+    <div class="input-wrap"><input id="nombreProyecto" type="text" placeholder="Ej: Casa Laureles - Comparativo abril"></div>
+  </div>
+  <button type="button" id="btnPDF" class="btn btn-gold" style="font-size:15px;padding:12px 22px">📄 Descargar informe en PDF</button>
+  <div class="muted" style="font-size:12px">Genera un reporte completo con todos los datos, diagnóstico, comparables y conclusión.</div>
+</section>
+
+<div class="disclaimer">
+  ⚠ <strong>Exclusión de responsabilidad:</strong> Este análisis tiene fines informativos y educativos. No constituye una recomendación definitiva de inversión ni reemplaza un avalúo profesional. Las decisiones de compra deben tomarse con asesoría comercial, jurídica y financiera adecuada.
+</div>
+
+</div>
+
+<script>
+/* ========= CONFIGURACIÓN POR TIPO DE INMUEBLE ========= */
+const TIPO_CONFIG = {
+  casa: {
+    label:'Casa',
+    datos:[
+      {key:'habitaciones',label:'Habitaciones',type:'number',min:0},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Administración Mensual (si aplica)',type:'money'}
+    ],
+    preguntas:[
+      {q:'¿Está ubicado en un callejón sin acceso vehicular?', si:'fuerte', no:'ok'},
+      {q:'¿Es sótano, semisótano o subnivel?', si:'fuerte', no:'ok'},
+      {q:'¿Tiene vista al exterior e iluminación natural?', si:'ok', no:'alerta'},
+      {q:'¿Este inmueble está alineado con mi estrategia de inversión?', si:'ok', no:'alerta'},
+      {q:'¿Conoce la zona o el barrio?', si:'ok', no:'alerta'},
+      {q:'¿Sabe el motivo de venta?', si:'ok', no:'alerta'}
+    ],
+    mercado:[
+      {key:'habitaciones',label:'Habitaciones',type:'number'},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Adm. ($)',type:'money'}
+    ]
+  },
+  apartamento: {
+    label:'Apartamento',
+    datos:[
+      {key:'habitaciones',label:'Habitaciones',type:'number',min:0},
+      {key:'piso',label:'Piso',type:'number',min:0},
+      {key:'ascensor',label:'Ascensor',type:'select',options:['Selecciona','SI','NO']},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Administración Mensual (si aplica)',type:'money'}
+    ],
+    preguntas:[
+      {q:'¿Está ubicado en un callejón sin acceso vehicular?', si:'fuerte', no:'ok'},
+      {q:'¿Es sótano, semisótano o subnivel?', si:'fuerte', no:'ok'},
+      {q:'¿Tiene vista al exterior e iluminación natural?', si:'ok', no:'alerta'},
+      {q:'¿Está en un 4 o 5 piso sin ascensor?', si:'fuerte', no:'ok'},
+      {q:'¿El apartamento está en el último piso del edificio?', si:'alerta', no:'ok'},
+      {q:'¿Este inmueble está alineado con mi estrategia de inversión?', si:'ok', no:'alerta'},
+      {q:'¿Conoce la zona o el barrio?', si:'ok', no:'alerta'},
+      {q:'¿Sabe el motivo de venta?', si:'ok', no:'alerta'}
+    ],
+    mercado:[
+      {key:'habitaciones',label:'Habitaciones',type:'number'},
+      {key:'piso',label:'Piso',type:'number'},
+      {key:'ascensor',label:'Ascensor',type:'select',options:['Selecciona','SI','NO']},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Adm. ($)',type:'money'}
+    ]
+  },
+  local: {
+    label:'Local',
+    datos:[
+      {key:'piso',label:'Piso',type:'number',min:0},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Administración Mensual (si aplica)',type:'money'}
+    ],
+    preguntas:[
+      {q:'¿Está ubicado en un callejón sin acceso vehicular?', si:'fuerte', no:'ok'},
+      {q:'¿Es sótano, semisótano o subnivel?', si:'fuerte', no:'ok'},
+      {q:'¿Tiene vista al exterior e iluminación natural?', si:'ok', no:'fuerte'},
+      {q:'¿El local está ubicado dentro de un centro comercial?', si:'ok', no:'alerta'},
+      {q:'¿Este inmueble está alineado con mi estrategia de inversión?', si:'ok', no:'alerta'},
+      {q:'¿Conoce la zona o el barrio?', si:'ok', no:'alerta'},
+      {q:'¿Sabe el motivo de venta?', si:'ok', no:'alerta'}
+    ],
+    mercado:[
+      {key:'piso',label:'Piso',type:'number'},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Adm. ($)',type:'money'}
+    ]
+  },
+  oficina: {
+    label:'Oficina',
+    datos:[
+      {key:'piso',label:'Piso',type:'number',min:0},
+      {key:'ascensor',label:'Ascensor',type:'select',options:['Selecciona','SI','NO']},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Administración Mensual (si aplica)',type:'money'}
+    ],
+    preguntas:[
+      {q:'¿Está ubicado en un callejón sin acceso vehicular?', si:'fuerte', no:'ok'},
+      {q:'¿Es sótano, semisótano o subnivel?', si:'fuerte', no:'ok'},
+      {q:'¿Tiene vista al exterior e iluminación natural?', si:'ok', no:'fuerte'},
+      {q:'¿Está en un 4 o 5 piso sin ascensor?', si:'fuerte', no:'ok'},
+      {q:'¿La oficina está en el último piso del edificio?', si:'alerta', no:'ok'},
+      {q:'¿Este inmueble está alineado con mi estrategia de inversión?', si:'ok', no:'alerta'},
+      {q:'¿Conoce la zona o el barrio?', si:'ok', no:'alerta'},
+      {q:'¿Sabe el motivo de venta?', si:'ok', no:'alerta'}
+    ],
+    mercado:[
+      {key:'piso',label:'Piso',type:'number'},
+      {key:'ascensor',label:'Ascensor',type:'select',options:['Selecciona','SI','NO']},
+      {key:'parqueadero',label:'Parqueadero',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Adm. ($)',type:'money'}
+    ]
+  },
+  lote: {
+    label:'Lote',
+    datos:[
+      {key:'admin',label:'Administración Mensual (si aplica)',type:'money'}
+    ],
+    preguntas:[
+      {q:'¿Es un lote de fácil acceso vehicular?', si:'ok', no:'fuerte'},
+      {q:'¿El lote tiene matrícula inmobiliaria propia e independiente?', si:'ok', no:'fuerte'},
+      {q:'¿El uso del suelo permite lo que quieres hacer?', si:'ok', no:'fuerte'},
+      {q:'¿Tiene servicios públicos o viabilidad cierta de conexión?', si:'ok', no:'fuerte'},
+      {q:'¿Está ubicado en zona/barrio/vereda con potencial de desarrollo y valorización?', si:'ok', no:'alerta'},
+      {q:'¿Este inmueble está alineado con mi estrategia de inversión?', si:'ok', no:'alerta'},
+      {q:'¿Conoce la zona o el barrio?', si:'ok', no:'alerta'},
+      {q:'¿Sabe el motivo de venta?', si:'ok', no:'alerta'}
+    ],
+    mercado:[
+      {key:'admin',label:'Adm. ($)',type:'money'}
+    ]
+  },
+  parqueadero: {
+    label:'Parqueadero',
+    datos:[
+      {key:'piso',label:'Piso',type:'number',min:0},
+      {key:'ascensor',label:'Ascensor',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Administración Mensual (si aplica)',type:'money'}
+    ],
+    preguntas:[
+      {q:'¿El espacio permite estacionar un vehículo normal sin dificultad?', si:'ok', no:'fuerte'},
+      {q:'¿Este inmueble está alineado con mi estrategia de inversión?', si:'ok', no:'alerta'},
+      {q:'¿Conoce la zona o el barrio?', si:'ok', no:'alerta'},
+      {q:'¿Sabe el motivo de venta?', si:'ok', no:'alerta'}
+    ],
+    mercado:[
+      {key:'piso',label:'Piso',type:'number'},
+      {key:'ascensor',label:'Ascensor',type:'select',options:['Selecciona','SI','NO']},
+      {key:'admin',label:'Adm. ($)',type:'money'}
+    ]
+  }
+};
+
+const MOTIVOS = [
+  {label:'No hay factor', pct:0},
+  {label:'Liquidez urgente', pct:0.15},
+  {label:'Deudas', pct:0.15},
+  {label:'Divorcio / Separación Patrimonial', pct:0.15},
+  {label:'Herencia', pct:0.12},
+  {label:'Inmueble improductivo', pct:0.12},
+  {label:'Traslado', pct:0.05},
+  {label:'Embargo previo a remate', pct:0.40},
+  {label:'Saneamiento Jurídico Viable', pct:0.10}
+];
+const TIEMPOS = [
+  {label:'Menos de 1 mes', pct:0},
+  {label:'Entre 1 y 3 meses', pct:0.02},
+  {label:'Entre 3 y 6 meses', pct:0.04},
+  {label:'Entre 6 y 12 meses', pct:0.06},
+  {label:'Más de 12 meses', pct:0.08}
+];
+const REFORMAS = [
+  {label:'No requiere reforma', pct:0, def:'El inmueble se entrega listo para uso, sin necesidad de inversión adicional en remodelación.'},
+  {label:'Adecuación menor', pct:0.03, def:'Ajustes básicos para mejorar apariencia. Ej: pintura, iluminación, griferías. ≈ 3% del valor del inmueble.'},
+  {label:'Adecuación estética o de bajo impacto', pct:0.05, def:'Mejorar apariencia sin cambiar distribución ni estructura. Ej: pintura, resane, iluminación, enchapes, cocina ligera. ≈ 5% del valor del inmueble.'},
+  {label:'Reforma de mediano impacto', pct:0.10, def:'Cambios amplios en acabados y ajustes no estructurales. No requiere licencia. Ej: cocina, baños, pisos, puertas, closets. ≈ 10% del valor del inmueble.'}
+];
+
+/* ========= ESTADO ========= */
+const state = {
+  tipo:'casa',
+  ubicacion:'',
+  precioActual:0,
+  area:0,
+  datos:{},
+  diagnostico:[],
+  mercado:[],
+  motivoIdx:0,
+  tiempoIdx:0,
+  reformaIdx:0,
+  costoReforma:0,
+  costoReformaTouched:false,
+  precioNegociado:0
+};
+
+/* ========= UTILIDADES ========= */
+const fmtCOP = n => isFinite(n) && n!==0 ? '$' + Math.round(n).toLocaleString('es-CO') : '$0';
+const fmtPct = n => (isFinite(n)?(n*100).toFixed(2)+'%':'0%');
+const parseMoney = v => {
+  if(typeof v!=='string') v = String(v||'');
+  const cleaned = v.replace(/[^\d]/g,'');
+  return cleaned ? parseInt(cleaned,10) : 0;
+};
+const formatMoneyInput = v => {
+  const n = parseMoney(v);
+  return n ? n.toLocaleString('es-CO') : '';
+};
+const $ = id => document.getElementById(id);
+
+/* ========= BUILD: DATOS ========= */
+function buildDatos(){
+  const cfg = TIPO_CONFIG[state.tipo];
+  const cont = $('datosInmueble');
+  cont.innerHTML = '';
+  // Always: Tipo (readonly), Precio Actual, Área, Precio/m² (calc)
+  const fixed = `
+    <div class="field">
+      <label>Tipo de Inmueble</label>
+      <div class="input-wrap"><input value="${cfg.label}" readonly></div>
+    </div>
+    <div class="field">
+      <label>Precio Actual del Inmueble</label>
+      <div class="input-wrap"><span class="symbol">$</span><input id="dPrecio" type="text" inputmode="numeric" placeholder="0"></div>
+    </div>
+    <div class="field">
+      <label>Área del Inmueble (m²)</label>
+      <div class="input-wrap"><input id="dArea" type="number" min="0" step="any" placeholder="0"><span class="symbol">m²</span></div>
+    </div>
+    <div class="field calculated">
+      <label>Precio por m²</label>
+      <div class="input-wrap"><span class="symbol">$</span><input id="dPrecioM2" readonly></div>
+    </div>
+  `;
+  cont.insertAdjacentHTML('beforeend', fixed);
+  cfg.datos.forEach(f=>{
+    let html = `<div class="field"><label>${f.label}</label><div class="input-wrap">`;
+    if(f.type==='money'){
+      html += `<span class="symbol">$</span><input data-extra="${f.key}" type="text" inputmode="numeric" placeholder="0">`;
+    } else if(f.type==='select'){
+      html += `<select data-extra="${f.key}">` + f.options.map(o=>`<option>${o}</option>`).join('') + `</select>`;
+    } else {
+      html += `<input data-extra="${f.key}" type="number" min="${f.min||0}" placeholder="0">`;
+    }
+    html += `</div></div>`;
+    cont.insertAdjacentHTML('beforeend', html);
+  });
+
+  $('dPrecio').addEventListener('input', e=>{
+    e.target.value = formatMoneyInput(e.target.value);
+    state.precioActual = parseMoney(e.target.value);
+    if(!state.costoReformaTouched) syncCostoReforma();
+    recalc();
+  });
+  $('dArea').addEventListener('input', e=>{
+    state.area = parseFloat(e.target.value)||0;
+    recalc();
+  });
+  cont.querySelectorAll('[data-extra]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const k = el.getAttribute('data-extra');
+      const cfgItem = cfg.datos.find(d=>d.key===k);
+      let v = el.value;
+      if(cfgItem.type==='money'){ el.value = formatMoneyInput(el.value); v = parseMoney(el.value); }
+      state.datos[k] = v;
+    });
+  });
+}
+
+/* ========= BUILD: DIAGNÓSTICO ========= */
+function buildDiagnostico(){
+  const cfg = TIPO_CONFIG[state.tipo];
+  const cont = $('preguntasDiagnostico');
+  cont.innerHTML = '';
+  state.diagnostico = cfg.preguntas.map(()=> ({ans:'', tag:'pending'}));
+  cfg.preguntas.forEach((p,i)=>{
+    const row = document.createElement('div');
+    row.className = 'q-row';
+    row.innerHTML = `
+      <div class="q-text">${p.q}</div>
+      <select data-q="${i}">
+        <option value="">—</option>
+        <option value="SI">SÍ</option>
+        <option value="NO">NO</option>
+      </select>
+      <div class="q-tag tag-pending" id="qtag-${i}">Pendiente</div>
+    `;
+    cont.appendChild(row);
+  });
+  cont.querySelectorAll('select[data-q]').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const i = +sel.dataset.q;
+      const ans = sel.value;
+      let tag = 'pending';
+      if(ans==='SI') tag = cfg.preguntas[i].si;
+      if(ans==='NO') tag = cfg.preguntas[i].no;
+      state.diagnostico[i] = {ans, tag};
+      const tagEl = $(`qtag-${i}`);
+      tagEl.className = 'q-tag ' + ({ok:'tag-ok',alerta:'tag-alert',fuerte:'tag-strong',pending:'tag-pending'}[tag]);
+      tagEl.textContent = ({ok:'OK',alerta:'Alerta',fuerte:'Alerta fuerte',pending:'Pendiente'}[tag]);
+      recalc();
+    });
+  });
+}
+
+/* ========= BUILD: MERCADO ========= */
+function buildMercadoTable(){
+  const cfg = TIPO_CONFIG[state.tipo];
+  const head = $('marketTableHead');
+  head.innerHTML = '';
+  const baseCols = ['N°','Dirección / Enlace','Área (m²)','Precio de Oferta','Precio por m²'];
+  const extraCols = cfg.mercado.map(c=>c.label);
+  const tailCols = ['Variación %','Clasificación','Acciones'];
+  [...baseCols, ...extraCols, ...tailCols].forEach(c=>{
+    const th = document.createElement('th'); th.textContent = c; head.appendChild(th);
+  });
+  state.mercado = [];
+  $('marketTableBody').innerHTML = '';
+  // start with 3 empty rows
+  for(let i=0;i<3;i++) addMarketRow();
+}
+
+function addMarketRow(){
+  const cfg = TIPO_CONFIG[state.tipo];
+  const idx = state.mercado.length;
+  const row = {direccion:'',area:'',precio:'',extras:{}};
+  cfg.mercado.forEach(f=>{ row.extras[f.key]=''; });
+  state.mercado.push(row);
+
+  const tr = document.createElement('tr');
+  tr.dataset.idx = idx;
+  let html = `
+    <td>${idx+1}</td>
+    <td><input data-f="direccion" type="text" placeholder="Dirección o enlace"></td>
+    <td><input data-f="area" type="number" min="0" step="any" placeholder="0"></td>
+    <td><input data-f="precio" type="text" inputmode="numeric" placeholder="0"></td>
+    <td class="calc" data-c="m2">$0</td>
+  `;
+  cfg.mercado.forEach(f=>{
+    if(f.type==='select'){
+      html += `<td><select data-x="${f.key}">` + f.options.map(o=>`<option>${o}</option>`).join('') + `</select></td>`;
+    } else if(f.type==='money'){
+      html += `<td><input data-x="${f.key}" type="text" inputmode="numeric" placeholder="0"></td>`;
+    } else {
+      html += `<td><input data-x="${f.key}" type="number" min="0" placeholder="0"></td>`;
+    }
+  });
+  html += `<td class="calc" data-c="varpct">—</td>`;
+  html += `<td data-c="clasif">—</td>`;
+  html += `<td><div class="row-actions"><button type="button" class="btn-danger btn">×</button></div></td>`;
+  tr.innerHTML = html;
+  $('marketTableBody').appendChild(tr);
+
+  tr.querySelector('[data-f="direccion"]').addEventListener('input', e=>{ state.mercado[idx].direccion = e.target.value; });
+  tr.querySelector('[data-f="area"]').addEventListener('input', e=>{ state.mercado[idx].area = parseFloat(e.target.value)||0; recalc(); });
+  const precInp = tr.querySelector('[data-f="precio"]');
+  precInp.addEventListener('input', e=>{
+    e.target.value = formatMoneyInput(e.target.value);
+    state.mercado[idx].precio = parseMoney(e.target.value);
+    recalc();
+  });
+  tr.querySelectorAll('[data-x]').forEach(el=>{
+    el.addEventListener('input', ()=>{
+      const k = el.dataset.x;
+      const cfgItem = cfg.mercado.find(c=>c.key===k);
+      if(cfgItem.type==='money'){ el.value = formatMoneyInput(el.value); state.mercado[idx].extras[k] = parseMoney(el.value); }
+      else state.mercado[idx].extras[k] = el.value;
+    });
+  });
+  tr.querySelector('.btn-danger').addEventListener('click', ()=>{
+    if(state.mercado.length<=1){ tr.querySelectorAll('input').forEach(i=>i.value=''); state.mercado[idx]={direccion:'',area:0,precio:0,extras:{}}; recalc(); return; }
+    state.mercado.splice(idx,1);
+    tr.remove();
+    // re-index
+    [...$('marketTableBody').children].forEach((r,i)=>{
+      r.dataset.idx = i;
+      r.firstElementChild.textContent = i+1;
+      const inp1 = r.querySelector('[data-f="direccion"]');
+      inp1.oninput = e=>{ state.mercado[i].direccion = e.target.value; };
+      const inp2 = r.querySelector('[data-f="area"]');
+      inp2.oninput = e=>{ state.mercado[i].area = parseFloat(e.target.value)||0; recalc(); };
+      const inp3 = r.querySelector('[data-f="precio"]');
+      inp3.oninput = e=>{ e.target.value = formatMoneyInput(e.target.value); state.mercado[i].precio = parseMoney(e.target.value); recalc(); };
+      r.querySelectorAll('[data-x]').forEach(el=>{
+        const k = el.dataset.x;
+        const ci = cfg.mercado.find(c=>c.key===k);
+        el.oninput = ()=>{
+          if(ci.type==='money'){ el.value = formatMoneyInput(el.value); state.mercado[i].extras[k] = parseMoney(el.value); }
+          else state.mercado[i].extras[k] = el.value;
+        };
+      });
+    });
+    recalc();
+  });
+}
+
+$('btnAddRow').addEventListener('click', ()=>{ addMarketRow(); recalc(); });
+
+/* ========= BUILD: SELECTS DE FACTORES ========= */
+function buildFactores(){
+  const m = $('motivoVenta'); m.innerHTML = MOTIVOS.map((o,i)=>`<option value="${i}">${o.label} ${o.pct?'('+(o.pct*100).toFixed(0)+'%)':''}</option>`).join('');
+  const t = $('tiempoVenta'); t.innerHTML = TIEMPOS.map((o,i)=>`<option value="${i}">${o.label} ${o.pct?'('+(o.pct*100).toFixed(0)+'%)':''}</option>`).join('');
+  const r = $('tipoReforma'); r.innerHTML = REFORMAS.map((o,i)=>`<option value="${i}">${o.label} ${o.pct?'('+(o.pct*100).toFixed(0)+'%)':''}</option>`).join('');
+  m.addEventListener('change', e=>{ state.motivoIdx = +e.target.value; recalc(); });
+  t.addEventListener('change', e=>{ state.tiempoIdx = +e.target.value; recalc(); });
+  r.addEventListener('change', e=>{
+    state.reformaIdx = +e.target.value;
+    state.costoReformaTouched = false; // re-sync
+    syncCostoReforma();
+    recalc();
+  });
+  $('costoReforma').addEventListener('input', e=>{
+    state.costoReformaTouched = true;
+    e.target.value = formatMoneyInput(e.target.value);
+    state.costoReforma = parseMoney(e.target.value);
+    recalc();
+  });
+  $('precioNegociado').addEventListener('input', e=>{
+    e.target.value = formatMoneyInput(e.target.value);
+    state.precioNegociado = parseMoney(e.target.value);
+    recalc();
+  });
+}
+function syncCostoReforma(){
+  const pct = REFORMAS[state.reformaIdx].pct;
+  state.costoReforma = Math.round(state.precioActual * pct);
+  $('costoReforma').value = state.costoReforma ? state.costoReforma.toLocaleString('es-CO') : '';
+  $('costoReformaHint').textContent = `Sugerido: ${(pct*100).toFixed(0)}% del precio actual = ${fmtCOP(state.costoReforma)}. Puedes editarlo.`;
+  $('reformaDef').textContent = REFORMAS[state.reformaIdx].def;
+}
+
+/* ========= CLASIFICACIÓN ========= */
+function clasificar(varPct){
+  if(varPct >= 0.20) return {label:'Sobrevalorado', cls:'cl-sobrev', dm:'dm-sobrev'};
+  if(varPct >= 0.10) return {label:'Con Sobreprecio', cls:'cl-sobreprecio', dm:'dm-sobreprecio'};
+  if(varPct > -0.10) return {label:'Precio de Mercado', cls:'cl-mercado', dm:'dm-mercado'};
+  if(varPct > -0.14) return {label:'Zona de Atención', cls:'cl-atencion', dm:'dm-atencion'};
+  if(varPct > -0.20) return {label:'Oportunidad', cls:'cl-oport', dm:'dm-oport'};
+  return {label:'Oportunidad Fuerte', cls:'cl-fuerte', dm:'dm-fuerte'};
+}
+const ANALISIS_MERCADO = {
+  'Precio de Mercado':'El inmueble se encuentra dentro del rango promedio de precios de la zona, pero no representa una oportunidad clara de inversión por debajo del mercado. Conviene evaluar otros factores antes de continuar.',
+  'Con Sobreprecio':'El inmueble tiene un precio superior al promedio de mercado de la zona. Esto indica que el valor solicitado está por encima de lo razonable y reduce el margen de oportunidad como inversión.',
+  'Sobrevalorado':'El inmueble está significativamente por encima del promedio de mercado de la zona. No representa una oportunidad de inversión bajo las condiciones actuales.',
+  'Zona de Atención':'El inmueble está ligeramente por debajo del promedio. Conviene seguir analizando los factores de negociación para confirmar si es una oportunidad real.',
+  'Oportunidad':'El inmueble presenta un precio claramente por debajo del promedio. Es razonable continuar el análisis y avanzar con la negociación.',
+  'Oportunidad Fuerte':'El inmueble está muy por debajo del promedio de mercado. Representa un escenario potencialmente atractivo de inversión.'
+};
+
+/* ========= RECALC ========= */
+function recalc(){
+  // precio/m² inmueble
+  const precioM2Actual = state.area>0 ? state.precioActual/state.area : 0;
+  $('dPrecioM2').value = precioM2Actual ? Math.round(precioM2Actual).toLocaleString('es-CO') : '';
+
+  // diagnóstico inicial
+  const fuertes = state.diagnostico.filter(d=>d.tag==='fuerte').length;
+  const alertas = state.diagnostico.filter(d=>d.tag==='alerta').length;
+  const oks = state.diagnostico.filter(d=>d.tag==='ok').length;
+  const total = state.diagnostico.length;
+  $('cntFuerte').textContent = fuertes;
+  $('cntAlerta').textContent = alertas;
+  $('cntOk').textContent = oks;
+
+  const allAnswered = state.diagnostico.every(d=>d.ans);
+  let diagStatus = 'pending';
+  const result = $('diagResult');
+  const descMsg = $('descartarMsg');
+  if(!allAnswered){
+    result.className = 'diag-result';
+    result.textContent = `Faltan ${total - state.diagnostico.filter(d=>d.ans).length} preguntas por responder.`;
+    descMsg.classList.add('hidden');
+  } else if(fuertes>=1){
+    result.className = 'diag-result descartar';
+    result.textContent = '🛑 DESCARTAR';
+    diagStatus = 'descartar';
+    descMsg.classList.remove('hidden');
+  } else if(alertas>=3){
+    result.className = 'diag-result cautela';
+    result.textContent = '⚠ REVISAR CON CAUTELA';
+    diagStatus = 'cautela';
+    descMsg.classList.add('hidden');
+  } else {
+    result.className = 'diag-result seguir';
+    result.textContent = '✅ SEGUIR EVALUANDO';
+    diagStatus = 'seguir';
+    descMsg.classList.add('hidden');
+  }
+
+  // Si descartar -> ocultar siguientes secciones
+  const hideAfter = diagStatus==='descartar';
+  ['seccionMercado','seccionPrecio','seccionFactores','seccionOferta','seccionResultado','seccionConclusiones'].forEach(id=>{
+    $(id).classList.toggle('hidden', hideAfter);
+  });
+  if(hideAfter) return;
+
+  // Análisis de mercado
+  const validMarket = state.mercado.filter(m=> m.area>0 && m.precio>0);
+  const m2Vals = validMarket.map(m => ({m2: m.precio/m.area, ref:m}));
+  const allM2 = m2Vals.map(v=>v.m2);
+  if(precioM2Actual>0) allM2.push(precioM2Actual);
+  const promedio = allM2.length ? allM2.reduce((a,b)=>a+b,0)/allM2.length : 0;
+
+  // Update each row
+  [...$('marketTableBody').children].forEach((tr,i)=>{
+    const m = state.mercado[i];
+    const m2 = (m.area>0 && m.precio>0) ? m.precio/m.area : 0;
+    tr.querySelector('[data-c="m2"]').textContent = m2 ? '$' + Math.round(m2).toLocaleString('es-CO') : '$0';
+    if(m2 && promedio){
+      const v = (m2 - promedio)/promedio;
+      tr.querySelector('[data-c="varpct"]').textContent = (v*100).toFixed(2)+'%';
+      const c = clasificar(v);
+      tr.querySelector('[data-c="clasif"]').innerHTML = `<span class="classif-pill ${c.cls}">${c.label}</span>`;
+    } else {
+      tr.querySelector('[data-c="varpct"]').textContent = '—';
+      tr.querySelector('[data-c="clasif"]').textContent = '—';
+    }
+  });
+
+  $('mPromedio').textContent = fmtCOP(promedio);
+  $('mActualM2').textContent = fmtCOP(precioM2Actual);
+  if(m2Vals.length){
+    const sorted = [...m2Vals].sort((a,b)=>a.m2-b.m2);
+    const minIdx = state.mercado.indexOf(sorted[0].ref) + 1;
+    const maxIdx = state.mercado.indexOf(sorted[sorted.length-1].ref) + 1;
+    $('mMenor').textContent = `Inmueble ${minIdx} - ${fmtCOP(sorted[0].m2)}/m²`;
+    $('mMayor').textContent = `Inmueble ${maxIdx} - ${fmtCOP(sorted[sorted.length-1].m2)}/m²`;
+  } else { $('mMenor').textContent = '—'; $('mMayor').textContent = '—'; }
+
+  const varActual = (precioM2Actual && promedio) ? (precioM2Actual - promedio)/promedio : 0;
+  const difPesos = (precioM2Actual && state.area) ? (precioM2Actual - promedio) * state.area : 0;
+  $('mVarPct').textContent = fmtPct(varActual);
+  $('mDifPesos').textContent = fmtCOP(difPesos);
+
+  // Diagnóstico mercado
+  const dm = $('diagMercado');
+  const am = $('analisisMercado');
+  let diagMercado = null;
+  if(precioM2Actual && promedio){
+    diagMercado = clasificar(varActual);
+    dm.className = 'diag-mercado ' + diagMercado.dm;
+    dm.textContent = 'Diagnóstico: ' + diagMercado.label;
+    am.textContent = ANALISIS_MERCADO[diagMercado.label] || '';
+  } else {
+    dm.className = 'diag-mercado dm-mercado';
+    dm.textContent = 'Diagnóstico: —';
+    am.textContent = 'Ingresa el precio y área del inmueble y al menos un comparable para ver el diagnóstico de mercado.';
+  }
+
+  // Si está en zona "no oportunidad" -> ocultar factores y siguientes
+  // (solo si ya hay al menos un comparable real, para no esconder por falta de datos)
+  const stopHere = diagMercado && validMarket.length>=1 && ['Precio de Mercado','Con Sobreprecio','Sobrevalorado'].includes(diagMercado.label);
+  ['seccionFactores','seccionOferta','seccionResultado','seccionConclusiones'].forEach(id=>{
+    $(id).classList.toggle('hidden', stopHere);
+  });
+  if(stopHere) return;
+
+  // Factores
+  const motivoPct = MOTIVOS[state.motivoIdx].pct;
+  const tiempoPct = TIEMPOS[state.tiempoIdx].pct;
+  const margen = motivoPct + tiempoPct;
+  $('margenNeg').value = (margen*100).toFixed(2);
+
+  // Oferta de compra
+  const promedioPesos = promedio * state.area;
+  const precioObjetivo = promedio>0 ? promedioPesos*(1 - margen) - state.costoReforma : 0;
+  const descuentoNeg = state.precioActual - precioObjetivo;
+  const descPctActual = state.precioActual ? descuentoNeg/state.precioActual : 0;
+  const descPctMercado = promedioPesos ? (promedioPesos - precioObjetivo)/promedioPesos : 0;
+
+  $('oPrecioActual').textContent = fmtCOP(state.precioActual);
+  $('oDescuento').textContent = fmtCOP(descuentoNeg);
+  $('oPromedio').textContent = fmtCOP(promedioPesos);
+  $('oDescPctActual').textContent = fmtPct(descPctActual);
+  $('oVarMercado').textContent = fmtPct(varActual);
+  $('oDescPctMercado').textContent = fmtPct(descPctMercado);
+  $('oDifMercado').textContent = fmtCOP(difPesos);
+  $('oPrecioObjetivo').textContent = fmtCOP(precioObjetivo);
+
+  // Resultado final
+  const ahorro = state.precioActual - state.precioNegociado;
+  const descMercado = promedioPesos - state.precioNegociado;
+  const pctAhorro = promedioPesos ? descMercado/promedioPesos : 0;
+  $('rAhorro').textContent = state.precioNegociado ? fmtCOP(ahorro) : '$0';
+  $('rDescMercado').textContent = state.precioNegociado ? fmtCOP(descMercado) : '$0';
+  $('rPctAhorro').textContent = state.precioNegociado ? fmtPct(pctAhorro) : '0%';
+
+  // Conclusiones
+  const zoneCard = $('zoneCard');
+  if(!state.precioNegociado || !promedioPesos){
+    zoneCard.innerHTML = `<div class="muted" style="text-align:center;padding:20px">Ingresa el precio negociado de compra para ver la conclusión final.</div>`;
+    return;
+  }
+  let zone, title, range, text;
+  if(pctAhorro >= 0.20){
+    zone='zone-verde'; title='ZONA VERDE · Oportunidad Atractiva';
+    range='Igual o mayor al 20% por debajo del mercado';
+    text='El inmueble presenta condiciones favorables de compra. El precio final se ubica con un descuento relevante frente al valor promedio del mercado, lo que abre espacio para una rentabilidad atractiva. Es una oportunidad sólida para avanzar.';
+  } else if(pctAhorro >= 0.10){
+    zone='zone-amarillo'; title='ZONA AMARILLA · Oportunidad para Revisar';
+    range='Entre 10% y 19,99% por debajo del mercado';
+    text='El inmueble muestra señales interesantes de oportunidad. Aunque presenta un descuento frente al mercado, es importante afinar la negociación y revisar otros factores antes de tomar la decisión final.';
+  } else {
+    zone='zone-naranja'; title='ZONA NARANJA · Zona de Atención';
+    range='Menos de 10% por debajo del mercado';
+    text='El inmueble no presenta una ventaja clara de compra frente al mercado de la zona. El margen de ajuste es reducido y puede no representar una oportunidad real de inversión bajo las condiciones actuales.';
+  }
+  zoneCard.innerHTML = `
+    <div class="zone-card ${zone}">
+      <div class="zone-label">${title.split(' · ')[0]}</div>
+      <div class="zone-title">${title.split(' · ')[1]||title}</div>
+      <div class="zone-range">${range}</div>
+      <div class="zone-text">${text}</div>
+    </div>`;
+}
+
+/* ========= TIPO SELECTOR ========= */
+document.querySelectorAll('#typeSelector .type-pill').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#typeSelector .type-pill').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    state.tipo = b.dataset.type;
+    state.datos = {};
+    state.precioActual = 0;
+    state.area = 0;
+    state.costoReformaTouched = false;
+    state.precioNegociado = 0;
+    buildDatos();
+    buildDiagnostico();
+    buildMercadoTable();
+    syncCostoReforma();
+    $('precioNegociado').value = '';
+    recalc();
+  });
+});
+
+$('ubicacion').addEventListener('input', e=>{ state.ubicacion = e.target.value; });
+
+/* ========= PDF ========= */
+function cargarImagen(url){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+function imagenABase64(img){
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth || img.width;
+  canvas.height = img.naturalHeight || img.height;
+  canvas.getContext('2d').drawImage(img,0,0);
+  return canvas.toDataURL('image/png');
+}
+
+async function descargarPDF(){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p','mm','a4');
+
+  // Paleta de marca
+  const cPurple = [97,49,116];
+  const cPurpleDark = [74,36,89];
+  const cGold = [241,201,1];
+  const cText = [26,26,26];
+  const cSoft = [90,90,106];
+  const cBg = [247,245,250];
+  const cGreen = [22,163,74];
+  const cGreenBg = [220,252,231];
+  const cYellow = [202,138,4];
+  const cYellowBg = [254,249,195];
+  const cOrange = [234,88,12];
+  const cOrangeBg = [255,237,213];
+  const cRed = [220,38,38];
+  const cRedBg = [254,226,226];
+
+  let y = 15;
+  const mIzq = 15, mDer = 195, ancho = mDer - mIzq;
+
+  function nueva(extra=0){
+    if(y + extra > 280){ doc.addPage(); y = 15; return true; }
+    return false;
+  }
+  function tituloSeccion(texto, color=cPurple){
+    nueva(14);
+    doc.setFillColor(...color);
+    doc.rect(mIzq, y, ancho, 8, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.text(texto.toUpperCase(), mIzq+3, y+5.6);
+    y += 11;
+  }
+  function bloqueTexto(texto, opts={}){
+    const fontSize = opts.fontSize||9;
+    const color = opts.color||cText;
+    const bg = opts.bg;
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', opts.bold?'bold':'normal');
+    const lines = doc.splitTextToSize(texto, ancho-6);
+    const altura = lines.length*4.5 + 4;
+    nueva(altura);
+    if(bg){ doc.setFillColor(...bg); doc.roundedRect(mIzq, y, ancho, altura, 2, 2, 'F'); }
+    doc.setTextColor(...color);
+    doc.text(lines, mIzq+3, y+5);
+    y += altura + 2;
+  }
+
+  // ========= ENCABEZADO =========
+  try{
+    const img = await cargarImagen('https://storage.googleapis.com/msgsndr/e3ptBMQArqbC3YL2ik2n/media/69467d01106fdc3c581d774f.png');
+    const data = imagenABase64(img);
+    const ar = img.width/img.height;
+    let lw = 50, lh = lw/ar;
+    if(lh>22){ lh=22; lw=lh*ar; }
+    doc.addImage(data,'PNG',(210-lw)/2, y, lw, lh);
+    y += lh + 4;
+  }catch(e){ y += 4; }
+
+  doc.setFillColor(...cPurple);
+  doc.rect(mIzq, y, ancho, 18, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('VALIDADOR DE OPORTUNIDADES INMOBILIARIAS CRECE', 105, y+7, {align:'center'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(10);
+  doc.text('Diagnóstico de un Inmueble Usado · Análisis Inicial y Comparativo', 105, y+13, {align:'center'});
+  y += 22;
+
+  const nombre = ($('nombreProyecto').value||'').trim();
+  const fecha = new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
+  doc.setFillColor(...cBg);
+  doc.roundedRect(mIzq, y, ancho, 14, 2, 2, 'F');
+  doc.setTextColor(...cPurpleDark);
+  doc.setFontSize(10); doc.setFont('helvetica','bold');
+  if(nombre) doc.text('Proyecto: '+nombre, mIzq+3, y+5.5);
+  doc.setFont('helvetica','normal'); doc.setTextColor(...cSoft);
+  doc.text('Tipo: '+TIPO_CONFIG[state.tipo].label, mIzq+3, y+10.5);
+  doc.text('Fecha: '+fecha, mDer-3, y+5.5, {align:'right'});
+  if(state.ubicacion) doc.text('Ubicación: '+state.ubicacion.substring(0,55), mDer-3, y+10.5, {align:'right'});
+  y += 18;
+
+  // ========= 1. DATOS DEL INMUEBLE =========
+  tituloSeccion('1. Datos del inmueble');
+  const cfg = TIPO_CONFIG[state.tipo];
+  const datosBody = [
+    ['Tipo de Inmueble', cfg.label],
+    ['Precio Actual del Inmueble', fmtCOP(state.precioActual)],
+    ['Área del Inmueble', state.area? state.area+' m²':'—'],
+    ['Precio por m²', state.area>0 && state.precioActual ? fmtCOP(state.precioActual/state.area) : '—']
+  ];
+  cfg.datos.forEach(f=>{
+    let v = state.datos[f.key];
+    if(v===undefined||v==='') v = '—';
+    else if(f.type==='money') v = fmtCOP(v);
+    datosBody.push([f.label, String(v)]);
+  });
+  doc.autoTable({
+    startY:y, body:datosBody, theme:'grid',
+    margin:{left:mIzq,right:mIzq},
+    styles:{fontSize:9, cellPadding:2.5, lineColor:[220,216,228], lineWidth:0.1},
+    columnStyles:{0:{fontStyle:'bold', textColor:cSoft, cellWidth:90}, 1:{halign:'right', fontStyle:'bold', textColor:cText}},
+    didParseCell:(d)=>{ if([0,3].includes(d.row.index)&&d.column.index===1) d.cell.styles.fillColor=[245,238,250]; }
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  // ========= 2. DIAGNÓSTICO INICIAL =========
+  tituloSeccion('2. Diagnóstico inicial');
+  const diagBody = cfg.preguntas.map((p,i)=>{
+    const d = state.diagnostico[i] || {ans:'',tag:'pending'};
+    const tagTxt = ({ok:'OK', alerta:'Alerta', fuerte:'Alerta fuerte', pending:'Pendiente'})[d.tag];
+    return [String(i+1), p.q, d.ans||'—', tagTxt];
+  });
+  doc.autoTable({
+    startY:y, head:[['#','Pregunta','Respuesta','Resultado']], body:diagBody, theme:'grid',
+    margin:{left:mIzq,right:mIzq},
+    headStyles:{fillColor:cPurple, textColor:255, fontSize:9, halign:'center'},
+    styles:{fontSize:8.5, cellPadding:2.5, lineColor:[220,216,228]},
+    columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:120},2:{cellWidth:18,halign:'center'},3:{cellWidth:34,halign:'center',fontStyle:'bold'}},
+    didParseCell:(d)=>{
+      if(d.section==='body' && d.column.index===3){
+        const t = d.cell.raw;
+        if(t==='OK'){ d.cell.styles.fillColor=cGreenBg; d.cell.styles.textColor=cGreen; }
+        else if(t==='Alerta'){ d.cell.styles.fillColor=cYellowBg; d.cell.styles.textColor=cYellow; }
+        else if(t==='Alerta fuerte'){ d.cell.styles.fillColor=cRedBg; d.cell.styles.textColor=cRed; }
+        else { d.cell.styles.fillColor=[238,240,244]; d.cell.styles.textColor=cSoft; }
+      }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 4;
+
+  const fuertes = state.diagnostico.filter(d=>d.tag==='fuerte').length;
+  const alertas = state.diagnostico.filter(d=>d.tag==='alerta').length;
+  const oks = state.diagnostico.filter(d=>d.tag==='ok').length;
+  const allAns = state.diagnostico.every(d=>d.ans);
+  let diagFinal = 'Pendiente', diagColor=[238,240,244], diagText=cSoft;
+  if(allAns){
+    if(fuertes>=1){ diagFinal='DESCARTAR'; diagColor=cRedBg; diagText=cRed; }
+    else if(alertas>=3){ diagFinal='REVISAR CON CAUTELA'; diagColor=cOrangeBg; diagText=cOrange; }
+    else { diagFinal='SEGUIR EVALUANDO'; diagColor=cGreenBg; diagText=cGreen; }
+  }
+  nueva(20);
+  doc.autoTable({
+    startY:y,
+    body:[['Alertas Fuertes', fuertes, 'Alertas', alertas, 'OK', oks]],
+    theme:'grid', margin:{left:mIzq,right:mIzq},
+    styles:{fontSize:9, cellPadding:3, halign:'center', fontStyle:'bold'},
+    columnStyles:{0:{textColor:cSoft},2:{textColor:cSoft},4:{textColor:cSoft},1:{textColor:cRed},3:{textColor:cYellow},5:{textColor:cGreen}}
+  });
+  y = doc.lastAutoTable.finalY + 2;
+  nueva(14);
+  doc.setFillColor(...diagColor);
+  doc.roundedRect(mIzq, y, ancho, 11, 2, 2, 'F');
+  doc.setTextColor(...diagText);
+  doc.setFont('helvetica','bold'); doc.setFontSize(13);
+  doc.text('Diagnóstico inicial: '+diagFinal, 105, y+7, {align:'center'});
+  y += 14;
+
+  if(diagFinal==='DESCARTAR'){
+    bloqueTexto('⚠ El inmueble presenta al menos una alerta fuerte. Considere descartarlo preliminarmente, ya que esa condición puede afectar de forma importante su viabilidad como oportunidad de inversión. Hasta aquí se realiza el análisis.', {bg:[255,247,247], color:[127,29,29], bold:true});
+    finalizarPDF(doc);
+    return;
+  }
+
+  // ========= 3. ANÁLISIS DE MERCADO =========
+  tituloSeccion('3. Análisis de mercado de la zona');
+  const validMarket = state.mercado.filter(m=> m.area>0 && m.precio>0);
+  const precioM2Actual = state.area>0 ? state.precioActual/state.area : 0;
+  const allM2 = validMarket.map(m=>m.precio/m.area);
+  if(precioM2Actual>0) allM2.push(precioM2Actual);
+  const promedio = allM2.length ? allM2.reduce((a,b)=>a+b,0)/allM2.length : 0;
+
+  // Encabezados dinámicos
+  const headBase = ['#','Dirección','Área','Precio','$/m²'];
+  const headExtras = cfg.mercado.map(c=>c.label);
+  const headTail = ['Var.%','Clasificación'];
+  const head = [...headBase, ...headExtras, ...headTail];
+
+  const body = state.mercado.map((m,i)=>{
+    const m2 = (m.area>0 && m.precio>0) ? m.precio/m.area : 0;
+    const v = (m2 && promedio) ? (m2-promedio)/promedio : null;
+    const c = v!==null ? clasificar(v) : null;
+    const extras = cfg.mercado.map(f=>{
+      const val = m.extras[f.key];
+      if(val===''||val===undefined) return '—';
+      if(f.type==='money') return fmtCOP(val);
+      return String(val);
+    });
+    return [
+      String(i+1),
+      m.direccion ? m.direccion.substring(0,40) : '—',
+      m.area? m.area+'m²':'—',
+      m.precio? fmtCOP(m.precio):'—',
+      m2? fmtCOP(m2):'—',
+      ...extras,
+      v!==null ? (v*100).toFixed(2)+'%' : '—',
+      c? c.label : '—'
+    ];
+  });
+
+  doc.autoTable({
+    startY:y, head:[head], body, theme:'grid',
+    margin:{left:mIzq,right:mIzq},
+    headStyles:{fillColor:cPurple, textColor:255, fontSize:7.5, halign:'center'},
+    styles:{fontSize:7.5, cellPadding:1.8, lineColor:[220,216,228], halign:'center'},
+    columnStyles:{0:{cellWidth:6}, 1:{halign:'left', cellWidth:'auto'}}
+  });
+  y = doc.lastAutoTable.finalY + 4;
+
+  // Métricas mercado
+  const varActual = (precioM2Actual && promedio) ? (precioM2Actual - promedio)/promedio : 0;
+  const difPesos = (precioM2Actual && state.area && promedio) ? (precioM2Actual - promedio)*state.area : 0;
+  let menor='—', mayor='—';
+  if(validMarket.length){
+    const m2s = validMarket.map((m,i)=>({m2:m.precio/m.area, idx:state.mercado.indexOf(m)+1}));
+    const sorted = [...m2s].sort((a,b)=>a.m2-b.m2);
+    menor = `Inmueble ${sorted[0].idx} - ${fmtCOP(sorted[0].m2)}/m²`;
+    mayor = `Inmueble ${sorted[sorted.length-1].idx} - ${fmtCOP(sorted[sorted.length-1].m2)}/m²`;
+  }
+  doc.autoTable({
+    startY:y, theme:'grid', margin:{left:mIzq,right:mIzq},
+    body:[
+      ['Precio Promedio de Mercado por m²', fmtCOP(promedio), 'Precio Actual del Inmueble por m²', fmtCOP(precioM2Actual)],
+      ['Menor Precio por m² Encontrado', menor, 'Mayor Precio por m² Encontrado', mayor],
+      ['Variación frente al Promedio (%)', fmtPct(varActual), 'Diferencia frente al Mercado ($)', fmtCOP(difPesos)]
+    ],
+    styles:{fontSize:8.5, cellPadding:2.5},
+    columnStyles:{0:{fontStyle:'bold',textColor:cSoft,cellWidth:55},1:{halign:'right',fontStyle:'bold',textColor:cPurple},2:{fontStyle:'bold',textColor:cSoft,cellWidth:55},3:{halign:'right',fontStyle:'bold',textColor:cPurple}}
+  });
+  y = doc.lastAutoTable.finalY + 4;
+
+  let diagMercado = null;
+  if(validMarket.length>=1 && precioM2Actual && promedio){
+    diagMercado = clasificar(varActual);
+    const mapaBg = {'cl-fuerte':cGreenBg,'cl-oport':[209,250,229],'cl-mercado':[229,231,235],'cl-atencion':cYellowBg,'cl-sobreprecio':cOrangeBg,'cl-sobrev':cRedBg};
+    const mapaFg = {'cl-fuerte':cGreen,'cl-oport':[4,120,87],'cl-mercado':[55,65,81],'cl-atencion':cYellow,'cl-sobreprecio':cOrange,'cl-sobrev':cRed};
+    nueva(14);
+    doc.setFillColor(...(mapaBg[diagMercado.cls]||[245,238,250]));
+    doc.roundedRect(mIzq, y, ancho, 11, 2, 2, 'F');
+    doc.setTextColor(...(mapaFg[diagMercado.cls]||cPurple));
+    doc.setFont('helvetica','bold'); doc.setFontSize(12);
+    doc.text('Diagnóstico de mercado: '+diagMercado.label, 105, y+7, {align:'center'});
+    y += 14;
+    if(ANALISIS_MERCADO[diagMercado.label]){
+      bloqueTexto(ANALISIS_MERCADO[diagMercado.label], {bg:[250,247,253], fontSize:9});
+    }
+  } else {
+    bloqueTexto('Aún no hay comparables suficientes para generar el diagnóstico de mercado.', {bg:[250,247,253], fontSize:9});
+  }
+
+  const stopHere = diagMercado && validMarket.length>=1 && ['Precio de Mercado','Con Sobreprecio','Sobrevalorado'].includes(diagMercado.label);
+  if(stopHere){
+    bloqueTexto('Según el diagnóstico de precio frente al mercado, el inmueble no representa una oportunidad clara de inversión por debajo del mercado. Hasta aquí se realiza el análisis.', {bg:[255,247,247], color:[127,29,29], bold:true});
+    finalizarPDF(doc);
+    return;
+  }
+
+  // ========= 4. FACTORES DE NEGOCIACIÓN =========
+  tituloSeccion('4. Factores de negociación');
+  const motivoPct = MOTIVOS[state.motivoIdx].pct;
+  const tiempoPct = TIEMPOS[state.tiempoIdx].pct;
+  const reformaSel = REFORMAS[state.reformaIdx];
+  const margen = motivoPct + tiempoPct;
+  doc.autoTable({
+    startY:y, theme:'grid', margin:{left:mIzq,right:mIzq},
+    body:[
+      ['Motivo de venta', MOTIVOS[state.motivoIdx].label, '% Descuento', (motivoPct*100).toFixed(0)+'%'],
+      ['Tiempo en venta', TIEMPOS[state.tiempoIdx].label, '% Descuento', (tiempoPct*100).toFixed(0)+'%'],
+      ['Tipo de reforma', reformaSel.label, '% Sugerido', (reformaSel.pct*100).toFixed(0)+'%'],
+      ['Costo Estimado de Reforma', fmtCOP(state.costoReforma), 'Margen total negociación', (margen*100).toFixed(2)+'%']
+    ],
+    styles:{fontSize:9, cellPadding:2.5},
+    columnStyles:{0:{fontStyle:'bold',textColor:cSoft,cellWidth:48},1:{textColor:cText,cellWidth:'auto'},2:{fontStyle:'bold',textColor:cSoft,cellWidth:42},3:{halign:'right',fontStyle:'bold',textColor:cPurple,cellWidth:25}}
+  });
+  y = doc.lastAutoTable.finalY + 2;
+  bloqueTexto('Definición — '+reformaSel.label+': '+reformaSel.def, {fontSize:8.5, color:cSoft, bg:[250,247,253]});
+
+  // ========= 5. ESTIMACIÓN DE LA OFERTA =========
+  tituloSeccion('5. Estimación de la oferta de compra');
+  const promedioPesos = promedio * state.area;
+  const precioObjetivo = promedio>0 ? promedioPesos*(1-margen) - state.costoReforma : 0;
+  const descuentoNeg = state.precioActual - precioObjetivo;
+  const descPctActual = state.precioActual ? descuentoNeg/state.precioActual : 0;
+  const descPctMercado = promedioPesos ? (promedioPesos - precioObjetivo)/promedioPesos : 0;
+
+  doc.autoTable({
+    startY:y, theme:'grid', margin:{left:mIzq,right:mIzq},
+    body:[
+      ['Precio Actual del Inmueble', fmtCOP(state.precioActual), 'Descuento a Negociar ($)', fmtCOP(descuentoNeg)],
+      ['Precio Promedio de Mercado', fmtCOP(promedioPesos), '% Descuento sobre Precio Actual', fmtPct(descPctActual)],
+      ['Variación frente al Mercado (%)', fmtPct(varActual), '% Descuento Frente al Mercado', fmtPct(descPctMercado)],
+      ['Diferencia frente al Mercado ($)', fmtCOP(difPesos), 'PRECIO OBJETIVO DE COMPRA', fmtCOP(precioObjetivo)]
+    ],
+    styles:{fontSize:9, cellPadding:2.5},
+    columnStyles:{0:{fontStyle:'bold',textColor:cSoft,cellWidth:60},1:{halign:'right',fontStyle:'bold',textColor:cText},2:{fontStyle:'bold',textColor:cSoft,cellWidth:60},3:{halign:'right',fontStyle:'bold',textColor:cPurple}},
+    didParseCell:(d)=>{
+      if(d.row.index===3 && d.column.index>=2){
+        d.cell.styles.fillColor = [255,251,224];
+        d.cell.styles.textColor = cPurpleDark;
+        d.cell.styles.fontSize = 10;
+      }
+    }
+  });
+  y = doc.lastAutoTable.finalY + 6;
+
+  // ========= 6. RESULTADO FINAL =========
+  if(state.precioNegociado>0){
+    tituloSeccion('6. Resultado final de la negociación');
+    const ahorro = state.precioActual - state.precioNegociado;
+    const descMercado = promedioPesos - state.precioNegociado;
+    const pctAhorro = promedioPesos ? descMercado/promedioPesos : 0;
+    doc.autoTable({
+      startY:y, theme:'grid', margin:{left:mIzq,right:mIzq},
+      body:[
+        ['Precio Negociado de Compra', fmtCOP(state.precioNegociado)],
+        ['Ahorro Logrado ($)', fmtCOP(ahorro)],
+        ['Descuento frente al Mercado ($)', fmtCOP(descMercado)],
+        ['% de Ahorro frente al Mercado', fmtPct(pctAhorro)]
+      ],
+      styles:{fontSize:9, cellPadding:3},
+      columnStyles:{0:{fontStyle:'bold',textColor:cSoft,cellWidth:100},1:{halign:'right',fontStyle:'bold',textColor:cPurple, fontSize:11}}
+    });
+    y = doc.lastAutoTable.finalY + 6;
+
+    // Conclusiones
+    tituloSeccion('7. Conclusión final', cGold);
+    let zoneTitle, zoneRange, zoneText, zoneBg, zoneFg;
+    if(pctAhorro >= 0.20){
+      zoneTitle='ZONA VERDE · Oportunidad Atractiva'; zoneRange='Igual o mayor al 20% por debajo del mercado';
+      zoneText='El inmueble presenta condiciones favorables de compra. El precio final se ubica con un descuento relevante frente al valor promedio del mercado, lo que abre espacio para una rentabilidad atractiva. Es una oportunidad sólida para avanzar.';
+      zoneBg=cGreenBg; zoneFg=[20,83,45];
+    } else if(pctAhorro >= 0.10){
+      zoneTitle='ZONA AMARILLA · Oportunidad para Revisar'; zoneRange='Entre 10% y 19,99% por debajo del mercado';
+      zoneText='El inmueble muestra señales interesantes de oportunidad. Aunque presenta un descuento frente al mercado, es importante afinar la negociación y revisar otros factores antes de tomar la decisión final.';
+      zoneBg=cYellowBg; zoneFg=[113,63,18];
+    } else {
+      zoneTitle='ZONA NARANJA · Zona de Atención'; zoneRange='Menos de 10% por debajo del mercado';
+      zoneText='El inmueble no presenta una ventaja clara de compra frente al mercado de la zona. El margen de ajuste es reducido y puede no representar una oportunidad real de inversión bajo las condiciones actuales.';
+      zoneBg=cOrangeBg; zoneFg=[124,45,18];
+    }
+    nueva(40);
+    doc.setFillColor(...zoneBg);
+    doc.roundedRect(mIzq, y, ancho, 36, 3, 3, 'F');
+    doc.setTextColor(...zoneFg);
+    doc.setFont('helvetica','bold'); doc.setFontSize(13);
+    doc.text(zoneTitle, 105, y+8, {align:'center'});
+    doc.setFont('helvetica','italic'); doc.setFontSize(9);
+    doc.text(zoneRange, 105, y+13, {align:'center'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    const lns = doc.splitTextToSize(zoneText, ancho-10);
+    doc.text(lns, 105, y+19, {align:'center'});
+    y += 40;
+  }
+
+  finalizarPDF(doc);
+}
+
+function finalizarPDF(doc){
+  let y2 = (doc.lastAutoTable?.finalY || 250);
+  // Disclaimer en última página
+  doc.addPage();
+  let y = 20;
+  const mIzq=15, ancho=180;
+  doc.setFillColor(255,251,235);
+  doc.setDrawColor(253,224,71);
+  doc.roundedRect(mIzq, y, ancho, 38, 3, 3, 'FD');
+  doc.setTextColor(124,45,18);
+  doc.setFont('helvetica','bold'); doc.setFontSize(11);
+  doc.text('⚠ Exclusión de responsabilidad', mIzq+5, y+8);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  const txt = 'Este análisis tiene fines informativos y educativos. No constituye una recomendación definitiva de inversión ni reemplaza un avalúo profesional. Las decisiones de compra deben tomarse con asesoría comercial, jurídica y financiera adecuada al caso particular.';
+  const lns = doc.splitTextToSize(txt, ancho-10);
+  doc.text(lns, mIzq+5, y+15);
+
+  // Footer en todas las páginas
+  const total = doc.internal.getNumberOfPages();
+  for(let i=1;i<=total;i++){
+    doc.setPage(i);
+    doc.setDrawColor(97,49,116);
+    doc.setLineWidth(0.3);
+    doc.line(15, 287, 195, 287);
+    doc.setFontSize(8); doc.setTextColor(97,49,116);
+    doc.setFont('helvetica','bold');
+    doc.text('Andrés Giraldo · CRECE', 15, 292);
+    doc.setFont('helvetica','normal'); doc.setTextColor(120,120,130);
+    doc.text(`Página ${i} de ${total}`, 195, 292, {align:'right'});
+  }
+
+  const fileName = 'Diagnostico_'+TIPO_CONFIG[state.tipo].label+'_'+new Date().toISOString().slice(0,10)+'.pdf';
+  doc.save(fileName);
+}
+
+$('btnPDF').addEventListener('click', async ()=>{
+  const btn = $('btnPDF');
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '⏳ Generando PDF...';
+  try { await descargarPDF(); }
+  catch(e){ console.error(e); alert('No se pudo generar el PDF: '+e.message); }
+  btn.disabled = false; btn.innerHTML = orig;
+});
+
+/* ========= INIT ========= */
+buildDatos();
+buildDiagnostico();
+buildMercadoTable();
+buildFactores();
+syncCostoReforma();
+recalc();
+</script>
+</body>
+</html>
