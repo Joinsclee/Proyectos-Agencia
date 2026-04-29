@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Mentoría VUELA · Aplicación a la entrevista · Andy Molina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --black: #0a0a0a;
+    --black-soft: #131313;
+    --black-elev: #1a1a1a;
+    --gold: #c9a961;
+    --gold-soft: #d4b876;
+    --gold-glow: rgba(201, 169, 97, 0.4);
+    --cream: #f5f1e8;
+    --cream-soft: #faf7ef;
+    --white: #ffffff;
+    --gray-400: #8a8a8a;
+    --gray-500: #6e6e6e;
+    --gray-600: #525252;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-dark: rgba(10, 10, 10, 0.12);
+    --ff-display: 'Fraunces', serif;
+    --ff-body: 'Inter', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+  body {
+    background: var(--black);
+    color: var(--cream);
+    font-family: var(--ff-body);
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  img { max-width: 100%; display: block; }
+
+  /* ============ FORCE FULL WIDTH (GHL safe) ============ */
+  .force-full-width {
+    position: relative;
+    width: 100vw;
+    max-width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    left: 0; right: 0;
+    box-sizing: border-box;
+  }
+  .force-full-width-fixed {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    position: relative !important;
+    left: 50% !important;
+    right: 50% !important;
+    margin-left: -50vw !important;
+    margin-right: -50vw !important;
+  }
+
+  /* ============ NAV ============ */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 20px 40px;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: rgba(10, 10, 10, 0.65);
+    border-bottom: 1px solid var(--line);
+    display: flex; justify-content: space-between; align-items: center;
+    transition: padding 0.4s ease;
+  }
+  nav.scrolled { padding: 14px 40px; }
+  .nav-brand {
+    font-family: var(--ff-display);
+    font-weight: 500; font-size: 18px; letter-spacing: 0.02em;
+    color: var(--cream);
+  }
+  .nav-brand em { font-style: italic; color: var(--gold); font-weight: 400; }
+  .nav-date-pill {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12px; color: var(--gray-400);
+    letter-spacing: 0.05em;
+  }
+  .nav-date-pill .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 10px var(--gold);
+    animation: pulse 2s infinite;
+  }
+  .nav-cta {
+    padding: 10px 24px;
+    background: var(--cream);
+    color: var(--black);
+    border: none; border-radius: 999px;
+    font-family: var(--ff-body); font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.01em;
+  }
+  .nav-cta:hover { background: var(--gold); transform: translateY(-1px); }
+  .nav-right { display: flex; align-items: center; gap: 24px; }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: auto;
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px 40px 70px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201, 169, 97, 0.08), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(201, 169, 97, 0.05), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.85  0 0 0 0 0.7  0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.6; mix-blend-mode: overlay; pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1200px; width: 100%;
+    text-align: center;
+    position: relative; z-index: 2;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 22px;
+    border: 1px solid rgba(201, 169, 97, 0.45);
+    border-radius: 999px;
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 40px;
+    opacity: 0; animation: fadeUp 1s 0.2s forwards;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 12px var(--gold);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .hero h1 {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-size: clamp(42px, 7vw, 96px);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--cream);
+    margin-bottom: 32px;
+    opacity: 0; animation: fadeUp 1.2s 0.4s forwards;
+  }
+  .hero h1 em {
+    font-style: italic; font-weight: 300;
+    color: var(--gold);
+    font-variation-settings: "opsz" 144;
+  }
+  .hero-tagline {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(22px, 2.6vw, 34px);
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    color: var(--cream);
+    max-width: 760px;
+    margin: -8px auto 36px;
+    opacity: 0; animation: fadeUp 1.2s 0.5s forwards;
+  }
+  .hero-tagline em {
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 400;
+    font-variation-settings: "opsz" 144;
+  }
+
+  /* ============ HERO VIDEO (vertical 9:16) ============ */
+  .hero-video {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto 48px;
+    border-radius: 20px;
+    overflow: hidden;
+    aspect-ratio: 9 / 16;
+    background: var(--black-elev);
+    border: 1px solid var(--gold);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(201, 169, 97, 0.18),
+                0 0 30px -10px var(--gold-glow);
+    opacity: 0; animation: fadeUp 1.2s 0.5s forwards;
+    cursor: pointer;
+  }
+  .hero-video video {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: var(--black);
+    display: block;
+  }
+  .hero-video-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex; align-items: flex-end; justify-content: flex-end;
+    padding: 16px;
+    background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.25) 100%);
+    pointer-events: none;
+  }
+  .hero-video-mute-btn {
+    pointer-events: auto;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: rgba(10, 10, 10, 0.65);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(245, 241, 232, 0.25);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--cream);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .hero-video-mute-btn:hover {
+    background: rgba(201, 169, 97, 0.85);
+    border-color: var(--gold);
+    color: var(--black);
+    transform: scale(1.08);
+  }
+  .hero-video-mute-btn .icon-muted,
+  .hero-video-mute-btn .icon-unmuted {
+    width: 20px; height: 20px;
+  }
+  .hero-video-mute-btn .icon-unmuted { display: none; }
+  .hero-video.is-unmuted .hero-video-mute-btn .icon-muted { display: none; }
+  .hero-video.is-unmuted .hero-video-mute-btn .icon-unmuted { display: block; }
+
+  .hero-video-hint {
+    position: absolute;
+    bottom: 18px; left: 18px;
+    z-index: 2;
+    pointer-events: none;
+    padding: 8px 16px;
+    background: rgba(10, 10, 10, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid var(--gold);
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    transition: opacity 0.4s ease;
+    animation: hintPulse 1.8s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(201, 169, 97, 0.25);
+  }
+  @keyframes hintPulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 12px rgba(201, 169, 97, 0.25);
+      border-color: var(--gold);
+    }
+    50% {
+      transform: scale(1.06);
+      box-shadow: 0 0 24px rgba(201, 169, 97, 0.55), 0 0 0 4px rgba(201, 169, 97, 0.12);
+      border-color: var(--gold-soft);
+    }
+  }
+  .hero-video.is-unmuted .hero-video-hint { opacity: 0; animation: none; }
+
+  .hero-sub {
+    font-size: clamp(16px, 1.3vw, 19px);
+    color: var(--gray-400);
+    max-width: 720px;
+    margin: 0 auto 48px;
+    line-height: 1.6;
+    opacity: 0; animation: fadeUp 1.2s 0.6s forwards;
+  }
+  .hero-sub strong { color: var(--cream); font-weight: 500; }
+  .hero-cta-group {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    opacity: 0; animation: fadeUp 1.2s 0.8s forwards;
+  }
+  .btn-primary {
+    padding: 20px 44px;
+    background: var(--cream);
+    color: var(--black);
+    border: none; border-radius: 999px;
+    font-family: var(--ff-body); font-size: 15px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    letter-spacing: 0.01em;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '→';
+    margin-left: 10px;
+    display: inline-block;
+    transition: transform 0.4s ease;
+  }
+  .btn-primary:hover {
+    background: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -10px rgba(201, 169, 97, 0.4);
+  }
+  .btn-primary:hover::after { transform: translateX(6px); }
+
+  /* ============ HERO PLAZAS (urgencia 7/20) ============ */
+  .hero-plazas {
+    margin-top: 56px;
+    display: inline-flex; align-items: center; gap: 24px;
+    padding: 16px 28px;
+    border: 1px solid rgba(201, 169, 97, 0.25);
+    border-radius: 999px;
+    background: rgba(201, 169, 97, 0.04);
+    opacity: 0; animation: fadeUp 1.2s 1s forwards;
+  }
+  .plazas-dots { display: flex; gap: 4px; }
+  .plazas-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: rgba(201, 169, 97, 0.18);
+    border: 1px solid rgba(201, 169, 97, 0.25);
+    transition: transform 0.4s ease;
+  }
+  .plazas-dot.taken {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 8px var(--gold-glow);
+    animation: dotPulse 2.4s infinite;
+  }
+  .plazas-dot.taken:nth-child(1) { animation-delay: 0s; }
+  .plazas-dot.taken:nth-child(2) { animation-delay: 0.18s; }
+  .plazas-dot.taken:nth-child(3) { animation-delay: 0.36s; }
+  .plazas-dot.taken:nth-child(4) { animation-delay: 0.54s; }
+  .plazas-dot.taken:nth-child(5) { animation-delay: 0.72s; }
+  .plazas-dot.taken:nth-child(6) { animation-delay: 0.9s; }
+  .plazas-dot.taken:nth-child(7) { animation-delay: 1.08s; }
+
+  @keyframes dotPulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 0 8px var(--gold-glow);
+    }
+    50% {
+      transform: scale(1.25);
+      box-shadow: 0 0 16px var(--gold-glow), 0 0 28px var(--gold-glow);
+    }
+  }
+
+  .plazas-label {
+    font-size: 13px; color: var(--gray-400);
+    letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .plazas-label strong { color: var(--gold); font-weight: 600; }
+  .plazas-label .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+    animation: pulse 1.6s infinite;
+    flex-shrink: 0;
+  }
+
+  /* ============ HERO BODY (LONG COPY) ============ */
+  .hero-body {
+    max-width: 720px;
+    margin: 56px auto 48px;
+    text-align: left;
+    opacity: 0; animation: fadeUp 1.2s 0.8s forwards;
+  }
+  .hero-body p {
+    font-size: clamp(15px, 1.15vw, 17px);
+    color: var(--gray-400);
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+  .hero-body p strong { color: var(--cream); font-weight: 500; }
+  .hero-body p em {
+    font-family: var(--ff-display);
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 400;
+  }
+  .hero-body .pull {
+    color: var(--cream);
+    font-family: var(--ff-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(18px, 1.6vw, 22px);
+    line-height: 1.4;
+    padding: 24px 0;
+    border-top: 1px solid rgba(201, 169, 97, 0.2);
+    border-bottom: 1px solid rgba(201, 169, 97, 0.2);
+    margin: 32px 0;
+  }
+  .hero-opener {
+    margin: 0 0 24px;
+    padding: 16px 22px;
+    background: rgba(201, 169, 97, 0.04);
+    border-left: 2px solid rgba(201, 169, 97, 0.5);
+    border-radius: 8px;
+  }
+  .hero-opener p {
+    font-family: var(--ff-body);
+    font-style: normal;
+    font-weight: 500;
+    font-size: clamp(15px, 1.15vw, 17px);
+    line-height: 1.55;
+    color: var(--cream);
+    margin: 0;
+  }
+  .hero-benefits {
+    margin: 32px 0;
+    padding: 28px 32px;
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.06), rgba(201, 169, 97, 0.01));
+    border: 1px solid rgba(201, 169, 97, 0.2);
+    border-radius: 16px;
+  }
+  .hero-benefits-title {
+    font-family: var(--ff-display); font-weight: 500;
+    font-size: 17px; color: var(--cream);
+    margin-bottom: 18px; letter-spacing: -0.01em;
+  }
+  .hero-benefits ul {
+    list-style: none; display: flex; flex-direction: column; gap: 14px;
+  }
+  .hero-benefits li {
+    padding-left: 28px; position: relative;
+    font-size: 15px; color: var(--gray-400);
+    line-height: 1.55;
+  }
+  .hero-benefits li::before {
+    content: '→'; position: absolute;
+    left: 0; top: 0;
+    color: var(--gold); font-weight: 400;
+  }
+  .hero-meta {
+    margin-top: 18px;
+    font-size: 13px; color: var(--gray-500);
+    letter-spacing: 0.02em;
+    line-height: 1.55;
+    opacity: 0; animation: fadeUp 1.2s 1.1s forwards;
+  }
+  .hero-signature {
+    margin-top: 28px;
+    font-family: var(--ff-display); font-style: italic;
+    font-weight: 300; font-size: 18px;
+    color: var(--gold);
+    opacity: 0; animation: fadeUp 1.2s 1.2s forwards;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ SECTIONS GENERAL ============ */
+  section { padding: 80px 40px; position: relative; }
+  .container { max-width: 1200px; margin: 0 auto; width: 100%; }
+  .section-eyebrow {
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--cream);
+    max-width: 900px;
+    margin-bottom: 32px;
+  }
+  .section-title em {
+    font-style: italic; color: var(--gold);
+    font-variation-settings: "opsz" 144;
+  }
+  .section-lead {
+    font-size: clamp(17px, 1.4vw, 20px); line-height: 1.55;
+    color: var(--gray-400);
+    max-width: 640px;
+    margin-bottom: 80px;
+  }
+
+  /* ============ TESTIMONIOS ============ */
+  .testimonios {
+    background: var(--black-soft);
+    padding: 80px 40px;
+  }
+  .testimonios-head {
+    text-align: center;
+    max-width: 820px;
+    margin: 0 auto 56px;
+  }
+  .testimonios-head .section-title { margin: 0 auto 24px; }
+  .testimonios-head .section-lead { margin: 0 auto; color: var(--gray-400); }
+  .testimonios-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .testimonio-card {
+    background: var(--black-elev);
+    border: 1px solid var(--gold);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 0 0 1px rgba(201, 169, 97, 0.08),
+                0 0 20px -10px var(--gold-glow);
+  }
+  .testimonio-card:hover {
+    border-color: var(--gold-soft);
+    transform: translateY(-4px);
+    box-shadow: 0 0 0 1px rgba(201, 169, 97, 0.15),
+                0 10px 40px -15px var(--gold-glow);
+  }
+  .testimonio-video {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    background: var(--black);
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .testimonio-video video {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    border: none;
+    background: var(--black);
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: none; /* Mientras está en preview, los clicks van al overlay */
+  }
+  .testimonio-video.is-playing video {
+    pointer-events: auto; /* Al reproducir, los controles nativos son interactivos */
+  }
+  /* Oculta cualquier botón residual de descarga/PiP en navegadores que ignoran controlslist */
+  .testimonio-video video::-internal-media-controls-download-button { display: none; }
+  .testimonio-video video::-webkit-media-controls-enclosure { overflow: hidden; }
+  .testimonio-video video::-webkit-media-controls-panel { width: calc(100% + 30px); }
+
+  .testimonio-video-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 100%),
+      radial-gradient(ellipse at center, rgba(201, 169, 97, 0.05), transparent 70%);
+    transition: opacity 0.4s ease;
+    z-index: 2;
+  }
+  .testimonio-video.is-playing .testimonio-video-overlay {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .testimonio-play {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(10, 10, 10, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1.5px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.4s ease;
+  }
+  .testimonio-card:hover .testimonio-play {
+    background: var(--gold);
+    transform: scale(1.08);
+  }
+  .testimonio-play svg { color: var(--gold); transition: color 0.4s ease; margin-left: 3px; }
+  .testimonio-card:hover .testimonio-play svg { color: var(--black); }
+  .testimonio-placeholder-label {
+    font-family: var(--ff-display);
+    font-style: italic; font-weight: 300;
+    font-size: 12px;
+    color: var(--cream);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+  .testimonio-meta {
+    padding: 20px 24px;
+    border-top: 1px solid var(--line);
+  }
+  .testimonio-name {
+    font-family: var(--ff-display); font-weight: 500;
+    font-size: 16px; color: var(--cream);
+    margin-bottom: 4px; letter-spacing: -0.01em;
+  }
+  .testimonio-role {
+    font-size: 12px; color: var(--gray-500);
+    letter-spacing: 0.02em;
+  }
+
+  /* ============ FINAL CTA ============ */
+  .final-cta {
+    padding: 100px 40px;
+    background: var(--black);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .final-cta::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(201, 169, 97, 0.08), transparent 70%);
+    pointer-events: none;
+  }
+  .final-cta-inner { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; }
+  .final-cta h2 {
+    font-family: var(--ff-display); font-weight: 300;
+    font-size: clamp(40px, 6vw, 80px);
+    line-height: 1.05; letter-spacing: -0.03em;
+    color: var(--cream); margin-bottom: 40px;
+  }
+  .final-cta h2 em {
+    font-style: italic; color: var(--gold);
+    font-variation-settings: "opsz" 144;
+  }
+  .final-cta-sub {
+    font-size: clamp(16px, 1.3vw, 18px); color: var(--gray-400);
+    margin-bottom: 48px; max-width: 640px;
+    margin-left: auto; margin-right: auto;
+    line-height: 1.55;
+  }
+  .btn-huge {
+    padding: 24px 64px;
+    font-size: 17px;
+    background: var(--cream); color: var(--black);
+    border: none; border-radius: 999px;
+    font-family: var(--ff-body); font-weight: 500;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    letter-spacing: 0.01em;
+  }
+  .btn-huge::after { content: '→'; margin-left: 12px; display: inline-block; transition: transform 0.4s ease; }
+  .btn-huge:hover {
+    background: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 30px 60px -15px rgba(201, 169, 97, 0.4);
+  }
+  .btn-huge:hover::after { transform: translateX(8px); }
+  .final-reassure {
+    margin-top: 24px; font-size: 13px; color: var(--gray-500);
+    letter-spacing: 0.03em;
+  }
+  .final-signature {
+    margin-top: 48px;
+    font-family: var(--ff-display); font-style: italic;
+    font-weight: 300; font-size: 24px;
+    color: var(--gold); line-height: 1.4;
+  }
+
+  /* ============ FINAL URGENCIA (mini, debajo del botón) ============ */
+  .final-urgencia {
+    margin: 32px auto 8px;
+    display: flex;
+    width: max-content;
+    max-width: 100%;
+    align-items: center; gap: 16px;
+    padding: 14px 24px;
+    border: 1px solid rgba(201, 169, 97, 0.25);
+    border-radius: 999px;
+    background: rgba(201, 169, 97, 0.04);
+  }
+  .final-urgencia .plazas-dots { gap: 3px; }
+  .final-urgencia .plazas-dot { width: 7px; height: 7px; }
+  .final-urgencia .plazas-label { font-size: 12px; }
+
+  /* ============ FOOTER ============ */
+  footer {
+    background: var(--black);
+    padding: 60px 40px 40px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+  .footer-brand {
+    font-family: var(--ff-display);
+    font-weight: 500; font-size: 20px;
+    color: var(--cream); margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+  .footer-brand em { font-style: italic; color: var(--gold); }
+  .footer-disclaimer {
+    font-size: 11px; color: var(--gray-600);
+    max-width: 800px; margin: 20px auto 0;
+    line-height: 1.6;
+  }
+  .footer-copy {
+    margin-top: 20px; font-size: 11px;
+    color: var(--gray-600);
+  }
+
+  /* ============ REVEAL ============ */
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ============ FORM MODAL (popup de admisión) ============ */
+  .form-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: none;            /* totalmente fuera del flujo cuando está cerrado */
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .form-modal.is-open {
+    display: flex;
+    opacity: 1;
+  }
+  .form-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 10, 0.82);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    cursor: pointer;
+  }
+  .form-modal-shell {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 760px;
+    max-height: calc(100vh - 64px);
+    background: var(--cream);
+    border-radius: 18px;
+    border: 1px solid rgba(201, 169, 97, 0.4);
+    overflow: hidden;
+    box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.7),
+                0 0 0 1px rgba(201, 169, 97, 0.15);
+    transform: translateY(24px) scale(0.98);
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+  }
+  .form-modal.is-open .form-modal-shell {
+    transform: translateY(0) scale(1);
+  }
+  .form-modal-header {
+    text-align: center;
+    padding: 36px 28px 24px;
+    background: transparent;
+    border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+    margin-bottom: 4px;
+  }
+  .form-modal-title {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-size: clamp(24px, 2.6vw, 32px);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    margin: 0;
+  }
+  .form-modal-title em {
+    font-style: italic;
+    color: #8a6d2b;
+    font-weight: 300;
+    font-variation-settings: "opsz" 144;
+  }
+  .form-modal-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    z-index: 5;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: rgba(10, 10, 10, 0.08);
+    border: 1px solid rgba(10, 10, 10, 0.12);
+    color: var(--black);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  .form-modal-close:hover {
+    background: var(--black);
+    color: var(--cream);
+    border-color: var(--black);
+    transform: scale(1.06);
+  }
+  .form-modal-scroll {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: var(--cream);
+  }
+  .form-modal-scroll iframe {
+    width: 100%;
+    min-height: 1931px;
+    border: none;
+    display: block;
+    background: var(--cream);
+  }
+  .form-modal-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    color: var(--gray-500);
+    font-size: 14px;
+    font-style: italic;
+    font-family: var(--ff-display);
+  }
+  .form-modal-loading::before {
+    content: '';
+    width: 14px; height: 14px;
+    margin-right: 12px;
+    border: 2px solid rgba(201, 169, 97, 0.3);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Bloquea scroll del body cuando el modal está abierto */
+  body.form-modal-open { overflow: hidden; }
+
+  @media (max-width: 600px) {
+    .form-modal { padding: 0; }
+    .form-modal-shell {
+      max-height: 100vh;
+      max-height: 100dvh;
+      border-radius: 0;
+      border: none;
+    }
+    .form-modal-header { padding: 28px 18px 18px; }
+    .form-modal-title { font-size: 22px; }
+    .form-modal-close { top: 10px; right: 10px; width: 34px; height: 34px; }
+  }
+
+  /* ============ MOBILE FLOATING CTA ============ */
+  .mobile-cta-bar {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--line);
+    z-index: 90;
+  }
+  .mobile-cta-bar button {
+    width: 100%;
+    padding: 16px;
+    background: var(--cream);
+    color: var(--black);
+    border: none; border-radius: 999px;
+    font-family: var(--ff-body); font-size: 15px; font-weight: 500;
+    cursor: pointer;
+  }
+  .mobile-cta-bar button::after { content: '  →'; display: inline; }
+
+  /* ============ RESPONSIVE ============ */
+
+  /* Tablet (entre 761px y 1100px) */
+  @media (min-width: 761px) and (max-width: 1100px) {
+    section { padding: 64px 32px; }
+    .hero { padding: 48px 32px 60px; }
+    .hero-inner { max-width: 800px; }
+    .hero-body { max-width: 660px; }
+    .testimonios { padding: 72px 32px; }
+    .testimonios-grid { grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 900px; }
+    .final-cta { padding: 80px 32px; }
+  }
+
+  /* Mobile (max 760px) */
+  @media (max-width: 760px) {
+    section { padding: 56px 20px; }
+
+    .hero { padding: 36px 20px 56px; min-height: auto; }
+    .hero-eyebrow {
+      margin-bottom: 24px; font-size: 13px; padding: 9px 18px; letter-spacing: 0.14em;
+      max-width: 100%; white-space: normal; line-height: 1.4; text-align: center;
+    }
+    .hero h1 { margin-bottom: 18px; }
+    .hero-tagline { font-size: 19px; line-height: 1.35; margin: 0 auto 28px; max-width: 92%; }
+    .hero-video { margin-bottom: 32px; border-radius: 14px; max-width: 300px; }
+    .hero-video-mute-btn { width: 40px; height: 40px; }
+    .hero-video-mute-btn .icon-muted, .hero-video-mute-btn .icon-unmuted { width: 18px; height: 18px; }
+    .hero-video-hint { font-size: 11px; padding: 7px 14px; bottom: 12px; left: 12px; letter-spacing: 0.08em; }
+    .hero-sub { margin-bottom: 32px; font-size: 17px; line-height: 1.55; }
+    .hero-cta-group { flex-direction: column; width: 100%; gap: 12px; }
+    .btn-primary { width: 100%; padding: 18px 28px; font-size: 15.5px; }
+    .hero-plazas {
+      margin-top: 28px; padding: 14px 20px;
+      flex-direction: column; gap: 12px;
+      width: 100%; max-width: 360px;
+    }
+    .plazas-dots { gap: 3px; }
+    .plazas-dot { width: 8px; height: 8px; }
+
+    .hero-body { margin: 28px auto 28px; padding: 0; }
+    .hero-body p { font-size: 16.5px; line-height: 1.65; }
+    .hero-opener { padding: 14px 18px; margin: 0 0 20px; }
+    .hero-opener p { font-size: 16px; line-height: 1.55; }
+    .hero-body .pull { font-size: 18.5px; padding: 18px 0; margin: 22px 0; }
+    .hero-benefits { padding: 22px 20px; margin: 22px 0; }
+    .hero-benefits-title { font-size: 16.5px; margin-bottom: 14px; }
+    .hero-benefits li { font-size: 15.5px; line-height: 1.55; }
+    .hero-meta { font-size: 13px; line-height: 1.6; }
+    .hero-signature { font-size: 18px; }
+
+    .testimonios { padding: 56px 20px; }
+    .testimonios-head { margin-bottom: 36px; }
+    .testimonios-grid { grid-template-columns: 1fr; gap: 16px; }
+    .testimonio-meta { padding: 16px 20px; }
+    .testimonio-name { font-size: 16px; }
+
+    .final-cta { padding: 64px 20px; }
+    .btn-huge { width: 100%; padding: 20px 28px; font-size: 15px; }
+    .final-signature { margin-top: 36px; font-size: 20px; }
+    .final-urgencia {
+      width: 100%; max-width: 360px;
+      flex-direction: column; gap: 12px;
+      padding: 14px 20px;
+    }
+
+    footer { padding: 36px 20px 100px; }
+
+    .mobile-cta-bar { display: block; }
+    body { padding-bottom: 80px; }
+  }
+
+  /* Tablet pequeña (481-760px): testimonios 2 cols */
+  @media (min-width: 481px) and (max-width: 760px) {
+    .testimonios-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; max-width: 560px; }
+    .testimonio-video { aspect-ratio: 9 / 16; }
+  }
+
+  /* Mobile pequeña (max 480px) */
+  @media (max-width: 480px) {
+    .hero { padding: 32px 18px 48px; }
+    .hero h1 { font-size: 38px; line-height: 1.05; margin-bottom: 14px; }
+    .hero-tagline { font-size: 17px; line-height: 1.4; margin: 0 auto 24px; }
+    .hero-sub { font-size: 16.5px; line-height: 1.6; margin-bottom: 24px; }
+    .hero-body { margin: 22px 0 26px; }
+    .hero-body p { font-size: 16px; line-height: 1.65; margin-bottom: 16px; }
+    .hero-opener { padding: 12px 16px; margin: 0 0 18px; border-radius: 8px; }
+    .hero-opener p { font-size: 15.5px; line-height: 1.55; }
+    .hero-body .pull { font-size: 17px; padding: 16px 0; margin: 20px 0; line-height: 1.45; }
+    .hero-benefits { padding: 18px 16px; margin: 20px 0; border-radius: 12px; }
+    .hero-benefits-title { font-size: 16px; margin-bottom: 12px; }
+    .hero-benefits li { font-size: 15px; padding-left: 22px; line-height: 1.55; }
+    .hero-cta-group { width: 100%; }
+    .btn-primary { width: 100%; padding: 17px 24px; font-size: 15px; }
+    .plazas-dot { width: 7px; height: 7px; }
+    .hero-meta { font-size: 12.5px; margin-top: 14px; }
+    .hero-signature { font-size: 17px; margin-top: 20px; }
+
+    .testimonios { padding: 48px 18px; }
+    .testimonios-head { margin-bottom: 32px; }
+    .testimonios-grid { grid-template-columns: 1fr; gap: 14px; max-width: 360px; }
+    .testimonio-video { aspect-ratio: 9 / 16; }
+    .testimonio-play { width: 56px; height: 56px; }
+    .testimonio-meta { padding: 16px 18px; }
+    .testimonio-name { font-size: 15px; }
+    .testimonio-role { font-size: 12px; }
+
+    .final-cta { padding: 56px 18px; }
+    .final-cta h2 { font-size: 36px; margin-bottom: 24px; }
+    .final-cta-sub { font-size: 14.5px; margin-bottom: 32px; }
+    .btn-huge { width: 100%; padding: 18px 24px; font-size: 14.5px; }
+    .final-reassure { font-size: 12px; margin-top: 18px; line-height: 1.5; }
+    .final-signature { margin-top: 32px; font-size: 18px; }
+
+    footer { padding: 32px 18px 100px; }
+    .footer-disclaimer { font-size: 10.5px; }
+  }
+
+  /* Bloqueo absoluto de overflow horizontal */
+  body, section, footer, nav, .hero, .testimonios, .final-cta, .mobile-cta-bar {
+    max-width: 100vw;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero force-full-width">
+  <div class="hero-grain"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Aplica a la Mentoría VUELA</div>
+    <h1>Reserva tu llamada<br/>de <em>admisión.</em></h1>
+    <p class="hero-tagline">y obtén una <em>ruta clara</em> sobre qué pasos seguir.</p>
+
+    <!-- Video en bucle con overlay de mute. Click sobre el video o el botón alterna el audio. -->
+    <div class="hero-video" id="heroVideo" role="button" tabindex="0" aria-label="Activar o desactivar audio del video">
+      <video
+        id="heroVideoEl"
+        src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69f1045fc5c98840c855ba32.mp4"
+        autoplay
+        loop
+        muted
+        playsinline
+        preload="metadata"
+        controlslist="nodownload nofullscreen noremoteplayback noplaybackrate"
+        disablepictureinpicture
+        oncontextmenu="return false;">
+      </video>
+      <div class="hero-video-hint">Click para activar audio</div>
+      <div class="hero-video-overlay">
+        <button class="hero-video-mute-btn" type="button" aria-label="Activar o desactivar audio">
+          <svg class="icon-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+            <line x1="23" y1="9" x2="17" y2="15"/>
+            <line x1="17" y1="9" x2="23" y2="15"/>
+          </svg>
+          <svg class="icon-unmuted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <p class="hero-sub">
+      Si quieres entrar a VUELA, no hay botón de comprar. Hay una <strong>entrevista de admisión</strong> conmigo y mi equipo donde decidimos juntos si esta es tu mentoría, y si tú eres la persona que queremos en este grupo de 20.
+    </p>
+
+    <div class="hero-body">
+      <div class="hero-opener">
+        <p>Voy a ser directa contigo, porque para eso vienes acá.</p>
+      </div>
+      <p>VUELA no es para todo el mundo. Es para personas con conocimiento real que están listas para construir un proyecto digital con <strong>método propio</strong>, <strong>oferta vendible</strong> y <strong>MiniApps de IA</strong>. Todo en 90 días, conmigo y mi equipo encima cada semana.</p>
+      <p>Eso significa que no me sirve que apliques porque <em>"te interesa"</em>. Me sirve que apliques porque vas a hacer el trabajo.</p>
+      <p>Por eso antes de aceptar tu plaza, hablamos.</p>
+
+      <div class="hero-benefits">
+        <div class="hero-benefits-title">En esta llamada de 30 minutos vas a salir con:</div>
+        <ul>
+          <li>Un <strong>diagnóstico honesto</strong> de por qué tu proyecto no está facturando lo que podría.</li>
+          <li><strong>Dos o tres acciones concretas</strong> que puedes aplicar esta semana, entres o no a VUELA.</li>
+          <li><strong>Claridad total sobre la mentoría</strong>: qué incluye, cómo funciona y si es para ti en este momento.</li>
+          <li><strong>Tiempo directo conmigo y con el equipo</strong> que está construyendo proyectos educativos reales en este momento.</li>
+        </ul>
+      </div>
+
+      <p class="pull">Si vemos que VUELA es tu siguiente paso, abrimos la conversación de admisión. Si vemos que todavía no es tu momento, te lo decimos de frente y sales con la ruta clara de qué hacer primero.</p>
+
+      <p>Esto no es una llamada de ventas disfrazada. Es una <strong>entrevista de admisión real</strong>. Las plazas son 20, llevamos varias tomadas, y mi equipo y yo no tenemos tiempo para convencer a nadie.</p>
+
+      <p>Si te identificas con esto, aplicas. Si no, mejor no nos hagamos perder el tiempo a ninguno de los dos.</p>
+    </div>
+
+    <div class="hero-cta-group">
+      <button class="btn-primary" type="button" data-form-trigger>Aplicar a la entrevista</button>
+    </div>
+
+    <!-- Animación de plazas: 7 tomadas · 13 disponibles -->
+    <div class="hero-plazas" aria-label="7 de 20 plazas tomadas">
+      <div class="plazas-dots">
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+      </div>
+      <div class="plazas-label">
+        <span class="live-dot"></span>
+        <span><strong>7 de 20</strong> plazas tomadas</span>
+      </div>
+    </div>
+
+    <div class="hero-meta">
+      Llamadas desde el 30 de abril · 9 AM hora Colombia<br/>
+      Solo aplicaciones completas pasan a agendamiento
+    </div>
+
+    <div class="hero-signature">Andy Molina</div>
+  </div>
+</section>
+
+<!-- ============ TESTIMONIOS ============ -->
+<section class="testimonios force-full-width">
+  <div class="container">
+    <div class="testimonios-head reveal">
+      <div class="section-eyebrow">Prueba real</div>
+      <h2 class="section-title">Quienes ya volaron y volvieron a <em>contarlo.</em></h2>
+      <p class="section-lead">No son testimonios de marketing. Son personas reales que hicieron el trabajo y hoy están en otro lugar de su proyecto.</p>
+    </div>
+
+    <div class="testimonios-grid">
+
+      <div class="testimonio-card reveal">
+        <div class="testimonio-video" data-testimonio-video>
+          <video
+            src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69f1045fc428703a0424f55a.mp4"
+            playsinline muted loop preload="auto"
+            controlslist="nodownload nofullscreen noremoteplayback noplaybackrate"
+            disablepictureinpicture
+            oncontextmenu="return false;"></video>
+          <div class="testimonio-video-overlay">
+            <div class="testimonio-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="testimonio-placeholder-label">Reproducir</div>
+          </div>
+        </div>
+        <div class="testimonio-meta">
+          <div class="testimonio-name">Testimonio 1</div>
+          <div class="testimonio-role">Egresada VUELA</div>
+        </div>
+      </div>
+
+      <div class="testimonio-card reveal">
+        <div class="testimonio-video" data-testimonio-video>
+          <video
+            src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69f1045f67b2088f501627c5.mp4"
+            playsinline muted loop preload="auto"
+            controlslist="nodownload nofullscreen noremoteplayback noplaybackrate"
+            disablepictureinpicture
+            oncontextmenu="return false;"></video>
+          <div class="testimonio-video-overlay">
+            <div class="testimonio-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="testimonio-placeholder-label">Reproducir</div>
+          </div>
+        </div>
+        <div class="testimonio-meta">
+          <div class="testimonio-name">Testimonio 2</div>
+          <div class="testimonio-role">Egresada VUELA</div>
+        </div>
+      </div>
+
+      <div class="testimonio-card reveal">
+        <div class="testimonio-video" data-testimonio-video>
+          <video
+            src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69f1045feecc3af70affe6d8.mp4"
+            playsinline muted loop preload="auto"
+            controlslist="nodownload nofullscreen noremoteplayback noplaybackrate"
+            disablepictureinpicture
+            oncontextmenu="return false;"></video>
+          <div class="testimonio-video-overlay">
+            <div class="testimonio-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="testimonio-placeholder-label">Reproducir</div>
+          </div>
+        </div>
+        <div class="testimonio-meta">
+          <div class="testimonio-name">Testimonio 3</div>
+          <div class="testimonio-role">Egresada VUELA</div>
+        </div>
+      </div>
+
+      <div class="testimonio-card reveal">
+        <div class="testimonio-video" data-testimonio-video>
+          <video
+            src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69f1045fdfacb1bd313d4fad.mp4"
+            playsinline muted loop preload="auto"
+            controlslist="nodownload nofullscreen noremoteplayback noplaybackrate"
+            disablepictureinpicture
+            oncontextmenu="return false;"></video>
+          <div class="testimonio-video-overlay">
+            <div class="testimonio-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="testimonio-placeholder-label">Reproducir</div>
+          </div>
+        </div>
+        <div class="testimonio-meta">
+          <div class="testimonio-name">Testimonio 4</div>
+          <div class="testimonio-role">Egresada VUELA</div>
+        </div>
+      </div>
+
+      <div class="testimonio-card reveal">
+        <div class="testimonio-video" data-testimonio-video>
+          <video
+            src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69f1045fd0efad0b4cbffd85.mp4"
+            playsinline muted loop preload="auto"
+            controlslist="nodownload nofullscreen noremoteplayback noplaybackrate"
+            disablepictureinpicture
+            oncontextmenu="return false;"></video>
+          <div class="testimonio-video-overlay">
+            <div class="testimonio-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="testimonio-placeholder-label">Reproducir</div>
+          </div>
+        </div>
+        <div class="testimonio-meta">
+          <div class="testimonio-name">Testimonio 5</div>
+          <div class="testimonio-role">Egresada VUELA</div>
+        </div>
+      </div>
+
+      <div class="testimonio-card reveal">
+        <div class="testimonio-video" data-testimonio-video>
+          <video
+            src="https://assets.cdn.filesafe.space/d63IMfTrRgWzePUPTy8e/media/69f10460dfacb1bd313d4fc8.mp4"
+            playsinline muted loop preload="auto"
+            controlslist="nodownload nofullscreen noremoteplayback noplaybackrate"
+            disablepictureinpicture
+            oncontextmenu="return false;"></video>
+          <div class="testimonio-video-overlay">
+            <div class="testimonio-play">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <div class="testimonio-placeholder-label">Reproducir</div>
+          </div>
+        </div>
+        <div class="testimonio-meta">
+          <div class="testimonio-name">Testimonio 6</div>
+          <div class="testimonio-role">Egresada VUELA</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final-cta force-full-width" id="cta-final">
+  <div class="final-cta-inner">
+    <h2 class="reveal">Que no sea el <em>miedo</em><br/>quien decida por ti.</h2>
+    <p class="final-cta-sub reveal">
+      Si llegaste hasta acá, ya sabes lo que tienes que hacer. La aplicación toma 4 minutos. La llamada, 30. Lo peor que puede pasarte es salir con un diagnóstico claro de tu proyecto.
+    </p>
+    <button class="btn-huge reveal" type="button" data-form-trigger>Aplicar a la entrevista</button>
+
+    <!-- Animación de plazas (mini, repetida al final) -->
+    <div class="final-urgencia reveal" aria-label="7 de 20 plazas tomadas">
+      <div class="plazas-dots">
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot taken"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+        <span class="plazas-dot"></span>
+      </div>
+      <div class="plazas-label">
+        <span class="live-dot"></span>
+        <span><strong>7 de 20</strong> plazas tomadas</span>
+      </div>
+    </div>
+
+    <div class="final-reassure reveal">Llamadas desde el 30 de abril · 9 AM hora Colombia · Solo aplicaciones completas pasan a agendamiento</div>
+    <div class="final-signature reveal">Andy Molina</div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="force-full-width">
+  <div class="footer-brand">Mentoría <em>VUELA</em></div>
+  <div style="font-size: 13px; color: var(--gray-500);">Por Andy Molina</div>
+  <div class="footer-disclaimer">
+    Los resultados pueden variar según la situación individual de cada persona. Ovejas Voladoras y sus representantes no garantizan resultados específicos. Este sitio no es parte del sitio web de Facebook™ o Facebook™ Inc. Además, este sitio NO está respaldado por Facebook™ de ninguna manera. FACEBOOK™ es una marca registrada de FACEBOOK™, Inc.
+  </div>
+  <div class="footer-copy">© 2026 Ovejas Voladoras · Mentoría VUELA · Todos los derechos reservados</div>
+</footer>
+
+<!-- ============ MOBILE FLOATING CTA ============ -->
+<div class="mobile-cta-bar force-full-width-fixed">
+  <button data-form-trigger>Aplicar a la entrevista</button>
+</div>
+
+<!-- ============ FORM MODAL (popup de admisión) ============ -->
+<div class="form-modal" id="formModal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Formulario de admisión a la mentoría VUELA">
+  <div class="form-modal-backdrop" data-form-close></div>
+  <div class="form-modal-shell">
+    <button class="form-modal-close" type="button" data-form-close aria-label="Cerrar formulario">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div class="form-modal-scroll" id="formModalScroll">
+      <header class="form-modal-header">
+        <h3 class="form-modal-title">Reserva tu llamada<br/>de <em>admisión.</em></h3>
+      </header>
+      <div class="form-modal-loading" id="formModalLoading">Cargando formulario…</div>
+      <!-- El iframe se inyecta on-demand al abrir el modal por primera vez -->
+    </div>
+  </div>
+</div>
+<script src="https://link.cleesaas.com/js/form_embed.js" defer></script>
+
+<script>
+  // ============ FORM MODAL (popup de admisión) ============
+  (function () {
+    const modal = document.getElementById('formModal');
+    const scrollWrap = document.getElementById('formModalScroll');
+    const loading = document.getElementById('formModalLoading');
+    if (!modal || !scrollWrap) return;
+
+    const FORM_URL = 'https://link.cleesaas.com/widget/form/aSHISOTkONXZfNvAxzxS';
+    const FORM_ID  = 'aSHISOTkONXZfNvAxzxS';
+    let iframeLoaded = false;
+    let lastFocused = null;
+
+    function injectIframe() {
+      if (iframeLoaded) return;
+      const iframe = document.createElement('iframe');
+      iframe.src = FORM_URL;
+      iframe.id = 'inline-' + FORM_ID;
+      iframe.title = 'Form Calificación Admisión: Mentoría Vuela 2';
+      iframe.setAttribute('data-layout', "{'id':'INLINE'}");
+      iframe.setAttribute('data-trigger-type', 'alwaysShow');
+      iframe.setAttribute('data-trigger-value', '');
+      iframe.setAttribute('data-activation-type', 'alwaysActivated');
+      iframe.setAttribute('data-activation-value', '');
+      iframe.setAttribute('data-deactivation-type', 'neverDeactivate');
+      iframe.setAttribute('data-deactivation-value', '');
+      iframe.setAttribute('data-form-name', 'Form Calificación Admisión: Mentoría Vuela 2');
+      iframe.setAttribute('data-height', '1931');
+      iframe.setAttribute('data-layout-iframe-id', 'inline-' + FORM_ID);
+      iframe.setAttribute('data-form-id', FORM_ID);
+      iframe.addEventListener('load', () => {
+        if (loading) loading.style.display = 'none';
+      });
+      scrollWrap.appendChild(iframe);
+      iframeLoaded = true;
+
+      // Re-ejecuta el script de GHL para que registre el iframe recién insertado
+      try {
+        if (window.formEmbed && typeof window.formEmbed.init === 'function') {
+          window.formEmbed.init();
+        }
+      } catch (e) { /* noop */ }
+    }
+
+    function openModal() {
+      lastFocused = document.activeElement;
+      injectIframe();
+      modal.classList.add('is-open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('form-modal-open');
+      const closeBtn = modal.querySelector('.form-modal-close');
+      if (closeBtn) setTimeout(() => { try { closeBtn.focus(); } catch(e){} }, 60);
+    }
+
+    function closeModal() {
+      modal.classList.remove('is-open');
+      modal.setAttribute('aria-hidden', 'true');
+      // Limpieza defensiva por si algo deja estilos colgados
+      document.body.classList.remove('form-modal-open');
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      if (lastFocused && typeof lastFocused.focus === 'function') {
+        try { lastFocused.focus(); } catch (e) { /* noop */ }
+      }
+    }
+
+    // Delegación global: cualquier click en algo con [data-form-trigger] abre,
+    // y cualquier click en [data-form-close] cierra. Más robusto que listeners
+    // individuales porque sobrevive a cambios del DOM.
+    document.addEventListener('click', (e) => {
+      const trigger = e.target.closest('[data-form-trigger]');
+      if (trigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        openModal();
+        return;
+      }
+      const closer = e.target.closest('[data-form-close]');
+      if (closer && modal.contains(closer)) {
+        e.preventDefault();
+        e.stopPropagation();
+        closeModal();
+      }
+    });
+
+    // ESC para cerrar
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+  })();
+
+  // Reveal animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ============ TESTIMONIOS: preview silencioso + click-to-play ============
+  (function () {
+    const wrappers = document.querySelectorAll('[data-testimonio-video]');
+
+    // 1) Preview silencioso en bucle solo cuando la card está visible
+    //    (evita descargar 6 videos a la vez antes de scrollear)
+    const previewObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const wrapper = entry.target;
+        const video = wrapper.querySelector('video');
+        if (!video) return;
+        // Si ya está en modo "play activo", el observer no toca nada
+        if (wrapper.classList.contains('is-playing')) return;
+
+        if (entry.isIntersecting) {
+          // Asegura el estado de preview: muted + loop
+          video.muted = true;
+          video.loop = true;
+          const p = video.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } else {
+          // Pausa el preview cuando sale del viewport
+          if (!video.paused) video.pause();
+        }
+      });
+    }, { threshold: 0.35, rootMargin: '0px 0px -10% 0px' });
+
+    wrappers.forEach(wrapper => {
+      const video = wrapper.querySelector('video');
+      const overlay = wrapper.querySelector('.testimonio-video-overlay');
+      if (!video || !overlay) return;
+
+      previewObserver.observe(wrapper);
+
+      function playThis(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+
+        // Pausa y resetea cualquier otro testimonio que estuviera en modo play activo
+        wrappers.forEach(other => {
+          if (other === wrapper) return;
+          const otherVideo = other.querySelector('video');
+          if (other.classList.contains('is-playing') && otherVideo) {
+            otherVideo.pause();
+            otherVideo.removeAttribute('controls');
+            otherVideo.muted = true;
+            otherVideo.loop = true;
+            otherVideo.currentTime = 0;
+            other.classList.remove('is-playing');
+            // Reanuda preview silencioso si sigue en viewport
+            const r = otherVideo.play();
+            if (r && typeof r.catch === 'function') r.catch(() => {});
+          }
+        });
+
+        // Activa modo "play real" en este video
+        wrapper.classList.add('is-playing');
+        video.pause();
+        video.currentTime = 0;       // reset desde el inicio
+        video.muted = false;         // audio activo
+        video.loop = false;          // ya no es preview
+        video.setAttribute('controls', '');
+
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(err => {
+            console.warn('No se pudo reproducir el video:', err);
+            wrapper.classList.remove('is-playing');
+            video.removeAttribute('controls');
+            video.muted = true;
+            video.loop = true;
+          });
+        }
+      }
+
+      overlay.addEventListener('click', playThis);
+
+      // Al terminar el video, vuelve al estado de preview
+      video.addEventListener('ended', () => {
+        wrapper.classList.remove('is-playing');
+        video.removeAttribute('controls');
+        video.muted = true;
+        video.loop = true;
+        video.currentTime = 0;
+        const r = video.play();
+        if (r && typeof r.catch === 'function') r.catch(() => {});
+      });
+    });
+  })();
+
+  // ============ HERO VIDEO: toggle mute al hacer click ============
+  (function () {
+    const wrapper = document.getElementById('heroVideo');
+    const video = document.getElementById('heroVideoEl');
+    if (!wrapper || !video) return;
+
+    function toggleMute(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      video.muted = !video.muted;
+      wrapper.classList.toggle('is-unmuted', !video.muted);
+      // Asegura que el video siga reproduciendo tras el cambio
+      const playPromise = video.play();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+    }
+
+    wrapper.addEventListener('click', toggleMute);
+    wrapper.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') toggleMute(e);
+    });
+  })();
+</script>
+
+</body>
+</html>

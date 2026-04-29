@@ -1,0 +1,1399 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vuela — 90 Días</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0a0a0a; }
+  body { font-family: 'Inter', sans-serif; }
+  deck-stage > section { background: #0a0a0a; }
+  /* Force the React mount div to fill the section so percentage-height inside Slide works.
+     Without this, height:100% on the Slide collapses to content height. */
+  deck-stage > section > div { position: absolute; inset: 0; width: 100%; height: 100%; }
+  ::selection { background: rgba(201,169,97,0.4); color: #f5f1e8; }
+
+  /* ============ SLIDE ANIMATIONS ============
+     Elements declare an intent via [data-anim="..."] with optional --d delay.
+     We control replay by toggling a class .anim-on on the active <section>.
+     When the class is removed and re-added, the descendant selectors stop
+     matching the animation rules and then start matching again — that
+     guarantees the browser restarts the @keyframes from the beginning. */
+
+  /* Resting state (used while [data-anim] elements exist but their slide is
+     not currently animating). */
+  [data-anim] { opacity: 0; }
+  [data-anim="strike"], [data-anim="reveal"], [data-anim="draw-x"], [data-anim="draw-y"] { opacity: 1; }
+  [data-anim="draw-x"] { transform: scaleX(0); transform-origin: left center; }
+  [data-anim="draw-y"] { transform: scaleY(0); transform-origin: top center; }
+  [data-anim="strike"] {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-size: 0% 2px;
+    background-position: left 56%;
+    text-decoration: none !important;
+  }
+
+  @keyframes vuela-rise    { from { opacity: 0; transform: translateY(28px); }  to { opacity: 1; transform: none; } }
+  @keyframes vuela-fall    { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: none; } }
+  @keyframes vuela-slide-l { from { opacity: 0; transform: translateX(-48px); } to { opacity: 1; transform: none; } }
+  @keyframes vuela-slide-r { from { opacity: 0; transform: translateX(48px); }  to { opacity: 1; transform: none; } }
+  @keyframes vuela-zoom    { from { opacity: 0; transform: scale(0.92); }       to { opacity: 1; transform: none; } }
+  @keyframes vuela-reveal  { from { clip-path: inset(0 100% 0 0); }             to { clip-path: inset(0 0 0 0); } }
+  @keyframes vuela-draw-x  { from { transform: scaleX(0); }                     to { transform: scaleX(1); } }
+  @keyframes vuela-draw-y  { from { transform: scaleY(0); }                     to { transform: scaleY(1); } }
+  @keyframes vuela-strike  { from { background-size: 0% 2px; }                  to { background-size: 100% 2px; } }
+
+  /* Active animation rules — only active when the section has data-deck-active.
+     deck-stage already toggles that attribute on every navigation, so changing
+     animation-name from "none" -> "vuela-..." triggers the browser to start
+     the animation fresh on every entry/re-entry. */
+  [data-deck-active] [data-anim="rise"]    { animation: vuela-rise    900ms cubic-bezier(.2,.7,.2,1) var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="fall"]    { animation: vuela-fall    900ms cubic-bezier(.2,.7,.2,1) var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="slide-l"] { animation: vuela-slide-l 900ms cubic-bezier(.2,.7,.2,1) var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="slide-r"] { animation: vuela-slide-r 900ms cubic-bezier(.2,.7,.2,1) var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="zoom"]    { animation: vuela-zoom    1000ms cubic-bezier(.2,.7,.2,1) var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="reveal"]  { animation: vuela-reveal  1100ms cubic-bezier(.7,0,.2,1)  var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="draw-x"]  { animation: vuela-draw-x  900ms cubic-bezier(.7,0,.2,1)  var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="draw-y"]  { animation: vuela-draw-y  1300ms cubic-bezier(.7,0,.2,1) var(--d, 0ms) both; }
+  [data-deck-active] [data-anim="strike"]  { animation: vuela-strike  700ms cubic-bezier(.7,0,.2,1)  var(--d, 0ms) both; }
+
+  /* prefers-reduced-motion override removed intentionally — Windows often
+     reports it as 'reduce' which silently kills our deck animations. */
+
+  /* ============ PREMIUM PULSE UTILITIES ============
+     Always-on decorative pulses that reinforce premium feel. */
+  @keyframes vuela-pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; }
+                               50% { transform: scale(1.5); opacity: 0.55; } }
+  @keyframes vuela-pulse-ring { 0% { transform: scale(1); opacity: 0.7; }
+                                100% { transform: scale(2.4); opacity: 0; } }
+  @keyframes vuela-glow-border { 0%, 100% { border-color: rgba(201,169,97,0.28); box-shadow: 0 0 0 0 rgba(201,169,97,0); }
+                                 50% { border-color: rgba(201,169,97,0.6);  box-shadow: 0 0 28px 0 rgba(201,169,97,0.12); } }
+  @keyframes vuela-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  @keyframes vuela-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+  .pulse-dot {
+    position: relative; display: inline-block;
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #c9a961;
+    animation: vuela-pulse-dot 2s ease-in-out infinite;
+  }
+  .pulse-dot::after {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    border: 1px solid #c9a961;
+    animation: vuela-pulse-ring 2s ease-out infinite;
+  }
+  .pulse-glow { animation: vuela-glow-border 3.2s ease-in-out infinite; }
+  .pulse-float { animation: vuela-float 4s ease-in-out infinite; }
+  .gold-shimmer {
+    background: linear-gradient(90deg, #c9a961 0%, #f5e2a8 35%, #c9a961 65%, #c9a961 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: vuela-shimmer 4.5s linear infinite;
+  }
+
+</style>
+</head>
+<body>
+<deck-stage width="1920" height="1080">
+  <section data-label="01 Portada"><div id="s01"></div></section>
+  <section data-label="02 No es mentoría"><div id="s02"></div></section>
+  <section data-label="03 No vienes a aprender"><div id="s03"></div></section>
+  <section data-label="04 La transformación"><div id="s04"></div></section>
+  <section data-label="05 Lo que te llevas"><div id="s05"></div></section>
+  <section data-label="06 Tracción"><div id="s06"></div></section>
+  <section data-label="07 El camino 90 días"><div id="s07"></div></section>
+  <section data-label="08 Mes 1 Despertar"><div id="s08"></div></section>
+  <section data-label="09 Mes 2 Construcción"><div id="s09"></div></section>
+  <section data-label="10 Mes 3 Exposición"><div id="s10"></div></section>
+  <section data-label="11 Día 91"><div id="s11"></div></section>
+  <section data-label="12 Entregables"><div id="s12"></div></section>
+  <section data-label="13 Bonos"><div id="s13"></div></section>
+  <section data-label="14 Inversión"><div id="s14"></div></section>
+  <section data-label="15 No es dinero"><div id="s15"></div></section>
+  <section data-label="16 Garantía"><div id="s16"></div></section>
+  <section data-label="17 20 plazas"><div id="s17"></div></section>
+  <section data-label="18 Cierre"><div id="s18"></div></section>
+</deck-stage>
+
+<script>
+/* ============================================================
+   <deck-stage> — web component (inlined)
+   ============================================================ */
+(() => {
+  const DESIGN_W_DEFAULT = 1920;
+  const DESIGN_H_DEFAULT = 1080;
+  const OVERLAY_HIDE_MS = 1800;
+  const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const stylesheet = `
+    :host { position: fixed; inset: 0; display: block; background: #000; color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; overflow: hidden; }
+    .stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+    .canvas { position: relative; transform-origin: center center; flex-shrink: 0; background: #0a0a0a; will-change: transform; }
+    ::slotted(*) { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important;
+      box-sizing: border-box !important; overflow: hidden; opacity: 0; pointer-events: none; visibility: hidden; }
+    ::slotted([data-deck-active]) { opacity: 1; pointer-events: auto; visibility: visible; }
+    .tapzones { position: fixed; inset: 0; display: flex; z-index: 2147482000; pointer-events: none; }
+    .tapzone { flex: 1; pointer-events: auto; -webkit-tap-highlight-color: transparent; }
+    @media (hover: hover) and (pointer: fine) { .tapzones { display: none; } }
+    .overlay { position: fixed; left: 50%; bottom: 22px; transform: translate(-50%, 6px) scale(0.92); filter: blur(6px);
+      display: flex; align-items: center; gap: 4px; padding: 4px; background: #000; color: #fff; border-radius: 999px;
+      font-size: 12px; font-feature-settings: "tnum" 1; opacity: 0; pointer-events: none;
+      transition: opacity 260ms ease, transform 260ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
+      transform-origin: center bottom; z-index: 2147483000; user-select: none; }
+    .overlay[data-visible] { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); filter: blur(0); }
+    .btn { appearance: none; background: transparent; border: 0; margin: 0; padding: 0; color: inherit; font: inherit;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center; height: 28px; min-width: 28px;
+      border-radius: 999px; color: rgba(255,255,255,0.72); transition: background 140ms ease, color 140ms ease; }
+    .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn:focus { outline: none; }
+    .btn svg { width: 14px; height: 14px; display: block; }
+    .btn.reset { font-size: 11px; font-weight: 500; padding: 0 10px 0 12px; gap: 6px; }
+    .btn.reset .kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px;
+      padding: 0 4px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 10px; line-height: 1;
+      color: rgba(255,255,255,0.88); background: rgba(255,255,255,0.12); border-radius: 4px; }
+    .count { font-variant-numeric: tabular-nums; color: #fff; font-weight: 500; padding: 0 8px; min-width: 42px;
+      text-align: center; font-size: 12px; }
+    .count .sep { color: rgba(255,255,255,0.45); margin: 0 3px; font-weight: 400; }
+    .count .total { color: rgba(255,255,255,0.55); }
+    .divider { width: 1px; height: 14px; background: rgba(255,255,255,0.18); margin: 0 2px; }
+    @media print {
+      :host { position: static; inset: auto; background: none; overflow: visible; color: inherit; }
+      .stage { position: static; display: block; }
+      .canvas { transform: none !important; width: auto !important; height: auto !important; background: none; }
+      ::slotted(*) { position: relative !important; inset: auto !important; width: var(--deck-design-w) !important;
+        height: var(--deck-design-h) !important; opacity: 1 !important; visibility: visible !important;
+        pointer-events: auto; break-after: page; page-break-after: always; break-inside: avoid; overflow: hidden; }
+      ::slotted(*:last-child) { break-after: auto; page-break-after: auto; }
+      .overlay, .tapzones { display: none !important; }
+    }
+  `;
+
+  class DeckStage extends HTMLElement {
+    static get observedAttributes() { return ['width', 'height', 'noscale']; }
+    constructor() {
+      super();
+      this._root = this.attachShadow({ mode: 'open' });
+      this._index = 0; this._slides = []; this._hideTimer = null;
+      this._onKey = this._onKey.bind(this);
+      this._onResize = this._onResize.bind(this);
+      this._onSlotChange = this._onSlotChange.bind(this);
+      this._onMouseMove = this._onMouseMove.bind(this);
+      this._onTapBack = this._onTapBack.bind(this);
+      this._onTapForward = this._onTapForward.bind(this);
+    }
+    get designWidth() { return parseInt(this.getAttribute('width'), 10) || DESIGN_W_DEFAULT; }
+    get designHeight() { return parseInt(this.getAttribute('height'), 10) || DESIGN_H_DEFAULT; }
+    connectedCallback() {
+      this._render(); this._syncPrintPageRule();
+      window.addEventListener('keydown', this._onKey);
+      window.addEventListener('resize', this._onResize);
+      window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+    }
+    disconnectedCallback() {
+      window.removeEventListener('keydown', this._onKey);
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('mousemove', this._onMouseMove);
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+    }
+    attributeChangedCallback() {
+      if (this._canvas) {
+        this._canvas.style.width = this.designWidth + 'px';
+        this._canvas.style.height = this.designHeight + 'px';
+        this._canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+        this._canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+        this._fit(); this._syncPrintPageRule();
+      }
+    }
+    _render() {
+      const style = document.createElement('style'); style.textContent = stylesheet;
+      const stage = document.createElement('div'); stage.className = 'stage';
+      const canvas = document.createElement('div'); canvas.className = 'canvas';
+      canvas.style.width = this.designWidth + 'px';
+      canvas.style.height = this.designHeight + 'px';
+      canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+      canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+      const slot = document.createElement('slot');
+      slot.addEventListener('slotchange', this._onSlotChange);
+      canvas.appendChild(slot); stage.appendChild(canvas);
+
+      const tapzones = document.createElement('div'); tapzones.className = 'tapzones';
+      const tzBack = document.createElement('div'); tzBack.className = 'tapzone';
+      const tzMid = document.createElement('div'); tzMid.className = 'tapzone'; tzMid.style.pointerEvents = 'none';
+      const tzFwd = document.createElement('div'); tzFwd.className = 'tapzone';
+      tzBack.addEventListener('click', this._onTapBack);
+      tzFwd.addEventListener('click', this._onTapForward);
+      tapzones.append(tzBack, tzMid, tzFwd);
+
+      const overlay = document.createElement('div'); overlay.className = 'overlay';
+      overlay.innerHTML = `
+        <button class="btn prev" type="button" aria-label="Previous"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg></button>
+        <span class="count"><span class="current">1</span><span class="sep">/</span><span class="total">1</span></span>
+        <button class="btn next" type="button" aria-label="Next"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"/></svg></button>
+        <span class="divider"></span>
+        <button class="btn fs" type="button" title="Pantalla completa (F)" aria-label="Fullscreen"><svg class="fs-enter" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg><svg class="fs-exit" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M6 2v4H2M10 2v4h4M6 14v-4H2M10 14v-4h4"/></svg></button>
+        <button class="btn reset" type="button">Reset<span class="kbd">R</span></button>
+      `;
+      overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1));
+      overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1));
+      overlay.querySelector('.reset').addEventListener('click', () => this._go(0));
+      const fsBtn = overlay.querySelector('.fs');
+      const fsEnter = fsBtn.querySelector('.fs-enter');
+      const fsExit = fsBtn.querySelector('.fs-exit');
+      fsBtn.addEventListener('click', () => this._toggleFullscreen());
+      document.addEventListener('fullscreenchange', () => {
+        const on = !!document.fullscreenElement;
+        fsEnter.style.display = on ? 'none' : 'block';
+        fsExit.style.display = on ? 'block' : 'none';
+      });
+
+      this._root.append(style, stage, tapzones, overlay);
+      this._canvas = canvas; this._slot = slot; this._overlay = overlay;
+      this._countEl = overlay.querySelector('.current');
+      this._totalEl = overlay.querySelector('.total');
+    }
+    _syncPrintPageRule() {
+      const id = 'deck-stage-print-page';
+      let tag = document.getElementById(id);
+      if (!tag) { tag = document.createElement('style'); tag.id = id; document.head.appendChild(tag); }
+      tag.textContent =
+        '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } ' +
+        '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+    }
+    _onSlotChange() {
+      this._collectSlides(); this._restoreIndex();
+      this._applyIndex({ showOverlay: false }); this._fit();
+    }
+    _collectSlides() {
+      const assigned = this._slot.assignedElements({ flatten: true });
+      this._slides = assigned.filter((el) => !['TEMPLATE', 'SCRIPT', 'STYLE'].includes(el.tagName));
+      this._slides.forEach((slide, i) => {
+        const n = i + 1;
+        let label = slide.getAttribute('data-label') || 'Slide';
+        slide.setAttribute('data-screen-label', `${pad2(n)} ${label}`);
+        if (!slide.hasAttribute('data-om-validate')) slide.setAttribute('data-om-validate', VALIDATE_ATTR);
+        slide.setAttribute('data-deck-slide', String(i));
+      });
+      if (this._totalEl) this._totalEl.textContent = String(this._slides.length || 1);
+      if (this._index >= this._slides.length) this._index = Math.max(0, this._slides.length - 1);
+    }
+    _restoreIndex() {
+      const h = (location.hash || '').match(/^#(\d+)$/);
+      if (h) { const n = parseInt(h[1], 10) - 1; if (n >= 0 && n < this._slides.length) this._index = n; }
+    }
+    _applyIndex({ showOverlay = true } = {}) {
+      if (!this._slides.length) return;
+      const curr = this._index;
+      // history.replaceState fails on file:// — skip silently.
+      if (location.protocol !== 'file:') {
+        try { history.replaceState(null, '', '#' + (curr + 1)); } catch (e) {}
+      }
+      // Toggle data-deck-active. The CSS animation rules are scoped to
+      // [data-deck-active] [data-anim="..."] so the selector starts matching
+      // (or stops) every time this attribute flips, and the browser restarts
+      // the @keyframes for us. No JS animation gymnastics needed.
+      this._slides.forEach((s, i) => {
+        if (i === curr) s.setAttribute('data-deck-active', '');
+        else s.removeAttribute('data-deck-active');
+      });
+      if (this._countEl) this._countEl.textContent = String(curr + 1);
+      // Dispatch a CustomEvent so React components (e.g., CountUp) can react.
+      this.dispatchEvent(new CustomEvent('slidechange', {
+        detail: { index: curr, total: this._slides.length, slide: this._slides[curr] || null },
+        bubbles: true, composed: true,
+      }));
+      if (showOverlay) this._flashOverlay();
+    }
+
+    /** Public: force-restart animations on the active slide by removing and
+     *  re-adding the data-deck-active attribute (next frame). Used after the
+     *  initial React commit, since deck-stage's first _applyIndex ran before
+     *  any [data-anim] elements existed. */
+    replayAnimations() {
+      const active = this._slides[this._index];
+      if (!active) return;
+      active.removeAttribute('data-deck-active');
+      void active.offsetWidth;
+      requestAnimationFrame(() => active.setAttribute('data-deck-active', ''));
+    }
+    _flashOverlay() {
+      if (!this._overlay) return;
+      this._overlay.setAttribute('data-visible', '');
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      this._hideTimer = setTimeout(() => this._overlay.removeAttribute('data-visible'), OVERLAY_HIDE_MS);
+    }
+    _fit() {
+      if (!this._canvas) return;
+      if (this.hasAttribute('noscale')) { this._canvas.style.transform = 'none'; return; }
+      const s = Math.min(window.innerWidth / this.designWidth, window.innerHeight / this.designHeight);
+      this._canvas.style.transform = `scale(${s})`;
+    }
+    _onResize() { this._fit(); }
+    _onMouseMove() { this._flashOverlay(); }
+    _onTapBack(e) { e.preventDefault(); this._go(this._index - 1); }
+    _onTapForward(e) { e.preventDefault(); this._go(this._index + 1); }
+    _onKey(e) {
+      const t = e.target;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key; let handled = true;
+      if (k === 'ArrowRight' || k === 'PageDown' || k === ' ') this._go(this._index + 1);
+      else if (k === 'ArrowLeft' || k === 'PageUp') this._go(this._index - 1);
+      else if (k === 'Home') this._go(0);
+      else if (k === 'End') this._go(this._slides.length - 1);
+      else if (k === 'r' || k === 'R') this._go(0);
+      else if (k === 'f' || k === 'F') this._toggleFullscreen();
+      else if (/^[0-9]$/.test(k)) { const n = k === '0' ? 9 : parseInt(k, 10) - 1; if (n < this._slides.length) this._go(n); }
+      else handled = false;
+      if (handled) { e.preventDefault(); this._flashOverlay(); }
+    }
+    _go(i) {
+      if (!this._slides.length) return;
+      const clamped = Math.max(0, Math.min(this._slides.length - 1, i));
+      if (clamped === this._index) { this._flashOverlay(); return; }
+      this._index = clamped; this._applyIndex({ showOverlay: true });
+    }
+    _toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        const el = document.documentElement;
+        (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen).call(el);
+      } else {
+        (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+      }
+    }
+  }
+  if (!customElements.get('deck-stage')) customElements.define('deck-stage', DeckStage);
+})();
+</script>
+
+<script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+<script type="text/babel" data-presets="react">
+/* ========== DESIGN TOKENS ========== */
+const C = {
+  bg: '#0a0a0a',
+  surface: '#1a1a1a',
+  surfaceAlt: '#141414',
+  primary: '#c9a961',
+  primarySoft: 'rgba(201, 169, 97, 0.12)',
+  primaryBorder: 'rgba(201, 169, 97, 0.28)',
+  text: '#f5f1e8',
+  muted: '#8a8a8a',
+  divider: 'rgba(245, 241, 232, 0.08)',
+};
+const TYPE = { title: 88, titleLg: 120, subtitle: 44, body: 32, small: 24, mega: 220, eyebrow: 18 };
+const SP = { px: 120, py: 100, titleGap: 56, itemGap: 32 };
+const FRAUNCES = "'Fraunces', 'Times New Roman', serif";
+const INTER = "'Inter', -apple-system, system-ui, sans-serif";
+
+/* ========== PRIMITIVES ========== */
+function Slide({ children, bg = C.bg, style = {} }) {
+  return (
+    <div style={{
+      width: '100%', height: '100%', background: bg, color: C.text, fontFamily: INTER,
+      display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', ...style,
+    }}>{children}</div>
+  );
+}
+function Eyebrow({ children, color = C.primary, style = {} }) {
+  return (
+    <div style={{
+      fontFamily: INTER, fontSize: TYPE.eyebrow, fontWeight: 500,
+      letterSpacing: '0.32em', textTransform: 'uppercase', color, ...style,
+    }}>{children}</div>
+  );
+}
+function GoldRule({ width = 80, style = {} }) {
+  return <div style={{ width, height: 1, background: C.primary, ...style }} />;
+}
+function Watermark({ idx, total }) {
+  return (
+    <div style={{
+      position: 'absolute', bottom: 36, left: SP.px, display: 'flex', alignItems: 'center', gap: 18,
+      fontFamily: INTER, fontSize: 14, color: C.muted, letterSpacing: '0.24em', textTransform: 'uppercase',
+    }}>
+      <span style={{ color: C.primary, fontWeight: 600 }}>VUELA</span>
+      <span style={{ width: 32, height: 1, background: C.divider }} />
+      <span>{String(idx).padStart(2,'0')} / {String(total).padStart(2,'0')}</span>
+    </div>
+  );
+}
+function Brand({ style = {} }) {
+  return (
+    <div style={{
+      position: 'absolute', top: 44, right: SP.px, display: 'flex', alignItems: 'center', gap: 14, ...style,
+    }}>
+      <span style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 24, color: C.primary, fontWeight: 400 }}>vuela</span>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.primary }} />
+      <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.28em', textTransform: 'uppercase' }}>90 días</span>
+    </div>
+  );
+}
+/* CountUp: animates a number from 0 to target whenever the slide enters.
+   Listens to slidechange on document and finds the closest active section. */
+function CountUp({ to = 20, duration = 1400, style = {} }) {
+  const ref = React.useRef(null);
+  const [val, setVal] = React.useState(0);
+  React.useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const sec = node.closest('section');
+    if (!sec) return;
+    let raf = null;
+    const run = () => {
+      const t0 = performance.now();
+      const tick = (t) => {
+        const p = Math.min(1, (t - t0) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setVal(Math.round(to * eased));
+        if (p < 1) raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    const onChange = (e) => {
+      if (e.detail && e.detail.slide === sec) {
+        if (raf) cancelAnimationFrame(raf);
+        setVal(0);
+        // Defer by one frame so the layout settles after the slide becomes active.
+        requestAnimationFrame(run);
+      }
+    };
+    document.addEventListener('slidechange', onChange);
+    // If we mount on an already-active slide (initial render), kick off immediately.
+    if (sec.hasAttribute('data-deck-active')) run();
+    return () => {
+      document.removeEventListener('slidechange', onChange);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [to, duration]);
+  return <span ref={ref} style={style}>{val}</span>;
+}
+
+function Grain() {
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, pointerEvents: 'none',
+      backgroundImage: 'radial-gradient(rgba(255,255,255,0.018) 1px, transparent 1px)',
+      backgroundSize: '3px 3px', opacity: 0.6,
+    }} />
+  );
+}
+
+/* ========== SLIDE 1 — COVER ========== */
+function S01_Cover() {
+  return (
+    <Slide>
+      <Grain />
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 720, fontWeight: 300,
+        color: 'rgba(201,169,97,0.05)', letterSpacing: '-0.04em', lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
+      }}>v</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: `${SP.py}px ${SP.px}px ${SP.py - 20}px`, position: 'relative' }}>
+        <div data-anim="rise" style={{ '--d': '100ms' }}>
+          <Eyebrow>Programa de transformación · Edición 2026</Eyebrow>
+        </div>
+
+        <div>
+          <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 260, fontWeight: 300, lineHeight: 0.88, letterSpacing: '-0.04em', color: C.text }}>
+            Vue<span style={{ fontStyle: 'italic', color: C.primary }}>la</span>.
+          </div>
+          <div data-anim="rise" style={{ '--d': '700ms', marginTop: 48, maxWidth: 1200 }}>
+            <div style={{ fontFamily: FRAUNCES, fontSize: 42, fontWeight: 300, color: C.text, lineHeight: 1.25, letterSpacing: '-0.01em' }}>
+              El sistema para convertir tu conocimiento <br/>
+              en un negocio rentable <span style={{ fontStyle: 'italic', color: C.primary }}>en 90 días.</span>
+            </div>
+          </div>
+        </div>
+
+        <div data-anim="rise" style={{ '--d': '1000ms', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: `1px solid ${C.divider}`, paddingTop: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <GoldRule width={48} />
+            <span style={{ fontFamily: INTER, fontSize: 14, color: C.muted, letterSpacing: '0.28em', textTransform: 'uppercase' }}>
+              Inicio · 13 de mayo
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span className="pulse-dot" style={{ width: 8, height: 8 }} />
+            <span style={{ fontFamily: INTER, fontSize: 14, color: C.muted, letterSpacing: '0.28em', textTransform: 'uppercase' }}>Solo</span>
+            <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 32, color: C.primary, fontWeight: 400 }}>20 plazas</div>
+          </div>
+        </div>
+      </div>
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 2 ========== */
+function S02_NotMentorship() {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.45fr 1fr', alignItems: 'center', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 90 }}>
+        <div>
+          <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 48 }}><Eyebrow>El reframe</Eyebrow></div>
+          <div style={{ fontFamily: FRAUNCES, fontSize: 78, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+            <div style={{ display: 'inline-block', color: C.muted }}>
+              <span data-anim="strike" style={{ '--d': '500ms', display: 'inline-block', color: 'rgba(138,138,138,0.6)' }}>No es una mentoría.</span>
+            </div>
+            <div data-anim="rise" style={{ '--d': '1100ms', marginTop: 28 }}>
+              Es un <span style={{ fontStyle: 'italic', color: C.primary }}>sistema intensivo</span><br/>
+              de transformación.
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '1500ms', marginTop: 56, display: 'flex', gap: 36, alignItems: 'flex-start' }}>
+            <GoldRule width={64} style={{ marginTop: 16 }} />
+            <div style={{ fontFamily: INTER, fontSize: 22, lineHeight: 1.5, color: C.text, maxWidth: 620, fontWeight: 300 }}>
+              Diseñado para personas que <em style={{ fontFamily: FRAUNCES, color: C.primary }}>saben mucho</em>, pero aún no han convertido ese conocimiento en un negocio real.
+            </div>
+          </div>
+        </div>
+
+        <div style={{ position: 'relative', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{
+            position: 'absolute', top: 0, right: 0, fontFamily: FRAUNCES, fontStyle: 'italic',
+            fontSize: 360, fontWeight: 300, color: 'rgba(201,169,97,0.07)',
+            lineHeight: 1, letterSpacing: '-0.04em', userSelect: 'none', pointerEvents: 'none',
+          }}>02</div>
+          <div data-anim="rise" style={{ '--d': '1300ms', border: `1px solid ${C.primaryBorder}`, padding: '36px 40px', background: C.primarySoft, position: 'relative', zIndex: 1 }}>
+            <div style={{ fontFamily: INTER, fontSize: 12, color: C.primary, letterSpacing: '0.32em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 18 }}>Naturaleza del programa</div>
+            {[
+              { k: 'Formato', v: 'Intensivo' },
+              { k: 'Duración', v: '90 días' },
+              { k: 'Modalidad', v: 'Grupal + 1:1' },
+              { k: 'Objetivo', v: 'Tracción real' },
+            ].map((row, i, arr) => (
+              <div key={row.k} data-anim="slide-r" style={{ '--d': `${1500 + i * 120}ms`,
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '18px 0',
+                borderBottom: i < arr.length - 1 ? `1px solid ${C.divider}` : 'none',
+              }}>
+                <span style={{ fontFamily: INTER, fontSize: 14, color: C.muted, letterSpacing: '0.2em', textTransform: 'uppercase' }}>{row.k}</span>
+                <span style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 26, color: C.text }}>{row.v}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <Watermark idx={2} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 3 ========== */
+function FromTo({ from, to }) {
+  return (
+    <div style={{ background: C.bg, border: `1px solid ${C.divider}`, padding: '24px 32px', display: 'flex', alignItems: 'center', gap: 28, flex: 1 }}>
+      <div style={{ flex: 1, fontFamily: INTER, fontSize: 20, color: C.muted, fontWeight: 400 }}>{from}</div>
+      <div style={{ width: 32, height: 1, background: C.primary }} />
+      <div style={{ flex: 1, fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 26, color: C.text, fontWeight: 400 }}>{to}</div>
+    </div>
+  );
+}
+function S03_NotToLearn() {
+  return (
+    <Slide bg={C.surface}>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'stretch', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 90 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 36 }}><Eyebrow>La diferencia</Eyebrow></div>
+            <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 76, fontWeight: 300, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
+              Aquí no vienes <br/><span style={{ color: C.muted }}>a aprender más.</span>
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '900ms', paddingLeft: 32, borderLeft: `2px solid ${C.primary}`, marginTop: 32 }}>
+            <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 44, lineHeight: 1.15, color: C.primary }}>
+              Vienes a estructurar,<br/>empaquetar y vender<br/>lo que ya sabes.
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '1400ms', display: 'flex', alignItems: 'center', gap: 18, marginTop: 32 }}>
+            <GoldRule width={48} />
+            <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>Cambio de paradigma</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 20 }}>
+          {[
+            { from: 'Acumular información', to: 'Ejecutar con dirección' },
+            { from: 'Saber mucho', to: 'Ser vendible' },
+            { from: 'Consumir contenido', to: 'Producir resultados' },
+            { from: 'Esperar el momento', to: 'Salir al mercado' },
+          ].map((p, i) => (
+            <div key={i} data-anim="slide-r" style={{ '--d': `${500 + i * 180}ms`, display: 'flex' }}>
+              <FromTo from={p.from} to={p.to} />
+            </div>
+          ))}
+        </div>
+      </div>
+      <Watermark idx={3} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 4 ========== */
+function S04_Transformation() {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.3fr 1fr', alignItems: 'center', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 90 }}>
+        <div>
+          <Eyebrow style={{ marginBottom: 40 }}>La transformación</Eyebrow>
+          <div style={{ fontFamily: FRAUNCES, fontSize: 68, fontWeight: 300, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            En 90 días dejas de ser <br/>
+            alguien con <span style={{ color: C.muted }}>conocimiento</span><br/>
+            y te conviertes en alguien <br/>
+            con <span style={{ fontStyle: 'italic', color: C.primary }}>estructura.</span>
+          </div>
+          <div style={{ marginTop: 56, display: 'flex', alignItems: 'center', gap: 24 }}>
+            <GoldRule width={56} />
+            <span style={{ fontFamily: INTER, fontSize: 16, color: C.muted, letterSpacing: '0.24em', textTransform: 'uppercase' }}>Día 1 → Día 90</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: `1px solid ${C.divider}` }}>
+          <div data-anim="rise" style={{ '--d': '300ms', padding: '32px 36px', background: C.surface, borderBottom: `1px solid ${C.divider}` }}>
+            <div style={{ fontFamily: INTER, fontSize: 12, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 16 }}>Día 1 · Punto de partida</div>
+            <div style={{ fontFamily: FRAUNCES, fontSize: 36, fontWeight: 300, lineHeight: 1.15, color: C.muted }}>
+              Conocimiento <em style={{ fontStyle: 'italic' }}>disperso.</em>
+            </div>
+          </div>
+          <div data-anim="reveal" style={{ '--d': '900ms', padding: '24px 36px', display: 'flex', alignItems: 'center', gap: 20, background: C.bg }}>
+            <div style={{ width: 1, height: 28, background: C.primary }} />
+            <div style={{ fontFamily: INTER, fontSize: 13, color: C.primary, letterSpacing: '0.32em', textTransform: 'uppercase', fontWeight: 600 }}>90 días de proceso</div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '1700ms', padding: '32px 36px', background: C.primarySoft, borderTop: `1px solid ${C.primaryBorder}` }}>
+            <div style={{ fontFamily: INTER, fontSize: 12, color: C.primary, letterSpacing: '0.32em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 16 }}>Día 90 · Llegada</div>
+            <div style={{ fontFamily: FRAUNCES, fontSize: 36, fontWeight: 300, lineHeight: 1.15, color: C.text }}>
+              Estructura <em style={{ fontStyle: 'italic', color: C.primary }}>ejecutable.</em>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Watermark idx={4} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 5 ========== */
+function S05_Outcomes() {
+  const outcomes = [
+    { n: '01', label: 'Método propio', desc: 'Claro, replicable y diferenciador.' },
+    { n: '02', label: 'Oferta premium', desc: 'Con nombre, promesa y precio definido.' },
+    { n: '03', label: 'Posicionamiento', desc: 'Sólido. Dejas de competir por atención.' },
+    { n: '04', label: 'Estrategia de contenido', desc: 'Con intención. No improvisación.' },
+    { n: '05', label: 'IA aplicada', desc: 'No como adorno. Como sistema.' },
+    { n: '06', label: 'Sistema comercial', desc: 'Listo para generar conversaciones de venta.' },
+  ];
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 64 }}>
+          <div>
+            <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 28 }}><Eyebrow>Sales con</Eyebrow></div>
+            <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 64, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+              Seis activos<br/>que <span style={{ fontStyle: 'italic', color: C.primary }}>antes no tenías.</span>
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '600ms', fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 32, color: C.muted, paddingBottom: 12 }}>entregables núcleo</div>
+        </div>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, 1fr)', gap: 0, border: `1px solid ${C.divider}` }}>
+          {outcomes.map((o, i) => (
+            <div key={o.n} data-anim="zoom" style={{ '--d': `${800 + i * 130}ms`,
+              padding: '40px 44px',
+              borderRight: (i % 3 !== 2) ? `1px solid ${C.divider}` : 'none',
+              borderBottom: (i < 3) ? `1px solid ${C.divider}` : 'none',
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 220,
+              transformOrigin: 'center',
+            }}>
+              <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 28, color: C.primary, fontWeight: 400 }}>{o.n}</div>
+              <div>
+                <div style={{ fontFamily: FRAUNCES, fontSize: 36, lineHeight: 1.15, fontWeight: 400, marginBottom: 12 }}>{o.label}</div>
+                <div style={{ fontFamily: INTER, fontSize: 20, color: C.muted, lineHeight: 1.4, fontWeight: 300 }}>{o.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Watermark idx={5} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 6 ========== */
+function S06_Traction() {
+  return (
+    <Slide bg={C.surface}>
+      <Grain /><Brand />
+      <div style={{
+        position: 'absolute', top: 80, left: 60,
+        fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 380,
+        color: 'rgba(201,169,97,0.08)', lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
+      }}>"</div>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.4fr 1fr', alignItems: 'center', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 90, position: 'relative', zIndex: 1 }}>
+        <div>
+          <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 40 }}><Eyebrow>Resultado del proceso</Eyebrow></div>
+          <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 84, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+            Aquí no terminas<br/>con <span style={{ color: C.muted }}>teoría.</span>
+          </div>
+          <div data-anim="rise" style={{ '--d': '700ms', marginTop: 28, fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 96, fontWeight: 300, color: C.primary, letterSpacing: '-0.02em', lineHeight: 1.05 }}>
+            Terminas<br/>con tracción.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {[
+            { k: 'Tu oferta', v: 'Publicada' },
+            { k: 'Tu sistema', v: 'Operando' },
+            { k: 'Tus ventas', v: 'En curso' },
+            { k: 'Tu dirección', v: 'Definida' },
+          ].map((row, i) => (
+            <div key={row.k} data-anim="slide-r" style={{ '--d': `${1100 + i * 150}ms`,
+              padding: '26px 32px', background: C.bg, border: `1px solid ${C.divider}`,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span style={{ fontFamily: INTER, fontSize: 14, color: C.muted, letterSpacing: '0.28em', textTransform: 'uppercase' }}>{row.k}</span>
+              <span style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 28, color: C.primary }}>{row.v}</span>
+            </div>
+          ))}
+          <div data-anim="rise" style={{ '--d': '1900ms', marginTop: 8, display: 'flex', alignItems: 'center', gap: 18 }}>
+            <GoldRule width={48} />
+            <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>Día 91 · No teoría</span>
+          </div>
+        </div>
+      </div>
+      <Watermark idx={6} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 7 ========== */
+function Timeline() {
+  const months = [
+    { n: '01', name: 'Despertar', sub: 'De confundido a estructurado', focus: 'Identidad' },
+    { n: '02', name: 'Construcción', sub: 'De saber a ser vendible', focus: 'Oferta' },
+    { n: '03', name: 'Exposición', sub: 'De proyecto a negocio real', focus: 'Mercado' },
+  ];
+  return (
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 0, width: '100%' }}>
+      <div data-anim="draw-y" style={{ '--d': '700ms', position: 'absolute', left: 38, top: 56, bottom: 56, width: 1, background: `linear-gradient(${C.primary}, ${C.divider})` }} />
+      {months.map((m, i, arr) => (
+        <div key={m.n} data-anim="rise" style={{ '--d': `${600 + i * 350}ms`,
+          display: 'flex', alignItems: 'flex-start', gap: 36, padding: '40px 0', position: 'relative',
+          borderBottom: i < arr.length - 1 ? `1px solid ${C.divider}` : 'none',
+        }}>
+          <div style={{
+            width: 76, height: 76, borderRadius: '50%', border: `1px solid ${C.primary}`, background: C.bg,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 30, color: C.primary, flexShrink: 0, zIndex: 1,
+          }}>{m.n}</div>
+          <div style={{ flex: 1, paddingTop: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 20, marginBottom: 10 }}>
+              <div style={{ fontFamily: FRAUNCES, fontSize: 52, fontWeight: 400, letterSpacing: '-0.01em' }}>{m.name}</div>
+              <div style={{ fontFamily: INTER, fontSize: 13, color: C.primary, letterSpacing: '0.32em', textTransform: 'uppercase', fontWeight: 600 }}>{m.focus}</div>
+            </div>
+            <div style={{ fontFamily: INTER, fontSize: 22, color: C.muted, fontWeight: 300 }}>{m.sub}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+function S07_PathHeader() {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1.4fr', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, alignItems: 'stretch', gap: 90 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontFamily: INTER, fontSize: 14, color: C.primary, letterSpacing: '0.4em', textTransform: 'uppercase', marginBottom: 32, fontWeight: 600 }}>
+              Capítulo · 02
+            </div>
+            <div style={{ fontFamily: FRAUNCES, fontSize: 88, fontWeight: 300, lineHeight: 1, letterSpacing: '-0.03em' }}>
+              El camino<br/>de los <span style={{ fontStyle: 'italic', color: C.primary }}>90 días.</span>
+            </div>
+            <div style={{ marginTop: 44, fontFamily: INTER, fontSize: 22, color: C.muted, lineHeight: 1.5, maxWidth: 540, fontWeight: 300 }}>
+              Tres meses. Tres transformaciones. <br/>
+              Un proceso diseñado para que ejecutes,<br/>
+              ajustes y salgas <em style={{ fontFamily: FRAUNCES, color: C.text }}>vendiendo.</em>
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+            <GoldRule width={48} />
+            <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>13 mayo · 11 agosto</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <Timeline />
+        </div>
+      </div>
+      <Watermark idx={7} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== MES SLIDES ========== */
+function MonthSlide({ idx, label, headline, lede, pillars, results, session, sessionDesc }) {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.05fr 1fr', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 90, alignItems: 'stretch' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 36 }}><Eyebrow>{label}</Eyebrow></div>
+            <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 68, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+              {headline}
+            </div>
+            <div data-anim="rise" style={{ '--d': '700ms', marginTop: 40, paddingLeft: 28, borderLeft: `1px solid ${C.primary}`, fontFamily: INTER, fontSize: 22, color: C.text, lineHeight: 1.5, fontWeight: 300, maxWidth: 600 }}>
+              {lede}
+            </div>
+          </div>
+          <div style={{ marginTop: 48 }}>
+            <div data-anim="rise" style={{ '--d': '1000ms', marginBottom: 24 }}><Eyebrow color={C.muted}>Pilares</Eyebrow></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+              {pillars.map((p, i) => (
+                <div key={p.name} data-anim="rise" style={{ '--d': `${1200 + i * 200}ms`, borderTop: `1px solid ${C.primaryBorder}`, paddingTop: 18 }}>
+                  <div style={{ fontFamily: FRAUNCES, fontSize: 32, fontWeight: 400, marginBottom: 8 }}>{p.name}</div>
+                  <div style={{ fontFamily: INTER, fontSize: 18, color: C.muted, lineHeight: 1.45, fontWeight: 300 }}>{p.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+          <div data-anim="slide-r" style={{ '--d': '500ms', background: C.surface, padding: '44px 48px', border: `1px solid ${C.divider}`, flex: 1 }}>
+            <Eyebrow style={{ marginBottom: 28 }}>Resultado</Eyebrow>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              {results.map((r, i) => (
+                <div key={i} data-anim="slide-r" style={{ '--d': `${900 + i * 150}ms`, display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+                  <span style={{ fontFamily: FRAUNCES, fontStyle: 'italic', color: C.primary, fontSize: 22, paddingTop: 4, minWidth: 36 }}>0{i+1}</span>
+                  <span style={{ fontFamily: INTER, fontSize: 22, color: C.text, fontWeight: 400, lineHeight: 1.4 }}>{r}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '1700ms', padding: '32px 36px', border: `1px solid ${C.primaryBorder}`, background: C.primarySoft }} className="pulse-glow">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 14 }}>
+              <span className="pulse-dot" />
+              <span style={{ fontFamily: INTER, fontSize: 13, letterSpacing: '0.32em', textTransform: 'uppercase', color: C.primary, fontWeight: 600 }}>Sesión estratégica 1:1</span>
+            </div>
+            <div style={{ fontFamily: FRAUNCES, fontSize: 28, fontWeight: 400, marginBottom: 8 }}>{session}</div>
+            <div style={{ fontFamily: INTER, fontSize: 17, color: C.muted, lineHeight: 1.45, fontStyle: 'italic' }}>{sessionDesc}</div>
+          </div>
+        </div>
+      </div>
+      <Watermark idx={idx} total={18} />
+    </Slide>
+  );
+}
+function S08_Mes1() {
+  return (
+    <MonthSlide
+      idx={8}
+      label="Mes 01 · Despertar"
+      headline={<>De humano <span style={{ color: C.muted }}>confundido</span><br/>a mente <em style={{ fontFamily: FRAUNCES, color: C.primary, fontStyle:'italic' }}>estructurada.</em></>}
+      lede="Aquí muere el experto genérico. Trabajamos lo interno antes que lo externo. Sin identidad, cualquier estrategia fracasa."
+      pillars={[
+        { name: 'Conocerte', desc: 'Identidad, esencia y talento monetizable' },
+        { name: 'Proyectarte', desc: 'Confianza, arquetipos y narrativa personal' },
+      ]}
+      results={[
+        'Entiendes qué sabes realmente',
+        'Identificas tu talento con la fórmula P + H = T',
+        'Defines para quién es tu conocimiento',
+        'Construyes tu Manifiesto de Marca',
+      ]}
+      session="Sesión 1:1 #1 — Validación de base"
+      sessionDesc="Aterrizamos tu identidad y evitamos que construyas sobre humo."
+    />
+  );
+}
+function S09_Mes2() {
+  return (
+    <MonthSlide
+      idx={9}
+      label="Mes 02 · Construcción"
+      headline={<>De saber<br/>a <em style={{ fontFamily: FRAUNCES, color: C.primary, fontStyle:'italic' }}>ser vendible.</em></>}
+      lede="Aquí el conocimiento deja de ser abstracto y se convierte en producto."
+      pillars={[
+        { name: 'Impactar', desc: 'Construcción de oferta con dirección' },
+        { name: 'Conectar', desc: 'Estrategia de contenido + ventas consultivas' },
+      ]}
+      results={[
+        'Tu oferta premium estructurada',
+        'Nombre, promesa, beneficios y precio definidos',
+        'Tu MiniApp diseñada como activo de valor',
+        'Tu sistema de ventas montado',
+      ]}
+      session="Sesión 1:1 #2 — Auditoría de oferta"
+      sessionDesc="Reviso lo que vas a vender como si fuera un cliente real."
+    />
+  );
+}
+function S10_Mes3() {
+  return (
+    <MonthSlide
+      idx={10}
+      label="Mes 03 · Exposición"
+      headline={<>De proyecto bonito<br/>a <em style={{ fontFamily: FRAUNCES, color: C.primary, fontStyle:'italic' }}>negocio real.</em></>}
+      lede="Aquí se acaba la teoría y empieza la magia. Sales al mercado."
+      pillars={[
+        { name: 'Responder', desc: 'Cómo gestionar mensajes y conversaciones' },
+        { name: 'Cerrar', desc: 'Manejar objeciones de precio sin parecer vendedor' },
+      ]}
+      results={[
+        'Publicas tu oferta',
+        'Tienes tus primeras conversaciones de venta',
+        'Manejas objeciones reales',
+        'Recibes tus primeros "no"… y sigues',
+        'Idealmente, tu primer "sí"',
+      ]}
+      session="Sesión 1:1 #3 — Dirección en ejecución"
+      sessionDesc="Ajustamos en tiempo real lo que estás haciendo en el mercado."
+    />
+  );
+}
+
+/* ========== SLIDE 11 ========== */
+function S11_Day91() {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div data-anim="zoom" style={{ '--d': '0ms',
+        position: 'absolute', top: -60, right: -40,
+        fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 900, fontWeight: 300,
+        color: 'rgba(201,169,97,0.06)', letterSpacing: '-0.04em', lineHeight: 0.85, userSelect: 'none', pointerEvents: 'none',
+        transformOrigin: 'top right',
+      }}>91</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, position: 'relative', zIndex: 1 }}>
+        <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 32 }}><Eyebrow>Día 91 · El día después</Eyebrow></div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'flex-end', marginBottom: 72 }}>
+          <div data-anim="slide-l" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 56, fontWeight: 300, lineHeight: 1.1, letterSpacing: '-0.02em', color: C.muted }}>
+            Mientras otros siguen<br/>
+            <em style={{ fontStyle: 'italic' }}>organizando ideas…</em>
+          </div>
+          <div data-anim="slide-r" style={{ '--d': '700ms', fontFamily: FRAUNCES, fontSize: 88, fontWeight: 300, lineHeight: 1, color: C.text, letterSpacing: '-0.02em', textAlign: 'right' }}>
+            Tú <em style={{ fontStyle: 'italic', color: C.primary }}>ya tienes:</em>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 32, flex: 1, alignItems: 'stretch' }}>
+          {[
+            { w: 'Oferta', d: 'publicada y activa' },
+            { w: 'Sistema', d: 'comercial montado' },
+            { w: 'Conversaciones', d: 'reales con prospectos' },
+            { w: 'Dirección', d: 'clara hacia adelante' },
+          ].map((item, i) => (
+            <div key={item.w} data-anim="rise" style={{ '--d': `${1100 + i * 180}ms`,
+              borderTop: `2px solid ${C.primary}`, paddingTop: 28,
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            }}>
+              <div>
+                <div style={{ fontFamily: INTER, fontSize: 14, color: C.primary, letterSpacing: '0.32em', marginBottom: 14 }}>0{i+1}</div>
+                <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 48, fontWeight: 300, color: C.text, letterSpacing: '-0.01em', lineHeight: 1.05, marginBottom: 16 }}>{item.w}.</div>
+              </div>
+              <div style={{ fontFamily: INTER, fontSize: 17, color: C.muted, lineHeight: 1.4, fontWeight: 300 }}>{item.d}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Watermark idx={11} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 12 ========== */
+function S12_Deliverables() {
+  const items = [
+    { t: 'Formación completa', d: 'Sesiones grupales en vivo cada semana, del 13 mayo al 11 agosto.' },
+    { t: '3 sesiones 1:1 estratégicas', d: 'Conmigo, en los momentos clave de tu proceso.' },
+    { t: 'Manifiesto de Marca', d: 'Método propio y oferta documentada.' },
+    { t: 'Estrategia validada', d: 'Comunicación y sistema de ventas testeados en mercado.' },
+    { t: 'Sistema comercial', d: 'Montado + software listo para operar desde el día uno.' },
+    { t: 'MiniApps de IA', d: 'Desarrolladas por mi equipo. No por ti.' },
+  ];
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px` }}>
+        <div style={{ marginBottom: 64 }}>
+          <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 28 }}><Eyebrow>Lo que te llevas</Eyebrow></div>
+          <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 64, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+            Seis entregables núcleo. <span style={{ fontStyle: 'italic', color: C.primary }}>Cero teoría suelta.</span>
+          </div>
+        </div>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+          {items.map((it, i) => (
+            <div key={it.t} data-anim="rise" style={{ '--d': `${600 + i * 130}ms`,
+              padding: '36px 48px 36px 0',
+              borderBottom: i < items.length - 2 ? `1px solid ${C.divider}` : 'none',
+              borderRight: i % 2 === 0 ? `1px solid ${C.divider}` : 'none',
+              paddingLeft: i % 2 === 1 ? 48 : 0,
+              display: 'flex', gap: 36, alignItems: 'flex-start',
+            }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%', border: `1px solid ${C.primary}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 22, color: C.primary, flexShrink: 0,
+              }}>{String(i+1).padStart(2,'0')}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: FRAUNCES, fontSize: 36, fontWeight: 400, lineHeight: 1.15, marginBottom: 10 }}>{it.t}</div>
+                <div style={{ fontFamily: INTER, fontSize: 20, color: C.muted, lineHeight: 1.45, fontWeight: 300 }}>{it.d}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Watermark idx={12} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 13 ========== */
+function S13_Bonuses() {
+  const bonuses = [
+    { name: 'Software de ventas y operación', meta: '12 meses · valor $1,164 USD' },
+    { name: 'Copiloto de IA', meta: 'Entrenado con tu método y voz' },
+    { name: 'Sistema de contenido', meta: 'Para creadores de marca personal' },
+    { name: 'Panel financiero', meta: 'Personalizado para tu negocio' },
+    { name: 'Acceso VIP a Ovejas Voladoras', meta: '12 meses de comunidad' },
+    { name: 'WhatsApp directo', meta: 'Conmigo y el equipo · 90 días' },
+    { name: 'Evento presencial', meta: 'Medellín · Agosto 2026' },
+    { name: 'Informe final estructurado', meta: 'De todo tu proyecto' },
+  ];
+  return (
+    <Slide bg={C.surface}>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px` }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 56 }}>
+          <div>
+            <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 24 }}><Eyebrow>Bonos · incluidos</Eyebrow></div>
+            <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 68, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+              Ocho activos<br/>que <span style={{ fontStyle: 'italic', color: C.primary }}>multiplican el sistema.</span>
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '600ms', textAlign: 'right' }}>
+            <div style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase', marginBottom: 8 }}>Valor agregado</div>
+            <div className="gold-shimmer" style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 56 }}>+ $1,164 USD</div>
+          </div>
+        </div>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, border: `1px solid ${C.divider}`, background: C.bg }}>
+          {bonuses.map((b, i) => (
+            <div key={b.name} data-anim="zoom" style={{ '--d': `${800 + i * 110}ms`,
+              padding: '36px 32px',
+              borderRight: (i % 4 !== 3) ? `1px solid ${C.divider}` : 'none',
+              borderBottom: (i < 4) ? `1px solid ${C.divider}` : 'none',
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 240,
+              transformOrigin: 'center',
+            }}>
+              <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 26, color: C.primary, fontWeight: 400 }}>0{i+1}</div>
+              <div>
+                <div style={{ fontFamily: FRAUNCES, fontSize: 28, fontWeight: 400, lineHeight: 1.15, marginBottom: 12 }}>{b.name}</div>
+                <div style={{ fontFamily: INTER, fontSize: 16, color: C.muted, lineHeight: 1.4, fontWeight: 300 }}>{b.meta}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Watermark idx={13} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 14 ========== */
+function S14_Investment() {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'stretch', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 100 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 36 }}><Eyebrow>La inversión</Eyebrow></div>
+            <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 84, fontWeight: 300, lineHeight: 1, letterSpacing: '-0.03em' }}>
+              Esto no cuesta<br/>
+              <span style={{ color: C.muted, textDecoration: 'line-through', textDecorationColor: 'rgba(138,138,138,0.6)', textDecorationThickness: 3 }}>$2,000.</span>
+            </div>
+            <div data-anim="rise" style={{ '--d': '900ms', marginTop: 36, fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 48, fontWeight: 300, color: C.primary, lineHeight: 1.1 }}>
+              Cuesta seguir otro año…
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '1500ms', display: 'flex', alignItems: 'center', gap: 18 }}>
+            <GoldRule width={48} />
+            <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>El costo real de no decidir</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 22 }}>
+          {[
+            { n: '01', t: 'Dudando qué vender' },
+            { n: '02', t: 'Sin estructura' },
+            { n: '03', t: 'Consumiendo contenido sin dirección' },
+          ].map((c, i) => (
+            <div key={c.n} data-anim="slide-r" style={{ '--d': `${500 + i * 200}ms`,
+              background: C.surface, border: `1px solid ${C.divider}`, padding: '32px 40px',
+              display: 'flex', alignItems: 'center', gap: 32,
+            }}>
+              <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 32, color: C.primary }}>{c.n}</div>
+              <div style={{ width: 1, height: 56, background: C.divider }} />
+              <div style={{ fontFamily: FRAUNCES, fontSize: 26, fontWeight: 400, color: C.text }}>{c.t}</div>
+            </div>
+          ))}
+          <div data-anim="rise" style={{ '--d': '1300ms', padding: '28px 36px', background: C.primarySoft, border: `1px solid ${C.primaryBorder}` }} className="pulse-glow">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <span className="pulse-dot" style={{ width: 8, height: 8 }} />
+              <span style={{ fontFamily: INTER, fontSize: 13, letterSpacing: '0.32em', textTransform: 'uppercase', color: C.primary, fontWeight: 600 }}>Punto de equilibrio</span>
+            </div>
+            <div style={{ fontFamily: FRAUNCES, fontSize: 26, fontWeight: 400, lineHeight: 1.3 }}>
+              Con <em style={{ fontStyle: 'italic', color: C.primary }}>2 clientes</em> bien estructurados recuperas la inversión.
+            </div>
+          </div>
+        </div>
+      </div>
+      <Watermark idx={14} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 15 ========== */
+function S15_NotAboutMoney() {
+  return (
+    <Slide bg={C.surface}>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.3fr 1fr', alignItems: 'center', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 100 }}>
+        <div>
+          <div data-anim="rise" style={{ '--d': '100ms', fontFamily: INTER, fontSize: 14, color: C.primary, letterSpacing: '0.4em', textTransform: 'uppercase', marginBottom: 36, fontWeight: 600 }}>
+            Pero esto no va de recuperar dinero
+          </div>
+          <div data-anim="rise" style={{ '--d': '400ms', fontFamily: FRAUNCES, fontSize: 92, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.03em' }}>
+            Va de recuperar <em style={{ fontStyle: 'italic', color: C.primary }}>control</em><br/>
+            y hacer que tu negocio<br/>
+            <span style={{ color: C.text }}>funcione.</span>
+          </div>
+          <div data-anim="rise" style={{ '--d': '900ms', marginTop: 56, display: 'flex', alignItems: 'center', gap: 24 }}>
+            <GoldRule width={56} />
+            <span style={{ fontFamily: INTER, fontSize: 14, color: C.muted, letterSpacing: '0.28em', textTransform: 'uppercase' }}>El verdadero ROI</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {[
+            { k: 'Recuperas', v: 'Control', desc: 'sobre lo que vendes' },
+            { k: 'Recuperas', v: 'Tiempo', desc: 'que hoy desperdicias' },
+            { k: 'Recuperas', v: 'Dirección', desc: 'sobre tu mercado' },
+          ].map((row, i, arr) => (
+            <div key={i} data-anim="slide-r" style={{ '--d': `${800 + i * 200}ms`,
+              padding: '32px 0',
+              borderBottom: i < arr.length - 1 ? `1px solid ${C.divider}` : 'none',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, marginBottom: 6 }}>
+                <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>{row.k}</span>
+                <span style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 48, color: C.primary, fontWeight: 300 }}>{row.v}</span>
+              </div>
+              <div style={{ fontFamily: INTER, fontSize: 17, color: C.muted, fontWeight: 300, fontStyle: 'italic' }}>{row.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Watermark idx={15} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 16 ========== */
+function S16_Guarantee() {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', alignItems: 'stretch', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, gap: 100 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 36 }}><Eyebrow>Garantía</Eyebrow></div>
+            <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 80, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+              No te dejamos solo<br/>con <span style={{ fontStyle: 'italic', color: C.primary }}>teoría.</span>
+            </div>
+            <div data-anim="rise" style={{ '--d': '700ms', marginTop: 36, fontFamily: INTER, fontSize: 22, color: C.text, lineHeight: 1.5, fontWeight: 300, maxWidth: 600 }}>
+              Sistemas, apps y estructura con <em style={{ fontFamily: FRAUNCES, color: C.primary }}>soporte directo</em> de mi equipo durante 3 meses completos.
+            </div>
+          </div>
+          <div data-anim="rise" style={{ '--d': '1100ms', display: 'flex', alignItems: 'center', gap: 18 }}>
+            <GoldRule width={48} />
+            <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>Respaldo de 90 días</span>
+          </div>
+        </div>
+        <div data-anim="zoom" style={{ '--d': '500ms', display: 'flex', flexDirection: 'column', gap: 0, border: `1px solid ${C.primaryBorder}`, alignSelf: 'center', transformOrigin: 'center' }} className="pulse-glow">
+          {[
+            { k: 'Soporte', v: '90 días' },
+            { k: 'Cobertura', v: 'Sistemas + Apps + Estructura' },
+            { k: 'Equipo', v: 'Acceso directo' },
+            { k: 'Modalidad', v: 'WhatsApp + sesiones grupales' },
+          ].map((row, i, arr) => (
+            <div key={row.k} style={{
+              padding: '32px 40px',
+              borderBottom: i < arr.length - 1 ? `1px solid ${C.primaryBorder}` : 'none',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <div style={{ fontFamily: INTER, fontSize: 14, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>{row.k}</div>
+              <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 30, color: C.primary, fontWeight: 400 }}>{row.v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Watermark idx={16} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 17 ========== */
+function DateCard({ label, date, time, highlight }) {
+  return (
+    <div style={{
+      padding: '32px 40px',
+      background: highlight ? C.primarySoft : C.bg,
+      border: `1px solid ${highlight ? C.primaryBorder : C.divider}`,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    }}>
+      <div>
+        <div style={{ fontFamily: INTER, fontSize: 13, color: highlight ? C.primary : C.muted, letterSpacing: '0.32em', textTransform: 'uppercase', fontWeight: 600, marginBottom: 8 }}>{label}</div>
+        <div style={{ fontFamily: INTER, fontSize: 16, color: C.muted, fontWeight: 300 }}>{time}</div>
+      </div>
+      <div style={{ fontFamily: FRAUNCES, fontStyle: highlight ? 'italic' : 'normal', fontSize: 40, fontWeight: 400, color: highlight ? C.primary : C.text }}>{date}</div>
+    </div>
+  );
+}
+function S17_Seats() {
+  return (
+    <Slide bg={C.surface}>
+      <Grain /><Brand />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px` }}>
+        <div data-anim="rise" style={{ '--d': '100ms', marginBottom: 40, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <Eyebrow>¿Cuántas plazas hay?</Eyebrow>
+          <span className="pulse-dot" style={{ marginLeft: 8 }} />
+          <span style={{ fontFamily: INTER, fontSize: 12, color: C.primary, letterSpacing: '0.32em', textTransform: 'uppercase', fontWeight: 600 }}>Cupos limitados</span>
+        </div>
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: 100, alignItems: 'stretch' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 32 }}>
+                <div style={{
+                  fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 320, fontWeight: 300, lineHeight: 0.85,
+                  color: C.primary, letterSpacing: '-0.05em', minWidth: 360,
+                }}>
+                  <CountUp to={20} duration={1500} />
+                </div>
+                <div data-anim="rise" style={{ '--d': '1500ms', paddingTop: 56 }}>
+                  <div style={{ fontFamily: FRAUNCES, fontSize: 48, fontWeight: 300, lineHeight: 1.1 }}>
+                    plazas en<br/><span style={{ color: C.muted, fontStyle: 'italic' }}>esta edición.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Disponibilidad: barra + métricas */}
+              <div data-anim="rise" style={{ '--d': '1900ms', marginTop: 36, maxWidth: 600 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+                  <span style={{ fontFamily: INTER, fontSize: 12, color: C.muted, letterSpacing: '0.28em', textTransform: 'uppercase', fontWeight: 600 }}>Disponibilidad actual</span>
+                  <span style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 24, color: C.primary }}>13 / 20</span>
+                </div>
+                <div style={{ position: 'relative', height: 6, background: C.surface, border: `1px solid ${C.divider}`, overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '35%', background: 'rgba(201,169,97,0.35)' }} />
+                  <div className="pulse-glow" style={{ position: 'absolute', top: 0, left: '35%', height: '100%', width: '65%', background: C.primary, border: '1px solid', borderColor: C.primary }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontFamily: INTER, fontSize: 14, fontWeight: 300 }}>
+                  <span style={{ color: C.muted }}><em style={{ fontFamily: FRAUNCES, color: C.muted, fontStyle: 'italic' }}>7</em> ya ocupadas</span>
+                  <span style={{ color: C.text }}><em style={{ fontFamily: FRAUNCES, color: C.primary, fontStyle: 'italic' }}>13</em> disponibles</span>
+                </div>
+              </div>
+            </div>
+            <div data-anim="rise" style={{ '--d': '2200ms', display: 'flex', alignItems: 'center', gap: 18 }}>
+              <GoldRule width={48} />
+              <span style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase' }}>Edición 2026 · Selección activa</span>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 20 }}>
+            <div data-anim="slide-r" style={{ '--d': '600ms' }}><DateCard label="Apertura" date="30 de abril" time="9:00 AM (Colombia)" /></div>
+            <div data-anim="slide-r" style={{ '--d': '900ms' }} className="pulse-glow"><DateCard label="Inicio" date="13 de mayo" time="Sesiones grupales semanales" highlight /></div>
+            <div data-anim="slide-r" style={{ '--d': '1200ms' }}><DateCard label="Cierre" date="11 de agosto" time="Día 91 · Tu negocio en marcha" /></div>
+          </div>
+        </div>
+      </div>
+      <Watermark idx={17} total={18} />
+    </Slide>
+  );
+}
+
+/* ========== SLIDE 18 ========== */
+function S18_Close() {
+  return (
+    <Slide>
+      <Grain /><Brand />
+      <div style={{
+        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+        fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 900, fontWeight: 300,
+        color: 'rgba(201,169,97,0.04)', letterSpacing: '-0.04em', lineHeight: 1, userSelect: 'none',
+      }}>.</div>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: `${SP.py}px ${SP.px}px ${SP.py + 40}px`, position: 'relative', zIndex: 1 }}>
+        <div data-anim="rise" style={{ '--d': '100ms' }}>
+          <Eyebrow>Cierre</Eyebrow>
+        </div>
+
+        <div>
+          <div data-anim="rise" style={{ '--d': '300ms', fontFamily: FRAUNCES, fontSize: 72, fontWeight: 300, lineHeight: 1.1, letterSpacing: '-0.02em', color: C.muted, maxWidth: 1500 }}>
+            El problema no es que <span style={{ color: C.text }}>no sepas.</span>
+          </div>
+          <div data-anim="rise" style={{ '--d': '800ms', marginTop: 28, fontFamily: FRAUNCES, fontSize: 80, fontWeight: 300, lineHeight: 1.05, letterSpacing: '-0.02em', maxWidth: 1500 }}>
+            El problema es que <em style={{ fontStyle: 'italic', color: C.primary }}>no has estructurado</em> lo que sabes.
+          </div>
+          <div style={{ marginTop: 48, display: 'flex', alignItems: 'center', gap: 32 }}>
+            <div data-anim="draw-x" style={{ '--d': '1500ms', width: 100, height: 1, background: C.primary, transformOrigin: 'left center' }} />
+            <div data-anim="rise" style={{ '--d': '1700ms', fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 28, color: C.text, fontWeight: 300, letterSpacing: '-0.01em' }}>
+              Y en este mercado, lo que no se estructura <span style={{ color: C.primary }}>no se vende.</span>
+            </div>
+          </div>
+        </div>
+
+        <div data-anim="rise" style={{ '--d': '2200ms', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderTop: `1px solid ${C.divider}`, paddingTop: 32 }}>
+          <div>
+            <div style={{ fontFamily: INTER, fontSize: 13, color: C.muted, letterSpacing: '0.32em', textTransform: 'uppercase', marginBottom: 12, fontWeight: 600 }}>Próximo paso</div>
+            <div style={{ fontFamily: FRAUNCES, fontSize: 44, fontWeight: 400, color: C.text }}>
+              Aplica antes del <em style={{ fontStyle: 'italic', color: C.primary }}>13 de mayo.</em>
+            </div>
+          </div>
+          <div style={{ fontFamily: FRAUNCES, fontStyle: 'italic', fontSize: 72, color: C.primary, fontWeight: 300 }}>vuela.</div>
+        </div>
+      </div>
+    </Slide>
+  );
+}
+
+/* ========== MOUNT ========== */
+const slides = [
+  S01_Cover, S02_NotMentorship, S03_NotToLearn, S04_Transformation,
+  S05_Outcomes, S06_Traction, S07_PathHeader, S08_Mes1, S09_Mes2, S10_Mes3,
+  S11_Day91, S12_Deliverables, S13_Bonuses, S14_Investment, S15_NotAboutMoney,
+  S16_Guarantee, S17_Seats, S18_Close,
+];
+slides.forEach((Comp, i) => {
+  const el = document.getElementById('s' + String(i+1).padStart(2, '0'));
+  if (el) ReactDOM.createRoot(el).render(<Comp />);
+});
+
+// React mounts synchronously above, but the deck-stage already scheduled a
+// rAF in _replayActiveAnimations before this script ran (during slotchange).
+// That rAF fires next frame, after React's DOM is in place — the .anim-on
+// class lands on the active section and CSS picks up the animation.
+// We additionally trigger one more replay after a real paint, in case some
+// slow load path leaves the first rAF without animated descendants yet.
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  const deck = document.querySelector('deck-stage');
+  if (deck && typeof deck.replayAnimations === 'function') deck.replayAnimations();
+}));
+</script>
+</body>
+</html>
