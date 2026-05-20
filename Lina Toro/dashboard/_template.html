@@ -283,7 +283,7 @@
     background:var(--white);
     border-bottom:1px solid var(--border);
     padding:1rem 2rem;
-    display:flex;align-items:center;justify-content:space-between;
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;
     position:sticky;top:0;z-index:20;
     backdrop-filter:blur(10px);
     background:rgba(255,255,255,.92);
@@ -293,9 +293,11 @@
     font-family:'Playfair Display',serif;font-style:italic;
     color:var(--ink);font-size:1.15rem;
     cursor:pointer;
+    min-width:0;flex:1 1 auto;
+    overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
   }
   .topbar .brand .brand-dot{background:var(--sage)}
-  .topbar-right{display:flex;align-items:center;gap:1rem}
+  .topbar-right{display:flex;align-items:center;gap:1rem;flex-shrink:0}
   .user-chip{
     display:flex;align-items:center;gap:.6rem;
     padding:.45rem .85rem .45rem .45rem;
@@ -382,6 +384,27 @@
   }
   .app-card .cta svg{transition:transform .25s}
   .app-card:hover .cta svg{transform:translateX(4px)}
+
+  /* Tarjeta bloqueada para no-miembros de Skool */
+  .app-card.locked{cursor:pointer}
+  .app-card.locked .icon,
+  .app-card.locked h3,
+  .app-card.locked p,
+  .app-card.locked .cta{opacity:.45;filter:grayscale(.4)}
+  .app-card.locked::before{display:none}
+  .app-card.locked:hover{transform:none;box-shadow:var(--shadow);border-color:var(--border)}
+  .app-card .lock-badge{
+    position:absolute;top:14px;right:14px;
+    display:none;align-items:center;gap:.3rem;
+    padding:.3rem .65rem;border-radius:100px;
+    background:#1a1a1a;color:#fff;
+    font-size:.7rem;font-weight:600;letter-spacing:.3px;
+    text-transform:uppercase;
+    z-index:2;
+  }
+  .app-card .lock-badge svg{width:11px;height:11px}
+  .app-card.locked .lock-badge{display:inline-flex}
+  .app-card.locked .cta::after{content:"";display:none}
 
   /* ============ APP VIEWER ============ */
   .app-viewer{
@@ -619,9 +642,14 @@
   .fab:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 18px 40px -10px rgba(60,70,50,.45)}
   .fab:active{transform:translateY(-1px) scale(1.01)}
   .fab-skool{
-    background:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 100%);color:#fff;
+    background:#fff;border:1px solid var(--border);padding:0;
   }
   .fab-skool svg{width:28px;height:28px}
+  .fab-skool-clip{
+    position:absolute;inset:0;border-radius:50%;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .fab-skool-clip img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.35);transform-origin:center}
   .fab-chat{
     background:linear-gradient(135deg,#9caf88 0%,#7d9169 100%);color:#fff;
   }
@@ -1057,9 +1085,11 @@
 
 <!-- ============================= FLOATING BUTTONS ============================= -->
 <div class="fab-stack" id="fabStack" style="display:none">
-  <a class="fab fab-skool" id="fabSkool" href="#" target="_blank" rel="noopener" aria-label="Ir a la comunidad Skool">
-    <span class="fab-tip">Comunidad SAVIAS</span>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+  <a class="fab fab-skool" id="fabSkool" href="#" target="_blank" rel="noopener" aria-label="Ir a la comunidad de Savias">
+    <span class="fab-tip">Ir a la comunidad de Savias</span>
+    <span class="fab-skool-clip">
+      <img src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png" alt="Savias" />
+    </span>
   </a>
   <button class="fab fab-chat" id="fabChat" type="button" aria-label="Abrir chat con Lina">
     <span class="pulse"></span>
@@ -1122,6 +1152,24 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- ============================= SKOOL GATE MODAL ============================= -->
+<div class="modal-backdrop" id="modalSkoolGate">
+  <div class="modal" style="text-align:center;max-width:440px">
+    <div style="width:64px;height:64px;border-radius:18px;background:var(--sage-soft);color:var(--sage-dark);display:grid;place-items:center;margin:0 auto 1rem">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+    </div>
+    <h3 id="skoolGateTitle">Esta herramienta es para miembros de Savias</h3>
+    <p class="sub" id="skoolGateMsg">Para desbloquearla, únete a la comunidad Skool de Savias con el mismo correo de esta cuenta. Una vez dentro, la herramienta se desbloquea automáticamente.</p>
+    <div class="modal-actions" style="margin-top:1.6rem">
+      <button type="button" class="btn btn-ghost" onclick="closeSkoolGate()">Más tarde</button>
+      <button type="button" class="btn btn-primary" onclick="goToSkool()">Unirme a Skool</button>
+    </div>
   </div>
 </div>
 
@@ -1225,13 +1273,15 @@
 /* ============ CONFIG ============ */
 // Video del hero (login). Sube savias.mp4 a la biblioteca de GHL y pega aquí su URL.
 // Si se deja vacío, el hero usa el gradiente sage como fallback.
-const SAVIAS_VIDEO_URL = 'https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69ebf1b19fe87a9994c25eba.mp4';
+const SAVIAS_VIDEO_URL = 'https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69f3c01414daed238d680d91.mp4';
 
 const SUPABASE_URL = 'https://cojwzekyeehqtxdvoldj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvand6ZWt5ZWVocXR4ZHZvbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTA2MjYsImV4cCI6MjA5MjYyNjYyNn0.qlTIaARvrrXHPGjPR6STbybmLA9Jn2r_R04xaZxnU4k';
 const WELCOME_FN_URL = `${SUPABASE_URL}/functions/v1/send-welcome-email`;
 const CHAT_FN_URL    = `${SUPABASE_URL}/functions/v1/chat-lina`;
-const SKOOL_URL      = 'https://www.skool.com/savias-8385';
+const SKOOL_URL       = 'https://www.skool.com/savias-8385';
+const SKOOL_ABOUT_URL = 'https://www.skool.com/savias-8385/about';
+function getSkoolUrl(){ return isSkoolMember ? SKOOL_URL : SKOOL_ABOUT_URL; }
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'pkce' }
@@ -1246,6 +1296,10 @@ const APPS = {
   portfolio: { title:'SkinSolver',                       srcId:'app-savias', saviasApp:'portfolio' },
   saviaspath:{ title:'SaviasPath',                       srcId:'app-savias', saviasApp:'saviaspath' }
 };
+
+// Herramientas accesibles para no-miembros de Skool (versión light / lead magnet)
+const LIGHT_APPS = new Set(['fitomatch','creaprecio','saponi']);
+let isSkoolMember = false;
 
 /* ============ HELPERS ============ */
 const $  = s => document.querySelector(s);
@@ -1407,6 +1461,10 @@ async function sendWelcomeEmail(email, name){
 /* ============ APP VIEWER ============ */
 function openApp(key){
   const app = APPS[key]; if(!app) return;
+  if(!isSkoolMember && !LIGHT_APPS.has(key)){
+    openSkoolGate(app.title);
+    return;
+  }
   const raw = document.getElementById(app.srcId).textContent.trim();
   let html;
   try{
@@ -1443,6 +1501,53 @@ function openChangePass(){
 }
 function closeChangePass(){ document.getElementById('modalChangePass').classList.remove('show'); }
 
+/* ============ SKOOL MEMBERSHIP GATING ============ */
+async function loadMembership(){
+  try{
+    const { data:{ user } } = await sb.auth.getUser();
+    if(!user){ isSkoolMember = false; return; }
+    const { data, error } = await sb
+      .from('profiles')
+      .select('is_skool_member')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if(error){ console.warn('loadMembership error', error); isSkoolMember = false; return; }
+    isSkoolMember = !!(data && data.is_skool_member);
+  }catch(e){
+    console.warn('loadMembership exception', e);
+    isSkoolMember = false;
+  }
+}
+
+function applyMembershipLocks(){
+  document.querySelectorAll('.app-card').forEach(card => {
+    const m = (card.getAttribute('onclick') || '').match(/openApp\(['"]([^'"]+)['"]\)/);
+    if(!m) return;
+    const key = m[1];
+    const locked = !isSkoolMember && !LIGHT_APPS.has(key);
+    card.classList.toggle('locked', locked);
+    if(!card.querySelector('.lock-badge')){
+      const badge = document.createElement('span');
+      badge.className = 'lock-badge';
+      badge.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg> Skool';
+      card.appendChild(badge);
+    }
+  });
+  // El FAB de Savias cambia su destino según si el usuario es miembro
+  const skoolFab = document.getElementById('fabSkool');
+  if(skoolFab) skoolFab.href = getSkoolUrl();
+}
+
+function openSkoolGate(appTitle){
+  const msgEl = document.getElementById('skoolGateMsg');
+  if(msgEl && appTitle){
+    msgEl.textContent = `Para acceder a "${appTitle}" únete a la comunidad Skool de Savias con el mismo correo de esta cuenta. Una vez dentro, la herramienta se desbloquea automáticamente.`;
+  }
+  document.getElementById('modalSkoolGate').classList.add('show');
+}
+function closeSkoolGate(){ document.getElementById('modalSkoolGate').classList.remove('show'); }
+function goToSkool(){ window.open(getSkoolUrl(), '_blank', 'noopener'); }
+
 /* ============ USER MENU ============ */
 function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('show'); }
 function closeUserMenu(){ document.getElementById('userMenu').classList.remove('show'); }
@@ -1460,6 +1565,12 @@ function enterApp(session, opts={}){
   setTimeout(applyFullBleed, 0);
   showFabs(firstName);
 
+  // Cargar estado de membresía Skool y bloquear las tarjetas correspondientes.
+  // Mostramos las cards bloqueadas por defecto (asumiendo no-miembro) y luego
+  // las desbloqueamos si el perfil dice lo contrario; evita el "flash" inverso.
+  applyMembershipLocks();
+  loadMembership().then(applyMembershipLocks);
+
   const onboarded = user.user_metadata?.onboarded === true;
   if(!onboarded){
     startOnboarding(firstName);
@@ -1470,7 +1581,7 @@ function showFabs(firstName){
   const stack = document.getElementById('fabStack');
   if(stack) stack.style.display = 'flex';
   const skool = document.getElementById('fabSkool');
-  if(skool) skool.href = SKOOL_URL;
+  if(skool) skool.href = getSkoolUrl();
   initChat(firstName);
 }
 function hideFabs(){
@@ -1534,7 +1645,7 @@ function applyFullBleed(){
 
 /* Mover overlays al <body> para escapar contenedores transformados de GHL */
 function reparentOverlays(){
-  ['viewer','modalChangePass','onboarding','boot'].forEach(id=>{
+  ['viewer','modalChangePass','modalSkoolGate','onboarding','boot'].forEach(id=>{
     const el = document.getElementById(id);
     if(el && el.parentNode !== document.body){
       document.body.appendChild(el);
@@ -1587,11 +1698,15 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   $('#modalChangePass').addEventListener('click', e=>{
     if(e.target.id==='modalChangePass') closeChangePass();
   });
+  $('#modalSkoolGate').addEventListener('click', e=>{
+    if(e.target.id==='modalSkoolGate') closeSkoolGate();
+  });
 
   // escape cierra
   document.addEventListener('keydown', e=>{
     if(e.key==='Escape'){
       if(document.getElementById('modalChangePass').classList.contains('show')) closeChangePass();
+      else if(document.getElementById('modalSkoolGate').classList.contains('show')) closeSkoolGate();
       else if(document.getElementById('viewer').classList.contains('show')) closeApp();
       else closeUserMenu();
     }

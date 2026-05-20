@@ -449,9 +449,9 @@ const Scene3: React.FC = () => {
       >
         Tu práctica
       </div>
-      <ValueLine label="Calcular." index={0} localFrame={localFrame} />
-      <ValueLine label="Formular." index={1} localFrame={localFrame} />
-      <ValueLine label="Crear." index={2} localFrame={localFrame} />
+      <ValueLine label="Entender." index={0} localFrame={localFrame} />
+      <ValueLine label="Verificar." index={1} localFrame={localFrame} />
+      <ValueLine label="Aplicar." index={2} localFrame={localFrame} />
     </div>
   );
 };

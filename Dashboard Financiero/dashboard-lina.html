@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard Financiero · Lina Toro × JoinsClee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --sage:#9caf88;
+    --sage-dark:#7d9169;
+    --sage-soft:#e8ede1;
+    --sage-mist:#f4f6f2;
+    --cream:#fafaf7;
+    --ink:#1a1a1a;
+    --ink-soft:#3a3a3a;
+    --muted:#6b7164;
+    --border:#dfe3d8;
+    --bg:#fafaf7;
+    --white:#ffffff;
+    --danger:#b85c5c;
+    --danger-soft:#fbeaea;
+    --warn:#c89858;
+    --warn-soft:#fbf2e3;
+    --success:#6b8e5a;
+    --success-soft:#e6efde;
+    --info:#5c87b8;
+    --info-soft:#e6eef7;
+    --radius:14px;
+    --radius-lg:20px;
+    --radius-sm:8px;
+    --shadow-sm:0 2px 8px rgba(60,70,50,.06);
+    --shadow:0 12px 32px -12px rgba(60,70,50,.18);
+    --shadow-lg:0 24px 60px -20px rgba(60,70,50,.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{width:100%;overflow-x:hidden}
+  body{
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    overflow-x:hidden;
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:'Playfair Display',serif;font-weight:600;letter-spacing:-.01em;color:var(--ink)}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;color:var(--ink)}
+
+  /* ============ FULL-BLEED (escapa de contenedores GHL) ============ */
+  .full-bleed{
+    width:100vw;
+    position:relative;
+    left:50%;
+    right:50%;
+    margin-left:-50vw;
+    margin-right:-50vw;
+    background:var(--bg);
+  }
+
+  /* Wrapper interno: padding lateral en el contenedor para que las cards no peguen al borde */
+  .shell{
+    max-width:1280px;
+    margin:0 auto;
+    padding:24px clamp(12px, 3vw, 28px) 80px;
+    display:grid;
+    gap:clamp(14px, 2vw, 20px);
+    width:100%;
+  }
+
+  /* ============ Topbar ============ */
+  .topbar{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:18px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    box-shadow:var(--shadow-sm);
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand .logo{
+    width:48px;height:48px;border-radius:14px;
+    background:linear-gradient(135deg,var(--sage) 0%,var(--sage-dark) 100%);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    font-family:'Playfair Display',serif;font-size:22px;font-weight:700;
+    box-shadow:var(--shadow-sm);
+  }
+  .brand h1{font-size:22px;line-height:1.1}
+  .brand .sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+  .topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+  /* ============ Buttons ============ */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;
+    border:1px solid transparent;background:var(--white);color:var(--ink);
+    transition:all .15s ease;line-height:1;cursor:pointer;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+  .btn-primary{background:var(--sage-dark);color:#fff}
+  .btn-primary:hover{background:#6b8159}
+  .btn-ghost{background:transparent;border-color:var(--border);color:var(--ink-soft)}
+  .btn-ghost:hover{background:var(--sage-mist)}
+  .btn-danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+  .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+
+  /* ============ Cards ============ */
+  .card{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:22px;
+    box-shadow:var(--shadow-sm);
+  }
+  .card h2{font-size:18px;margin-bottom:4px}
+  .card .card-sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .card-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    flex-wrap:wrap;margin-bottom:14px;
+  }
+  .card-head h2{margin-bottom:0}
+
+  /* ============ Params bar ============ */
+  .params{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .param{display:flex;flex-direction:column;gap:4px}
+  .param label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .param .input-wrap{
+    display:flex;align-items:center;gap:6px;
+    background:var(--sage-mist);border:1px solid var(--border);border-radius:10px;padding:8px 12px;
+  }
+  .param input{border:none;background:none;font-size:15px;font-weight:600;width:100%;outline:none}
+  .param .input-wrap small{color:var(--muted);font-size:11px}
+  .param .hint{font-size:11px;color:var(--muted)}
+
+  /* ============ KPIs ============ */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  .kpi{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px;display:flex;flex-direction:column;gap:6px;
+    box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  }
+  .kpi::before{content:'';position:absolute;inset:0 auto auto 0;width:4px;height:100%;background:var(--sage)}
+  .kpi.kpi-revenue::before{background:var(--success)}
+  .kpi.kpi-expense::before{background:var(--danger)}
+  .kpi.kpi-profit::before{background:var(--sage-dark)}
+  .kpi.kpi-lina::before{background:var(--info)}
+  .kpi.kpi-agency::before{background:var(--warn)}
+  .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .kpi-value{font-family:'Playfair Display',serif;font-size:24px;font-weight:600;line-height:1.1;color:var(--ink)}
+  .kpi-sub{font-size:12px;color:var(--muted)}
+  .kpi-detail{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;border-top:1px dashed var(--border)}
+  .kpi-detail b{color:var(--ink-soft);font-weight:600}
+
+  /* ============ Tabs ============ */
+  .tabs{display:flex;gap:2px;background:var(--sage-mist);padding:4px;border-radius:12px;flex-wrap:wrap}
+  .tab{
+    flex:1;min-width:120px;padding:10px 14px;border-radius:9px;
+    font-size:13px;font-weight:600;color:var(--muted);
+    transition:all .15s ease;text-align:center;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:var(--white);color:var(--ink);box-shadow:var(--shadow-sm)}
+
+  /* ============ Tables ============ */
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{
+    background:var(--sage-mist);color:var(--muted);
+    font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;
+    padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:1;
+  }
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--ink-soft)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--sage-mist)}
+  .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+  .num b{font-weight:600;color:var(--ink)}
+  .pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600}
+  .pill-lina{background:var(--info-soft);color:var(--info)}
+  .pill-agency{background:var(--warn-soft);color:var(--warn)}
+  .pill-success{background:var(--success-soft);color:var(--success)}
+  .pill-danger{background:var(--danger-soft);color:var(--danger)}
+  .pill-muted{background:var(--sage-mist);color:var(--muted)}
+
+  .row-actions{display:flex;gap:4px;justify-content:flex-end}
+  .row-actions button{padding:4px 8px;font-size:11px;border-radius:6px;color:var(--muted)}
+  .row-actions button:hover{background:var(--sage-mist);color:var(--ink)}
+  .row-actions .del:hover{background:var(--danger-soft);color:var(--danger)}
+
+  .empty{padding:42px 24px;text-align:center;color:var(--muted);font-size:14px}
+  .empty b{display:block;font-size:16px;color:var(--ink);margin-bottom:4px;font-family:'Playfair Display',serif}
+
+  /* ============ Charts ============ */
+  .charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:20px}
+  @media (max-width:900px){.charts-row{grid-template-columns:1fr}}
+  .chart-wrap{position:relative;height:240px}
+
+  /* ============ Modal ============ */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(20,30,15,.42);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;z-index:999;padding:16px;
+  }
+  .modal-overlay.show{display:flex}
+  .modal{
+    background:var(--white);border-radius:var(--radius-lg);
+    width:min(560px,100%);max-height:90vh;overflow:auto;
+    box-shadow:var(--shadow-lg);
+  }
+  .modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-head h3{font-size:18px}
+  .modal-body{padding:22px}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--sage-mist)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-grid .full{grid-column:1/-1}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .field input,.field select,.field textarea{
+    border:1px solid var(--border);border-radius:10px;padding:10px 12px;
+    font-size:14px;outline:none;background:var(--white);transition:border-color .15s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--sage-dark)}
+  .field textarea{min-height:60px;resize:vertical}
+
+  /* ============ Liquidación ============ */
+  .liq-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:760px){.liq-grid{grid-template-columns:1fr}}
+  .liq-card{
+    border:1px solid var(--border);border-radius:14px;padding:18px;
+    background:linear-gradient(180deg,var(--sage-mist) 0%,var(--white) 70%);
+  }
+  .liq-card.agency{background:linear-gradient(180deg,var(--warn-soft) 0%,var(--white) 70%)}
+  .liq-card h4{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
+  .liq-card .liq-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:600;margin-bottom:14px}
+  .liq-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--ink-soft)}
+  .liq-row.total{border-top:2px solid var(--border);margin-top:8px;padding-top:10px;font-weight:700;color:var(--ink);font-size:15px}
+
+  /* ============ Toasts ============ */
+  .toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:9999;max-width:340px}
+  .toast{
+    background:var(--white);border:1px solid var(--border);border-radius:12px;
+    padding:12px 16px;box-shadow:var(--shadow);font-size:13px;
+    display:flex;align-items:center;gap:10px;animation:slideIn .3s ease;
+  }
+  .toast.success{border-left:4px solid var(--success)}
+  .toast.error{border-left:4px solid var(--danger)}
+  @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+  @media print{
+    body{background:#fff}
+    .full-bleed{position:static;width:100%;left:0;right:0;margin:0}
+    .shell{padding:0}
+    .topbar,.tabs,.btn,.row-actions,#paramsCard{display:none !important}
+    .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+  }
+
+  /* ============ Responsive ============ */
+  @media (max-width:1024px){
+    .charts-row{gap:14px}
+    .card{padding:18px}
+  }
+
+  @media (max-width:900px){
+    .charts-row{grid-template-columns:1fr}
+    .chart-wrap{height:220px}
+    .brand h1{font-size:19px}
+    .kpi-value{font-size:21px}
+  }
+
+  @media (max-width:760px){
+    .liq-grid{grid-template-columns:1fr}
+    .topbar{padding:14px 16px}
+    .topbar-actions{width:100%;justify-content:flex-end}
+    .card-head{flex-direction:column;align-items:flex-start;gap:8px}
+    .tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+    .tab{flex:0 0 auto;min-width:auto;padding:8px 14px;white-space:nowrap}
+    .params{grid-template-columns:repeat(2,1fr)}
+  }
+
+  @media (max-width:640px){
+    .kpis{grid-template-columns:repeat(2,1fr);gap:10px}
+    .kpi{padding:14px}
+    .kpi-value{font-size:18px}
+    .kpi-label{font-size:10px}
+    .kpi-detail{font-size:10px;flex-direction:column;gap:2px}
+    .form-grid{grid-template-columns:1fr}
+    .brand{gap:10px}
+    .brand .logo{width:40px;height:40px;font-size:18px}
+    .brand h1{font-size:17px}
+    .brand .sub{font-size:11px}
+    .card{padding:16px;border-radius:14px}
+    .card h2{font-size:16px}
+    .card .card-sub{font-size:12px}
+    thead th{padding:8px 10px;font-size:10px}
+    tbody td{padding:8px 10px;font-size:12px}
+    .modal{max-height:95vh}
+    .modal-body{padding:18px}
+    .toasts{left:10px;right:10px;bottom:10px;max-width:none}
+  }
+
+  @media (max-width:480px){
+    .shell{padding:14px 10px 60px;gap:12px}
+    .kpis{grid-template-columns:1fr}
+    .params{grid-template-columns:1fr}
+    .topbar{flex-direction:column;align-items:stretch;gap:12px}
+    .topbar-actions{flex-wrap:wrap;justify-content:stretch}
+    .topbar-actions .btn{flex:1;min-width:120px}
+    .liq-card{padding:14px}
+    .liq-card .liq-name{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="full-bleed"><div class="shell">
+
+  <!-- ====================== TOPBAR ====================== -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">L</div>
+      <div>
+        <h1>Cuadre Financiero · Lina Toro</h1>
+        <div class="sub">SAVIAS × JoinsClee · Inicio colaboración 2 feb 2026</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" id="exportXlsxBtn">↓ Excel</button>
+      <button class="btn btn-primary btn-sm" id="exportPdfBtn">↓ Informe PDF</button>
+    </div>
+  </div>
+
+  <!-- ====================== PARAMS ====================== -->
+  <div class="card" id="paramsCard">
+    <div class="card-head">
+      <div>
+        <h2>Parámetros del cuadre</h2>
+        <div class="card-sub">Edita TRM y % de reparto. Los cambios se guardan automáticamente.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="pill pill-muted" id="periodPill">Acumulado</span>
+        <select id="periodFilter" class="btn btn-ghost btn-sm" style="cursor:pointer">
+          <option value="all">Todo el período</option>
+        </select>
+      </div>
+    </div>
+    <div class="params">
+      <div class="param">
+        <label>TRM (COP por USD)</label>
+        <div class="input-wrap">
+          <input type="number" step="0.01" id="trmInput" placeholder="3729.27" />
+          <small>COP/USD</small>
+        </div>
+        <div class="hint">Recalcula todos los importes en COP.</div>
+      </div>
+      <div class="param">
+        <label>% para Lina (SAVIAS)</label>
+        <div class="input-wrap">
+          <input type="number" step="1" min="0" max="100" id="linaShareInput" />
+          <small>%</small>
+        </div>
+        <div class="hint">Parte de Lina del beneficio neto.</div>
+      </div>
+      <div class="param">
+        <label>% para JoinsClee</label>
+        <div class="input-wrap">
+          <input type="number" step="1" min="0" max="100" id="agencyShareInput" />
+          <small>%</small>
+        </div>
+        <div class="hint">Parte de la agencia. Lina + JoinsClee = 100%.</div>
+      </div>
+      <div class="param">
+        <label>Fuente del TRM</label>
+        <div class="input-wrap">
+          <input type="text" id="trmSourceInput" placeholder="Banco de la República · 8 may 2026" />
+        </div>
+        <div class="hint">Para referencia en informes.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== KPIs ====================== -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- ====================== CHARTS ====================== -->
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-head"><div><h2>Ingresos vs Gastos</h2><div class="card-sub">Mes a mes en COP</div></div></div>
+      <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2>Reparto del beneficio</h2><div class="card-sub">Quién recibe qué</div></div></div>
+      <div class="chart-wrap"><canvas id="chartSplit"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ====================== TABS ====================== -->
+  <div class="card">
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="ingresos">Ingresos Skool</div>
+      <div class="tab" data-tab="pauta">Pauta Meta</div>
+      <div class="tab" data-tab="gastos-lina">Gastos Lina</div>
+      <div class="tab" data-tab="gastos-agencia">Gastos JoinsClee</div>
+      <div class="tab" data-tab="liquidacion">Liquidación</div>
+    </div>
+    <div style="margin-top:18px" id="tabContent"></div>
+  </div>
+
+</div></div>
+
+<!-- ====================== MODAL ====================== -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Nuevo registro</h3>
+      <button class="btn btn-ghost btn-sm" id="modalCloseBtn">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" id="modalCancelBtn">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="modalSaveBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================================================
+ *  CONFIG · Lina Toro
+ * ============================================================ */
+const SUPABASE_URL = 'https://cojwzekyeehqtxdvoldj.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvand6ZWt5ZWVocXR4ZHZvbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTA2MjYsImV4cCI6MjA5MjYyNjYyNn0.qlTIaARvrrXHPGjPR6STbybmLA9Jn2r_R04xaZxnU4k';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const T = {
+  params: 'lina_finance_params',
+  revenues: 'lina_finance_revenues',
+  expenses: 'lina_finance_expenses',
+  ads: 'lina_finance_ad_charges',
+};
+const PARTNER_LINA = 'lina';
+const PARTNER_AGENCY = 'joinsclee';
+
+/* ============================================================
+ *  STATE
+ * ============================================================ */
+const state = {
+  params: null,
+  revenues: [],
+  expenses: [],
+  adCharges: [],
+  period: 'all',
+  tab: 'ingresos',
+};
+
+/* ============================================================
+ *  HELPERS
+ * ============================================================ */
+const fmtUSD = n => '$' + (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtCOP = n => '$' + Math.round(Number(n)||0).toLocaleString('es-CO') + ' COP';
+const fmtPct = n => (Number(n)*100).toFixed(1) + '%';
+const fmtDate = d => d ? new Date(d).toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const monthOf = d => d ? String(d).slice(0,7) : '';
+const monthLabel = m => {
+  if(!m) return '—';
+  const [y,mo] = m.split('-');
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${meses[parseInt(mo,10)-1]} ${y}`;
+};
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+function toast(msg, kind='success'){
+  const t = document.createElement('div');
+  t.className = 'toast ' + kind;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
+}
+
+async function db(promise){
+  const { data, error } = await promise;
+  if(error){
+    console.error(error);
+    toast(error.message || 'Error en la base de datos', 'error');
+    throw error;
+  }
+  return data;
+}
+
+/* ============================================================
+ *  DATA LOADERS
+ * ============================================================ */
+async function loadAll(){
+  const [params, revenues, expenses, adCharges] = await Promise.all([
+    db(sb.from(T.params).select('*').eq('id', 1).maybeSingle()),
+    db(sb.from(T.revenues).select('*').order('paid_at', { ascending: false })),
+    db(sb.from(T.expenses).select('*').order('spent_at', { ascending: false })),
+    db(sb.from(T.ads).select('*').order('charged_at', { ascending: false })),
+  ]);
+  state.params = params || { id: 1, trm_cop_per_usd: 3729.27, lina_share: 0.7, joinsclee_share: 0.3, trm_source: '' };
+  state.revenues = revenues || [];
+  state.expenses = expenses || [];
+  state.adCharges = adCharges || [];
+  if(!params){
+    await db(sb.from(T.params).upsert(state.params));
+  }
+  renderAll();
+}
+
+/* ============================================================
+ *  AGGREGATIONS
+ * ============================================================ */
+function filterByPeriod(rows, dateField){
+  if(state.period === 'all') return rows;
+  return rows.filter(r => monthOf(r[dateField]) === state.period);
+}
+
+function availablePeriods(){
+  const set = new Set();
+  state.revenues.forEach(r => set.add(monthOf(r.paid_at)));
+  state.expenses.forEach(e => set.add(monthOf(e.spent_at)));
+  state.adCharges.forEach(a => set.add(monthOf(a.charged_at)));
+  return Array.from(set).filter(Boolean).sort().reverse();
+}
+
+function aggregate(){
+  const trm = Number(state.params?.trm_cop_per_usd) || 0;
+  const linaShare = Number(state.params?.lina_share) || 0.7;
+  const agencyShare = Number(state.params?.joinsclee_share) || 0.3;
+
+  const revs = filterByPeriod(state.revenues, 'paid_at');
+  const exps = filterByPeriod(state.expenses, 'spent_at');
+
+  const incomeUSD = revs.reduce((s,r) => s + (Number(r.usd_amount)||0), 0);
+  const incomeCOP = revs.reduce((s,r) => {
+    if(r.cop_real && Number(r.cop_real) > 0) return s + Number(r.cop_real);
+    return s + (Number(r.usd_amount)||0) * trm;
+  }, 0);
+
+  const expenseTotal = (filter) => exps.filter(filter).reduce((s,e) => {
+    const meses = Number(e.months_billed)||1;
+    if(e.cop_amount && Number(e.cop_amount) > 0){
+      return s + Number(e.cop_amount) * meses;
+    }
+    return s + (Number(e.usd_amount)||0) * trm * meses;
+  }, 0);
+
+  const linaExp = expenseTotal(e => e.paid_by === PARTNER_LINA);
+  const agencyExp = expenseTotal(e => e.paid_by === PARTNER_AGENCY);
+  const totalExp = linaExp + agencyExp;
+  const profit = incomeCOP - totalExp;
+  const margin = incomeCOP > 0 ? profit / incomeCOP : 0;
+  const linaProfit = profit * linaShare;
+  const agencyProfit = profit * agencyShare;
+
+  return {
+    trm, linaShare, agencyShare,
+    incomeUSD, incomeCOP,
+    linaExp, agencyExp, totalExp,
+    profit, margin,
+    linaProfit, agencyProfit,
+    linaTotal: linaProfit + linaExp,
+    agencyTotal: agencyProfit + agencyExp,
+  };
+}
+
+function monthlySeries(){
+  const trm = Number(state.params?.trm_cop_per_usd) || 0;
+  const map = {};
+  state.revenues.forEach(r => {
+    const m = monthOf(r.paid_at); if(!m) return;
+    map[m] = map[m] || { income: 0, expense: 0 };
+    const cop = (r.cop_real && Number(r.cop_real) > 0)
+      ? Number(r.cop_real) : (Number(r.usd_amount)||0) * trm;
+    map[m].income += cop;
+  });
+  state.expenses.forEach(e => {
+    const m = monthOf(e.spent_at); if(!m) return;
+    map[m] = map[m] || { income: 0, expense: 0 };
+    const meses = Number(e.months_billed)||1;
+    const cop = (e.cop_amount && Number(e.cop_amount) > 0)
+      ? Number(e.cop_amount) * meses : (Number(e.usd_amount)||0) * trm * meses;
+    map[m].expense += cop;
+  });
+  const keys = Object.keys(map).sort();
+  return {
+    labels: keys.map(monthLabel),
+    income: keys.map(k => map[k].income),
+    expense: keys.map(k => map[k].expense),
+  };
+}
+
+/* ============================================================
+ *  RENDER · PARAMS
+ * ============================================================ */
+function renderParams(){
+  const p = state.params; if(!p) return;
+  document.getElementById('trmInput').value = p.trm_cop_per_usd;
+  document.getElementById('linaShareInput').value = Math.round((p.lina_share || 0)*100);
+  document.getElementById('agencyShareInput').value = Math.round((p.joinsclee_share || 0)*100);
+  document.getElementById('trmSourceInput').value = p.trm_source || '';
+
+  const periods = availablePeriods();
+  const sel = document.getElementById('periodFilter');
+  sel.innerHTML = '<option value="all">Todo el período</option>' +
+                   periods.map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
+  sel.value = state.period;
+  document.getElementById('periodPill').textContent = state.period === 'all' ? 'Acumulado' : monthLabel(state.period);
+}
+
+/* ============================================================
+ *  RENDER · KPIs
+ * ============================================================ */
+function renderKpis(){
+  const a = aggregate();
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi kpi-revenue">
+      <div class="kpi-label">Ingresos</div>
+      <div class="kpi-value">${fmtCOP(a.incomeCOP)}</div>
+      <div class="kpi-sub">${fmtUSD(a.incomeUSD)} USD enviados por Skool</div>
+    </div>
+    <div class="kpi kpi-expense">
+      <div class="kpi-label">Gastos totales</div>
+      <div class="kpi-value">${fmtCOP(a.totalExp)}</div>
+      <div class="kpi-detail"><span>Lina <b>${fmtCOP(a.linaExp)}</b></span><span>JoinsClee <b>${fmtCOP(a.agencyExp)}</b></span></div>
+    </div>
+    <div class="kpi kpi-profit">
+      <div class="kpi-label">Beneficio neto</div>
+      <div class="kpi-value">${fmtCOP(a.profit)}</div>
+      <div class="kpi-sub">${fmtPct(a.margin)} de margen sobre ingresos</div>
+    </div>
+    <div class="kpi kpi-lina">
+      <div class="kpi-label">A Lina (SAVIAS)</div>
+      <div class="kpi-value">${fmtCOP(a.linaTotal)}</div>
+      <div class="kpi-detail"><span>Utilidad ${Math.round(a.linaShare*100)}% <b>${fmtCOP(a.linaProfit)}</b></span><span>Reembolso <b>${fmtCOP(a.linaExp)}</b></span></div>
+    </div>
+    <div class="kpi kpi-agency">
+      <div class="kpi-label">A JoinsClee</div>
+      <div class="kpi-value">${fmtCOP(a.agencyTotal)}</div>
+      <div class="kpi-detail"><span>Utilidad ${Math.round(a.agencyShare*100)}% <b>${fmtCOP(a.agencyProfit)}</b></span><span>Reembolso <b>${fmtCOP(a.agencyExp)}</b></span></div>
+    </div>
+  `;
+}
+
+/* ============================================================
+ *  RENDER · CHARTS
+ * ============================================================ */
+let chartMonthly, chartSplit;
+function renderCharts(){
+  const s = monthlySeries();
+  const a = aggregate();
+  const ctxM = document.getElementById('chartMonthly').getContext('2d');
+  if(chartMonthly) chartMonthly.destroy();
+  chartMonthly = new Chart(ctxM, {
+    type: 'bar',
+    data: {
+      labels: s.labels,
+      datasets: [
+        { label: 'Ingresos', data: s.income, backgroundColor: '#6b8e5a', borderRadius: 6 },
+        { label: 'Gastos',   data: s.expense, backgroundColor: '#b85c5c', borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, color: '#3a3a3a' } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtCOP(c.parsed.y)}` } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => '$' + (v/1000000).toFixed(1) + 'M', color: '#6b7164', font: { family: 'Inter' } }, grid: { color: '#dfe3d8' } },
+        x: { ticks: { color: '#6b7164', font: { family: 'Inter' } }, grid: { display: false } }
+      }
+    }
+  });
+
+  const ctxS = document.getElementById('chartSplit').getContext('2d');
+  if(chartSplit) chartSplit.destroy();
+  chartSplit = new Chart(ctxS, {
+    type: 'doughnut',
+    data: {
+      labels: ['Lina (utilidad)', 'JoinsClee (utilidad)', 'Reembolso Lina', 'Reembolso JoinsClee'],
+      datasets: [{
+        data: [a.linaProfit, a.agencyProfit, a.linaExp, a.agencyExp],
+        backgroundColor: ['#5c87b8', '#c89858', '#9caf88', '#d4b78a'],
+        borderColor: '#fff', borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 11 }, color: '#3a3a3a', boxWidth: 12 } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${fmtCOP(c.parsed)}` } }
+      }
+    }
+  });
+}
+
+/* ============================================================
+ *  RENDER · TABS
+ * ============================================================ */
+function renderTabs(){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
+  const root = document.getElementById('tabContent');
+  if(state.tab === 'ingresos')             root.innerHTML = renderIngresosTable();
+  else if(state.tab === 'pauta')           root.innerHTML = renderPautaTable();
+  else if(state.tab === 'gastos-lina')     root.innerHTML = renderGastosTable(PARTNER_LINA);
+  else if(state.tab === 'gastos-agencia')  root.innerHTML = renderGastosTable(PARTNER_AGENCY);
+  else if(state.tab === 'liquidacion')     root.innerHTML = renderLiquidacion();
+  attachRowHandlers();
+}
+
+function renderIngresosTable(){
+  const trm = Number(state.params?.trm_cop_per_usd)||0;
+  const rows = filterByPeriod(state.revenues, 'paid_at');
+  if(!rows.length) return tabHeader('Ingresos Skool','Pagos recibidos en cuenta Bancolombia','revenue') + emptyState('Sin ingresos en este período');
+
+  let totalUSD=0, totalCOPexp=0, totalCOPreal=0;
+  const body = rows.map(r => {
+    const usd = Number(r.usd_amount)||0;
+    const copExp = usd * trm;
+    const copReal = Number(r.cop_real)||0;
+    totalUSD += usd; totalCOPexp += copExp; totalCOPreal += copReal;
+    const spread = copReal ? (copReal - copExp) : 0;
+    return `<tr>
+      <td>${fmtDate(r.paid_at)}</td>
+      <td>${r.concept || '—'}</td>
+      <td class="num"><b>${fmtUSD(usd)}</b></td>
+      <td class="num">${fmtCOP(copExp)}</td>
+      <td class="num">${copReal ? '<b>'+fmtCOP(copReal)+'</b>' : '<span class="pill pill-muted">pendiente</span>'}</td>
+      <td class="num">${copReal ? (spread>=0 ? '<span class="pill pill-success">'+fmtCOP(spread)+'</span>' : '<span class="pill pill-danger">'+fmtCOP(spread)+'</span>') : '—'}</td>
+      <td class="row-actions">
+        <button class="edit" data-table="revenues" data-id="${r.id}">Editar</button>
+        <button class="del" data-table="revenues" data-id="${r.id}">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return tabHeader('Ingresos Skool', 'Pagos en USD enviados por Skool + lo que entró al banco (COP)', 'revenue') + `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Fecha</th><th>Concepto</th>
+        <th class="num">USD enviado</th>
+        <th class="num">COP esperado (TRM)</th>
+        <th class="num">COP real banco</th>
+        <th class="num">Spread/comisión</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${body}
+        <tr style="background:var(--sage-mist);font-weight:700">
+          <td colspan="2">TOTAL</td>
+          <td class="num">${fmtUSD(totalUSD)}</td>
+          <td class="num">${fmtCOP(totalCOPexp)}</td>
+          <td class="num">${fmtCOP(totalCOPreal)}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table></div>`;
+}
+
+function renderPautaTable(){
+  const rows = filterByPeriod(state.adCharges, 'charged_at');
+  if(!rows.length) return tabHeader('Pauta Meta','Cobros reales en la tarjeta de Lina','ad') + emptyState('Sin cobros de pauta en este período');
+
+  let totalUSD = 0;
+  const body = rows.map(a => {
+    const usd = Number(a.usd_amount)||0; totalUSD += usd;
+    return `<tr>
+      <td>${fmtDate(a.charged_at)}</td>
+      <td style="font-size:11px;color:var(--muted)">${a.transaction_id || '—'}</td>
+      <td class="num"><b>${fmtUSD(usd)}</b></td>
+      <td><span class="pill ${a.status==='cobrado'?'pill-success':a.status==='fallido'?'pill-danger':'pill-muted'}">${a.status||'cobrado'}</span></td>
+      <td>${a.notes||''}</td>
+      <td class="row-actions">
+        <button class="edit" data-table="ads" data-id="${a.id}">Editar</button>
+        <button class="del" data-table="ads" data-id="${a.id}">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return tabHeader('Pauta Meta', 'Detalle de cobros reales de Meta (incluye fallidos)', 'ad') + `
+    <div class="table-wrap"><table>
+      <thead><tr><th>Fecha</th><th>ID transacción</th><th class="num">USD</th><th>Estado</th><th>Notas</th><th></th></tr></thead>
+      <tbody>${body}
+        <tr style="background:var(--sage-mist);font-weight:700">
+          <td colspan="2">TOTAL cobrado</td>
+          <td class="num">${fmtUSD(totalUSD)}</td>
+          <td colspan="3"></td>
+        </tr>
+      </tbody>
+    </table></div>`;
+}
+
+function renderGastosTable(paidBy){
+  const trm = Number(state.params?.trm_cop_per_usd)||0;
+  const rows = filterByPeriod(state.expenses, 'spent_at').filter(e => e.paid_by === paidBy);
+  const title = paidBy === PARTNER_LINA ? 'Gastos asumidos por Lina' : 'Gastos asumidos por JoinsClee';
+  const sub = paidBy === PARTNER_LINA
+    ? 'Suscripciones, pauta, edición. Se devuelven a Lina antes del reparto.'
+    : 'Servicios subcontratados por la agencia. Se devuelven a JoinsClee antes del reparto.';
+  if(!rows.length) return tabHeader(title, sub, 'expense', paidBy) + emptyState('Sin gastos registrados');
+
+  let total = 0;
+  const body = rows.map(e => {
+    const meses = Number(e.months_billed)||1;
+    const cop = (e.cop_amount && Number(e.cop_amount)>0)
+      ? Number(e.cop_amount) * meses
+      : (Number(e.usd_amount)||0) * trm * meses;
+    total += cop;
+    return `<tr>
+      <td>${fmtDate(e.spent_at)}</td>
+      <td><b>${e.concept}</b></td>
+      <td><span class="pill pill-muted">${e.category||'—'}</span></td>
+      <td>${e.frequency||'—'}</td>
+      <td class="num">${meses}</td>
+      <td class="num">${e.usd_amount ? fmtUSD(e.usd_amount) : '—'}</td>
+      <td class="num">${e.cop_amount ? fmtCOP(e.cop_amount) : '—'}</td>
+      <td class="num"><b>${fmtCOP(cop)}</b></td>
+      <td class="row-actions">
+        <button class="edit" data-table="expenses" data-id="${e.id}">Editar</button>
+        <button class="del" data-table="expenses" data-id="${e.id}">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return tabHeader(title, sub, 'expense', paidBy) + `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Fecha</th><th>Concepto</th><th>Categoría</th>
+        <th>Frecuencia</th><th class="num">Meses</th>
+        <th class="num">USD</th><th class="num">COP</th>
+        <th class="num">Total COP</th><th></th>
+      </tr></thead>
+      <tbody>${body}
+        <tr style="background:var(--sage-mist);font-weight:700">
+          <td colspan="7">TOTAL</td>
+          <td class="num">${fmtCOP(total)}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table></div>`;
+}
+
+function renderLiquidacion(){
+  const a = aggregate();
+  return `
+    <div style="margin-bottom:16px">
+      <h3 style="font-size:18px;margin-bottom:4px">Liquidación del período</h3>
+      <div class="card-sub">${state.period === 'all' ? 'Acumulado total' : monthLabel(state.period)}</div>
+    </div>
+
+    <div class="liq-grid">
+      <div class="liq-card">
+        <h4>Parte cliente</h4>
+        <div class="liq-name">Lina Toro (SAVIAS)</div>
+        <div class="liq-row"><span>Utilidad ${Math.round(a.linaShare*100)}% del beneficio</span><span><b>${fmtCOP(a.linaProfit)}</b></span></div>
+        <div class="liq-row"><span>Reembolso de gastos asumidos</span><span><b>${fmtCOP(a.linaExp)}</b></span></div>
+        <div class="liq-row total"><span>TOTAL a recibir</span><span>${fmtCOP(a.linaTotal)}</span></div>
+      </div>
+      <div class="liq-card agency">
+        <h4>Parte agencia</h4>
+        <div class="liq-name">JoinsClee</div>
+        <div class="liq-row"><span>Utilidad ${Math.round(a.agencyShare*100)}% del beneficio</span><span><b>${fmtCOP(a.agencyProfit)}</b></span></div>
+        <div class="liq-row"><span>Reembolso de gastos asumidos</span><span><b>${fmtCOP(a.agencyExp)}</b></span></div>
+        <div class="liq-row total"><span>TOTAL a recibir</span><span>${fmtCOP(a.agencyTotal)}</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:18px;background:var(--sage-mist);border-radius:14px;border:1px solid var(--border)">
+      <h4 style="font-family:'Playfair Display',serif;font-size:16px;margin-bottom:10px">Cómo se calcula</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;font-size:13px;color:var(--ink-soft)">
+        <div><b>Ingresos</b><br>${fmtCOP(a.incomeCOP)}<br><small style="color:var(--muted)">${fmtUSD(a.incomeUSD)} × TRM ${a.trm.toFixed(2)}</small></div>
+        <div><b>− Gastos totales</b><br>${fmtCOP(a.totalExp)}<br><small style="color:var(--muted)">${fmtCOP(a.linaExp)} (Lina) + ${fmtCOP(a.agencyExp)} (JoinsClee)</small></div>
+        <div><b>= Beneficio neto</b><br>${fmtCOP(a.profit)}<br><small style="color:var(--muted)">Margen ${fmtPct(a.margin)}</small></div>
+        <div><b>Reparto ${Math.round(a.linaShare*100)}/${Math.round(a.agencyShare*100)}</b><br>Lina: ${fmtCOP(a.linaProfit)}<br>JoinsClee: ${fmtCOP(a.agencyProfit)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function tabHeader(title, sub, kind, paidBy){
+  const action = kind === 'revenue' ? `<button class="btn btn-primary btn-sm" data-add="revenue">+ Nuevo ingreso</button>`
+              : kind === 'expense' ? `<button class="btn btn-primary btn-sm" data-add="expense" data-paid-by="${paidBy}">+ Nuevo gasto</button>`
+              : kind === 'ad'      ? `<button class="btn btn-primary btn-sm" data-add="ad">+ Cobro Meta</button>`
+              : '';
+  return `<div class="card-head"><div><h2>${title}</h2><div class="card-sub">${sub}</div></div>${action}</div>`;
+}
+
+function emptyState(msg){
+  return `<div class="empty"><b>${msg}</b><span>Agrega registros con el botón "+ Nuevo" arriba a la derecha.</span></div>`;
+}
+
+/* ============================================================
+ *  RENDER · ROOT
+ * ============================================================ */
+function renderAll(){
+  renderParams();
+  renderKpis();
+  renderCharts();
+  renderTabs();
+}
+
+/* ============================================================
+ *  EVENTOS / MODALS
+ * ============================================================ */
+function attachRowHandlers(){
+  document.querySelectorAll('[data-add="revenue"]').forEach(b => b.addEventListener('click', () => openRevenueModal()));
+  document.querySelectorAll('[data-add="expense"]').forEach(b => b.addEventListener('click', () => openExpenseModal(b.dataset.paidBy)));
+  document.querySelectorAll('[data-add="ad"]').forEach(b => b.addEventListener('click', () => openAdModal()));
+  document.querySelectorAll('.row-actions .edit').forEach(b => b.addEventListener('click', () => editRow(b.dataset.table, b.dataset.id)));
+  document.querySelectorAll('.row-actions .del').forEach(b => b.addEventListener('click', () => deleteRow(b.dataset.table, b.dataset.id)));
+}
+
+function editRow(table, id){
+  if(table === 'revenues'){
+    const r = state.revenues.find(x => x.id === id); if(r) openRevenueModal(r);
+  } else if(table === 'expenses'){
+    const e = state.expenses.find(x => x.id === id); if(e) openExpenseModal(e.paid_by, e);
+  } else if(table === 'ads'){
+    const a = state.adCharges.find(x => x.id === id); if(a) openAdModal(a);
+  }
+}
+
+async function deleteRow(table, id){
+  if(!confirm('¿Eliminar este registro? No se puede deshacer.')) return;
+  const tbl = table === 'revenues' ? T.revenues : table === 'expenses' ? T.expenses : T.ads;
+  await db(sb.from(tbl).delete().eq('id', id));
+  toast('Eliminado');
+  await loadAll();
+}
+
+function showModal(title, bodyHTML, onSave){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  const overlay = document.getElementById('modal');
+  overlay.classList.add('show');
+  const close = () => overlay.classList.remove('show');
+  document.getElementById('modalCloseBtn').onclick = close;
+  document.getElementById('modalCancelBtn').onclick = close;
+  document.getElementById('modalSaveBtn').onclick = async () => {
+    try { await onSave(); close(); } catch(e){ /* toast lo maneja */ }
+  };
+}
+
+function openRevenueModal(r){
+  const isEdit = !!r;
+  const body = `
+    <div class="form-grid">
+      <div class="field"><label>Fecha del pago</label><input type="date" id="f_paid_at" value="${r?.paid_at || todayISO()}" /></div>
+      <div class="field"><label>Fuente</label>
+        <select id="f_source">
+          ${['skool','stripe','manual','otro'].map(o => `<option ${r?.source===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field full"><label>Concepto</label><input id="f_concept" value="${r?.concept||'Payout Bancolombia'}" /></div>
+      <div class="field"><label>USD enviado</label><input type="number" step="0.01" id="f_usd" value="${r?.usd_amount||''}" /></div>
+      <div class="field"><label>COP real banco (opcional)</label><input type="number" step="1" id="f_cop_real" value="${r?.cop_real||''}" /></div>
+      <div class="field full"><label>Notas</label><textarea id="f_notes">${r?.notes||''}</textarea></div>
+    </div>`;
+  showModal(isEdit ? 'Editar ingreso' : 'Nuevo ingreso', body, async () => {
+    const payload = {
+      paid_at: document.getElementById('f_paid_at').value,
+      source: document.getElementById('f_source').value,
+      concept: document.getElementById('f_concept').value || null,
+      usd_amount: parseFloat(document.getElementById('f_usd').value) || 0,
+      cop_real: parseFloat(document.getElementById('f_cop_real').value) || null,
+      notes: document.getElementById('f_notes').value || null,
+    };
+    if(isEdit) await db(sb.from(T.revenues).update(payload).eq('id', r.id));
+    else       await db(sb.from(T.revenues).insert(payload));
+    toast(isEdit ? 'Ingreso actualizado' : 'Ingreso agregado');
+    await loadAll();
+  });
+}
+
+function openExpenseModal(paidBy, e){
+  const isEdit = !!e;
+  const body = `
+    <div class="form-grid">
+      <div class="field"><label>Fecha</label><input type="date" id="f_spent_at" value="${e?.spent_at || todayISO()}" /></div>
+      <div class="field"><label>Asume</label>
+        <select id="f_paid_by">
+          <option value="${PARTNER_LINA}" ${paidBy===PARTNER_LINA?'selected':''}>Lina</option>
+          <option value="${PARTNER_AGENCY}" ${paidBy===PARTNER_AGENCY?'selected':''}>JoinsClee</option>
+        </select>
+      </div>
+      <div class="field full"><label>Concepto</label><input id="f_concept" value="${e?.concept||''}" /></div>
+      <div class="field"><label>Categoría</label><input id="f_category" value="${e?.category||''}" placeholder="ej: Suscripción, Producción" /></div>
+      <div class="field"><label>Frecuencia</label>
+        <select id="f_frequency">
+          ${['unico','mensual','acumulado','anual'].map(o => `<option ${e?.frequency===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Meses cobrados</label><input type="number" step="0.5" id="f_months" value="${e?.months_billed||1}" /></div>
+      <div class="field"><label>USD unitario</label><input type="number" step="0.01" id="f_usd" value="${e?.usd_amount||''}" /></div>
+      <div class="field"><label>COP unitario (si pagaste directo en COP)</label><input type="number" step="1" id="f_cop" value="${e?.cop_amount||''}" /></div>
+      <div class="field full"><label>Notas</label><textarea id="f_notes">${e?.notes||''}</textarea></div>
+    </div>`;
+  showModal(isEdit ? 'Editar gasto' : 'Nuevo gasto', body, async () => {
+    const payload = {
+      spent_at: document.getElementById('f_spent_at').value,
+      paid_by: document.getElementById('f_paid_by').value,
+      concept: document.getElementById('f_concept').value,
+      category: document.getElementById('f_category').value || null,
+      frequency: document.getElementById('f_frequency').value,
+      months_billed: parseFloat(document.getElementById('f_months').value) || 1,
+      usd_amount: parseFloat(document.getElementById('f_usd').value) || null,
+      cop_amount: parseFloat(document.getElementById('f_cop').value) || null,
+      notes: document.getElementById('f_notes').value || null,
+    };
+    if(isEdit) await db(sb.from(T.expenses).update(payload).eq('id', e.id));
+    else       await db(sb.from(T.expenses).insert(payload));
+    toast(isEdit ? 'Gasto actualizado' : 'Gasto agregado');
+    await loadAll();
+  });
+}
+
+function openAdModal(a){
+  const isEdit = !!a;
+  const body = `
+    <div class="form-grid">
+      <div class="field"><label>Fecha</label><input type="date" id="f_charged_at" value="${a?.charged_at || todayISO()}" /></div>
+      <div class="field"><label>USD cobrado</label><input type="number" step="0.01" id="f_usd" value="${a?.usd_amount||''}" /></div>
+      <div class="field full"><label>ID transacción Meta</label><input id="f_tx" value="${a?.transaction_id||''}" /></div>
+      <div class="field"><label>Estado</label>
+        <select id="f_status">
+          ${['cobrado','fallido','pendiente'].map(o => `<option ${a?.status===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field full"><label>Notas</label><textarea id="f_notes">${a?.notes||''}</textarea></div>
+    </div>`;
+  showModal(isEdit ? 'Editar cobro Meta' : 'Nuevo cobro Meta', body, async () => {
+    const payload = {
+      charged_at: document.getElementById('f_charged_at').value,
+      transaction_id: document.getElementById('f_tx').value || null,
+      usd_amount: parseFloat(document.getElementById('f_usd').value) || 0,
+      status: document.getElementById('f_status').value,
+      notes: document.getElementById('f_notes').value || null,
+    };
+    if(isEdit) await db(sb.from(T.ads).update(payload).eq('id', a.id));
+    else       await db(sb.from(T.ads).insert(payload));
+    toast(isEdit ? 'Cobro actualizado' : 'Cobro agregado');
+    await loadAll();
+  });
+}
+
+/* ============================================================
+ *  PARAMS · auto-save
+ * ============================================================ */
+let saveTimer;
+function bindParamInputs(){
+  const save = async () => {
+    const trm = parseFloat(document.getElementById('trmInput').value) || state.params.trm_cop_per_usd;
+    const ls = (parseFloat(document.getElementById('linaShareInput').value)||70)/100;
+    const as = (parseFloat(document.getElementById('agencyShareInput').value)||30)/100;
+    const sum = ls + as;
+    const lina_share = sum>0 ? ls/sum : 0.7;
+    const joinsclee_share = sum>0 ? as/sum : 0.3;
+    const trm_source = document.getElementById('trmSourceInput').value;
+
+    state.params = { ...state.params, trm_cop_per_usd: trm, lina_share, joinsclee_share, trm_source };
+    await db(sb.from(T.params).update({
+      trm_cop_per_usd: trm, lina_share, joinsclee_share, trm_source, trm_updated_at: new Date().toISOString()
+    }).eq('id', 1));
+    renderKpis(); renderCharts(); renderTabs();
+  };
+  ['trmInput','linaShareInput','agencyShareInput','trmSourceInput'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(save, 500);
+    });
+  });
+}
+
+/* ============================================================
+ *  EXPORT · Excel
+ * ============================================================ */
+function exportExcel(){
+  const a = aggregate();
+  const trm = state.params.trm_cop_per_usd;
+  const wb = XLSX.utils.book_new();
+
+  const resumen = [
+    ['Lina Toro × JoinsClee — Cuadre Financiero'],
+    [`Generado: ${new Date().toLocaleString('es-CO')}`],
+    [`Período: ${state.period === 'all' ? 'Acumulado total' : monthLabel(state.period)}`],
+    [],
+    ['INDICADORES PRINCIPALES'],
+    ['Ingresos totales (USD)', a.incomeUSD],
+    ['Ingresos totales (COP)', a.incomeCOP],
+    ['Gastos totales (COP)', a.totalExp],
+    ['Beneficio neto (COP)', a.profit],
+    ['Margen %', a.margin],
+    [],
+    ['REPARTO DEL BENEFICIO'],
+    ['Parte','% reparto','Beneficio (COP)','Reembolso gastos','TOTAL a recibir'],
+    ['Lina Toro (SAVIAS)', a.linaShare, a.linaProfit, a.linaExp, a.linaTotal],
+    ['JoinsClee', a.agencyShare, a.agencyProfit, a.agencyExp, a.agencyTotal],
+    ['TOTAL', 1, a.profit, a.totalExp, a.profit + a.totalExp],
+    [],
+    ['PARÁMETROS'],
+    ['TRM (COP por USD)', trm],
+    ['Fuente TRM', state.params.trm_source || ''],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumen), 'Resumen');
+
+  const ingHead = [['Fecha','Concepto','Fuente','USD enviado','COP esperado (TRM)','COP real banco','Spread','Notas']];
+  const ing = state.revenues.map(r => {
+    const usd = Number(r.usd_amount)||0;
+    const copExp = usd * trm;
+    const copReal = Number(r.cop_real)||0;
+    return [r.paid_at, r.concept||'', r.source||'', usd, copExp, copReal||'', copReal? (copReal - copExp) : '', r.notes||''];
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...ingHead, ...ing]), 'Ingresos');
+
+  const adHead = [['Fecha','ID transacción','USD cobrado','COP esperado (TRM)','Estado','Notas']];
+  const ad = state.adCharges.map(a => {
+    const usd = Number(a.usd_amount)||0;
+    return [a.charged_at, a.transaction_id||'', usd, usd*trm, a.status||'cobrado', a.notes||''];
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...adHead, ...ad]), 'Pauta Meta');
+
+  for(const who of [PARTNER_LINA, PARTNER_AGENCY]){
+    const rows = state.expenses.filter(e => e.paid_by === who);
+    const head = [['Fecha','Concepto','Categoría','Frecuencia','Meses','USD unit','COP unit','Total COP','Notas']];
+    const body = rows.map(e => {
+      const meses = Number(e.months_billed)||1;
+      const total = (e.cop_amount && Number(e.cop_amount)>0)
+        ? Number(e.cop_amount) * meses
+        : (Number(e.usd_amount)||0) * trm * meses;
+      return [e.spent_at, e.concept, e.category||'', e.frequency||'', meses, e.usd_amount||'', e.cop_amount||'', total, e.notes||''];
+    });
+    const sheetName = who === PARTNER_LINA ? 'Gastos Lina' : 'Gastos JoinsClee';
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...head, ...body]), sheetName);
+  }
+
+  const liq = [
+    ['LIQUIDACIÓN'],
+    [],
+    ['INGRESOS'], ['Total COP', a.incomeCOP],
+    [],
+    ['GASTOS'], ['Lina', a.linaExp], ['JoinsClee', a.agencyExp], ['TOTAL', a.totalExp],
+    [],
+    ['BENEFICIO NETO', a.profit], ['Margen %', a.margin],
+    [],
+    ['REPARTO'],
+    ['Parte','%','Utilidad','Reembolso','Total'],
+    ['Lina Toro (SAVIAS)', a.linaShare, a.linaProfit, a.linaExp, a.linaTotal],
+    ['JoinsClee', a.agencyShare, a.agencyProfit, a.agencyExp, a.agencyTotal],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(liq), 'Liquidación');
+
+  XLSX.writeFile(wb, `Cuadre_LinaToro_${todayISO()}.xlsx`);
+  toast('Excel descargado');
+}
+
+/* ============================================================
+ *  EXPORT · PDF
+ * ============================================================ */
+function exportPDF(){
+  const a = aggregate();
+  const trm = state.params.trm_cop_per_usd;
+  const period = state.period === 'all' ? 'Acumulado total' : monthLabel(state.period);
+
+  const html = `
+    <div style="font-family:'Inter',sans-serif;padding:40px;background:#fafaf7;color:#1a1a1a;width:800px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:24px;border-bottom:2px solid #9caf88">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700">Informe Financiero</div>
+          <div style="color:#6b7164;font-size:14px;margin-top:4px">Lina Toro (SAVIAS) × JoinsClee</div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:#6b7164">
+          <div><b>Período:</b> ${period}</div>
+          <div><b>Generado:</b> ${new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})}</div>
+          <div><b>TRM:</b> ${trm.toFixed(2)} COP/USD</div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:12px">Resumen</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="padding:18px;background:#e6efde;border-radius:12px;border-left:4px solid #6b8e5a">
+            <div style="font-size:11px;text-transform:uppercase;color:#6b8e5a;font-weight:700">Ingresos</div>
+            <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-top:6px">${fmtCOP(a.incomeCOP)}</div>
+            <div style="font-size:12px;color:#6b7164">${fmtUSD(a.incomeUSD)} en USD</div>
+          </div>
+          <div style="padding:18px;background:#fbeaea;border-radius:12px;border-left:4px solid #b85c5c">
+            <div style="font-size:11px;text-transform:uppercase;color:#b85c5c;font-weight:700">Gastos</div>
+            <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-top:6px">${fmtCOP(a.totalExp)}</div>
+            <div style="font-size:12px;color:#6b7164">Lina ${fmtCOP(a.linaExp)} · JoinsClee ${fmtCOP(a.agencyExp)}</div>
+          </div>
+          <div style="padding:18px;background:#e8ede1;border-radius:12px;border-left:4px solid #7d9169;grid-column:span 2">
+            <div style="font-size:11px;text-transform:uppercase;color:#7d9169;font-weight:700">Beneficio neto · ${fmtPct(a.margin)} de margen</div>
+            <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;margin-top:4px">${fmtCOP(a.profit)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:12px">Reparto del beneficio</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#e8ede1">
+              <th style="padding:10px;text-align:left;border-bottom:1px solid #dfe3d8">Parte</th>
+              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">%</th>
+              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">Utilidad</th>
+              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">Reembolso</th>
+              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">Total a recibir</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:10px;border-bottom:1px solid #dfe3d8"><b>Lina Toro (SAVIAS)</b></td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${Math.round(a.linaShare*100)}%</td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.linaProfit)}</td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.linaExp)}</td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8;background:#e6efde;font-weight:700">${fmtCOP(a.linaTotal)}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px;border-bottom:1px solid #dfe3d8"><b>JoinsClee</b></td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${Math.round(a.agencyShare*100)}%</td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.agencyProfit)}</td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.agencyExp)}</td>
+              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8;background:#fbf2e3;font-weight:700">${fmtCOP(a.agencyTotal)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:28px">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:12px">Detalle de gastos</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#5c87b8;text-transform:uppercase;margin-bottom:6px">Gastos asumidos por Lina</div>
+            ${renderExpensesListPDF(PARTNER_LINA, trm)}
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#c89858;text-transform:uppercase;margin-bottom:6px">Gastos asumidos por JoinsClee</div>
+            ${renderExpensesListPDF(PARTNER_AGENCY, trm)}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:36px;padding-top:18px;border-top:1px solid #dfe3d8;font-size:11px;color:#6b7164;text-align:center">
+        JoinsClee · Dashboard financiero · ${new Date().getFullYear()}
+      </div>
+    </div>`;
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+  html2pdf().from(wrap.firstElementChild).set({
+    margin: 0, filename: `Informe_LinaToro_${todayISO()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#fafaf7' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).save().then(() => {
+    wrap.remove();
+    toast('PDF generado');
+  });
+}
+
+function renderExpensesListPDF(paidBy, trm){
+  const rows = filterByPeriod(state.expenses, 'spent_at').filter(e => e.paid_by === paidBy);
+  if(!rows.length) return '<div style="color:#6b7164;font-size:13px;padding:8px">Sin gastos</div>';
+  return rows.map(e => {
+    const meses = Number(e.months_billed)||1;
+    const total = (e.cop_amount && Number(e.cop_amount)>0)
+      ? Number(e.cop_amount) * meses
+      : (Number(e.usd_amount)||0) * trm * meses;
+    return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #dfe3d8;font-size:12px">
+      <span>${e.concept}${meses>1?` <small style="color:#6b7164">×${meses}</small>`:''}</span>
+      <span style="font-weight:600">${fmtCOP(total)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+ *  INIT
+ * ============================================================ */
+async function init(){
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    state.tab = t.dataset.tab; renderTabs();
+  }));
+
+  document.getElementById('periodFilter').addEventListener('change', e => {
+    state.period = e.target.value;
+    document.getElementById('periodPill').textContent = state.period === 'all' ? 'Acumulado' : monthLabel(state.period);
+    renderKpis(); renderCharts(); renderTabs();
+  });
+
+  document.getElementById('exportXlsxBtn').addEventListener('click', exportExcel);
+  document.getElementById('exportPdfBtn').addEventListener('click', exportPDF);
+
+  bindParamInputs();
+
+  try {
+    await loadAll();
+  } catch(err){
+    console.error(err);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

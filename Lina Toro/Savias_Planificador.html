@@ -1,0 +1,4038 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1A1F1A">
+    <meta name="description" content="Planificador estratégico Savias 2026 — Sistema CLEE para Lina Toro">
+    <title>Savias · Planificador 2026 · Lina Toro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            /* Paleta Savias */
+            --bg-deep: #FAFAF7;
+            --bg-panel: #FFFFFF;
+            --bg-panel-soft: #F4F2EC;
+            --bg-row: #FFFFFF;
+            --bg-row-alt: #F9F8F4;
+            --bg-dark: #1A1F1A;
+
+            --sage: #9CAF88;
+            --sage-deep: #6F8264;
+            --sage-light: #BFCEAD;
+            --sage-soft: rgba(156, 175, 136, 0.12);
+            --sage-border: rgba(156, 175, 136, 0.32);
+
+            --gold: #B8945A;
+            --gold-light: #D4B27D;
+            --gold-soft: rgba(184, 148, 90, 0.1);
+
+            --text-dark: #1A1F1A;
+            --text-mid: #4A524A;
+            --text-dim: #8A8F86;
+            --text-very-dim: #B8BCB6;
+
+            --q1-red: #C0524A;
+            --q1-red-soft: #FBEEED;
+            --q2-sage: #6F8264;
+            --q2-sage-soft: #EDF1E7;
+            --q3-amber: #C9913D;
+            --q3-amber-soft: #FAF1E2;
+            --q4-grey: #8A8F86;
+            --q4-grey-soft: #ECEDEB;
+
+            --status-todo: #ECEDEB;
+            --status-doing: #DCE8E2;
+            --status-blocked: #FBEEED;
+            --status-done: #E0EBD6;
+            --status-delegated: #F5E9D6;
+
+            /* Layout tokens */
+            --sidebar-width: 240px;
+            --topbar-height: 56px;
+            --safe-bottom: env(safe-area-inset-bottom, 0);
+            --safe-top: env(safe-area-inset-top, 0);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            background: var(--bg-deep);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        img,
+        svg {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* ───────────────────────────────────────────────
+           UTIL: force-full-width
+           Rompe contenedores con max-width al subir a
+           GoHighLevel para que los fondos abarquen 100vw.
+           El cálculo "calc(50% - 50vw)" funciona tanto en
+           contenedores limitados (GHL) como en full-width.
+           ─────────────────────────────────────────────── */
+        .force-full-width {
+            position: relative;
+            width: 100vw;
+            max-width: 100vw;
+            margin-left: calc(50% - 50vw);
+            margin-right: calc(50% - 50vw);
+        }
+
+        ::selection {
+            background: var(--sage);
+            color: #fff;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-panel-soft);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--sage);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--sage-deep);
+        }
+
+        /* Layout */
+        .app {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Mobile topbar */
+        .mobile-topbar {
+            display: none;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: var(--bg-dark);
+            color: #FAFAF7;
+            padding: calc(var(--safe-top) + 10px) 14px 10px;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            grid-column: 1 / -1;
+        }
+
+        .mobile-topbar h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--sage-light);
+            letter-spacing: 0.4px;
+            line-height: 1;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .mobile-topbar .menu-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 0;
+            transition: background 0.15s;
+        }
+
+        .mobile-topbar .menu-btn:hover,
+        .mobile-topbar .menu-btn:focus-visible {
+            background: rgba(255, 255, 255, 0.16);
+            outline: none;
+        }
+
+        .mobile-topbar .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Sidebar backdrop (móvil) */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 31, 26, 0.55);
+            backdrop-filter: blur(2px);
+            z-index: 60;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar-backdrop.open {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--bg-dark);
+            color: #FAFAF7;
+            padding: 24px 16px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transition: transform 0.25s ease;
+            z-index: 70;
+        }
+
+        .brand {
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .brand h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--sage-light);
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+        }
+
+        .brand .tag {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .brand .lema {
+            font-size: 10px;
+            color: var(--gold-light);
+            margin-top: 8px;
+            font-style: italic;
+            font-family: 'Fraunces', serif;
+        }
+
+        .nav-section {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.4);
+            margin: 18px 0 8px 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            margin-bottom: 2px;
+        }
+
+        .nav-item:hover {
+            background: rgba(156, 175, 136, 0.15);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: var(--sage);
+            color: #fff;
+        }
+
+        .nav-item .icon {
+            font-size: 14px;
+            width: 18px;
+            text-align: center;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .nav-item.active .badge {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .sidebar-footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Main */
+        .main {
+            padding: 28px 36px calc(28px + var(--safe-bottom));
+            max-width: 100%;
+            min-width: 0;
+            overflow-x: hidden;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--sage-border);
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .page-header > div:first-child {
+            min-width: 0;
+            flex: 1 1 240px;
+        }
+
+        .page-header h2 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(22px, 4vw, 28px);
+            font-weight: 600;
+            color: var(--text-dark);
+            letter-spacing: 0.2px;
+            line-height: 1.15;
+        }
+
+        .page-header p {
+            font-size: 13px;
+            color: var(--text-mid);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        .page-header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 10px;
+            padding: 22px;
+            margin-bottom: 18px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .panel-title {
+            font-family: 'Fraunces', serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-title::before {
+            content: '';
+            width: 24px;
+            height: 2px;
+            background: var(--gold);
+        }
+
+        /* KPI cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .kpi-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 8px;
+            padding: 18px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card.q1 {
+            background: var(--q1-red-soft);
+            border-color: var(--q1-red);
+        }
+
+        .kpi-card.q2 {
+            background: var(--q2-sage-soft);
+            border-color: var(--q2-sage);
+        }
+
+        .kpi-card.q3 {
+            background: var(--q3-amber-soft);
+            border-color: var(--q3-amber);
+        }
+
+        .kpi-card.q4 {
+            background: var(--q4-grey-soft);
+            border-color: var(--q4-grey);
+        }
+
+        .kpi-card.gold {
+            background: var(--gold-soft);
+            border-color: var(--gold);
+        }
+
+        .kpi-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.4px;
+            color: var(--text-mid);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .kpi-value {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(26px, 5vw, 36px);
+            font-weight: 600;
+            line-height: 1;
+            color: var(--text-dark);
+            word-break: break-word;
+        }
+
+        .kpi-card.q1 .kpi-value {
+            color: var(--q1-red);
+        }
+
+        .kpi-card.q2 .kpi-value {
+            color: var(--q2-sage);
+        }
+
+        .kpi-card.q3 .kpi-value {
+            color: var(--q3-amber);
+        }
+
+        .kpi-card.q4 .kpi-value {
+            color: var(--q4-grey);
+        }
+
+        .kpi-card.gold .kpi-value {
+            color: var(--gold);
+        }
+
+        .kpi-sub {
+            font-size: 11px;
+            color: var(--text-mid);
+            margin-top: 6px;
+        }
+
+        /* Matrix */
+        .matrix {
+            display: grid;
+            grid-template-columns: 60px 1fr 1fr;
+            grid-template-rows: 36px 1fr 1fr;
+            gap: 6px;
+        }
+
+        .matrix-stack {
+            display: none;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .matrix-stack .matrix-cell {
+            min-height: auto;
+        }
+
+        .matrix-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-mid);
+        }
+
+        .matrix-label.vert {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+        }
+
+        .matrix-cell {
+            border-radius: 8px;
+            padding: 18px;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 1px solid;
+        }
+
+        .matrix-q1 {
+            background: var(--q1-red-soft);
+            border-color: var(--q1-red);
+        }
+
+        .matrix-q2 {
+            background: var(--q2-sage-soft);
+            border-color: var(--q2-sage);
+        }
+
+        .matrix-q3 {
+            background: var(--q3-amber-soft);
+            border-color: var(--q3-amber);
+        }
+
+        .matrix-q4 {
+            background: var(--q4-grey-soft);
+            border-color: var(--q4-grey);
+        }
+
+        .matrix-cell h4 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(16px, 2.8vw, 18px);
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+
+        .matrix-q1 h4 {
+            color: var(--q1-red);
+        }
+
+        .matrix-q2 h4 {
+            color: var(--q2-sage);
+        }
+
+        .matrix-q3 h4 {
+            color: var(--q3-amber);
+        }
+
+        .matrix-q4 h4 {
+            color: var(--q4-grey);
+        }
+
+        .matrix-cell .action {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-mid);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .matrix-cell .desc {
+            font-size: 12px;
+            color: var(--text-mid);
+            line-height: 1.5;
+        }
+
+        .matrix-cell .count {
+            font-family: 'Fraunces', serif;
+            font-size: 24px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .matrix-q1 .count {
+            color: var(--q1-red);
+        }
+
+        .matrix-q2 .count {
+            color: var(--q2-sage);
+        }
+
+        .matrix-q3 .count {
+            color: var(--q3-amber);
+        }
+
+        .matrix-q4 .count {
+            color: var(--q4-grey);
+        }
+
+        /* Tables */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12.5px;
+        }
+
+        .table-scroll table {
+            min-width: 720px;
+        }
+
+        th {
+            background: var(--bg-panel-soft);
+            color: var(--text-mid);
+            font-weight: 600;
+            text-align: left;
+            padding: 11px 12px;
+            border-bottom: 1px solid var(--sage-border);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        td {
+            padding: 11px 12px;
+            border-bottom: 1px solid rgba(156, 175, 136, 0.12);
+            vertical-align: middle;
+            word-break: break-word;
+        }
+
+        tbody tr {
+            transition: background 0.1s;
+        }
+
+        tbody tr:hover {
+            background: var(--sage-soft);
+        }
+
+        .area-row.alt {
+            background: var(--bg-row-alt);
+        }
+
+        /* Pills */
+        .quad-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-align: center;
+            min-width: 32px;
+        }
+
+        .quad-pill.q1 {
+            background: var(--q1-red);
+            color: #fff;
+        }
+
+        .quad-pill.q2 {
+            background: var(--q2-sage);
+            color: #fff;
+        }
+
+        .quad-pill.q3 {
+            background: var(--q3-amber);
+            color: #fff;
+        }
+
+        .quad-pill.q4 {
+            background: var(--q4-grey);
+            color: #fff;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .status-Pendiente {
+            background: var(--status-todo);
+            color: var(--text-dark);
+        }
+
+        .status-EnProgreso {
+            background: var(--status-doing);
+            color: var(--q2-sage);
+        }
+
+        .status-Bloqueado {
+            background: var(--status-blocked);
+            color: var(--q1-red);
+        }
+
+        .status-Hecho {
+            background: var(--status-done);
+            color: var(--q2-sage);
+            font-weight: 600;
+        }
+
+        .status-Delegado {
+            background: var(--status-delegated);
+            color: var(--q3-amber);
+        }
+
+        .plan-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .plan-Standard {
+            background: var(--sage-soft);
+            color: var(--sage-deep);
+            border: 1px solid var(--sage-border);
+        }
+
+        .plan-Premium {
+            background: var(--gold-soft);
+            color: var(--gold);
+            border: 1px solid var(--gold);
+        }
+
+        .plan-VIP {
+            background: #1A1F1A;
+            color: var(--gold-light);
+        }
+
+        .plan-Todos {
+            background: var(--bg-panel-soft);
+            color: var(--text-mid);
+            border: 1px solid var(--sage-border);
+        }
+
+        .plan-General {
+            background: var(--bg-panel-soft);
+            color: var(--text-mid);
+            border: 1px solid var(--sage-border);
+        }
+
+        /* Form controls */
+        select,
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        textarea {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            color: var(--text-dark);
+            padding: 7px 10px;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 12.5px;
+            width: 100%;
+        }
+
+        select:focus,
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--sage);
+            box-shadow: 0 0 0 3px var(--sage-soft);
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--sage);
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        input[type="range"] {
+            accent-color: var(--sage);
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--bg-panel);
+            color: var(--text-dark);
+            border: 1px solid var(--sage-border);
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--sage-soft);
+            border-color: var(--sage);
+        }
+
+        .btn-primary {
+            background: var(--sage);
+            color: #fff;
+            border-color: var(--sage);
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            background: var(--sage-deep);
+            border-color: var(--sage-deep);
+        }
+
+        .btn-gold {
+            background: var(--gold);
+            color: #fff;
+            border-color: var(--gold);
+            font-weight: 600;
+        }
+
+        .btn-gold:hover {
+            background: var(--gold-light);
+            border-color: var(--gold-light);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border-color: transparent;
+            color: var(--text-mid);
+        }
+
+        .btn-ghost:hover {
+            background: var(--sage-soft);
+            color: var(--text-dark);
+        }
+
+        .btn-danger {
+            color: var(--q1-red);
+            border-color: rgba(192, 82, 74, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: var(--q1-red-soft);
+            border-color: var(--q1-red);
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            background: var(--bg-panel);
+            border-radius: 8px;
+            border: 1px solid var(--sage-border);
+        }
+
+        .filters label {
+            font-size: 10px;
+            color: var(--text-mid);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filters select,
+        .filters input {
+            width: auto;
+            min-width: 130px;
+            max-width: 100%;
+        }
+
+        .filters .search {
+            min-width: 220px;
+            flex: 1 1 220px;
+        }
+
+        .filters-spacer {
+            flex: 1;
+        }
+
+        /* View toggle */
+        .view-toggle {
+            display: inline-flex;
+            background: var(--bg-panel-soft);
+            border-radius: 5px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .view-toggle button {
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .view-toggle button.active {
+            background: var(--bg-panel);
+            color: var(--text-dark);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Progress */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-panel-soft);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--sage);
+            transition: width 0.3s;
+        }
+
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .progress-row span {
+            min-width: 36px;
+            color: var(--sage-deep);
+            font-weight: 600;
+        }
+
+        /* Alert cards */
+        .alert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .alert-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-left: 3px solid var(--sage);
+            border-radius: 6px;
+            padding: 14px;
+        }
+
+        .alert-card.danger {
+            border-left-color: var(--q1-red);
+        }
+
+        .alert-card.warning {
+            border-left-color: var(--q3-amber);
+        }
+
+        .alert-card.success {
+            border-left-color: var(--q2-sage);
+        }
+
+        .alert-title {
+            font-size: 11px;
+            color: var(--text-mid);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .alert-value {
+            font-family: 'Fraunces', serif;
+            font-size: 28px;
+            color: var(--text-dark);
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .alert-card.danger .alert-value {
+            color: var(--q1-red);
+        }
+
+        .alert-card.warning .alert-value {
+            color: var(--q3-amber);
+        }
+
+        .alert-card.success .alert-value {
+            color: var(--q2-sage);
+        }
+
+        .alert-hint {
+            font-size: 11px;
+            color: var(--text-mid);
+            font-style: italic;
+            margin-top: 6px;
+        }
+
+        /* Kanban */
+        .kanban {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .kanban-col {
+            background: var(--bg-panel-soft);
+            border-radius: 8px;
+            padding: 14px;
+            min-height: 200px;
+        }
+
+        .kanban-col.q1 {
+            background: var(--q1-red-soft);
+        }
+
+        .kanban-col.q2 {
+            background: var(--q2-sage-soft);
+        }
+
+        .kanban-col.q3 {
+            background: var(--q3-amber-soft);
+        }
+
+        .kanban-col.q4 {
+            background: var(--q4-grey-soft);
+        }
+
+        .kanban-col h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 14px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .kanban-col.q1 h3 {
+            color: var(--q1-red);
+        }
+
+        .kanban-col.q2 h3 {
+            color: var(--q2-sage);
+        }
+
+        .kanban-col.q3 h3 {
+            color: var(--q3-amber);
+        }
+
+        .kanban-col.q4 h3 {
+            color: var(--q4-grey);
+        }
+
+        .kanban-col .count {
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-dark);
+        }
+
+        .kanban-col .action {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-mid);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .kanban-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 6px;
+            padding: 11px 12px;
+            margin-bottom: 8px;
+            font-size: 12.5px;
+            line-height: 1.4;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .kanban-card:hover {
+            border-color: var(--sage);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        .kanban-card .title {
+            color: var(--text-dark);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .kanban-card .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            font-size: 10px;
+            color: var(--text-mid);
+        }
+
+        .kanban-card .meta .tag {
+            background: var(--bg-panel-soft);
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 8px 0 8px 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--sage-border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            background: var(--bg-panel);
+            border-radius: 6px;
+            border: 1px solid var(--sage-border);
+            border-left: 3px solid var(--sage);
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -28px;
+            top: 18px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--sage);
+            border: 2px solid var(--bg-deep);
+        }
+
+        .timeline-item.lanzamiento {
+            border-left-color: var(--q1-red);
+        }
+
+        .timeline-item.lanzamiento::before {
+            background: var(--q1-red);
+        }
+
+        .timeline-item.directo {
+            border-left-color: var(--gold);
+        }
+
+        .timeline-item.directo::before {
+            background: var(--gold);
+        }
+
+        .timeline-item.podcast {
+            border-left-color: var(--q3-amber);
+        }
+
+        .timeline-item.podcast::before {
+            background: var(--q3-amber);
+        }
+
+        .timeline-item.taller {
+            border-left-color: var(--sage-deep);
+        }
+
+        .timeline-item.taller::before {
+            background: var(--sage-deep);
+        }
+
+        .timeline-item.evento {
+            border-left-color: var(--gold);
+        }
+
+        .timeline-item.evento::before {
+            background: var(--gold);
+        }
+
+        .timeline-date {
+            font-size: 10px;
+            color: var(--sage-deep);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .timeline-title {
+            font-size: 14px;
+            color: var(--text-dark);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .timeline-meta {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-mid);
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        /* ───────────────────────────────────────────────
+           CALENDARIO MENSUAL
+           ─────────────────────────────────────────────── */
+        .cal-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+            padding: 12px 14px;
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 8px;
+        }
+
+        .cal-nav {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .cal-nav button {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            color: var(--text-dark);
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.15s;
+        }
+
+        .cal-nav button:hover {
+            background: var(--sage-soft);
+            border-color: var(--sage);
+        }
+
+        .cal-month-label {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(18px, 3vw, 22px);
+            font-weight: 600;
+            color: var(--text-dark);
+            text-transform: capitalize;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .cal-view-toggle {
+            display: inline-flex;
+            background: var(--bg-panel-soft);
+            border-radius: 5px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .cal-view-toggle button {
+            background: transparent;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-mid);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .cal-view-toggle button.active {
+            background: var(--bg-panel);
+            color: var(--text-dark);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        .cal-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 11px;
+            color: var(--text-mid);
+        }
+
+        .cal-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .cal-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .cal-legend-dot.lanzamiento { background: var(--q1-red); }
+        .cal-legend-dot.directo { background: var(--gold); }
+        .cal-legend-dot.podcast { background: var(--q3-amber); }
+        .cal-legend-dot.taller { background: var(--sage-deep); }
+        .cal-legend-dot.evento { background: var(--gold-light); }
+        .cal-legend-dot.otro { background: var(--text-dim); }
+
+        .cal-grid-wrap {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .cal-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: var(--bg-panel-soft);
+            border-bottom: 1px solid var(--sage-border);
+        }
+
+        .cal-weekday {
+            padding: 10px 8px;
+            text-align: center;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            color: var(--text-mid);
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(110px, 1fr);
+        }
+
+        .cal-cell {
+            border-right: 1px solid rgba(156, 175, 136, 0.18);
+            border-bottom: 1px solid rgba(156, 175, 136, 0.18);
+            padding: 6px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: var(--bg-panel);
+            transition: background 0.15s;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .cal-cell:nth-child(7n) {
+            border-right: none;
+        }
+
+        .cal-cell:hover {
+            background: var(--sage-soft);
+        }
+
+        .cal-cell.is-other-month {
+            background: var(--bg-panel-soft);
+            opacity: 0.6;
+        }
+
+        .cal-cell.is-weekend:not(.is-other-month) {
+            background: rgba(244, 242, 236, 0.5);
+        }
+
+        .cal-cell.is-today .cal-day-num {
+            background: var(--sage);
+            color: #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .cal-day-num {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            min-height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 4px;
+        }
+
+        .cal-cell.is-other-month .cal-day-num {
+            color: var(--text-very-dim);
+        }
+
+        .cal-events {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .cal-event {
+            font-size: 10.5px;
+            padding: 3px 6px;
+            border-radius: 3px;
+            background: var(--sage-soft);
+            color: var(--sage-deep);
+            border-left: 3px solid var(--sage);
+            cursor: pointer;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+
+        .cal-event:hover {
+            transform: translateX(1px);
+            filter: brightness(0.96);
+        }
+
+        .cal-event.lanzamiento {
+            background: var(--q1-red-soft);
+            color: var(--q1-red);
+            border-left-color: var(--q1-red);
+        }
+
+        .cal-event.directo {
+            background: var(--gold-soft);
+            color: var(--gold);
+            border-left-color: var(--gold);
+        }
+
+        .cal-event.podcast {
+            background: var(--q3-amber-soft);
+            color: var(--q3-amber);
+            border-left-color: var(--q3-amber);
+        }
+
+        .cal-event.taller {
+            background: var(--q2-sage-soft);
+            color: var(--sage-deep);
+            border-left-color: var(--sage-deep);
+        }
+
+        .cal-event.evento {
+            background: var(--gold-soft);
+            color: var(--gold);
+            border-left-color: var(--gold-light);
+        }
+
+        .cal-event.otro {
+            background: var(--bg-panel-soft);
+            color: var(--text-mid);
+            border-left-color: var(--text-dim);
+        }
+
+        .cal-event.is-range {
+            border-radius: 0 3px 3px 0;
+        }
+
+        .cal-more {
+            font-size: 10px;
+            color: var(--sage-deep);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 2px 6px;
+            text-decoration: underline;
+        }
+
+        /* Vista agenda mobile/secundaria */
+        .cal-agenda {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .cal-agenda-day {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: grid;
+            grid-template-columns: 56px 1fr;
+            gap: 12px;
+            align-items: start;
+        }
+
+        .cal-agenda-day.is-today {
+            border-color: var(--sage);
+            box-shadow: 0 0 0 2px var(--sage-soft);
+        }
+
+        .cal-agenda-date {
+            text-align: center;
+            border-right: 1px solid var(--sage-border);
+            padding-right: 10px;
+        }
+
+        .cal-agenda-date .num {
+            font-family: 'Fraunces', serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--sage-deep);
+            line-height: 1;
+        }
+
+        .cal-agenda-date .month {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-mid);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .cal-agenda-events {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .cal-agenda-events .cal-event {
+            white-space: normal;
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+
+        .cal-empty-month {
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-mid);
+            font-style: italic;
+        }
+
+        /* Modal detalle hito */
+        .hito-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .hito-detail-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            align-self: flex-start;
+        }
+
+        .hito-detail-row {
+            display: flex;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(156, 175, 136, 0.15);
+            font-size: 13px;
+        }
+
+        .hito-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .hito-detail-row .label {
+            color: var(--text-mid);
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 1px;
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .hito-detail-row .value {
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        @media (max-width: 900px) {
+            .cal-grid {
+                grid-auto-rows: minmax(80px, auto);
+            }
+
+            .cal-cell {
+                padding: 4px;
+            }
+
+            .cal-event {
+                font-size: 9.5px;
+                padding: 2px 4px;
+            }
+
+            .cal-day-num {
+                font-size: 11px;
+            }
+
+            .cal-toolbar {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .cal-weekday {
+                font-size: 9px;
+                padding: 8px 2px;
+                letter-spacing: 0.5px;
+            }
+
+            .cal-grid {
+                grid-auto-rows: minmax(64px, auto);
+            }
+
+            .cal-event {
+                font-size: 0;
+                padding: 0;
+                height: 5px;
+                border-radius: 2px;
+                border-left: none;
+                margin: 1px 0;
+            }
+
+            .cal-event::before {
+                content: '';
+                display: block;
+                height: 100%;
+            }
+
+            .cal-cell.is-today .cal-day-num {
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
+            }
+
+            .hito-detail-row {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .hito-detail-row .label {
+                min-width: 0;
+            }
+        }
+
+        /* Hoy view */
+        .today-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .today-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 8px;
+            padding: 18px;
+        }
+
+        .today-card.priority {
+            background: var(--q1-red-soft);
+            border-color: var(--q1-red);
+        }
+
+        .today-card.gold {
+            background: var(--gold-soft);
+            border-color: var(--gold);
+        }
+
+        .today-card h4 {
+            font-family: 'Fraunces', serif;
+            font-size: 15px;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+        }
+
+        .today-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .today-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(156, 175, 136, 0.15);
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .today-list li:last-child {
+            border-bottom: none;
+        }
+
+        .today-list .meta {
+            font-size: 10px;
+            color: var(--text-mid);
+        }
+
+        /* Welcome */
+        .welcome {
+            text-align: center;
+            padding: 32px 20px 16px;
+        }
+
+        .welcome h1 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(28px, 5.5vw, 44px);
+            font-weight: 600;
+            color: var(--text-dark);
+            letter-spacing: 0.3px;
+            margin-bottom: 8px;
+            line-height: 1.1;
+        }
+
+        .welcome h1 em {
+            color: var(--sage-deep);
+            font-style: italic;
+        }
+
+        .welcome .subtitle {
+            font-size: clamp(13px, 2.4vw, 16px);
+            color: var(--text-mid);
+            margin-bottom: 6px;
+        }
+
+        .welcome .lema {
+            font-size: clamp(12px, 2.2vw, 14px);
+            color: var(--gold);
+            font-style: italic;
+            margin-bottom: 28px;
+            font-family: 'Fraunces', serif;
+            padding: 0 8px;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+        }
+
+        .step-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 8px;
+            padding: 18px;
+            text-align: left;
+        }
+
+        .step-card .num {
+            font-family: 'Fraunces', serif;
+            font-size: 24px;
+            color: var(--sage-deep);
+            font-weight: 600;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .step-card p {
+            font-size: 13px;
+            color: var(--text-mid);
+            line-height: 1.55;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(26, 31, 26, 0.5);
+            backdrop-filter: blur(3px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-backdrop.open {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-panel);
+            border: 1px solid var(--sage-border);
+            border-radius: 10px;
+            padding: 24px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-actions {
+            flex-wrap: wrap;
+        }
+
+        .modal h3 {
+            font-family: 'Fraunces', serif;
+            color: var(--text-dark);
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--sage-border);
+        }
+
+        /* Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .form-grid label {
+            font-size: 11px;
+            color: var(--text-mid);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-mid);
+            font-style: italic;
+            font-size: 13px;
+        }
+
+        /* Quote footer */
+        .quote-footer {
+            margin-top: 24px;
+            padding: 24px;
+            text-align: center;
+            background: var(--bg-dark);
+            border-radius: 8px;
+        }
+
+        .quote-footer p {
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            color: var(--sage-light);
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-mid);
+            font-style: italic;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--bg-dark);
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            z-index: 200;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            border-left: 3px solid var(--sage);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        /* ───────────────────────────────────────────────
+           RESPONSIVE
+           ─────────────────────────────────────────────── */
+
+        /* Tablets grandes / laptops pequeñas */
+        @media (max-width: 1200px) {
+            .main {
+                padding: 24px 24px calc(24px + var(--safe-bottom));
+            }
+
+            .kanban {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Tablet (landscape) */
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 200px;
+            }
+
+            .sidebar {
+                padding: 18px 12px;
+            }
+
+            .nav-item {
+                font-size: 12.5px;
+                padding: 9px 10px;
+            }
+
+            .brand h1 {
+                font-size: 20px;
+            }
+        }
+
+        /* Tablet vertical / móvil grande — drawer */
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
+
+            .mobile-topbar {
+                display: flex;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: min(280px, 86vw);
+                height: 100vh;
+                height: 100dvh;
+                transform: translateX(-100%);
+                box-shadow: 6px 0 24px rgba(0, 0, 0, 0.25);
+                padding-top: calc(var(--safe-top) + 24px);
+                padding-bottom: calc(var(--safe-bottom) + 24px);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                padding: 18px 16px calc(28px + var(--safe-bottom));
+                grid-column: 1 / -1;
+            }
+
+            .matrix {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                gap: 10px;
+            }
+
+            .matrix-label,
+            .matrix-label.vert {
+                display: none;
+            }
+
+            .matrix .matrix-cell {
+                grid-column: 1 / -1;
+            }
+
+            .kanban {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .today-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome {
+                padding: 20px 12px 12px;
+            }
+
+            .panel {
+                padding: 18px 16px;
+            }
+
+            .filters {
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .filters select,
+            .filters input,
+            .filters .search {
+                width: 100%;
+                min-width: 0;
+                flex: 1 1 100%;
+            }
+
+            .filters .btn {
+                width: 100%;
+            }
+
+            .page-header-actions {
+                width: 100%;
+            }
+
+            .page-header-actions .btn,
+            .page-header-actions .view-toggle {
+                flex: 1 1 auto;
+            }
+
+            .view-toggle button {
+                flex: 1;
+            }
+        }
+
+        /* Móvil */
+        @media (max-width: 640px) {
+            html, body {
+                font-size: 13.5px;
+            }
+
+            .main {
+                padding: 14px 12px calc(24px + var(--safe-bottom));
+            }
+
+            .panel {
+                padding: 16px 14px;
+                margin-bottom: 14px;
+                border-radius: 8px;
+            }
+
+            .panel-title {
+                font-size: 13px;
+                letter-spacing: 1px;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .kpi-card {
+                padding: 14px;
+            }
+
+            .kpi-label {
+                font-size: 9px;
+            }
+
+            .alert-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .kanban {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .timeline {
+                padding-left: 26px;
+            }
+
+            .timeline-item::before {
+                left: -22px;
+                width: 10px;
+                height: 10px;
+            }
+
+            table {
+                font-size: 11.5px;
+            }
+
+            th,
+            td {
+                padding: 8px 8px;
+            }
+
+            th {
+                font-size: 9.5px;
+                letter-spacing: 0.4px;
+            }
+
+            .modal-backdrop {
+                padding: 12px;
+                align-items: flex-end;
+            }
+
+            .modal {
+                max-height: 92dvh;
+                padding: 18px;
+                border-radius: 12px 12px 8px 8px;
+            }
+
+            .modal h3 {
+                font-size: 18px;
+            }
+
+            .modal-actions {
+                gap: 8px;
+            }
+
+            .modal-actions .btn {
+                flex: 1 1 calc(50% - 4px);
+                min-width: 0;
+            }
+
+            .modal-actions > div[style*="flex:1"] {
+                display: none;
+            }
+
+            .toast {
+                left: 12px;
+                right: 12px;
+                bottom: calc(12px + var(--safe-bottom));
+                transform: translateY(120%);
+            }
+
+            .toast.show {
+                transform: translateY(0);
+            }
+
+            .quote-footer {
+                padding: 20px 16px;
+            }
+
+            .quote-footer p {
+                font-size: 14px;
+            }
+
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Móvil pequeño */
+        @media (max-width: 420px) {
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .kpi-card {
+                padding: 12px;
+            }
+
+            .alert-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-header h2 {
+                font-size: 22px;
+            }
+
+            .matrix-cell {
+                padding: 14px;
+                min-height: auto;
+            }
+
+            .timeline-item {
+                padding: 12px 14px;
+            }
+
+            .today-card {
+                padding: 14px;
+            }
+
+            .today-list li {
+                flex-wrap: wrap;
+            }
+        }
+
+        /* Reducción de movimiento */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Focus visible accesible */
+        .btn:focus-visible,
+        select:focus-visible,
+        input:focus-visible,
+        textarea:focus-visible,
+        .nav-item:focus-visible {
+            outline: 2px solid var(--sage);
+            outline-offset: 2px;
+        }
+
+        /* Print */
+        @media print {
+            .sidebar,
+            .mobile-topbar,
+            .sidebar-backdrop,
+            .page-header-actions,
+            .filters,
+            .toast,
+            .modal-backdrop {
+                display: none !important;
+            }
+
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            .main {
+                padding: 0;
+            }
+
+            .panel {
+                box-shadow: none;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app force-full-width" data-fwb="true">
+        <header class="mobile-topbar" data-fwb="true" role="banner">
+            <button class="menu-btn" id="menu-toggle" aria-label="Abrir menú" aria-controls="sidebar" aria-expanded="false">
+                <span aria-hidden="true">☰</span>
+            </button>
+            <h1>Savias · Planificador</h1>
+        </header>
+
+        <div class="sidebar-backdrop" id="sidebar-backdrop" aria-hidden="true"></div>
+
+        <aside class="sidebar" id="sidebar" data-fwb="true" aria-label="Navegación principal">
+            <div class="brand">
+                <h1>Savias</h1>
+                <div class="tag">Planificador 2026</div>
+                <div class="lema">«De cocina a laboratorio»</div>
+            </div>
+            <nav>
+                <div class="nav-section">Vista general</div>
+                <div class="nav-item active" data-view="inicio" role="button" tabindex="0"><span class="icon">◆</span> Inicio</div>
+                <div class="nav-item" data-view="hoy" role="button" tabindex="0"><span class="icon">☀</span> Hoy</div>
+                <div class="nav-item" data-view="dashboard" role="button" tabindex="0"><span class="icon">▣</span> Dashboard</div>
+
+                <div class="nav-section">Áreas</div>
+                <div class="nav-item" data-view="producto" role="button" tabindex="0"><span class="icon">▲</span> Producto <span class="badge"
+                        id="badge-producto">0</span></div>
+                <div class="nav-item" data-view="marketing" role="button" tabindex="0"><span class="icon">●</span> Marketing <span class="badge"
+                        id="badge-marketing">0</span></div>
+                <div class="nav-item" data-view="ventas" role="button" tabindex="0"><span class="icon">$</span> Ventas <span class="badge"
+                        id="badge-ventas">0</span></div>
+
+                <div class="nav-section">Planificación</div>
+                <div class="nav-item" data-view="calendario" role="button" tabindex="0"><span class="icon">▦</span> Calendario</div>
+                <div class="nav-item" data-view="equipo" role="button" tabindex="0"><span class="icon">◉</span> Equipo</div>
+                <div class="nav-item" data-view="ajustes" role="button" tabindex="0"><span class="icon">⚙</span> Ajustes</div>
+            </nav>
+            <div class="sidebar-footer">
+                Lina Toro · Cosmética Natural<br>
+                Sistema Cristhian Fonseca
+            </div>
+        </aside>
+
+        <main class="main" id="main" role="main"></main>
+    </div>
+
+    <div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal" id="modal-content"></div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        // SEED DATA — Tareas del proyecto Savias
+        // ═══════════════════════════════════════════════════════════════
+        const SEED_TASKS = [
+            // ─── PRODUCTO ───
+            // Comunidad y soporte (Q1)
+            { area: 'producto', plan: 'Todos', tarea: 'Responder mensajes y consultas en comunidad Skool', subarea: 'Comunidad Skool', urgente: true, importante: true, responsable: 'Lina + Soporte', frecuencia: 'Diaria', estado: 'En progreso', avance: 50, notas: 'Soporte lunes a sábado prometido en oferta' },
+            { area: 'producto', plan: 'Standard', tarea: 'Live semanal Q&A + laboratorio', subarea: 'Lives semanales', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: '1 sesión por semana incluida en Standard' },
+            { area: 'producto', plan: 'Premium', tarea: 'Live semanal avanzado de negocios', subarea: 'Lives semanales', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: '2do live para Premium' },
+            { area: 'producto', plan: 'VIP', tarea: 'Sesiones 1:1 VIP (60 min)', subarea: 'VIP', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'Agendar y dictar' },
+            { area: 'producto', plan: 'VIP', tarea: 'Sesión grupal mensual VIP enfocada en negocio', subarea: 'VIP', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'producto', plan: 'Premium', tarea: 'Revisión prioritaria de formulaciones', subarea: 'Soporte premium', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Promesa de soporte prioritario Premium/VIP' },
+            { area: 'producto', plan: 'Todos', tarea: 'Onboarding nuevas alumnas', subarea: 'Comunidad Skool', urgente: true, importante: true, responsable: 'Soporte', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Email + DM Skool · ruta clara' },
+            { area: 'producto', plan: 'Todos', tarea: 'Gestión de garantía 7 días (devoluciones)', subarea: 'Atención cliente', urgente: true, importante: true, responsable: 'Soporte', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Garantía sin preguntas' },
+
+            // Cursos Standard (Q2)
+            { area: 'producto', plan: 'Standard', tarea: 'Curso 1 — El Despertar de la Formuladora Curiosa', subarea: 'Cursos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Hecho', avance: 100, notas: 'Glicerina · damasco · gemstone' },
+            { area: 'producto', plan: 'Standard', tarea: 'Curso 2 — Más allá de la Glicerina', subarea: 'Cursos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Hecho', avance: 100, notas: 'Saponificación frío y caliente' },
+            { area: 'producto', plan: 'Standard', tarea: 'Curso 3 — De la Teoría a la Fórmula de Autor', subarea: 'Cursos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Hecho', avance: 100, notas: 'Corazón del método EVA' },
+            { area: 'producto', plan: 'Standard', tarea: 'Curso 4 — Te doy la base, tú le pones tu sello', subarea: 'Cursos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'En progreso', avance: 50, notas: 'Marmoleado · pencil line · técnicas avanzadas' },
+
+            // Cursos Premium (Q2)
+            { area: 'producto', plan: 'Premium', tarea: 'Curso Premium 1 — Fitocosmética: principios activos', subarea: 'Cursos Premium', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'En progreso', avance: 0, notas: 'Hidrolato · oleato · extracto · infusión · tintura' },
+            { area: 'producto', plan: 'Premium', tarea: 'Curso Premium 2 — Ritual de Bienestar (Body Care)', subarea: 'Cursos Premium', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Desodorantes · exfoliante · cremas' },
+            { area: 'producto', plan: 'Premium', tarea: 'Curso Premium 3 — ADN Capilar (Hair Care)', subarea: 'Cursos Premium', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Shampoos sólidos y líquidos · acondicionadores' },
+            { area: 'producto', plan: 'Premium', tarea: 'Curso Premium 4 — Skincare', subarea: 'Cursos Premium', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Agua micelar · sérum · crema facial · mascarillas' },
+
+            // Bonos Standard
+            { area: 'producto', plan: 'Standard', tarea: 'Bono — Soda cáustica en control', subarea: 'Bonos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Hecho', avance: 100, notas: '' },
+            { area: 'producto', plan: 'Standard', tarea: 'Bono — Salva-lotes', subarea: 'Bonos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Hecho', avance: 100, notas: '' },
+            { area: 'producto', plan: 'Standard', tarea: 'Bono — Hackea las formulaciones', subarea: 'Bonos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'En progreso', avance: 0, notas: '' },
+            { area: 'producto', plan: 'Standard', tarea: 'Bono — Guía de aditivos', subarea: 'Bonos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'producto', plan: 'Standard', tarea: 'Bono — Guía de colorantes y fragancias', subarea: 'Bonos Standard', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: '' },
+
+            // Bonos Premium
+            { area: 'producto', plan: 'Premium', tarea: 'Bono — Precio sin culpa (plantilla costeo)', subarea: 'Bonos Premium', urgente: false, importante: true, responsable: 'Lina + Cristhian', frecuencia: 'Puntual', estado: 'En progreso', avance: 0, notas: 'Plantilla Excel para Premium' },
+            { area: 'producto', plan: 'Premium', tarea: 'Bono — Vende sin ser influencer (scripts WA)', subarea: 'Bonos Premium', urgente: false, importante: true, responsable: 'Lina + Copy', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'producto', plan: 'Premium', tarea: 'Bono — Protocolo de Conservación', subarea: 'Bonos Premium', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Evita hongos/levaduras' },
+            { area: 'producto', plan: 'Premium', tarea: 'Bono — Balance HLB (No más cremas fallidas)', subarea: 'Bonos Premium', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Ingeniería de emulsiones' },
+            { area: 'producto', plan: 'VIP', tarea: 'Guía de Requisitos y Regulaciones VIP', subarea: 'Bonos VIP', urgente: false, importante: true, responsable: 'Lina + Asesor legal', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Vender legalmente' },
+
+            // MiniApps / Universo Lina
+            { area: 'producto', plan: 'VIP', tarea: 'MiniApp Calculadora de saponificación', subarea: 'Universo Lina', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Bono VIP + posible leadmagnet' },
+            { area: 'producto', plan: 'VIP', tarea: 'MiniApp Simulador proporciones de lípidos', subarea: 'Universo Lina', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'producto', plan: 'General', tarea: 'MiniApp Diagnóstico de fórmulas (IA)', subarea: 'Universo Lina', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Puntual', estado: 'Pendiente', avance: 0, notas: 'Posible leadmagnet de adquisición' },
+            { area: 'producto', plan: 'General', tarea: 'Soporte semanal de IA en MiniApps', subarea: 'Universo Lina', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Revisar respuestas IA · ajustar prompts' },
+            { area: 'producto', plan: 'General', tarea: 'Mejoras y ajustes MiniApps existentes', subarea: 'Universo Lina', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'UX · contenido' },
+
+            // Operaciones plataforma
+            { area: 'producto', plan: 'General', tarea: 'Mantenimiento plataforma Skool', subarea: 'Plataforma', urgente: false, importante: true, responsable: 'Soporte', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'Configuración · secciones' },
+            { area: 'producto', plan: 'General', tarea: 'Renovar contenido de cursos según feedback', subarea: 'Cursos', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Revisar lo que más piden en lives' },
+            { area: 'producto', plan: 'VIP', tarea: 'Talleres VIP exclusivos trimestrales', subarea: 'VIP', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'producto', plan: 'General', tarea: 'Reuniones operativas sin agenda', subarea: 'Coordinación', urgente: true, importante: false, responsable: 'Equipo', frecuencia: 'Recurrente', estado: 'Pendiente', avance: 0, notas: 'Q3 — eliminar o estructurar' },
+            { area: 'producto', plan: 'General', tarea: 'DMs administrativos repetitivos', subarea: 'Soporte', urgente: true, importante: false, responsable: 'Soporte', frecuencia: 'Diaria', estado: 'Pendiente', avance: 0, notas: 'Q3 — guion + delegar' },
+
+            // ─── MARKETING ───
+            // YouTube — canal principal
+            { area: 'marketing', plan: 'General', tarea: 'Investigación 10 ideas/día x 7 días (Fase 1 YT)', subarea: 'YouTube · Ideación', urgente: false, importante: true, responsable: 'Lina + Cristhian', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Framework 100-10-1' },
+            { area: 'marketing', plan: 'General', tarea: 'Definir Packaging YT (título + miniatura + intro)', subarea: 'YouTube · Packaging', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: '30 títulos · 3 miniaturas · A/B' },
+            { area: 'marketing', plan: 'General', tarea: 'Guionizar video YouTube semanal', subarea: 'YouTube · Guion', urgente: true, importante: true, responsable: 'Cristhian', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Estructura 4 bloques · 5 P\'s intro' },
+            { area: 'marketing', plan: 'General', tarea: 'Grabar video YouTube semanal', subarea: 'YouTube · Producción', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Audio · foco · iluminación' },
+            { area: 'marketing', plan: 'General', tarea: 'Editar video YouTube (postproducción)', subarea: 'YouTube · Postproducción', urgente: true, importante: true, responsable: 'Editor externo', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Montaje · música · GFX · SFX' },
+            { area: 'marketing', plan: 'General', tarea: 'Test A/B 9 combinaciones título+miniatura', subarea: 'YouTube · Distribución', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Semanal', estado: 'Pendiente', avance: 0, notas: 'Cambiar miniatura si CTR bajo en 24h' },
+            { area: 'marketing', plan: 'General', tarea: 'Análisis retención y AVD/AVP cada video', subarea: 'YouTube · Análisis', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Semanal', estado: 'Pendiente', avance: 0, notas: 'Documentar 72h y 1 semana' },
+            { area: 'marketing', plan: 'General', tarea: 'Grabar Podcast YouTube (1 al mes)', subarea: 'YouTube · Podcast', urgente: false, importante: true, responsable: 'Lina', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'Más confianza · más tiempo con Lina' },
+            { area: 'marketing', plan: 'General', tarea: 'SEO YouTube (descripción, tags, capítulos)', subarea: 'YouTube · Optimización', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: '' },
+            { area: 'marketing', plan: 'General', tarea: 'Gestión de monetización YouTube', subarea: 'YouTube · Monetización', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: '' },
+
+            // Instagram
+            { area: 'marketing', plan: 'General', tarea: 'Extraer 5 piezas SFC desde cada video YT', subarea: 'Instagram · Reels', urgente: true, importante: true, responsable: 'Cristhian + Editor', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Reel · carrusel · post' },
+            { area: 'marketing', plan: 'General', tarea: 'Guionizar Reels desde referentes (Una Natural)', subarea: 'Instagram · Reels', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: '3 hooks · CTA tripartito' },
+            { area: 'marketing', plan: 'General', tarea: 'Publicar Reels con CTA tripartito', subarea: 'Instagram · Reels', urgente: true, importante: true, responsable: 'Equipo redes', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Mín 3-4 Reels/semana · YT + comunidad + curiosidad' },
+            { area: 'marketing', plan: 'General', tarea: 'Crear historias diarias Instagram', subarea: 'Instagram · Stories', urgente: true, importante: true, responsable: 'Lina + Equipo redes', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: '3-5 historias/día' },
+            { area: 'marketing', plan: 'General', tarea: 'Responder DMs y comentarios IG', subarea: 'Instagram · Comunidad', urgente: true, importante: true, responsable: 'Equipo redes + Lina', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Conversaciones de setting' },
+            { area: 'marketing', plan: 'General', tarea: 'Mantener automatizaciones DM por keyword', subarea: 'Instagram · Automatización', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'En progreso', avance: 0, notas: 'PEPINO · CACAO · OLEATO · CALMA · VIDEO · RECETA' },
+            { area: 'marketing', plan: 'General', tarea: 'Análisis Reels que funcionan → replicar', subarea: 'Instagram · Análisis', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Semanal', estado: 'Pendiente', avance: 0, notas: 'Identificar outliers' },
+
+            // TikTok
+            { area: 'marketing', plan: 'General', tarea: 'Adaptar y publicar Reels en TikTok', subarea: 'TikTok', urgente: false, importante: true, responsable: 'Equipo redes', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Por presencia, no canal principal' },
+            { area: 'marketing', plan: 'General', tarea: 'Análisis mensual TikTok', subarea: 'TikTok', urgente: false, importante: false, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'Q4 si no aporta a conversión' },
+
+            // Email + WhatsApp
+            { area: 'marketing', plan: 'General', tarea: 'Email semanal acompañando video YT', subarea: 'Email Marketing', urgente: true, importante: true, responsable: 'Cristhian', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Día de subida del video' },
+            { area: 'marketing', plan: 'General', tarea: 'WhatsApp Broadcast acompañando video YT', subarea: 'WhatsApp', urgente: true, importante: true, responsable: 'Equipo redes', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Lista filtrada por engagement' },
+            { area: 'marketing', plan: 'General', tarea: 'Limpieza y segmentación lista email/WA', subarea: 'CRM', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: '' },
+
+            // Estrategia
+            { area: 'marketing', plan: 'General', tarea: 'Mantener Social Funnel CLEE', subarea: 'Estrategia · Embudo', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Trimestral', estado: 'En progreso', avance: 0, notas: 'SFC → YT → Skool/VSL' },
+            { area: 'marketing', plan: 'General', tarea: 'Crear leadmagnets MiniApp', subarea: 'Estrategia · Leadmagnet', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Leadmagnet con setting' },
+            { area: 'marketing', plan: 'General', tarea: 'Auditoría mensual del embudo', subarea: 'Estrategia · Análisis', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'CTR · conversión · abandono' },
+
+            // Meta Ads
+            { area: 'marketing', plan: 'General', tarea: 'Investigar ángulos publicitarios nuevos', subarea: 'Meta Ads · Investigación', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Evitar fatiga creativa' },
+            { area: 'marketing', plan: 'General', tarea: 'Guionizar video ads (5 guiones x ángulo)', subarea: 'Meta Ads · Creativos', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'AIDA · PAS · BAB · PASTOR · Libre' },
+            { area: 'marketing', plan: 'General', tarea: 'Crear creativos estáticos para ads', subarea: 'Meta Ads · Creativos', urgente: false, importante: true, responsable: 'Diseño + Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'marketing', plan: 'General', tarea: 'Manejo diario campañas Meta Ads', subarea: 'Meta Ads · Operación', urgente: true, importante: true, responsable: 'Mediabuyer', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Optimización · escalado · apagar perdedores' },
+            { area: 'marketing', plan: 'General', tarea: 'Reporte semanal Meta Ads', subarea: 'Meta Ads · Análisis', urgente: false, importante: true, responsable: 'Mediabuyer', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'CPL · CPA · ROAS' },
+
+            // Lanzamientos
+            { area: 'marketing', plan: 'General', tarea: 'Lanzamiento Q1 — Fase Invitación (captación)', subarea: 'Lanzamientos', urgente: true, importante: true, responsable: 'Cristhian + Lina + Mediabuyer', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Ads + leadmagnet · 7-10 días' },
+            { area: 'marketing', plan: 'General', tarea: 'Lanzamiento Q1 — Fase Consciencia (pre-launch)', subarea: 'Lanzamientos', urgente: true, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Romper creencias · educativo' },
+            { area: 'marketing', plan: 'General', tarea: 'Lanzamiento Q1 — Fase Entrenamiento', subarea: 'Lanzamientos', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Workshop o serie de videos' },
+            { area: 'marketing', plan: 'General', tarea: 'Lanzamiento Q1 — Fase Compra (carrito)', subarea: 'Lanzamientos', urgente: true, importante: true, responsable: 'Cristhian + Lina + Setters', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Email + WA + ads + setters' },
+
+            // Estrategia macro
+            { area: 'marketing', plan: 'General', tarea: 'Planificación trimestral + calendario editorial', subarea: 'Estrategia', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Bloque Q2 puro · estratégico' },
+            { area: 'marketing', plan: 'General', tarea: 'Investigación competidores (Una Natural)', subarea: 'Estrategia', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'En progreso', avance: 0, notas: 'Calibrar voz + ideas' },
+
+            // ─── VENTAS ───
+            { area: 'ventas', plan: 'General', tarea: 'Setting con leads de Instagram (DM)', subarea: 'Setting · Instagram', urgente: true, importante: true, responsable: 'Setter 1', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Activación por leadmagnet (PEPINO, CACAO...)' },
+            { area: 'ventas', plan: 'General', tarea: 'Setting con exalumnas (upgrade Premium/VIP)', subarea: 'Setting · Exalumnas', urgente: true, importante: true, responsable: 'Setter 2 + Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Lista segmentada' },
+            { area: 'ventas', plan: 'General', tarea: 'Calificar y agendar llamadas leadmagnet', subarea: 'Setting · Llamadas', urgente: true, importante: true, responsable: 'Setter 1', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Solo para perfil VIP' },
+            { area: 'ventas', plan: 'General', tarea: 'Llamadas de venta (closer)', subarea: 'Setting · Llamadas', urgente: true, importante: true, responsable: 'Closer / Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: '' },
+            { area: 'ventas', plan: 'General', tarea: 'Conversión sin llamada (DM directo)', subarea: 'Setting · DM', urgente: true, importante: true, responsable: 'Setter 1', frecuencia: 'Diaria', estado: 'En progreso', avance: 0, notas: 'Para Standard y Premium' },
+
+            // Directos mensuales
+            { area: 'ventas', plan: 'General', tarea: 'Planificar tema y promesa del directo mensual', subarea: 'Directos mensuales', urgente: false, importante: true, responsable: 'Lina + Cristhian', frecuencia: 'Mensual', estado: 'En progreso', avance: 0, notas: 'Aporta valor + presenta comunidad' },
+            { area: 'ventas', plan: 'General', tarea: 'Comunicación pre-directo (WA + email + IG)', subarea: 'Directos mensuales', urgente: true, importante: true, responsable: 'Cristhian + Equipo redes', frecuencia: 'Mensual', estado: 'En progreso', avance: 0, notas: 'Una semana antes' },
+            { area: 'ventas', plan: 'General', tarea: 'Emitir directo mensual YT + presentar Skool', subarea: 'Directos mensuales', urgente: true, importante: true, responsable: 'Lina', frecuencia: 'Mensual', estado: 'En progreso', avance: 0, notas: 'CTA a Skool/VSL al final' },
+            { area: 'ventas', plan: 'General', tarea: 'Seguimiento post-directo (24-72h)', subarea: 'Directos mensuales', urgente: true, importante: true, responsable: 'Setters + Cristhian', frecuencia: 'Mensual', estado: 'En progreso', avance: 0, notas: 'Ventana caliente · email + WA + DM' },
+
+            // Cierres lanzamientos
+            { area: 'ventas', plan: 'General', tarea: 'Cierre lanzamiento Q1 — última fase', subarea: 'Lanzamientos · Cierre', urgente: true, importante: true, responsable: 'Setters + Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'ventas', plan: 'General', tarea: 'Cierre lanzamiento Q2', subarea: 'Lanzamientos · Cierre', urgente: false, importante: true, responsable: 'Setters + Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'ventas', plan: 'General', tarea: 'Cierre lanzamiento Q3', subarea: 'Lanzamientos · Cierre', urgente: false, importante: true, responsable: 'Setters + Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: '' },
+            { area: 'ventas', plan: 'General', tarea: 'Cierre lanzamiento Q4', subarea: 'Lanzamientos · Cierre', urgente: false, importante: true, responsable: 'Setters + Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: '' },
+
+            // Operación de ventas
+            { area: 'ventas', plan: 'General', tarea: 'Reporte semanal de ventas', subarea: 'Análisis', urgente: false, importante: true, responsable: 'Cristhian + Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Lunes · matrículas · ARPU · churn' },
+            { area: 'ventas', plan: 'General', tarea: 'Gestión de churn / cancelaciones', subarea: 'Retención', urgente: true, importante: true, responsable: 'Setter 2 + Lina', frecuencia: 'Semanal', estado: 'En progreso', avance: 0, notas: 'Llamada de exit + survey' },
+            { area: 'ventas', plan: 'General', tarea: 'Optimización scripts setting + objeciones', subarea: 'Sistema de ventas', urgente: false, importante: true, responsable: 'Cristhian + Setters', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'Iterar con base en datos' },
+            { area: 'ventas', plan: 'General', tarea: 'Capacitación mensual de setters', subarea: 'Sistema de ventas', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'Roleplay · revisión llamadas' },
+            { area: 'ventas', plan: 'General', tarea: 'Auditoría mensual proceso de venta', subarea: 'Análisis', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'Pendiente', avance: 0, notas: 'Funnel: lead → conversación → venta' },
+            { area: 'ventas', plan: 'General', tarea: 'Gestión pasarela de pagos', subarea: 'Operaciones', urgente: true, importante: true, responsable: 'Cristhian', frecuencia: 'Mensual', estado: 'En progreso', avance: 0, notas: 'Resolver fallos cuando ocurren' },
+            { area: 'ventas', plan: 'General', tarea: 'Activación promociones y descuentos', subarea: 'Operaciones', urgente: false, importante: true, responsable: 'Cristhian', frecuencia: 'Trimestral', estado: 'Pendiente', avance: 0, notas: 'Por lanzamiento' },
+        ];
+
+        const SEED_HITOS = [
+            { titulo: '🚀 Lanzamiento Q1 Savias', inicio: '2026-03-01', fin: '2026-03-31', responsable: 'Equipo', tipo: 'lanzamiento' },
+            { titulo: '🎤 Directo mensual YouTube — Marzo', inicio: '2026-03-20', fin: '2026-03-20', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🎙️ Podcast YT — Marzo', inicio: '2026-03-25', fin: '2026-03-25', responsable: 'Lina', tipo: 'podcast' },
+            { titulo: '🎤 Directo mensual YouTube — Abril', inicio: '2026-04-15', fin: '2026-04-15', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🎙️ Podcast YT — Abril', inicio: '2026-04-22', fin: '2026-04-22', responsable: 'Lina', tipo: 'podcast' },
+            { titulo: '🚀 Lanzamiento Q2 Savias', inicio: '2026-06-01', fin: '2026-06-30', responsable: 'Equipo', tipo: 'lanzamiento' },
+            { titulo: '🎤 Directo mensual YouTube — Mayo', inicio: '2026-05-15', fin: '2026-05-15', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🎤 Directo mensual YouTube — Junio', inicio: '2026-06-15', fin: '2026-06-15', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🧪 Taller VIP Q2', inicio: '2026-06-20', fin: '2026-06-20', responsable: 'Lina', tipo: 'taller' },
+            { titulo: '🎤 Directo mensual YouTube — Julio', inicio: '2026-07-15', fin: '2026-07-15', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🎤 Directo mensual YouTube — Agosto', inicio: '2026-08-15', fin: '2026-08-15', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🚀 Lanzamiento Q3 Savias', inicio: '2026-09-01', fin: '2026-09-30', responsable: 'Equipo', tipo: 'lanzamiento' },
+            { titulo: '🎤 Directo mensual YouTube — Septiembre', inicio: '2026-09-15', fin: '2026-09-15', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🧪 Taller VIP Q3', inicio: '2026-09-25', fin: '2026-09-25', responsable: 'Lina', tipo: 'taller' },
+            { titulo: '🎤 Directo mensual YouTube — Octubre', inicio: '2026-10-15', fin: '2026-10-15', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🚀 Lanzamiento Q4 Savias (Black Friday)', inicio: '2026-11-15', fin: '2026-11-30', responsable: 'Equipo', tipo: 'lanzamiento' },
+            { titulo: '🎤 Directo mensual YouTube — Noviembre', inicio: '2026-11-12', fin: '2026-11-12', responsable: 'Lina', tipo: 'directo' },
+            { titulo: '🎁 Campaña Diciembre Savias', inicio: '2026-12-01', fin: '2026-12-20', responsable: 'Equipo', tipo: 'lanzamiento' },
+            { titulo: '🎤 Directo cierre de año', inicio: '2026-12-15', fin: '2026-12-15', responsable: 'Lina', tipo: 'directo' },
+        ];
+
+        const EQUIPO = [
+            { nombre: 'Lina Toro', rol: 'Fundadora · Cara visible · Lives · 1:1 VIP' },
+            { nombre: 'Cristhian', rol: 'Estrategia · Marketing · Embudos · Ads · IA' },
+            { nombre: 'Soporte', rol: 'Atención cliente · Skool · Onboarding · Garantía' },
+            { nombre: 'Equipo redes', rol: 'Stories · Publicación · DMs · TikTok' },
+            { nombre: 'Editor', rol: 'Edición YouTube · Reels · Miniaturas' },
+            { nombre: 'Mediabuyer', rol: 'Operación Meta Ads · Optimización · Reporte' },
+            { nombre: 'Setter 1', rol: 'Setting Instagram · Leadmagnet · DMs en frío' },
+            { nombre: 'Setter 2', rol: 'Exalumnas · Gestión churn · Llamadas' },
+            { nombre: 'Closer', rol: 'Llamadas alto ticket · VIP · Casos complejos' },
+            { nombre: 'Diseño', rol: 'Imágenes ads · Identidad gráfica' },
+        ];
+
+        // ═══════════════════════════════════════════════════════════════
+        // STATE
+        // ═══════════════════════════════════════════════════════════════
+        const STORAGE_TASKS = 'savias-planner:tasks:v1';
+        const STORAGE_HITOS = 'savias-planner:hitos:v1';
+
+        let state = {
+            tasks: [],
+            hitos: [],
+            currentView: 'inicio',
+            filters: { plan: '', subarea: '', cuadrante: '', estado: '', responsable: '', search: '' },
+            areaViewMode: 'lista', // 'lista' | 'kanban'
+            calendarMode: 'mes', // 'mes' | 'agenda'
+            calendarCursor: null, // {year, month}  — null = mes actual
+            initialized: false,
+        };
+
+        const TIPO_LABELS = {
+            lanzamiento: 'Lanzamiento',
+            directo: 'Directo',
+            podcast: 'Podcast',
+            taller: 'Taller',
+            evento: 'Evento',
+            otro: 'Otro',
+        };
+
+        const MES_LARGO = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        const MES_CORTO = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const DIA_SEMANA_CORTO = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+        function ymdToParts(s) {
+            if (!s) return null;
+            const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (!m) return null;
+            return { year: +m[1], month: +m[2] - 1, day: +m[3] };
+        }
+
+        function partsToYmd(y, m, d) {
+            return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        }
+
+        function getCurrentCursor() {
+            if (state.calendarCursor) return state.calendarCursor;
+            const now = new Date();
+            return { year: now.getFullYear(), month: now.getMonth() };
+        }
+
+        const uid = () => 'T' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36);
+
+        const getQuadrant = (t) => {
+            if (t.urgente && t.importante) return 'Q1';
+            if (!t.urgente && t.importante) return 'Q2';
+            if (t.urgente && !t.importante) return 'Q3';
+            return 'Q4';
+        };
+
+        const getAction = (q) => ({ Q1: 'Hacer YA', Q2: 'Programar', Q3: 'Delegar', Q4: 'Eliminar' }[q] || '');
+
+        async function loadState() {
+            try {
+                const tRes = await window.storage.get(STORAGE_TASKS);
+                if (tRes && tRes.value) {
+                    state.tasks = JSON.parse(tRes.value);
+                } else {
+                    state.tasks = SEED_TASKS.map(t => ({ ...t, id: uid() }));
+                    await saveTasks();
+                }
+            } catch {
+                state.tasks = SEED_TASKS.map(t => ({ ...t, id: uid() }));
+                try { await saveTasks(); } catch { }
+            }
+            try {
+                const hRes = await window.storage.get(STORAGE_HITOS);
+                if (hRes && hRes.value) {
+                    state.hitos = JSON.parse(hRes.value);
+                } else {
+                    state.hitos = SEED_HITOS.map(h => ({ ...h, id: uid() }));
+                    await saveHitos();
+                }
+            } catch {
+                state.hitos = SEED_HITOS.map(h => ({ ...h, id: uid() }));
+                try { await saveHitos(); } catch { }
+            }
+            state.initialized = true;
+        }
+
+        async function saveTasks() {
+            try {
+                await window.storage.set(STORAGE_TASKS, JSON.stringify(state.tasks));
+            } catch (e) { console.warn('Save tasks error:', e); }
+        }
+        async function saveHitos() {
+            try {
+                await window.storage.set(STORAGE_HITOS, JSON.stringify(state.hitos));
+            } catch (e) { console.warn('Save hitos error:', e); }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // HELPERS
+        // ═══════════════════════════════════════════════════════════════
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2400);
+        }
+        function escapeHtml(s) {
+            if (s == null) return '';
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function formatDate(d) {
+            if (!d) return '—';
+            const date = new Date(d + 'T00:00:00');
+            if (isNaN(date)) return d;
+            return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+        }
+        function formatDateLong(d) {
+            if (!d) return '—';
+            const date = new Date(d + 'T00:00:00');
+            if (isNaN(date)) return d;
+            return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+        function openModal(html) {
+            document.getElementById('modal-content').innerHTML = html;
+            document.getElementById('modal-backdrop').classList.add('open');
+        }
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.remove('open');
+        }
+        document.getElementById('modal-backdrop').addEventListener('click', (e) => {
+            if (e.target.id === 'modal-backdrop') closeModal();
+        });
+
+        function updateBadges() {
+            const counts = { producto: 0, marketing: 0, ventas: 0 };
+            state.tasks.forEach(t => {
+                if (t.estado !== 'Hecho' && counts[t.area] !== undefined) counts[t.area]++;
+            });
+            ['producto', 'marketing', 'ventas'].forEach(a => {
+                const el = document.getElementById('badge-' + a);
+                if (el) el.textContent = counts[a];
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // VIEWS
+        // ═══════════════════════════════════════════════════════════════
+        const main = document.getElementById('main');
+
+        function renderInicio() {
+            main.innerHTML = `
+    <div class="welcome">
+      <h1>Planificador <em>Savias</em></h1>
+      <div class="subtitle">2026 · Lina Toro · Sistema JoinsClee</div>
+      <div class="lema">«No es un curso que compras y olvidas, es una mentoría con paso a paso»</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Cómo usar este planificador</div>
+      <div class="steps-grid">
+        <div class="step-card"><div class="num">01</div><p>Cada área (<strong>Producto · Marketing · Ventas</strong>) tiene una hoja con tareas precargadas alineadas con la oferta de Savias y el sistema CLEE.</p></div>
+        <div class="step-card"><div class="num">02</div><p>Marca cada tarea como <strong>Urgente / Importante</strong>. El cuadrante y la acción se calculan solos.</p></div>
+        <div class="step-card"><div class="num">03</div><p>Asigna responsable, fecha y estado. Actualiza el % de avance conforme avanzas — todo se guarda automáticamente.</p></div>
+        <div class="step-card"><div class="num">04</div><p>Vuelve a <strong>Hoy</strong> al iniciar el día y al <strong>Dashboard</strong> los lunes. Ve cuánto tiempo estás en Q2 (zona de oro) vs Q1 (crisis).</p></div>
+        <div class="step-card"><div class="num">05</div><p>Si tu Q1 supera el 30% del total, estás apagando incendios. Migra esfuerzo a Q2 (planificación a tiempo).</p></div>
+        <div class="step-card"><div class="num">06</div><p>Cambia entre vista <strong>Lista</strong> y <strong>Kanban</strong> en cada área. Exporta o importa tu plan desde Ajustes.</p></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Los 4 cuadrantes — tu mapa de decisión</div>
+      <div class="matrix">
+        <div></div>
+        <div class="matrix-label">Urgente</div>
+        <div class="matrix-label">No urgente</div>
+        <div class="matrix-label vert">Importante</div>
+        <div class="matrix-cell matrix-q1">
+          <div><h4>Q1 · Crisis</h4><div class="action">Hacer YA</div><div class="desc">Soporte diario Skool · cierre de lanzamiento · live semanal · grabación de la semana</div></div>
+        </div>
+        <div class="matrix-cell matrix-q2">
+          <div><h4>Q2 · Estrategia</h4><div class="action">Zona de oro · Programar</div><div class="desc">Cursos Premium nuevos · MiniApps · embudos · planificación trimestral · ángulos de ads</div></div>
+        </div>
+        <div class="matrix-label vert">No imp.</div>
+        <div class="matrix-cell matrix-q3">
+          <div><h4>Q3 · Engaño</h4><div class="action">Delegar</div><div class="desc">DMs operativos repetitivos · reuniones sin agenda · tareas que no dependen de Lina</div></div>
+        </div>
+        <div class="matrix-cell matrix-q4">
+          <div><h4>Q4 · Desperdicio</h4><div class="action">Eliminar</div><div class="desc">Trends sin marca · métricas vanity · análisis sin acción · canales que no convierten</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="quote-footer" data-fwb="true">
+      <p>«Más de 2.000 creadoras han transformado su cocina en su laboratorio. Hoy te toca a ti llevar el negocio al siguiente nivel.»</p>
+    </div>
+  `;
+        }
+
+        function renderHoy() {
+            const tasks = state.tasks;
+            const q1Activas = tasks.filter(t => getQuadrant(t) === 'Q1' && t.estado !== 'Hecho').slice(0, 8);
+            const enProgreso = tasks.filter(t => t.estado === 'En progreso').slice(0, 8);
+            const bloqueadas = tasks.filter(t => t.estado === 'Bloqueado');
+            const today = new Date().toISOString().split('T')[0];
+            const proximosHitos = state.hitos
+                .filter(h => h.inicio >= today)
+                .sort((a, b) => a.inicio.localeCompare(b.inicio))
+                .slice(0, 5);
+
+            main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Hoy</h2>
+        <p>${new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card q1"><div class="kpi-label">🔥 Q1 activas</div><div class="kpi-value">${q1Activas.length}</div><div class="kpi-sub">Hacer ya</div></div>
+      <div class="kpi-card q2"><div class="kpi-label">⚙ En progreso</div><div class="kpi-value">${enProgreso.length}</div><div class="kpi-sub">Foco actual</div></div>
+      <div class="kpi-card q3"><div class="kpi-label">🛑 Bloqueadas</div><div class="kpi-value">${bloqueadas.length}</div><div class="kpi-sub">Resolver dependencias</div></div>
+      <div class="kpi-card gold"><div class="kpi-label">📅 Próximos hitos</div><div class="kpi-value">${proximosHitos.length}</div><div class="kpi-sub">Próximas 5</div></div>
+    </div>
+
+    <div class="today-grid">
+      <div class="today-card priority">
+        <h4>🔥 Tareas Q1 que tocan hoy</h4>
+        ${q1Activas.length === 0 ? '<p style="color:var(--text-mid);font-style:italic;font-size:13px">No hay tareas Q1 — lo estás haciendo bien.</p>' : `
+        <ul class="today-list">
+          ${q1Activas.map(t => `
+            <li>
+              <div>
+                <div style="font-weight:500">${escapeHtml(t.tarea)}</div>
+                <div class="meta">${escapeHtml(t.responsable || 'Sin asignar')} · ${escapeHtml(t.subarea || '')}</div>
+              </div>
+              <span class="quad-pill q1">Q1</span>
+            </li>
+          `).join('')}
+        </ul>`}
+      </div>
+
+      <div class="today-card">
+        <h4>⚙ En progreso ahora</h4>
+        ${enProgreso.length === 0 ? '<p style="color:var(--text-mid);font-style:italic;font-size:13px">Nada en progreso. Empieza la primera Q1.</p>' : `
+        <ul class="today-list">
+          ${enProgreso.map(t => `
+            <li>
+              <div>
+                <div style="font-weight:500">${escapeHtml(t.tarea)}</div>
+                <div class="meta">${escapeHtml(t.responsable || 'Sin asignar')} · ${t.avance || 0}%</div>
+              </div>
+              <div class="progress-bar" style="width:60px"><div class="progress-fill" style="width:${t.avance || 0}%"></div></div>
+            </li>
+          `).join('')}
+        </ul>`}
+      </div>
+
+      ${bloqueadas.length > 0 ? `
+      <div class="today-card priority">
+        <h4>🛑 Bloqueadas — resuelve esto</h4>
+        <ul class="today-list">
+          ${bloqueadas.slice(0, 5).map(t => `
+            <li>
+              <div>
+                <div style="font-weight:500">${escapeHtml(t.tarea)}</div>
+                <div class="meta">${escapeHtml(t.notas || 'Sin nota — agrega contexto')}</div>
+              </div>
+              <span class="status-pill status-Bloqueado">Bloqueada</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>` : ''}
+
+      <div class="today-card gold">
+        <h4>📅 Próximos hitos del calendario</h4>
+        ${proximosHitos.length === 0 ? '<p style="color:var(--text-mid);font-style:italic;font-size:13px">No hay hitos programados.</p>' : `
+        <ul class="today-list">
+          ${proximosHitos.map(h => `
+            <li>
+              <div>
+                <div style="font-weight:500">${escapeHtml(h.titulo)}</div>
+                <div class="meta">${formatDateLong(h.inicio)} · ${escapeHtml(h.responsable || '')}</div>
+              </div>
+            </li>
+          `).join('')}
+        </ul>`}
+      </div>
+    </div>
+  `;
+        }
+
+        function renderDashboard() {
+            const tasks = state.tasks;
+            const total = tasks.length;
+            const counts = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 };
+            const byArea = {
+                producto: { Q1: 0, Q2: 0, Q3: 0, Q4: 0, total: 0, hechas: 0 },
+                marketing: { Q1: 0, Q2: 0, Q3: 0, Q4: 0, total: 0, hechas: 0 },
+                ventas: { Q1: 0, Q2: 0, Q3: 0, Q4: 0, total: 0, hechas: 0 }
+            };
+            let estados = { Pendiente: 0, 'En progreso': 0, Bloqueado: 0, Hecho: 0, Delegado: 0 };
+
+            tasks.forEach(t => {
+                const q = getQuadrant(t);
+                counts[q]++;
+                if (byArea[t.area]) {
+                    byArea[t.area][q]++;
+                    byArea[t.area].total++;
+                    if (t.estado === 'Hecho') byArea[t.area].hechas++;
+                }
+                if (estados[t.estado] !== undefined) estados[t.estado]++;
+            });
+
+            const pct = (n, d) => d ? Math.round((n / d) * 1000) / 10 : 0;
+            const totalDone = estados.Hecho;
+            const pctDoneGlobal = pct(totalDone, total);
+            const pctQ2 = pct(counts.Q2, total);
+            const pctQ1 = pct(counts.Q1, total);
+
+            main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Dashboard estratégico</h2>
+        <p>Vista global · ¿Cuánto tiempo estamos en la zona de oro?</p>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card q1"><div class="kpi-label">Q1 · Crisis</div><div class="kpi-value">${counts.Q1}</div><div class="kpi-sub">${pctQ1}% del total</div></div>
+      <div class="kpi-card q2"><div class="kpi-label">Q2 · Zona de oro</div><div class="kpi-value">${counts.Q2}</div><div class="kpi-sub">${pctQ2}% del total</div></div>
+      <div class="kpi-card q3"><div class="kpi-label">Q3 · Engaño</div><div class="kpi-value">${counts.Q3}</div><div class="kpi-sub">${pct(counts.Q3, total)}% del total</div></div>
+      <div class="kpi-card q4"><div class="kpi-label">Q4 · Desperdicio</div><div class="kpi-value">${counts.Q4}</div><div class="kpi-sub">${pct(counts.Q4, total)}% del total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total tareas</div><div class="kpi-value">${total}</div><div class="kpi-sub">en sistema</div></div>
+      <div class="kpi-card gold"><div class="kpi-label">% Hechas</div><div class="kpi-value">${pctDoneGlobal}%</div><div class="kpi-sub">${totalDone} de ${total}</div></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Distribución por área</div>
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Área</th>
+            <th style="text-align:center">Q1</th>
+            <th style="text-align:center">Q2</th>
+            <th style="text-align:center">Q3</th>
+            <th style="text-align:center">Q4</th>
+            <th style="text-align:center">Total</th>
+            <th>% Hecho</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${['producto', 'marketing', 'ventas'].map(a => {
+                const ar = byArea[a];
+                const pctH = pct(ar.hechas, ar.total);
+                const label = a === 'producto' ? '▲ Producto' : (a === 'marketing' ? '● Marketing' : '$ Ventas');
+                return `<tr>
+              <td style="font-weight:600">${label}</td>
+              <td style="text-align:center"><span class="quad-pill q1">${ar.Q1}</span></td>
+              <td style="text-align:center"><span class="quad-pill q2">${ar.Q2}</span></td>
+              <td style="text-align:center"><span class="quad-pill q3">${ar.Q3}</span></td>
+              <td style="text-align:center"><span class="quad-pill q4">${ar.Q4}</span></td>
+              <td style="text-align:center;font-weight:600">${ar.total}</td>
+              <td>
+                <div class="progress-row">
+                  <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${pctH}%"></div></div>
+                  <span>${pctH}%</span>
+                </div>
+              </td>
+            </tr>`;
+            }).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🚨 Alertas</div>
+      <div class="alert-grid">
+        <div class="alert-card ${pctQ1 > 30 ? 'danger' : ''}"><div class="alert-title">🔥 Tareas en Q1</div><div class="alert-value">${counts.Q1}</div><div class="alert-hint">${pctQ1 > 30 ? 'Más del 30% — apagando incendios' : 'Bajo control'}</div></div>
+        <div class="alert-card ${pctQ2 < 50 ? 'warning' : 'success'}"><div class="alert-title">🌱 Q2 · Zona de oro</div><div class="alert-value">${pctQ2}%</div><div class="alert-hint">${pctQ2 < 50 ? 'Por debajo del 50% — solo sosteniendo' : 'Crecimiento real'}</div></div>
+        <div class="alert-card"><div class="alert-title">⚙ En progreso</div><div class="alert-value">${estados['En progreso']}</div><div class="alert-hint">Foco actual</div></div>
+        <div class="alert-card ${estados.Bloqueado > 0 ? 'danger' : ''}"><div class="alert-title">🛑 Bloqueadas</div><div class="alert-value">${estados.Bloqueado}</div><div class="alert-hint">${estados.Bloqueado > 0 ? 'Resolver dependencias YA' : 'Sin bloqueos'}</div></div>
+        <div class="alert-card warning"><div class="alert-title">⏳ Pendientes</div><div class="alert-value">${estados.Pendiente}</div><div class="alert-hint">Backlog total</div></div>
+        <div class="alert-card success"><div class="alert-title">✅ Hechas</div><div class="alert-value">${estados.Hecho}</div><div class="alert-hint">Avance documentado</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📋 Recomendaciones metodología Eisenhower</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="padding:14px 16px;background:var(--q1-red-soft);border-radius:6px;border-left:3px solid var(--q1-red)"><strong style="color:var(--q1-red)">Q1 · CRISIS</strong> — <span style="color:var(--text-mid)">Lo ideal: que sean POCAS. Si tu Q1 está sobrecargado, casi todas vienen de un Q2 que no programaste a tiempo.</span></div>
+        <div style="padding:14px 16px;background:var(--q2-sage-soft);border-radius:6px;border-left:3px solid var(--q2-sage)"><strong style="color:var(--q2-sage)">Q2 · ESTRATEGIA · ZONA DE ORO</strong> — <span style="color:var(--text-mid)">Aquí ocurre el crecimiento real. Si pasas el 50%+ de tu tiempo aquí, tu negocio escala. Cursos nuevos, MiniApps, embudos.</span></div>
+        <div style="padding:14px 16px;background:var(--q3-amber-soft);border-radius:6px;border-left:3px solid var(--q3-amber)"><strong style="color:var(--q3-amber)">Q3 · ENGAÑO</strong> — <span style="color:var(--text-mid)">Cosas que gritan tu atención pero no mueven la aguja. Delegar a soporte, setters o automatizaciones.</span></div>
+        <div style="padding:14px 16px;background:var(--q4-grey-soft);border-radius:6px;border-left:3px solid var(--q4-grey)"><strong style="color:var(--q4-grey)">Q4 · DESPERDICIO</strong> — <span style="color:var(--text-mid)">Trends sin marca, métricas vanity, descuentos reactivos. Eliminar sin culpa.</span></div>
+      </div>
+    </div>
+  `;
+        }
+
+        function renderArea(area) {
+            const labels = {
+                producto: { title: '▲ Producto · Entrega y operación', subtitle: 'Comunidad Skool · Cursos · Lives · Bonos · MiniApps · Universo Lina · VIP' },
+                marketing: { title: '● Marketing y contenidos', subtitle: 'YouTube · Instagram · TikTok · Email · WhatsApp · Ads · Lanzamientos · Estrategia' },
+                ventas: { title: '$ Sistema de ventas', subtitle: 'Setting · Cierres · Directos mensuales · Llamadas · Retención · CRM' },
+            };
+            const lbl = labels[area];
+            const f = state.filters;
+
+            let filteredTasks = state.tasks.filter(t => t.area === area);
+            if (f.plan) filteredTasks = filteredTasks.filter(t => t.plan === f.plan);
+            if (f.cuadrante) filteredTasks = filteredTasks.filter(t => getQuadrant(t) === f.cuadrante);
+            if (f.estado) filteredTasks = filteredTasks.filter(t => t.estado === f.estado);
+            if (f.responsable) filteredTasks = filteredTasks.filter(t => (t.responsable || '').toLowerCase().includes(f.responsable.toLowerCase()));
+            if (f.subarea) filteredTasks = filteredTasks.filter(t => (t.subarea || '').toLowerCase().includes(f.subarea.toLowerCase()));
+            if (f.search) {
+                const s = f.search.toLowerCase();
+                filteredTasks = filteredTasks.filter(t =>
+                    (t.tarea || '').toLowerCase().includes(s) ||
+                    (t.subarea || '').toLowerCase().includes(s) ||
+                    (t.notas || '').toLowerCase().includes(s)
+                );
+            }
+
+            const allArea = state.tasks.filter(t => t.area === area);
+            const counts = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 };
+            let hechas = 0;
+            allArea.forEach(t => { counts[getQuadrant(t)]++; if (t.estado === 'Hecho') hechas++; });
+            const pctH = allArea.length ? Math.round((hechas / allArea.length) * 100) : 0;
+
+            // Subáreas únicas
+            const subareas = [...new Set(allArea.map(t => t.subarea).filter(Boolean))].sort();
+
+            main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>${lbl.title}</h2>
+        <p>${lbl.subtitle}</p>
+      </div>
+      <div class="page-header-actions">
+        <div class="view-toggle">
+          <button class="${state.areaViewMode === 'lista' ? 'active' : ''}" data-mode="lista">Lista</button>
+          <button class="${state.areaViewMode === 'kanban' ? 'active' : ''}" data-mode="kanban">Kanban</button>
+        </div>
+        <button class="btn btn-primary" id="btn-add-task">+ Nueva tarea</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card q1"><div class="kpi-label">Q1</div><div class="kpi-value">${counts.Q1}</div></div>
+      <div class="kpi-card q2"><div class="kpi-label">Q2</div><div class="kpi-value">${counts.Q2}</div></div>
+      <div class="kpi-card q3"><div class="kpi-label">Q3</div><div class="kpi-value">${counts.Q3}</div></div>
+      <div class="kpi-card q4"><div class="kpi-label">Q4</div><div class="kpi-value">${counts.Q4}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total</div><div class="kpi-value">${allArea.length}</div></div>
+      <div class="kpi-card gold"><div class="kpi-label">% Hecho</div><div class="kpi-value">${pctH}%</div></div>
+    </div>
+
+    <div class="filters">
+      <input type="text" class="search" id="f-search" placeholder="Buscar tareas, subáreas, notas..." value="${escapeHtml(f.search)}">
+      <select id="f-plan">
+        <option value="">Plan: todos</option>
+        <option value="General"${f.plan === 'General' ? ' selected' : ''}>General</option>
+        <option value="Standard"${f.plan === 'Standard' ? ' selected' : ''}>Standard</option>
+        <option value="Premium"${f.plan === 'Premium' ? ' selected' : ''}>Premium</option>
+        <option value="VIP"${f.plan === 'VIP' ? ' selected' : ''}>VIP</option>
+        <option value="Todos"${f.plan === 'Todos' ? ' selected' : ''}>Todos los planes</option>
+      </select>
+      <select id="f-subarea">
+        <option value="">Subárea: todas</option>
+        ${subareas.map(s => `<option value="${escapeHtml(s)}"${f.subarea === s ? ' selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+      </select>
+      <select id="f-cuadrante">
+        <option value="">Cuadrante: todos</option>
+        <option value="Q1"${f.cuadrante === 'Q1' ? ' selected' : ''}>Q1 · Crisis</option>
+        <option value="Q2"${f.cuadrante === 'Q2' ? ' selected' : ''}>Q2 · Estrategia</option>
+        <option value="Q3"${f.cuadrante === 'Q3' ? ' selected' : ''}>Q3 · Engaño</option>
+        <option value="Q4"${f.cuadrante === 'Q4' ? ' selected' : ''}>Q4 · Desperdicio</option>
+      </select>
+      <select id="f-estado">
+        <option value="">Estado: todos</option>
+        <option value="Pendiente"${f.estado === 'Pendiente' ? ' selected' : ''}>Pendiente</option>
+        <option value="En progreso"${f.estado === 'En progreso' ? ' selected' : ''}>En progreso</option>
+        <option value="Bloqueado"${f.estado === 'Bloqueado' ? ' selected' : ''}>Bloqueado</option>
+        <option value="Hecho"${f.estado === 'Hecho' ? ' selected' : ''}>Hecho</option>
+        <option value="Delegado"${f.estado === 'Delegado' ? ' selected' : ''}>Delegado</option>
+      </select>
+      <button class="btn btn-ghost" id="btn-clear-filters">Limpiar</button>
+    </div>
+
+    <div id="area-content"></div>
+  `;
+
+            // Bindings
+            document.getElementById('f-search').addEventListener('input', e => { state.filters.search = e.target.value; debounceRender(); });
+            document.getElementById('f-plan').addEventListener('change', e => { state.filters.plan = e.target.value; render(true); });
+            document.getElementById('f-subarea').addEventListener('change', e => { state.filters.subarea = e.target.value; render(true); });
+            document.getElementById('f-cuadrante').addEventListener('change', e => { state.filters.cuadrante = e.target.value; render(true); });
+            document.getElementById('f-estado').addEventListener('change', e => { state.filters.estado = e.target.value; render(true); });
+            document.getElementById('btn-clear-filters').addEventListener('click', () => {
+                state.filters = { plan: '', subarea: '', cuadrante: '', estado: '', responsable: '', search: '' };
+                render(true);
+            });
+            document.getElementById('btn-add-task').addEventListener('click', () => openTaskForm(null, area));
+            document.querySelectorAll('.view-toggle button').forEach(b => {
+                b.addEventListener('click', () => {
+                    state.areaViewMode = b.dataset.mode;
+                    renderAreaContent(area, filteredTasks);
+                    document.querySelectorAll('.view-toggle button').forEach(x => x.classList.toggle('active', x.dataset.mode === state.areaViewMode));
+                });
+            });
+
+            renderAreaContent(area, filteredTasks);
+        }
+
+        function renderAreaContent(area, filteredTasks) {
+            const container = document.getElementById('area-content');
+            if (!container) return;
+
+            if (state.areaViewMode === 'kanban') {
+                renderKanban(container, filteredTasks);
+            } else {
+                renderListaArea(container, filteredTasks);
+            }
+        }
+
+        function renderListaArea(container, filteredTasks) {
+            if (filteredTasks.length === 0) {
+                container.innerHTML = '<div class="empty-state">No hay tareas que coincidan con los filtros. Ajusta o crea una nueva.</div>';
+                return;
+            }
+            container.innerHTML = `
+    <div class="panel" style="padding:0;overflow:hidden">
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:32%;min-width:200px">Tarea</th>
+            <th>Plan</th>
+            <th>Subárea</th>
+            <th style="text-align:center">Urg.</th>
+            <th style="text-align:center">Imp.</th>
+            <th style="text-align:center">Cuad.</th>
+            <th>Responsable</th>
+            <th>Estado</th>
+            <th>Avance</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filteredTasks.map((t, idx) => {
+                const q = getQuadrant(t);
+                const estadoKey = (t.estado || 'Pendiente').replace(/\s+/g, '');
+                return `<tr class="area-row${idx % 2 ? ' alt' : ''}">
+              <td>
+                <div style="font-weight:500;color:var(--text-dark);margin-bottom:2px">${escapeHtml(t.tarea)}</div>
+                ${t.notas ? `<div style="font-size:10px;color:var(--text-dim);font-style:italic">${escapeHtml(t.notas)}</div>` : ''}
+              </td>
+              <td><span class="plan-pill plan-${t.plan || 'General'}">${t.plan || 'General'}</span></td>
+              <td style="font-size:11px;color:var(--text-mid)">${escapeHtml(t.subarea || '—')}</td>
+              <td style="text-align:center"><input type="checkbox" data-id="${t.id}" data-field="urgente" ${t.urgente ? 'checked' : ''}></td>
+              <td style="text-align:center"><input type="checkbox" data-id="${t.id}" data-field="importante" ${t.importante ? 'checked' : ''}></td>
+              <td style="text-align:center"><span class="quad-pill ${q.toLowerCase()}">${q}</span></td>
+              <td style="font-size:11px">${escapeHtml(t.responsable || '—')}</td>
+              <td>
+                <select data-id="${t.id}" data-field="estado" style="font-size:10px;min-width:110px">
+                  <option ${t.estado === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                  <option ${t.estado === 'En progreso' ? 'selected' : ''}>En progreso</option>
+                  <option ${t.estado === 'Bloqueado' ? 'selected' : ''}>Bloqueado</option>
+                  <option ${t.estado === 'Hecho' ? 'selected' : ''}>Hecho</option>
+                  <option ${t.estado === 'Delegado' ? 'selected' : ''}>Delegado</option>
+                </select>
+              </td>
+              <td>
+                <div class="progress-row">
+                  <input type="range" min="0" max="100" step="5" value="${t.avance || 0}" data-id="${t.id}" data-field="avance" style="width:80px">
+                  <span>${t.avance || 0}%</span>
+                </div>
+              </td>
+              <td style="white-space:nowrap">
+                <button class="btn btn-sm" data-action="edit" data-id="${t.id}" aria-label="Editar tarea">✎</button>
+                <button class="btn btn-sm btn-danger" data-action="delete" data-id="${t.id}" aria-label="Eliminar tarea">×</button>
+              </td>
+            </tr>`;
+            }).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+            bindRowEvents();
+        }
+
+        function renderKanban(container, filteredTasks) {
+            const cols = { Q1: [], Q2: [], Q3: [], Q4: [] };
+            filteredTasks.forEach(t => cols[getQuadrant(t)].push(t));
+
+            container.innerHTML = `
+    <div class="kanban">
+      ${['Q1', 'Q2', 'Q3', 'Q4'].map(q => `
+        <div class="kanban-col ${q.toLowerCase()}">
+          <h3>
+            ${q === 'Q1' ? 'Crisis' : q === 'Q2' ? 'Estrategia' : q === 'Q3' ? 'Engaño' : 'Desperdicio'}
+            <span class="count">${cols[q].length}</span>
+          </h3>
+          <div class="action">${getAction(q)}</div>
+          ${cols[q].length === 0 ? '<p style="color:var(--text-dim);font-size:11px;font-style:italic;margin-top:8px">Sin tareas</p>' : cols[q].map(t => `
+            <div class="kanban-card" data-action="edit" data-id="${t.id}">
+              <div class="title">${escapeHtml(t.tarea)}</div>
+              <div class="meta">
+                <span class="tag">${escapeHtml(t.responsable || '—')}</span>
+                <span class="tag">${escapeHtml(t.subarea || '—')}</span>
+                <span class="status-pill status-${(t.estado || 'Pendiente').replace(/\s+/g, '')}">${t.estado || 'Pendiente'}</span>
+              </div>
+              ${t.avance ? `<div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${t.avance}%"></div></div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}
+    </div>
+  `;
+            // Click to edit
+            container.querySelectorAll('.kanban-card').forEach(c => {
+                c.addEventListener('click', () => openTaskForm(c.dataset.id));
+            });
+        }
+
+        function bindRowEvents() {
+            document.querySelectorAll('input[type="checkbox"][data-field]').forEach(cb => {
+                cb.addEventListener('change', async e => {
+                    const id = e.target.dataset.id;
+                    const field = e.target.dataset.field;
+                    const task = state.tasks.find(t => t.id === id);
+                    if (task) {
+                        task[field] = e.target.checked;
+                        await saveTasks();
+                        render(true);
+                    }
+                });
+            });
+            document.querySelectorAll('select[data-field="estado"]').forEach(sel => {
+                sel.addEventListener('change', async e => {
+                    const id = e.target.dataset.id;
+                    const task = state.tasks.find(t => t.id === id);
+                    if (task) {
+                        task.estado = e.target.value;
+                        if (task.estado === 'Hecho') task.avance = 100;
+                        await saveTasks();
+                        updateBadges();
+                        render(true);
+                    }
+                });
+            });
+            document.querySelectorAll('input[type="range"][data-field="avance"]').forEach(rng => {
+                rng.addEventListener('change', async e => {
+                    const id = e.target.dataset.id;
+                    const task = state.tasks.find(t => t.id === id);
+                    if (task) {
+                        task.avance = parseInt(e.target.value);
+                        if (task.avance === 100 && task.estado !== 'Hecho') task.estado = 'Hecho';
+                        await saveTasks();
+                        updateBadges();
+                        render(true);
+                    }
+                });
+                rng.addEventListener('input', e => {
+                    const span = e.target.parentElement.querySelector('span');
+                    if (span) span.textContent = e.target.value + '%';
+                });
+            });
+            document.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    const id = e.target.dataset.id;
+                    const action = e.target.dataset.action;
+                    if (action === 'edit') openTaskForm(id);
+                    else if (action === 'delete') {
+                        if (confirm('¿Eliminar esta tarea? Esta acción no se puede deshacer.')) {
+                            state.tasks = state.tasks.filter(t => t.id !== id);
+                            saveTasks().then(() => {
+                                updateBadges();
+                                render(true);
+                                showToast('Tarea eliminada');
+                            });
+                        }
+                    }
+                });
+            });
+        }
+
+        let renderTimeout;
+        function debounceRender() {
+            clearTimeout(renderTimeout);
+            renderTimeout = setTimeout(() => render(true), 250);
+        }
+
+        function renderCalendario() {
+            const cursor = getCurrentCursor();
+            const { year, month } = cursor;
+            const today = new Date();
+            const todayYmd = partsToYmd(today.getFullYear(), today.getMonth(), today.getDate());
+
+            // Hitos por fecha (expandiendo rangos)
+            const hitosByDate = {};
+            state.hitos.forEach(h => {
+                if (!h.inicio) return;
+                const a = ymdToParts(h.inicio);
+                const b = ymdToParts(h.fin) || a;
+                if (!a) return;
+                const start = new Date(a.year, a.month, a.day);
+                const end = new Date(b.year, b.month, b.day);
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const key = partsToYmd(d.getFullYear(), d.getMonth(), d.getDate());
+                    (hitosByDate[key] = hitosByDate[key] || []).push({
+                        ...h,
+                        isStart: key === h.inicio,
+                        isRange: h.fin && h.fin !== h.inicio,
+                    });
+                }
+            });
+
+            const monthLabel = `${MES_LARGO[month]} ${year}`;
+
+            main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Calendario de hitos</h2>
+        <p>Lanzamientos · directos mensuales · podcasts · talleres VIP</p>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn" id="btn-cal-today">Hoy</button>
+        <button class="btn btn-primary" id="btn-add-hito">+ Nuevo hito</button>
+      </div>
+    </div>
+
+    <div class="cal-toolbar">
+      <div class="cal-nav">
+        <button id="cal-prev" aria-label="Mes anterior">‹</button>
+        <button id="cal-next" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="cal-month-label">${monthLabel}</div>
+      <div class="cal-view-toggle" role="tablist" aria-label="Modo de vista">
+        <button class="${state.calendarMode === 'mes' ? 'active' : ''}" data-cal-mode="mes" role="tab">Mes</button>
+        <button class="${state.calendarMode === 'agenda' ? 'active' : ''}" data-cal-mode="agenda" role="tab">Agenda</button>
+      </div>
+    </div>
+
+    <div class="cal-legend">
+      <span class="cal-legend-item"><span class="cal-legend-dot lanzamiento"></span>Lanzamiento</span>
+      <span class="cal-legend-item"><span class="cal-legend-dot directo"></span>Directo</span>
+      <span class="cal-legend-item"><span class="cal-legend-dot podcast"></span>Podcast</span>
+      <span class="cal-legend-item"><span class="cal-legend-dot taller"></span>Taller</span>
+      <span class="cal-legend-item"><span class="cal-legend-dot evento"></span>Evento</span>
+      <span class="cal-legend-item"><span class="cal-legend-dot otro"></span>Otro</span>
+    </div>
+
+    <div id="cal-content"></div>
+  `;
+
+            renderCalContent({ year, month, hitosByDate, todayYmd });
+
+            document.getElementById('btn-add-hito').addEventListener('click', () => openHitoForm());
+            document.getElementById('btn-cal-today').addEventListener('click', () => {
+                state.calendarCursor = null;
+                renderCalendario();
+            });
+            document.getElementById('cal-prev').addEventListener('click', () => {
+                const c = getCurrentCursor();
+                state.calendarCursor = c.month === 0 ? { year: c.year - 1, month: 11 } : { year: c.year, month: c.month - 1 };
+                renderCalendario();
+            });
+            document.getElementById('cal-next').addEventListener('click', () => {
+                const c = getCurrentCursor();
+                state.calendarCursor = c.month === 11 ? { year: c.year + 1, month: 0 } : { year: c.year, month: c.month + 1 };
+                renderCalendario();
+            });
+            main.querySelectorAll('[data-cal-mode]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    state.calendarMode = btn.dataset.calMode;
+                    renderCalendario();
+                });
+            });
+        }
+
+        function renderCalContent({ year, month, hitosByDate, todayYmd }) {
+            const wrap = document.getElementById('cal-content');
+            if (!wrap) return;
+
+            if (state.calendarMode === 'agenda') {
+                renderCalAgenda(wrap, { year, month, hitosByDate, todayYmd });
+            } else {
+                renderCalMonth(wrap, { year, month, hitosByDate, todayYmd });
+            }
+        }
+
+        function renderCalMonth(wrap, { year, month, hitosByDate, todayYmd }) {
+            // Día de la semana del 1ro (lunes=0 ... domingo=6)
+            const firstDay = new Date(year, month, 1);
+            const jsDow = firstDay.getDay(); // 0=dom
+            const offset = jsDow === 0 ? 6 : jsDow - 1;
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Mes anterior para padding
+            const prevDays = new Date(year, month, 0).getDate();
+
+            // Total celdas: múltiplo de 7 que cubra todos los días
+            const totalCells = Math.ceil((offset + daysInMonth) / 7) * 7;
+
+            const cells = [];
+            for (let i = 0; i < totalCells; i++) {
+                const dayInGrid = i - offset + 1;
+                let cellYear = year, cellMonth = month, cellDay, otherMonth = false;
+
+                if (dayInGrid < 1) {
+                    cellDay = prevDays + dayInGrid;
+                    cellMonth = month - 1;
+                    if (cellMonth < 0) { cellMonth = 11; cellYear = year - 1; }
+                    otherMonth = true;
+                } else if (dayInGrid > daysInMonth) {
+                    cellDay = dayInGrid - daysInMonth;
+                    cellMonth = month + 1;
+                    if (cellMonth > 11) { cellMonth = 0; cellYear = year + 1; }
+                    otherMonth = true;
+                } else {
+                    cellDay = dayInGrid;
+                }
+
+                const ymd = partsToYmd(cellYear, cellMonth, cellDay);
+                const events = hitosByDate[ymd] || [];
+                const isToday = ymd === todayYmd && !otherMonth;
+                const isWeekend = (i % 7) >= 5;
+
+                cells.push({ ymd, day: cellDay, otherMonth, isToday, isWeekend, events });
+            }
+
+            const MAX_VISIBLE = 3;
+
+            wrap.innerHTML = `
+    <div class="cal-grid-wrap">
+      <div class="cal-weekdays">
+        ${DIA_SEMANA_CORTO.map(d => `<div class="cal-weekday">${d}</div>`).join('')}
+      </div>
+      <div class="cal-grid">
+        ${cells.map(c => {
+                const visible = c.events.slice(0, MAX_VISIBLE);
+                const overflow = c.events.length - visible.length;
+                return `
+          <div class="cal-cell${c.otherMonth ? ' is-other-month' : ''}${c.isToday ? ' is-today' : ''}${c.isWeekend ? ' is-weekend' : ''}" data-ymd="${c.ymd}">
+            <div class="cal-day-num">${c.day}</div>
+            <div class="cal-events">
+              ${visible.map(e => `
+                <div class="cal-event ${e.tipo || 'otro'}${e.isRange ? ' is-range' : ''}" data-hito-id="${e.id}" title="${escapeHtml(e.titulo)}">
+                  ${escapeHtml(e.titulo)}
+                </div>
+              `).join('')}
+              ${overflow > 0 ? `<div class="cal-more" data-cell-ymd="${c.ymd}">+${overflow} más</div>` : ''}
+            </div>
+          </div>
+        `;
+            }).join('')}
+      </div>
+    </div>
+  `;
+
+            // Click en evento → detalle
+            wrap.querySelectorAll('.cal-event').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openHitoDetail(el.dataset.hitoId);
+                });
+            });
+            // Click en "+N más" → ver todos los del día
+            wrap.querySelectorAll('.cal-more').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openDayDetail(el.dataset.cellYmd, hitosByDate[el.dataset.cellYmd] || []);
+                });
+            });
+            // Click en celda vacía → crear hito en esa fecha
+            wrap.querySelectorAll('.cal-cell').forEach(el => {
+                el.addEventListener('click', () => {
+                    if (el.classList.contains('is-other-month')) return;
+                    openHitoForm(null, el.dataset.ymd);
+                });
+            });
+        }
+
+        function renderCalAgenda(wrap, { year, month, hitosByDate, todayYmd }) {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const dias = [];
+            for (let d = 1; d <= daysInMonth; d++) {
+                const ymd = partsToYmd(year, month, d);
+                const events = hitosByDate[ymd] || [];
+                if (events.length > 0) dias.push({ ymd, day: d, events, isToday: ymd === todayYmd });
+            }
+
+            if (dias.length === 0) {
+                wrap.innerHTML = `<div class="cal-empty-month">Sin hitos este mes. Pulsa <strong>+ Nuevo hito</strong> para agregar uno.</div>`;
+                return;
+            }
+
+            wrap.innerHTML = `
+    <div class="cal-agenda">
+      ${dias.map(d => `
+        <div class="cal-agenda-day${d.isToday ? ' is-today' : ''}">
+          <div class="cal-agenda-date">
+            <div class="num">${d.day}</div>
+            <div class="month">${MES_CORTO[month]}</div>
+          </div>
+          <div class="cal-agenda-events">
+            ${d.events.map(e => `
+              <div class="cal-event ${e.tipo || 'otro'}" data-hito-id="${e.id}">
+                ${escapeHtml(e.titulo)}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+            wrap.querySelectorAll('.cal-event').forEach(el => {
+                el.addEventListener('click', () => openHitoDetail(el.dataset.hitoId));
+            });
+        }
+
+        function openDayDetail(ymd, events) {
+            const parts = ymdToParts(ymd);
+            if (!parts) return;
+            const dateLong = new Date(parts.year, parts.month, parts.day)
+                .toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            openModal(`
+    <h3 style="text-transform:capitalize">${dateLong}</h3>
+    <p style="color:var(--text-mid);font-size:12px;margin-bottom:14px">${events.length} hito${events.length === 1 ? '' : 's'} en este día</p>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${events.map(e => `
+        <div class="cal-event ${e.tipo || 'otro'}" data-hito-id="${e.id}" style="white-space:normal;font-size:13px;padding:10px 12px">
+          <div style="font-weight:600;margin-bottom:2px">${escapeHtml(e.titulo)}</div>
+          <div style="font-size:11px;opacity:0.8">${escapeHtml(e.responsable || '—')} · ${TIPO_LABELS[e.tipo] || e.tipo || 'Otro'}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="btn-cancel">Cerrar</button>
+    </div>
+  `);
+            document.getElementById('btn-cancel').addEventListener('click', closeModal);
+            document.querySelectorAll('#modal-content .cal-event').forEach(el => {
+                el.addEventListener('click', () => openHitoDetail(el.dataset.hitoId));
+            });
+        }
+
+        function openHitoDetail(id) {
+            const h = state.hitos.find(x => x.id === id);
+            if (!h) return;
+            const tipo = h.tipo || 'otro';
+            const tipoLabel = TIPO_LABELS[tipo] || tipo;
+            const fechaTxt = h.fin && h.fin !== h.inicio
+                ? `${formatDateLong(h.inicio)} → ${formatDateLong(h.fin)}`
+                : formatDateLong(h.inicio);
+
+            openModal(`
+    <h3>${escapeHtml(h.titulo)}</h3>
+    <div class="hito-detail">
+      <span class="hito-detail-tag cal-event ${tipo}" style="cursor:default">${tipoLabel}</span>
+      <div>
+        <div class="hito-detail-row">
+          <div class="label">Fecha</div>
+          <div class="value">${fechaTxt}</div>
+        </div>
+        <div class="hito-detail-row">
+          <div class="label">Responsable</div>
+          <div class="value">${escapeHtml(h.responsable || '—')}</div>
+        </div>
+        <div class="hito-detail-row">
+          <div class="label">Tipo</div>
+          <div class="value">${tipoLabel}</div>
+        </div>
+        ${h.notas ? `
+        <div class="hito-detail-row">
+          <div class="label">Notas</div>
+          <div class="value">${escapeHtml(h.notas)}</div>
+        </div>` : ''}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="btn-delete-hito">Eliminar</button>
+      <div style="flex:1"></div>
+      <button class="btn" id="btn-cancel">Cerrar</button>
+      <button class="btn btn-primary" id="btn-edit-hito">Editar</button>
+    </div>
+  `);
+
+            document.getElementById('btn-cancel').addEventListener('click', closeModal);
+            document.getElementById('btn-edit-hito').addEventListener('click', () => {
+                closeModal();
+                openHitoForm(id);
+            });
+            document.getElementById('btn-delete-hito').addEventListener('click', async () => {
+                if (!confirm('¿Eliminar este hito?')) return;
+                state.hitos = state.hitos.filter(x => x.id !== id);
+                await saveHitos();
+                closeModal();
+                render();
+                showToast('Hito eliminado');
+            });
+        }
+
+        function renderEquipo() {
+            const personas = EQUIPO.map(p => {
+                const matches = (resp) => (resp || '').toLowerCase().includes(p.nombre.toLowerCase());
+                const tareas = state.tasks.filter(t => matches(t.responsable));
+                const counts = {
+                    producto: tareas.filter(t => t.area === 'producto').length,
+                    marketing: tareas.filter(t => t.area === 'marketing').length,
+                    ventas: tareas.filter(t => t.area === 'ventas').length,
+                };
+                const total = counts.producto + counts.marketing + counts.ventas;
+                const hechas = tareas.filter(t => t.estado === 'Hecho').length;
+                const pctH = total ? Math.round((hechas / total) * 100) : 0;
+                return { ...p, ...counts, total, pctH };
+            });
+
+            main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Equipo · Carga por persona</h2>
+        <p>¿Quién está sosteniendo qué? · Distribución de tareas activas</p>
+      </div>
+    </div>
+
+    <div class="panel" style="padding:0;overflow:hidden">
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="min-width:140px">Persona</th>
+            <th style="min-width:200px">Rol</th>
+            <th style="text-align:center">Producto</th>
+            <th style="text-align:center">Marketing</th>
+            <th style="text-align:center">Ventas</th>
+            <th style="text-align:center">Total</th>
+            <th style="min-width:160px">% Hechas</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${personas.map((p, idx) => `
+            <tr class="area-row${idx % 2 ? ' alt' : ''}">
+              <td style="font-weight:600">${escapeHtml(p.nombre)}</td>
+              <td style="font-size:11px;color:var(--text-mid);font-style:italic">${escapeHtml(p.rol)}</td>
+              <td style="text-align:center;font-weight:600">${p.producto}</td>
+              <td style="text-align:center;font-weight:600">${p.marketing}</td>
+              <td style="text-align:center;font-weight:600">${p.ventas}</td>
+              <td style="text-align:center;font-weight:700;color:var(--sage-deep);font-size:16px">${p.total}</td>
+              <td>
+                <div class="progress-row">
+                  <div class="progress-bar" style="flex:1"><div class="progress-fill" style="width:${p.pctH}%"></div></div>
+                  <span>${p.pctH}%</span>
+                </div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p style="font-size:12px;color:var(--text-mid);font-style:italic">💡 Los conteos usan coincidencia parcial — si una tarea tiene varios responsables ('Lina + Cristhian'), suma a ambos.</p>
+    </div>
+  `;
+        }
+
+        function renderAjustes() {
+            main.innerHTML = `
+    <div class="page-header">
+      <div>
+        <h2>Ajustes</h2>
+        <p>Importar · Exportar · Restablecer datos</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📥 Importar / Exportar</div>
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px">
+        Exporta todo tu plan a JSON para hacer backup, compartir con tu equipo o llevarlo a otro dispositivo.
+        Al importar, los datos actuales se reemplazarán.
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="btn-export">📥 Exportar plan completo</button>
+        <button class="btn" id="btn-import">📤 Importar desde JSON</button>
+        <input type="file" id="import-file" accept="application/json" style="display:none">
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📊 Resumen actual</div>
+      <table>
+        <tbody>
+          <tr><td>Tareas totales</td><td style="text-align:right;font-weight:600">${state.tasks.length}</td></tr>
+          <tr><td>Hitos del calendario</td><td style="text-align:right;font-weight:600">${state.hitos.length}</td></tr>
+          <tr><td>Tareas hechas</td><td style="text-align:right;font-weight:600">${state.tasks.filter(t => t.estado === 'Hecho').length}</td></tr>
+          <tr><td>Almacenamiento</td><td style="text-align:right;font-weight:600">Persistente (window.storage)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel" style="border-color:var(--q1-red)">
+      <div class="panel-title" style="color:var(--q1-red)">⚠ Zona peligrosa</div>
+      <p style="font-size:13px;color:var(--text-mid);margin-bottom:14px">
+        Restablecer datos elimina todas tus tareas e hitos personalizados y vuelve a cargar los datos iniciales de Savias. Esto no se puede deshacer.
+      </p>
+      <button class="btn btn-danger" id="btn-reset">🔄 Restablecer todo</button>
+    </div>
+  `;
+
+            document.getElementById('btn-export').addEventListener('click', exportData);
+            document.getElementById('btn-import').addEventListener('click', () => document.getElementById('import-file').click());
+            document.getElementById('import-file').addEventListener('change', importData);
+            document.getElementById('btn-reset').addEventListener('click', resetData);
+        }
+
+        function exportData() {
+            const data = {
+                proyecto: 'Savias',
+                exportado: new Date().toISOString(),
+                tasks: state.tasks,
+                hitos: state.hitos,
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `savias-planner-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Plan exportado');
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!confirm('Importar este archivo reemplazará todo tu plan actual. ¿Continuar?')) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (Array.isArray(data.tasks)) {
+                        state.tasks = data.tasks.map(t => ({ ...t, id: t.id || uid() }));
+                        await saveTasks();
+                    }
+                    if (Array.isArray(data.hitos)) {
+                        state.hitos = data.hitos.map(h => ({ ...h, id: h.id || uid() }));
+                        await saveHitos();
+                    }
+                    updateBadges();
+                    render();
+                    showToast('Plan importado correctamente');
+                } catch (err) {
+                    showToast('Error al importar el archivo');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function resetData() {
+            if (!confirm('Esto eliminará TODOS tus datos personalizados y volverá a cargar los datos iniciales. ¿Estás seguro?')) return;
+            if (!confirm('Última confirmación: ¿realmente quieres restablecer todo?')) return;
+            state.tasks = SEED_TASKS.map(t => ({ ...t, id: uid() }));
+            state.hitos = SEED_HITOS.map(h => ({ ...h, id: uid() }));
+            await saveTasks();
+            await saveHitos();
+            updateBadges();
+            render();
+            showToast('Datos restablecidos');
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // FORMS
+        // ═══════════════════════════════════════════════════════════════
+        function openTaskForm(id, defaultArea) {
+            const task = id ? state.tasks.find(t => t.id === id) : null;
+            const t = task || {
+                area: defaultArea || 'producto',
+                plan: 'General',
+                tarea: '',
+                subarea: '',
+                urgente: false,
+                importante: false,
+                responsable: '',
+                frecuencia: '',
+                inicio: '',
+                fin: '',
+                estado: 'Pendiente',
+                avance: 0,
+                notas: ''
+            };
+
+            openModal(`
+    <h3>${id ? 'Editar tarea' : 'Nueva tarea'}</h3>
+    <div class="form-grid">
+      <div class="full">
+        <label>Tarea</label>
+        <input type="text" id="t-tarea" value="${escapeHtml(t.tarea)}" placeholder="Ej: Live semanal Q&A laboratorio">
+      </div>
+      <div>
+        <label>Área</label>
+        <select id="t-area">
+          <option value="producto" ${t.area === 'producto' ? 'selected' : ''}>▲ Producto</option>
+          <option value="marketing" ${t.area === 'marketing' ? 'selected' : ''}>● Marketing</option>
+          <option value="ventas" ${t.area === 'ventas' ? 'selected' : ''}>$ Ventas</option>
+        </select>
+      </div>
+      <div>
+        <label>Plan</label>
+        <select id="t-plan">
+          <option value="General" ${t.plan === 'General' ? 'selected' : ''}>General</option>
+          <option value="Standard" ${t.plan === 'Standard' ? 'selected' : ''}>Standard</option>
+          <option value="Premium" ${t.plan === 'Premium' ? 'selected' : ''}>Premium</option>
+          <option value="VIP" ${t.plan === 'VIP' ? 'selected' : ''}>VIP</option>
+          <option value="Todos" ${t.plan === 'Todos' ? 'selected' : ''}>Todos</option>
+        </select>
+      </div>
+      <div>
+        <label>Subárea</label>
+        <input type="text" id="t-subarea" value="${escapeHtml(t.subarea)}" placeholder="Ej: Cursos Premium">
+      </div>
+      <div>
+        <label>Frecuencia</label>
+        <input type="text" id="t-frecuencia" value="${escapeHtml(t.frecuencia)}" placeholder="Ej: Semanal">
+      </div>
+      <div>
+        <label>Urgente?</label>
+        <select id="t-urgente">
+          <option value="false" ${!t.urgente ? 'selected' : ''}>No</option>
+          <option value="true" ${t.urgente ? 'selected' : ''}>Sí</option>
+        </select>
+      </div>
+      <div>
+        <label>Importante?</label>
+        <select id="t-importante">
+          <option value="false" ${!t.importante ? 'selected' : ''}>No</option>
+          <option value="true" ${t.importante ? 'selected' : ''}>Sí</option>
+        </select>
+      </div>
+      <div>
+        <label>Responsable</label>
+        <input type="text" id="t-responsable" value="${escapeHtml(t.responsable)}" placeholder="Ej: Lina + Cristhian">
+      </div>
+      <div>
+        <label>Estado</label>
+        <select id="t-estado">
+          <option ${t.estado === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+          <option ${t.estado === 'En progreso' ? 'selected' : ''}>En progreso</option>
+          <option ${t.estado === 'Bloqueado' ? 'selected' : ''}>Bloqueado</option>
+          <option ${t.estado === 'Hecho' ? 'selected' : ''}>Hecho</option>
+          <option ${t.estado === 'Delegado' ? 'selected' : ''}>Delegado</option>
+        </select>
+      </div>
+      <div>
+        <label>Fecha inicio</label>
+        <input type="date" id="t-inicio" value="${t.inicio || ''}">
+      </div>
+      <div>
+        <label>Fecha límite</label>
+        <input type="date" id="t-fin" value="${t.fin || ''}">
+      </div>
+      <div>
+        <label>% Avance</label>
+        <input type="number" id="t-avance" value="${t.avance || 0}" min="0" max="100" step="5">
+      </div>
+      <div class="full">
+        <label>Notas / Bloqueos</label>
+        <textarea id="t-notas" rows="2" placeholder="Contexto adicional, dependencias...">${escapeHtml(t.notas)}</textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      ${id ? '<button class="btn btn-danger" id="btn-delete-task">Eliminar</button>' : ''}
+      <div style="flex:1"></div>
+      <button class="btn" id="btn-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-task">${id ? 'Guardar cambios' : 'Crear tarea'}</button>
+    </div>
+  `);
+
+            document.getElementById('btn-cancel').addEventListener('click', closeModal);
+            if (id) {
+                document.getElementById('btn-delete-task').addEventListener('click', async () => {
+                    if (confirm('¿Eliminar esta tarea?')) {
+                        state.tasks = state.tasks.filter(x => x.id !== id);
+                        await saveTasks();
+                        updateBadges();
+                        closeModal();
+                        render(true);
+                        showToast('Tarea eliminada');
+                    }
+                });
+            }
+            document.getElementById('btn-save-task').addEventListener('click', async () => {
+                const data = {
+                    area: document.getElementById('t-area').value,
+                    plan: document.getElementById('t-plan').value,
+                    tarea: document.getElementById('t-tarea').value.trim(),
+                    subarea: document.getElementById('t-subarea').value.trim(),
+                    urgente: document.getElementById('t-urgente').value === 'true',
+                    importante: document.getElementById('t-importante').value === 'true',
+                    responsable: document.getElementById('t-responsable').value.trim(),
+                    frecuencia: document.getElementById('t-frecuencia').value.trim(),
+                    inicio: document.getElementById('t-inicio').value,
+                    fin: document.getElementById('t-fin').value,
+                    estado: document.getElementById('t-estado').value,
+                    avance: parseInt(document.getElementById('t-avance').value) || 0,
+                    notas: document.getElementById('t-notas').value.trim(),
+                };
+                if (!data.tarea) { showToast('La tarea no puede estar vacía'); return; }
+
+                if (id) {
+                    const taskRef = state.tasks.find(t => t.id === id);
+                    Object.assign(taskRef, data);
+                    showToast('Tarea actualizada');
+                } else {
+                    state.tasks.push({ id: uid(), ...data });
+                    showToast('Tarea creada');
+                }
+                await saveTasks();
+                updateBadges();
+                closeModal();
+                render(true);
+            });
+        }
+
+        function openHitoForm(id, defaultYmd) {
+            const existing = id ? state.hitos.find(h => h.id === id) : null;
+            const h = existing || {
+                titulo: '',
+                inicio: defaultYmd || '',
+                fin: '',
+                tipo: 'evento',
+                responsable: '',
+                notas: '',
+            };
+
+            openModal(`
+    <h3>${id ? 'Editar hito' : 'Nuevo hito'}</h3>
+    <div class="form-grid">
+      <div class="full">
+        <label>Título</label>
+        <input type="text" id="h-titulo" value="${escapeHtml(h.titulo)}" placeholder="Ej: 🚀 Lanzamiento Q3 Savias">
+      </div>
+      <div>
+        <label>Fecha inicio</label>
+        <input type="date" id="h-inicio" value="${h.inicio || ''}">
+      </div>
+      <div>
+        <label>Fecha fin</label>
+        <input type="date" id="h-fin" value="${h.fin || ''}">
+      </div>
+      <div>
+        <label>Tipo</label>
+        <select id="h-tipo">
+          <option value="lanzamiento" ${h.tipo === 'lanzamiento' ? 'selected' : ''}>Lanzamiento</option>
+          <option value="directo" ${h.tipo === 'directo' ? 'selected' : ''}>Directo</option>
+          <option value="podcast" ${h.tipo === 'podcast' ? 'selected' : ''}>Podcast</option>
+          <option value="taller" ${h.tipo === 'taller' ? 'selected' : ''}>Taller</option>
+          <option value="evento" ${h.tipo === 'evento' ? 'selected' : ''}>Evento</option>
+          <option value="otro" ${h.tipo === 'otro' ? 'selected' : ''}>Otro</option>
+        </select>
+      </div>
+      <div>
+        <label>Responsable</label>
+        <input type="text" id="h-responsable" value="${escapeHtml(h.responsable || '')}" placeholder="Ej: Lina + Equipo">
+      </div>
+      <div class="full">
+        <label>Notas</label>
+        <textarea id="h-notas" rows="2" placeholder="Detalles, contexto, links...">${escapeHtml(h.notas || '')}</textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      ${id ? '<button class="btn btn-danger" id="btn-delete-hito-form">Eliminar</button>' : ''}
+      <div style="flex:1"></div>
+      <button class="btn" id="btn-cancel-hito">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-hito">${id ? 'Guardar cambios' : 'Crear hito'}</button>
+    </div>
+  `);
+
+            document.getElementById('btn-cancel-hito').addEventListener('click', closeModal);
+            if (id) {
+                document.getElementById('btn-delete-hito-form').addEventListener('click', async () => {
+                    if (!confirm('¿Eliminar este hito?')) return;
+                    state.hitos = state.hitos.filter(x => x.id !== id);
+                    await saveHitos();
+                    closeModal();
+                    render();
+                    showToast('Hito eliminado');
+                });
+            }
+            document.getElementById('btn-save-hito').addEventListener('click', async () => {
+                const titulo = document.getElementById('h-titulo').value.trim();
+                if (!titulo) { showToast('El título es obligatorio'); return; }
+
+                const data = {
+                    titulo,
+                    inicio: document.getElementById('h-inicio').value,
+                    fin: document.getElementById('h-fin').value,
+                    tipo: document.getElementById('h-tipo').value,
+                    responsable: document.getElementById('h-responsable').value.trim(),
+                    notas: document.getElementById('h-notas').value.trim(),
+                };
+
+                if (id) {
+                    const ref = state.hitos.find(x => x.id === id);
+                    if (ref) Object.assign(ref, data);
+                    showToast('Hito actualizado');
+                } else {
+                    state.hitos.push({ id: uid(), ...data });
+                    showToast('Hito creado');
+                }
+                await saveHitos();
+                closeModal();
+                render();
+            });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // ROUTER
+        // ═══════════════════════════════════════════════════════════════
+        function render(keepFilters) {
+            if (!state.initialized) {
+                main.innerHTML = '<div class="loading">Cargando planificador...</div>';
+                return;
+            }
+            if (!keepFilters && !['producto', 'marketing', 'ventas'].includes(state.currentView)) {
+                state.filters = { plan: '', subarea: '', cuadrante: '', estado: '', responsable: '', search: '' };
+            }
+
+            document.querySelectorAll('.nav-item').forEach(n => {
+                n.classList.toggle('active', n.dataset.view === state.currentView);
+            });
+
+            switch (state.currentView) {
+                case 'inicio': renderInicio(); break;
+                case 'hoy': renderHoy(); break;
+                case 'dashboard': renderDashboard(); break;
+                case 'producto': renderArea('producto'); break;
+                case 'marketing': renderArea('marketing'); break;
+                case 'ventas': renderArea('ventas'); break;
+                case 'calendario': renderCalendario(); break;
+                case 'equipo': renderEquipo(); break;
+                case 'ajustes': renderAjustes(); break;
+                default: renderInicio();
+            }
+
+            updateBadges();
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // MOBILE SIDEBAR DRAWER
+        // ═══════════════════════════════════════════════════════════════
+        const sidebarEl = document.getElementById('sidebar');
+        const backdropEl = document.getElementById('sidebar-backdrop');
+        const menuBtn = document.getElementById('menu-toggle');
+        const mobileMQ = window.matchMedia('(max-width: 900px)');
+
+        function openSidebar() {
+            sidebarEl.classList.add('open');
+            backdropEl.classList.add('open');
+            backdropEl.setAttribute('aria-hidden', 'false');
+            menuBtn.setAttribute('aria-expanded', 'true');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebarEl.classList.remove('open');
+            backdropEl.classList.remove('open');
+            backdropEl.setAttribute('aria-hidden', 'true');
+            menuBtn.setAttribute('aria-expanded', 'false');
+            document.body.style.overflow = '';
+        }
+
+        function toggleSidebar() {
+            if (sidebarEl.classList.contains('open')) closeSidebar();
+            else openSidebar();
+        }
+
+        menuBtn.addEventListener('click', toggleSidebar);
+        backdropEl.addEventListener('click', closeSidebar);
+
+        // Cerrar drawer al cambiar a desktop
+        mobileMQ.addEventListener('change', (e) => {
+            if (!e.matches) closeSidebar();
+        });
+
+        // Cerrar con tecla Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (sidebarEl.classList.contains('open')) closeSidebar();
+                if (document.getElementById('modal-backdrop').classList.contains('open')) closeModal();
+            }
+        });
+
+        // Navegación
+        document.querySelectorAll('.nav-item').forEach(n => {
+            const handler = () => {
+                state.currentView = n.dataset.view;
+                state.filters = { plan: '', subarea: '', cuadrante: '', estado: '', responsable: '', search: '' };
+                render();
+                window.scrollTo(0, 0);
+                if (mobileMQ.matches) closeSidebar();
+            };
+            n.addEventListener('click', handler);
+            n.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handler();
+                }
+            });
+        });
+
+        // ═══════════════════════════════════════════════════════════════
+        // INIT
+        // ═══════════════════════════════════════════════════════════════
+        (async () => {
+            render();
+            await loadState();
+            render();
+        })();
+    </script>
+</body>
+
+</html>

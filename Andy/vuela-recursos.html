@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Tus Recursos VUELA · Andy Molina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --black: #0a0a0a;
+    --black-soft: #131313;
+    --black-elev: #1a1a1a;
+    --gold: #c9a961;
+    --gold-soft: #d4b876;
+    --gold-glow: rgba(201, 169, 97, 0.4);
+    --cream: #f5f1e8;
+    --cream-soft: #faf7ef;
+    --white: #ffffff;
+    --gray-400: #8a8a8a;
+    --gray-500: #6e6e6e;
+    --gray-600: #525252;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-dark: rgba(10, 10, 10, 0.12);
+    --ff-display: 'Fraunces', serif;
+    --ff-body: 'Inter', -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+  body {
+    background: var(--black);
+    color: var(--cream);
+    font-family: var(--ff-body);
+    font-weight: 400;
+    line-height: 1.6;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  img { max-width: 100%; display: block; }
+
+  /* ============ FORCE FULL WIDTH (GHL safe) ============ */
+  .force-full-width {
+    position: relative !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    margin-right: calc(50% - 50vw) !important;
+    left: 0 !important;
+    right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .force-full-width-fixed {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* GHL contenedores típicos que pueden romper el full-width */
+  .force-full-width.force-full-width { /* doble para ganar especificidad */
+    width: 100vw !important;
+    max-width: 100vw !important;
+  }
+
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: auto;
+    display: flex; align-items: center; justify-content: center;
+    padding: 80px 40px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201, 169, 97, 0.08), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 50% 100%, rgba(201, 169, 97, 0.05), transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.85  0 0 0 0 0.7  0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.6; mix-blend-mode: overlay; pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1200px; width: 100%;
+    text-align: center;
+    position: relative; z-index: 2;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 10px 22px;
+    border: 1px solid rgba(201, 169, 97, 0.45);
+    border-radius: 999px;
+    font-size: 15px; font-weight: 600;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 36px;
+    opacity: 0; animation: fadeUp 1s 0.2s forwards;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold); box-shadow: 0 0 12px var(--gold);
+    animation: pulse 2s infinite;
+  }
+
+  .hero h1 {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-size: clamp(42px, 7vw, 96px);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    color: var(--cream);
+    margin-bottom: 28px;
+    opacity: 0; animation: fadeUp 1.2s 0.4s forwards;
+  }
+  .hero h1 em {
+    font-style: italic; font-weight: 300;
+    color: var(--gold);
+    font-variation-settings: "opsz" 144;
+  }
+  .hero-tagline {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-style: italic;
+    font-size: clamp(20px, 2.4vw, 30px);
+    line-height: 1.35;
+    letter-spacing: -0.015em;
+    color: var(--cream);
+    max-width: 760px;
+    margin: -8px auto 28px;
+    opacity: 0; animation: fadeUp 1.2s 0.5s forwards;
+  }
+  .hero-tagline em {
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 400;
+    font-variation-settings: "opsz" 144;
+  }
+  .hero-sub {
+    font-size: clamp(16px, 1.3vw, 18px);
+    color: var(--gray-400);
+    max-width: 640px;
+    margin: 0 auto 14px;
+    line-height: 1.6;
+    opacity: 0; animation: fadeUp 1.2s 0.6s forwards;
+  }
+  .hero-sub strong { color: var(--cream); font-weight: 500; }
+  .hero-arrow {
+    display: inline-flex;
+    margin-top: 8px;
+    color: var(--gold);
+    font-size: 28px;
+    animation: bounce 2.4s infinite;
+    opacity: 0;
+    animation: fadeUp 1.2s 0.8s forwards, bounce 2.4s 1.4s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
+
+  /* ============ VIDEO LOOM SECTION ============ */
+  .video-section {
+    padding: 40px 40px 80px;
+    background: var(--black);
+    position: relative;
+  }
+  .video-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--gold);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(201, 169, 97, 0.18),
+                0 0 30px -10px var(--gold-glow);
+    aspect-ratio: 16 / 9;
+    background: var(--black-elev);
+  }
+  .video-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    border: 0;
+  }
+  .video-caption {
+    text-align: center;
+    margin-top: 22px;
+    font-family: var(--ff-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(15px, 1.2vw, 17px);
+    color: var(--gold);
+    letter-spacing: 0.01em;
+  }
+
+  /* ============ SECTIONS GENERAL ============ */
+  section { padding: 80px 40px; position: relative; }
+  .container { max-width: 1200px; margin: 0 auto; width: 100%; }
+  .section-eyebrow {
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--cream);
+    max-width: 900px;
+    margin-bottom: 32px;
+  }
+  .section-title em {
+    font-style: italic; color: var(--gold);
+    font-variation-settings: "opsz" 144;
+  }
+  .section-lead {
+    font-size: clamp(17px, 1.4vw, 20px); line-height: 1.55;
+    color: var(--gray-400);
+    max-width: 640px;
+    margin-bottom: 60px;
+  }
+
+  /* ============ RECURSOS ============ */
+  .recursos {
+    background: var(--black-soft);
+    padding: 100px 40px;
+  }
+  .recursos-head {
+    text-align: center;
+    max-width: 820px;
+    margin: 0 auto 60px;
+  }
+  .recursos-head .section-title { margin: 0 auto 24px; }
+  .recursos-head .section-lead { margin: 0 auto; color: var(--gray-400); }
+
+  .recursos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto 32px;
+  }
+  .recurso-card {
+    background: var(--black-elev);
+    border: 1px solid rgba(201, 169, 97, 0.25);
+    border-radius: 18px;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .recurso-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.4;
+  }
+  .recurso-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px -20px rgba(201, 169, 97, 0.3),
+                0 0 0 1px rgba(201, 169, 97, 0.4);
+  }
+  .recurso-icon {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.15), rgba(201, 169, 97, 0.05));
+    border: 1px solid rgba(201, 169, 97, 0.3);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  .recurso-tag {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    background: rgba(201, 169, 97, 0.08);
+    border: 1px solid rgba(201, 169, 97, 0.2);
+    padding: 4px 10px;
+    border-radius: 999px;
+    width: fit-content;
+  }
+  .recurso-name {
+    font-family: var(--ff-display);
+    font-weight: 500;
+    font-size: 24px;
+    color: var(--cream);
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .recurso-name em {
+    font-style: italic;
+    color: var(--gold);
+    font-weight: 400;
+  }
+  .recurso-desc {
+    font-size: 14.5px;
+    color: var(--gray-400);
+    line-height: 1.6;
+    flex: 1;
+  }
+  .recurso-btn {
+    margin-top: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 10px;
+    padding: 14px 22px;
+    background: var(--cream);
+    color: var(--black);
+    border: none; border-radius: 999px;
+    font-family: var(--ff-body); font-size: 14px; font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    letter-spacing: 0.01em;
+    width: fit-content;
+  }
+  .recurso-btn svg { width: 16px; height: 16px; }
+  .recurso-btn:hover {
+    background: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px -10px rgba(201, 169, 97, 0.4);
+  }
+
+  .recurso-card.guia {
+    grid-column: span 2;
+    background: linear-gradient(135deg, rgba(201, 169, 97, 0.08), rgba(201, 169, 97, 0.02));
+    border-color: rgba(201, 169, 97, 0.4);
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+    padding: 36px;
+  }
+  .recurso-card.guia .recurso-icon {
+    width: 64px; height: 64px;
+    border-radius: 16px;
+  }
+  .recurso-card.guia .recurso-content { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .recurso-card.guia .recurso-name { font-size: 26px; }
+  .recurso-card.guia .recurso-desc { font-size: 15px; }
+  .recurso-card.guia .recurso-btn { margin-top: 4px; }
+
+  /* ============ CTA LLAMADA (slide 36) ============ */
+  .llamada {
+    padding: 110px 40px;
+    background: var(--black);
+    position: relative;
+    overflow: hidden;
+  }
+  .llamada::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(201, 169, 97, 0.1), transparent 70%);
+    pointer-events: none;
+  }
+  .llamada-inner {
+    position: relative; z-index: 2;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .llamada-grid {
+    display: grid;
+    grid-template-columns: 0.85fr 1.3fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .llamada-clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .clock-circle {
+    width: 240px; height: 240px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(201, 169, 97, 0.35);
+    background: radial-gradient(circle at center, rgba(201, 169, 97, 0.08), transparent 70%);
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 0 60px -15px rgba(201, 169, 97, 0.25),
+                inset 0 0 30px rgba(201, 169, 97, 0.05);
+  }
+  .clock-circle::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid rgba(201, 169, 97, 0.15);
+    animation: rotate 30s linear infinite;
+  }
+  .clock-circle::after {
+    content: '';
+    position: absolute;
+    inset: -16px;
+    border-radius: 50%;
+    border: 1px dashed rgba(201, 169, 97, 0.18);
+    animation: rotate 50s linear infinite reverse;
+  }
+  @keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .clock-num {
+    font-family: var(--ff-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 96px;
+    line-height: 1;
+    color: var(--gold);
+    letter-spacing: -0.04em;
+  }
+  .clock-label {
+    font-family: var(--ff-body);
+    font-size: 13px;
+    color: var(--cream);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-top: 6px;
+  }
+  .clock-sub {
+    font-family: var(--ff-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 22px;
+    color: var(--cream);
+    text-align: center;
+    line-height: 1.35;
+    margin-top: 8px;
+    max-width: 280px;
+  }
+  .clock-tag {
+    font-size: 12px;
+    color: var(--gold);
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .llamada-content .section-eyebrow { margin-bottom: 18px; }
+  .llamada-h1 {
+    font-family: var(--ff-display);
+    font-weight: 300;
+    font-size: clamp(38px, 4.6vw, 60px);
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+    color: var(--cream);
+    margin-bottom: 20px;
+  }
+  .llamada-h1 em {
+    font-style: italic; color: var(--gold);
+    font-weight: 400;
+    font-variation-settings: "opsz" 144;
+  }
+  .llamada-intro {
+    font-family: var(--ff-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: clamp(18px, 1.6vw, 22px);
+    color: var(--cream);
+    margin-bottom: 32px;
+    line-height: 1.4;
+  }
+  .llamada-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 40px;
+  }
+  .llamada-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: clamp(15px, 1.15vw, 17px);
+    color: var(--gray-400);
+    line-height: 1.55;
+  }
+  .llamada-list li::before {
+    content: '→';
+    color: var(--gold);
+    font-family: var(--ff-display);
+    font-size: 22px;
+    line-height: 1.2;
+    flex-shrink: 0;
+    margin-top: -2px;
+  }
+  .llamada-list li strong { color: var(--cream); font-weight: 600; }
+
+  .llamada-cta-block {
+    margin-top: 40px;
+    padding-top: 36px;
+    border-top: 1px solid rgba(201, 169, 97, 0.2);
+  }
+  .llamada-cta-title {
+    font-family: var(--ff-display);
+    font-weight: 400;
+    font-size: clamp(22px, 2vw, 28px);
+    color: var(--cream);
+    margin-bottom: 20px;
+    letter-spacing: -0.01em;
+  }
+  .llamada-cta-title em { font-style: italic; color: var(--gold); }
+
+  .btn-primary {
+    display: inline-flex; align-items: center;
+    text-decoration: none;
+    padding: 22px 48px;
+    background: var(--cream);
+    color: var(--black);
+    border: none; border-radius: 999px;
+    font-family: var(--ff-body); font-size: 16px; font-weight: 500;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    letter-spacing: 0.01em;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '→';
+    margin-left: 12px;
+    display: inline-block;
+    transition: transform 0.4s ease;
+  }
+  .btn-primary:hover {
+    background: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px -10px rgba(201, 169, 97, 0.4);
+  }
+  .btn-primary:hover::after { transform: translateX(6px); }
+
+  /* Urgencia */
+  .llamada-urgencia {
+    margin-top: 24px;
+    display: inline-flex; align-items: center; gap: 16px;
+    padding: 14px 22px;
+    border: 1px solid rgba(201, 169, 97, 0.25);
+    border-radius: 999px;
+    background: rgba(201, 169, 97, 0.04);
+  }
+  .plazas-dots { display: flex; gap: 3px; }
+  .plazas-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: rgba(201, 169, 97, 0.18);
+    border: 1px solid rgba(201, 169, 97, 0.25);
+  }
+  .plazas-dot.taken {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 8px var(--gold-glow);
+    animation: dotPulse 2.4s infinite;
+  }
+  .plazas-dot.taken:nth-child(1) { animation-delay: 0s; }
+  .plazas-dot.taken:nth-child(2) { animation-delay: 0.12s; }
+  .plazas-dot.taken:nth-child(3) { animation-delay: 0.24s; }
+  .plazas-dot.taken:nth-child(4) { animation-delay: 0.36s; }
+  .plazas-dot.taken:nth-child(5) { animation-delay: 0.48s; }
+  .plazas-dot.taken:nth-child(6) { animation-delay: 0.6s; }
+  .plazas-dot.taken:nth-child(7) { animation-delay: 0.72s; }
+  .plazas-dot.taken:nth-child(8) { animation-delay: 0.84s; }
+  .plazas-dot.taken:nth-child(9) { animation-delay: 0.96s; }
+  .plazas-dot.taken:nth-child(10) { animation-delay: 1.08s; }
+  .plazas-dot.taken:nth-child(11) { animation-delay: 1.2s; }
+  .plazas-dot.taken:nth-child(12) { animation-delay: 1.32s; }
+  .plazas-dot.taken:nth-child(13) { animation-delay: 1.44s; }
+  .plazas-dot.taken:nth-child(14) { animation-delay: 1.56s; }
+  .plazas-dot.taken:nth-child(15) { animation-delay: 1.68s; }
+  @keyframes dotPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 8px var(--gold-glow); }
+    50% { transform: scale(1.25); box-shadow: 0 0 16px var(--gold-glow), 0 0 28px var(--gold-glow); }
+  }
+  .plazas-label {
+    font-size: 12.5px; color: var(--gray-400);
+    letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .plazas-label strong { color: var(--gold); font-weight: 600; }
+  .plazas-label .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+    animation: pulse 1.6s infinite;
+    flex-shrink: 0;
+  }
+  .llamada-meta {
+    margin-top: 14px;
+    font-size: 12.5px; color: var(--gray-500);
+    letter-spacing: 0.02em;
+  }
+
+  /* ============ REPLAY ============ */
+  .replay {
+    background: var(--black-soft);
+    padding: 100px 40px;
+  }
+  .replay-head {
+    text-align: center;
+    max-width: 820px;
+    margin: 0 auto 56px;
+  }
+  .replay-head .section-title { margin: 0 auto 24px; }
+  .replay-head .section-lead { margin: 0 auto; color: var(--gray-400); }
+  .replay-wrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(201, 169, 97, 0.4);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(201, 169, 97, 0.18);
+    aspect-ratio: 16 / 9;
+    background: var(--black-elev);
+  }
+  .replay-wrap iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    border: 0;
+  }
+
+  /* ============ FOOTER ============ */
+  footer {
+    background: var(--black);
+    padding: 60px 40px 40px;
+    border-top: 1px solid var(--line);
+    text-align: center;
+  }
+  .footer-brand {
+    font-family: var(--ff-display);
+    font-weight: 500; font-size: 20px;
+    color: var(--cream); margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+  .footer-brand em { font-style: italic; color: var(--gold); }
+  .footer-disclaimer {
+    font-size: 11px; color: var(--gray-600);
+    max-width: 800px; margin: 20px auto 0;
+    line-height: 1.6;
+  }
+  .footer-copy {
+    margin-top: 20px; font-size: 11px;
+    color: var(--gray-600);
+  }
+
+  /* ============ REVEAL ============ */
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* ============ MOBILE FLOATING CTA ============ */
+  .mobile-cta-bar {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    background: rgba(10, 10, 10, 0.92);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--line);
+    z-index: 90;
+  }
+  .mobile-cta-bar a {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+    padding: 16px;
+    background: var(--cream);
+    color: var(--black);
+    border: none; border-radius: 999px;
+    font-family: var(--ff-body); font-size: 15px; font-weight: 500;
+    cursor: pointer;
+  }
+  .mobile-cta-bar a::after { content: '  →'; display: inline; }
+
+  /* ============ RESPONSIVE ============ */
+  @media (min-width: 761px) and (max-width: 1100px) {
+    section, .video-section { padding-left: 32px; padding-right: 32px; }
+    .hero { padding: 60px 32px 48px; }
+    .recursos { padding: 80px 32px; }
+    .llamada { padding: 90px 32px; }
+    .replay { padding: 80px 32px; }
+    .llamada-grid { gap: 48px; }
+    .clock-circle { width: 200px; height: 200px; }
+    .clock-num { font-size: 80px; }
+  }
+
+  /* Tablet: recursos en 2 columnas pero más compactos */
+  @media (min-width: 481px) and (max-width: 900px) {
+    .recursos-grid { grid-template-columns: repeat(2, 1fr); gap: 18px; max-width: 720px; }
+    .recurso-card.guia { grid-column: span 2; }
+  }
+
+  @media (max-width: 900px) {
+    .llamada-grid { grid-template-columns: 1fr; gap: 48px; }
+    .llamada-clock { order: -1; }
+  }
+
+  @media (max-width: 760px) {
+    section { padding: 64px 20px; }
+    .video-section { padding: 32px 20px 60px; }
+
+    .hero { padding: 56px 20px 36px; min-height: auto; }
+    .hero-eyebrow {
+      margin-bottom: 24px; font-size: 12.5px; padding: 9px 18px; letter-spacing: 0.14em;
+      max-width: 100%; white-space: normal; line-height: 1.4; text-align: center;
+    }
+    .hero h1 { margin-bottom: 18px; }
+    .hero-tagline { font-size: 19px; line-height: 1.4; margin: 0 auto 22px; max-width: 92%; }
+    .hero-sub { font-size: 16px; margin-bottom: 12px; }
+
+    .video-wrap { border-radius: 14px; }
+
+    .recursos { padding: 64px 20px; }
+    .recursos-head { margin-bottom: 40px; }
+    .recursos-grid { grid-template-columns: 1fr; gap: 16px; }
+    .recurso-card { padding: 26px 22px; }
+    .recurso-name { font-size: 21px; }
+    .recurso-card.guia {
+      grid-column: span 1;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 28px 22px;
+      gap: 18px;
+    }
+    .recurso-card.guia .recurso-icon { width: 56px; height: 56px; }
+
+    .llamada { padding: 64px 20px; }
+    .llamada-grid { gap: 40px; }
+    .clock-circle { width: 200px; height: 200px; }
+    .clock-num { font-size: 78px; }
+    .clock-sub { font-size: 19px; }
+    .llamada-h1 { font-size: 34px; }
+    .llamada-intro { font-size: 18px; margin-bottom: 26px; }
+    .llamada-list { gap: 16px; margin-bottom: 32px; }
+    .llamada-list li { font-size: 15.5px; }
+    .llamada-cta-block { margin-top: 32px; padding-top: 28px; }
+    .btn-primary { width: 100%; padding: 18px 28px; font-size: 15.5px; justify-content: center; }
+    .llamada-urgencia {
+      width: 100%; max-width: 360px;
+      flex-direction: column; gap: 12px;
+      padding: 14px 20px;
+    }
+
+    .replay { padding: 64px 20px; }
+    .replay-head { margin-bottom: 36px; }
+    .replay-wrap { border-radius: 14px; }
+
+    footer { padding: 36px 20px 100px; }
+
+    .mobile-cta-bar { display: block; }
+    body { padding-bottom: 80px; }
+  }
+
+  @media (max-width: 480px) {
+    .hero { padding: 44px 18px 28px; }
+    .hero h1 { font-size: 38px; line-height: 1.05; margin-bottom: 14px; }
+    .hero-tagline { font-size: 17px; line-height: 1.4; margin: 0 auto 20px; }
+    .hero-sub { font-size: 15.5px; line-height: 1.6; }
+
+    .recursos { padding: 56px 18px; }
+    .recurso-name { font-size: 19.5px; }
+    .recurso-desc { font-size: 14px; }
+
+    .llamada { padding: 56px 18px; }
+    .clock-circle { width: 180px; height: 180px; }
+    .clock-num { font-size: 68px; }
+    .llamada-h1 { font-size: 30px; }
+    .llamada-cta-title { font-size: 20px; }
+
+    .replay { padding: 56px 18px; }
+
+    footer { padding: 32px 18px 100px; }
+    .footer-disclaimer { font-size: 10.5px; }
+  }
+
+  /* ============ Bloqueo absoluto de overflow horizontal ============ */
+  html, body { overflow-x: hidden !important; max-width: 100vw !important; }
+  section, footer, .hero, .recursos, .llamada, .replay, .video-section, .mobile-cta-bar {
+    max-width: 100vw !important;
+    overflow-x: clip;
+  }
+  /* Iframes 100% del contenedor */
+  iframe { max-width: 100%; }
+  .video-wrap, .replay-wrap { width: 100%; }
+  /* Container nunca debe romper el ancho del padre */
+  .container { width: 100%; max-width: min(1200px, 100%); }
+  /* Imágenes y media seguros */
+  img, video, iframe, embed, object { max-width: 100%; height: auto; }
+  /* Forzar wrap en textos largos para que no rompan el layout en mobile */
+  h1, h2, p, li, .recurso-name, .llamada-h1, .clock-sub { overflow-wrap: anywhere; word-wrap: break-word; }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero force-full-width">
+  <div class="hero-grain"></div>
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Recursos prometidos</div>
+    <h1>Tus recursos están <em>listos.</em></h1>
+    <p class="hero-tagline">Pero antes <em>mírate el video.</em><br/>Ahí te explico cómo sacarles el jugo real.</p>
+    <p class="hero-sub">
+      Dale play, te toma <strong>10 minutos</strong>. Después, justo abajo, descargas las <strong>4 Skills</strong> y la <strong>guía de instalación de Claude</strong>.
+    </p>
+    <div class="hero-arrow">↓</div>
+  </div>
+</section>
+
+<!-- ============ VIDEO LOOM ============ -->
+<section class="video-section force-full-width" aria-label="Video explicativo de las skills">
+  <div class="container" style="max-width: 1000px;">
+    <div class="video-wrap reveal">
+      <iframe
+        src="https://www.loom.com/embed/d1dd432979d04beca77d30085a29eaeb?sid=&hideEmbedTopBar=true"
+        frameborder="0"
+        webkitallowfullscreen
+        mozallowfullscreen
+        allowfullscreen
+        allow="autoplay; fullscreen; picture-in-picture">
+      </iframe>
+    </div>
+    <div class="video-caption reveal">Cristhian te explica cómo instalar y aprovechar cada Skill.</div>
+  </div>
+</section>
+
+<!-- ============ RECURSOS ============ -->
+<section class="recursos force-full-width" id="recursos">
+  <div class="container">
+    <div class="recursos-head reveal">
+      <div class="section-eyebrow">Descarga directa</div>
+      <h2 class="section-title">Las <em>4 Skills</em> y la guía<br/>para empezar con <em>Claude.</em></h2>
+      <p class="section-lead">Instálalas en orden. Si no tienes Claude todavía, empieza por la guía. Cada Skill es un sistema completo listo para usar.</p>
+    </div>
+
+    <div class="recursos-grid">
+
+      <div class="recurso-card reveal">
+        <div class="recurso-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span class="recurso-tag">Skill 01</span>
+        <div class="recurso-name">Skill <em>Oferta</em></div>
+        <p class="recurso-desc">Construye una oferta vendible y diferenciada en minutos. Convierte tu conocimiento en un sistema con precio claro.</p>
+        <a class="recurso-btn" href="https://drive.google.com/uc?export=download&id=1qgvh2b2Z-2b8nQTHGKz1Ri89N4RTbNgP" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar Skill
+        </a>
+      </div>
+
+      <div class="recurso-card reveal">
+        <div class="recurso-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            <path d="M2 2l7.586 7.586"/>
+            <circle cx="11" cy="11" r="2"/>
+          </svg>
+        </div>
+        <span class="recurso-tag">Skill 02</span>
+        <div class="recurso-name">Skill <em>Builder</em></div>
+        <p class="recurso-desc">El sistema para construir tus MiniApps de IA y cualquier producto digital sin escribir código manual.</p>
+        <a class="recurso-btn" href="https://drive.google.com/uc?export=download&id=1RxQCLeo1M6dtgdMpiml8nJhSRtWabJyU" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar Skill
+        </a>
+      </div>
+
+      <div class="recurso-card reveal">
+        <div class="recurso-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/>
+            <path d="M5 21V7l8-4v18"/>
+            <path d="M19 21V11l-6-4"/>
+            <line x1="9" y1="9" x2="9" y2="9.01"/>
+            <line x1="9" y1="13" x2="9" y2="13.01"/>
+            <line x1="9" y1="17" x2="9" y2="17.01"/>
+          </svg>
+        </div>
+        <span class="recurso-tag">Skill 03</span>
+        <div class="recurso-name">Skill <em>Architect</em></div>
+        <p class="recurso-desc">A partir de tu oferta, te genera <strong>5 ideas de MiniApps de IA</strong> listas para validar y construir.</p>
+        <a class="recurso-btn" href="https://drive.google.com/uc?export=download&id=1Bcc_B-G_6OkPMCZLNWNmIpnuCPv6YuCU" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar Skill
+        </a>
+      </div>
+
+      <div class="recurso-card reveal">
+        <div class="recurso-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3l7.5 18 2.5-9 9-2.5L3 3z"/>
+            <path d="M13 12l8 8"/>
+          </svg>
+        </div>
+        <span class="recurso-tag">Skill 04</span>
+        <div class="recurso-name">Skill <em>Funnel Builder</em></div>
+        <p class="recurso-desc">Diseña embudos de venta completos: páginas, copy, secuencias y automatizaciones listas para vender.</p>
+        <a class="recurso-btn" href="https://drive.google.com/uc?export=download&id=17J0eJOeOwzTqMYUsHhyiNsvOsLAcMoel" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar Skill
+        </a>
+      </div>
+
+      <div class="recurso-card guia reveal">
+        <div class="recurso-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </div>
+        <div class="recurso-content">
+          <span class="recurso-tag">Empieza aquí si no tienes Claude</span>
+          <div class="recurso-name">Guía de instalación de <em>Claude.</em></div>
+          <p class="recurso-desc">El paso a paso para instalar Claude desde cero, configurar las Skills y dejar todo listo para empezar a usarlas hoy mismo. Si nunca has usado Claude, este es tu primer documento.</p>
+          <a class="recurso-btn" href="https://drive.google.com/uc?export=download&id=1vLZOHU-EmYnQB-Il4l-aSvSuiaRQQArI" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Descargar Guía
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA LLAMADA (slide 36) ============ -->
+<section class="llamada force-full-width" id="llamada">
+  <div class="llamada-inner">
+    <div class="llamada-grid">
+
+      <div class="llamada-clock reveal">
+        <div class="clock-tag">Llamada de admisión</div>
+        <div class="clock-circle">
+          <div class="clock-num">30</div>
+          <div class="clock-label">Minutos</div>
+        </div>
+        <div class="clock-sub">30 minutos en privado<br/>conmigo y mi equipo.</div>
+      </div>
+
+      <div class="llamada-content reveal">
+        <div class="section-eyebrow">Próximo paso</div>
+        <h2 class="llamada-h1">Reserva tu llamada de admisión y obtén una <em>ruta clara.</em></h2>
+        <p class="llamada-intro">Lo que vamos a hacer en los <em style="color: var(--gold); font-style: italic;">30 minutos juntos:</em></p>
+
+        <ul class="llamada-list">
+          <li><span>Vamos a entender exactamente <strong>dónde estás hoy</strong> y qué te frena.</span></li>
+          <li><span>Vas a salir con un <strong>diagnóstico claro</strong> de tu proyecto: qué tienes, qué te falta y cuál es tu siguiente paso.</span></li>
+          <li><span>Vamos a revisar si <strong>VUELA</strong> es realmente tu siguiente paso, o si todavía no es tu momento.</span></li>
+          <li><span>Si lo es, abrimos la <strong>conversación de admisión</strong>.</span></li>
+          <li><span>Si no lo es, te lo decimos de frente y sales con tu <strong>ruta personal trazada</strong>.</span></li>
+        </ul>
+
+        <div class="llamada-cta-block">
+          <div class="llamada-cta-title">Esto es lo que recibes en la <em>llamada de 30 minutos.</em><br/>Agenda la tuya <em>antes que se llene.</em></div>
+          <a class="btn-primary" href="https://agendar.ovejasvoladoras.com" target="_blank" rel="noopener">Agendar mi llamada</a>
+
+          <div class="llamada-urgencia" aria-label="15 de 20 plazas tomadas">
+            <div class="plazas-dots">
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot taken"></span>
+              <span class="plazas-dot"></span>
+              <span class="plazas-dot"></span>
+              <span class="plazas-dot"></span>
+              <span class="plazas-dot"></span>
+              <span class="plazas-dot"></span>
+            </div>
+            <div class="plazas-label">
+              <span class="live-dot"></span>
+              <span><strong>15 de 20</strong> plazas tomadas</span>
+            </div>
+          </div>
+
+          <div class="llamada-meta">Llamadas desde el 30 de abril · 9 AM hora Colombia · Solo aplicaciones completas pasan a agendamiento</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ REPLAY DIRECTO ============ -->
+<section class="replay force-full-width" id="replay">
+  <div class="container">
+    <div class="replay-head reveal">
+      <div class="section-eyebrow">Repetición del directo</div>
+      <h2 class="section-title">¿Te perdiste algo? <em>Aquí lo tienes.</em></h2>
+      <p class="section-lead">La grabación completa del directo de ayer. Vuelve a verla las veces que necesites.</p>
+    </div>
+
+    <div class="replay-wrap reveal">
+      <iframe
+        src="https://www.youtube.com/embed/Oon7MHWDjQ4?rel=0&modestbranding=1"
+        title="Repetición del directo VUELA · Andy Molina"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="force-full-width">
+  <div class="footer-brand">Mentoría <em>VUELA</em></div>
+  <div style="font-size: 13px; color: var(--gray-500);">Por Andy Molina</div>
+  <div class="footer-disclaimer">
+    Los resultados pueden variar según la situación individual de cada persona. Ovejas Voladoras y sus representantes no garantizan resultados específicos. Este sitio no es parte del sitio web de Facebook™ o Facebook™ Inc. Además, este sitio NO está respaldado por Facebook™ de ninguna manera. FACEBOOK™ es una marca registrada de FACEBOOK™, Inc.
+  </div>
+  <div class="footer-copy">© 2026 Ovejas Voladoras · Mentoría VUELA · Todos los derechos reservados</div>
+</footer>
+
+<!-- ============ MOBILE FLOATING CTA ============ -->
+<div class="mobile-cta-bar force-full-width-fixed">
+  <a href="https://agendar.ovejasvoladoras.com" target="_blank" rel="noopener">Agendar mi llamada</a>
+</div>
+
+<script>
+  // Reveal animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

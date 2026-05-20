@@ -1443,14 +1443,8 @@
         <div class="field">
           <label>Margen de ganancia</label>
           <div class="slider-display">
-            <input type="range" id="cp-margen" min="0" max="300" value="100" style="accent-color:var(--verde);background:linear-gradient(to right, #e07c5a 0%, #f0c040 17%, #9caf88 33%, #2d7a2d 100%)" oninput="calcPrecio(); document.getElementById('cp-margen-val').textContent=this.value+'%'">
-            <span class="slider-val" id="cp-margen-val">100%</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:.65rem;color:#bbb;font-weight:600;text-transform:uppercase;margin-top:4px">
-            <span style="color:#e07c5a">0% Costo</span>
-            <span style="color:#f0c040">50% Mín</span>
-            <span style="color:#9caf88">100% Ideal</span>
-            <span style="color:#2d7a2d">200%+</span>
+            <input type="range" id="cp-margen" min="0" max="99" value="50" style="accent-color:var(--verde);background:linear-gradient(to right, #e07c5a 0%, #f0c040 25%, #9caf88 50%, #2d7a2d 100%)" oninput="calcPrecio(); document.getElementById('cp-margen-val').textContent=this.value+'%'">
+            <span class="slider-val" id="cp-margen-val">50%</span>
           </div>
         </div>
       </div>
@@ -1458,27 +1452,25 @@
       <div class="card">
         <div class="card-title">Resultados</div>
         <div class="result-box">
-          <div class="result-label">Precio de Venta Sugerido (PVP)</div>
-          <div class="result-val big" id="cp-pvp">$0</div>
+          <div class="result-label">Costo real por unidad</div>
+          <div class="result-val" id="cp-costo-u">$0</div>
         </div>
-        <div class="results-row">
-          <div class="result-box">
-            <div class="result-label">Costo real por unidad</div>
-            <div class="result-val" id="cp-costo-u">$0</div>
+        <div class="result-box" style="background:var(--accent-soft);border:2px solid var(--verde);margin-top:12px;padding:1.25rem 1rem;text-align:center">
+          <div class="result-label" style="text-transform:uppercase;letter-spacing:.06em;font-size:.7rem;color:var(--verde-oscuro,#2d7a2d);font-weight:700">Precio de Venta Sugerido por Unidad (PVP)</div>
+          <div class="result-val big" id="cp-pvp" style="font-size:2rem;color:var(--verde-oscuro,#2d7a2d);margin-top:6px">$0</div>
+          <div style="text-align:center;margin-top:8px">
+            <span class="badge badge-verde" id="cp-badge" style="display:none"></span>
           </div>
+        </div>
+        <div class="results-row" style="margin-top:12px">
           <div class="result-box">
             <div class="result-label">Ganancia neta por unidad</div>
             <div class="result-val" id="cp-ganancia-u">$0</div>
           </div>
-        </div>
-        <div class="results-row">
-          <div class="result-box" style="grid-column:1/-1">
+          <div class="result-box">
             <div class="result-label">Ganancia total del lote</div>
             <div class="result-val" id="cp-ganancia-lote">$0</div>
           </div>
-        </div>
-        <div style="text-align:center">
-          <span class="badge badge-verde" id="cp-badge" style="display:none"></span>
         </div>
       </div>
     </div>
@@ -1804,6 +1796,7 @@
       var costoManoObra = horas * valorHora;
       var costoTotalLote = ingredientes + (empaque * unidades) + costoManoObra + otros;
       var costoUnidad = costoTotalLote / unidades;
+      // Margen como markup sobre costo: PVP = Costo × (1 + margen/100). Coherente con la Calculadora de Precios.
       var pvp = costoUnidad * (1 + margen / 100);
       var gananciaU = pvp - costoUnidad;
       var gananciaLote = gananciaU * unidades;
@@ -1815,10 +1808,10 @@
 
       var badge = document.getElementById('cp-badge');
       badge.style.display = 'inline-block';
-      if (margen >= 100) {
+      if (margen >= 50) {
         badge.textContent = 'Excelente rentabilidad';
         badge.className = 'badge badge-green';
-      } else if (margen >= 50) {
+      } else if (margen >= 30) {
         badge.textContent = 'Buena rentabilidad';
         badge.className = 'badge badge-green';
       } else if (margen > 0) {

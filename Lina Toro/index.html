@@ -1125,7 +1125,6 @@
             </div>
             <div class="results-container">
                 <div class="result-box"><span class="label">Costo Total del Lote</span><span class="value" id="res-cost-lot">0,00</span></div>
-                <div class="result-box" id="box-cost-fab"><span class="label" id="label-cost-fab">Costo Fab/Unidad</span><span class="value" id="res-cost-fab">0,00</span></div>
                 <div class="result-box highlight"><span class="label">Costo por Unidad</span><span class="value" id="res-cost-unit">0,00</span></div>
                 <div class="result-box"><span class="label">Unidades del Lote</span><span class="value" id="res-units-lot">0</span></div>
             </div>
@@ -1142,17 +1141,11 @@
                     <span class="margin-slider-value" id="margin-slider-display">50%</span>
                 </div>
                 <input type="range" class="margin-slider" id="margin-slider" min="0" max="99" value="50" oninput="onMarginSlider()" style="background: linear-gradient(to right, #e07c5a 0%, #f0c040 25%, #9caf88 50%, #2d7a2d 100%);">
-                <div class="margin-ranges">
-                    <span class="range-min">0% Sin ganancia</span>
-                    <span class="range-min">30% Mínimo</span>
-                    <span class="range-ideal">50% Recomendado</span>
-                    <span class="range-max">70%+</span>
-                </div>
             </div>
 
             <!-- PVP GRANDE DESTACADO -->
             <div class="pvp-hero" style="margin-top: 2rem;">
-                <div class="pvp-hero-label">Precio de Venta Sugerido (PVP)</div>
+                <div class="pvp-hero-label">Precio de Venta Sugerido por Unidad (PVP)</div>
                 <div class="pvp-hero-value" id="res-pvp-hero">0,00</div>
                 <div class="pvp-hero-badge" id="res-badge" style="display: none;"></div>
             </div>
@@ -1162,11 +1155,6 @@
                 <div class="result-box"><span class="label" id="label-pvp-secondary">PVP por Kg</span><span class="value" id="res-pvp">0,00</span></div>
                 <div class="result-box highlight"><span class="label">Ganancia Neta / Unidad</span><span class="value" id="res-ganancia-unit">0,00</span></div>
                 <div class="result-box" style="background:#f0f9f0; border-color:#c8ddc0;"><span class="label">Ganancia Total del Lote</span><span class="value" style="color:#2d7a2d;" id="res-ganancia-lote">0,00</span></div>
-            </div>
-
-            <!-- INDICADOR DE RENTABILIDAD -->
-            <div id="margin-indicator" class="margin-empty" style="margin-top: 1.5rem;">
-                Ingresa datos para ver el análisis de rentabilidad.
             </div>
         </div>
 
@@ -1265,37 +1253,6 @@
             return q * pricePerGram;
         }
 
-        function updateProfitIndicator(margenPct) {
-            const el = document.getElementById('margin-indicator');
-            if (margenPct === undefined || margenPct === null || margenPct <= 0) {
-                el.className = 'margin-empty';
-                el.innerHTML = 'Ingresa datos para ver el análisis de rentabilidad.';
-                return;
-            }
-            let cls, title, desc;
-            if (margenPct >= 50) {
-                cls = 'margin-indicator margin-good';
-                title = '¡Excelente rentabilidad!';
-                desc = `De cada unidad vendida, el ${margenPct}% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.`;
-            } else if (margenPct >= 30) {
-                cls = 'margin-indicator margin-ok';
-                title = 'Margen aceptable — puede mejorar';
-                desc = `De cada unidad vendida, el ${margenPct}% es ganancia. Evalúa subir el precio o reducir costos.`;
-            } else {
-                cls = 'margin-indicator margin-bad';
-                title = 'Margen bajo';
-                desc = `Solo el ${margenPct}% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.`;
-            }
-            el.className = cls;
-            el.innerHTML = `
-                <div class="margin-value">${margenPct}%</div>
-                <div class="margin-text">
-                    <div class="margin-title">${title}</div>
-                    <div class="margin-desc">${desc}</div>
-                </div>
-            `;
-        }
-
         let currentProductType = 'cosmetica';
         let currentMarginPct = 50;
 
@@ -1310,24 +1267,24 @@
             const btnAddActives = document.getElementById('btn-add-actives');
             const effHelp = document.getElementById('efficiency').parentElement.querySelector('.help-tooltip');
 
+            const labelPvpSec = document.getElementById('label-pvp-secondary');
+            const labelLaborTime = document.getElementById('label-labor-time');
             if (type === 'jaboneria') {
                 oilsTitle.innerHTML = '<span class="dot"></span> Aceites y Grasas Base';
                 activesTitle.innerHTML = '<span class="dot"></span> Aditivos · Esencias · Colorantes';
                 btnAddOils.textContent = 'AÑADIR ACEITE';
                 btnAddActives.textContent = 'AÑADIR ADITIVO';
                 if (effHelp) effHelp.textContent = 'Considera mermas de curado y desperdicio en utensilios. Típico 80-85%.';
-                document.getElementById('label-cost-fab').textContent = 'Costo Fab/Kg';
-                document.getElementById('label-pvp-secondary').textContent = 'PVP por Kg';
-                document.getElementById('label-labor-time').textContent = 'Tiempo por Kg';
+                if (labelPvpSec) labelPvpSec.textContent = 'PVP por Kg';
+                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo por Kg';
             } else {
                 oilsTitle.innerHTML = '<span class="dot"></span> Ingredientes y Materias Primas';
                 activesTitle.innerHTML = '<span class="dot"></span> Activos Cosméticos · Conservantes · Fragancias / AAEE';
                 btnAddOils.textContent = 'AÑADIR INGREDIENTE';
                 btnAddActives.textContent = 'AÑADIR ACTIVO';
                 if (effHelp) effHelp.textContent = 'Considera mermas por transferencia y desperdicio. Típico 90-95%.';
-                document.getElementById('label-cost-fab').textContent = 'Costo Fab/Unidad';
-                document.getElementById('label-pvp-secondary').textContent = 'Costo Total/Unidad';
-                document.getElementById('label-labor-time').textContent = 'Tiempo por Lote';
+                if (labelPvpSec) labelPvpSec.textContent = 'Costo Total/Unidad';
+                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo por Lote';
             }
             calc();
         }
@@ -1404,10 +1361,10 @@
             const unidades = manualUnits > 0 ? manualUnits : Math.floor((lotWeight * efficiency) / unitSize);
             const costPerUnit = unidades > 0 ? (costTotalLot / unidades) + unitPkg + unitExtra : 0;
 
-            // Margen de ganancia real: PVP = Costo / (1 - margen/100)
-            const pvpPerUnit = currentMarginPct < 100 ? costPerUnit / (1 - currentMarginPct / 100) : 0;
+            // Margen como markup sobre costo: PVP = Costo × (1 + margen/100)
+            const pvpPerUnit = costPerUnit * (1 + currentMarginPct / 100);
             const pvpPerKg = unitSize > 0 ? (pvpPerUnit - unitPkg - unitExtra) / unitSize * 1000 : 0;
-            const minPerUnit = costPerUnit / (1 - 30 / 100); // mínimo con 30% de margen
+            const minPerUnit = costPerUnit * (1 + 30 / 100); // mínimo con 30% de margen sobre costo
             const margen = currentMarginPct;
             const gananciaUnit = pvpPerUnit - costPerUnit;
             const gananciaLote = gananciaUnit * unidades;
@@ -1422,12 +1379,9 @@
             document.getElementById('res-ganancia-lote').textContent = fmtNum(gananciaLote);
 
             // Cosmética: todo por unidad · Jabonería: por Kg
-            if (currentProductType === 'cosmetica') {
-                document.getElementById('res-cost-fab').textContent = fmtNum(costPerUnit - unitPkg - unitExtra);
-                document.getElementById('res-pvp').textContent      = fmtNum(costPerUnit);
-            } else {
-                document.getElementById('res-cost-fab').textContent = fmtNum(costFabKilo);
-                document.getElementById('res-pvp').textContent      = fmtNum(pvpPerKg);
+            const elPvpSecondary = document.getElementById('res-pvp');
+            if (elPvpSecondary) {
+                elPvpSecondary.textContent = currentProductType === 'cosmetica' ? fmtNum(costPerUnit) : fmtNum(pvpPerKg);
             }
 
             // Badge de rentabilidad
@@ -1450,8 +1404,6 @@
             } else {
                 badge.style.display = 'none';
             }
-
-            updateProfitIndicator(currentMarginPct);
 
             return { lotWeight, efficiency, unitSize, matKiloEff, laborKilo, totalOtherExpenses, costFabKilo, pvp: pvpPerKg, unitPvp: pvpPerUnit, margen, costPerUnit, unidades, costTotalLot, minPerUnit, gananciaUnit, gananciaLote };
         }
@@ -1898,7 +1850,7 @@
                 pdf.roundedRect(ML, Y, CW, 24, 2, 2, 'F');
                 pdf.setTextColor(...FGRAY);
                 pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
-                pdf.text('PRECIO DE VENTA SUGERIDO (PVP)', ML + CW / 2, Y + 6.5, { align: 'center' });
+                pdf.text('PRECIO DE VENTA SUGERIDO POR UNIDAD (PVP)', ML + CW / 2, Y + 6.5, { align: 'center' });
                 pdf.setTextColor(...GREEN);
                 pdf.setFontSize(18); pdf.setFont('helvetica', 'bold');
                 pdf.text(f(d.unitPvp), ML + CW / 2, Y + 16, { align: 'center' });

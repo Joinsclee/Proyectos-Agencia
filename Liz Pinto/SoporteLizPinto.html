@@ -3,17 +3,15 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soporte | The Click Boss - Liz Pinto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>lizpinto.ai</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,700&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <style>
-        /* ── GHL ENCAPSULATION SHIELD ────────────────────────
-           Neutraliza padding/margin/overflow que GHL inyecta
-           en body, .main-content-wrapper, .hl_page-creator, etc. */
+        /* ── GHL ENCAPSULATION SHIELD ──────────────────────── */
         html.hl_page-creator,
         body.hl_page-creator,
         .main-content-wrapper,
@@ -39,20 +37,18 @@
         }
 
         :root {
-            --lz-gold: #e7b93f;
-            --lz-gold-light: #f5d88a;
-            --lz-gold-dark: #d4a01e;
-            --lz-dark: #2b2b2b;
-            --lz-black: #1a1a1a;
-            --lz-grey: #7a7a7a;
-            --lz-grey-dark: #4a4a4a;
-            --lz-beige: #f5f1e8;
-            --lz-light-bg: #f9f9f9;
-            --green: #37ca37;
-            --header-h: 60px;
+            --bg: #ffffff;
+            --bg-alt: #f7f7f8;
+            --bg-user: #1a1a1a;
+            --text: #1a1a1a;
+            --text-soft: #3f3f46;
+            --text-muted: #71717a;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-strong: rgba(0, 0, 0, 0.12);
+            --accent: #c8a04a;
+            --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.04);
         }
 
-        /* iOS Safari: prevent address bar resize from causing layout shift */
         @supports (-webkit-touch-callout: none) {
             #app { height: -webkit-fill-available; }
         }
@@ -67,540 +63,319 @@
 
         html, body {
             height: 100% !important;
-            font-family: 'Raleway', sans-serif !important;
-            color: var(--lz-black) !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            color: var(--text) !important;
+            background: var(--bg) !important;
             overflow: hidden !important;
         }
 
-        /* ── APP WRAPPER: position:fixed bypasses GHL container completely ──
-           Cubre todo el viewport sin depender del modelo de caja de GHL. */
+        /* App wrapper full-viewport */
         #app {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            width: 100% !important; height: 100% !important;
-            background-color: var(--lz-beige) !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: var(--bg) !important;
             display: flex !important;
             flex-direction: column !important;
             overflow: hidden !important;
             z-index: 9999;
         }
 
-        /* -- HEADER -- */
+        /* -- HEADER minimalista -- */
         .header {
             position: relative;
             width: 100% !important;
-            height: var(--header-h) !important;
-            background: #ffffff !important;
-            border-bottom: 1px solid rgba(231, 185, 63, 0.15);
-            padding: 0 24px !important;
+            padding: 10px 24px 4px !important;
             display: flex !important;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            background: var(--bg) !important;
             z-index: 10;
         }
 
-        .header-brand {
-            display: flex;
+        .brand {
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
         }
 
-        .header-brand span {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--lz-dark);
-            letter-spacing: 0.5px;
+        .brand-logo {
+            display: block;
+            height: 110px;
+            width: auto;
+            object-fit: contain;
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
-        .status-badge {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(231, 185, 63, 0.08);
-            border: 1px solid rgba(231, 185, 63, 0.25);
-            border-radius: 0;
-            padding: 5px 14px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--lz-dark);
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            white-space: nowrap;
-        }
-
-        .status-dot {
-            width: 7px; height: 7px;
-            flex-shrink: 0;
-            background: var(--green);
-            border-radius: 50%;
-            animation: pulse-green 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-green {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(0.85); }
-        }
-
-        /* -- MAIN / CHAT AREA -- */
-        .main-container {
+        /* -- MAIN -- */
+        .main {
             flex: 1;
             min-height: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 16px;
+            width: 100%;
             overflow: hidden;
         }
 
-        .chat-wrapper {
+        .chat {
             width: 100%;
-            max-width: 840px;
+            max-width: 780px;
             flex: 1;
             min-height: 0;
             display: flex;
             flex-direction: column;
+            padding: 0 20px;
         }
 
-        /* -- TITLE -- */
-        .chat-title {
-            text-align: center;
-            margin-bottom: 12px;
-            flex-shrink: 0;
-        }
-
-        .chat-title h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.3rem;
-            font-weight: 400;
-            color: var(--lz-dark);
-            letter-spacing: 0.02em;
-            line-height: 1.3;
-        }
-
-        .chat-title h1 em {
-            font-style: italic;
-            color: var(--lz-gold-dark);
-        }
-
-        /* -- CHAT CONTAINER -- */
-        .chat-container {
-            flex: 1;
-            min-height: 0;
-            background: #ffffff !important;
-            border-radius: 0;
-            border: 1px solid rgba(231, 185, 63, 0.15);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
-            display: flex !important;
-            flex-direction: column !important;
-            overflow: hidden !important;
-        }
-
-        /* -- CHAT STRIP -- */
-        .chat-strip {
-            background: var(--lz-dark);
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
-        .bot-avatar {
-            width: 36px; height: 36px;
-            background: var(--lz-gold);
-            border-radius: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .bot-avatar svg { width: 19px; height: 19px; fill: var(--lz-dark); }
-
-        .strip-info { flex: 1; min-width: 0; }
-
-        .strip-info h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 0.92rem;
-            color: white;
-            font-weight: 400;
-            letter-spacing: 0.05em;
-        }
-
-        .strip-info p {
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.55);
-            margin-top: 1px;
-        }
-
-        .online-pill {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.85);
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px 10px;
-            border-radius: 0;
-            font-weight: 600;
-            flex-shrink: 0;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .online-dot {
-            width: 6px; height: 6px;
-            background: var(--green);
-            border-radius: 50%;
-            animation: pulse-green 2s ease-in-out infinite;
-        }
-
-        /* -- MESSAGES -- */
-        .messages-area {
+        /* -- MENSAJES -- */
+        .messages {
             flex: 1;
             min-height: 0;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 18px;
+            padding: 24px 4px 12px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 18px;
             scroll-behavior: smooth;
         }
 
-        .messages-area::-webkit-scrollbar { width: 3px; }
-        .messages-area::-webkit-scrollbar-track { background: transparent; }
-        .messages-area::-webkit-scrollbar-thumb {
-            background: rgba(231, 185, 63, 0.25);
-            border-radius: 4px;
+        .messages::-webkit-scrollbar { width: 6px; }
+        .messages::-webkit-scrollbar-track { background: transparent; }
+        .messages::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.12);
+            border-radius: 999px;
         }
 
-        /* Welcome card */
-        .welcome-card {
-            background: var(--lz-beige);
-            border-radius: 0;
-            padding: 20px;
-            border: 1px solid rgba(231, 185, 63, 0.15);
+        /* Welcome */
+        .welcome {
+            margin: auto 0;
             text-align: center;
-            animation: slideIn 0.4s ease-out;
+            padding: 12px 8px 24px;
+            animation: fadeIn 0.5s ease-out;
         }
 
-        .gold-circle {
-            width: 50px; height: 50px;
-            background: var(--lz-gold);
-            border-radius: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 12px;
-            box-shadow: 0 4px 14px rgba(231, 185, 63, 0.25);
-        }
-
-        .gold-circle svg { width: 24px; height: 24px; fill: var(--lz-dark); }
-
-        .welcome-card h3 {
+        .welcome h1 {
             font-family: 'Playfair Display', serif;
+            font-size: 1.9rem;
+            font-weight: 400;
+            color: var(--text);
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
             font-size: 1rem;
-            color: var(--lz-dark);
-            margin-bottom: 6px;
-            font-weight: 500;
+            color: var(--text-muted);
+            line-height: 1.55;
+            max-width: 520px;
+            margin: 0 auto;
+            font-weight: 400;
         }
 
-        .welcome-card p {
-            font-size: 0.86rem;
-            color: var(--lz-grey);
-            line-height: 1.6;
-        }
-
-        .suggestions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 7px;
-            justify-content: center;
-            margin-top: 14px;
-        }
-
-        .chip {
-            background: rgba(231, 185, 63, 0.08);
-            border: 1.5px solid rgba(231, 185, 63, 0.3);
-            color: var(--lz-dark);
-            border-radius: 0;
-            padding: 6px 13px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-family: 'Raleway', sans-serif;
-            min-height: 34px;
-            display: inline-flex;
-            align-items: center;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .chip:hover, .chip:active {
-            background: var(--lz-dark);
-            color: white;
-            border-color: var(--lz-dark);
-        }
-
-        /* Messages */
-        .message {
-            display: flex;
-            gap: 8px;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .message.user { flex-direction: row-reverse; }
-
-        @keyframes slideIn {
+        @keyframes fadeIn {
             from { opacity: 0; transform: translateY(6px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        .msg-avatar {
-            width: 28px; height: 28px;
-            border-radius: 0;
-            flex-shrink: 0;
+        /* Mensajes individuales */
+        .message {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.58rem;
-            font-weight: 700;
-            margin-top: 3px;
-            letter-spacing: 0.3px;
+            width: 100%;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        .message.bot  .msg-avatar { background: var(--lz-dark); color: white; }
-        .message.user .msg-avatar { background: var(--lz-gold); color: var(--lz-dark); }
+        .message.user { justify-content: flex-end; }
+        .message.bot  { justify-content: flex-start; }
 
-        .msg-bubble {
-            max-width: 78%;
-            padding: 10px 15px;
-            font-size: 0.88rem;
+        .bubble {
+            max-width: 86%;
+            font-size: 0.96rem;
             line-height: 1.6;
+            color: var(--text);
+            white-space: normal;
         }
 
-        .message.bot  .msg-bubble {
-            background: var(--lz-beige);
-            color: var(--lz-dark);
-            border-radius: 0 12px 12px 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(231, 185, 63, 0.1);
+        .message.user .bubble {
+            background: var(--bg-user);
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 22px;
+            border-bottom-right-radius: 6px;
         }
 
-        .message.user .msg-bubble {
-            background: var(--lz-dark);
-            color: white;
-            border-radius: 12px 0 12px 12px;
+        .message.bot .bubble {
+            background: transparent;
+            padding: 2px 0;
         }
 
-        /* Markdown in bot */
-        .msg-bubble h1, .msg-bubble h2, .msg-bubble h3 {
+        /* Markdown */
+        .bubble h1, .bubble h2, .bubble h3 {
             font-family: 'Playfair Display', serif;
-            color: var(--lz-dark);
-            margin-bottom: 5px;
-            margin-top: 10px;
+            color: var(--text);
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-weight: 500;
         }
-        .msg-bubble h1:first-child,
-        .msg-bubble h2:first-child,
-        .msg-bubble h3:first-child { margin-top: 0; }
-        .msg-bubble h1 { font-size: 0.98rem; }
-        .msg-bubble h2 { font-size: 0.93rem; }
-        .msg-bubble h3 { font-size: 0.88rem; }
-        .msg-bubble p  { margin-bottom: 6px; }
-        .msg-bubble p:last-child { margin-bottom: 0; }
-        .msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin-bottom: 6px; }
-        .msg-bubble li { margin-bottom: 3px; }
-        .msg-bubble strong { font-weight: 700; }
-        .msg-bubble em { font-style: italic; color: var(--lz-gold-dark); }
-        .msg-bubble code {
-            background: rgba(231, 185, 63, 0.12);
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-size: 0.82em;
+        .bubble h1:first-child,
+        .bubble h2:first-child,
+        .bubble h3:first-child { margin-top: 0; }
+        .bubble h1 { font-size: 1.15rem; }
+        .bubble h2 { font-size: 1.05rem; }
+        .bubble h3 { font-size: 0.98rem; }
+        .bubble p { margin-bottom: 8px; }
+        .bubble p:last-child { margin-bottom: 0; }
+        .bubble ul, .bubble ol { padding-left: 22px; margin-bottom: 8px; }
+        .bubble li { margin-bottom: 4px; }
+        .bubble strong { font-weight: 600; color: var(--text); }
+        .bubble em { font-style: italic; color: var(--text-soft); }
+        .bubble code {
+            background: var(--bg-alt);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.86em;
+            font-family: 'SF Mono', Menlo, Consolas, monospace;
         }
+        .bubble a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 
-        /* Typing indicator */
-        .typing-wrap {
+        /* Typing */
+        .typing {
             display: flex;
-            gap: 8px;
-            align-items: flex-end;
-            animation: slideIn 0.3s ease-out;
-        }
-
-        .typing-bubbles {
-            background: var(--lz-beige);
-            border-radius: 0 12px 12px 12px;
-            padding: 12px 16px;
-            display: flex;
-            gap: 5px;
             align-items: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-            border: 1px solid rgba(231, 185, 63, 0.1);
+            gap: 6px;
+            padding: 6px 2px;
+            animation: fadeIn 0.3s ease-out;
         }
 
         .dot {
             width: 7px; height: 7px;
-            background: var(--lz-gold);
+            background: var(--text-muted);
             border-radius: 50%;
-            opacity: 0.35;
+            opacity: 0.4;
             animation: dotBounce 1.4s ease-in-out infinite;
         }
-
         .dot:nth-child(2) { animation-delay: 0.18s; }
         .dot:nth-child(3) { animation-delay: 0.36s; }
 
         @keyframes dotBounce {
             0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
-            30%            { opacity: 1;    transform: translateY(-5px); }
+            30%            { opacity: 1;    transform: translateY(-4px); }
         }
 
-        /* -- INPUT AREA -- */
-        .input-area {
-            padding: 12px 16px;
-            border-top: 1px solid rgba(231, 185, 63, 0.1);
-            background: #ffffff;
+        /* -- COMPOSER -- */
+        .composer {
+            padding: 8px 0 16px;
             flex-shrink: 0;
-            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            background: var(--bg);
+            padding-bottom: max(16px, env(safe-area-inset-bottom));
         }
 
-        .input-row {
+        .composer-pill {
+            position: relative;
             display: flex;
-            gap: 10px;
             align-items: flex-end;
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            padding: 8px 8px 8px 18px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .composer-pill:focus-within {
+            border-color: var(--border-strong);
+            box-shadow: var(--shadow);
         }
 
         .input-field {
             flex: 1;
-            background: var(--lz-light-bg);
-            border: 1.5px solid rgba(231, 185, 63, 0.2);
-            border-radius: 0;
-            padding: 10px 16px;
-            font-family: 'Raleway', sans-serif;
-            font-size: 16px;
-            color: var(--lz-dark);
-            resize: none;
+            background: transparent;
+            border: none;
             outline: none;
-            min-height: 44px;
-            max-height: 120px;
-            overflow-y: auto;
-            line-height: 1.4;
-            transition: border-color 0.2s, background 0.2s;
+            font-family: inherit;
+            font-size: 16px;
+            color: var(--text);
+            resize: none;
+            min-height: 28px;
+            max-height: 140px;
+            line-height: 1.45;
+            padding: 8px 8px 8px 0;
             -webkit-appearance: none;
             appearance: none;
         }
 
-        .input-field:focus {
-            border-color: var(--lz-gold);
-            background: white;
-        }
-
-        .input-field::placeholder { color: #bbb; }
+        .input-field::placeholder { color: var(--text-muted); }
 
         .send-btn {
-            width: 44px; height: 44px;
-            min-width: 44px;
-            background: var(--lz-dark);
+            width: 36px; height: 36px;
+            min-width: 36px;
+            background: var(--text);
             border: none;
-            border-radius: 0;
+            border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: all 0.2s;
-            box-shadow: 0 4px 14px rgba(43, 43, 43, 0.2);
+            transition: background 0.2s, transform 0.15s, opacity 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
 
         .send-btn:hover:not(:disabled) {
-            background: var(--lz-gold-dark);
-            transform: scale(1.06);
+            background: #000;
+            transform: translateY(-1px);
         }
 
-        .send-btn:active:not(:disabled) { transform: scale(0.93); }
+        .send-btn:active:not(:disabled) { transform: scale(0.94); }
 
         .send-btn:disabled {
-            opacity: 0.4;
+            opacity: 0.25;
             cursor: not-allowed;
-            box-shadow: none;
         }
 
-        .send-btn svg { width: 18px; height: 18px; fill: white; margin-left: 2px; }
+        .send-btn svg { width: 16px; height: 16px; fill: #fff; }
 
-        .input-hint {
-            font-size: 0.65rem;
-            color: #ccc;
+        .composer-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
             text-align: center;
-            margin-top: 6px;
-            letter-spacing: 0.2px;
+            margin-top: 10px;
+            letter-spacing: 0.01em;
         }
 
-        /* -- RESPONSIVE: tablet -- */
-        @media (max-width: 768px) {
-            .main-container { padding: 12px; }
-        }
-
-        /* -- RESPONSIVE: movil -- */
+        /* -- RESPONSIVE -- */
         @media (max-width: 640px) {
-            :root { --header-h: 56px; }
-
-            .header { padding: 0 16px !important; }
-            .header-brand span { font-size: 0.95rem; }
-
-            .status-badge { right: 12px; padding: 4px 10px; font-size: 0.65rem; }
-
-            .main-container { padding: 8px; }
-            .chat-title { margin-bottom: 8px; }
-            .chat-title h1 { font-size: 1.05rem; }
-
-            .chat-strip { padding: 10px 14px; gap: 10px; }
-            .strip-info p { display: none; }
-
-            .messages-area { padding: 12px; gap: 10px; }
-
-            .msg-bubble { max-width: 88%; font-size: 0.86rem; }
-            .msg-avatar { width: 26px; height: 26px; font-size: 0.54rem; }
-
-            .welcome-card { padding: 16px; }
-            .welcome-card h3 { font-size: 0.92rem; }
-            .welcome-card p { font-size: 0.82rem; }
-            .gold-circle { width: 44px; height: 44px; }
-
-            .chip { font-size: 0.72rem; padding: 5px 11px; }
-
-            .input-area { padding: 10px 12px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-            .input-hint { display: none; }
+            .header { padding: 8px 16px 2px !important; }
+            .brand-logo { height: 86px; }
+            .chat { padding: 0 14px; }
+            .messages { padding: 18px 2px 8px; gap: 16px; }
+            .welcome h1 { font-size: 1.5rem; }
+            .welcome p { font-size: 0.95rem; }
+            .bubble { font-size: 0.94rem; }
+            .message.user .bubble { max-width: 92%; }
+            .composer { padding: 6px 0 12px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+            .composer-pill { padding: 6px 6px 6px 16px; border-radius: 22px; }
+            .composer-hint { display: none; }
         }
 
-        /* -- RESPONSIVE: muy pequeno -- */
         @media (max-width: 380px) {
-            .status-badge .badge-label { display: none; }
-            .status-badge { padding: 4px 8px; }
-            .chat-title h1 { font-size: 0.95rem; }
-            .msg-bubble { max-width: 92%; }
-            .chip { font-size: 0.68rem; padding: 4px 9px; min-height: 30px; }
-            .welcome-card p { font-size: 0.78rem; }
+            .welcome h1 { font-size: 1.35rem; }
+            .welcome p { font-size: 0.9rem; }
+            .bubble { font-size: 0.9rem; }
         }
 
-        /* -- RESPONSIVE: pantallas muy cortas (landscape movil) -- */
         @media (max-height: 500px) {
-            :root { --header-h: 44px; }
-            .chat-title { display: none; }
-            .welcome-card { padding: 10px; }
-            .gold-circle { width: 36px; height: 36px; margin-bottom: 8px; }
-            .gold-circle svg { width: 18px; height: 18px; }
-            .suggestions { margin-top: 8px; }
+            .header { padding: 4px 20px 2px !important; }
+            .brand-logo { height: 56px; }
+            .welcome { padding: 8px 4px 12px; }
+            .welcome h1 { font-size: 1.25rem; margin-bottom: 6px; }
+            .welcome p { font-size: 0.88rem; }
         }
 
-        /* -- Reducir movimiento -- */
         @media (prefers-reduced-motion: reduce) {
             * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
@@ -613,82 +388,39 @@
 
     <!-- HEADER -->
     <header class="header">
-        <div class="header-brand">
-            <span>The Click Boss</span>
-        </div>
-        <div class="status-badge">
-            <span class="status-dot"></span>
-            <span class="badge-label">Soporte activo</span>
+        <div class="brand">
+            <img class="brand-logo" src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/6a077f03dbe569a25d517665.png" alt="Liz Pinto">
         </div>
     </header>
 
     <!-- MAIN -->
-    <main class="main-container">
-        <div class="chat-wrapper">
+    <main class="main">
+        <div class="chat">
 
-            <div class="chat-title">
-                <h1>Soporte <em>The Camera Business</em></h1>
+            <!-- Mensajes -->
+            <div class="messages" id="messagesArea">
+                <div class="welcome" id="welcomeCard">
+                    <h1>Hola, soy el clon digital de Liz.</h1>
+                    <p>Estoy aqui para resolver cualquier pregunta sobre el negocio de la fotografia.</p>
+                </div>
             </div>
 
-            <div class="chat-container">
-
-                <!-- Strip superior del chat -->
-                <div class="chat-strip">
-                    <div class="bot-avatar">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5 2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5 2.5 2.5 0 0 0 2.5 2.5 2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 16.5 13z"/>
-                        </svg>
-                    </div>
-                    <div class="strip-info">
-                        <h2>Asistente The Camera Business</h2>
-                        <p>Tu asistente inteligente de soporte</p>
-                    </div>
-                    <div class="online-pill">
-                        <span class="online-dot"></span>
-                        En linea
-                    </div>
+            <!-- Composer -->
+            <div class="composer">
+                <div class="composer-pill">
+                    <textarea
+                        id="messageInput"
+                        class="input-field"
+                        placeholder="Escribe tu pregunta..."
+                        rows="1"
+                    ></textarea>
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()" aria-label="Enviar">
+                        <svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L17.17 12H4v2h13.17l-6.58 6.59L12 22l10-10z" transform="rotate(-90 12 12)"/></svg>
+                    </button>
                 </div>
-
-                <!-- Area de mensajes -->
-                <div class="messages-area" id="messagesArea">
-
-                    <!-- Tarjeta de bienvenida -->
-                    <div class="welcome-card" id="welcomeCard">
-                        <div class="gold-circle">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4l5 2.18V11c0 3.5-2.33 6.79-5 7.93-2.67-1.14-5-4.43-5-7.93V7.18L12 5z"/>
-                            </svg>
-                        </div>
-                        <h3>Hola, soy el Asistente de The Camera Business</h3>
-                        <p>Preguntame cualquier duda sobre <strong>The Camera Business</strong>, los programas, metodologia o como comenzar a construir tu negocio de fotografia.</p>
-                        <div class="suggestions">
-                            <button class="chip" onclick="sendChip(this)">Que es The Camera Business?</button>
-                            <button class="chip" onclick="sendChip(this)">Como me registro?</button>
-                            <button class="chip" onclick="sendChip(this)">Que incluye el programa?</button>
-                            <button class="chip" onclick="sendChip(this)">Como funcionan las clases?</button>
-                            <button class="chip" onclick="sendChip(this)">Cuanto cuesta?</button>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- Input -->
-                <div class="input-area">
-                    <div class="input-row">
-                        <textarea
-                            id="messageInput"
-                            class="input-field"
-                            placeholder="Escribe tu pregunta..."
-                            rows="1"
-                        ></textarea>
-                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-                            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                        </button>
-                    </div>
-                    <p class="input-hint">Enter para enviar &nbsp;&middot;&nbsp; Shift+Enter para nueva linea</p>
-                </div>
-
+                <p class="composer-hint">Enter para enviar &nbsp;&middot;&nbsp; Shift + Enter para nueva linea</p>
             </div>
+
         </div>
     </main>
 
@@ -711,7 +443,7 @@
         const inputEl = document.getElementById('messageInput');
         inputEl.addEventListener('input', function () {
             this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 130) + 'px';
+            this.style.height = Math.min(this.scrollHeight, 140) + 'px';
         });
 
         inputEl.addEventListener('keydown', function (e) {
@@ -720,11 +452,6 @@
                 sendMessage();
             }
         });
-
-        function sendChip(btn) {
-            inputEl.value = btn.textContent;
-            sendMessage();
-        }
 
         function hideWelcome() {
             const card = document.getElementById('welcomeCard');
@@ -738,12 +465,8 @@
             const wrap = document.createElement('div');
             wrap.className = `message ${role}`;
 
-            const av = document.createElement('div');
-            av.className = 'msg-avatar';
-            av.textContent = role === 'user' ? 'TU' : 'AI';
-
             const bubble = document.createElement('div');
-            bubble.className = 'msg-bubble';
+            bubble.className = 'bubble';
 
             if (useMarkdown && typeof marked !== 'undefined') {
                 const rawHtml = marked.parse(text);
@@ -753,7 +476,6 @@
                 bubble.innerHTML = safe.replace(/\n/g, '<br>');
             }
 
-            wrap.appendChild(av);
             wrap.appendChild(bubble);
             area.appendChild(wrap);
             area.scrollTop = area.scrollHeight;
@@ -762,11 +484,10 @@
         function showTyping() {
             const area = document.getElementById('messagesArea');
             const wrap = document.createElement('div');
-            wrap.className = 'typing-wrap';
+            wrap.className = 'message bot';
             wrap.id = 'typingWrap';
             wrap.innerHTML = `
-                <div class="msg-avatar" style="background:var(--lz-dark);color:white;width:30px;height:30px;border-radius:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0;margin-top:3px">AI</div>
-                <div class="typing-bubbles">
+                <div class="typing">
                     <div class="dot"></div>
                     <div class="dot"></div>
                     <div class="dot"></div>
@@ -808,7 +529,17 @@
 
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                const raw = await res.json();
+                const bodyText = await res.text();
+                if (!bodyText || !bodyText.trim()) {
+                    throw new Error('EMPTY_BODY');
+                }
+
+                let raw;
+                try {
+                    raw = JSON.parse(bodyText);
+                } catch (parseErr) {
+                    raw = { output: bodyText };
+                }
                 const data = Array.isArray(raw) ? raw[0] : raw;
 
                 const reply =
@@ -825,7 +556,10 @@
 
             } catch (err) {
                 hideTyping();
-                addMessage('Lo siento, hubo un problema de conexion. Por favor intenta de nuevo en un momento.', 'bot', false);
+                const msg = err && err.message === 'EMPTY_BODY'
+                    ? 'El asistente esta despertando. Por favor intentalo de nuevo en unos segundos.'
+                    : 'Lo siento, hubo un problema de conexion. Por favor intenta de nuevo en un momento.';
+                addMessage(msg, 'bot', false);
             } finally {
                 isProcessing = false;
                 document.getElementById('sendBtn').disabled = false;
@@ -836,7 +570,7 @@
 
         window.addEventListener('load', () => inputEl.focus());
 
-        /* ── Virtual keyboard resize handler (iOS/Android) ── */
+        /* Virtual keyboard resize (iOS/Android) */
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', () => {
                 const app = document.getElementById('app');

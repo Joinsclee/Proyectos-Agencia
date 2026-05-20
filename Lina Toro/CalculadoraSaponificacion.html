@@ -1704,6 +1704,14 @@
       'Aceite de maíz': { sap: .136, iodine: 125, lauric: 0, miristic: 0, palmitic: 12, stearic: 2, ricin: 0, oleic: 27, linoleic: 58, linolenic: 1 },
       'Sebo vacuno (tallow)': { sap: .140, iodine: 40, lauric: 0, miristic: 3, palmitic: 24, stearic: 19, ricin: 0, oleic: 43, linoleic: 3, linolenic: 1 },
       'Manteca de cerdo (lard)': { sap: .138, iodine: 60, lauric: 0, miristic: 1, palmitic: 26, stearic: 14, ricin: 0, oleic: 44, linoleic: 11, linolenic: 1 },
+      'Cera de abeja': { sap: .069, iodine: 10, lauric: 0, miristic: 0, palmitic: 25, stearic: 5, ricin: 0, oleic: 4, linoleic: 0, linolenic: 0 },
+      'Ácido esteárico': { sap: .148, iodine: 0, lauric: 0, miristic: 0, palmitic: 0, stearic: 100, ricin: 0, oleic: 0, linoleic: 0, linolenic: 0 },
+      'Aceite de babasú': { sap: .175, iodine: 16, lauric: 50, miristic: 20, palmitic: 11, stearic: 4, ricin: 0, oleic: 10, linoleic: 2, linolenic: 0 },
+      'Aceite de macadamia': { sap: .139, iodine: 76, lauric: 0, miristic: 0, palmitic: 9, stearic: 3, ricin: 0, oleic: 60, linoleic: 2, linolenic: 0 },
+      'Aceite de avellana': { sap: .135, iodine: 92, lauric: 0, miristic: 0, palmitic: 5, stearic: 3, ricin: 0, oleic: 78, linoleic: 10, linolenic: 0 },
+      'Aceite de albaricoque': { sap: .135, iodine: 100, lauric: 0, miristic: 0, palmitic: 6, stearic: 1, ricin: 0, oleic: 64, linoleic: 28, linolenic: 0 },
+      'Manteca de cupuaçu': { sap: .137, iodine: 47, lauric: 0, miristic: 0, palmitic: 8, stearic: 33, ricin: 0, oleic: 43, linoleic: 5, linolenic: 0 },
+      'Manteca de murumuru': { sap: .190, iodine: 14, lauric: 48, miristic: 27, palmitic: 6, stearic: 2, ricin: 0, oleic: 10, linoleic: 1, linolenic: 0 },
       '— Personalizado —': { sap: 0, iodine: 0, lauric: 0, miristic: 0, palmitic: 0, stearic: 0, ricin: 0, oleic: 0, linoleic: 0, linolenic: 0 },
     };
 
@@ -2417,14 +2425,10 @@
       const faNames    = { lauric:'Láurico', miristic:'Mirístico', palmitic:'Palmítico', stearic:'Esteárico', ricin:'Ricinoleico', oleic:'Oléico', linoleic:'Linoléico', linolenic:'Linolénico' };
 
       // ── Build HTML fragments ──────────────────────
-      const oilRowsHTML = oilRows.map(r => `
+      const oilRowsSimpleHTML = oilRows.map(r => `
         <tr>
           <td style="text-align:left;font-weight:500;">${r.name}</td>
-          <td>${r.g} g</td><td>${r.pct}</td><td>${r.sap}</td>
-          <td style="color:#6a8f5a;font-weight:600;">${r.naoh}</td>
-          <td>${r.iodine}</td><td>${r.lauric}</td><td>${r.miristic}</td>
-          <td>${r.palmitic}</td><td>${r.stearic}</td><td>${r.ricin}</td>
-          <td>${r.oleic}</td><td>${r.linoleic}</td><td>${r.linolenic}</td>
+          <td>${r.g} g</td><td>${r.pct}</td>
         </tr>`).join('');
 
       const propsHTML = propsVisible
@@ -2537,49 +2541,29 @@
     <div><strong>Elaboración:</strong> ${fmtDate(dateElab)}</div>
     <div><strong>Curado:</strong> ${fmtDate(dateCured)}</div>
     <div><strong>Temperatura:</strong> ${temp}°C</div>
+    <div><strong>Sobreengrasado (SF):</strong> ${sf}%</div>
+    <div><strong>Concentración Lejía:</strong> ${conc}%</div>
     <div style="margin-top:6px;font-size:.65rem;opacity:.45;">Generado: ${today}</div>
   </div>
 </div>
 
-<!-- LEJÍA NaOH -->
+<!-- LEJÍA NaOH (solo agua y soda para llevar al taller) -->
 <div class="section">
-  <div class="section-title">Cálculo de Lejía (NaOH)</div>
-  <div class="metrics">
+  <div class="section-title">Cálculo de Lejía</div>
+  <div class="metrics-3" style="grid-template-columns:repeat(2,1fr);">
+    <div class="metric">
+      <div class="metric-val">${resAgua}</div>
+      <div class="metric-lbl">Agua</div>
+    </div>
     <div class="metric">
       <div class="metric-val">${resNaOH}</div>
       <div class="metric-lbl">${resNaOHLabel}</div>
-    </div>
-    <div class="metric">
-      <div class="metric-val">${resAgua}</div>
-      <div class="metric-lbl">Agua de Lejía</div>
-    </div>
-    <div class="metric">
-      <div class="metric-val">${resTotalLeija}</div>
-      <div class="metric-lbl">Total Lejía</div>
-    </div>
-    <div class="metric">
-      <div class="metric-val">${resTotalReceta}</div>
-      <div class="metric-lbl">Peso Total Receta</div>
-    </div>
-  </div>
-  <div class="metrics-3">
-    <div class="metric">
-      <div class="metric-val">${sf}%</div>
-      <div class="metric-lbl">Sobreengrasado (SF)</div>
-    </div>
-    <div class="metric">
-      <div class="metric-val">${conc}%</div>
-      <div class="metric-lbl">Concentración Lejía</div>
-    </div>
-    <div class="metric">
-      <div class="metric-val">${resGlicerina}</div>
-      <div class="metric-lbl">Glicerina Generada</div>
     </div>
   </div>
   ${liquidExtra}
 </div>
 
-<!-- ACEITES -->
+<!-- ACEITES (solo nombre, gramos y %) -->
 <div class="section">
   <div class="section-title">Aceites, Grasas, Ceras y Mantecas</div>
   ${oilRows.length ? `
@@ -2587,52 +2571,20 @@
     <thead>
       <tr>
         <th style="text-align:left;">Aceite / Grasa</th>
-        <th>Gramos</th><th>%</th><th>SAP</th>
-        <th>NaOH (g)</th><th>IY</th>
-        <th>Láur.</th><th>Mirís.</th><th>Palm.</th><th>Estear.</th>
-        <th>Ricin.</th><th>Oléico</th><th>Linol.</th><th>Linolén.</th>
+        <th>Gramos</th><th>%</th>
       </tr>
     </thead>
-    <tbody>${oilRowsHTML}</tbody>
+    <tbody>${oilRowsSimpleHTML}</tbody>
     <tfoot>
       <tr class="total-row">
         <td style="text-align:left;">TOTAL</td>
-        <td>${totG}</td><td>100%</td><td>—</td>
-        <td style="color:#6a8f5a;">${totNaoh}</td><td>${totIodine}</td>
-        <td>${totLauric}</td><td>${totMiristic}</td><td>${totPalmitic}</td><td>${totStearic}</td>
-        <td>${totRicin}</td><td>${totOleic}</td><td>${totLinoleic}</td><td>${totLinolenic}</td>
+        <td>${totG}</td><td>100%</td>
       </tr>
     </tfoot>
   </table>` : '<p style="color:#888;font-size:.83rem;">Sin aceites configurados.</p>'}
 </div>
 
-<!-- PROPIEDADES + ÁCIDOS GRASOS -->
-<div class="section two-col">
-  <div>
-    <div class="section-title">Propiedades del Jabón</div>
-    ${propsHTML}
-    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:.82rem;font-weight:600;">Índice de Yodo:</span>
-      <span style="font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:700;">${iodineVal}</span>
-      <span style="padding:3px 12px;border-radius:100px;font-size:.75rem;font-weight:700;background:${iodineBg(iodineClass)};color:${iodineColor(iodineClass)};-webkit-print-color-adjust:exact;print-color-adjust:exact;">${iodineBadge}</span>
-    </div>
-  </div>
-  <div>
-    <div class="section-title">Perfil de Ácidos Grasos</div>
-    ${fattyHTML}
-  </div>
-</div>
-
-<!-- SOBREENGRASADO -->
-<div class="section">
-  <div class="section-title">Sobreengrasado (SE) — SF: ${sf}%</div>
-  <table>
-    <thead><tr><th style="text-align:left;">Aceite para SE</th><th>Gramos</th><th>Agregar en</th></tr></thead>
-    <tbody>${seRowsHTML}</tbody>
-  </table>
-</div>
-
-<!-- ADITIVOS -->
+<!-- ADITIVOS (solo si hay) -->
 ${(specAdds.length || custAdds.length) ? `
 <div class="section">
   <div class="section-title">Aditivos y Activos</div>
@@ -2642,10 +2594,31 @@ ${(specAdds.length || custAdds.length) ? `
   </table>
 </div>` : ''}
 
+<!-- SOBREENGRASADO (solo si hay aceite específico) -->
+${seRows.length ? `
+<div class="section">
+  <div class="section-title">Sobreengrasado (SE) — SF: ${sf}%</div>
+  <table>
+    <thead><tr><th style="text-align:left;">Aceite para SE</th><th>Gramos</th><th>Agregar en</th></tr></thead>
+    <tbody>${seRowsHTML}</tbody>
+  </table>
+</div>` : ''}
+
 <!-- NOTAS -->
 <div class="section">
   <div class="section-title">Notas de la Receta</div>
   <div class="notes-box">${notes ? notes.replace(/</g,'&lt;').replace(/>/g,'&gt;') : 'Sin notas.'}</div>
+</div>
+
+<!-- PROPIEDADES DEL JABÓN (diagnóstico al final) -->
+<div class="section">
+  <div class="section-title">Propiedades del Jabón</div>
+  ${propsHTML}
+  <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span style="font-size:.82rem;font-weight:600;">Índice de Yodo:</span>
+    <span style="font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:700;">${iodineVal}</span>
+    <span style="padding:3px 12px;border-radius:100px;font-size:.75rem;font-weight:700;background:${iodineBg(iodineClass)};color:${iodineColor(iodineClass)};-webkit-print-color-adjust:exact;print-color-adjust:exact;">${iodineBadge}</span>
+  </div>
 </div>
 
 <div class="footer">
