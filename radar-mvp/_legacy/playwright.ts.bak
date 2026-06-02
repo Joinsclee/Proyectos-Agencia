@@ -1,0 +1,101 @@
+import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
+import { env } from './env.js';
+
+/**
+ * User-agents reales de navegadores actuales. Rotamos por request para evitar
+ * detección por fingerprint trivial.
+ */
+const USER_AGENTS = [
+  // Chrome Windows
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+  // Chrome macOS
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+  // Safari macOS
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+  // Edge Windows
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0',
+];
+
+export function pickUserAgent(): string {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)]!;
+}
+
+/**
+ * Delay aleatorio entre requests para parecer humano.
+ * Configurable vía SCRAPE_DELAY_MIN_MS / SCRAPE_DELAY_MAX_MS.
+ */
+export function randomDelay(): Promise<void> {
+  const min = env.SCRAPE_DELAY_MIN_MS;
+  const max = env.SCRAPE_DELAY_MAX_MS;
+  const ms = min + Math.random() * Math.max(0, max - min);
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+export interface BrowserBundle {
+  browser: Browser;
+  context: BrowserContext;
+  page: Page;
+  close: () => Promise<void>;
+}
+
+export interface BrowserOptions {
+  /** Estado persistente (cookies) para portales con login - Fase 2. */
+  storageStatePath?: string;
+  /** Referer realista para el portal target. */
+  referer?: string;
+  /** Idioma. Por defecto 'es-CO' para portales colombianos. */
+  acceptLanguage?: string;
+  /** Viewport. Default desktop estándar. */
+  viewport?: { width: number; height: number };
+}
+
+/**
+ * Inicializa Chromium con configuración anti-bot estándar:
+ * - User-agent rotativo
+ * - Headers Accept-Language y Referer realistas
+ * - Viewport realista (1366×768)
+ * - Locale en español
+ *
+ * El llamador debe await close() en finally para evitar fugas de procesos.
+ */
+export async function launchBrowser(opts: BrowserOptions = {}): Promise<BrowserBundle> {
+  const browser = await chromium.launch({
+    headless: env.SCRAPE_HEADLESS,
+    args: [
+      '--disable-blink-features=AutomationControlled',
+      '--disable-features=IsolateOrigins,site-per-process',
+    ],
+  });
+
+  const context = await browser.newContext({
+    userAgent: pickUserAgent(),
+    viewport: opts.viewport ?? { width: 1366, height: 768 },
+    deviceScaleFactor: 1,
+    locale: 'es-CO',
+    timezoneId: 'America/Bogota',
+    extraHTTPHeaders: {
+      'Accept-Language': opts.acceptLanguage ?? 'es-CO,es;q=0.9,en;q=0.8',
+      ...(opts.referer ? { Referer: opts.referer } : {}),
+    },
+    storageState: opts.storageStatePath,
+  });
+
+  // Camuflaje básico anti-detection: removemos webdriver flag
+  await context.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+  });
+
+  const page = await context.newPage();
+  page.setDefaultTimeout(env.SCRAPE_TIMEOUT_MS);
+  page.setDefaultNavigationTimeout(env.SCRAPE_TIMEOUT_MS);
+
+  return {
+    browser,
+    context,
+    page,
+    close: async () => {
+      await context.close().catch(() => {});
+      await browser.close().catch(() => {});
+    },
+  };
+}

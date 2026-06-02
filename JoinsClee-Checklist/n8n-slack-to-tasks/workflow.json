@@ -1,0 +1,298 @@
+{
+  "name": "JoinsClee · Slack Daily → Tareas",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": ["message"],
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "REEMPLAZAR_CON_CHANNEL_ID"
+        },
+        "watchForChannelEvents": true,
+        "options": {
+          "thread_ts": false
+        }
+      },
+      "id": "slack-trigger",
+      "name": "Slack · Trigger #dailys",
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [200, 300],
+      "webhookId": "auto-generated-on-import",
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack JoinsClee"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "is-not-bot",
+              "leftValue": "={{ $json.event?.bot_id || $json.bot_id || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "starts-with-daily",
+              "leftValue": "={{ ($json.event?.text || $json.text || '').toLowerCase().trim() }}",
+              "rightValue": "daily",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "filter-daily",
+      "name": "Sólo mensajes que empiezan con 'daily'",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/cl_clients?select=id,name,slug,status&order=name.asc",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $vars.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-get-clients",
+      "name": "Supabase · GET cl_clients",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construye el contexto que recibe el LLM:\n// - daily_text: el mensaje crudo de Slack\n// - clients: lista compacta slug → nombre\n// - agency_members: 4 personas fijas\n// - today: fecha actual ISO\nconst clientsList = $('Supabase · GET cl_clients').first().json;\nconst slackEvent = $('Slack · Trigger #dailys').first().json;\nconst rawText = slackEvent.event?.text || slackEvent.text || '';\n\n// Limpia el prefijo 'daily' al inicio (case insensitive)\nconst dailyText = rawText.replace(/^\\s*daily[:\\s-]*/i, '').trim();\n\nconst today = new Date();\nconst todayISO = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;\n\nconst clients = (Array.isArray(clientsList) ? clientsList : [])\n  .filter(c => c.status !== 'archived')\n  .map(c => ({ slug: c.slug, name: c.name }));\n\nreturn [{\n  json: {\n    daily_text: dailyText,\n    clients,\n    agency_members: ['Cristhian Fonseca', 'Cristian Vega', 'Elmer', 'Camilo'],\n    today: todayISO,\n    slack: {\n      ts: slackEvent.event?.ts || slackEvent.ts,\n      channel: slackEvent.event?.channel || slackEvent.channel,\n      user: slackEvent.event?.user || slackEvent.user,\n      thread_ts: slackEvent.event?.thread_ts || slackEvent.event?.ts || slackEvent.ts,\n    },\n  }\n}];\n"
+      },
+      "id": "build-context",
+      "name": "Build context (clientes + daily)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 300]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=Eres un asistente que extrae tareas concretas de un daily de Slack y devuelve JSON estructurado. NO inventes tareas. Si el daily no menciona acciones concretas, devuelve { \"tasks\": [] }.\n\nCLIENTES ACTIVOS (slug · nombre):\n{{ $json.clients.map(c => '- ' + c.slug + ' · ' + c.name).join('\\n') }}\n\nMIEMBROS DE LA AGENCIA (responsables válidos):\n{{ $json.agency_members.join(', ') }}\n\nHOY ES: {{ $json.today }}\n\nReglas:\n1. Lee el daily y extrae cada acción concreta a hacer (verbo + objeto).\n2. Para cada tarea, completa:\n   - title (max 80 chars, en imperativo)\n   - description (detalles opcionales, '' si no hay)\n   - client_slug: si la tarea es para un cliente, su slug exacto de la lista; null si es interna.\n   - owner_type: 'client' si tiene client_slug, 'agency' si no.\n   - assigned_to: nombre exacto de un miembro de la agencia si se menciona, null si no.\n   - priority: 'urgent' | 'high' | 'medium' | 'low' (default 'medium')\n   - block: 'Operaciones' | 'Atracción' | 'Sistema de Ventas' | 'Producto / Entrega' o null\n   - due_date: YYYY-MM-DD si se menciona fecha relativa (hoy, mañana, viernes) o explícita; null si no.\n3. Si una mención es vaga como 'seguir con X' o 'continuar trabajando', omítela.\n4. Devuelve ÚNICAMENTE JSON válido sin comentarios."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.daily_text }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {
+          "temperature": 0.2,
+          "maxTokens": 2000
+        }
+      },
+      "id": "openai-extract",
+      "name": "OpenAI · Extraer tareas",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.6,
+      "position": [1180, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "REEMPLAZAR",
+          "name": "OpenAI JoinsClee"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapea las tareas extraídas por OpenAI a payloads de cl_items.\n// - Resuelve client_slug → client_id usando la lista de clientes.\n// - Aplica fallbacks razonables y marca source='slack'.\n// - Si client_slug no existe, log y descartar (NO crear con id inválido).\n\nconst openAiOutput = $('OpenAI · Extraer tareas').first().json;\nconst ctx = $('Build context (clientes + daily)').first().json;\nconst clientsList = $('Supabase · GET cl_clients').first().json;\n\n// El nodo OpenAI con jsonOutput devuelve { message: { content: '...' } } o un parsed directamente\nlet parsed;\ntry {\n  const raw = openAiOutput.message?.content || openAiOutput.content || openAiOutput;\n  parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;\n} catch (e) {\n  return [{ json: { error: 'No se pudo parsear el JSON de OpenAI', raw: openAiOutput, valid: [], invalid: [] } }];\n}\n\nconst tasks = Array.isArray(parsed?.tasks) ? parsed.tasks : [];\nconst slugToId = Object.fromEntries((clientsList || []).map(c => [c.slug, c.id]));\nconst validMembers = new Set(ctx.agency_members);\n\nconst valid = [];\nconst invalid = [];\n\ntasks.forEach((t, i) => {\n  const slug = t.client_slug || null;\n  const ownerType = slug ? 'client' : 'agency';\n\n  if (slug && !slugToId[slug]) {\n    invalid.push({ reason: `client_slug '${slug}' no existe`, task: t });\n    return;\n  }\n  if (!t.title || !t.title.trim()) {\n    invalid.push({ reason: 'sin título', task: t });\n    return;\n  }\n\n  valid.push({\n    owner_type: ownerType,\n    client_id: slug ? slugToId[slug] : null,\n    title: String(t.title).trim().substring(0, 200),\n    description: (t.description || '').trim() || null,\n    assigned_to: (t.assigned_to && validMembers.has(t.assigned_to)) ? t.assigned_to : null,\n    priority: ['urgent','high','medium','low'].includes(t.priority) ? t.priority : 'medium',\n    block: t.block || null,\n    due_date: t.due_date || null,\n    status: 'pending',\n    source: 'slack',\n    slack_message_ts: ctx.slack.ts,\n    slack_channel_id: ctx.slack.channel,\n    slack_user_id: ctx.slack.user,\n    updated_by: 'agency',\n    position: (i + 1) * 10,\n  });\n});\n\nreturn [{ json: { valid, invalid, slack: ctx.slack } }];\n"
+      },
+      "id": "build-payloads",
+      "name": "Build payloads cl_items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "conditions": [
+            {
+              "id": "has-valid-tasks",
+              "leftValue": "={{ $json.valid.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if-has-tasks",
+      "name": "¿Tareas válidas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1700, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/cl_items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "apikey",        "value": "={{ $vars.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Authorization", "value": "Bearer {{ $vars.SUPABASE_SERVICE_KEY }}" },
+            { "name": "Content-Type",  "value": "application/json" },
+            { "name": "Prefer",        "value": "return=representation" }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={{ $json.valid }}",
+        "options": {}
+      },
+      "id": "supabase-insert",
+      "name": "Supabase · INSERT cl_items",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1960, 240]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construye el mensaje de respuesta para Slack agrupando por cliente.\nconst valid = $('Build payloads cl_items').first().json.valid || [];\nconst invalid = $('Build payloads cl_items').first().json.invalid || [];\nconst slack = $('Build payloads cl_items').first().json.slack;\nconst inserted = $('Supabase · INSERT cl_items').first().json || [];\n\nconst clientsList = $('Supabase · GET cl_clients').first().json || [];\nconst idToName = Object.fromEntries(clientsList.map(c => [c.id, c.name]));\n\n// Agrupar por destino\nconst byTarget = {};\nvalid.forEach(t => {\n  const key = t.client_id ? idToName[t.client_id] || 'Cliente' : 'Agencia';\n  byTarget[key] = (byTarget[key] || 0) + 1;\n});\n\nconst lines = Object.entries(byTarget).map(([k, n]) => `• *${n}* en _${k}_`);\nlet text = `✅ Creé ${valid.length} tarea${valid.length===1?'':'s'} desde tu daily:\\n${lines.join('\\n')}`;\nif (invalid.length > 0) {\n  text += `\\n\\n⚠ ${invalid.length} omitida${invalid.length===1?'':'s'} (slug no encontrado o sin título)`;\n}\n\nreturn [{\n  json: {\n    text,\n    channel: slack.channel,\n    thread_ts: slack.thread_ts,\n  }\n}];\n"
+      },
+      "id": "build-slack-reply",
+      "name": "Build Slack reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2220, 240]
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.channel }}"
+        },
+        "messageType": "text",
+        "text": "={{ $json.text }}",
+        "otherOptions": {
+          "thread_ts": "={{ $json.thread_ts }}"
+        }
+      },
+      "id": "slack-reply-ok",
+      "name": "Slack · responder en hilo (OK)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [2480, 240],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack JoinsClee"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Build payloads cl_items').first().json.slack.channel }}"
+        },
+        "messageType": "text",
+        "text": "🤔 Leí tu daily pero no detecté tareas concretas para crear. Si querés que las cree, usá un formato más accionable (verbos + objeto + opcional: cliente).",
+        "otherOptions": {
+          "thread_ts": "={{ $('Build payloads cl_items').first().json.slack.thread_ts }}"
+        }
+      },
+      "id": "slack-reply-empty",
+      "name": "Slack · responder en hilo (sin tareas)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [1960, 380],
+      "credentials": {
+        "slackApi": {
+          "id": "REEMPLAZAR",
+          "name": "Slack JoinsClee"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Slack · Trigger #dailys": {
+      "main": [[{ "node": "Sólo mensajes que empiezan con 'daily'", "type": "main", "index": 0 }]]
+    },
+    "Sólo mensajes que empiezan con 'daily'": {
+      "main": [
+        [{ "node": "Supabase · GET cl_clients", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase · GET cl_clients": {
+      "main": [[{ "node": "Build context (clientes + daily)", "type": "main", "index": 0 }]]
+    },
+    "Build context (clientes + daily)": {
+      "main": [[{ "node": "OpenAI · Extraer tareas", "type": "main", "index": 0 }]]
+    },
+    "OpenAI · Extraer tareas": {
+      "main": [[{ "node": "Build payloads cl_items", "type": "main", "index": 0 }]]
+    },
+    "Build payloads cl_items": {
+      "main": [[{ "node": "¿Tareas válidas?", "type": "main", "index": 0 }]]
+    },
+    "¿Tareas válidas?": {
+      "main": [
+        [{ "node": "Supabase · INSERT cl_items", "type": "main", "index": 0 }],
+        [{ "node": "Slack · responder en hilo (sin tareas)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase · INSERT cl_items": {
+      "main": [[{ "node": "Build Slack reply", "type": "main", "index": 0 }]]
+    },
+    "Build Slack reply": {
+      "main": [[{ "node": "Slack · responder en hilo (OK)", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {},
+  "versionId": "fase-1-slack-to-tasks",
+  "triggerCount": 1
+}

@@ -1,0 +1,924 @@
+/* ========================================
+   Mi Barco - Sistema de hábitos de Paulina Valencia
+   Identidad visual: Asap + navy #08315C + gold #F4C94A
+   (Alineada a la marca de Paulina/comunidad)
+   ======================================== */
+
+:root {
+  /* Paleta principal de marca */
+  --pv-navy: #08315C;        /* Azul oscuro principal */
+  --pv-navy-soft: #0d4178;   /* Azul medio */
+  --pv-gold: #F4C94A;        /* Dorado (CTA principal) */
+  --pv-gold-soft: #f7d56e;
+  --pv-gold-glow: rgba(244, 201, 74, 0.18);
+
+  /* Texto y superficies */
+  --pv-ink: #1a2433;
+  --pv-ink-soft: #5b6878;
+  --pv-paper: #f7f9fc;
+  --pv-cream: #ffffff;
+  --pv-line: #e2e8f0;
+
+  /* Colores funcionales (tracker semáforo) */
+  --pv-mint: #2f9e6f;        /* Cumplido — más alineado con paleta */
+  --pv-coral: #d94534;       /* No cumplido */
+  --pv-amber: #d99230;       /* A medias */
+  --pv-purple: #6c4fa5;      /* Neuropliegue gestiona cerebro */
+  --pv-rose: #d4756b;
+
+  /* Tipografía */
+  --pv-font-sans: 'Asap', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html, body {
+  font-family: var(--pv-font-sans);
+  background: var(--pv-cream);
+  color: var(--pv-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-width: 320px;
+  overflow-x: hidden;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+}
+
+/* Numerales tabulares en stats para alineación perfecta */
+.pv-num-tabular { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* ========================================
+   ICONOS (estilo Lucide)
+   ======================================== */
+.pv-icon {
+  width: 1.05em;
+  height: 1.05em;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+.pv-icon-sm { width: 0.9em; height: 0.9em; }
+.pv-icon-lg { width: 1.4em; height: 1.4em; }
+.pv-icon-xl { width: 1.8em; height: 1.8em; }
+
+/* Wrapper que centra el ícono y mantiene proporciones */
+.pv-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+/* Wrapper raíz amigable con GHL */
+.pv-root {
+  width: 100%;
+  background: var(--pv-cream);
+}
+
+.pv-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .pv-container { padding: 1.75rem; }
+}
+@media (min-width: 1024px) {
+  .pv-container { padding: 2rem; }
+}
+
+/* Las imágenes/SVG no se desbordan */
+.pv-root img, .pv-root svg { max-width: 100%; }
+
+/* Mantener clase font-serif por compatibilidad pero sin cambiar fuente */
+.font-serif { font-family: var(--pv-font-sans); font-weight: 700; letter-spacing: -0.01em; }
+
+/* ========================================
+   CARDS — shadows con tinte navy para sensación premium
+   ======================================== */
+.pv-card {
+  background: #fff;
+  border: 1px solid var(--pv-line);
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(8, 49, 92, 0.04),
+    0 0 0 1px rgba(8, 49, 92, 0.01);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.2s ease;
+}
+button.pv-card:hover,
+a.pv-card:hover {
+  border-color: rgba(8, 49, 92, 0.15);
+  box-shadow:
+    0 14px 28px -12px rgba(8, 49, 92, 0.18),
+    0 6px 10px -4px rgba(8, 49, 92, 0.06);
+  transform: translateY(-3px);
+}
+
+/* Card con accent dorado decorativo arriba */
+.pv-card-accent-top {
+  position: relative;
+  overflow: hidden;
+}
+.pv-card-accent-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.5rem;
+  right: 1.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pv-gold) 50%, transparent);
+  opacity: 0.7;
+}
+
+/* Ornamento decorativo (línea + punto dorado) — separador premium */
+.pv-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1rem auto;
+  max-width: 200px;
+}
+.pv-ornament::before,
+.pv-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--pv-line));
+}
+.pv-ornament::after {
+  background: linear-gradient(90deg, var(--pv-line), transparent);
+}
+.pv-ornament-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pv-gold);
+  box-shadow: 0 0 0 3px rgba(244, 201, 74, 0.25);
+}
+
+/* Stats con underline dorado gradient */
+.pv-stat-num {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========================================
+   BOTONES
+   ======================================== */
+.pv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  line-height: 1.2;
+  font-family: inherit;
+}
+
+/* CTA primario: dorado con shimmer sutil al hover */
+.pv-btn-primary {
+  background: linear-gradient(180deg, var(--pv-gold-soft) 0%, var(--pv-gold) 100%);
+  color: var(--pv-navy);
+  font-weight: 800;
+  box-shadow:
+    0 8px 20px -8px rgba(244, 201, 74, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+.pv-btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+.pv-btn-primary:hover::before { transform: translateX(100%); }
+.pv-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 28px -10px rgba(244, 201, 74, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.pv-btn-primary:active { transform: translateY(0); }
+.pv-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+/* Ghost: borde sutil sobre fondo claro */
+.pv-btn-ghost {
+  background: #fff;
+  color: var(--pv-navy);
+  border-color: var(--pv-line);
+  font-weight: 600;
+}
+.pv-btn-ghost:hover {
+  background: var(--pv-paper);
+  border-color: var(--pv-navy);
+}
+
+/* ========================================
+   PILLS / TAGS
+   ======================================== */
+.pv-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--pv-gold-glow);
+  color: #a37b00;
+  border: 1px solid rgba(244, 201, 74, 0.35);
+}
+
+.pv-pill-dark {
+  background: rgba(8, 49, 92, 0.07);
+  color: var(--pv-navy);
+  border: 1px solid rgba(8, 49, 92, 0.15);
+}
+
+/* ========================================
+   ANIMACIONES
+   ======================================== */
+@keyframes pv-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pv-fade-in { animation: pv-fade-in 0.35s ease both; }
+.pv-view { animation: pv-fade-in 0.25s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pv-fade-in, .pv-view { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* ========================================
+   HERO BACKGROUND (header con detalle dorado)
+   ======================================== */
+.pv-hero-band {
+  background:
+    radial-gradient(900px 420px at 75% -10%, rgba(244, 201, 74, 0.18), transparent 60%),
+    radial-gradient(700px 380px at -5% 110%, rgba(13, 65, 120, 0.55), transparent 55%),
+    var(--pv-navy);
+  color: #fff;
+  border-radius: 24px;
+  padding: 2.75rem 1.5rem 2.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 25px 50px -12px rgba(8, 49, 92, 0.25),
+    0 0 0 1px rgba(8, 49, 92, 0.05);
+}
+/* Sutil patrón de puntos en el hero */
+.pv-hero-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+.pv-hero-band > * { position: relative; z-index: 1; }
+
+.pv-hero-band .pv-pill {
+  background: var(--pv-gold-glow);
+  color: var(--pv-gold);
+  border-color: rgba(244, 201, 74, 0.4);
+}
+
+/* Ornamento en el hero */
+.pv-hero-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 auto 1rem;
+  max-width: 160px;
+}
+.pv-hero-ornament::before,
+.pv-hero-ornament::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(244, 201, 74, 0.5));
+}
+.pv-hero-ornament::after {
+  background: linear-gradient(90deg, rgba(244, 201, 74, 0.5), transparent);
+}
+.pv-hero-ornament-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--pv-gold);
+}
+
+/* ========================================
+   MONOGRAMA / LOGO
+   ======================================== */
+.pv-monogram {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--pv-gold);
+  color: var(--pv-gold);
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+.pv-monogram.solid {
+  background: var(--pv-gold);
+  color: var(--pv-navy);
+}
+.pv-logo {
+  height: 60px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   RUEDA DE LA VIDA
+   ======================================== */
+
+.wheel-svg {
+  width: 100%;
+  height: auto;
+  max-width: 600px;
+  display: block;
+  margin: 0 auto;
+}
+
+.wheel-axis { stroke: var(--pv-line); stroke-width: 1; }
+.wheel-ring { fill: none; stroke: var(--pv-line); stroke-width: 0.5; }
+
+.wheel-segment {
+  fill: var(--pv-paper);
+  stroke: #fff;
+  stroke-width: 1;
+  cursor: pointer;
+  transition: fill 0.15s ease;
+}
+.wheel-segment:hover { fill: #eef2f8; }
+.wheel-segment.active {
+  fill: var(--pv-gold);
+  fill-opacity: 0.18;
+}
+
+.wheel-label {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--pv-ink);
+  text-anchor: middle;
+  font-family: var(--pv-font-sans);
+}
+
+.wheel-value-dot {
+  fill: var(--pv-gold);
+  stroke: var(--pv-navy);
+  stroke-width: 2;
+}
+
+.wheel-value-line {
+  fill: var(--pv-gold);
+  fill-opacity: 0.22;
+  stroke: var(--pv-navy);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* ========================================
+   TRACKER CIRCULAR
+   ======================================== */
+
+.tracker-svg {
+  width: 100%;
+  height: auto;
+  max-width: 600px;
+  display: block;
+  margin: 0 auto;
+}
+
+.tracker-cell {
+  cursor: pointer;
+  transition: fill 0.15s ease, transform 0.15s ease;
+  stroke: var(--pv-line);
+  stroke-width: 1;
+}
+.tracker-cell:hover {
+  filter: brightness(0.93);
+  stroke: var(--pv-navy);
+  stroke-width: 1.5;
+}
+
+.tracker-cell-empty { fill: #fff; }
+.tracker-cell-done  { fill: var(--pv-mint); stroke: #fff; stroke-width: 1.5; }
+.tracker-cell-skip  { fill: var(--pv-coral); stroke: #fff; stroke-width: 1.5; }
+.tracker-cell-partial { fill: var(--pv-amber); stroke: #fff; stroke-width: 1.5; }
+.tracker-cell-future {
+  fill: var(--pv-paper);
+  opacity: 0.6;
+  cursor: not-allowed;
+  stroke: var(--pv-line);
+  stroke-dasharray: 2 2;
+}
+.tracker-cell-future:hover {
+  filter: none;
+  stroke: var(--pv-line);
+  stroke-width: 1;
+}
+
+.tracker-guide-ring {
+  fill: none;
+  stroke: var(--pv-line);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.tracker-day-label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--pv-ink-soft);
+  text-anchor: middle;
+  font-family: var(--pv-font-sans);
+}
+
+/* ========================================
+   INPUTS / SLIDER
+   ======================================== */
+
+input[type="range"].pv-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--pv-line);
+  border-radius: 3px;
+  outline: none;
+}
+input[type="range"].pv-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--pv-gold);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid var(--pv-navy);
+  box-shadow: 0 2px 6px rgba(8, 49, 92, 0.25);
+}
+input[type="range"].pv-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  background: var(--pv-gold);
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid var(--pv-navy);
+}
+
+.pv-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--pv-line);
+  background: #fff;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--pv-ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.pv-input::placeholder { color: #9aa6b5; }
+.pv-input:focus {
+  outline: none;
+  border-color: var(--pv-navy);
+  box-shadow: 0 0 0 3px rgba(8, 49, 92, 0.12);
+}
+
+/* ========================================
+   NAVEGACIÓN POR TABS
+   ======================================== */
+
+.pv-tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: #fff;
+  border: 1px solid var(--pv-line);
+  border-radius: 14px;
+  padding: 0.375rem;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto 2rem;
+  box-shadow: 0 2px 8px -4px rgba(8, 49, 92, 0.06);
+}
+
+.pv-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pv-ink-soft);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.pv-tab:hover {
+  color: var(--pv-navy);
+  background: var(--pv-paper);
+}
+
+.pv-tab.active {
+  background: var(--pv-navy);
+  color: #fff;
+  box-shadow: 0 4px 10px -4px rgba(8, 49, 92, 0.35);
+}
+.pv-tab.active .pv-tab-icon {
+  color: var(--pv-gold);
+}
+
+.pv-tab .pv-tab-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+@media (max-width: 480px) {
+  .pv-tabs {
+    border-radius: 12px;
+    padding: 0.25rem;
+  }
+  .pv-tab {
+    font-size: 0.72rem;
+    padding: 0.55rem 0.4rem;
+    gap: 0.25rem;
+  }
+  .pv-tab .pv-tab-label-full { display: none; }
+  .pv-tab .pv-tab-icon { font-size: 1.15rem; }
+}
+
+/* ========================================
+   RESPONSIVE — Mobile-first refinements
+   ======================================== */
+
+@media (max-width: 768px) {
+  .wheel-svg, .tracker-svg { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .wheel-label { font-size: 9px; }
+  .tracker-day-label { font-size: 8px; }
+  .pv-card { border-radius: 12px; }
+  .pv-btn { padding: 0.8rem 1.1rem; font-size: 0.95rem; }
+  .pv-hero-band { padding: 2rem 1rem 1.5rem; border-radius: 18px; }
+}
+
+@media (max-width: 380px) {
+  .wheel-label { font-size: 8px; }
+  .tracker-day-label { font-size: 7px; }
+}
+
+/* ========================================
+   NEUROPLIEGUES
+   ======================================== */
+
+.np-card {
+  background: #fff;
+  border: 1px solid var(--pv-line);
+  border-radius: 18px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.np-card:not(.proximamente):hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 32px -16px rgba(8, 49, 92, 0.25);
+  border-color: transparent;
+}
+.np-card.proximamente {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.np-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.np-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+}
+
+.np-tool-card {
+  background: #fff;
+  border: 1px solid var(--pv-line);
+  border-radius: 14px;
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+}
+.np-tool-card:hover {
+  border-color: var(--pv-navy);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -12px rgba(8, 49, 92, 0.22);
+}
+
+.np-section {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--pv-line);
+}
+.np-section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  color: var(--pv-navy);
+  margin-bottom: 0.5rem;
+}
+
+.np-pill-tool {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: var(--pv-paper);
+  color: var(--pv-ink-soft);
+  font-weight: 600;
+}
+
+/* Botón "Aplicar ahora" — dorado prominente como CTA principal */
+.np-btn-apply {
+  background: var(--pv-gold);
+  color: var(--pv-navy);
+  font-weight: 800;
+  border: none;
+  box-shadow: 0 8px 18px -8px rgba(244, 201, 74, 0.55);
+}
+.np-btn-apply:hover {
+  background: var(--pv-gold-soft);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px -10px rgba(244, 201, 74, 0.65);
+}
+
+/* Botón "Guardar en mi plan" — outline navy */
+.np-btn-save {
+  background: #fff;
+  color: var(--pv-navy);
+  border: 1.5px solid var(--pv-navy);
+  font-weight: 700;
+}
+.np-btn-save:hover { background: var(--pv-paper); }
+.np-btn-save.saved {
+  background: var(--pv-navy);
+  color: #fff;
+}
+
+/* ========================================
+   QUIZ DE OBSTÁCULOS
+   ======================================== */
+
+.np-quiz-card {
+  background: linear-gradient(135deg, #fff 0%, var(--pv-paper) 100%);
+  border: 1px solid var(--pv-line);
+  border-radius: 18px;
+  padding: 1.75rem 1.5rem;
+}
+
+.np-obstacle-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: #fff;
+  border: 1.5px solid var(--pv-line);
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--pv-ink);
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+.np-obstacle-btn:hover {
+  border-color: var(--pv-gold);
+  background: var(--pv-gold-glow);
+  transform: translateX(4px);
+}
+.np-obstacle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ========================================
+   HISTORIAL DE RUEDA (snapshots mensuales)
+   ======================================== */
+.rueda-snapshot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: var(--pv-paper);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  transition: background 0.15s ease;
+}
+.rueda-snapshot:hover { background: #edf1f7; }
+
+/* ========================================
+   FOOTER — premium con ornamento dorado
+   ======================================== */
+.pv-footer {
+  margin-top: 3.5rem;
+  padding: 2rem 1rem 1rem;
+  text-align: center;
+  color: var(--pv-ink-soft);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  position: relative;
+}
+.pv-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--pv-line), transparent);
+}
+.pv-footer-ornament {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0 auto 1rem;
+  color: var(--pv-gold);
+}
+.pv-footer-ornament::before,
+.pv-footer-ornament::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--pv-gold));
+  opacity: 0.5;
+}
+.pv-footer-ornament::after {
+  background: linear-gradient(90deg, var(--pv-gold), transparent);
+}
+
+/* ========================================
+   MODAL — con backdrop blur premium
+   ======================================== */
+.pv-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(8, 49, 92, 0.35);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+.pv-modal {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow:
+    0 25px 50px -12px rgba(8, 49, 92, 0.35),
+    0 0 0 1px rgba(8, 49, 92, 0.05);
+  max-width: 28rem;
+  width: 100%;
+  padding: 1.75rem;
+}
+
+/* ========================================
+   STAT NUMBER — tipografía refinada
+   ======================================== */
+.pv-stat-tile {
+  position: relative;
+  padding: 0.5rem 0.5rem 0.75rem;
+  text-align: center;
+}
+.pv-stat-tile::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 30%;
+  right: 30%;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.3;
+}
+.pv-stat-tile.gold::after { color: var(--pv-gold); }
+
+/* Toast premium con shadow tinted */
+.pv-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.9rem 1.4rem;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  z-index: 50;
+  box-shadow:
+    0 20px 40px -8px rgba(8, 49, 92, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Mejora del rueda-snapshot */
+.rueda-snapshot::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pv-gold);
+  margin-right: 0.6rem;
+  flex-shrink: 0;
+}
+
+/* Decorative number badge */
+.pv-step-num {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--pv-navy);
+  background: #fff;
+  border: 2px solid var(--pv-line);
+  position: relative;
+  box-shadow: 0 4px 12px -4px rgba(8, 49, 92, 0.1);
+}
+.pv-step-num::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pv-gold), transparent);
+  opacity: 0.18;
+  z-index: -1;
+}
+
+/* Background pattern paper sutil */
+.pv-pattern-paper {
+  background-color: #fff;
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(8, 49, 92, 0.025) 1px, transparent 0);
+  background-size: 18px 18px;
+}

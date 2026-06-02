@@ -398,7 +398,7 @@
       <div class="chart-wrap"><canvas id="chartMonthly"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-head"><div><h2>Reparto del beneficio</h2><div class="card-sub">Quién recibe qué</div></div></div>
+      <div class="card-head"><div><h2>Distribución de los ingresos</h2><div class="card-sub">A dónde va cada peso que entró</div></div></div>
       <div class="chart-wrap"><canvas id="chartSplit"></canvas></div>
     </div>
   </div>
@@ -407,7 +407,6 @@
   <div class="card">
     <div class="tabs" id="tabs">
       <div class="tab active" data-tab="ingresos">Ingresos Skool</div>
-      <div class="tab" data-tab="pauta">Pauta Meta</div>
       <div class="tab" data-tab="gastos-lina">Gastos Lina</div>
       <div class="tab" data-tab="gastos-agencia">Gastos JoinsClee</div>
       <div class="tab" data-tab="liquidacion">Liquidación</div>
@@ -446,7 +445,6 @@ const T = {
   params: 'lina_finance_params',
   revenues: 'lina_finance_revenues',
   expenses: 'lina_finance_expenses',
-  ads: 'lina_finance_ad_charges',
 };
 const PARTNER_LINA = 'lina';
 const PARTNER_AGENCY = 'joinsclee';
@@ -458,7 +456,6 @@ const state = {
   params: null,
   revenues: [],
   expenses: [],
-  adCharges: [],
   period: 'all',
   tab: 'ingresos',
 };
@@ -501,16 +498,14 @@ async function db(promise){
  *  DATA LOADERS
  * ============================================================ */
 async function loadAll(){
-  const [params, revenues, expenses, adCharges] = await Promise.all([
+  const [params, revenues, expenses] = await Promise.all([
     db(sb.from(T.params).select('*').eq('id', 1).maybeSingle()),
     db(sb.from(T.revenues).select('*').order('paid_at', { ascending: false })),
     db(sb.from(T.expenses).select('*').order('spent_at', { ascending: false })),
-    db(sb.from(T.ads).select('*').order('charged_at', { ascending: false })),
   ]);
   state.params = params || { id: 1, trm_cop_per_usd: 3729.27, lina_share: 0.7, joinsclee_share: 0.3, trm_source: '' };
   state.revenues = revenues || [];
   state.expenses = expenses || [];
-  state.adCharges = adCharges || [];
   if(!params){
     await db(sb.from(T.params).upsert(state.params));
   }
@@ -529,7 +524,6 @@ function availablePeriods(){
   const set = new Set();
   state.revenues.forEach(r => set.add(monthOf(r.paid_at)));
   state.expenses.forEach(e => set.add(monthOf(e.spent_at)));
-  state.adCharges.forEach(a => set.add(monthOf(a.charged_at)));
   return Array.from(set).filter(Boolean).sort().reverse();
 }
 
@@ -542,10 +536,11 @@ function aggregate(){
   const exps = filterByPeriod(state.expenses, 'spent_at');
 
   const incomeUSD = revs.reduce((s,r) => s + (Number(r.usd_amount)||0), 0);
-  const incomeCOP = revs.reduce((s,r) => {
-    if(r.cop_real && Number(r.cop_real) > 0) return s + Number(r.cop_real);
-    return s + (Number(r.usd_amount)||0) * trm;
-  }, 0);
+  // Ingresos = SOLO lo que entró real al banco de Lina (COP). Sin TRM ficticio:
+  // lo que aún no se ha confirmado en banco queda como "pendiente" y no infla cuentas.
+  const incomeCOP = revs.reduce((s,r) => s + (Number(r.cop_real)||0), 0);
+  // COP esperado vía TRM: solo referencia/comparación, no entra en el cuadre.
+  const incomeCOPexpected = revs.reduce((s,r) => s + (Number(r.usd_amount)||0) * trm, 0);
 
   const expenseTotal = (filter) => exps.filter(filter).reduce((s,e) => {
     const meses = Number(e.months_billed)||1;
@@ -565,11 +560,13 @@ function aggregate(){
 
   return {
     trm, linaShare, agencyShare,
-    incomeUSD, incomeCOP,
+    incomeUSD, incomeCOP, incomeCOPexpected,
     linaExp, agencyExp, totalExp,
     profit, margin,
     linaProfit, agencyProfit,
-    linaTotal: linaProfit + linaExp,
+    // Lina conserva (neto) = su utilidad = ingresos − sus gastos − transferencia a JoinsClee.
+    // Sus gastos NO se le reembolsan aparte: ya los pagó de su propia cuenta.
+    // agencyTotal = único movimiento real: lo que Lina transfiere a JoinsClee (30% + reembolso USD).
     agencyTotal: agencyProfit + agencyExp,
   };
 }
@@ -580,9 +577,7 @@ function monthlySeries(){
   state.revenues.forEach(r => {
     const m = monthOf(r.paid_at); if(!m) return;
     map[m] = map[m] || { income: 0, expense: 0 };
-    const cop = (r.cop_real && Number(r.cop_real) > 0)
-      ? Number(r.cop_real) : (Number(r.usd_amount)||0) * trm;
-    map[m].income += cop;
+    map[m].income += Number(r.cop_real)||0;
   });
   state.expenses.forEach(e => {
     const m = monthOf(e.spent_at); if(!m) return;
@@ -640,14 +635,16 @@ function renderKpis(){
       <div class="kpi-sub">${fmtPct(a.margin)} de margen sobre ingresos</div>
     </div>
     <div class="kpi kpi-lina">
-      <div class="kpi-label">A Lina (SAVIAS)</div>
-      <div class="kpi-value">${fmtCOP(a.linaTotal)}</div>
-      <div class="kpi-detail"><span>Utilidad ${Math.round(a.linaShare*100)}% <b>${fmtCOP(a.linaProfit)}</b></span><span>Reembolso <b>${fmtCOP(a.linaExp)}</b></span></div>
+      <div class="kpi-label">Lina conserva (neto)</div>
+      <div class="kpi-value">${fmtCOP(a.linaProfit)}</div>
+      <div class="kpi-sub">Su ${Math.round(a.linaShare*100)}% del beneficio · ya en su cuenta</div>
+      <div class="kpi-detail"><span>Ingresos − sus gastos − transferencia</span></div>
     </div>
     <div class="kpi kpi-agency">
-      <div class="kpi-label">A JoinsClee</div>
+      <div class="kpi-label">Lina transfiere a JoinsClee</div>
       <div class="kpi-value">${fmtCOP(a.agencyTotal)}</div>
-      <div class="kpi-detail"><span>Utilidad ${Math.round(a.agencyShare*100)}% <b>${fmtCOP(a.agencyProfit)}</b></span><span>Reembolso <b>${fmtCOP(a.agencyExp)}</b></span></div>
+      <div class="kpi-sub">Único movimiento a realizar</div>
+      <div class="kpi-detail"><span>Utilidad ${Math.round(a.agencyShare*100)}% <b>${fmtCOP(a.agencyProfit)}</b></span><span>Reembolso USD <b>${fmtCOP(a.agencyExp)}</b></span></div>
     </div>
   `;
 }
@@ -688,7 +685,7 @@ function renderCharts(){
   chartSplit = new Chart(ctxS, {
     type: 'doughnut',
     data: {
-      labels: ['Lina (utilidad)', 'JoinsClee (utilidad)', 'Reembolso Lina', 'Reembolso JoinsClee'],
+      labels: ['Utilidad Lina', 'Utilidad JoinsClee', 'Gastos Lina', 'Gastos JoinsClee (USD)'],
       datasets: [{
         data: [a.linaProfit, a.agencyProfit, a.linaExp, a.agencyExp],
         backgroundColor: ['#5c87b8', '#c89858', '#9caf88', '#d4b78a'],
@@ -712,7 +709,6 @@ function renderTabs(){
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
   const root = document.getElementById('tabContent');
   if(state.tab === 'ingresos')             root.innerHTML = renderIngresosTable();
-  else if(state.tab === 'pauta')           root.innerHTML = renderPautaTable();
   else if(state.tab === 'gastos-lina')     root.innerHTML = renderGastosTable(PARTNER_LINA);
   else if(state.tab === 'gastos-agencia')  root.innerHTML = renderGastosTable(PARTNER_AGENCY);
   else if(state.tab === 'liquidacion')     root.innerHTML = renderLiquidacion();
@@ -745,12 +741,12 @@ function renderIngresosTable(){
     </tr>`;
   }).join('');
 
-  return tabHeader('Ingresos Skool', 'Pagos en USD enviados por Skool + lo que entró al banco (COP)', 'revenue') + `
+  return tabHeader('Ingresos Skool', 'Lo que Skool envió (USD) y lo que entró real al banco de Lina (COP). El COP esperado es solo referencia, el cuadre usa el COP real.', 'revenue') + `
     <div class="table-wrap"><table>
       <thead><tr>
         <th>Fecha</th><th>Concepto</th>
         <th class="num">USD enviado</th>
-        <th class="num">COP esperado (TRM)</th>
+        <th class="num">COP esperado · ref</th>
         <th class="num">COP real banco</th>
         <th class="num">Spread/comisión</th>
         <th></th>
@@ -767,46 +763,13 @@ function renderIngresosTable(){
     </table></div>`;
 }
 
-function renderPautaTable(){
-  const rows = filterByPeriod(state.adCharges, 'charged_at');
-  if(!rows.length) return tabHeader('Pauta Meta','Cobros reales en la tarjeta de Lina','ad') + emptyState('Sin cobros de pauta en este período');
-
-  let totalUSD = 0;
-  const body = rows.map(a => {
-    const usd = Number(a.usd_amount)||0; totalUSD += usd;
-    return `<tr>
-      <td>${fmtDate(a.charged_at)}</td>
-      <td style="font-size:11px;color:var(--muted)">${a.transaction_id || '—'}</td>
-      <td class="num"><b>${fmtUSD(usd)}</b></td>
-      <td><span class="pill ${a.status==='cobrado'?'pill-success':a.status==='fallido'?'pill-danger':'pill-muted'}">${a.status||'cobrado'}</span></td>
-      <td>${a.notes||''}</td>
-      <td class="row-actions">
-        <button class="edit" data-table="ads" data-id="${a.id}">Editar</button>
-        <button class="del" data-table="ads" data-id="${a.id}">×</button>
-      </td>
-    </tr>`;
-  }).join('');
-
-  return tabHeader('Pauta Meta', 'Detalle de cobros reales de Meta (incluye fallidos)', 'ad') + `
-    <div class="table-wrap"><table>
-      <thead><tr><th>Fecha</th><th>ID transacción</th><th class="num">USD</th><th>Estado</th><th>Notas</th><th></th></tr></thead>
-      <tbody>${body}
-        <tr style="background:var(--sage-mist);font-weight:700">
-          <td colspan="2">TOTAL cobrado</td>
-          <td class="num">${fmtUSD(totalUSD)}</td>
-          <td colspan="3"></td>
-        </tr>
-      </tbody>
-    </table></div>`;
-}
-
 function renderGastosTable(paidBy){
   const trm = Number(state.params?.trm_cop_per_usd)||0;
   const rows = filterByPeriod(state.expenses, 'spent_at').filter(e => e.paid_by === paidBy);
   const title = paidBy === PARTNER_LINA ? 'Gastos asumidos por Lina' : 'Gastos asumidos por JoinsClee';
   const sub = paidBy === PARTNER_LINA
-    ? 'Suscripciones, pauta, edición. Se devuelven a Lina antes del reparto.'
-    : 'Servicios subcontratados por la agencia. Se devuelven a JoinsClee antes del reparto.';
+    ? 'Todo lo que se carga al banco de Lina en COP: suscripciones, pauta Meta, edición, etc. Registra el COP real que le sacan.'
+    : 'Servicios que JoinsClee pagó en USD. Se le cobran a Lina al TRM actual (USD × TRM).';
   if(!rows.length) return tabHeader(title, sub, 'expense', paidBy) + emptyState('Sin gastos registrados');
 
   let total = 0;
@@ -858,29 +821,46 @@ function renderLiquidacion(){
       <div class="card-sub">${state.period === 'all' ? 'Acumulado total' : monthLabel(state.period)}</div>
     </div>
 
+    <!-- ÚNICO MOVIMIENTO REAL -->
+    <div style="padding:20px 22px;border-radius:16px;border:1px solid var(--warn);background:linear-gradient(180deg,var(--warn-soft) 0%,var(--white) 80%);margin-bottom:18px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--warn)">Único movimiento a realizar</div>
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <span style="font-family:'Playfair Display',serif;font-size:15px;color:var(--muted)">Lina transfiere a JoinsClee</span>
+        <span style="font-family:'Playfair Display',serif;font-size:30px;font-weight:700">${fmtCOP(a.agencyTotal)}</span>
+      </div>
+      <div style="font-size:13px;color:var(--ink-soft);margin-top:6px">
+        = Utilidad ${Math.round(a.agencyShare*100)}% del beneficio (<b>${fmtCOP(a.agencyProfit)}</b>) + reembolso de gastos que JoinsClee pagó en USD (<b>${fmtCOP(a.agencyExp)}</b>)
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">
+        Tras pagar sus gastos y esta transferencia, Lina conserva <b>${fmtCOP(a.linaProfit)}</b> (su ${Math.round(a.linaShare*100)}% del beneficio). No hay ningún otro movimiento que hacer.
+      </div>
+    </div>
+
     <div class="liq-grid">
       <div class="liq-card">
-        <h4>Parte cliente</h4>
+        <h4>Lina conserva (neto)</h4>
         <div class="liq-name">Lina Toro (SAVIAS)</div>
-        <div class="liq-row"><span>Utilidad ${Math.round(a.linaShare*100)}% del beneficio</span><span><b>${fmtCOP(a.linaProfit)}</b></span></div>
-        <div class="liq-row"><span>Reembolso de gastos asumidos</span><span><b>${fmtCOP(a.linaExp)}</b></span></div>
-        <div class="liq-row total"><span>TOTAL a recibir</span><span>${fmtCOP(a.linaTotal)}</span></div>
+        <div class="liq-row"><span>Ingresos que entraron al banco</span><span><b>${fmtCOP(a.incomeCOP)}</b></span></div>
+        <div class="liq-row"><span>− Sus gastos pagados desde su banco</span><span><b>−${fmtCOP(a.linaExp)}</b></span></div>
+        <div class="liq-row"><span>− Transferencia a JoinsClee</span><span><b>−${fmtCOP(a.agencyTotal)}</b></span></div>
+        <div class="liq-row total"><span>Lina conserva (neto)</span><span>${fmtCOP(a.linaProfit)}</span></div>
+        <div class="liq-row" style="color:var(--muted);font-size:12px;border-top:1px dashed var(--border);margin-top:8px;padding-top:8px"><span>Equivale a su ${Math.round(a.linaShare*100)}% del beneficio</span><span>${fmtCOP(a.linaProfit)}</span></div>
       </div>
       <div class="liq-card agency">
-        <h4>Parte agencia</h4>
+        <h4>JoinsClee recibe</h4>
         <div class="liq-name">JoinsClee</div>
         <div class="liq-row"><span>Utilidad ${Math.round(a.agencyShare*100)}% del beneficio</span><span><b>${fmtCOP(a.agencyProfit)}</b></span></div>
-        <div class="liq-row"><span>Reembolso de gastos asumidos</span><span><b>${fmtCOP(a.agencyExp)}</b></span></div>
-        <div class="liq-row total"><span>TOTAL a recibir</span><span>${fmtCOP(a.agencyTotal)}</span></div>
+        <div class="liq-row"><span>Reembolso gastos en USD (× TRM ${a.trm.toFixed(2)})</span><span><b>${fmtCOP(a.agencyExp)}</b></span></div>
+        <div class="liq-row total"><span>TOTAL a transferir</span><span>${fmtCOP(a.agencyTotal)}</span></div>
       </div>
     </div>
 
     <div style="margin-top:20px;padding:18px;background:var(--sage-mist);border-radius:14px;border:1px solid var(--border)">
       <h4 style="font-family:'Playfair Display',serif;font-size:16px;margin-bottom:10px">Cómo se calcula</h4>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;font-size:13px;color:var(--ink-soft)">
-        <div><b>Ingresos</b><br>${fmtCOP(a.incomeCOP)}<br><small style="color:var(--muted)">${fmtUSD(a.incomeUSD)} × TRM ${a.trm.toFixed(2)}</small></div>
-        <div><b>− Gastos totales</b><br>${fmtCOP(a.totalExp)}<br><small style="color:var(--muted)">${fmtCOP(a.linaExp)} (Lina) + ${fmtCOP(a.agencyExp)} (JoinsClee)</small></div>
-        <div><b>= Beneficio neto</b><br>${fmtCOP(a.profit)}<br><small style="color:var(--muted)">Margen ${fmtPct(a.margin)}</small></div>
+        <div><b>Ingresos (COP real)</b><br>${fmtCOP(a.incomeCOP)}<br><small style="color:var(--muted)">Lo que entró real al banco de Lina</small></div>
+        <div><b>− Gastos totales</b><br>${fmtCOP(a.totalExp)}<br><small style="color:var(--muted)">${fmtCOP(a.linaExp)} (Lina) + ${fmtCOP(a.agencyExp)} (JoinsClee, USD)</small></div>
+        <div><b>= Beneficio</b><br>${fmtCOP(a.profit)}<br><small style="color:var(--muted)">Margen ${fmtPct(a.margin)}</small></div>
         <div><b>Reparto ${Math.round(a.linaShare*100)}/${Math.round(a.agencyShare*100)}</b><br>Lina: ${fmtCOP(a.linaProfit)}<br>JoinsClee: ${fmtCOP(a.agencyProfit)}</div>
       </div>
     </div>
@@ -890,7 +870,6 @@ function renderLiquidacion(){
 function tabHeader(title, sub, kind, paidBy){
   const action = kind === 'revenue' ? `<button class="btn btn-primary btn-sm" data-add="revenue">+ Nuevo ingreso</button>`
               : kind === 'expense' ? `<button class="btn btn-primary btn-sm" data-add="expense" data-paid-by="${paidBy}">+ Nuevo gasto</button>`
-              : kind === 'ad'      ? `<button class="btn btn-primary btn-sm" data-add="ad">+ Cobro Meta</button>`
               : '';
   return `<div class="card-head"><div><h2>${title}</h2><div class="card-sub">${sub}</div></div>${action}</div>`;
 }
@@ -915,7 +894,6 @@ function renderAll(){
 function attachRowHandlers(){
   document.querySelectorAll('[data-add="revenue"]').forEach(b => b.addEventListener('click', () => openRevenueModal()));
   document.querySelectorAll('[data-add="expense"]').forEach(b => b.addEventListener('click', () => openExpenseModal(b.dataset.paidBy)));
-  document.querySelectorAll('[data-add="ad"]').forEach(b => b.addEventListener('click', () => openAdModal()));
   document.querySelectorAll('.row-actions .edit').forEach(b => b.addEventListener('click', () => editRow(b.dataset.table, b.dataset.id)));
   document.querySelectorAll('.row-actions .del').forEach(b => b.addEventListener('click', () => deleteRow(b.dataset.table, b.dataset.id)));
 }
@@ -925,14 +903,12 @@ function editRow(table, id){
     const r = state.revenues.find(x => x.id === id); if(r) openRevenueModal(r);
   } else if(table === 'expenses'){
     const e = state.expenses.find(x => x.id === id); if(e) openExpenseModal(e.paid_by, e);
-  } else if(table === 'ads'){
-    const a = state.adCharges.find(x => x.id === id); if(a) openAdModal(a);
   }
 }
 
 async function deleteRow(table, id){
   if(!confirm('¿Eliminar este registro? No se puede deshacer.')) return;
-  const tbl = table === 'revenues' ? T.revenues : table === 'expenses' ? T.expenses : T.ads;
+  const tbl = table === 'revenues' ? T.revenues : T.expenses;
   await db(sb.from(tbl).delete().eq('id', id));
   toast('Eliminado');
   await loadAll();
@@ -1024,35 +1000,6 @@ function openExpenseModal(paidBy, e){
   });
 }
 
-function openAdModal(a){
-  const isEdit = !!a;
-  const body = `
-    <div class="form-grid">
-      <div class="field"><label>Fecha</label><input type="date" id="f_charged_at" value="${a?.charged_at || todayISO()}" /></div>
-      <div class="field"><label>USD cobrado</label><input type="number" step="0.01" id="f_usd" value="${a?.usd_amount||''}" /></div>
-      <div class="field full"><label>ID transacción Meta</label><input id="f_tx" value="${a?.transaction_id||''}" /></div>
-      <div class="field"><label>Estado</label>
-        <select id="f_status">
-          ${['cobrado','fallido','pendiente'].map(o => `<option ${a?.status===o?'selected':''}>${o}</option>`).join('')}
-        </select>
-      </div>
-      <div class="field full"><label>Notas</label><textarea id="f_notes">${a?.notes||''}</textarea></div>
-    </div>`;
-  showModal(isEdit ? 'Editar cobro Meta' : 'Nuevo cobro Meta', body, async () => {
-    const payload = {
-      charged_at: document.getElementById('f_charged_at').value,
-      transaction_id: document.getElementById('f_tx').value || null,
-      usd_amount: parseFloat(document.getElementById('f_usd').value) || 0,
-      status: document.getElementById('f_status').value,
-      notes: document.getElementById('f_notes').value || null,
-    };
-    if(isEdit) await db(sb.from(T.ads).update(payload).eq('id', a.id));
-    else       await db(sb.from(T.ads).insert(payload));
-    toast(isEdit ? 'Cobro actualizado' : 'Cobro agregado');
-    await loadAll();
-  });
-}
-
 /* ============================================================
  *  PARAMS · auto-save
  * ============================================================ */
@@ -1095,17 +1042,26 @@ function exportExcel(){
     [`Período: ${state.period === 'all' ? 'Acumulado total' : monthLabel(state.period)}`],
     [],
     ['INDICADORES PRINCIPALES'],
-    ['Ingresos totales (USD)', a.incomeUSD],
-    ['Ingresos totales (COP)', a.incomeCOP],
+    ['Ingresos totales (USD enviado por Skool)', a.incomeUSD],
+    ['Ingresos totales (COP real en banco)', a.incomeCOP],
     ['Gastos totales (COP)', a.totalExp],
-    ['Beneficio neto (COP)', a.profit],
+    ['Beneficio (COP)', a.profit],
     ['Margen %', a.margin],
     [],
-    ['REPARTO DEL BENEFICIO'],
-    ['Parte','% reparto','Beneficio (COP)','Reembolso gastos','TOTAL a recibir'],
-    ['Lina Toro (SAVIAS)', a.linaShare, a.linaProfit, a.linaExp, a.linaTotal],
-    ['JoinsClee', a.agencyShare, a.agencyProfit, a.agencyExp, a.agencyTotal],
-    ['TOTAL', 1, a.profit, a.totalExp, a.profit + a.totalExp],
+    ['LIQUIDACIÓN'],
+    ['ÚNICO MOVIMIENTO · Lina transfiere a JoinsClee', a.agencyTotal],
+    ['Lina conserva (neto · su 70% del beneficio)', a.linaProfit],
+    [],
+    ['DETALLE'],
+    ['Concepto','Valor (COP)'],
+    ['Ingresos (COP real)', a.incomeCOP],
+    ['(−) Gastos de Lina (pagados por ella)', a.linaExp],
+    ['(−) Transferencia a JoinsClee (30% + reembolso USD)', a.agencyTotal],
+    ['(=) Lina conserva (neto)', a.linaProfit],
+    [],
+    ['Transferencia a JoinsClee = Utilidad 30%', a.agencyProfit],
+    ['  (+) Reembolso gastos USD', a.agencyExp],
+    ['  (=) Total transferencia', a.agencyTotal],
     [],
     ['PARÁMETROS'],
     ['TRM (COP por USD)', trm],
@@ -1121,13 +1077,6 @@ function exportExcel(){
     return [r.paid_at, r.concept||'', r.source||'', usd, copExp, copReal||'', copReal? (copReal - copExp) : '', r.notes||''];
   });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...ingHead, ...ing]), 'Ingresos');
-
-  const adHead = [['Fecha','ID transacción','USD cobrado','COP esperado (TRM)','Estado','Notas']];
-  const ad = state.adCharges.map(a => {
-    const usd = Number(a.usd_amount)||0;
-    return [a.charged_at, a.transaction_id||'', usd, usd*trm, a.status||'cobrado', a.notes||''];
-  });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...adHead, ...ad]), 'Pauta Meta');
 
   for(const who of [PARTNER_LINA, PARTNER_AGENCY]){
     const rows = state.expenses.filter(e => e.paid_by === who);
@@ -1146,16 +1095,20 @@ function exportExcel(){
   const liq = [
     ['LIQUIDACIÓN'],
     [],
-    ['INGRESOS'], ['Total COP', a.incomeCOP],
+    ['INGRESOS (COP real en banco)'], ['Total COP', a.incomeCOP],
     [],
-    ['GASTOS'], ['Lina', a.linaExp], ['JoinsClee', a.agencyExp], ['TOTAL', a.totalExp],
+    ['GASTOS'], ['Lina (COP, pagados por ella)', a.linaExp], ['JoinsClee (USD × TRM)', a.agencyExp], ['TOTAL', a.totalExp],
     [],
-    ['BENEFICIO NETO', a.profit], ['Margen %', a.margin],
+    ['BENEFICIO', a.profit], ['Margen %', a.margin],
     [],
-    ['REPARTO'],
-    ['Parte','%','Utilidad','Reembolso','Total'],
-    ['Lina Toro (SAVIAS)', a.linaShare, a.linaProfit, a.linaExp, a.linaTotal],
-    ['JoinsClee', a.agencyShare, a.agencyProfit, a.agencyExp, a.agencyTotal],
+    ['ÚNICO MOVIMIENTO A REALIZAR'],
+    ['Lina transfiere a JoinsClee', a.agencyTotal],
+    ['  · Utilidad 30% del beneficio', a.agencyProfit],
+    ['  · Reembolso gastos USD', a.agencyExp],
+    [],
+    ['Lina conserva (neto)', a.linaProfit],
+    ['  = Ingresos − sus gastos − transferencia', a.incomeCOP - a.linaExp - a.agencyTotal],
+    ['  = su 70% del beneficio', a.linaProfit],
   ];
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(liq), 'Liquidación');
 
@@ -1191,7 +1144,7 @@ function exportPDF(){
           <div style="padding:18px;background:#e6efde;border-radius:12px;border-left:4px solid #6b8e5a">
             <div style="font-size:11px;text-transform:uppercase;color:#6b8e5a;font-weight:700">Ingresos</div>
             <div style="font-family:'Playfair Display',serif;font-size:24px;font-weight:700;margin-top:6px">${fmtCOP(a.incomeCOP)}</div>
-            <div style="font-size:12px;color:#6b7164">${fmtUSD(a.incomeUSD)} en USD</div>
+            <div style="font-size:12px;color:#6b7164">${fmtUSD(a.incomeUSD)} USD enviado por Skool</div>
           </div>
           <div style="padding:18px;background:#fbeaea;border-radius:12px;border-left:4px solid #b85c5c">
             <div style="font-size:11px;text-transform:uppercase;color:#b85c5c;font-weight:700">Gastos</div>
@@ -1199,39 +1152,31 @@ function exportPDF(){
             <div style="font-size:12px;color:#6b7164">Lina ${fmtCOP(a.linaExp)} · JoinsClee ${fmtCOP(a.agencyExp)}</div>
           </div>
           <div style="padding:18px;background:#e8ede1;border-radius:12px;border-left:4px solid #7d9169;grid-column:span 2">
-            <div style="font-size:11px;text-transform:uppercase;color:#7d9169;font-weight:700">Beneficio neto · ${fmtPct(a.margin)} de margen</div>
+            <div style="font-size:11px;text-transform:uppercase;color:#7d9169;font-weight:700">Beneficio · ${fmtPct(a.margin)} de margen</div>
             <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;margin-top:4px">${fmtCOP(a.profit)}</div>
           </div>
         </div>
       </div>
 
       <div style="margin-top:28px">
-        <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:12px">Reparto del beneficio</div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:12px">Liquidación</div>
+        <div style="padding:18px;background:#fbf2e3;border-radius:12px;border-left:4px solid #c89858">
+          <div style="font-size:11px;text-transform:uppercase;color:#c89858;font-weight:700">Único movimiento a realizar · Lina transfiere a JoinsClee</div>
+          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:700;margin-top:4px">${fmtCOP(a.agencyTotal)}</div>
+          <div style="font-size:12px;color:#6b7164;margin-top:4px">= Utilidad ${Math.round(a.agencyShare*100)}% (${fmtCOP(a.agencyProfit)}) + reembolso gastos USD (${fmtCOP(a.agencyExp)}). Tras esto, Lina conserva <b>${fmtCOP(a.linaProfit)}</b> (su ${Math.round(a.linaShare*100)}% del beneficio).</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:14px">
           <thead>
             <tr style="background:#e8ede1">
-              <th style="padding:10px;text-align:left;border-bottom:1px solid #dfe3d8">Parte</th>
-              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">%</th>
-              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">Utilidad</th>
-              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">Reembolso</th>
-              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">Total a recibir</th>
+              <th style="padding:10px;text-align:left;border-bottom:1px solid #dfe3d8">Concepto</th>
+              <th style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">COP</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td style="padding:10px;border-bottom:1px solid #dfe3d8"><b>Lina Toro (SAVIAS)</b></td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${Math.round(a.linaShare*100)}%</td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.linaProfit)}</td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.linaExp)}</td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8;background:#e6efde;font-weight:700">${fmtCOP(a.linaTotal)}</td>
-            </tr>
-            <tr>
-              <td style="padding:10px;border-bottom:1px solid #dfe3d8"><b>JoinsClee</b></td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${Math.round(a.agencyShare*100)}%</td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.agencyProfit)}</td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.agencyExp)}</td>
-              <td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8;background:#fbf2e3;font-weight:700">${fmtCOP(a.agencyTotal)}</td>
-            </tr>
+            <tr><td style="padding:10px;border-bottom:1px solid #dfe3d8">Ingresos (COP real en banco)</td><td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">${fmtCOP(a.incomeCOP)}</td></tr>
+            <tr><td style="padding:10px;border-bottom:1px solid #dfe3d8">(−) Gastos de Lina (pagados por ella)</td><td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">−${fmtCOP(a.linaExp)}</td></tr>
+            <tr><td style="padding:10px;border-bottom:1px solid #dfe3d8">(−) Transferencia a JoinsClee (30% + reembolso USD)</td><td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8">−${fmtCOP(a.agencyTotal)}</td></tr>
+            <tr><td style="padding:10px;border-bottom:1px solid #dfe3d8;background:#e6efde"><b>(=) Lina conserva (neto · ${Math.round(a.linaShare*100)}% del beneficio)</b></td><td style="padding:10px;text-align:right;border-bottom:1px solid #dfe3d8;background:#e6efde;font-weight:700">${fmtCOP(a.linaProfit)}</td></tr>
           </tbody>
         </table>
       </div>

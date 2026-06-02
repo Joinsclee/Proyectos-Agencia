@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Casi lista! · Mi primer jabón vendible — Lina Toro</title>
+</head>
+
+<body>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
+
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden
+    }
+
+    .svty {
+        --sage: #9CAF88;
+        --sage-deep: #7B8F6A;
+        --sage-light: #DCE2CB;
+        --gold: #B8943E;
+        --cream: #F5EFE6;
+        --cream-deep: #EDE4D3;
+        --paper: #FAF7F2;
+        --dark: #2A2823;
+        --ink: #1F1F1B;
+        --ink-soft: #4A4A45;
+        --ink-mute: #7A7A72;
+        --line: #D4CBB8;
+        --line-soft: #E5DCC8;
+        --wa: #25D366;
+        --wa-dark: #1EAE55;
+        --sans: 'Hanken Grotesk', system-ui, sans-serif;
+        --serif: 'Cormorant Garamond', Georgia, serif;
+        font-family: var(--sans);
+        background: var(--cream);
+        color: var(--ink);
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        font-size: 17px;
+        display: block;
+        width: 100%;
+    }
+
+    .svty * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box
+    }
+
+    /* force-full-width: cada banda va de borde a borde del viewport,
+       aunque GHL la meta en una columna angosta */
+    .svty .band {
+        position: relative;
+        width: 100vw;
+        left: 50%;
+        margin-left: -50vw
+    }
+
+    .svty .wrap {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 0 22px
+    }
+
+    .svty .em {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 500;
+        color: var(--gold)
+    }
+
+    .svty .topbar {
+        background: var(--dark);
+        color: var(--cream);
+        text-align: center;
+        padding: 9px 16px;
+        font-size: 12.5px;
+        letter-spacing: .14em;
+        text-transform: uppercase;
+        font-weight: 600
+    }
+
+    .svty .topbar span {
+        color: var(--sage)
+    }
+
+    .svty main {
+        padding: 42px 0 30px;
+        text-align: center;
+        display: block;
+        background: var(--cream)
+    }
+
+    .svty .progress-wrap {
+        max-width: 560px;
+        margin: 0 auto 34px
+    }
+
+    .svty .progress-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 9px
+    }
+
+    .svty .progress-label .step {
+        font-size: 12.5px;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--sage-deep)
+    }
+
+    .svty .progress-label .pct {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 1.15rem;
+        color: var(--gold);
+        font-weight: 600
+    }
+
+    .svty .progress-track {
+        height: 16px;
+        background: var(--cream-deep);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+        position: relative
+    }
+
+    .svty .progress-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--sage-deep) 0%, var(--sage) 35%, var(--sage-light) 50%, var(--sage) 65%, var(--sage-deep) 100%);
+        background-size: 220% 100%;
+        animation: svtyFill 1.4s cubic-bezier(.22, 1, .36, 1) forwards, svtyShimmer 1.6s linear infinite
+    }
+
+    @keyframes svtyFill {
+        from {
+            width: 0
+        }
+
+        to {
+            width: 85%
+        }
+    }
+
+    @keyframes svtyShimmer {
+        0% {
+            background-position: 220% 0
+        }
+
+        100% {
+            background-position: -220% 0
+        }
+    }
+
+    .svty h1 {
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: clamp(1.7rem, 4.2vw, 2.7rem);
+        line-height: 1.1;
+        letter-spacing: -.02em;
+        max-width: 30ch;
+        margin: 0 auto 14px;
+        color: var(--ink)
+    }
+
+    .svty .lead {
+        font-size: clamp(1.05rem, 2vw, 1.3rem);
+        color: var(--ink-soft);
+        font-weight: 600;
+        max-width: 32ch;
+        margin: 0 auto
+    }
+
+    .svty .wa {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 13px;
+        background: var(--wa);
+        color: #fff;
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: 17px;
+        letter-spacing: .01em;
+        border: none;
+        border-radius: 999px;
+        padding: 18px 34px;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 14px 30px -10px rgba(37, 211, 102, .65);
+        transition: transform .18s ease, background .2s, box-shadow .2s;
+        max-width: 480px;
+        width: 100%;
+        margin-top: 26px
+    }
+
+    .svty .wa:hover {
+        background: var(--wa-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 18px 36px -12px rgba(37, 211, 102, .8)
+    }
+
+    .svty .wa svg {
+        width: 26px;
+        height: 26px;
+        fill: #fff;
+        flex: none
+    }
+
+    .svty .wa-note {
+        font-size: 13px;
+        color: var(--ink-mute);
+        font-weight: 600;
+        margin-top: 10px
+    }
+
+    .svty .final-cta {
+        text-align: center;
+        padding: 48px 0 8px
+    }
+
+    .svty .final-cta .cta-eyebrow {
+        font-family: var(--serif);
+        font-style: italic;
+        color: var(--sage-deep);
+        font-size: 1.2rem;
+        margin-bottom: 6px
+    }
+
+    .svty .final-cta .cta-title {
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: clamp(1.4rem, 3.4vw, 2rem);
+        letter-spacing: -.015em;
+        line-height: 1.12;
+        color: var(--ink);
+        max-width: 24ch;
+        margin: 0 auto 10px
+    }
+
+    .svty .final-cta .cta-sub {
+        color: var(--ink-soft);
+        font-size: 1.02rem;
+        font-weight: 600;
+        max-width: 42ch;
+        margin: 0 auto
+    }
+
+    .svty .copy {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 30px 30px;
+        margin: 8px auto 0;
+        max-width: 600px;
+        text-align: left
+    }
+
+    .svty .copy p {
+        color: var(--ink-soft);
+        font-size: 16px;
+        margin-bottom: 14px
+    }
+
+    .svty .copy p:last-child {
+        margin-bottom: 0
+    }
+
+    .svty .copy .hl {
+        color: var(--ink);
+        font-weight: 700
+    }
+
+    .svty .copy .em {
+        font-weight: 600
+    }
+
+    .svty .copy .signoff {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 1.3rem;
+        color: var(--sage-deep);
+        margin-top: 4px
+    }
+
+    .svty .schedule {
+        background: var(--dark);
+        color: var(--cream);
+        margin-top: 48px;
+        padding: 52px 0 56px
+    }
+
+    .svty .schedule .wrap {
+        text-align: center
+    }
+
+    .svty .sched-eyebrow {
+        font-family: var(--serif);
+        font-style: italic;
+        color: var(--sage);
+        font-size: 1.25rem;
+        margin-bottom: 6px
+    }
+
+    .svty .schedule h2 {
+        font-family: var(--sans);
+        font-weight: 800;
+        font-size: clamp(1.5rem, 3.4vw, 2.1rem);
+        letter-spacing: -.015em;
+        margin-bottom: 6px;
+        color: var(--cream)
+    }
+
+    .svty .schedule .date {
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: .04em;
+        margin-bottom: 26px
+    }
+
+    .svty .sched-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        max-width: 560px;
+        margin: 0 auto
+    }
+
+    .svty .sched-card {
+        background: rgba(245, 239, 230, .05);
+        border: 1px solid rgba(245, 239, 230, .12);
+        border-radius: 14px;
+        padding: 18px 16px;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 13px
+    }
+
+    .svty .sched-card .flag {
+        font-size: 1.7rem;
+        line-height: 1;
+        flex: none
+    }
+
+    .svty .sched-card .zone {
+        display: block;
+        font-size: 13.5px;
+        color: var(--sage-light);
+        font-weight: 600;
+        line-height: 1.25
+    }
+
+    .svty .sched-card .time {
+        display: block;
+        font-family: var(--sans);
+        font-weight: 800;
+        color: #fff;
+        font-size: 1.18rem;
+        line-height: 1.15;
+        margin-top: 4px
+    }
+
+    .svty .sched-note {
+        font-size: 13px;
+        color: var(--sage-light);
+        opacity: .85;
+        margin-top: 22px
+    }
+
+    .svty footer {
+        background: var(--ink);
+        color: var(--ink-mute);
+        text-align: center;
+        padding: 30px 20px;
+        font-size: 13px;
+        display: block
+    }
+
+    .svty footer .tag {
+        font-family: var(--serif);
+        font-style: italic;
+        color: var(--sage);
+        font-size: 1.05rem;
+        margin-bottom: 6px
+    }
+
+    /* lluvia de hojas premium (animación de entrada) */
+    .svty-leaves {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 9999;
+        overflow: hidden
+    }
+
+    .svty-leaf {
+        position: absolute;
+        top: -12%;
+        will-change: transform;
+        animation: svtyLeafFall linear forwards
+    }
+
+    .svty-leaf i {
+        display: block;
+        will-change: transform;
+        animation: svtyLeafSway ease-in-out infinite alternate
+    }
+
+    @keyframes svtyLeafFall {
+        to {
+            transform: translateY(118vh)
+        }
+    }
+
+    @keyframes svtyLeafSway {
+        from {
+            transform: translateX(-16px) rotate(-25deg)
+        }
+
+        to {
+            transform: translateX(16px) rotate(35deg)
+        }
+    }
+
+    .svty .reveal {
+        opacity: 0;
+        transform: translateY(22px);
+        transition: opacity .7s ease, transform .7s ease
+    }
+
+    .svty .reveal.in {
+        opacity: 1;
+        transform: none
+    }
+
+    @media(max-width:720px) {
+        .svty main {
+            padding: 32px 0 24px
+        }
+
+        .svty .sched-grid {
+            grid-template-columns: 1fr
+        }
+
+        .svty .copy {
+            padding: 26px 22px
+        }
+
+        .svty .schedule {
+            padding: 44px 0 48px;
+            margin-top: 38px
+        }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+        .svty .reveal {
+            opacity: 1 !important;
+            transform: none !important
+        }
+
+        .svty .progress-fill {
+            animation: svtyFill .01s forwards
+        }
+    }
+</style>
+
+<div class="svty">
+
+    <main class="band">
+        <div class="wrap">
+
+            <!-- PROGRESO -->
+            <div class="progress-wrap">
+                <div class="progress-label">
+                    <span class="step">Paso 2 de 2</span>
+                    <span class="pct">Casi lista…</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- HEADLINE -->
+            <h1>Ya casi estás registrada, pero te falta <span class="em">un paso importante</span></h1>
+            <p class="lead">Únete a la comunidad de WhatsApp para llegar lista a la clase.</p>
+
+            <!-- WHATSAPP CTA (1) -->
+            <a href="https://go.wha.link/av90ne" target="_blank" rel="noopener" class="wa reveal">
+                <svg viewBox="0 0 32 32" aria-hidden="true">
+                    <path
+                        d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.6 6L4 29l8.2-1.6c1.8.9 3.8 1.4 5.8 1.4 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.8 0-3.6-.5-5.1-1.4l-.4-.2-4.9 1 1-4.8-.3-.4c-1-1.6-1.5-3.4-1.5-5.3C4.8 9.5 9.3 5 16 5c6 0 10.8 4.8 10.8 10.8S22 24.8 16 24.8zm6-8.1c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.4-.6.1-.2.1-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z" />
+                </svg>
+                UNIRME AL GRUPO DE WHATSAPP
+            </a>
+            <p class="wa-note">Es donde te paso todo lo del evento. Sin spam, solo lo importante.</p>
+
+            <!-- COPY -->
+            <div class="copy reveal">
+                <p>En esta comunidad de WhatsApp <span class="hl">vamos a pasarte toda la información del evento</span>.
+                    Solo hablaré yo, y además te enviaré recursos, PDFs, clases adicionales y todo lo que necesitas
+                    para:</p>
+                <p class="hl"><span class="em" style="color:#B8943E">Aprender a crear tus primeros jabones artesanales y
+                        a venderlos desde casa.</span></p>
+                <p>Es importante para que llegues preparada a la clase.</p>
+                <p class="signoff">Así que te veo dentro 🌿</p>
+            </div>
+
+        </div>
+
+        <!-- HORARIOS -->
+        <section class="schedule">
+            <div class="wrap">
+                <p class="sched-eyebrow">Aparta el día</p>
+                <h2>Horarios de la clase en vivo</h2>
+                <p class="date">[ 15 DE JUNIO ]</p>
+                <div class="sched-grid">
+                    <div class="sched-card">
+                        <span class="flag">🇺🇸</span>
+                        <span>
+                            <span class="zone">Hispanos en USA<br>Este (Miami/NY) · Pacífico (LA)</span>
+                            <span class="time">8:00 PM ET · 5:00 PM PT</span>
+                        </span>
+                    </div>
+                    <div class="sched-card">
+                        <span class="flag">🇲🇽</span>
+                        <span>
+                            <span class="zone">México (CDMX)</span>
+                            <span class="time">6:00 PM</span>
+                        </span>
+                    </div>
+                    <div class="sched-card">
+                        <span class="flag">🇨🇴</span>
+                        <span>
+                            <span class="zone">Colombia (Bogotá)</span>
+                            <span class="time">7:00 PM</span>
+                        </span>
+                    </div>
+                    <div class="sched-card">
+                        <span class="flag">🌎</span>
+                        <span>
+                            <span class="zone">Argentina / Chile y más de LATAM</span>
+                            <span class="time">9:00 PM ARG</span>
+                        </span>
+                    </div>
+                </div>
+                <p class="sched-note">Te recordaremos la hora exacta de tu país por WhatsApp antes de la clase.</p>
+            </div>
+        </section>
+
+        <!-- WHATSAPP CTA (2) -->
+        <div class="final-cta">
+            <div class="wrap">
+                <p class="cta-eyebrow reveal">Tu último paso</p>
+                <h2 class="cta-title reveal">Únete al grupo y llega <span class="em">lista</span> a la clase</h2>
+                <p class="cta-sub reveal">Ahí te envío los recordatorios, los recursos y el acceso a la clase en vivo.
+                    Sin spam, solo lo importante.</p>
+                <a href="https://go.wha.link/av90ne" target="_blank" rel="noopener" class="wa reveal">
+                    <svg viewBox="0 0 32 32" aria-hidden="true">
+                        <path
+                            d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.6 6L4 29l8.2-1.6c1.8.9 3.8 1.4 5.8 1.4 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.8 0-3.6-.5-5.1-1.4l-.4-.2-4.9 1 1-4.8-.3-.4c-1-1.6-1.5-3.4-1.5-5.3C4.8 9.5 9.3 5 16 5c6 0 10.8 4.8 10.8 10.8S22 24.8 16 24.8zm6-8.1c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.4-.6.1-.2.1-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z" />
+                    </svg>
+                    UNIRME AL GRUPO DE WHATSAPP
+                </a>
+                <p class="wa-note">Toca el botón y entra ahora para no perderte nada del evento.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="band">
+        <div class="tag">No copiamos recetas. Aprendemos a formular.</div>
+        COMUNIDAD SAVIAS · Lina Toro
+    </footer>
+
+</div>
+
+<script>
+    (function () {
+        var root = document.querySelector('.svty'); if (!root) return;
+        var els = root.querySelectorAll('.reveal');
+        if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('in') }); return; }
+        var io = new IntersectionObserver(function (en) { en.forEach(function (x) { if (x.isIntersecting) { x.target.classList.add('in'); io.unobserve(x.target); } }); }, { threshold: .14 });
+        els.forEach(function (e) { io.observe(e); });
+    })();
+</script>
+
+<!-- Animación premium: hojas cayendo suavemente al entrar -->
+<script>
+    (function () {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var colors = ['#9CAF88', '#7B8F6A', '#B8943E', '#A8BE93', '#DCE2CB'];
+        var leaf = '<svg viewBox="0 0 64 64" width="100%" height="100%">'
+            + '<path d="M32 4C16 14 10 30 14 46c2 8 10 14 18 14s16-6 18-14c4-16-2-32-18-42z" fill="COLOR"/>'
+            + '<path d="M32 12v40" stroke="rgba(31,31,27,.14)" stroke-width="2" fill="none"/>'
+            + '</svg>';
+        var layer = document.createElement('div');
+        layer.className = 'svty-leaves';
+        var N = 28;
+        for (var k = 0; k < N; k++) {
+            var w = document.createElement('span');
+            w.className = 'svty-leaf';
+            var size = 13 + Math.random() * 17;
+            w.style.left = (Math.random() * 100) + '%';
+            w.style.animationDuration = (6.5 + Math.random() * 6) + 's';
+            w.style.animationDelay = (Math.random() * 4) + 's';
+            var inner = document.createElement('i');
+            inner.style.width = size + 'px';
+            inner.style.height = size + 'px';
+            inner.style.opacity = (0.55 + Math.random() * 0.4).toFixed(2);
+            inner.style.animationDuration = (1.6 + Math.random() * 2) + 's';
+            inner.innerHTML = leaf.replace('COLOR', colors[k % colors.length]);
+            w.appendChild(inner);
+            layer.appendChild(w);
+        }
+        document.body.appendChild(layer);
+        setTimeout(function () { if (layer.parentNode) layer.parentNode.removeChild(layer); }, 17000);
+    })();
+</script>
+
+</body>
+
+</html>

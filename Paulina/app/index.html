@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>Mi Barco | Paulina Valencia</title>
+  <meta name="description" content="Diagnostica con la Rueda de la Vida. Comprende tu cerebro con los Neuropliegues. Construye tu identidad con el Tracker de Hábitos." />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Asap:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="assets/styles.css" />
+
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="assets/app.js"></script>
+</head>
+<body>
+
+<div class="pv-root">
+  <div class="pv-container" x-data="miBarcoApp()" x-init="init()">
+
+    <!-- ===================== HEADER (solo en Inicio) ===================== -->
+    <header x-show="vista === 'home'" x-cloak class="pv-hero-band mb-6 md:mb-8 pv-fade-in">
+      <div class="flex items-center justify-center gap-3 mb-5">
+        <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
+             alt="Isotipo Paulina Valencia" class="pv-logo" />
+        <span class="text-left text-sm font-bold tracking-wide leading-tight text-white">
+          Paulina Valencia<br/>
+          <span class="font-medium text-white/60 text-xs">Mentora de hábitos</span>
+        </span>
+      </div>
+
+      <div class="pv-hero-ornament"><span class="pv-hero-ornament-dot"></span></div>
+
+      <span class="pv-pill mb-4 inline-flex items-center gap-2">
+        <span x-html="icon('sparkle')" class="pv-icon-sm"></span>
+        Mi Barco · Mini-app del ecosistema
+      </span>
+      <h1 class="text-balance text-3xl sm:text-4xl md:text-5xl font-extrabold mb-3 leading-[1.1]" style="letter-spacing: -0.02em;">
+        Construye tu identidad,
+        <span style="color: var(--pv-gold);">un pliegue a la vez</span>.
+      </h1>
+      <p class="text-base md:text-lg text-white/85 max-w-2xl mx-auto leading-relaxed">
+        Diagnostica con la <strong>Rueda</strong>. Comprende tu cerebro con los
+        <strong style="color: var(--pv-gold);">Neuropliegues</strong>. Construye tu identidad con el <strong>Tracker</strong>.
+      </p>
+      <p x-show="userName" x-cloak class="text-sm italic mt-4 text-white/85">
+        Bienvenida, <span class="font-semibold" x-text="userName"></span>.
+      </p>
+    </header>
+
+    <!-- ===================== TABS ===================== -->
+    <nav class="pv-tabs" role="tablist">
+      <button class="pv-tab" :class="vista === 'home' ? 'active' : ''" @click="cambiarVista('home')" role="tab">
+        <span class="pv-tab-icon" x-html="icon('home')"></span>
+        <span class="pv-tab-label-full">Inicio</span>
+      </button>
+      <button class="pv-tab" :class="vista === 'rueda' ? 'active' : ''" @click="cambiarVista('rueda')" role="tab">
+        <span class="pv-tab-icon" x-html="icon('target')"></span>
+        <span class="pv-tab-label-full">Rueda</span>
+      </button>
+      <button class="pv-tab" :class="vista === 'neuropliegues' ? 'active' : ''" @click="cambiarVista('neuropliegues')" role="tab">
+        <span class="pv-tab-icon" x-html="icon('brain')"></span>
+        <span class="pv-tab-label-full">Neuropliegues</span>
+      </button>
+      <button class="pv-tab" :class="vista === 'tracker' ? 'active' : ''" @click="cambiarVista('tracker')" role="tab">
+        <span class="pv-tab-icon" x-html="icon('calendar')"></span>
+        <span class="pv-tab-label-full">Tracker</span>
+      </button>
+      <button class="pv-tab" :class="vista === 'plan' ? 'active' : ''" @click="cambiarVista('plan')" role="tab">
+        <span class="pv-tab-icon" x-html="icon('clipboard')"></span>
+        <span class="pv-tab-label-full">Mi Plan</span>
+      </button>
+    </nav>
+
+    <!-- ===================== HOME ===================== -->
+    <section x-show="vista === 'home'" x-cloak class="pv-view" role="tabpanel">
+
+      <!-- Progreso -->
+      <div x-show="tieneRueda || tieneTracker || plan.herramientas.length > 0" x-cloak class="pv-card pv-card-accent-top p-5 md:p-6 mb-6">
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="text-lg md:text-xl font-extrabold" style="letter-spacing: -0.01em; color: var(--pv-navy);">Tu progreso</h2>
+          <span class="pv-pill pv-pill-dark">Mes en curso</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 md:gap-4">
+          <div class="pv-stat-tile gold">
+            <p class="pv-stat-num text-3xl md:text-4xl" style="color: var(--pv-navy);" x-text="promedioRueda.toFixed(1)"></p>
+            <p class="text-[0.65rem] uppercase tracking-widest mt-1 font-semibold" style="color: var(--pv-ink-soft);">Promedio rueda</p>
+          </div>
+          <div class="pv-stat-tile" style="color: var(--pv-purple);">
+            <p class="pv-stat-num text-3xl md:text-4xl" x-text="plan.herramientas.length"></p>
+            <p class="text-[0.65rem] uppercase tracking-widest mt-1 font-semibold" style="color: var(--pv-ink-soft);">Herramientas</p>
+          </div>
+          <div class="pv-stat-tile" style="color: var(--pv-mint);">
+            <p class="pv-stat-num text-3xl md:text-4xl" x-text="totalHabitos"></p>
+            <p class="text-[0.65rem] uppercase tracking-widest mt-1 font-semibold" style="color: var(--pv-ink-soft);">Hábitos</p>
+          </div>
+          <div class="pv-stat-tile" style="color: var(--pv-coral);">
+            <p class="pv-stat-num text-3xl md:text-4xl" x-text="diasCumplidos"></p>
+            <p class="text-[0.65rem] uppercase tracking-widest mt-1 font-semibold" style="color: var(--pv-ink-soft);">Pliegues</p>
+          </div>
+        </div>
+        <div x-show="pilarMasBajo && tieneRueda" x-cloak class="mt-5 pt-5 border-t" style="border-color: var(--pv-line);">
+          <p class="text-sm flex items-center gap-2" style="color: var(--pv-ink-soft);">
+            <span x-html="icon('flag')" class="pv-icon-sm" style="color: var(--pv-coral);"></span>
+            Tu pilar más bajo:
+            <strong style="color: var(--pv-coral);" x-text="pilarMasBajo?.nombre"></strong>
+            (<span class="pv-num-tabular" x-text="pilarMasBajo?.valor"></span>/10)
+          </p>
+        </div>
+      </div>
+
+      <!-- 3 herramientas -->
+      <div class="grid md:grid-cols-3 gap-4 md:gap-5">
+        <button @click="cambiarVista('rueda')" class="pv-card p-5 md:p-6 text-left">
+          <div class="flex items-start justify-between mb-3">
+            <span class="np-icon" style="background: rgba(217,69,52,0.1); color: var(--pv-coral); margin-bottom:0; width:44px; height:44px; font-size:1.3rem;" x-html="icon('target')"></span>
+            <span class="text-[0.65rem] uppercase tracking-widest font-bold" style="color: var(--pv-coral);">Paso 1</span>
+          </div>
+          <h3 class="text-xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Rueda de la Vida</h3>
+          <p class="text-sm mb-4" style="color: var(--pv-ink-soft); line-height: 1.6;">
+            Califica del 1 al 10 los 10 pilares de tu vida y descubre dónde un nuevo hábito haría más diferencia.
+          </p>
+          <div class="flex items-center justify-between text-xs">
+            <span class="pv-pill pv-pill-dark" x-show="tieneRueda" x-cloak>Última: <span x-text="fechaRueda"></span></span>
+            <span class="pv-pill pv-pill-dark" x-show="!tieneRueda" x-cloak>~ 5 minutos</span>
+            <span style="color: var(--pv-navy);" class="font-bold inline-flex items-center gap-1">
+              <span x-text="tieneRueda ? 'Ver mi rueda' : 'Comenzar'"></span>
+              <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+            </span>
+          </div>
+        </button>
+
+        <button @click="cambiarVista('neuropliegues')" class="pv-card p-5 md:p-6 text-left">
+          <div class="flex items-start justify-between mb-3">
+            <span class="np-icon" style="background: rgba(108,79,165,0.1); color: var(--pv-purple); margin-bottom:0; width:44px; height:44px; font-size:1.3rem;" x-html="icon('brain')"></span>
+            <span class="text-[0.65rem] uppercase tracking-widest font-bold" style="color: var(--pv-purple);">Paso 2</span>
+          </div>
+          <h3 class="text-xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Neuropliegues</h3>
+          <p class="text-sm mb-4" style="color: var(--pv-ink-soft); line-height: 1.6;">
+            Herramientas basadas en neurociencia para superar la barrera específica que te está bloqueando.
+          </p>
+          <div class="flex items-center justify-between text-xs">
+            <span class="pv-pill pv-pill-dark">4 pilares · 12 herramientas</span>
+            <span style="color: var(--pv-navy);" class="font-bold inline-flex items-center gap-1">
+              Explorar
+              <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+            </span>
+          </div>
+        </button>
+
+        <button @click="cambiarVista('tracker')" class="pv-card p-5 md:p-6 text-left">
+          <div class="flex items-start justify-between mb-3">
+            <span class="np-icon" style="background: rgba(47,158,111,0.1); color: var(--pv-mint); margin-bottom:0; width:44px; height:44px; font-size:1.3rem;" x-html="icon('calendar')"></span>
+            <span class="text-[0.65rem] uppercase tracking-widest font-bold" style="color: var(--pv-mint);">Paso 3</span>
+          </div>
+          <h3 class="text-xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Tracker de Hábitos</h3>
+          <p class="text-sm mb-4" style="color: var(--pv-ink-soft); line-height: 1.6;">
+            Marca cada día. Cada pliegue es un voto a favor de la persona que estás construyendo.
+          </p>
+          <div class="flex items-center justify-between text-xs">
+            <span class="pv-pill pv-pill-dark" x-show="totalHabitos > 0" x-cloak>
+              <span x-text="totalHabitos"></span> hábitos · <span x-text="diasCumplidos"></span> días
+            </span>
+            <span class="pv-pill pv-pill-dark" x-show="totalHabitos === 0" x-cloak>~ 2 min al día</span>
+            <span style="color: var(--pv-navy);" class="font-bold inline-flex items-center gap-1">
+              <span x-text="totalHabitos > 0 ? 'Marcar hoy' : 'Crear hábito'"></span>
+              <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+            </span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Cómo se hablan las 3 herramientas -->
+      <section class="mt-14">
+        <div class="pv-ornament"><span class="pv-ornament-dot"></span></div>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-center mb-2" style="color: var(--pv-navy); letter-spacing: -0.02em;">
+          Cómo se hablan estas tres herramientas
+        </h2>
+        <p class="text-sm md:text-base text-center mb-10 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
+          No consumes contenido por categorías. Eliges herramientas según el obstáculo que estás enfrentando.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center p-2">
+            <span class="pv-step-num mb-4 mx-auto">1</span>
+            <p class="text-[0.65rem] uppercase tracking-widest font-bold mb-1" style="color: var(--pv-coral);">¿Dónde estoy?</p>
+            <h3 class="text-lg font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Diagnostica tu realidad</h3>
+            <p class="text-sm" style="color: var(--pv-ink-soft); line-height: 1.6;">
+              Califica tu rueda y descubre qué pilar requiere tu atención.
+            </p>
+          </div>
+          <div class="text-center p-2">
+            <span class="pv-step-num mb-4 mx-auto">2</span>
+            <p class="text-[0.65rem] uppercase tracking-widest font-bold mb-1" style="color: var(--pv-purple);">¿Qué hago ahora?</p>
+            <h3 class="text-lg font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Comprende tu cerebro</h3>
+            <p class="text-sm" style="color: var(--pv-ink-soft); line-height: 1.6;">
+              Elige el Neuropliegue que ataca la barrera específica que te detiene.
+            </p>
+          </div>
+          <div class="text-center p-2">
+            <span class="pv-step-num mb-4 mx-auto">3</span>
+            <p class="text-[0.65rem] uppercase tracking-widest font-bold mb-1" style="color: var(--pv-mint);">¿Cómo lo sostengo?</p>
+            <h3 class="text-lg font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Construye tu identidad</h3>
+            <p class="text-sm" style="color: var(--pv-ink-soft); line-height: 1.6;">
+              Marca cada día. Cada acción repetida es evidencia de quién estás siendo.
+            </p>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===================== RUEDA ===================== -->
+    <section x-show="vista === 'rueda'" x-cloak class="pv-view" role="tabpanel">
+      <div class="text-center mb-6">
+        <p class="pv-pill mb-2" style="background: #fef3ec; color: var(--pv-coral);">Paso 1 · ¿Dónde estoy?</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-semibold" style="color: var(--pv-navy);">
+          Diagnostica tu realidad
+        </h2>
+        <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
+          La Rueda de la Vida — toca un pilar y califícalo del 1 al 10.
+        </p>
+        <p x-show="rueda.mesAsignado" x-cloak class="text-xs mt-2 italic" style="color: var(--pv-ink-soft);">
+          Esta rueda es de <strong x-text="nombreMes(rueda.mesAsignado)"></strong>.
+          Se reseteará automáticamente al cambiar de mes para obligarte a reevaluar.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-5 lg:gap-6">
+        <div class="pv-card p-4 md:p-6">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-serif text-lg font-semibold">Tu rueda</h3>
+            <span class="pv-pill">Promedio: <strong class="ml-1" x-text="promedioRueda.toFixed(1)"></strong>/10</span>
+          </div>
+
+          <svg viewBox="-50 -50 500 500" class="wheel-svg" preserveAspectRatio="xMidYMid meet">
+            <circle cx="200" cy="200" r="18" class="wheel-ring" />
+            <circle cx="200" cy="200" r="36" class="wheel-ring" />
+            <circle cx="200" cy="200" r="54" class="wheel-ring" />
+            <circle cx="200" cy="200" r="72" class="wheel-ring" />
+            <circle cx="200" cy="200" r="90" class="wheel-ring" />
+            <circle cx="200" cy="200" r="108" class="wheel-ring" />
+            <circle cx="200" cy="200" r="126" class="wheel-ring" />
+            <circle cx="200" cy="200" r="144" class="wheel-ring" />
+            <circle cx="200" cy="200" r="162" class="wheel-ring" />
+            <circle cx="200" cy="200" r="180" class="wheel-ring" />
+            <g x-ref="ruedaGroup" x-effect="renderRueda(rueda, ruedaSelectedIndex)"></g>
+          </svg>
+          <p class="text-xs text-center mt-2" style="color: var(--pv-ink-soft);">Toca un pilar para calificarlo →</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="pv-card p-5 md:p-6 pv-fade-in" :key="ruedaSelectedIndex">
+            <p class="text-xs uppercase tracking-wider mb-1" style="color: var(--pv-ink-soft);">Pilar seleccionado</p>
+            <h3 class="font-serif text-2xl font-semibold mb-1" x-text="pilarActual.nombre"></h3>
+            <p class="text-sm mb-5" style="color: var(--pv-ink-soft);">
+              ¿En qué medida adoptas hábitos que favorezcan este pilar?
+            </p>
+            <div class="flex items-center gap-4 mb-3">
+              <span class="text-3xl font-serif font-semibold" style="color: var(--pv-navy);" x-text="pilarActual.valor"></span>
+              <input type="range" min="1" max="10" step="1" class="pv-slider flex-1"
+                     x-model.number="pilarActual.valor" @input="onRuedaValorChange()" />
+              <span class="text-sm" style="color: var(--pv-ink-soft);">/10</span>
+            </div>
+            <div class="flex justify-between text-xs mb-4" style="color: var(--pv-ink-soft);">
+              <span>Muy poco</span><span>Mucho</span>
+            </div>
+            <p class="text-xs uppercase tracking-wider mb-2" style="color: var(--pv-ink-soft);">Hábitos que fortalecen este pilar</p>
+            <ul class="text-sm space-y-1">
+              <template x-for="h in pilarActual.habitosSugeridos">
+                <li class="flex items-start gap-2"><span style="color: var(--pv-mint);">·</span><span x-text="h"></span></li>
+              </template>
+            </ul>
+            <div class="flex justify-between items-center mt-5 pt-4 border-t" style="border-color: var(--pv-line);">
+              <button class="pv-btn pv-btn-ghost"
+                      @click="ruedaSelectedIndex = (ruedaSelectedIndex - 1 + rueda.pilares.length) % rueda.pilares.length">
+                <span x-html="icon('chevronLeft')" class="pv-icon-sm"></span> Anterior
+              </button>
+              <span class="text-xs pv-num-tabular" style="color: var(--pv-ink-soft);">
+                <span x-text="ruedaSelectedIndex + 1"></span> de <span x-text="rueda.pilares.length"></span>
+              </span>
+              <button class="pv-btn pv-btn-ghost"
+                      @click="ruedaSelectedIndex = (ruedaSelectedIndex + 1) % rueda.pilares.length">
+                Siguiente <span x-html="icon('chevronRight')" class="pv-icon-sm"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="pv-card p-5 md:p-6" x-show="pilarMasBajo && tieneRueda" x-cloak>
+            <p class="pv-pill mb-3" style="background: #fef3ec; color: var(--pv-coral);">Diagnóstico</p>
+            <h3 class="font-serif text-xl font-semibold mb-2">
+              Tu pilar más bajo: <span style="color: var(--pv-coral);" x-text="pilarMasBajo?.nombre"></span>
+            </h3>
+            <p class="text-sm mb-4" style="color: var(--pv-ink-soft);">
+              Aquí es donde un nuevo hábito puede mover más tu rueda.
+              <em>El siguiente paso es elegir cómo implementarlo.</em>
+            </p>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button @click="cambiarVista('neuropliegues')" class="pv-btn pv-btn-primary flex-1">
+                <span x-html="icon('brain')" class="pv-icon-sm"></span>
+                Elegir un Neuropliegue
+                <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+              </button>
+              <button @click="crearHabitoDesdeRueda(pilarMasBajo?.id)" class="pv-btn pv-btn-ghost flex-1">
+                <span x-html="icon('calendar')" class="pv-icon-sm"></span>
+                Saltar a Tracker
+              </button>
+            </div>
+          </div>
+
+          <!-- Histórico de ruedas pasadas -->
+          <div class="pv-card p-5 md:p-6" x-show="rueda.historial && rueda.historial.length > 0" x-cloak>
+            <h3 class="font-serif text-lg font-semibold mb-3">Ruedas pasadas</h3>
+            <template x-for="snap in rueda.historial" :key="snap.mes">
+              <div class="rueda-snapshot">
+                <span x-text="nombreMes(snap.mes)"></span>
+                <span class="font-semibold" style="color: var(--pv-navy);">
+                  Promedio: <span x-text="snap.promedio.toFixed(1)"></span>/10
+                </span>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 mt-6 justify-center">
+        <button @click="guardarRueda()" class="pv-btn pv-btn-primary">
+          <span x-html="icon('save')" class="pv-icon-sm"></span>
+          Guardar mi rueda
+        </button>
+        <button @click="resetRueda()" class="pv-btn pv-btn-ghost" style="color: var(--pv-coral);">
+          <span x-html="icon('refresh')" class="pv-icon-sm"></span>
+          Empezar de cero
+        </button>
+      </div>
+    </section>
+
+    <!-- ===================== NEUROPLIEGUES ===================== -->
+    <section x-show="vista === 'neuropliegues'" x-cloak class="pv-view" role="tabpanel">
+      <!-- Header del Paso 2: solo visible cuando NO hay NP ni herramienta activa -->
+      <div x-show="!neuropliegueActivo && !herramientaActiva" x-cloak class="text-center mb-6">
+        <p class="pv-pill mb-2" style="background: rgba(108,79,165,0.15); color: var(--pv-purple); border-color: rgba(108,79,165,0.35);">Paso 2 · ¿Qué hago ahora?</p>
+        <h2 class="text-3xl md:text-4xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.02em;">
+          Comprende tu cerebro
+        </h2>
+        <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
+          Los Neuropliegues son herramientas basadas en ciencia para superar la barrera específica del proceso de cambio.
+        </p>
+      </div>
+
+      <!-- Lista de Neuropliegues (estado inicial) -->
+      <div x-show="!neuropliegueActivo" x-cloak>
+        <!-- Quiz inicial -->
+        <div class="np-quiz-card mb-6 max-w-2xl mx-auto">
+          <p class="text-xs uppercase tracking-wider mb-2" style="color: var(--pv-navy);">¿Por dónde empezar?</p>
+          <h3 class="font-serif text-xl font-semibold mb-3">¿Qué te cuesta más al construir un hábito?</h3>
+          <p class="text-sm mb-4" style="color: var(--pv-ink-soft);">
+            Elige el obstáculo que más te resuena. Te llevaré directo al Neuropliegue que lo ataca.
+          </p>
+          <template x-for="o in obstaculos" :key="o.id">
+            <button class="np-obstacle-btn"
+                    :disabled="findNeuropliegueById(o.neuropliegueId)?.proximamente"
+                    @click="abrirNeuropliegue(o.neuropliegueId)">
+              <span x-text="o.label"></span>
+              <span x-show="findNeuropliegueById(o.neuropliegueId)?.proximamente" x-cloak
+                    class="np-pill-tool ml-2">Próximamente</span>
+            </button>
+          </template>
+        </div>
+
+        <!-- Grid de Neuropliegues -->
+        <div class="pv-ornament"><span class="pv-ornament-dot"></span></div>
+        <h3 class="text-xl md:text-2xl font-extrabold text-center mb-6" style="color: var(--pv-navy); letter-spacing: -0.01em;">
+          O explora los 4 Neuropliegues
+        </h3>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <template x-for="np in neuropliegues" :key="np.id">
+            <div class="np-card" :class="np.proximamente ? 'proximamente' : ''"
+                 @click="!np.proximamente && abrirNeuropliegue(np.id)">
+              <div class="np-card-accent" :style="`background: ${np.color}`"></div>
+              <div class="np-icon" :style="`background: ${np.color}1a; color: ${np.color}`" x-html="icon(np.icono)"></div>
+              <h3 class="text-lg font-extrabold mb-1" style="color: var(--pv-navy); letter-spacing: -0.01em;" x-text="np.nombre"></h3>
+              <p class="text-xs mb-3 italic" style="color: var(--pv-ink-soft);" x-text="np.obstaculo"></p>
+              <p class="text-sm leading-relaxed" style="color: var(--pv-ink-soft);" x-text="np.explicacionCorta"></p>
+              <div class="mt-4 flex items-center justify-between">
+                <span class="np-pill-tool" x-show="!np.proximamente" x-cloak>
+                  <span x-text="np.herramientas.length"></span> herramientas
+                </span>
+                <span class="np-pill-tool" x-show="np.proximamente" x-cloak
+                      style="background: rgba(232,169,78,0.15); color: var(--pv-amber);">Próximamente</span>
+                <span x-show="!np.proximamente" x-cloak class="text-xs font-bold inline-flex items-center gap-1" :style="`color: ${np.color}`">
+                  Abrir <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+                </span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Detalle de un Neuropliegue (herramientas) -->
+      <div x-show="neuropliegueActivo && !herramientaActiva" x-cloak class="pv-fade-in">
+        <button @click="neuropliegueActivo = null" class="pv-btn pv-btn-ghost mb-5">
+          <span x-html="icon('chevronLeft')" class="pv-icon-sm"></span>
+          Ver todos los Neuropliegues
+        </button>
+
+        <div class="pv-card pv-card-accent-top p-5 md:p-7 mb-6">
+          <div class="flex items-center gap-4 mb-4">
+            <span class="np-icon" :style="`background: ${neuropliegueActivoData?.color}1a; color: ${neuropliegueActivoData?.color}; margin-bottom: 0;`"
+                  x-html="icon(neuropliegueActivoData?.icono)"></span>
+            <div>
+              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${neuropliegueActivoData?.color}`">Neuropliegue</p>
+              <h2 class="text-2xl md:text-3xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.02em;" x-text="neuropliegueActivoData?.nombre"></h2>
+            </div>
+          </div>
+          <p class="text-base leading-relaxed" style="color: var(--pv-ink);"
+             x-text="neuropliegueActivoData?.explicacionCorta"></p>
+        </div>
+
+        <div class="flex items-center justify-between mb-4 max-w-2xl">
+          <h3 class="text-xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Elige una herramienta</h3>
+          <span class="np-pill-tool"><span x-text="neuropliegueActivoData?.herramientas?.length"></span> disponibles</span>
+        </div>
+        <p class="text-sm mb-6" style="color: var(--pv-ink-soft);">
+          Recomendación: elige <strong>una sola</strong> herramienta por Neuropliegue, la que más se ajuste a lo que necesitas hoy.
+        </p>
+
+        <div class="grid md:grid-cols-3 gap-4">
+          <template x-for="herramienta in neuropliegueActivoData?.herramientas || []" :key="herramienta.id">
+            <div class="np-tool-card cursor-pointer" @click="abrirHerramienta(herramienta.id)">
+              <h4 class="text-lg font-extrabold mb-1" style="color: var(--pv-navy); letter-spacing: -0.01em;" x-text="herramienta.nombre"></h4>
+              <p x-show="herramienta.autor" x-cloak class="text-xs italic mb-3" style="color: var(--pv-ink-soft);">
+                por <span x-text="herramienta.autor"></span>
+              </p>
+              <p class="text-sm leading-relaxed line-clamp-3" style="color: var(--pv-ink-soft);"
+                 x-text="herramienta.explicacion"></p>
+              <div class="mt-3 flex items-center justify-between">
+                <span class="np-pill-tool inline-flex items-center gap-1" x-show="estaEnPlanLocal(neuropliegueActivo, herramienta.id)" x-cloak
+                      style="background: var(--pv-navy); color: #fff;">
+                  <span x-html="icon('bookmarkCheck')" class="pv-icon-sm"></span> En mi plan
+                </span>
+                <span x-show="!estaEnPlanLocal(neuropliegueActivo, herramienta.id)" x-cloak></span>
+                <span class="text-xs font-bold inline-flex items-center gap-1" style="color: var(--pv-navy);">
+                  Ver más <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+                </span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Detalle de una Herramienta -->
+      <div x-show="herramientaActiva" x-cloak class="pv-fade-in max-w-3xl mx-auto">
+        <button @click="herramientaActiva = null" class="pv-btn pv-btn-ghost mb-5">
+          <span x-html="icon('chevronLeft')" class="pv-icon-sm"></span>
+          Volver a las herramientas
+        </button>
+
+        <article class="pv-card pv-card-accent-top p-6 md:p-8">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="np-icon" :style="`background: ${neuropliegueActivoData?.color}1a; color: ${neuropliegueActivoData?.color}; margin-bottom: 0; width: 36px; height: 36px; font-size: 1.2rem;`"
+                  x-html="icon(neuropliegueActivoData?.icono)"></span>
+            <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${neuropliegueActivoData?.color}`"
+               x-text="neuropliegueActivoData?.nombre"></p>
+          </div>
+          <h2 class="text-3xl md:text-4xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.02em;"
+              x-text="herramientaActivaData?.nombre"></h2>
+          <p x-show="herramientaActivaData?.autor" x-cloak class="text-sm italic mb-6 inline-flex items-center gap-2" style="color: var(--pv-ink-soft);">
+            <span x-html="icon('book')" class="pv-icon-sm"></span>
+            por <span x-text="herramientaActivaData?.autor"></span>
+          </p>
+
+          <div class="np-section">
+            <p class="np-section-label">Explicación</p>
+            <p class="text-base leading-relaxed" x-text="herramientaActivaData?.explicacion"></p>
+          </div>
+
+          <div class="np-section">
+            <p class="np-section-label">Fundamento científico</p>
+            <p class="text-base leading-relaxed" x-text="herramientaActivaData?.fundamentoCientifico"></p>
+          </div>
+
+          <div class="np-section">
+            <p class="np-section-label">Cómo aplicarlo</p>
+            <p class="text-base leading-relaxed" x-text="herramientaActivaData?.comoAplicarlo"></p>
+          </div>
+
+          <div class="np-section">
+            <p class="np-section-label">Ejemplo práctico</p>
+            <p class="text-base leading-relaxed italic relative pl-4" style="color: var(--pv-rose); border-left: 3px solid var(--pv-gold);"
+               x-text="herramientaActivaData?.ejemploPractico"></p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t" style="border-color: var(--pv-line);">
+            <button class="pv-btn np-btn-apply flex-1"
+                    @click="abrirModalAplicacion(neuropliegueActivo, herramientaActivaData.id)">
+              <span x-html="icon('zap')" class="pv-icon-sm"></span>
+              Aplicar ahora
+            </button>
+            <button class="pv-btn np-btn-save flex-1"
+                    :class="estaEnPlanLocal(neuropliegueActivo, herramientaActivaData?.id) ? 'saved' : ''"
+                    @click="toggleEnPlan(neuropliegueActivo, herramientaActivaData.id)">
+              <span x-show="!estaEnPlanLocal(neuropliegueActivo, herramientaActivaData?.id)" x-cloak class="inline-flex items-center gap-2">
+                <span x-html="icon('bookmark')" class="pv-icon-sm"></span>
+                Guardar en mi plan
+              </span>
+              <span x-show="estaEnPlanLocal(neuropliegueActivo, herramientaActivaData?.id)" x-cloak class="inline-flex items-center gap-2">
+                <span x-html="icon('bookmarkCheck')" class="pv-icon-sm"></span>
+                En mi plan — quitar
+              </span>
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================== TRACKER ===================== -->
+    <section x-show="vista === 'tracker'" x-cloak class="pv-view" role="tabpanel">
+      <div class="text-center mb-6">
+        <p class="pv-pill mb-2" style="background: #eaf5ed; color: var(--pv-mint);">Paso 3 · ¿Cómo lo sostengo?</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-semibold" style="color: var(--pv-navy);">
+          Construye tu identidad
+        </h2>
+        <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
+          Cada día marcado es un voto a favor de la persona que estás construyendo.
+        </p>
+      </div>
+
+      <div class="flex items-center justify-center gap-3 mb-6">
+        <button @click="cambiarMes(-1)" class="pv-btn pv-btn-ghost" aria-label="Mes anterior">
+          <span x-html="icon('chevronLeft')" class="pv-icon-sm"></span>
+        </button>
+        <h3 class="text-xl md:text-2xl font-extrabold capitalize" style="color: var(--pv-navy); letter-spacing: -0.01em;" x-text="nombreMes(mesActivo)"></h3>
+        <button @click="cambiarMes(1)" class="pv-btn pv-btn-ghost" aria-label="Mes siguiente">
+          <span x-html="icon('chevronRight')" class="pv-icon-sm"></span>
+        </button>
+      </div>
+
+      <div x-show="tracker.habitos.length === 0" x-cloak class="pv-card pv-card-accent-top p-8 text-center mb-6 max-w-2xl mx-auto">
+        <span class="np-icon mx-auto" style="background: rgba(244,201,74,0.15); color: var(--pv-gold);" x-html="icon('sprout')"></span>
+        <p class="text-2xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Aún no tienes hábitos en tu rueda</p>
+        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);">
+          Empieza por uno solo. Los pequeños sostenidos pesan más que los grandes abandonados.
+        </p>
+        <button @click="abrirNuevoHabito()" class="pv-btn pv-btn-primary">
+          <span x-html="icon('plus')" class="pv-icon-sm"></span>
+          Agregar mi primer hábito
+        </button>
+      </div>
+
+      <div x-show="tracker.habitos.length > 0" x-cloak class="grid lg:grid-cols-5 gap-5 lg:gap-6">
+
+        <div class="lg:col-span-3 space-y-5">
+          <div class="pv-card p-5">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Hábitos diarios</h3>
+              <button @click="abrirNuevoHabito()" class="pv-btn pv-btn-ghost text-xs">
+                <span x-html="icon('plus')" class="pv-icon-sm"></span>
+                Hábito
+              </button>
+            </div>
+            <ul class="space-y-2">
+              <template x-for="(habito, i) in tracker.habitos" :key="habito.id">
+                <li class="flex items-center gap-3 p-2 rounded-lg transition cursor-pointer"
+                    :class="habitoActivo === habito.id ? 'bg-[var(--pv-paper)]' : ''"
+                    @click="habitoActivo = habito.id">
+                  <span class="w-4 h-4 rounded-full shrink-0" :style="`background:${habito.color}`"></span>
+                  <span class="flex-1 text-sm font-medium" x-text="habito.nombre"></span>
+                  <span class="text-xs pv-num-tabular" style="color: var(--pv-ink-soft);"
+                        x-text="`${contarDias(habito.id, 'done')}/${diasMes}`"></span>
+                  <button @click.stop="eliminarHabito(habito.id)"
+                          class="opacity-40 hover:opacity-100 hover:text-[var(--pv-coral)] transition" title="Eliminar"
+                          x-html="icon('trash')"></button>
+                </li>
+              </template>
+            </ul>
+          </div>
+
+          <div class="pv-card p-4 md:p-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">
+                <span x-text="habitoSeleccionado?.nombre || 'Selecciona un hábito'"></span>
+              </h3>
+              <div class="flex gap-1.5 text-xs">
+                <span class="pv-pill inline-flex items-center gap-1" style="background:#eaf5ed; color:var(--pv-mint); border-color: rgba(47,158,111,0.25);">
+                  <span x-html="icon('checkCircle')" class="pv-icon-sm"></span>
+                  <span class="pv-num-tabular" x-text="contarDias(habitoActivo, 'done')"></span>
+                </span>
+                <span class="pv-pill inline-flex items-center gap-1" style="background:#fde8e5; color:var(--pv-coral); border-color: rgba(217,69,52,0.25);">
+                  <span x-html="icon('xCircle')" class="pv-icon-sm"></span>
+                  <span class="pv-num-tabular" x-text="contarDias(habitoActivo, 'skip')"></span>
+                </span>
+              </div>
+            </div>
+
+            <div x-show="esMesActual && habitoActivo" x-cloak class="flex flex-wrap gap-2 mb-4 p-3 rounded-xl border" style="background: var(--pv-paper); border-color: var(--pv-line);">
+              <span class="text-xs font-semibold self-center mr-1" style="color: var(--pv-ink-soft);">
+                Hoy <span class="pv-num-tabular">(día <span x-text="MisPliegues.getDiaActual()"></span>):</span>
+              </span>
+              <button @click="marcarHoy('done')" class="pv-btn inline-flex items-center gap-1.5"
+                      style="background: var(--pv-mint); color: #fff; font-size: 0.78rem; padding: 0.45rem 0.85rem; box-shadow: 0 4px 12px -4px rgba(47,158,111,0.4);">
+                <span x-html="icon('checkCircle')" class="pv-icon-sm"></span> Cumplí
+              </button>
+              <button @click="marcarHoy('partial')" class="pv-btn inline-flex items-center gap-1.5"
+                      style="background: var(--pv-amber); color: #fff; font-size: 0.78rem; padding: 0.45rem 0.85rem; box-shadow: 0 4px 12px -4px rgba(217,146,48,0.4);">
+                <span x-html="icon('halfCircle')" class="pv-icon-sm"></span> A medias
+              </button>
+              <button @click="marcarHoy('skip')" class="pv-btn inline-flex items-center gap-1.5"
+                      style="background: var(--pv-coral); color: #fff; font-size: 0.78rem; padding: 0.45rem 0.85rem; box-shadow: 0 4px 12px -4px rgba(217,69,52,0.4);">
+                <span x-html="icon('xCircle')" class="pv-icon-sm"></span> No cumplí
+              </button>
+            </div>
+
+            <svg viewBox="-30 -30 460 460" class="tracker-svg" preserveAspectRatio="xMidYMid meet">
+              <circle cx="200" cy="200" r="70" class="tracker-guide-ring" />
+              <circle cx="200" cy="200" r="175" class="tracker-guide-ring" />
+              <g x-ref="cellsGroup" x-effect="renderCells(tracker, habitoActivo, mesActivo)"></g>
+              <circle cx="200" cy="200" r="50" fill="#fff" stroke="var(--pv-line)" stroke-width="1" />
+              <text x="200" y="190" class="font-serif" text-anchor="middle" font-size="14" fill="var(--pv-ink-soft)">Día</text>
+              <text x="200" y="220" class="font-serif" text-anchor="middle" font-size="32" font-weight="600" fill="var(--pv-navy)">
+                <tspan x-text="diaHoy"></tspan>
+              </text>
+            </svg>
+
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-4 text-xs" style="color: var(--pv-ink-soft);">
+              <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded" style="background:var(--pv-mint);"></span> Cumplí</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded" style="background:var(--pv-amber);"></span> A medias</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded" style="background:var(--pv-coral);"></span> No cumplí</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-3 h-3 rounded" style="background:#fff; border:1px solid var(--pv-line);"></span> Vacío</span>
+            </div>
+            <p class="text-xs text-center mt-3" style="color: var(--pv-ink-soft);">
+              <strong>Toca cualquier día del anillo</strong> (también pasados) para cambiar su estado.
+              Los días con borde punteado son futuros.
+            </p>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-4">
+          <div class="pv-card p-5">
+            <div class="flex items-center gap-2 mb-4">
+              <span x-html="icon('sparkles')" class="pv-icon" style="color: var(--pv-gold);"></span>
+              <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Resumen del mes</h3>
+            </div>
+            <div class="space-y-3">
+              <template x-for="stat in resumenMes" :key="stat.habito.id">
+                <div>
+                  <div class="flex items-center justify-between text-sm mb-1.5">
+                    <span class="flex items-center gap-2">
+                      <span class="w-3 h-3 rounded-full" :style="`background:${stat.habito.color}`"></span>
+                      <span class="font-medium" x-text="stat.habito.nombre"></span>
+                    </span>
+                    <span class="pv-num-tabular font-bold" style="color: var(--pv-navy);" x-text="`${stat.porcentaje}%`"></span>
+                  </div>
+                  <div class="h-2 rounded-full overflow-hidden" style="background:var(--pv-paper);">
+                    <div class="h-full rounded-full transition-all" :style="`width:${stat.porcentaje}%; background: linear-gradient(90deg, ${stat.habito.color}, ${stat.habito.color}dd)`"></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="pv-card p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span x-html="icon('flag')" class="pv-icon" style="color: var(--pv-coral);"></span>
+              <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Metas del mes</h3>
+            </div>
+            <textarea class="pv-input" rows="3"
+                      placeholder="¿Qué quiero lograr este mes? ¿Qué pliegue estoy practicando?"
+                      x-model="metaMes" @blur="guardarTracker()"></textarea>
+          </div>
+
+          <div class="pv-card p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span x-html="icon('book')" class="pv-icon" style="color: var(--pv-navy);"></span>
+              <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Notas</h3>
+            </div>
+            <textarea class="pv-input" rows="4"
+                      placeholder="Aprendizajes, recaídas, micro-acciones que sí funcionaron..."
+                      x-model="notasMes" @blur="guardarTracker()"></textarea>
+          </div>
+
+          <div class="pv-card p-5">
+            <div class="flex items-center gap-2 mb-3">
+              <span x-html="icon('calendar')" class="pv-icon" style="color: var(--pv-mint);"></span>
+              <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Constancia anual</h3>
+            </div>
+            <div class="grid grid-cols-6 gap-1.5">
+              <template x-for="mes in mesesDelAnio" :key="mes.key">
+                <button @click="mesActivo = mes.key"
+                        class="aspect-square rounded-lg text-xs font-bold flex items-center justify-center transition"
+                        :class="mes.key === mesActivo ? 'ring-2 ring-offset-1' : ''"
+                        :style="`background:${mes.color}; color:${mes.textColor}`"
+                        :title="`${mes.nombre}: ${mes.totalDone} días cumplidos`">
+                  <span x-text="mes.label"></span>
+                </button>
+              </template>
+            </div>
+            <p class="text-xs text-center mt-2" style="color: var(--pv-ink-soft);">
+              Color más fuerte = más días cumplidos.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MI PLAN ===================== -->
+    <section x-show="vista === 'plan'" x-cloak class="pv-view" role="tabpanel">
+      <div class="text-center mb-6">
+        <p class="pv-pill mb-2">Tu plan personal</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-semibold" style="color: var(--pv-navy);">Mi Plan</h2>
+        <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
+          Las herramientas que has elegido aplicar. Tu caja de herramientas conductuales personal.
+        </p>
+      </div>
+
+      <div x-show="plan.herramientas.length === 0" x-cloak class="pv-card pv-card-accent-top p-8 text-center max-w-2xl mx-auto">
+        <span class="np-icon mx-auto" style="background: rgba(244,201,74,0.15); color: var(--pv-gold);" x-html="icon('bookmark')"></span>
+        <p class="text-2xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.01em;">Aún no has guardado herramientas</p>
+        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);">
+          Explora los Neuropliegues, elige una herramienta y guárdala aquí para verla cuando la necesites.
+        </p>
+        <button @click="cambiarVista('neuropliegues')" class="pv-btn pv-btn-primary">
+          <span x-html="icon('brain')" class="pv-icon-sm"></span>
+          Explorar Neuropliegues
+          <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+        </button>
+      </div>
+
+      <div x-show="plan.herramientas.length > 0" x-cloak class="max-w-3xl mx-auto space-y-4">
+        <template x-for="item in plan.herramientas" :key="item.neuropliegueId + '-' + item.herramientaId">
+          <div class="pv-card p-5">
+            <div class="flex items-start gap-4">
+              <span class="np-icon shrink-0"
+                    :style="`background: ${findNeuropliegueById(item.neuropliegueId)?.color}1a; color: ${findNeuropliegueById(item.neuropliegueId)?.color}; margin-bottom: 0; width: 44px; height: 44px;`"
+                    x-html="icon(findNeuropliegueById(item.neuropliegueId)?.icono)"></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-[0.65rem] uppercase tracking-widest font-bold"
+                   :style="`color: ${findNeuropliegueById(item.neuropliegueId)?.color}`"
+                   x-text="findNeuropliegueById(item.neuropliegueId)?.nombre"></p>
+                <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;"
+                    x-text="findHerramientaById(item.neuropliegueId, item.herramientaId)?.nombre"></h3>
+                <p class="text-xs mt-1 inline-flex items-center gap-1.5" style="color: var(--pv-ink-soft);">
+                  <span x-html="item.estado === 'aplicando' ? icon('zap') : icon('bookmarkCheck')" class="pv-icon-sm"></span>
+                  <span x-text="item.estado === 'aplicando' ? 'Aplicada' : 'Guardada'"></span> el
+                  <span x-text="formatFecha(item.fechaGuardado)"></span>
+                </p>
+              </div>
+              <div class="flex flex-col gap-2 shrink-0">
+                <button @click="abrirModalAplicacion(item.neuropliegueId, item.herramientaId)"
+                        class="pv-btn pv-btn-ghost text-xs" :title="item.aplicacion ? 'Editar aplicación' : 'Aplicar ahora'">
+                  <span x-html="icon('zap')" class="pv-icon-sm"></span>
+                  <span x-text="item.aplicacion ? 'Editar' : 'Aplicar'"></span>
+                </button>
+                <button @click="toggleEnPlan(item.neuropliegueId, item.herramientaId)"
+                        class="text-xs inline-flex items-center gap-1 justify-center" style="color: var(--pv-coral);">
+                  <span x-html="icon('trash')" class="pv-icon-sm"></span> Quitar
+                </button>
+              </div>
+            </div>
+
+            <!-- Aplicación personalizada (si existe) -->
+            <div x-show="item.aplicacion && item.aplicacion.campos" x-cloak class="mt-4 pt-4 border-t" style="border-color: var(--pv-line);">
+              <p class="text-[0.65rem] uppercase tracking-widest font-bold mb-3" style="color: var(--pv-navy);">Tu aplicación</p>
+              <div class="space-y-2 text-sm">
+                <template x-for="campo in findHerramientaById(item.neuropliegueId, item.herramientaId)?.formularioAplicacion?.campos || []" :key="campo.id">
+                  <div x-show="item.aplicacion?.campos?.[campo.id]" x-cloak class="flex flex-col">
+                    <span class="text-xs font-semibold" style="color: var(--pv-ink-soft);" x-text="campo.label"></span>
+                    <span x-text="item.aplicacion?.campos?.[campo.id]"></span>
+                  </div>
+                </template>
+              </div>
+              <div x-show="item.aplicacion?.habitoSugerido" x-cloak
+                   class="mt-3 p-3 rounded-lg text-sm" style="background: rgba(244,201,74,0.12); border: 1px dashed rgba(244,201,74,0.5);">
+                <span class="text-[0.65rem] uppercase tracking-widest font-bold block mb-1" style="color: #a37b00;">Hábito que registrar</span>
+                <span x-text="item.aplicacion?.habitoSugerido" style="color: var(--pv-navy);" class="font-semibold"></span>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </section>
+
+    <!-- ===================== MODAL: APLICAR HERRAMIENTA ===================== -->
+    <div x-show="modalAplicacion" x-cloak class="pv-modal-backdrop" @click.self="cerrarModalAplicacion()">
+      <div class="pv-modal pv-card-accent-top pv-fade-in" style="max-width: 32rem; max-height: 92vh; overflow-y: auto;">
+        <!-- Vista inicial: formulario -->
+        <div x-show="!aplicacionExitosa" x-cloak>
+          <div class="flex items-center gap-3 mb-2">
+            <span class="np-icon" :style="`background: ${aplicacionNeuropliegueData?.color}1a; color: ${aplicacionNeuropliegueData?.color}; margin-bottom: 0; width: 40px; height: 40px; font-size: 1.2rem;`"
+                  x-html="icon(aplicacionNeuropliegueData?.icono)"></span>
+            <div>
+              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${aplicacionNeuropliegueData?.color}`"
+                 x-text="aplicacionNeuropliegueData?.nombre"></p>
+              <h3 class="text-xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;"
+                  x-text="aplicacionHerramientaData?.nombre"></h3>
+            </div>
+          </div>
+          <p class="text-sm mb-5" style="color: var(--pv-ink-soft);"
+             x-text="aplicacionHerramientaData?.formularioAplicacion?.descripcion || 'Define cómo aplicarás esta herramienta:'"></p>
+
+          <template x-for="campo in aplicacionHerramientaData?.formularioAplicacion?.campos || []" :key="campo.id">
+            <div class="mb-4">
+              <label class="text-[0.72rem] uppercase tracking-widest font-bold block mb-2" style="color: var(--pv-navy);" x-text="campo.label"></label>
+              <textarea x-show="campo.tipo === 'textarea'" class="pv-input" rows="2"
+                        :placeholder="campo.placeholder" x-model="aplicacionFormData[campo.id]"></textarea>
+              <input x-show="campo.tipo !== 'textarea'" type="text" class="pv-input"
+                     :placeholder="campo.placeholder" x-model="aplicacionFormData[campo.id]" />
+            </div>
+          </template>
+
+          <div class="flex gap-2 justify-end mt-6">
+            <button @click="cerrarModalAplicacion()" class="pv-btn pv-btn-ghost">Cancelar</button>
+            <button @click="guardarAplicacion()" class="pv-btn pv-btn-primary"
+                    :disabled="!aplicacionFormValida">
+              <span x-html="icon('zap')" class="pv-icon-sm"></span>
+              Aplicar y guardar
+            </button>
+          </div>
+        </div>
+
+        <!-- Vista de éxito: pantalla puente al Tracker -->
+        <div x-show="aplicacionExitosa" x-cloak class="text-center pv-fade-in">
+          <span class="np-icon mx-auto" style="background: rgba(47,158,111,0.15); color: var(--pv-mint); width: 56px; height: 56px;" x-html="icon('checkCircle')"></span>
+          <h3 class="text-2xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.02em;">¡Listo, está en tu plan!</h3>
+          <p class="text-sm mb-5" style="color: var(--pv-ink-soft);">
+            Tu aplicación de <strong x-text="aplicacionHerramientaData?.nombre"></strong> quedó guardada.
+            Ahora regístrala como hábito en tu <strong>Tracker</strong> para sostenerla día a día.
+          </p>
+          <div class="p-4 rounded-xl mb-5 text-left" style="background: var(--pv-paper); border: 1px dashed var(--pv-line);">
+            <p class="text-[0.65rem] uppercase tracking-widest font-bold mb-1" style="color: var(--pv-navy);">Hábito sugerido</p>
+            <p class="text-sm font-semibold" x-text="habitoSugeridoGenerado"></p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <button @click="cerrarModalAplicacion()" class="pv-btn pv-btn-ghost flex-1">
+              Solo guardar
+            </button>
+            <button @click="irAlTrackerConHabito()" class="pv-btn pv-btn-primary flex-1">
+              <span x-html="icon('calendar')" class="pv-icon-sm"></span>
+              Registrar en mi Tracker
+              <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MODAL NUEVO HÁBITO ===================== -->
+    <div x-show="modalNuevoHabito" x-cloak class="pv-modal-backdrop" @click.self="modalNuevoHabito = false">
+      <div class="pv-modal pv-card-accent-top pv-fade-in">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="np-icon" style="background: rgba(244,201,74,0.15); color: var(--pv-gold); margin-bottom: 0; width: 40px; height: 40px;" x-html="icon('plus')"></span>
+          <h3 class="text-2xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Nuevo hábito</h3>
+        </div>
+        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);">
+          Pequeño. Específico. Sostenible. Encuentra tu versión <em>imposible de fallar</em>.
+        </p>
+        <label class="text-[0.7rem] uppercase tracking-widest font-bold block mb-2" style="color: var(--pv-navy);">Nombre del hábito</label>
+        <input type="text" class="pv-input mb-4" x-model="nuevoHabitoNombre"
+               placeholder="Ej: caminar 10 min, leer 5 páginas"
+               @keydown.enter="confirmarNuevoHabito()" x-ref="nuevoHabitoInput" />
+        <label class="text-[0.7rem] uppercase tracking-widest font-bold block mb-2" style="color: var(--pv-navy);">Pilar (opcional)</label>
+        <select class="pv-input mb-5" x-model="nuevoHabitoPilar">
+          <option value="">— Sin pilar específico —</option>
+          <template x-for="p in pilares" :key="p.id">
+            <option :value="p.id" x-text="p.nombre"></option>
+          </template>
+        </select>
+        <div class="flex gap-2 justify-end">
+          <button @click="modalNuevoHabito = false" class="pv-btn pv-btn-ghost">Cancelar</button>
+          <button @click="confirmarNuevoHabito()" class="pv-btn pv-btn-primary"
+                  :disabled="!nuevoHabitoNombre.trim()">
+            <span x-html="icon('plus')" class="pv-icon-sm"></span>
+            Crear hábito
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== TOAST ===================== -->
+    <div x-show="toastVisible" x-transition.opacity x-cloak class="pv-toast"
+         :style="`background: ${toastColor};`">
+      <span x-html="icon('sparkle')" class="pv-icon-sm"></span>
+      <span x-text="toastMessage"></span>
+    </div>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer class="pv-footer">
+      <div class="pv-footer-ornament">
+        <span x-html="icon('sparkle')" class="pv-icon-sm"></span>
+      </div>
+      <div class="flex justify-center mb-3">
+        <span class="pv-monogram solid" style="width:40px; height:40px; font-size:0.9rem;">PV</span>
+      </div>
+      Parte del ecosistema de transformación de <strong style="color: var(--pv-navy);">Paulina Valencia</strong><br/>
+      Basado en los libros <em>"No eres tú, son tus hábitos"</em> y <em>"Hábitos con cerebro"</em>
+    </footer>
+  </div>
+</div>
+
+<script>
+function miBarcoApp() {
+  return {
+    // ----- Estado global -----
+    userName: '',
+    vista: 'home',
+    pilares: window.MisPliegues?.PILARES_DEFAULT || [],
+    neuropliegues: window.MisPliegues?.NEUROPLIEGUES || [],
+    obstaculos: window.MisPliegues?.OBSTACULOS || [],
+    MisPliegues: window.MisPliegues,
+
+    // ----- Rueda -----
+    rueda: { pilares: [], historial: [] },
+    ruedaSelectedIndex: 0,
+
+    // ----- Neuropliegues -----
+    neuropliegueActivo: null,
+    herramientaActiva: null,
+
+    // ----- Tracker -----
+    tracker: { habitos: [], registros: {}, metas: {}, notas: {} },
+    mesActivo: '',
+    habitoActivo: null,
+    estadoSeleccionado: 'done',
+    modoRapido: false,
+
+    // ----- Plan -----
+    plan: { herramientas: [] },
+
+    // ----- Modal nuevo hábito -----
+    modalNuevoHabito: false,
+    nuevoHabitoNombre: '',
+    nuevoHabitoPilar: '',
+
+    // ----- Modal aplicación de herramienta -----
+    modalAplicacion: false,
+    aplicacionNeuropliegueId: null,
+    aplicacionHerramientaId: null,
+    aplicacionFormData: {},
+    aplicacionExitosa: false,
+
+    // ----- Toast -----
+    toastVisible: false,
+    toastMessage: '',
+    toastColor: '#1f3a5f',
+
+    // ====================================================
+    init() {
+      this.userName = MisPliegues.getUserName();
+      this.rueda = MisPliegues.getRueda();
+      this.tracker = MisPliegues.getTracker();
+      this.plan = MisPliegues.getPlan();
+      this.mesActivo = MisPliegues.getMesActual();
+      if (this.tracker.habitos.length > 0) this.habitoActivo = this.tracker.habitos[0].id;
+
+      const hash = window.location.hash.replace('#', '');
+      if (['home','rueda','neuropliegues','tracker','plan'].includes(hash)) this.vista = hash;
+      window.addEventListener('hashchange', () => {
+        const h = window.location.hash.replace('#', '');
+        if (['home','rueda','neuropliegues','tracker','plan'].includes(h)) this.vista = h;
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      const pilarParam = params.get('pilar');
+      if (pilarParam && this.tracker.habitos.length === 0) {
+        this.nuevoHabitoPilar = pilarParam;
+        this.vista = 'tracker';
+        setTimeout(() => this.abrirNuevoHabito(), 200);
+      }
+    },
+
+    cambiarVista(v) {
+      this.vista = v;
+      // Resetear estado de Neuropliegues si salimos
+      if (v !== 'neuropliegues') {
+        this.neuropliegueActivo = null;
+        this.herramientaActiva = null;
+      }
+      history.replaceState(null, '', '#' + v);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    crearHabitoDesdeRueda(pilarId) {
+      this.nuevoHabitoPilar = pilarId || '';
+      this.cambiarVista('tracker');
+      setTimeout(() => this.abrirNuevoHabito(), 250);
+    },
+
+    // ====================================================
+    // RUEDA
+    // ====================================================
+    get pilarActual() {
+      return this.rueda.pilares[this.ruedaSelectedIndex] || { nombre: '', valor: 5, habitosSugeridos: [] };
+    },
+    get promedioRueda() { return MisPliegues.getPromedioRueda(this.rueda); },
+    get pilarMasBajo() { return MisPliegues.getPilarMasBajo(this.rueda); },
+    get tieneRueda() { return !!this.rueda.ultimaActualizacion; },
+    get fechaRueda() {
+      if (!this.rueda.ultimaActualizacion) return '';
+      return new Date(this.rueda.ultimaActualizacion).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    },
+
+    toRad(deg) { return (deg * Math.PI) / 180; },
+    anguloPilarCentro(i) {
+      const total = this.rueda.pilares.length || 10;
+      return -90 + (i * 360 / total);
+    },
+    pointX(i, valor) {
+      const r = (valor / 10) * 180;
+      return 200 + r * Math.cos(this.toRad(this.anguloPilarCentro(i)));
+    },
+    pointY(i, valor) {
+      const r = (valor / 10) * 180;
+      return 200 + r * Math.sin(this.toRad(this.anguloPilarCentro(i)));
+    },
+    labelX(i) { return 200 + 205 * Math.cos(this.toRad(this.anguloPilarCentro(i))); },
+    labelY(i) { return 200 + 205 * Math.sin(this.toRad(this.anguloPilarCentro(i))) + 4; },
+    sectorPath(i) {
+      const total = this.rueda.pilares.length || 10;
+      const angleStep = 360 / total;
+      const startAngle = this.anguloPilarCentro(i) - angleStep / 2;
+      const endAngle = this.anguloPilarCentro(i) + angleStep / 2;
+      const r = 180;
+      const x1 = 200 + r * Math.cos(this.toRad(startAngle));
+      const y1 = 200 + r * Math.sin(this.toRad(startAngle));
+      const x2 = 200 + r * Math.cos(this.toRad(endAngle));
+      const y2 = 200 + r * Math.sin(this.toRad(endAngle));
+      return `M 200 200 L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z`;
+    },
+
+    renderRueda() {
+      const group = this.$refs.ruedaGroup;
+      if (!group) return;
+      while (group.firstChild) group.removeChild(group.firstChild);
+      const svgNS = 'http://www.w3.org/2000/svg';
+      this.rueda.pilares.forEach((pilar, i) => {
+        const sector = document.createElementNS(svgNS, 'path');
+        sector.setAttribute('d', this.sectorPath(i));
+        sector.setAttribute('class', 'wheel-segment' + (this.ruedaSelectedIndex === i ? ' active' : ''));
+        sector.addEventListener('click', () => { this.ruedaSelectedIndex = i; });
+        group.appendChild(sector);
+
+        const line = document.createElementNS(svgNS, 'line');
+        line.setAttribute('x1', 200); line.setAttribute('y1', 200);
+        line.setAttribute('x2', 200 + 180 * Math.cos(this.toRad(this.anguloPilarCentro(i))));
+        line.setAttribute('y2', 200 + 180 * Math.sin(this.toRad(this.anguloPilarCentro(i))));
+        line.setAttribute('class', 'wheel-axis');
+        line.setAttribute('style', 'pointer-events:none');
+        group.appendChild(line);
+
+        const label = document.createElementNS(svgNS, 'text');
+        label.setAttribute('x', this.labelX(i));
+        label.setAttribute('y', this.labelY(i));
+        label.setAttribute('class', 'wheel-label');
+        label.setAttribute('style', 'pointer-events:none; fill:' + (this.ruedaSelectedIndex === i ? 'var(--pv-navy)' : 'var(--pv-ink)'));
+        label.textContent = pilar.nombre;
+        group.appendChild(label);
+      });
+
+      const polygon = document.createElementNS(svgNS, 'polygon');
+      const points = this.rueda.pilares.map((p, i) => `${this.pointX(i, p.valor)},${this.pointY(i, p.valor)}`).join(' ');
+      polygon.setAttribute('points', points);
+      polygon.setAttribute('class', 'wheel-value-line');
+      polygon.setAttribute('style', 'pointer-events:none');
+      group.appendChild(polygon);
+
+      this.rueda.pilares.forEach((pilar, i) => {
+        const dot = document.createElementNS(svgNS, 'circle');
+        dot.setAttribute('cx', this.pointX(i, pilar.valor));
+        dot.setAttribute('cy', this.pointY(i, pilar.valor));
+        dot.setAttribute('r', 5);
+        dot.setAttribute('class', 'wheel-value-dot');
+        dot.setAttribute('style', 'pointer-events:none');
+        group.appendChild(dot);
+      });
+    },
+
+    onRuedaValorChange() {
+      const clon = JSON.parse(JSON.stringify(this.rueda));
+      MisPliegues.saveRueda(clon);
+      this.rueda = clon;
+    },
+    guardarRueda() {
+      const clon = JSON.parse(JSON.stringify(this.rueda));
+      const ok = MisPliegues.saveRueda(clon);
+      this.rueda = clon;
+      this.showToast(ok ? '✓ Rueda guardada' : 'Error al guardar', ok ? 'var(--pv-mint)' : 'var(--pv-coral)');
+    },
+    resetRueda() {
+      if (!confirm('¿Reiniciar todos los valores a 5?')) return;
+      const clon = JSON.parse(JSON.stringify(this.rueda));
+      clon.pilares.forEach(p => p.valor = 5);
+      MisPliegues.saveRueda(clon);
+      this.rueda = clon;
+    },
+
+    // ====================================================
+    // NEUROPLIEGUES
+    // ====================================================
+    get neuropliegueActivoData() {
+      return this.neuropliegues.find(n => n.id === this.neuropliegueActivo);
+    },
+    get herramientaActivaData() {
+      const np = this.neuropliegueActivoData;
+      if (!np) return null;
+      return np.herramientas.find(h => h.id === this.herramientaActiva);
+    },
+
+    findNeuropliegueById(id) { return this.neuropliegues.find(n => n.id === id); },
+    findHerramientaById(neuropliegueId, herramientaId) {
+      const np = this.findNeuropliegueById(neuropliegueId);
+      return np ? np.herramientas.find(h => h.id === herramientaId) : null;
+    },
+
+    abrirNeuropliegue(id) {
+      const np = this.findNeuropliegueById(id);
+      if (!np || np.proximamente) {
+        this.showToast('Esta sección estará disponible próximamente', 'var(--pv-amber)');
+        return;
+      }
+      this.vista = 'neuropliegues';
+      history.replaceState(null, '', '#neuropliegues');
+      this.neuropliegueActivo = id;
+      this.herramientaActiva = null;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    abrirHerramienta(herramientaId) {
+      this.herramientaActiva = herramientaId;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    // ----- Modal de aplicación -----
+    get aplicacionNeuropliegueData() {
+      return this.findNeuropliegueById(this.aplicacionNeuropliegueId);
+    },
+    get aplicacionHerramientaData() {
+      return this.findHerramientaById(this.aplicacionNeuropliegueId, this.aplicacionHerramientaId);
+    },
+    get aplicacionFormValida() {
+      const campos = this.aplicacionHerramientaData?.formularioAplicacion?.campos || [];
+      // Al menos el primer campo debe estar lleno (los demás son opcionales)
+      if (!campos.length) return true;
+      return !!(this.aplicacionFormData[campos[0].id] || '').trim();
+    },
+    get habitoSugeridoGenerado() {
+      const tpl = this.aplicacionHerramientaData?.formularioAplicacion?.habitoSugerido || '';
+      const campos = this.aplicacionHerramientaData?.formularioAplicacion?.campos || [];
+      let resultado = tpl;
+      campos.forEach(c => {
+        const valor = (this.aplicacionFormData[c.id] || '').trim();
+        // Reemplaza [Label original] y [id] por valor
+        resultado = resultado.replace(`[${c.label}]`, valor || `[${c.label}]`);
+      });
+      // Reemplazos simbólicos comunes
+      campos.forEach(c => {
+        const valor = (this.aplicacionFormData[c.id] || '').trim();
+        const tokens = {
+          'accion': 'acción',
+          'cuando': 'Cuándo',
+          'entonces': 'Entonces',
+          'que': 'Qué',
+          'donde': 'Dónde',
+          'habito': 'Hábito',
+          'objeto': 'objeto',
+          'lugar': 'lugar',
+          'habito_viejo': 'hábito viejo',
+          'habito_nuevo': 'hábito nuevo',
+          'partner': 'partner',
+          'compromiso': 'compromiso',
+          'habito_original': 'Hábito original',
+          'version_absurda': 'Versión absurda',
+          'meta_dias': 'Meta días',
+          'habito_100': 'Habito 100%',
+          'habito_50': 'Habito 50%',
+          'identidad': 'identidad',
+          'voto': 'Voto',
+          'narrativa_vieja': 'Narrativa vieja',
+          'narrativa_nueva': 'Narrativa nueva',
+          'referente': 'referente',
+          'por_que': 'Por qué',
+          'pregunta': 'Pregunta clave'
+        };
+        const placeholder = tokens[c.id];
+        if (placeholder) {
+          resultado = resultado.split(`[${placeholder}]`).join(valor || `[${placeholder}]`);
+        }
+      });
+      return resultado;
+    },
+
+    abrirModalAplicacion(neuropliegueId, herramientaId) {
+      this.aplicacionNeuropliegueId = neuropliegueId;
+      this.aplicacionHerramientaId = herramientaId;
+      // Si ya tiene aplicación guardada, precarga; si no, vacío
+      const existente = this.plan.herramientas.find(
+        h => h.neuropliegueId === neuropliegueId && h.herramientaId === herramientaId
+      );
+      this.aplicacionFormData = existente?.aplicacion?.campos ? { ...existente.aplicacion.campos } : {};
+      this.aplicacionExitosa = false;
+      this.modalAplicacion = true;
+    },
+
+    cerrarModalAplicacion() {
+      this.modalAplicacion = false;
+      this.aplicacionExitosa = false;
+      this.aplicacionFormData = {};
+      this.aplicacionNeuropliegueId = null;
+      this.aplicacionHerramientaId = null;
+    },
+
+    guardarAplicacion() {
+      if (!this.aplicacionFormValida) return;
+      const aplicacion = {
+        campos: { ...this.aplicacionFormData },
+        habitoSugerido: this.habitoSugeridoGenerado,
+        fechaAplicacion: new Date().toISOString()
+      };
+      const clon = JSON.parse(JSON.stringify(this.plan));
+      MisPliegues.agregarHerramientaAlPlan(
+        clon, this.aplicacionNeuropliegueId, this.aplicacionHerramientaId, 'aplicando', aplicacion
+      );
+      this.plan = clon;
+      MisPliegues.savePlan(clon);
+      this.aplicacionExitosa = true;
+    },
+
+    irAlTrackerConHabito() {
+      const sugerido = this.habitoSugeridoGenerado;
+      const np = this.aplicacionNeuropliegueId;
+      // Buscar pilar relacionado con el neuropliegue (asignación lógica)
+      const pilarPorNp = {
+        'reducir_friccion': 'autodisciplina',
+        'disenar_entorno': 'ambiente',
+        'empezar_pequeno': 'desarrollo_personal',
+        'construir_identidad': 'desarrollo_personal',
+        'gestiona_cerebro': 'salud_mental'
+      };
+      this.nuevoHabitoNombre = sugerido;
+      this.nuevoHabitoPilar = pilarPorNp[np] || '';
+      this.cerrarModalAplicacion();
+      this.cambiarVista('tracker');
+      setTimeout(() => {
+        this.modalNuevoHabito = true;
+        this.$nextTick(() => this.$refs.nuevoHabitoInput?.focus());
+      }, 350);
+    },
+
+    toggleEnPlan(neuropliegueId, herramientaId) {
+      const clon = JSON.parse(JSON.stringify(this.plan));
+      if (MisPliegues.estaEnPlan(clon, neuropliegueId, herramientaId)) {
+        MisPliegues.quitarHerramientaDelPlan(clon, neuropliegueId, herramientaId);
+        this.showToast('Herramienta retirada del plan', 'var(--pv-ink-soft)');
+      } else {
+        MisPliegues.agregarHerramientaAlPlan(clon, neuropliegueId, herramientaId, 'guardado');
+        this.showToast('✓ Guardada en Mi Plan', 'var(--pv-mint)');
+      }
+      this.plan = clon;
+      MisPliegues.savePlan(clon);
+    },
+
+    estaEnPlanLocal(neuropliegueId, herramientaId) {
+      return MisPliegues.estaEnPlan(this.plan, neuropliegueId, herramientaId);
+    },
+
+    formatFecha(iso) {
+      if (!iso) return '';
+      return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
+
+    // ====================================================
+    // TRACKER
+    // ====================================================
+    get esMesActual() { return MisPliegues.getMesActual() === this.mesActivo; },
+    get diaHoy() { return this.esMesActual ? MisPliegues.getDiaActual() : '–'; },
+    get diasMes() { return MisPliegues.getDiasDelMes(this.mesActivo); },
+    get diasArray() { return Array.from({ length: this.diasMes }, (_, i) => i + 1); },
+    get habitoSeleccionado() { return this.tracker.habitos.find(h => h.id === this.habitoActivo); },
+    get metaMes() { return this.tracker.metas[this.mesActivo] || ''; },
+    set metaMes(v) { this.tracker.metas[this.mesActivo] = v; },
+    get notasMes() { return this.tracker.notas[this.mesActivo] || ''; },
+    set notasMes(v) { this.tracker.notas[this.mesActivo] = v; },
+    get resumenMes() { return MisPliegues.getResumenMes(this.tracker, this.mesActivo); },
+    get totalHabitos() { return this.tracker.habitos.length; },
+    get tieneTracker() { return this.tracker.habitos.length > 0; },
+    get diasCumplidos() {
+      const stats = MisPliegues.getResumenMes(this.tracker, MisPliegues.getMesActual());
+      return stats.reduce((acc, s) => acc + s.done, 0);
+    },
+    get mesesDelAnio() {
+      const [year] = this.mesActivo.split('-').map(Number);
+      const cortos = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      return cortos.map((label, idx) => {
+        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;
+        const stats = MisPliegues.getResumenMes(this.tracker, key);
+        const totalDone = stats.reduce((acc, s) => acc + s.done, 0);
+        const totalPosible = stats.reduce((acc, s) => acc + s.dias, 0);
+        const pct = totalPosible > 0 ? totalDone / totalPosible : 0;
+        const color = this.lerpColor('#f5f0e8', '#4a9a73', Math.min(1, pct));
+        const textColor = pct > 0.5 ? '#fff' : '#2a2a2a';
+        return { key, label, nombre: this.nombreMes(key), totalDone, color, textColor };
+      });
+    },
+    nombreMes(key) {
+      if (!key) return '';
+      const [year, month] = key.split('-').map(Number);
+      const nombres = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      return `${nombres[month - 1]} ${year}`;
+    },
+    cambiarMes(delta) {
+      const [year, month] = this.mesActivo.split('-').map(Number);
+      const d = new Date(year, month - 1 + delta, 1);
+      this.mesActivo = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    },
+    contarDias(habitoId, estado) {
+      if (!habitoId) return 0;
+      const reg = this.tracker.registros[this.mesActivo]?.[habitoId] || {};
+      return Object.values(reg).filter(v => v === estado).length;
+    },
+
+    anguloDia(dia) {
+      const angleStep = 360 / this.diasMes;
+      return -90 - (angleStep / 2) + (dia * angleStep);
+    },
+    cellPath(dia) {
+      const angleStep = 360 / this.diasMes;
+      const startAngle = this.anguloDia(dia) - angleStep / 2;
+      const endAngle = this.anguloDia(dia) + angleStep / 2;
+      const rIn = 70, rOut = 175;
+      const x1 = 200 + rIn * Math.cos(this.toRad(startAngle));
+      const y1 = 200 + rIn * Math.sin(this.toRad(startAngle));
+      const x2 = 200 + rOut * Math.cos(this.toRad(startAngle));
+      const y2 = 200 + rOut * Math.sin(this.toRad(startAngle));
+      const x3 = 200 + rOut * Math.cos(this.toRad(endAngle));
+      const y3 = 200 + rOut * Math.sin(this.toRad(endAngle));
+      const x4 = 200 + rIn * Math.cos(this.toRad(endAngle));
+      const y4 = 200 + rIn * Math.sin(this.toRad(endAngle));
+      return `M ${x1} ${y1} L ${x2} ${y2} A ${rOut} ${rOut} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${rIn} ${rIn} 0 0 0 ${x1} ${y1} Z`;
+    },
+    cellLabelX(dia) { return 200 + 195 * Math.cos(this.toRad(this.anguloDia(dia))); },
+    cellLabelY(dia) { return 200 + 195 * Math.sin(this.toRad(this.anguloDia(dia))) + 3; },
+    cellClass(dia) {
+      if (!this.habitoActivo) return 'tracker-cell-empty';
+      const estado = MisPliegues.getEstadoDia(this.tracker, this.habitoActivo, this.mesActivo, dia);
+      const realMes = MisPliegues.getMesActual();
+      const realDia = MisPliegues.getDiaActual();
+      const esFuturo = this.mesActivo > realMes || (this.mesActivo === realMes && dia > realDia);
+      if (estado === 'done') return 'tracker-cell-done';
+      if (estado === 'skip') return 'tracker-cell-skip';
+      if (estado === 'partial') return 'tracker-cell-partial';
+      if (esFuturo) return 'tracker-cell-future';
+      return 'tracker-cell-empty';
+    },
+
+    renderCells() {
+      const group = this.$refs.cellsGroup;
+      if (!group) return;
+      while (group.firstChild) group.removeChild(group.firstChild);
+      const svgNS = 'http://www.w3.org/2000/svg';
+      this.diasArray.forEach(dia => {
+        const cellG = document.createElementNS(svgNS, 'g');
+        const path = document.createElementNS(svgNS, 'path');
+        path.setAttribute('d', this.cellPath(dia));
+        path.setAttribute('class', 'tracker-cell ' + this.cellClass(dia));
+        path.addEventListener('click', () => this.ciclarDia(dia));
+        cellG.appendChild(path);
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', this.cellLabelX(dia));
+        text.setAttribute('y', this.cellLabelY(dia));
+        text.setAttribute('class', 'tracker-day-label');
+        text.setAttribute('style', 'pointer-events: none;');
+        text.textContent = dia;
+        cellG.appendChild(text);
+        group.appendChild(cellG);
+      });
+    },
+
+    ciclarDia(dia) {
+      if (!this.habitoActivo) {
+        this.showToast('Primero crea o selecciona un hábito', 'var(--pv-amber)');
+        return;
+      }
+      const realMes = MisPliegues.getMesActual();
+      const realDia = MisPliegues.getDiaActual();
+      const esFuturo = this.mesActivo > realMes || (this.mesActivo === realMes && dia > realDia);
+      if (esFuturo) {
+        this.showToast('No puedes marcar días futuros', 'var(--pv-amber)');
+        return;
+      }
+      const estadoActual = MisPliegues.getEstadoDia(this.tracker, this.habitoActivo, this.mesActivo, dia);
+      const orden = ['empty', 'done', 'partial', 'skip'];
+      const idx = orden.indexOf(estadoActual);
+      const nuevoEstado = orden[(idx + 1) % orden.length];
+      this.aplicarEstado(this.habitoActivo, this.mesActivo, dia, nuevoEstado);
+    },
+
+    marcarHoy(estado) {
+      if (!this.habitoActivo) { this.showToast('Primero crea un hábito', 'var(--pv-amber)'); return; }
+      const realMes = MisPliegues.getMesActual();
+      if (this.mesActivo !== realMes) this.mesActivo = realMes;
+      const dia = MisPliegues.getDiaActual();
+      this.aplicarEstado(this.habitoActivo, realMes, dia, estado);
+      const labels = { done: '✓ Cumplido', partial: '◐ A medias', skip: '✗ No cumplí' };
+      const colors = { done: 'var(--pv-mint)', partial: 'var(--pv-amber)', skip: 'var(--pv-coral)' };
+      this.showToast(labels[estado] || 'Actualizado', colors[estado]);
+    },
+
+    aplicarEstado(habitoId, mes, dia, estado) {
+      const nuevosRegistros = JSON.parse(JSON.stringify(this.tracker.registros || {}));
+      if (!nuevosRegistros[mes]) nuevosRegistros[mes] = {};
+      if (!nuevosRegistros[mes][habitoId]) nuevosRegistros[mes][habitoId] = {};
+      if (estado === 'empty' || estado === null) {
+        delete nuevosRegistros[mes][habitoId][dia];
+        if (Object.keys(nuevosRegistros[mes][habitoId]).length === 0) delete nuevosRegistros[mes][habitoId];
+        if (Object.keys(nuevosRegistros[mes]).length === 0) delete nuevosRegistros[mes];
+      } else {
+        nuevosRegistros[mes][habitoId][dia] = estado;
+      }
+      this.tracker = { ...this.tracker, registros: nuevosRegistros };
+      this.guardarTracker();
+    },
+
+    abrirNuevoHabito() {
+      this.modalNuevoHabito = true;
+      this.nuevoHabitoNombre = '';
+      this.$nextTick(() => this.$refs.nuevoHabitoInput?.focus());
+    },
+    confirmarNuevoHabito() {
+      if (!this.nuevoHabitoNombre.trim()) return;
+      const clon = JSON.parse(JSON.stringify(this.tracker));
+      const id = MisPliegues.agregarHabito(clon, this.nuevoHabitoNombre.trim(), this.nuevoHabitoPilar);
+      this.tracker = clon;
+      this.guardarTracker();
+      this.habitoActivo = id;
+      this.modalNuevoHabito = false;
+      this.nuevoHabitoNombre = '';
+      this.nuevoHabitoPilar = '';
+      this.showToast('✓ Hábito creado', 'var(--pv-mint)');
+    },
+    eliminarHabito(id) {
+      if (!confirm('¿Eliminar este hábito y todo su historial?')) return;
+      const clon = JSON.parse(JSON.stringify(this.tracker));
+      MisPliegues.eliminarHabito(clon, id);
+      this.tracker = clon;
+      if (this.habitoActivo === id) this.habitoActivo = this.tracker.habitos[0]?.id || null;
+      this.guardarTracker();
+    },
+    guardarTracker() { MisPliegues.saveTracker(this.tracker); },
+
+    showToast(message, color) {
+      this.toastMessage = message;
+      this.toastColor = color || 'var(--pv-navy)';
+      this.toastVisible = true;
+      setTimeout(() => { this.toastVisible = false; }, 2200);
+    },
+    lerpColor(a, b, t) {
+      const ah = parseInt(a.replace('#', ''), 16);
+      const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab_ = ah & 0xff;
+      const bh = parseInt(b.replace('#', ''), 16);
+      const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
+      const rr = Math.round(ar + (br - ar) * t);
+      const rg = Math.round(ag + (bg - ag) * t);
+      const rb = Math.round(ab_ + (bb - ab_) * t);
+      return `rgb(${rr},${rg},${rb})`;
+    }
+  };
+}
+</script>
+
+<style>
+  [x-cloak] { display: none !important; }
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>
+
+</body>
+</html>

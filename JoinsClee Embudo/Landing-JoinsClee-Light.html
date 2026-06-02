@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#FFFFFF" />
+  <title>JOINSCLEE · Implementamos tu Funnel y CRM de Ventas</title>
+  <meta name="description" content="Implementamos tu funnel y CRM de ventas para ayudarte a organizar, automatizar y escalar tu negocio. Diagnóstico gratuito incluido." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="icon" type="image/png" href="https://vibe.filesafe.space/1779853814963839930/attachments/5498cf53-d1d5-4dc8-ae73-977545f788d3.png" />
+
+  <meta property="og:title" content="JOINSCLEE · Funnels y CRM de Ventas" />
+  <meta property="og:description" content="Implementamos tu funnel y CRM de ventas para ayudarte a organizar, automatizar y escalar." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/68e8a4f135e8693434043962.png" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'jc-bg': '#FFFFFF', 'jc-card': '#F8FAFC', 'jc-border': '#E2E8F0',
+            'jc-muted': '#64748B', 'jc-fg': '#0F172A',
+            'jc-primary': '#0070F3', 'jc-secondary': '#0057B3'
+          },
+          fontFamily: {
+            display: ['"Instrument Sans"','Inter','system-ui','sans-serif'],
+            serif: ['"Instrument Serif"','"Times New Roman"','Georgia','serif'],
+            sans: ['"Plus Jakarta Sans"','Inter','system-ui','sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    html { scroll-behavior: smooth; }
+    html, body { background-color: #FFFFFF; color: #0F172A; }
+    body { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+    .text-balance { text-wrap: balance; }
+
+    .bg-grid {
+      background-image:
+        radial-gradient(ellipse 70% 60% at 50% -10%, rgba(0,112,243,0.08), transparent 65%),
+        radial-gradient(circle at 1px 1px, rgba(0,112,243,0.06) 1px, transparent 0);
+      background-size: auto, 32px 32px;
+    }
+    .glow-divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #0070F3 50%, transparent);
+      box-shadow: 0 0 16px rgba(0,112,243,0.35);
+      filter: drop-shadow(0 0 6px rgba(0,112,243,0.25));
+    }
+    .cta-button {
+      background: linear-gradient(180deg, #0070F3 0%, #0057B3 100%);
+      border: 1px solid #0070F3;
+      box-shadow: 0 12px 28px -6px rgba(0,112,243,0.35), 0 0 0 1px rgba(0,112,243,0.1), inset 0 1px 0 rgba(255,255,255,0.18);
+      transition: all .35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative; overflow: hidden;
+    }
+    .cta-button::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+      opacity: 0; transition: opacity .35s ease;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 0 6px rgba(0,112,243,0.12), 0 18px 40px -10px rgba(0,112,243,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .cta-button:hover::before { opacity: 1; }
+    .card-base {
+      background: linear-gradient(180deg, #FFFFFF, #F8FAFC);
+      border: 1px solid rgba(15,23,42,0.08);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      transition: border-color .3s ease, transform .3s ease, background .3s ease, box-shadow .3s ease;
+    }
+    .card-base:hover {
+      border-color: rgba(0,112,243,0.35);
+      transform: translateY(-2px);
+      background: linear-gradient(180deg, #FFFFFF, rgba(0,112,243,0.03));
+      box-shadow: 0 12px 28px -8px rgba(0,112,243,0.18), 0 2px 4px rgba(15,23,42,0.04);
+    }
+    .eyebrow { display: inline-flex; align-items: center; gap: 14px; }
+    .eyebrow::before, .eyebrow::after {
+      content: ''; width: 32px; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(0,112,243,0.7), transparent);
+    }
+    .hl {
+      background: linear-gradient(180deg, #60A5FA 0%, #0070F3 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      font-family: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+      font-style: italic;
+      font-weight: 400;
+    }
+    .status-dot-sm {
+      width: 5px; height: 5px; border-radius: 9999px; background: #4ADE80;
+      box-shadow: 0 0 6px rgba(74,222,128,0.6);
+      animation: pulse 2.4s ease-in-out infinite;
+      opacity: 0.85;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+    .guarantee-chip {
+      background: linear-gradient(180deg, rgba(0,112,243,0.08), rgba(0,112,243,0.02));
+      border: 1px solid rgba(0,112,243,0.25);
+    }
+
+    .hero-orb {
+      position: absolute; inset: -20% -10% auto auto; width: 60vw; height: 60vw;
+      background: radial-gradient(circle at center, rgba(0,112,243,0.12), transparent 60%);
+      filter: blur(40px); pointer-events: none; z-index: 0;
+    }
+
+    .pain-row { transition: transform .25s ease, background .25s ease; }
+    .pain-row:hover { transform: translateX(4px); background: rgba(0,112,243,0.05); }
+
+    /* Animations */
+    .fade-up { opacity: 0; transform: translateY(24px); transition: opacity .85s cubic-bezier(0.16,1,0.3,1), transform .85s cubic-bezier(0.16,1,0.3,1); }
+    .fade-up.is-visible { opacity: 1; transform: translateY(0); }
+    .fade-up.delay-1 { transition-delay: .08s; }
+    .fade-up.delay-2 { transition-delay: .16s; }
+    .fade-up.delay-3 { transition-delay: .24s; }
+
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .float-slow { animation: float 7s ease-in-out infinite; }
+
+    @keyframes cta-glow-pulse {
+      0%, 100% { box-shadow: 0 12px 28px -6px rgba(0,112,243,0.35), 0 0 0 0 rgba(0,112,243,0.35), inset 0 1px 0 rgba(255,255,255,0.18); }
+      50% { box-shadow: 0 12px 28px -6px rgba(0,112,243,0.35), 0 0 0 14px rgba(0,112,243,0), inset 0 1px 0 rgba(255,255,255,0.18); }
+    }
+    .cta-button.cta-pulse { animation: cta-glow-pulse 2.8s ease-out infinite; }
+
+    .mockup-frame { transition: transform .6s cubic-bezier(0.16,1,0.3,1); }
+    .mockup-frame:hover { transform: translateY(-6px) scale(1.01); }
+
+    /* Marquee */
+    .marquee { overflow: hidden; mask-image: linear-gradient(to right, transparent, #fff 8%, #fff 92%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, #fff 8%, #fff 92%, transparent); }
+    .marquee-track { display: flex; gap: 3rem; width: max-content; animation: marquee 50s linear infinite; align-items: center; }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+    .marquee:hover .marquee-track { animation-play-state: paused; }
+
+    .tool-chip {
+      display: inline-flex; align-items: center; gap: 14px;
+      padding: 14px 24px; border-radius: 14px;
+      background: linear-gradient(180deg, #FFFFFF, #F8FAFC);
+      border: 1px solid rgba(15,23,42,0.08);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      transition: all .3s ease;
+      min-height: 64px;
+      white-space: nowrap;
+    }
+    .tool-chip:hover {
+      border-color: rgba(0,112,243,0.4);
+      background: linear-gradient(180deg, #FFFFFF, rgba(0,112,243,0.03));
+      box-shadow: 0 8px 20px -6px rgba(0,112,243,0.2);
+    }
+    .tool-chip svg, .tool-chip img {
+      height: 28px; width: auto; max-width: 110px; object-fit: contain; flex-shrink: 0;
+      color: #0F172A;
+      transition: filter .3s ease, transform .3s ease;
+    }
+    .tool-chip img {
+      filter: brightness(0) opacity(0.75);
+    }
+    .tool-chip:hover img {
+      filter: brightness(0) opacity(1) drop-shadow(0 0 4px rgba(0,112,243,0.4));
+    }
+    .tool-chip:hover svg {
+      color: #0070F3;
+      filter: drop-shadow(0 0 4px rgba(0,112,243,0.3));
+    }
+    .tool-chip .tool-name {
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 1rem; font-weight: 500; letter-spacing: 0.02em;
+      color: #0F172A;
+    }
+
+    /* Funnel tabs */
+    .funnel-tab {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px; border-radius: 14px;
+      background: linear-gradient(180deg, #FFFFFF, #F8FAFC);
+      border: 1px solid rgba(15,23,42,0.08);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      cursor: pointer; transition: all .3s ease;
+      font-family: 'Instrument Sans', sans-serif;
+      font-size: 0.92rem; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: rgba(15,23,42,0.6);
+    }
+    .funnel-tab:hover {
+      border-color: rgba(0,112,243,0.35);
+      color: rgba(15,23,42,0.9);
+    }
+    .funnel-tab.is-active {
+      background: linear-gradient(180deg, rgba(0,112,243,0.08), rgba(0,112,243,0.02));
+      border-color: #0070F3;
+      color: #0070F3;
+      box-shadow: 0 0 0 1px rgba(0,112,243,0.3), 0 8px 20px -6px rgba(0,112,243,0.2);
+    }
+    .funnel-tab .tab-arrow { opacity: 0.4; transition: opacity .25s ease, transform .25s ease; }
+    .funnel-tab.is-active .tab-arrow { opacity: 1; transform: translateX(2px); }
+
+    .funnel-panel { display: none; }
+    .funnel-panel.is-active { display: block; animation: fadeZoomIn .5s ease-out; }
+    @keyframes fadeZoomIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .float-slow, .play-pulse, .cta-button.cta-pulse, .marquee-track {
+        animation: none !important;
+      }
+      .fade-up { opacity: 1; transform: none; transition: none; }
+      .mockup-frame:hover { transform: none; }
+    }
+
+
+    .video-frame {
+      border: 1px solid rgba(0,112,243,0.25);
+      box-shadow:
+        0 0 60px rgba(0,112,243,0.12),
+        0 24px 60px -16px rgba(15,23,42,0.18),
+        inset 0 0 1px rgba(15,23,42,0.04);
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0,112,243,0.45), 0 0 40px 0 rgba(0,112,243,0.25); }
+      50% { box-shadow: 0 0 0 22px rgba(0,112,243,0), 0 0 60px 0 rgba(0,112,243,0.4); }
+    }
+    .play-pulse { animation: pulse-glow 2.6s ease-out infinite; }
+
+
+    .testimonial-card { transition: transform .35s cubic-bezier(0.16,1,0.3,1); }
+    .testimonial-card:hover .play-btn {
+      box-shadow: 0 0 0 6px rgba(0,112,243,0.15), 0 10px 26px rgba(0,112,243,0.45);
+    }
+    .testimonial-card.is-playing .testimonial-thumb { padding: 0; }
+    .testimonial-card.is-playing { cursor: default; }
+
+
+    .ideal-card {
+      background: linear-gradient(180deg, #FFFFFF, #F8FAFC);
+      border: 1px solid rgba(15,23,42,0.08);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      transition: border-color .3s ease, transform .3s ease, background .3s ease, box-shadow .3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .ideal-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(to right, transparent, rgba(0,112,243,0.5), transparent);
+      opacity: 0; transition: opacity .3s ease;
+    }
+    .ideal-card:hover {
+      border-color: rgba(0,112,243,0.35);
+      transform: translateY(-1px);
+      background: linear-gradient(180deg, #FFFFFF, rgba(0,112,243,0.03));
+      box-shadow: 0 8px 20px -6px rgba(0,112,243,0.15);
+    }
+    .ideal-card:hover::before { opacity: 1; }
+    .ideal-card .check-icon {
+      box-shadow: 0 0 12px rgba(0,112,243,0.12);
+      transition: box-shadow .3s ease, transform .3s ease;
+    }
+    .ideal-card:hover .check-icon {
+      box-shadow: 0 0 18px rgba(0,112,243,0.25);
+      transform: scale(1.05);
+    }
+
+    /* === GHL embed safety: fuerza full-width sin que el builder rompa proporciones === */
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      overflow-x: hidden !important;
+    }
+    .c-section, .c-wrapper, .row-wrapper, .col,
+    .hl_page-creator--row, .full-section,
+    [data-section-id], .c-section-content,
+    .ghl-page, .ghl-section, .funnel-section {
+      max-width: 100% !important;
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    .force-full-width {
+      width: 100vw !important;
+      max-width: 100vw !important;
+      margin-left: calc(50% - 50vw) !important;
+      margin-right: calc(50% - 50vw) !important;
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ HEADER ============ -->
+  <header class="force-full-width sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-jc-border/70">
+    <div class="relative max-w-6xl mx-auto px-6 py-3 flex items-center justify-center">
+      <a href="#" class="flex items-center gap-3 group" aria-label="JoinsClee — inicio">
+        <img src="https://vibe.filesafe.space/1779853814963839930/attachments/5498cf53-d1d5-4dc8-ae73-977545f788d3.png" alt="JoinsClee" class="h-8 w-8 rounded-lg" />
+        <span class="font-display text-2xl tracking-[0.22em] font-medium group-hover:text-jc-primary transition-colors">JOINSCLEE</span>
+      </a>
+      <div class="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-jc-muted/40">
+        <span class="status-dot-sm"></span>
+        <span class="hidden lg:inline">Agenda disponible</span>
+      </div>
+      <a href="#agendar" class="md:hidden absolute right-6 top-1/2 -translate-y-1/2 text-xs uppercase tracking-wider text-jc-primary/80 font-medium">Agendar</a>
+    </div>
+  </header>
+
+  <main class="force-full-width">
+
+    <!-- ============ 1. HERO ============ -->
+    <section class="relative bg-grid pt-5 md:pt-10 pb-14 md:pb-20 overflow-hidden">
+      <div class="hero-orb"></div>
+      <div class="relative max-w-6xl mx-auto px-6 z-10">
+
+        <div class="text-center mb-5 fade-up">
+          <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+            Funnels y CRM de Ventas
+          </span>
+        </div>
+
+        <h1 class="text-center font-serif font-normal text-[1.875rem] sm:text-4xl md:text-[3rem] leading-[1.06] tracking-tight max-w-4xl mx-auto text-balance fade-up delay-1">
+          Implementamos <span class="hl">tu Funnel</span> y CRM de Ventas para ayudarte a organizar, automatizar y <span class="hl">escalar tu negocio</span>.
+        </h1>
+
+        <p class="text-center mt-3 md:mt-4 text-sm md:text-base text-jc-muted/90 max-w-2xl mx-auto leading-relaxed text-balance fade-up delay-2">
+          Ayudamos a empresas, coaches, consultores e infoproductores a optimizar su captación, seguimiento y cierre de ventas mediante funnels, automatización y CRM.
+        </p>
+
+        <div class="mt-6 md:mt-8 flex flex-col items-center gap-4 fade-up delay-2">
+          <a href="#agendar" class="cta-button cta-pulse inline-flex items-center gap-3 text-white font-semibold text-base md:text-lg px-10 py-5 md:px-12 md:py-6 rounded-full">
+            <span>Agenda una Consultoría Gratuita</span>
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+          <div class="inline-flex items-center gap-2 text-[11px] md:text-xs uppercase tracking-[0.25em] text-jc-muted">
+            <svg class="w-3.5 h-3.5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            + Incluye Diagnóstico de tu Negocio (PDF)
+          </div>
+        </div>
+
+        <div class="mt-8 md:mt-12 relative max-w-4xl mx-auto fade-up delay-3">
+          <div class="absolute -inset-4 bg-gradient-to-r from-jc-primary/20 via-jc-primary/10 to-jc-primary/20 blur-3xl opacity-50 pointer-events-none"></div>
+          <!-- VSL video placeholder. Cuando esté el video, reemplazar el div .video-inner por:
+               <iframe src="https://www.loom.com/embed/XXXX?autoplay=1" allow="autoplay; fullscreen" allowfullscreen class="absolute inset-0 w-full h-full"></iframe> -->
+          <div class="relative video-frame rounded-2xl overflow-hidden aspect-video group cursor-pointer" role="button" tabindex="0" aria-label="Reproducir VSL (próximamente)">
+            <div class="video-inner absolute inset-0 bg-gradient-to-br from-[#F1F5F9] via-white to-[#F1F5F9] flex items-center justify-center">
+              <span class="font-display absolute text-[16rem] md:text-[20rem] tracking-tighter font-light text-jc-primary/[0.06] select-none pointer-events-none leading-none">JC</span>
+              <div class="play-pulse relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full bg-jc-primary group-hover:scale-110 transition-transform duration-300">
+                <svg class="w-7 h-7 md:w-8 md:h-8 ml-1 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 px-6 pb-4 pt-12 bg-gradient-to-t from-black/60 to-transparent text-center">
+                <p class="text-[10px] md:text-xs uppercase tracking-[0.28em] text-jc-muted">
+                  Video VSL · Próximamente
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 2. DOLORES ============ -->
+    <section class="relative py-20 md:py-28 border-t border-jc-border/30 bg-gradient-to-b from-jc-bg to-[#F1F5F9]">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-12 md:mb-16 fade-up">
+          <p class="text-base md:text-lg text-jc-muted/80 max-w-2xl mx-auto leading-relaxed text-balance italic mb-6 md:mb-8">
+            Muchos negocios que venden servicios, mentorías o programas online pierden oportunidades por no tener un sistema de ventas organizado.
+          </p>
+          <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+            El problema
+          </span>
+          <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[2.75rem] leading-[1.1] tracking-tight max-w-3xl mx-auto text-balance">
+            ¿Tu negocio está creciendo, pero tu proceso de ventas <span class="hl">sigue siendo un caos</span>?
+          </h2>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3 md:gap-4 max-w-4xl mx-auto fade-up">
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">Leads que llegan y nunca reciben seguimiento</span>
+          </div>
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">Conversaciones perdidas entre WhatsApp, Instagram y formularios</span>
+          </div>
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">Prospectos interesados que desaparecen por falta de seguimiento</span>
+          </div>
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">Equipos de ventas desorganizados y sin procesos claros</span>
+          </div>
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">Mucho trabajo manual y poca automatización</span>
+          </div>
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">No sabes en qué etapa se encuentra cada prospecto</span>
+          </div>
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">Dependencia total de responder manualmente para vender</span>
+          </div>
+          <div class="pain-row flex items-start gap-4 p-5 rounded-xl border border-jc-border/40">
+            <svg class="w-5 h-5 mt-0.5 flex-shrink-0 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <span class="text-sm md:text-base text-jc-fg/90">Procesos difíciles de escalar</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 3. SOLUCIÓN (6 cards con mockups) ============ -->
+    <section class="relative py-20 md:py-28 border-t border-jc-border/30 bg-grid">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-14 md:mb-20 fade-up">
+          <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+            La solución
+          </span>
+          <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[2.75rem] leading-[1.1] tracking-tight max-w-3xl mx-auto text-balance">
+            Construimos un <span class="hl">sistema de ventas automatizado</span> para tu negocio.
+          </h2>
+          <p class="mt-6 text-base md:text-lg text-jc-muted/90 max-w-2xl mx-auto leading-relaxed text-balance">
+            Implementamos funnels, CRM y automatizaciones que te ayudan a captar leads, dar seguimiento y convertir más clientes de manera organizada y escalable.
+          </p>
+          <p class="mt-8 md:mt-10 font-display uppercase tracking-[0.18em] text-sm md:text-base text-jc-fg/80 font-medium">
+            Menos desorden. Más automatización. <span class="hl">Más ventas</span>.
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 fade-up">
+          <!-- Card 1: CRM DE VENTAS -->
+          <div class="card-base rounded-2xl overflow-hidden flex flex-col group">
+            <div class="aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#F1F5F9] to-white">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/05/macbookproiphone13mockup1fp-1.png" alt="CRM de Ventas" loading="lazy" class="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-6 md:p-7 border-t border-jc-border/40">
+              <div class="w-10 h-10 rounded-lg bg-jc-primary/10 border border-jc-primary/30 flex items-center justify-center mb-4">
+                <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+              <h3 class="font-display text-base uppercase tracking-[0.08em] font-bold mb-3">CRM de Ventas</h3>
+              <p class="text-sm text-jc-muted leading-relaxed">Centraliza tu base de datos de clientes de redes sociales y leads en una sola plataforma para una gestión más eficiente.</p>
+            </div>
+          </div>
+
+          <!-- Card 2: FUNNELS Y LANDING PAGES -->
+          <div class="card-base rounded-2xl overflow-hidden flex flex-col group">
+            <div class="aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#F1F5F9] to-white">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2023/03/NEW-rm355-pf-s73-card-laptop-01-mockup-1.png" alt="Funnels y Landing Pages" loading="lazy" class="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-6 md:p-7 border-t border-jc-border/40">
+              <div class="w-10 h-10 rounded-lg bg-jc-primary/10 border border-jc-primary/30 flex items-center justify-center mb-4">
+                <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+              </div>
+              <h3 class="font-display text-base uppercase tracking-[0.08em] font-bold mb-3">Funnels y Landing Pages</h3>
+              <p class="text-sm text-jc-muted leading-relaxed">Diseño de alta conversión para guiar a tus leads a través de un proceso de ventas efectivo y aumenta tus conversiones.</p>
+            </div>
+          </div>
+
+          <!-- Card 3: WHATSAPP AL CRM -->
+          <div class="card-base rounded-2xl overflow-hidden flex flex-col group">
+            <div class="aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#F1F5F9] to-white">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/11/ANUNCIOS-CRM-LEADPILOT360-e1731695903882-1024x727.png" alt="Integración WhatsApp al CRM" loading="lazy" class="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-6 md:p-7 border-t border-jc-border/40">
+              <div class="w-10 h-10 rounded-lg bg-jc-primary/10 border border-jc-primary/30 flex items-center justify-center mb-4">
+                <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </div>
+              <h3 class="font-display text-base uppercase tracking-[0.08em] font-bold mb-3">Integración de WhatsApp al CRM</h3>
+              <p class="text-sm text-jc-muted leading-relaxed">Asigna clientes a vendedores y mejora la colaboración entre equipos para un seguimiento efectivo.</p>
+            </div>
+          </div>
+
+          <!-- Card 4: AUTOMATIZACIÓN -->
+          <div class="card-base rounded-2xl overflow-hidden flex flex-col group">
+            <div class="aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#F1F5F9] to-white">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/05/MacBook-Pro-16sss-1024x709.png" alt="Automatización de proceso de ventas" loading="lazy" class="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-6 md:p-7 border-t border-jc-border/40">
+              <div class="w-10 h-10 rounded-lg bg-jc-primary/10 border border-jc-primary/30 flex items-center justify-center mb-4">
+                <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              </div>
+              <h3 class="font-display text-base uppercase tracking-[0.08em] font-bold mb-3">Automatización de Proceso de Ventas</h3>
+              <p class="text-sm text-jc-muted leading-relaxed">Automatización de funnels y tareas repetitivas, maximiza tu productividad y seguimiento de leads sin intervención manual.</p>
+            </div>
+          </div>
+
+          <!-- Card 5: APLICACIÓN MÓVIL -->
+          <div class="card-base rounded-2xl overflow-hidden flex flex-col group">
+            <div class="aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#F1F5F9] to-white">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/11/66c72c768c2d0136132052e5-2-768x1024.png" alt="Aplicación móvil del CRM" loading="lazy" class="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-6 md:p-7 border-t border-jc-border/40">
+              <div class="w-10 h-10 rounded-lg bg-jc-primary/10 border border-jc-primary/30 flex items-center justify-center mb-4">
+                <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              </div>
+              <h3 class="font-display text-base uppercase tracking-[0.08em] font-bold mb-3">Aplicación Móvil del CRM</h3>
+              <p class="text-sm text-jc-muted leading-relaxed">¡Tu marketing a una sola descarga de tu aplicación móvil! Visualización CRM de Ventas y seguimiento de clientes potenciales.</p>
+            </div>
+          </div>
+
+          <!-- Card 6: CALENDARIO INTELIGENTE -->
+          <div class="card-base rounded-2xl overflow-hidden flex flex-col group">
+            <div class="aspect-[4/3] overflow-hidden bg-gradient-to-br from-[#F1F5F9] to-white">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2025/03/MyMarketing_calendario-1-2048x1541-1-1-1024x771.png" alt="Calendario inteligente" loading="lazy" class="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            <div class="p-6 md:p-7 border-t border-jc-border/40">
+              <div class="w-10 h-10 rounded-lg bg-jc-primary/10 border border-jc-primary/30 flex items-center justify-center mb-4">
+                <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <h3 class="font-display text-base uppercase tracking-[0.08em] font-bold mb-3">Recordatorio Automático de Citas</h3>
+              <p class="text-sm text-jc-muted leading-relaxed">Calendario inteligente que elimina las no-asistencias con recordatorios automáticos. Optimiza tu tiempo y mejora la experiencia del cliente.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. TRANSFORMA + CTA ============ -->
+    <section class="relative py-20 md:py-28 border-t border-jc-border/30">
+      <div class="max-w-4xl mx-auto px-6 text-center fade-up">
+        <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+          El resultado
+        </span>
+        <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[3rem] leading-[1.08] tracking-tight text-balance">
+          Transforma tu <span class="hl">proceso de ventas</span> en un sistema <span class="hl">listo para escalar</span>.
+        </h2>
+        <div class="glow-divider max-w-md mx-auto my-10 md:my-12 rounded-full"></div>
+        <a href="#agendar" class="cta-button inline-flex items-center gap-3 text-white font-semibold text-base md:text-lg px-10 py-5 md:px-12 md:py-6 rounded-full">
+          <span>Agenda una Consultoría Gratuita</span>
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <p class="mt-4 text-[11px] md:text-xs uppercase tracking-[0.28em] text-jc-muted">
+          + Incluye Diagnóstico de tu Negocio (PDF)
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ 5. IDEAL PARA / TRABAJAMOS CON ============ -->
+    <section class="relative py-20 md:py-28 border-t border-jc-border/30 bg-gradient-to-b from-jc-bg to-[#F1F5F9]">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-14 md:mb-16 fade-up">
+          <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+            Trabajamos con
+          </span>
+          <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[2.75rem] leading-[1.1] tracking-tight max-w-3xl mx-auto text-balance">
+            Ideal para negocios que venden <span class="hl">conocimiento, servicios o programas online</span>.
+          </h2>
+          <p class="mt-6 text-base md:text-lg text-jc-muted/90 max-w-2xl mx-auto leading-relaxed text-balance">
+            Ayudamos a coaches, consultores e infoproductores a optimizar su captación, seguimiento y cierre de ventas mediante funnels, automatización y CRM.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 max-w-4xl mx-auto fade-up">
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Coaches y mentores</p>
+          </div>
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Consultores y agencias</p>
+          </div>
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Empresas de servicios</p>
+          </div>
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Infoproductores</p>
+          </div>
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Marcas personales</p>
+          </div>
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Empresas de formación online</p>
+          </div>
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Negocios que venden programas high ticket</p>
+          </div>
+          <div class="ideal-card flex items-center gap-4 p-5 md:p-6 rounded-xl">
+            <div class="check-icon flex-shrink-0 w-11 h-11 rounded-full bg-jc-primary/10 border border-jc-primary/40 flex items-center justify-center">
+              <svg class="w-5 h-5 text-jc-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <p class="font-semibold text-sm md:text-base text-jc-fg/90 leading-tight">Empresas que buscan automatizar su proceso de ventas</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6. FUNNELS (tabs como original) ============ -->
+    <section class="relative py-20 md:py-28 border-t border-jc-border/30">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-12 md:mb-16 fade-up">
+          <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+            Funnels que construimos
+          </span>
+          <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[2.75rem] leading-[1.1] tracking-tight max-w-3xl mx-auto text-balance">
+            Funnels y sistemas adaptados a <span class="hl">tu modelo de negocio</span>.
+          </h2>
+          <p class="mt-4 text-[11px] md:text-xs uppercase tracking-[0.25em] text-jc-muted/70">
+            Haz clic en cada uno para ver el ejemplo
+          </p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 max-w-5xl mx-auto fade-up">
+          <!-- Tabs list (left) -->
+          <div class="flex flex-col gap-3 lg:gap-4 w-full lg:w-1/3">
+            <button class="funnel-tab is-active" data-funnel="captacion">
+              <span>Funnel de Captación</span>
+              <svg class="tab-arrow w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+            <button class="funnel-tab" data-funnel="agendamiento">
+              <span>Funnel de Agendamiento</span>
+              <svg class="tab-arrow w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+            <button class="funnel-tab" data-funnel="webinar">
+              <span>Funnel Webinar</span>
+              <svg class="tab-arrow w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+            <button class="funnel-tab" data-funnel="vsl">
+              <span>Funnel VSL</span>
+              <svg class="tab-arrow w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <!-- Tabs panels (right) -->
+          <div class="card-base w-full lg:w-2/3 rounded-2xl p-4 md:p-8 flex items-center justify-center min-h-[280px] md:min-h-[400px]">
+            <div class="funnel-panel is-active" data-funnel-panel="captacion">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/05/MacBook-Pro-16sss-1024x709.png" alt="Funnel de Captación" loading="lazy" class="w-full object-contain" />
+            </div>
+            <div class="funnel-panel" data-funnel-panel="agendamiento">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/05/HIGH-TICKER-FU-1024x709.png" alt="Funnel de Agendamiento" loading="lazy" class="w-full object-contain" />
+            </div>
+            <div class="funnel-panel" data-funnel-panel="webinar">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/05/DASDASDFREE-1024x709.png" alt="Funnel Webinar" loading="lazy" class="w-full object-contain" />
+            </div>
+            <div class="funnel-panel" data-funnel-panel="vsl">
+              <img src="https://elmeralmeida.com/wp-content/uploads/2024/05/MacBook-Pro-16SS-1024x709.png" alt="Funnel VSL" loading="lazy" class="w-full object-contain" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 7. TESTIMONIOS ============ -->
+    <section class="relative py-20 md:py-28 border-t border-jc-border/30 bg-gradient-to-b from-[#F1F5F9] to-jc-bg">
+      <div class="max-w-6xl mx-auto px-6">
+        <div class="text-center mb-12 md:mb-16 fade-up">
+          <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+            Empresas y marcas que ya están
+          </span>
+          <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[2.75rem] leading-[1.1] tracking-tight max-w-3xl mx-auto text-balance">
+            Automatizando su <span class="hl">proceso de ventas</span> con JoinsClee.
+          </h2>
+          <p class="mt-6 text-base md:text-lg text-jc-muted/90 max-w-2xl mx-auto leading-relaxed text-balance">
+            Resultados reales de negocios que decidieron organizar y escalar sus ventas con funnels y CRM.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-7 max-w-6xl mx-auto fade-up">
+          <div class="testimonial-card group" data-loom-id="4166de74e3644fe49df35ef038f35525">
+            <div class="testimonial-thumb relative aspect-[3/4] overflow-hidden rounded-2xl border border-jc-border/60 cursor-pointer shadow-[0_12px_40px_-8px_rgba(0,0,0,0.4)]" role="button" tabindex="0" aria-label="Reproducir testimonio: Nico Manubens">
+              <img src="https://cdn.loom.com/sessions/thumbnails/4166de74e3644fe49df35ef038f35525-299378b7c527314e.jpg" alt="Testimonio: Nico Manubens" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="play-btn relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/85 bg-white/5 backdrop-blur-sm group-hover:bg-jc-primary group-hover:border-jc-primary group-hover:scale-110 transition-all duration-300">
+                  <svg class="w-8 h-8 md:w-10 md:h-10 ml-1 text-white drop-shadow" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 text-center">
+              <div class="flex justify-center gap-1 mb-3">
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+              <p class="font-serif text-lg md:text-xl font-medium leading-tight">Nico Manubens</p>
+              <p class="mt-1 text-[11px] md:text-xs uppercase tracking-[0.18em] text-jc-muted/80">CEO @ IA LAB</p>
+            </div>
+          </div>
+
+          <div class="testimonial-card group" data-loom-id="db966e3e406f48bea9bb14b6dc2c7d44">
+            <div class="testimonial-thumb relative aspect-[3/4] overflow-hidden rounded-2xl border border-jc-border/60 cursor-pointer shadow-[0_12px_40px_-8px_rgba(0,0,0,0.4)]" role="button" tabindex="0" aria-label="Reproducir testimonio: Andrés Giraldo">
+              <img src="https://cdn.loom.com/sessions/thumbnails/db966e3e406f48bea9bb14b6dc2c7d44-de24c2a2eb4a00a1.jpg" alt="Testimonio: Andrés Giraldo" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="play-btn relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/85 bg-white/5 backdrop-blur-sm group-hover:bg-jc-primary group-hover:border-jc-primary group-hover:scale-110 transition-all duration-300">
+                  <svg class="w-8 h-8 md:w-10 md:h-10 ml-1 text-white drop-shadow" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 text-center">
+              <div class="flex justify-center gap-1 mb-3">
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+              <p class="font-serif text-lg md:text-xl font-medium leading-tight">Andrés Giraldo</p>
+              <p class="mt-1 text-[11px] md:text-xs uppercase tracking-[0.18em] text-jc-muted/80">CEO @ SISTEMA CRECE INMOBILIARIO</p>
+            </div>
+          </div>
+
+          <div class="testimonial-card group" data-loom-id="efe2ec28f8fd4766a1e7211f4fae837a">
+            <div class="testimonial-thumb relative aspect-[3/4] overflow-hidden rounded-2xl border border-jc-border/60 cursor-pointer shadow-[0_12px_40px_-8px_rgba(0,0,0,0.4)]" role="button" tabindex="0" aria-label="Reproducir testimonio: Daniel Felipe Medina">
+              <img src="https://cdn.loom.com/sessions/thumbnails/efe2ec28f8fd4766a1e7211f4fae837a-62650290e25b0784.jpg" alt="Testimonio: Daniel Felipe Medina" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="play-btn relative flex items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/85 bg-white/5 backdrop-blur-sm group-hover:bg-jc-primary group-hover:border-jc-primary group-hover:scale-110 transition-all duration-300">
+                  <svg class="w-8 h-8 md:w-10 md:h-10 ml-1 text-white drop-shadow" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="mt-6 text-center">
+              <div class="flex justify-center gap-1 mb-3">
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="w-4 h-4 text-yellow-400" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+              <p class="font-serif text-lg md:text-xl font-medium leading-tight">Daniel Felipe Medina</p>
+              <p class="mt-1 text-[11px] md:text-xs uppercase tracking-[0.18em] text-jc-muted/80">CEO @ YOUTUBE PRO</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 8. ABOUT ============ -->
+    <section class="relative py-20 md:py-28 border-t border-jc-border/30">
+      <div class="max-w-5xl mx-auto px-6">
+        <div class="grid md:grid-cols-[300px_1fr] gap-10 md:gap-14 items-center fade-up">
+          <div class="relative mx-auto md:mx-0 max-w-[280px]">
+            <div class="absolute -inset-4 bg-jc-primary/12 blur-3xl opacity-40 pointer-events-none"></div>
+            <img src="https://vibe.filesafe.space/1779853814963839930/attachments/dd176251-ab7a-426d-90e5-5f5210df7ec1.png" alt="Cristhian Fonseca · JoinsClee" loading="lazy" class="relative w-full aspect-square rounded-2xl border border-jc-border/40 object-cover shadow-[0_20px_50px_-12px_rgba(0,112,243,0.25),0_4px_12px_-4px_rgba(15,23,42,0.08)]" />
+          </div>
+          <div>
+            <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+              Hola, soy
+            </span>
+            <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[2.75rem] leading-[1.1] tracking-tight">
+              <span class="hl">Cristhian Fonseca</span><br/>de JoinsClee.
+            </h2>
+            <p class="mt-6 text-base md:text-lg text-jc-muted/90 leading-relaxed">
+              Ayudamos a empresas e infoproductores a implementar sistemas de ventas basados en funnels, automatización y CRM para optimizar su captación, seguimiento y conversión de clientes.
+            </p>
+            <p class="mt-4 text-base md:text-lg text-jc-muted/90 leading-relaxed">
+              Diseñamos ecosistemas de ventas enfocados en organizar procesos, automatizar tareas repetitivas y crear una estructura preparada para escalar.
+            </p>
+            <p class="mt-4 text-base md:text-lg text-jc-muted/90 leading-relaxed">
+              Nuestro enfoque combina estrategia, tecnología y automatización para construir sistemas que realmente impulsen el crecimiento de tu negocio.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 9. HERRAMIENTAS ============ -->
+    <section class="relative py-20 md:py-24 border-t border-jc-border/30 overflow-hidden">
+      <div class="max-w-6xl mx-auto px-6 mb-10 md:mb-12">
+        <div class="text-center fade-up">
+          <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+            Herramientas con las que
+          </span>
+          <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[2.5rem] leading-[1.1] tracking-tight">
+            <span class="hl">trabajamos</span>
+          </h2>
+        </div>
+      </div>
+
+      <div class="marquee fade-up">
+        <div class="marquee-track py-4">
+          <div class="tool-chip">
+            <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/6a17c0f65be84ad6401427f3.png" alt="GoHighLevel" loading="lazy" />
+            <span class="tool-name">GoHighLevel</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/6a17c0d8f58810f313a64065.png" alt="Claude Code" loading="lazy" />
+            <span class="tool-name">Claude Code</span>
+          </div>
+          <div class="tool-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><ellipse cx="12" cy="12" rx="9.5" ry="3.5"/><ellipse cx="12" cy="12" rx="9.5" ry="3.5" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9.5" ry="3.5" transform="rotate(120 12 12)"/></svg>
+            <span class="tool-name">Antigravity</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://api.iconify.design/simple-icons/googlegemini.svg" alt="" loading="lazy" width="28" height="28" />
+            <span class="tool-name">Gemini</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://api.iconify.design/simple-icons/zapier.svg" alt="" loading="lazy" width="28" height="28" />
+            <span class="tool-name">Zapier</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://api.iconify.design/simple-icons/make.svg" alt="" loading="lazy" width="28" height="28" />
+            <span class="tool-name">Make</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/6a17c11a5be84ad6401429ff.png" alt="Skool" loading="lazy" />
+            <span class="tool-name">Skool</span>
+          </div>
+
+          <!-- Loop duplicado -->
+          <div class="tool-chip">
+            <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/6a17c0f65be84ad6401427f3.png" alt="GoHighLevel" loading="lazy" />
+            <span class="tool-name">GoHighLevel</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/6a17c0d8f58810f313a64065.png" alt="Claude Code" loading="lazy" />
+            <span class="tool-name">Claude Code</span>
+          </div>
+          <div class="tool-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.5" fill="currentColor"/><ellipse cx="12" cy="12" rx="9.5" ry="3.5"/><ellipse cx="12" cy="12" rx="9.5" ry="3.5" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9.5" ry="3.5" transform="rotate(120 12 12)"/></svg>
+            <span class="tool-name">Antigravity</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://api.iconify.design/simple-icons/googlegemini.svg" alt="" loading="lazy" width="28" height="28" />
+            <span class="tool-name">Gemini</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://api.iconify.design/simple-icons/zapier.svg" alt="" loading="lazy" width="28" height="28" />
+            <span class="tool-name">Zapier</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://api.iconify.design/simple-icons/make.svg" alt="" loading="lazy" width="28" height="28" />
+            <span class="tool-name">Make</span>
+          </div>
+          <div class="tool-chip">
+            <img src="https://assets.cdn.filesafe.space/Np6qnux1pM5NRF9JY3lh/media/6a17c11a5be84ad6401429ff.png" alt="Skool" loading="lazy" />
+            <span class="tool-name">Skool</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10. FINAL CTA ============ -->
+    <section id="agendar" class="relative py-24 md:py-32 border-t border-jc-border/30 bg-grid">
+      <div class="hero-orb opacity-60"></div>
+      <div class="relative max-w-4xl mx-auto px-6 text-center z-10 fade-up">
+        <span class="eyebrow uppercase tracking-[0.3em] text-[11px] md:text-xs text-jc-primary/90 font-medium">
+          Tu siguiente paso
+        </span>
+        <h2 class="mt-5 font-serif font-normal text-3xl sm:text-4xl md:text-[3.25rem] leading-[1.06] tracking-tight text-balance">
+          Tu negocio necesita un <span class="hl">sistema de ventas</span>, <span class="hl">no más procesos improvisados</span>.
+        </h2>
+        <p class="mt-6 text-base md:text-lg text-jc-muted/90 max-w-2xl mx-auto leading-relaxed text-balance">
+          Organiza tu captación, automatiza seguimientos y escala con funnels y CRM diseñados estratégicamente para vender más.
+        </p>
+        <div class="glow-divider max-w-md mx-auto my-10 md:my-12 rounded-full"></div>
+        <a href="#" class="cta-button cta-pulse inline-flex items-center gap-3 text-white font-semibold text-base md:text-lg px-10 py-5 md:px-12 md:py-6 rounded-full">
+          <span>Quiero Escalar mi Negocio</span>
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <p class="mt-4 text-[11px] md:text-xs uppercase tracking-[0.28em] text-jc-muted">
+          + Incluye Diagnóstico de tu Negocio (PDF)
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ FOOTER ============ -->
+    <footer class="border-t border-jc-border/30 py-10">
+      <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] md:text-xs text-jc-muted/70">
+        <div class="flex items-center gap-3">
+          <img src="https://vibe.filesafe.space/1779853814963839930/attachments/5498cf53-d1d5-4dc8-ae73-977545f788d3.png" alt="" class="h-5 w-5 rounded" />
+          <span class="font-display tracking-[0.22em]">JOINSCLEE</span>
+          <span class="hidden sm:inline">· Funnels Automatizados y CRM de Ventas</span>
+        </div>
+        <div class="flex items-center gap-5">
+          <a href="#" class="hover:text-jc-primary transition-colors">Privacidad</a>
+          <a href="#" class="hover:text-jc-primary transition-colors">Términos</a>
+          <a href="mailto:hola@joinsclee.com" class="hover:text-jc-primary transition-colors">Contacto</a>
+        </div>
+      </div>
+    </footer>
+
+  </main>
+
+  <script>
+    // Scroll fade-up
+    (function() {
+      if (!('IntersectionObserver' in window)) {
+        document.querySelectorAll('.fade-up').forEach(function(el) { el.classList.add('is-visible'); });
+        return;
+      }
+      var io = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -80px 0px' });
+      document.querySelectorAll('.fade-up').forEach(function(el) { io.observe(el); });
+    })();
+
+    // Funnel tabs
+    (function() {
+      var tabs = document.querySelectorAll('.funnel-tab');
+      var panels = document.querySelectorAll('.funnel-panel');
+      tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+          var target = tab.getAttribute('data-funnel');
+          tabs.forEach(function(t) { t.classList.remove('is-active'); });
+          panels.forEach(function(p) { p.classList.remove('is-active'); });
+          tab.classList.add('is-active');
+          var panel = document.querySelector('[data-funnel-panel="' + target + '"]');
+          if (panel) panel.classList.add('is-active');
+        });
+      });
+    })();
+
+    // Testimonial cards: reproducir Loom inline al click
+    (function() {
+      document.querySelectorAll('.testimonial-card').forEach(function(card) {
+        card.addEventListener('click', function() {
+          if (card.classList.contains('is-playing')) return;
+          var id = card.getAttribute('data-loom-id');
+          var thumb = card.querySelector('.testimonial-thumb');
+          if (!id || !thumb) return;
+          thumb.innerHTML =
+            '<iframe src="https://www.loom.com/embed/' + id + '?autoplay=1&hideEmbedTopBar=true" ' +
+            'frameborder="0" allow="autoplay; fullscreen; encrypted-media" allowfullscreen ' +
+            'class="absolute inset-0 w-full h-full"></iframe>';
+          card.classList.add('is-playing');
+        });
+        card.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+        });
+      });
+    })();
+  </script>
+
+</body>
+</html>
