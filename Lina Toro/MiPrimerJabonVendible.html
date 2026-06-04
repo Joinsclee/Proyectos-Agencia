@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Primer Jabón Vendible · Clase gratuita en vivo con Lina Toro</title>
+    <!-- Acelera la carga del formulario de GHL: abre la conexión por adelantado -->
+    <link rel="preconnect" href="https://link.cleesaas.com" crossorigin>
+    <link rel="dns-prefetch" href="https://link.cleesaas.com">
 </head>
 
 <body>
@@ -264,6 +267,74 @@
         color: var(--ink-mute);
         font-size: 14px;
         margin-bottom: 18px
+    }
+
+    /* contenedor del formulario embebido + skeleton de carga */
+    .svjr .form-embed {
+        position: relative;
+        min-height: 480px
+    }
+
+    .svjr .form-embed iframe {
+        position: relative;
+        z-index: 1;
+        opacity: 0;
+        transition: opacity .45s ease
+    }
+
+    .svjr .form-embed.loaded iframe {
+        opacity: 1
+    }
+
+    .svjr .form-skeleton {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 16px;
+        transition: opacity .35s ease
+    }
+
+    .svjr .form-embed.loaded .form-skeleton {
+        opacity: 0;
+        visibility: hidden
+    }
+
+    .svjr .sk-line {
+        border-radius: 10px;
+        background: linear-gradient(90deg, #ece6d8 25%, #f6f1e8 37%, #ece6d8 63%);
+        background-size: 400% 100%;
+        animation: svjrSkeleton 1.4s ease infinite
+    }
+
+    .svjr .sk-input {
+        height: 48px
+    }
+
+    .svjr .sk-btn {
+        height: 52px;
+        border-radius: 999px;
+        margin-top: 6px
+    }
+
+    .svjr .sk-cap {
+        text-align: center;
+        font-size: 13px;
+        color: var(--ink-mute);
+        font-weight: 600;
+        margin-top: 2px
+    }
+
+    @keyframes svjrSkeleton {
+        0% {
+            background-position: 100% 0
+        }
+
+        100% {
+            background-position: -100% 0
+        }
     }
 
     .svjr .field {
@@ -774,7 +845,7 @@
     <header class="hero band">
         <div class="wrap">
             <div class="hero-inner stagger">
-                <span class="pill"><span class="dot"></span>Clase gratuita en vivo · [15 de junio]</span>
+                <span class="pill"><span class="dot"></span>Clase gratuita en vivo · 23 de junio</span>
                 <h1>Mi primer jabón <span class="em">vendible</span></h1>
                 <p class="lead">Aprende a crear tus primeros jabones artesanales y a venderlos desde casa, con lo que ya
                     tienes en tu cocina y sin desperdiciar dinero en insumos.</p>
@@ -808,22 +879,33 @@
                 <div class="form-card" id="registro">
                     <h2>Reserva tu lugar gratis</h2>
                     <p class="sub">Cupos limitados. Te enviamos el acceso a tu correo.</p>
-                    <iframe src="https://link.cleesaas.com/widget/form/vfHbpx1DSNmClxu7oBMO"
-                        style="width:100%;height:480px;border:none;border-radius:10px"
-                        id="inline-vfHbpx1DSNmClxu7oBMO"
-                        data-layout="{'id':'INLINE'}"
-                        data-trigger-type="alwaysShow"
-                        data-trigger-value=""
-                        data-activation-type="alwaysActivated"
-                        data-activation-value=""
-                        data-deactivation-type="neverDeactivate"
-                        data-deactivation-value=""
-                        data-form-name="Form Evento Mensual 2026"
-                        data-height="460"
-                        data-layout-iframe-id="inline-vfHbpx1DSNmClxu7oBMO"
-                        data-form-id="vfHbpx1DSNmClxu7oBMO"
-                        title="Form Evento Mensual 2026">
-                    </iframe>
+                    <div class="form-embed">
+                        <!-- placeholder mientras carga el formulario de GHL -->
+                        <div class="form-skeleton" aria-hidden="true">
+                            <span class="sk-line sk-input"></span>
+                            <span class="sk-line sk-input"></span>
+                            <span class="sk-line sk-btn"></span>
+                            <span class="sk-cap">Cargando formulario…</span>
+                        </div>
+                        <iframe src="https://link.cleesaas.com/widget/form/vfHbpx1DSNmClxu7oBMO"
+                            style="width:100%;height:480px;border:none;border-radius:10px"
+                            id="inline-vfHbpx1DSNmClxu7oBMO"
+                            data-layout="{'id':'INLINE'}"
+                            data-trigger-type="alwaysShow"
+                            data-trigger-value=""
+                            data-activation-type="alwaysActivated"
+                            data-activation-value=""
+                            data-deactivation-type="neverDeactivate"
+                            data-deactivation-value=""
+                            data-form-name="Form Evento Mensual 2026"
+                            data-height="460"
+                            data-layout-iframe-id="inline-vfHbpx1DSNmClxu7oBMO"
+                            data-form-id="vfHbpx1DSNmClxu7oBMO"
+                            title="Form Evento Mensual 2026"
+                            loading="eager"
+                            onload="this.closest('.form-embed').classList.add('loaded')">
+                        </iframe>
+                    </div>
                 </div>
             </div>
         </div>
@@ -948,7 +1030,7 @@
             <p class="reveal">Es gratis, es en vivo y empiezas con lo que ya tienes en tu cocina. Tu primer paso para
                 emprender desde casa empieza aquí.</p>
             <a href="#registro" class="cta reveal">RESERVAR MI LUGAR GRATIS <span class="arrow">→</span></a>
-            <p class="urgency reveal">Cupos limitados · La clase es en vivo el [15 de junio] · La repetición estará
+            <p class="urgency reveal">Cupos limitados · La clase es en vivo el 23 de junio · La repetición estará
                 disponible solo por tiempo limitado.</p>
         </div>
     </section>
@@ -969,6 +1051,14 @@
             entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
         }, { threshold: .16 });
         els.forEach(function (e) { io.observe(e); });
+    })();
+</script>
+
+<!-- Respaldo: si onload no se dispara, revela el formulario igualmente -->
+<script>
+    (function () {
+        var box = document.querySelector('.form-embed');
+        if (box) setTimeout(function () { box.classList.add('loaded'); }, 4000);
     })();
 </script>
 

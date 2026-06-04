@@ -250,27 +250,25 @@
               <p class="text-sm mt-1" style="color: var(--pv-ink-soft);">Recibe el acceso directo a la sala.</p>
             </div>
 
-            <form id="pv-form" class="space-y-3.5" novalidate>
-              <div>
-                <label for="nombre" class="sr-only">Nombre</label>
-                <input id="nombre" name="nombre" type="text" autocomplete="given-name" class="pv-input" placeholder="Tu nombre" required />
-              </div>
-              <div>
-                <label for="email" class="sr-only">Correo</label>
-                <input id="email" name="email" type="email" autocomplete="email" class="pv-input" placeholder="Tu mejor correo" required />
-              </div>
-              <div>
-                <label for="telefono" class="sr-only">WhatsApp</label>
-                <input id="telefono" name="telefono" type="tel" autocomplete="tel" class="pv-input" placeholder="Tu WhatsApp (con indicativo)" required />
-              </div>
-
-              <p id="pv-error" class="text-sm text-red-600 hidden" role="alert"></p>
-
-              <button type="submit" class="pv-btn mt-1">
-                <svg class="pv-ico" style="width:1.25rem;height:1.25rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.3a1.8 1.8 0 0 0 0 3.4v1.3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.3a1.8 1.8 0 0 0 0-3.4z"/><path d="M14 6.5v11"/></svg>
-                ¡SÍ, QUIERO RESERVAR MI CUPO GRATIS!
-              </button>
-            </form>
+            <!-- Formulario embebido de GHL -->
+            <iframe
+              src="https://link.cleesaas.com/widget/form/l9XFOz73dwrBQIHvueO7"
+              style="width:100%;height:460px;border:none;border-radius:10px;"
+              id="inline-l9XFOz73dwrBQIHvueO7"
+              data-layout="{'id':'INLINE'}"
+              data-trigger-type="alwaysShow"
+              data-trigger-value=""
+              data-activation-type="alwaysActivated"
+              data-activation-value=""
+              data-deactivation-type="neverDeactivate"
+              data-deactivation-value=""
+              data-form-name="Form Evento 2026 PV"
+              data-height="460"
+              data-layout-iframe-id="inline-l9XFOz73dwrBQIHvueO7"
+              data-form-id="l9XFOz73dwrBQIHvueO7"
+              title="Form Evento 2026 PV">
+            </iframe>
+            <script src="https://link.cleesaas.com/js/form_embed.js"></script>
 
             <p class="text-xs text-center mt-4 leading-relaxed inline-flex items-start gap-1.5" style="color: var(--pv-ink-soft);">
               <svg class="pv-ico" style="width:.95rem;height:.95rem;margin-top:1px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
@@ -477,8 +475,7 @@
    CONFIGURACIÓN — editar aquí
    ========================================================= */
 const PV_CONFIG = {
-  // Enlace del grupo VIP de WhatsApp (destino tras registrarse)
-  whatsappUrl: 'https://chat.whatsapp.com/REEMPLAZAR_LINK_GRUPO_VIP',
+  // El registro y la redirección a WhatsApp los maneja el formulario de GHL embebido.
 
   // Fecha y hora del evento para el contador (formato ISO con zona horaria).
   // Ejemplo Colombia (UTC-5), 9 de junio 2026 a las 7:00 p.m.
@@ -488,10 +485,7 @@ const PV_CONFIG = {
   horaTexto: '7:00 p.m. (hora Colombia)',
 
   // Foto de Paulina (dejar vacío para mostrar placeholder)
-  fotoUrl: 'https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dce1ad7322952d180042b.png',
-
-  // Endpoint opcional para guardar leads (GHL / webhook). Vacío = solo redirige.
-  webhookUrl: '',
+  fotoUrl: 'https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1f3fd3bce897da75237df6.jpg',
 };
 
 /* =========================================================
@@ -542,61 +536,14 @@ if (PV_CONFIG.fotoUrl) {
 })();
 
 /* =========================================================
-   Formulario de registro
+   El CTA final lleva al formulario de GHL del hero
    ========================================================= */
-(function initForm() {
-  const form = document.getElementById('pv-form');
-  const errorEl = document.getElementById('pv-error');
-  const submitBtn = form.querySelector('button[type="submit"]');
-
-  function showError(msg) {
-    errorEl.textContent = msg;
-    errorEl.classList.remove('hidden');
-  }
-  function clearError() { errorEl.classList.add('hidden'); }
-
-  function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-  async function registrar(datos) {
-    // Guardado opcional en webhook/GHL (no bloquea la redirección)
-    if (PV_CONFIG.webhookUrl) {
-      try {
-        await fetch(PV_CONFIG.webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(datos),
-        });
-      } catch (err) {
-        console.warn('No se pudo registrar el lead en el webhook:', err);
-      }
-    }
-    // Redirección al grupo VIP de WhatsApp
-    window.location.href = PV_CONFIG.whatsappUrl;
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    clearError();
-
-    const datos = {
-      nombre: form.nombre.value.trim(),
-      email: form.email.value.trim(),
-      telefono: form.telefono.value.trim(),
-    };
-
-    if (!datos.nombre) return showError('Por favor escribe tu nombre.');
-    if (!isEmail(datos.email)) return showError('Ingresa un correo válido.');
-    if (datos.telefono.replace(/\D/g, '').length < 7) return showError('Ingresa un número de WhatsApp válido.');
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Reservando tu cupo...';
-    await registrar(datos);
-  });
-
-  // El CTA final lleva al formulario del hero
-  document.getElementById('pv-cta-final').addEventListener('click', () => {
-    document.getElementById('nombre').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    setTimeout(() => document.getElementById('nombre').focus(), 600);
+(function initCtaScroll() {
+  const ctaFinal = document.getElementById('pv-cta-final');
+  const form = document.getElementById('inline-l9XFOz73dwrBQIHvueO7');
+  if (!ctaFinal || !form) return;
+  ctaFinal.addEventListener('click', () => {
+    form.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 })();
 </script>

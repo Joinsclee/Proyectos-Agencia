@@ -2,56 +2,54 @@
  * Scraper BBVA — Remates
  *
  * Portal: https://www.bbva.com.co/personas/promocion/remates.html
- * Tipo: HTML estático o SPA (a confirmar tras primer run). Plan Fase 1.BB.
- * CRON: cada 6h.
- *
- * BBVA publica un listado de inmuebles en remate (dación de pago). Suele tener
- * pocas propiedades (< 50). Posible que use PDF descargable como Aval, o tabla HTML.
- *
- * NOTA: hasta validar el primer scrape, este scraper toma el listado completo
- * y deja que el LLM extraiga inmuebles del markdown rendered. Si BBVA usa PDF,
- * pivotear a pipeline tipo Aval.
+ * Estrategia: la landing tiene 3 links a PDFs (Casas, Apartamentos, Oficinas/Locales).
+ *  1) Scrape landing → extraer URLs de los 3 PDFs (cambian periódicamente)
+ *  2) Scrape cada PDF con Firecrawl PDF parser → schema extraction
+ *  3) Upsert
  */
 
-import { scrapeWithSchema } from '../../../lib/firecrawl.js';
+import { scrapeMarkdown, scrapeWithSchema } from '../../../lib/firecrawl.js';
 import {
   upsertInmuebles,
   startScrapingLog,
   finishScrapingLog,
 } from '../../../lib/supabase.js';
 import { createLogger } from '../../../lib/logger.js';
-import type { Inmueble, ScrapingRunResult } from '../../../lib/types.js';
+import { normalizeCity, type Inmueble, type ScrapingRunResult } from '../../../lib/types.js';
 import { createHash } from 'node:crypto';
 
 const SOURCE = 'bbva';
 const COUNTRY = 'CO';
-const LISTADO_URL = 'https://www.bbva.com.co/personas/promocion/remates.html';
+const LANDING_URL = 'https://www.bbva.com.co/personas/promocion/remates.html';
 const log = createLogger(SOURCE);
 
-/**
- * BBVA típicamente lista todos los inmuebles en UNA sola página (no hay paginación
- * profunda como en bancos comerciales). Estrategia: extraer la lista completa
- * con un solo scrape + schema array.
- */
-const LISTADO_SCHEMA = {
+// Patrón de URL de los PDFs del inventario de remates BBVA.
+// Ejemplos confirmados:
+//   /content/dam/.../Casas-Inventario-de-Bienes-0403.pdf
+//   /content/dam/.../Apartamentos-Inventario-Bienes-0403.pdf
+//   /content/dam/.../Oficinas-y-locales-Inventario-0403.pdf
+const PDF_URL_PATTERN = /https?:\/\/www\.bbva\.com\.co\/[^"'\s]+(?:Inventario|inventario)[^"'\s]*\.pdf/gi;
+
+const PDF_SCHEMA = {
   type: 'object',
   properties: {
     inmuebles: {
       type: 'array',
-      description: 'Lista de inmuebles en remate publicados por BBVA',
+      description: 'Inmuebles en remate del banco BBVA Colombia',
       items: {
         type: 'object',
         properties: {
           city: { type: 'string', description: 'Ciudad en Colombia, minúsculas sin tildes' },
           zone: { type: 'string', nullable: true },
-          address: { type: 'string', description: 'Dirección exacta si aparece', nullable: true },
+          address: { type: 'string', nullable: true },
           type: { type: 'string', enum: ['apartment', 'house', 'commercial', 'lot'] },
           price: { type: 'number', description: 'Precio en COP, solo número' },
           area_m2: { type: 'number', nullable: true },
-          bedrooms: { type: 'number', nullable: true },
-          bathrooms: { type: 'number', nullable: true },
-          stratum: { type: 'number', nullable: true },
-          detail_url: { type: 'string', description: 'Enlace al detalle si aparece', nullable: true },
+          bedrooms: { type: 'number', description: 'Habitaciones / alcobas / dormitorios', nullable: true },
+          bathrooms: { type: 'number', description: 'Baños', nullable: true },
+          garages: { type: 'number', description: 'Garajes/Parqueaderos. Suele aparecer abreviado en la tabla como "Gj", "Garajes", "Parq", "Park", "Pq", "Parqueadero".', nullable: true },
+          stratum: { type: 'number', description: 'Estrato socioeconómico (1-6)', nullable: true },
+          reference: { type: 'string', description: 'Referencia/ID del inmueble si aparece en la tabla (suele ser un código tipo BA12345, número de oficio, etc.)', nullable: true },
         },
         required: ['city', 'type', 'price'],
       },
@@ -61,15 +59,16 @@ const LISTADO_SCHEMA = {
 } as const;
 
 const PROMPT = `
-Esta página de BBVA Colombia publica inmuebles en remate (dación de pago).
-Extrae cada inmueble del listado en un array "inmuebles".
-Precio en pesos colombianos (COP), solo número sin $ ni separadores.
+Este PDF es el inventario de bienes en remate del Banco BBVA Colombia.
+Extrae cada inmueble como elemento del array "inmuebles".
+Precio en COP, solo número (sin $ ni separadores).
 Para "type": apartamento→"apartment", casa→"house", local/oficina/bodega→"commercial", lote→"lot".
-Para "city": en minúsculas sin tildes. Si no encuentras la ciudad clara, deduce del contexto.
-Si la página solo tiene un PDF descargable o pocos datos, devuelve "inmuebles": [].
+Para "city": minúsculas sin tildes (bogota, medellin, cali, etc.).
+Para "garages": busca columnas/abreviaturas tipo "Gj", "Garajes", "Parq", "Park", "Pq", "Parqueadero". Si la tabla tiene una columna con número de parqueaderos, úsala. Si no aparece, devuelve null.
+Si un campo no aparece claro en la fila, devuelve null en vez de inventar.
 `.trim();
 
-type FichaListado = {
+type Ficha = {
   city: string;
   zone?: string | null;
   address?: string | null;
@@ -78,26 +77,28 @@ type FichaListado = {
   area_m2?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
+  garages?: number | null;
   stratum?: number | null;
-  detail_url?: string | null;
+  reference?: string | null;
 };
 
-function stableId(item: FichaListado): string {
-  // BBVA no siempre da ID. Generamos hash estable a partir de address+precio+area.
-  const key = `${item.address ?? ''}|${item.price}|${item.area_m2 ?? ''}|${item.city}`;
+function stableId(item: Ficha, pdfUrl: string): string {
+  if (item.reference) return item.reference;
+  const key = `${item.address ?? ''}|${item.price}|${item.area_m2 ?? ''}|${item.city}|${pdfUrl}`;
   return createHash('md5').update(key).digest('hex').slice(0, 16);
 }
 
-function toInmueble(item: FichaListado): Inmueble | null {
+function toInmueble(item: Ficha, pdfUrl: string): Inmueble | null {
   if (!item.price || !item.city) return null;
   const features: Record<string, unknown> = {};
   if (item.bedrooms != null) features.bedrooms = item.bedrooms;
   if (item.bathrooms != null) features.bathrooms = item.bathrooms;
+  if (item.garages != null) features.garages = item.garages;
   if (item.stratum != null) features.stratum = item.stratum;
 
   return {
     country_code: COUNTRY,
-    city: item.city.toLowerCase().trim(),
+    city: normalizeCity(item.city),
     zone: item.zone ?? null,
     address: item.address ?? null,
     type: item.type,
@@ -106,10 +107,34 @@ function toInmueble(item: FichaListado): Inmueble | null {
     area_m2: item.area_m2 ?? null,
     features,
     source: SOURCE,
-    source_id: stableId(item),
-    source_url: item.detail_url ?? LISTADO_URL,
+    source_id: stableId(item, pdfUrl),
+    source_url: pdfUrl,
     image_url: null,
   };
+}
+
+async function obtenerPDFsDelLanding(): Promise<string[]> {
+  log.info(`Landing: ${LANDING_URL}`);
+  const { html, links, error } = await scrapeMarkdown({
+    url: LANDING_URL,
+    waitFor: 2000,
+    onlyMainContent: false,
+  });
+  if (error) {
+    log.error(`Landing falló`, error);
+    return [];
+  }
+
+  const pdfs = new Set<string>();
+  // Buscar en html y en la lista de links
+  const fromHtml = [...(html ?? '').matchAll(PDF_URL_PATTERN)].map((m) => m[0]);
+  const fromLinks = links.filter((l) => /\.pdf$/i.test(l) && /(?:Inventario|inventario)/.test(l));
+  [...fromHtml, ...fromLinks].forEach((u) => pdfs.add(u));
+
+  const arr = [...pdfs];
+  log.info(`PDFs detectados: ${arr.length}`);
+  arr.forEach((u) => log.debug(`  · ${u}`));
+  return arr;
 }
 
 export async function run(_opts: { maxDetails?: number } = {}): Promise<ScrapingRunResult> {
@@ -119,40 +144,42 @@ export async function run(_opts: { maxDetails?: number } = {}): Promise<Scraping
   };
 
   try {
-    log.info(`Scrapeando listado completo: ${LISTADO_URL}`);
-
-    const { data, error } = await scrapeWithSchema<{ inmuebles: FichaListado[] }>({
-      url: LISTADO_URL,
-      schema: LISTADO_SCHEMA as Record<string, unknown>,
-      prompt: PROMPT,
-      waitFor: 2000,
-    });
-
-    if (error) {
-      result.errors.push({ message: `scrape: ${error}` });
-      await finishScrapingLog(logId, 'error', result);
-      return result;
-    }
-
-    const items = data?.inmuebles ?? [];
-    result.records_found = items.length;
-    log.info(`LLM extrajo ${items.length} inmuebles del listado`);
-
-    if (items.length === 0) {
-      result.meta!.note = 'No se extrajeron inmuebles. Verifica si BBVA usa PDF descargable (pivotear a pipeline Aval).';
+    const pdfs = await obtenerPDFsDelLanding();
+    if (pdfs.length === 0) {
+      result.errors.push({ message: 'No se detectaron PDFs en la landing de BBVA' });
       await finishScrapingLog(logId, 'partial', result);
       return result;
     }
+    result.meta!.pdfs = pdfs;
 
-    const inmuebles = items.map(toInmueble).filter((x): x is Inmueble => x != null);
-    log.info(`Inmuebles válidos: ${inmuebles.length}/${items.length}`);
+    const inmuebles: Inmueble[] = [];
+    for (const pdfUrl of pdfs) {
+      log.info(`Scrapeando PDF: ${pdfUrl}`);
+      const { data, error } = await scrapeWithSchema<{ inmuebles: Ficha[] }>({
+        url: pdfUrl,
+        schema: PDF_SCHEMA as Record<string, unknown>,
+        prompt: PROMPT,
+      });
+      if (error) {
+        result.errors.push({ message: `pdf ${pdfUrl}: ${error}` });
+        continue;
+      }
+      const items = data?.inmuebles ?? [];
+      log.info(`  ${items.length} inmuebles extraídos del PDF`);
+      result.records_found += items.length;
+      for (const it of items) {
+        const inm = toInmueble(it, pdfUrl);
+        if (inm) inmuebles.push(inm);
+      }
+    }
 
+    log.info(`Inmuebles válidos totales: ${inmuebles.length}`);
     if (inmuebles.length > 0) {
       const up = await upsertInmuebles(inmuebles);
       result.records_inserted = up.inserted;
     }
 
-    const status = result.errors.length === 0 ? 'success' : 'partial';
+    const status = result.errors.length === 0 && inmuebles.length > 0 ? 'success' : 'partial';
     await finishScrapingLog(logId, status, result);
     return result;
   } catch (err) {
@@ -164,7 +191,5 @@ export async function run(_opts: { maxDetails?: number } = {}): Promise<Scraping
 
 const isMain = import.meta.url === `file://${process.argv[1]}`;
 if (isMain) {
-  run()
-    .then((r) => { log.info('Done', r); process.exit(0); })
-    .catch((e) => { log.error('Failed', e); process.exit(1); });
+  run().then((r) => { log.info('Done', r); process.exit(0); }).catch((e) => { log.error('Failed', e); process.exit(1); });
 }

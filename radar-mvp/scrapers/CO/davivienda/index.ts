@@ -17,7 +17,7 @@ import {
   finishScrapingLog,
 } from '../../../lib/supabase.js';
 import { createLogger } from '../../../lib/logger.js';
-import type { Inmueble, ScrapingRunResult } from '../../../lib/types.js';
+import { normalizeCity, type Inmueble, type ScrapingRunResult } from '../../../lib/types.js';
 
 const SOURCE = 'davivienda';
 const COUNTRY = 'CO';
@@ -41,12 +41,31 @@ const FICHA_SCHEMA = {
     zone: { type: 'string', description: 'Barrio, sector o zona dentro de la ciudad', nullable: true },
     address: { type: 'string', description: 'Dirección exacta del inmueble si aparece', nullable: true },
     type: { type: 'string', enum: ['apartment', 'house', 'commercial', 'lot'], description: 'Tipo de inmueble' },
-    price: { type: 'number', description: 'Precio en COP (solo el número, sin $ ni separadores)' },
-    area_m2: { type: 'number', description: 'Área construida en metros cuadrados', nullable: true },
+    price: { type: 'number', description: 'Precio EXACTO en COP (solo el número, SIN REDONDEAR, sin separadores). Ej: si dice $285.450.000 → 285450000 EXACTO.' },
+    price_raw: { type: 'string', description: 'Precio EXACTAMENTE como aparece (texto literal con $, puntos). Ej: "$285.450.000"', nullable: true },
+    area_m2: { type: 'number', description: 'Área EXACTA en m² SIN REDONDEAR. Si dice 87.5 m² → 87.5, si dice 143,57 m² → 143.57. Conserva decimales.', nullable: true },
+    area_raw: { type: 'string', description: 'Área literal como aparece. Ej: "87.50 m²" o "143,57 m²"', nullable: true },
     bedrooms: { type: 'number', description: 'Habitaciones', nullable: true },
     bathrooms: { type: 'number', description: 'Baños', nullable: true },
     garages: { type: 'number', description: 'Garajes/parqueaderos', nullable: true },
     stratum: { type: 'number', description: 'Estrato socioeconómico (1-6)', nullable: true },
+    image_url: { type: 'string', description: 'URL de la imagen principal (suele estar en meta og:image)', nullable: true },
+    image_urls: {
+      type: 'array',
+      description: 'TODAS las URLs de fotos del inmueble (galería completa, suele haber 5-15 en el carrusel). Incluye la principal también. Solo URLs absolutas (https://...).',
+      items: { type: 'string' },
+      nullable: true,
+    },
+    description: { type: 'string', description: 'Descripción larga del inmueble del vendedor (texto completo). Si no hay, null.', nullable: true },
+    amenities: {
+      type: 'array',
+      description: 'Lista de amenidades / características adicionales del inmueble o del edificio (piscina, gimnasio, terraza, balcón, ascensor, BBQ, salón social, portería 24h, etc.). Array de strings cortos.',
+      items: { type: 'string' },
+      nullable: true,
+    },
+    year_built: { type: 'number', description: 'Año de construcción si aparece', nullable: true },
+    antiguedad: { type: 'string', description: 'Antigüedad como texto (ej: "5 años", "Nuevo", "Más de 20 años")', nullable: true },
+    administracion: { type: 'number', description: 'Cuota de administración mensual en COP', nullable: true },
   },
   required: ['city', 'type', 'price'],
 } as const;
@@ -57,19 +76,39 @@ type FichaExtraida = {
   address?: string | null;
   type: 'apartment' | 'house' | 'commercial' | 'lot';
   price: number;
+  price_raw?: string | null;
   area_m2?: number | null;
+  area_raw?: string | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   garages?: number | null;
   stratum?: number | null;
+  image_url?: string | null;
+  image_urls?: string[] | null;
+  description?: string | null;
+  amenities?: string[] | null;
+  year_built?: number | null;
+  antiguedad?: string | null;
+  administracion?: number | null;
 };
 
 const PROMPT = `
 Extrae los datos de este inmueble publicado en venta por Davivienda en Colombia.
 El precio es en pesos colombianos (COP).
-Si un dato no aparece claramente, devuelve null en vez de inventarlo.
-Para "type": si dice apartamento usa "apartment", si dice casa usa "house", si dice local/oficina/bodega usa "commercial", si dice lote usa "lot".
-Para "city": en minúsculas y sin tildes (ej: bogota, medellin).
+
+CRÍTICO — VALORES EXACTOS SIN REDONDEAR:
+- "price": número EXACTO. Si el portal dice $285.450.000 → 285450000. NUNCA redondees a millones ni acortes.
+- "price_raw": copia el texto LITERAL como aparece (con $, puntos, decimales). Ej: "$285.450.000".
+- "area_m2": número exacto CON DECIMALES. 87.50 m² → 87.50 (no 88). 143,57 → 143.57.
+- "area_raw": copia literal del área como aparece. Ej: "87.50 m²" o "143,57 m²".
+
+IMPORTANTE:
+- Para "image_urls" extrae TODAS las fotos del carrusel/galería (no solo la principal). Davivienda muestra varias fotos por propiedad — incluye todas con URL absoluta.
+- Para "description" copia el texto completo de descripción del vendedor si aparece.
+- Para "amenities" extrae lista de servicios/características del edificio (piscina, gym, ascensor, etc.).
+- Si un dato no aparece claramente, devuelve null en vez de inventarlo.
+- Para "type": apartamento → "apartment", casa → "house", local/oficina/bodega → "commercial", lote → "lot".
+- Para "city": minúsculas sin tildes (bogota, medellin, etc.).
 `.trim();
 
 // ────────────────────────────────────────────────────────────
@@ -122,14 +161,32 @@ function toInmueble(
   if (!ficha.price || !ficha.city) return null;
 
   const features: Record<string, unknown> = { es_proyecto_nuevo: candidate.es_proyecto_nuevo };
+  if (ficha.price_raw) features.price_raw = ficha.price_raw;
+  if (ficha.area_raw) features.area_raw = ficha.area_raw;
   if (ficha.bedrooms != null) features.bedrooms = ficha.bedrooms;
   if (ficha.bathrooms != null) features.bathrooms = ficha.bathrooms;
   if (ficha.garages != null) features.garages = ficha.garages;
   if (ficha.stratum != null) features.stratum = ficha.stratum;
+  if (ficha.description) features.description = ficha.description.substring(0, 2000);
+  if (ficha.amenities?.length) features.amenities = ficha.amenities.filter((a) => typeof a === 'string' && a.length > 0).slice(0, 20);
+  if (ficha.year_built) features.year_built = ficha.year_built;
+  if (ficha.antiguedad) features.antiguedad = ficha.antiguedad;
+  if (ficha.administracion) features.administracion = ficha.administracion;
+
+  // Validar URLs absolutas (LLM a veces devuelve paths relativos)
+  const isAbsUrl = (u: unknown): u is string => typeof u === 'string' && /^https?:\/\//i.test(u);
+
+  const imageUrl = isAbsUrl(ficha.image_url) ? ficha.image_url : null;
+
+  // Galería: validar cada URL, dedupar, conservar primera como principal
+  if (Array.isArray(ficha.image_urls)) {
+    const gallery = [...new Set(ficha.image_urls.filter(isAbsUrl))];
+    if (gallery.length > 0) features.images = gallery.slice(0, 20);
+  }
 
   return {
     country_code: COUNTRY,
-    city: ficha.city.toLowerCase().trim(),
+    city: normalizeCity(ficha.city),
     zone: ficha.zone ?? null,
     address: ficha.address ?? null,
     type: ficha.type,
@@ -140,7 +197,7 @@ function toInmueble(
     source: SOURCE,
     source_id: candidate.source_id,
     source_url: candidate.url,
-    image_url: null, // TODO Fase 1.IMG: extraer og:image y subir a Supabase Storage
+    image_url: imageUrl,
   };
 }
 

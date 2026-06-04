@@ -3,10 +3,19 @@ import { VisitasVideo } from "./VisitasVideo";
 import { SistemaCreceVideo } from "./SistemaCreceVideo";
 import { SurveyVideo, SURVEY_VIDEO_DURATION } from "./SurveyVideo";
 import { SaviasVideo, SAVIAS_DURATION } from "./SaviasVideo";
+import { EncuestaLoopVideo, ENCUESTA_DURATION } from "./EncuestaLoopVideo";
 
 export const RemotionRoot = () => {
   return (
     <>
+      <Composition
+        id="EncuestaLoopVideo"
+        component={EncuestaLoopVideo}
+        durationInFrames={ENCUESTA_DURATION}
+        fps={60}
+        width={1920}
+        height={1080}
+      />
       <Composition
         id="VisitasVideo"
         component={VisitasVideo}

@@ -2,42 +2,39 @@
  * Scraper Grupo Aval — Portal Inmobiliario
  *
  * Portal: https://www.avalvc.com.co/portal-inmobiliario
- * Tipo: PDF descargable (a confirmar). Plan Fase 1.AV.
- * CRON: cada 24h (PDF se actualiza con menor frecuencia).
+ * Estrategia: la landing linkea a un PDF que se actualiza periódicamente.
+ * URL típica: https://www.avalvc.com.co/repositorio/Avalvc/portal-inmobiliario/{DD-MM-YY}/Inmuebles.pdf
  *
- * Estrategia Firecrawl:
- * - Firecrawl tiene parser PDF nativo (`parsers: [{type: 'pdf'}]`).
- * - Si la página tiene un link a PDF, Firecrawl lo detecta y parsea.
- * - Si la página es HTML con el listado embebido, lo extrae igual.
- *
- * Para el POC: scrape de la página principal del portal, schema array con
- * todos los inmuebles. El LLM se encarga de la heterogeneidad del PDF.
- *
- * Si en el primer run vemos que el PDF necesita descarga manual + parser propio,
- * pivotamos a pipeline custom (pdf-parse + Claude Vision como dice el plan v1.1).
+ * Pipeline:
+ *  1) Scrape landing → extraer URL del PDF (la fecha cambia, hay que detectarla)
+ *  2) Scrape PDF con Firecrawl PDF parser + schema
+ *  3) Upsert
  */
 
-import { scrapeWithSchema } from '../../../lib/firecrawl.js';
+import { scrapeMarkdown, scrapeWithSchema } from '../../../lib/firecrawl.js';
 import {
   upsertInmuebles,
   startScrapingLog,
   finishScrapingLog,
 } from '../../../lib/supabase.js';
 import { createLogger } from '../../../lib/logger.js';
-import type { Inmueble, ScrapingRunResult } from '../../../lib/types.js';
+import { normalizeCity, type Inmueble, type ScrapingRunResult } from '../../../lib/types.js';
 import { createHash } from 'node:crypto';
 
 const SOURCE = 'aval';
 const COUNTRY = 'CO';
-const PORTAL_URL = 'https://www.avalvc.com.co/portal-inmobiliario';
+const LANDING_URL = 'https://www.avalvc.com.co/portal-inmobiliario';
 const log = createLogger(SOURCE);
 
-const LISTADO_SCHEMA = {
+// PDF de Aval: /repositorio/Avalvc/portal-inmobiliario/DD-MM-YY/Inmuebles.pdf
+const PDF_URL_PATTERN = /https?:\/\/www\.avalvc\.com\.co\/repositorio\/[^"'\s]+\.pdf/gi;
+
+const PDF_SCHEMA = {
   type: 'object',
   properties: {
     inmuebles: {
       type: 'array',
-      description: 'Lista de inmuebles publicados por Grupo Aval (CISA / bancos del grupo)',
+      description: 'Inmuebles publicados por Grupo Aval (CISA / bancos del grupo)',
       items: {
         type: 'object',
         properties: {
@@ -45,12 +42,13 @@ const LISTADO_SCHEMA = {
           zone: { type: 'string', nullable: true },
           address: { type: 'string', nullable: true },
           type: { type: 'string', enum: ['apartment', 'house', 'commercial', 'lot'] },
-          price: { type: 'number', description: 'Precio COP, solo número' },
+          price: { type: 'number', description: 'Precio en COP, solo número' },
           area_m2: { type: 'number', nullable: true },
-          bedrooms: { type: 'number', nullable: true },
-          bathrooms: { type: 'number', nullable: true },
-          stratum: { type: 'number', nullable: true },
-          source_id_external: { type: 'string', description: 'ID o referencia del inmueble si aparece', nullable: true },
+          bedrooms: { type: 'number', description: 'Habitaciones / alcobas', nullable: true },
+          bathrooms: { type: 'number', description: 'Baños', nullable: true },
+          garages: { type: 'number', description: 'Garajes/Parqueaderos. Suele aparecer abreviado como "Gj", "Garajes", "Parq", "Park", "Pq", "Parqueadero", "Parking".', nullable: true },
+          stratum: { type: 'number', description: 'Estrato (1-6)', nullable: true },
+          reference: { type: 'string', description: 'Código o referencia del inmueble', nullable: true },
         },
         required: ['city', 'type', 'price'],
       },
@@ -60,15 +58,17 @@ const LISTADO_SCHEMA = {
 } as const;
 
 const PROMPT = `
-Esta es la página del portal inmobiliario de Grupo Aval en Colombia (puede incluir CISA, Banco de Bogotá, Banco Occidente, etc.).
-Si la página o el PDF que muestra contiene un listado de inmuebles, extráelos en el array "inmuebles".
+Este PDF es el inventario de inmuebles publicados por Grupo Aval Colombia
+(puede incluir CISA, Banco de Bogotá, Banco Occidente, Banco Popular, Banco AV Villas).
+Extrae cada inmueble como elemento del array "inmuebles".
 Precio en COP, solo número (sin $ ni separadores).
 Para "type": apartamento→"apartment", casa→"house", local/oficina/bodega→"commercial", lote→"lot".
 Para "city": minúsculas sin tildes.
-Si la página solo enlaza a un PDF que no se renderizó, devuelve "inmuebles": [].
+Para "garages": busca columnas/abreviaturas tipo "Gj", "Garajes", "Parq", "Park", "Pq", "Parqueadero", "Parking". Si la tabla tiene una columna con número de parqueaderos, úsala. Si no aparece, devuelve null.
+Si un campo no aparece claro en la fila, devuelve null.
 `.trim();
 
-type FichaListado = {
+type Ficha = {
   city: string;
   zone?: string | null;
   address?: string | null;
@@ -77,26 +77,28 @@ type FichaListado = {
   area_m2?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
+  garages?: number | null;
   stratum?: number | null;
-  source_id_external?: string | null;
+  reference?: string | null;
 };
 
-function stableId(item: FichaListado): string {
-  if (item.source_id_external) return item.source_id_external;
+function stableId(item: Ficha): string {
+  if (item.reference) return item.reference;
   const key = `${item.address ?? ''}|${item.price}|${item.area_m2 ?? ''}|${item.city}`;
   return createHash('md5').update(key).digest('hex').slice(0, 16);
 }
 
-function toInmueble(item: FichaListado): Inmueble | null {
+function toInmueble(item: Ficha, pdfUrl: string): Inmueble | null {
   if (!item.price || !item.city) return null;
   const features: Record<string, unknown> = {};
   if (item.bedrooms != null) features.bedrooms = item.bedrooms;
   if (item.bathrooms != null) features.bathrooms = item.bathrooms;
+  if (item.garages != null) features.garages = item.garages;
   if (item.stratum != null) features.stratum = item.stratum;
 
   return {
     country_code: COUNTRY,
-    city: item.city.toLowerCase().trim(),
+    city: normalizeCity(item.city),
     zone: item.zone ?? null,
     address: item.address ?? null,
     type: item.type,
@@ -106,9 +108,35 @@ function toInmueble(item: FichaListado): Inmueble | null {
     features,
     source: SOURCE,
     source_id: stableId(item),
-    source_url: PORTAL_URL,
+    source_url: pdfUrl,
     image_url: null,
   };
+}
+
+async function obtenerPDFDelLanding(): Promise<string | null> {
+  log.info(`Landing: ${LANDING_URL}`);
+  const { html, links, error } = await scrapeMarkdown({
+    url: LANDING_URL,
+    waitFor: 3000,
+    onlyMainContent: false,
+  });
+  if (error) {
+    log.error(`Landing falló`, error);
+    return null;
+  }
+
+  const fromHtml = [...(html ?? '').matchAll(PDF_URL_PATTERN)].map((m) => m[0]);
+  const fromLinks = links.filter((l) => /\.pdf$/i.test(l) && /avalvc\.com\.co\/repositorio/.test(l));
+  const candidates = [...new Set([...fromHtml, ...fromLinks])];
+
+  if (candidates.length === 0) {
+    log.warn('No se detectó PDF de inmuebles en landing');
+    return null;
+  }
+  // Si hay varios, tomamos el primero (debería ser único: Inmuebles.pdf más reciente)
+  const pdfUrl = candidates[0]!;
+  log.info(`PDF detectado: ${pdfUrl}`);
+  return pdfUrl;
 }
 
 export async function run(_opts: { maxDetails?: number } = {}): Promise<ScrapingRunResult> {
@@ -118,17 +146,23 @@ export async function run(_opts: { maxDetails?: number } = {}): Promise<Scraping
   };
 
   try {
-    log.info(`Scrapeando portal Aval: ${PORTAL_URL}`);
+    const pdfUrl = await obtenerPDFDelLanding();
+    if (!pdfUrl) {
+      result.errors.push({ message: 'No PDF detectado en landing Aval' });
+      await finishScrapingLog(logId, 'partial', result);
+      return result;
+    }
+    result.meta!.pdf_url = pdfUrl;
 
-    const { data, error } = await scrapeWithSchema<{ inmuebles: FichaListado[] }>({
-      url: PORTAL_URL,
-      schema: LISTADO_SCHEMA as Record<string, unknown>,
+    log.info(`Scrapeando PDF: ${pdfUrl}`);
+    const { data, error } = await scrapeWithSchema<{ inmuebles: Ficha[] }>({
+      url: pdfUrl,
+      schema: PDF_SCHEMA as Record<string, unknown>,
       prompt: PROMPT,
-      waitFor: 3000,
     });
 
     if (error) {
-      result.errors.push({ message: `scrape: ${error}` });
+      result.errors.push({ message: `pdf: ${error}` });
       await finishScrapingLog(logId, 'error', result);
       return result;
     }
@@ -137,13 +171,7 @@ export async function run(_opts: { maxDetails?: number } = {}): Promise<Scraping
     result.records_found = items.length;
     log.info(`Aval: ${items.length} inmuebles extraídos`);
 
-    if (items.length === 0) {
-      result.meta!.note = 'Sin inmuebles. Probable: PDF descargable no renderiza. Pivotear a pipeline pdf-parse + Claude Vision.';
-      await finishScrapingLog(logId, 'partial', result);
-      return result;
-    }
-
-    const inmuebles = items.map(toInmueble).filter((x): x is Inmueble => x != null);
+    const inmuebles = items.map((i) => toInmueble(i, pdfUrl)).filter((x): x is Inmueble => x != null);
     log.info(`Inmuebles válidos: ${inmuebles.length}/${items.length}`);
 
     if (inmuebles.length > 0) {
@@ -151,7 +179,7 @@ export async function run(_opts: { maxDetails?: number } = {}): Promise<Scraping
       result.records_inserted = up.inserted;
     }
 
-    const status = result.errors.length === 0 ? 'success' : 'partial';
+    const status = result.errors.length === 0 && inmuebles.length > 0 ? 'success' : 'partial';
     await finishScrapingLog(logId, status, result);
     return result;
   } catch (err) {
@@ -163,7 +191,5 @@ export async function run(_opts: { maxDetails?: number } = {}): Promise<Scraping
 
 const isMain = import.meta.url === `file://${process.argv[1]}`;
 if (isMain) {
-  run()
-    .then((r) => { log.info('Done', r); process.exit(0); })
-    .catch((e) => { log.error('Failed', e); process.exit(1); });
+  run().then((r) => { log.info('Done', r); process.exit(0); }).catch((e) => { log.error('Failed', e); process.exit(1); });
 }

@@ -6,13 +6,6 @@
  *
  * Output: matriz de viabilidad por portal — cuántas URLs encontró,
  *         cuántas extrajo, cuántas pasaron validación, errores.
- *
- * Volumen estimado en créditos Firecrawl:
- *   - Davivienda: 3 listados + 3 fichas = ~6 créditos
- *   - Bancolombia: 1 listado + 3 fichas = ~4 créditos
- *   - BBVA: 1 scrape listado completo = ~1 crédito
- *   - Aval: 1 scrape portal = ~1 crédito
- *   Total: ~12 créditos del Free Tier (1000/mes)
  */
 
 import { run as runDavivienda } from '../scrapers/CO/davivienda/index.js';
@@ -20,7 +13,7 @@ import { run as runBancolombia } from '../scrapers/CO/bancolombia/index.js';
 import { run as runBBVA } from '../scrapers/CO/bbva/index.js';
 import { run as runAval } from '../scrapers/CO/aval/index.js';
 
-const MAX_DETAILS = 3; // tope conservador para POC
+const MAX_DETAILS = 2; // tope conservador para POC
 
 type PortalResult = {
   portal: string;

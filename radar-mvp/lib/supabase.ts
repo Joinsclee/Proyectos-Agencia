@@ -3,6 +3,7 @@ import { env } from './env.js';
 import { createLogger } from './logger.js';
 import {
   InmuebleSchema,
+  isReasonableInmueble,
   type Inmueble,
   type ScrapingRunResult,
   type ScrapingRunStatus,
@@ -53,10 +54,37 @@ export async function upsertInmuebles(items: unknown[]): Promise<{
     return { inserted: 0, updated: 0, invalid: errors.length, errors };
   }
 
+  // ⭐ Filtro de outliers: descarta inmuebles con datos absurdos
+  // (price < 30M, area_m2 < 5m², area_m2 > 100k m² — típicamente errores de parsing de PDFs)
+  const reasonable = valid.filter(isReasonableInmueble);
+  const outliersDropped = valid.length - reasonable.length;
+  if (outliersDropped > 0) {
+    log.warn(`Outliers: descartados ${outliersDropped} registros con price/area absurdos`);
+  }
+
+  if (reasonable.length === 0) {
+    return { inserted: 0, updated: 0, invalid: errors.length + outliersDropped, errors };
+  }
+
+  // ⭐ Dedup por (country_code, source, source_id) — Supabase upsert no permite
+  // tocar la misma fila dos veces en el mismo statement. Si el scraper genera
+  // duplicados (común con hash MD5 de PDFs cuando los campos están vacíos),
+  // nos quedamos con la última instancia (más fresca).
+  const deduped = new Map<string, Inmueble>();
+  for (const v of reasonable) {
+    const key = `${v.country_code}|${v.source}|${v.source_id}`;
+    deduped.set(key, v);
+  }
+  const dedupedItems = [...deduped.values()];
+  const dropped = reasonable.length - dedupedItems.length;
+  if (dropped > 0) {
+    log.warn(`Dedup: descartados ${dropped} duplicados en batch (mismo source_id)`);
+  }
+
   // Supabase v2: upsert con onConflict por la constraint compuesta.
   const { data, error, count } = await supabase
     .from('inmuebles')
-    .upsert(valid, {
+    .upsert(dedupedItems, {
       onConflict: 'country_code,source,source_id',
       ignoreDuplicates: false,
       count: 'exact',
