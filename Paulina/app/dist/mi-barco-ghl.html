@@ -943,68 +943,489 @@ input[type="range"].pv-slider::-moz-range-thumb {
   background-size: 18px 18px;
 }
 
+/* ========================================================================
+   LOGIN / REGISTRO + CUENTA  (branding Paulina: navy #08315C + gold #F4C94A)
+   Adaptado del dashboard de Lina, con tipografía Asap.
+   ======================================================================== */
+
+/* ---- Full-bleed: escapa de contenedores de GHL ---- */
+.full-bleed {
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+}
+
+/* ---- Overlay de carga ---- */
+.pv-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--pv-navy);
+  transition: opacity .4s ease;
+}
+.pv-boot.hide { opacity: 0; pointer-events: none; }
+.pv-boot-loader {
+  width: 42px;
+  height: 42px;
+  border: 3px solid rgba(244, 201, 74, 0.25);
+  border-top-color: var(--pv-gold);
+  border-radius: 50%;
+  animation: pv-spin .7s linear infinite;
+}
+@keyframes pv-spin { to { transform: rotate(360deg); } }
+
+/* ---- Layout de la zona de auth ---- */
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  background: var(--pv-paper);
+}
+
+.auth-hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--pv-navy) 0%, var(--pv-navy-soft) 100%);
+  color: #fff;
+  padding: 3rem 3.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+.auth-hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
+/* Velo navy para legibilidad del texto sobre el video */
+.auth-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(8,49,92,0.55) 0%, rgba(8,49,92,0.25) 40%, rgba(8,49,92,0.70) 100%),
+    radial-gradient(circle at 80% 15%, rgba(244,201,74,0.16), transparent 45%);
+  pointer-events: none;
+}
+.auth-hero-content,
+.auth-hero-logo,
+.auth-hero-foot { position: relative; z-index: 2; }
+
+.auth-hero-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  margin-bottom: 1.25rem;
+  background: rgba(255, 255, 255, .95);
+  padding: .45rem .95rem .45rem .45rem;
+  border-radius: 100px;
+  box-shadow: 0 6px 22px -8px rgba(0, 0, 0, .35);
+  width: fit-content;
+}
+.auth-hero-logo .logo-img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.auth-hero-logo .logo-img img { width: 100%; height: 100%; object-fit: contain; padding: 3px; }
+.auth-hero-logo .logo-name {
+  color: var(--pv-navy);
+  font-size: .92rem;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+.auth-hero h1 {
+  font-family: var(--pv-font-sans);
+  font-size: 2.9rem;
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin: 0 0 1rem;
+  text-shadow: 0 2px 18px rgba(8,49,92,0.35);
+}
+.auth-hero h1 em { font-style: italic; font-weight: 700; color: var(--pv-gold); }
+.auth-hero p.lead {
+  font-size: 1.08rem;
+  line-height: 1.6;
+  max-width: 420px;
+  opacity: .94;
+  font-weight: 400;
+  text-shadow: 0 1px 10px rgba(8,49,92,0.3);
+}
+.auth-hero-foot { font-size: .82rem; opacity: .8; }
+
+/* ---- Columna de formularios ---- */
+.auth-form-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background: var(--pv-paper);
+}
+.auth-form-inner { width: 100%; max-width: 430px; }
+.auth-form-header { margin-bottom: 2rem; text-align: center; }
+.auth-form-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 22px;
+  background: #fff;
+  border: 1px solid var(--pv-line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 13px;
+  margin: 0 auto 1.2rem;
+  box-shadow: 0 10px 30px -14px rgba(8, 49, 92, .25);
+}
+.auth-form-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.auth-form-title {
+  font-family: var(--pv-font-sans);
+  font-weight: 800;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  color: var(--pv-navy);
+  letter-spacing: -.02em;
+  margin: 0;
+}
+.auth-form-title em { font-style: italic; font-weight: 700; color: var(--pv-gold); }
+
+.auth-card { width: 100%; max-width: 430px; }
+.auth-card .eyebrow {
+  font-style: italic;
+  color: var(--pv-navy-soft);
+  font-size: .95rem;
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+.auth-card h2 {
+  font-family: var(--pv-font-sans);
+  font-weight: 800;
+  font-size: 1.85rem;
+  color: var(--pv-ink);
+  letter-spacing: -.02em;
+  margin: 0 0 .4rem;
+}
+.auth-card .sub { color: var(--pv-ink-soft); font-size: .94rem; margin-bottom: 1.6rem; }
+
+/* ---- Campos ---- */
+.field { margin-bottom: 1.05rem; }
+.field label {
+  display: block;
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--pv-ink-soft);
+  margin-bottom: .4rem;
+}
+.field input {
+  width: 100%;
+  padding: .85rem 1rem;
+  border: 1.5px solid var(--pv-line);
+  border-radius: 12px;
+  font-family: var(--pv-font-sans);
+  font-size: .95rem;
+  background: #fff;
+  color: var(--pv-ink);
+  transition: border-color .2s ease, box-shadow .2s ease;
+  box-sizing: border-box;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--pv-gold);
+  box-shadow: 0 0 0 4px var(--pv-gold-glow);
+}
+.field input::placeholder { color: #aab4c0; }
+
+.pwd-wrap { position: relative; }
+.pwd-wrap input { padding-right: 2.9rem; }
+.pwd-toggle {
+  position: absolute;
+  top: 50%;
+  right: .5rem;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--pv-ink-soft);
+  border-radius: 8px;
+  transition: color .2s ease, background .2s ease;
+}
+.pwd-toggle:hover { color: var(--pv-navy); background: rgba(8, 49, 92, .05); }
+.pwd-toggle .eye-off { display: none; }
+.pwd-toggle.is-visible .eye-on { display: none; }
+.pwd-toggle.is-visible .eye-off { display: block; }
+
+.field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -.3rem 0 1rem;
+  font-size: .85rem;
+}
+.field-row a, .switch-auth a {
+  color: var(--pv-navy-soft);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.field-row a:hover, .switch-auth a:hover { color: var(--pv-gold); text-decoration: underline; }
+
+.switch-auth {
+  text-align: center;
+  margin-top: 1.6rem;
+  color: var(--pv-ink-soft);
+  font-size: .9rem;
+}
+
+/* ---- Botón de auth ---- */
+.auth-btn {
+  width: 100%;
+  padding: .95rem 1.2rem;
+  border-radius: 12px;
+  font-family: var(--pv-font-sans);
+  font-size: .98rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+  cursor: pointer;
+  border: none;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+}
+.auth-btn-primary { background: var(--pv-navy); color: #fff; }
+.auth-btn-primary:hover {
+  background: var(--pv-navy-soft);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -10px rgba(8, 49, 92, .5);
+}
+.auth-btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ---- Alertas ---- */
+.alert {
+  padding: .8rem 1rem;
+  border-radius: 10px;
+  font-size: .88rem;
+  margin-bottom: 1.1rem;
+  display: none;
+  line-height: 1.45;
+}
+.alert.show { display: block; }
+.alert.error { background: #fdecec; color: var(--pv-coral); border-left: 3px solid var(--pv-coral); }
+.alert.success { background: #e9f4ee; color: var(--pv-mint); border-left: 3px solid var(--pv-mint); }
+
+/* ---- Spinner ---- */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: pv-spin .7s linear infinite;
+  display: none;
+}
+.spinner.show { display: inline-block; }
+
+/* ---- Barra de cuenta (dentro de la app) ---- */
+.pv-account-bar {
+  width: 100%;
+  background: var(--pv-navy);
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+.pv-account-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: .55rem 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+}
+.user-chip-wrap { position: relative; }
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: #fff;
+  padding: .35rem .7rem .35rem .4rem;
+  border-radius: 100px;
+  cursor: pointer;
+  font-family: var(--pv-font-sans);
+  font-size: .86rem;
+  font-weight: 600;
+  transition: background .2s ease;
+}
+.user-chip:hover { background: rgba(255, 255, 255, .16); }
+.user-chip .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--pv-gold);
+  color: var(--pv-navy);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .78rem;
+  font-weight: 800;
+}
+.user-menu {
+  position: absolute;
+  top: calc(100% + .5rem);
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--pv-line);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px -16px rgba(8, 49, 92, .35);
+  padding: .35rem;
+  min-width: 180px;
+  display: none;
+  z-index: 50;
+}
+.user-menu.show { display: block; }
+.user-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .65rem .75rem;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--pv-font-sans);
+  font-size: .9rem;
+  font-weight: 600;
+  color: var(--pv-ink);
+  text-align: left;
+}
+.user-menu button:hover { background: var(--pv-paper); color: var(--pv-navy); }
+
+/* ---- Responsive: apila el hero arriba en pantallas pequeñas ---- */
+@media (max-width: 900px) {
+  .auth-shell { grid-template-columns: 1fr; }
+  .auth-hero {
+    min-height: 240px;
+    padding: 2rem 1.75rem;
+  }
+  .auth-hero h1 { font-size: 2.1rem; }
+  .auth-hero p.lead { font-size: 1rem; }
+  .auth-form-wrap { padding: 2.25rem 1.5rem; }
+}
+@media (max-width: 560px) {
+  .auth-hero { min-height: 180px; }
+  .auth-hero p.lead, .auth-hero-foot { display: none; }
+  .auth-form-title { font-size: 1.5rem; }
+  .auth-card h2 { font-size: 1.6rem; }
+}
+
 </style>
+
+  <!-- Supabase (auth + base de datos). Debe cargar ANTES de app.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script>
 /* ========================================
-   Mi Barco — Lógica compartida
+   Mi Barco — Lógica + sincronización con Supabase
    Sistema de hábitos de Paulina Valencia
    Basado en los libros "No eres tú, son tus hábitos" y "Hábitos con cerebro"
+   --------------------------------------------------------------
+   IMPORTANTE: el progreso de la usuaria NO se guarda en localStorage.
+   Todo vive en Supabase (tabla mi_barco_state). Aquí solo mantenemos una
+   copia EN MEMORIA que se hidrata al iniciar sesión y se sincroniza
+   (upsert con debounce) en cada cambio.
    ======================================== */
+
+/* ====== CONFIGURACIÓN (EDITAR ANTES DE PUBLICAR) ======
+   1) Crea el proyecto en https://supabase.com y corre las migraciones de
+      Paulina/supabase/migrations/.
+   2) Pega aquí la URL y la anon key (Project Settings → API).
+   3) (Opcional) Pega la URL del video .mp4 del login tras subirlo a GHL.
+   Vuelve a ejecutar build-ghl.sh después de editar este archivo. */
+window.MI_BARCO_CONFIG = {
+  SUPABASE_URL: 'https://TU-PROYECTO.supabase.co',
+  SUPABASE_ANON_KEY: 'TU_ANON_KEY_PUBLICA',
+  VIDEO_URL: '' // URL del .mp4 del hero del login. Vacío = fondo gradiente navy/gold.
+};
 
 (function (global) {
   'use strict';
 
-  const STORAGE_PREFIX = 'mi_barco_v2';
+  // ----- Estado EN MEMORIA (la única fuente de verdad vive en Supabase) -----
+  const _store = { name: '', rueda: null, tracker: null, plan: null };
+  let _userId = null;
 
-  // ----- Identidad de usuario -----
-  function getUserId() {
-    const params = new URLSearchParams(window.location.search);
-    const emailParam = params.get('email');
-    if (emailParam) return emailParam.trim().toLowerCase();
+  const _hasContent = (v) => v && typeof v === 'object' && Object.keys(v).length > 0;
 
-    let anon = localStorage.getItem(`${STORAGE_PREFIX}__anon_id`);
-    if (!anon) {
-      anon = 'anon_' + Math.random().toString(36).slice(2, 10);
-      localStorage.setItem(`${STORAGE_PREFIX}__anon_id`, anon);
+  // Hidrata el estado desde una fila de Supabase (o vacío si la cuenta es nueva).
+  function hydrate(row, name) {
+    _store.name = name || '';
+    _store.rueda = _hasContent(row && row.rueda) ? row.rueda : null;
+    _store.tracker = _hasContent(row && row.tracker) ? row.tracker : null;
+    _store.plan = _hasContent(row && row.plan) ? row.plan : null;
+  }
+
+  function setUserId(id) { _userId = id; }
+  function getUserId() { return _userId; }
+
+  // Snapshot serializable para el upsert a Supabase.
+  function getState() {
+    return {
+      rueda: _store.rueda || {},
+      tracker: _store.tracker || {},
+      plan: _store.plan || {}
+    };
+  }
+
+  // Limpia el estado en memoria (al cerrar sesión).
+  function resetState() {
+    _store.name = '';
+    _store.rueda = null;
+    _store.tracker = null;
+    _store.plan = null;
+    _userId = null;
+  }
+
+  // Avisa a la capa de nube que hay cambios pendientes por sincronizar.
+  function _schedulePush() {
+    if (global.MiBarcoCloud && typeof global.MiBarcoCloud.schedulePush === 'function') {
+      global.MiBarcoCloud.schedulePush();
     }
-    return anon;
   }
 
-  function getUserName() {
-    const params = new URLSearchParams(window.location.search);
-    const nameParam = params.get('name');
-    if (nameParam) return nameParam.trim();
-    return localStorage.getItem(`${STORAGE_PREFIX}__name`) || '';
-  }
+  // ----- Identidad de usuario (el nombre proviene de la sesión de Supabase) -----
+  function getUserName() { return _store.name || ''; }
+  function setUserName(name) { if (name) { _store.name = name; } }
 
-  function setUserName(name) {
-    if (name) localStorage.setItem(`${STORAGE_PREFIX}__name`, name);
-  }
-
-  function storageKey(scope) {
-    return `${STORAGE_PREFIX}__${getUserId()}__${scope}`;
-  }
-
+  // ----- Acceso al estado en memoria (reemplaza por completo a localStorage) -----
   function load(scope, fallback) {
-    try {
-      const raw = localStorage.getItem(storageKey(scope));
-      return raw ? JSON.parse(raw) : fallback;
-    } catch (e) {
-      console.warn('Error leyendo storage:', e);
-      return fallback;
-    }
+    return _store[scope] != null ? _store[scope] : fallback;
   }
 
   function save(scope, data) {
-    try {
-      localStorage.setItem(storageKey(scope), JSON.stringify(data));
-      return true;
-    } catch (e) {
-      console.error('Error guardando en storage:', e);
-      return false;
-    }
+    _store[scope] = data;
+    _schedulePush();
+    return true;
   }
 
   // ----- Pilares de la Rueda (del libro de Paulina, pág. 188-190) -----
@@ -1517,6 +1938,7 @@ input[type="range"].pv-slider::-moz-range-thumb {
   // ----- Exponer API -----
   global.MisPliegues = {
     getUserId, getUserName, setUserName,
+    hydrate, setUserId, getState, resetState,
     PILARES_DEFAULT, NEUROPLIEGUES, OBSTACULOS, ICONS, icon,
     getRueda, saveRueda, getPilarMasBajo, getPromedioRueda,
     getTracker, saveTracker, getMesActual, getDiasDelMes, getDiaActual,
@@ -1530,9 +1952,528 @@ input[type="range"].pv-slider::-moz-range-thumb {
   global.MiBarco = global.MisPliegues;
 })(window);
 
+
+/* ============================================================
+   MiBarcoCloud + Autenticación (Supabase)
+   - Gate de login obligatorio (estilo dashboard de Lina, branding Paulina)
+   - Sincroniza el estado de Mi Barco con la tabla `mi_barco_state`
+   - El progreso NO se guarda en localStorage; vive solo en Supabase.
+   ============================================================ */
+(function (global) {
+  'use strict';
+
+  const CFG = global.MI_BARCO_CONFIG || {};
+  const SUPABASE_URL = CFG.SUPABASE_URL || '';
+  const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || '';
+  const VIDEO_URL = CFG.VIDEO_URL || '';
+
+  const isConfigured = () =>
+    !!SUPABASE_URL && !!SUPABASE_ANON_KEY &&
+    !/TU-PROYECTO/.test(SUPABASE_URL) && !/TU_ANON_KEY/.test(SUPABASE_ANON_KEY);
+
+  let sb = null;
+  if (global.supabase && isConfigured()) {
+    sb = global.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }
+    });
+  }
+
+  // ---------- Helpers de DOM ----------
+  const $ = (s) => document.querySelector(s);
+
+  function showAlert(id, msg, type = 'error') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `alert show ${type}`;
+  }
+  function clearAlert(id) {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'alert'; el.textContent = ''; }
+  }
+  function clearAuthAlerts() {
+    ['alert-login', 'alert-register', 'alert-forgot', 'alert-reset'].forEach(clearAlert);
+  }
+  function setLoading(form, on) {
+    const btn = form.querySelector('button[type="submit"]');
+    if (!btn) return;
+    const sp = btn.querySelector('.spinner');
+    const txt = btn.querySelector('.txt');
+    btn.disabled = on;
+    if (sp) sp.classList.toggle('show', on);
+    if (txt) txt.style.opacity = on ? 0.6 : 1;
+  }
+  function showAuthCard(name) {
+    ['login', 'register', 'forgot', 'reset'].forEach((n) => {
+      const c = document.getElementById(`card-${n}`);
+      if (c) c.style.display = n === name ? 'block' : 'none';
+    });
+  }
+  function initials(name, email) {
+    const src = (name || '').trim() || (email || '').trim();
+    const parts = src.split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return (src[0] || '·').toUpperCase();
+  }
+  function traducirError(msg = '') {
+    const m = msg.toLowerCase();
+    if (m.includes('invalid login')) return 'Correo o contraseña incorrectos.';
+    if (m.includes('user already registered')) return 'Ya existe una cuenta con ese correo.';
+    if (m.includes('password should be')) return 'La contraseña debe tener al menos 8 caracteres.';
+    if (m.includes('email rate limit')) return 'Demasiados intentos. Espera unos minutos.';
+    if (m.includes('unable to validate email')) return 'Correo inválido.';
+    if (m.includes('failed to fetch')) return 'No hay conexión con el servidor. Revisa tu internet.';
+    return msg || 'Ocurrió un error. Intenta de nuevo.';
+  }
+  function notifyToast(message) {
+    window.dispatchEvent(new CustomEvent('mibarco:toast', { detail: { message } }));
+  }
+
+  // ---------- Sincronización con Supabase ----------
+  let _ready = false;
+  let _pushTimer = null;
+  let _pushing = false;
+  let _pendingPush = false;
+
+  async function hydrate(session) {
+    const user = session.user;
+    const name = (user.user_metadata && user.user_metadata.full_name) ||
+      (user.email || '').split('@')[0] || '';
+    MisPliegues.setUserId(user.id);
+    let row = null;
+    try {
+      const { data, error } = await sb
+        .from('mi_barco_state')
+        .select('rueda,tracker,plan')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      row = data;
+    } catch (e) {
+      console.warn('No se pudo leer el estado de la nube:', e);
+    }
+    MisPliegues.hydrate(row || {}, name);
+    _ready = true;
+    MiBarcoCloud.ready = true;
+  }
+
+  function schedulePush() {
+    if (!sb || !_ready) return;
+    if (_pushTimer) clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(flushPush, 600);
+  }
+
+  async function flushPush() {
+    if (!sb || !_ready) return;
+    if (_pushing) { _pendingPush = true; return; }
+    const userId = MisPliegues.getUserId();
+    if (!userId) return;
+    _pushing = true;
+    try {
+      const payload = Object.assign(
+        { user_id: userId, updated_at: new Date().toISOString() },
+        MisPliegues.getState()
+      );
+      const { error } = await sb.from('mi_barco_state').upsert(payload, { onConflict: 'user_id' });
+      if (error) throw error;
+    } catch (e) {
+      console.error('Error guardando en Supabase:', e);
+      notifyToast('No se pudo guardar en la nube. Reintentando…');
+      _pendingPush = true;
+    } finally {
+      _pushing = false;
+      if (_pendingPush) { _pendingPush = false; setTimeout(flushPush, 1500); }
+    }
+  }
+
+  // ---------- Flujos de autenticación ----------
+  async function handleLogin(e) {
+    e.preventDefault();
+    clearAlert('alert-login');
+    const f = e.target;
+    setLoading(f, true);
+    const { email, password } = Object.fromEntries(new FormData(f));
+    const { data, error } = await sb.auth.signInWithPassword({
+      email: (email || '').trim().toLowerCase(), password
+    });
+    setLoading(f, false);
+    if (error) { showAlert('alert-login', traducirError(error.message)); return; }
+    enterApp(data.session);
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    clearAlert('alert-register');
+    const f = e.target;
+    setLoading(f, true);
+    const { name, email, password } = Object.fromEntries(new FormData(f));
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanName = (name || '').trim();
+    const { data, error } = await sb.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: { data: { full_name: cleanName } }
+    });
+    if (error) { setLoading(f, false); showAlert('alert-register', traducirError(error.message)); return; }
+
+    // Sin verificación por email: si hay sesión entramos directo; si no, login.
+    let session = data.session;
+    if (!session) {
+      const login = await sb.auth.signInWithPassword({ email: cleanEmail, password });
+      if (login.error) {
+        setLoading(f, false);
+        showAlert('alert-register', 'Cuenta creada. Inicia sesión para continuar.', 'success');
+        setTimeout(() => showAuthCard('login'), 1200);
+        return;
+      }
+      session = login.data.session;
+    }
+    setLoading(f, false);
+    enterApp(session);
+  }
+
+  async function handleForgot(e) {
+    e.preventDefault();
+    clearAlert('alert-forgot');
+    const f = e.target;
+    setLoading(f, true);
+    const { email } = Object.fromEntries(new FormData(f));
+    const { error } = await sb.auth.resetPasswordForEmail((email || '').trim().toLowerCase(), {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    setLoading(f, false);
+    if (error) { showAlert('alert-forgot', traducirError(error.message)); return; }
+    showAlert('alert-forgot', 'Te enviamos un enlace. Revisa tu correo (y spam por si acaso).', 'success');
+  }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    clearAlert('alert-reset');
+    const f = e.target;
+    const { password, password2 } = Object.fromEntries(new FormData(f));
+    if (password !== password2) { showAlert('alert-reset', 'Las contraseñas no coinciden.'); return; }
+    setLoading(f, true);
+    const { error } = await sb.auth.updateUser({ password });
+    setLoading(f, false);
+    if (error) { showAlert('alert-reset', traducirError(error.message)); return; }
+    showAlert('alert-reset', 'Contraseña actualizada. Iniciando sesión…', 'success');
+    setTimeout(async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) enterApp(session); else showAuthCard('login');
+    }, 900);
+  }
+
+  async function doLogout() {
+    try { if (sb) await sb.auth.signOut(); } catch (e) { /* noop */ }
+    MisPliegues.resetState();
+    location.reload();
+  }
+
+  // ---------- Cambio de vista ----------
+  async function enterApp(session) {
+    const user = session.user;
+    const name = (user.user_metadata && user.user_metadata.full_name) ||
+      (user.email || '').split('@')[0] || '';
+    const elName = document.getElementById('userName');
+    const elAvatar = document.getElementById('userAvatar');
+    if (elName) elName.textContent = name || 'Mi cuenta';
+    if (elAvatar) elAvatar.textContent = initials(name, user.email);
+
+    const auth = document.getElementById('view-auth');
+    const app = document.getElementById('view-app');
+    if (auth) auth.style.display = 'none';
+    if (app) app.style.display = '';
+
+    await hydrate(session);
+    window.dispatchEvent(new CustomEvent('mibarco:ready'));
+  }
+
+  // ---------- Video del hero (login) ----------
+  function initHeroVideo() {
+    const v = document.getElementById('heroVideo');
+    if (!v) return;
+    if (!VIDEO_URL) { v.remove(); return; } // sin video: queda el fondo gradiente navy/gold
+    v.src = VIDEO_URL;
+    v.play().catch(() => { /* autoplay bloqueado: el loop arranca con gesto */ });
+  }
+
+  // ---------- Toggle mostrar/ocultar contraseña ----------
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-pwd-toggle]');
+    if (!btn) return;
+    const wrap = btn.closest('.pwd-wrap');
+    if (!wrap) return;
+    const input = wrap.querySelector('input');
+    if (!input) return;
+    const visible = input.type === 'text';
+    input.type = visible ? 'password' : 'text';
+    btn.classList.toggle('is-visible', !visible);
+    btn.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  });
+
+  // ---------- API pública ----------
+  const MiBarcoCloud = {
+    ready: false,
+    schedulePush,
+    flushPush,
+    hydrate,
+    logout: doLogout,
+    getClient: () => sb,
+    isConfigured
+  };
+  global.MiBarcoCloud = MiBarcoCloud;
+
+  // ---------- Arranque ----------
+  document.addEventListener('DOMContentLoaded', async () => {
+    initHeroVideo();
+
+    // Navegación entre tarjetas de auth (data-nav="login|register|forgot")
+    document.body.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-nav]');
+      if (a) { e.preventDefault(); clearAuthAlerts(); showAuthCard(a.dataset.nav); }
+    });
+
+    // Envío de formularios
+    const fl = $('#form-login'); if (fl) fl.addEventListener('submit', handleLogin);
+    const fr = $('#form-register'); if (fr) fr.addEventListener('submit', handleRegister);
+    const ff = $('#form-forgot'); if (ff) ff.addEventListener('submit', handleForgot);
+    const frs = $('#form-reset'); if (frs) frs.addEventListener('submit', handleReset);
+
+    // Menú de cuenta (chip + cerrar sesión)
+    const chip = $('#userChip');
+    if (chip) chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = $('#userMenu'); if (m) m.classList.toggle('show');
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.user-chip-wrap')) {
+        const m = $('#userMenu'); if (m) m.classList.remove('show');
+      }
+    });
+    const lo = $('#btnLogout'); if (lo) lo.addEventListener('click', doLogout);
+
+    const boot = document.getElementById('boot');
+
+    // Supabase sin configurar: mostramos login con aviso claro.
+    if (!sb) {
+      showAuthCard('login');
+      showAlert('alert-login', '⚙️ Falta configurar Supabase en app.js (SUPABASE_URL y anon key).');
+      if (boot) boot.classList.add('hide');
+      return;
+    }
+
+    // Flujo de recuperación de contraseña (Supabase redirige con token en la URL)
+    const hash = window.location.hash || '';
+    const isRecovery = hash.includes('type=recovery') ||
+      new URL(window.location.href).searchParams.get('type') === 'recovery';
+
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        const auth = document.getElementById('view-auth');
+        const app = document.getElementById('view-app');
+        if (auth) auth.style.display = '';
+        if (app) app.style.display = 'none';
+        showAuthCard('reset');
+        if (boot) boot.classList.add('hide');
+      }
+    });
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (isRecovery) {
+      showAuthCard('reset');
+    } else if (session) {
+      await enterApp(session);
+    } else {
+      showAuthCard('login');
+    }
+    if (boot) setTimeout(() => boot.classList.add('hide'), 200);
+  });
+})(window);
+
 </script>
 </head>
 <body>
+
+<!-- ===================== OVERLAY DE CARGA ===================== -->
+<div class="pv-boot" id="boot">
+  <div class="pv-boot-loader"></div>
+</div>
+
+<!-- ===================== LOGIN / REGISTRO ===================== -->
+<div class="auth-shell full-bleed" id="view-auth">
+  <!-- Hero con video (fallback: gradiente navy/gold) -->
+  <aside class="auth-hero">
+    <video class="auth-hero-video" id="heroVideo" autoplay loop muted playsinline preload="auto"></video>
+    <div class="auth-hero-overlay"></div>
+    <div class="auth-hero-content">
+      <div class="auth-hero-logo">
+        <span class="logo-img">
+          <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
+               alt="Paulina Valencia" />
+        </span>
+        <span class="logo-name">Paulina Valencia</span>
+      </div>
+      <h1>Construye tu identidad,<br/><em>un pliegue a la vez</em>.</h1>
+      <p class="lead">Diagnostica con la Rueda, comprende tu cerebro con los Neuropliegues y sostén tus hábitos con el Tracker.</p>
+    </div>
+    <div class="auth-hero-foot">Mi Barco · Mini-app del ecosistema de Paulina Valencia</div>
+  </aside>
+
+  <!-- Formularios -->
+  <section class="auth-form-wrap">
+    <div class="auth-form-inner">
+      <div class="auth-form-header">
+        <div class="auth-form-logo">
+          <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
+               alt="Paulina Valencia" />
+        </div>
+        <h1 class="auth-form-title">Tu bitácora de <em>hábitos</em>, siempre contigo.</h1>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="auth-card" id="card-login">
+        <div class="eyebrow">Bienvenida de vuelta</div>
+        <h2>Ingresa a Mi Barco</h2>
+        <p class="sub">Accede con el correo que usaste al registrarte.</p>
+        <div class="alert" id="alert-login"></div>
+        <form id="form-login" novalidate>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field-row">
+            <span></span>
+            <a data-nav="forgot">¿Olvidaste tu contraseña?</a>
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Iniciar sesión</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+        <div class="switch-auth">¿Aún no tienes cuenta? <a data-nav="register">Crea la tuya</a></div>
+      </div>
+
+      <!-- REGISTRO -->
+      <div class="auth-card" id="card-register" style="display:none">
+        <div class="eyebrow">Te damos la bienvenida</div>
+        <h2>Crea tu cuenta</h2>
+        <p class="sub">En un minuto empiezas a construir tu identidad.</p>
+        <div class="alert" id="alert-register"></div>
+        <form id="form-register" novalidate>
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" name="name" placeholder="Tu nombre" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" minlength="8" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Crear mi cuenta</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+        <div class="switch-auth">¿Ya tienes cuenta? <a data-nav="login">Inicia sesión</a></div>
+      </div>
+
+      <!-- OLVIDÉ CONTRASEÑA -->
+      <div class="auth-card" id="card-forgot" style="display:none">
+        <div class="eyebrow">Recuperar acceso</div>
+        <h2>¿Olvidaste tu contraseña?</h2>
+        <p class="sub">Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
+        <div class="alert" id="alert-forgot"></div>
+        <form id="form-forgot" novalidate>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Enviar enlace</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+        <div class="switch-auth"><a data-nav="login">Volver al inicio de sesión</a></div>
+      </div>
+
+      <!-- NUEVA CONTRASEÑA (reset desde el enlace de Supabase) -->
+      <div class="auth-card" id="card-reset" style="display:none">
+        <div class="eyebrow">Nueva contraseña</div>
+        <h2>Elige una contraseña</h2>
+        <p class="sub">Ingresa una nueva contraseña para tu cuenta.</p>
+        <div class="alert" id="alert-reset"></div>
+        <form id="form-reset" novalidate>
+          <div class="field">
+            <label>Nueva contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Confirmar contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password2" minlength="8" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Guardar contraseña</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+      </div>
+
+    </div><!-- /auth-form-inner -->
+  </section>
+</div><!-- /view-auth -->
+
+<!-- ===================== APP (visible tras iniciar sesión) ===================== -->
+<div id="view-app" style="display:none">
+
+<!-- Barra de cuenta -->
+<div class="pv-account-bar">
+  <div class="pv-account-inner">
+    <div class="user-chip-wrap">
+      <button class="user-chip" id="userChip" type="button">
+        <span class="avatar" id="userAvatar">·</span>
+        <span id="userName">Mi cuenta</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-menu" id="userMenu">
+        <button type="button" id="btnLogout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="pv-root">
   <div class="pv-container" x-data="miBarcoApp()" x-init="init()">
@@ -2413,6 +3354,7 @@ input[type="range"].pv-slider::-moz-range-thumb {
     </footer>
   </div>
 </div>
+</div><!-- /view-app -->
 
 <script>
 function miBarcoApp() {
@@ -2462,12 +3404,15 @@ function miBarcoApp() {
 
     // ====================================================
     init() {
-      this.userName = MisPliegues.getUserName();
-      this.rueda = MisPliegues.getRueda();
-      this.tracker = MisPliegues.getTracker();
-      this.plan = MisPliegues.getPlan();
-      this.mesActivo = MisPliegues.getMesActual();
-      if (this.tracker.habitos.length > 0) this.habitoActivo = this.tracker.habitos[0].id;
+      // Los datos viven en Supabase: cargamos el estado cuando la sesión
+      // está hidratada. La capa de auth (app.js) dispara 'mibarco:ready'.
+      if (window.MiBarcoCloud && window.MiBarcoCloud.ready) this.cargarEstado();
+      window.addEventListener('mibarco:ready', () => this.cargarEstado());
+
+      // Toast de errores de sincronización emitido por MiBarcoCloud.
+      window.addEventListener('mibarco:toast', (e) => {
+        this.showToast((e.detail && e.detail.message) || 'Aviso', 'var(--pv-coral)');
+      });
 
       const hash = window.location.hash.replace('#', '');
       if (['home','rueda','neuropliegues','tracker','plan'].includes(hash)) this.vista = hash;
@@ -2475,6 +3420,15 @@ function miBarcoApp() {
         const h = window.location.hash.replace('#', '');
         if (['home','rueda','neuropliegues','tracker','plan'].includes(h)) this.vista = h;
       });
+    },
+
+    cargarEstado() {
+      this.userName = MisPliegues.getUserName();
+      this.rueda = MisPliegues.getRueda();
+      this.tracker = MisPliegues.getTracker();
+      this.plan = MisPliegues.getPlan();
+      this.mesActivo = MisPliegues.getMesActual();
+      if (this.tracker.habitos.length > 0) this.habitoActivo = this.tracker.habitos[0].id;
 
       const params = new URLSearchParams(window.location.search);
       const pilarParam = params.get('pilar');
@@ -2483,6 +3437,10 @@ function miBarcoApp() {
         this.vista = 'tracker';
         setTimeout(() => this.abrirNuevoHabito(), 200);
       }
+    },
+
+    logout() {
+      if (window.MiBarcoCloud) window.MiBarcoCloud.logout();
     },
 
     cambiarVista(v) {

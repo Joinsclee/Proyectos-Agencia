@@ -22,6 +22,7 @@ import {
 } from '../../../lib/supabase.js';
 import { createLogger } from '../../../lib/logger.js';
 import { normalizeCity, type Inmueble, type ScrapingRunResult } from '../../../lib/types.js';
+import { isEntrypoint } from '../../../lib/is-main.js';
 
 const SOURCE = 'bancolombia';
 const COUNTRY = 'CO';
@@ -248,7 +249,7 @@ export async function run(opts: { maxDetails?: number } = {}): Promise<ScrapingR
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+const isMain = isEntrypoint(import.meta.url);
 if (isMain) {
   const arg = process.argv.find((a) => a.startsWith('--max='));
   const maxDetails = arg ? parseInt(arg.split('=')[1]!, 10) : undefined;

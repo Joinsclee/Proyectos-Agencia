@@ -10,8 +10,8 @@
 
 import { run as runDavivienda } from '../scrapers/CO/davivienda/index.js';
 import { run as runBancolombia } from '../scrapers/CO/bancolombia/index.js';
-import { run as runBBVA } from '../scrapers/CO/bbva/index.js';
-import { run as runAval } from '../scrapers/CO/aval/index.js';
+import { run as runBBVA } from '../scrapers/CO/bbva/index-v2.js';
+import { run as runAval } from '../scrapers/CO/aval/index-v2.js';
 
 const MAX_DETAILS = 2; // tope conservador para POC
 
@@ -70,8 +70,8 @@ async function main() {
 
   results.push(await runPortal('davivienda', () => runDavivienda({ maxDetails: MAX_DETAILS })));
   results.push(await runPortal('bancolombia', () => runBancolombia({ maxDetails: MAX_DETAILS })));
-  results.push(await runPortal('bbva', () => runBBVA()));
-  results.push(await runPortal('aval', () => runAval()));
+  results.push(await runPortal('bbva', () => runBBVA({ maxPages: 20 })));
+  results.push(await runPortal('aval', () => runAval({ maxPages: 20 })));
 
   console.log('\n┌─────────────────────────────────────────────────────────────────────────┐');
   console.log('│           MATRIZ DE VIABILIDAD — Smoke test Firecrawl                  │');

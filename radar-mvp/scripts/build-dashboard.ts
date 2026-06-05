@@ -12,6 +12,9 @@ import { supabase } from '../lib/supabase.js';
 import { normalizeCity, isReasonableInmueble } from '../lib/types.js';
 import { createLogger } from '../lib/logger.js';
 import { writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const log = createLogger('dashboard');
 
@@ -857,8 +860,15 @@ async function main() {
   log.info('Paso 3: HTML');
   const html = buildHTML(inmuebles);
 
-  const permanentPath = '/Users/cristhian/Downloads/Paginas Web/Andres Giraldo/RadarMVP-Dashboard.html';
-  const tmpPath = '/tmp/radar-dashboard.html';
+  // Output del dashboard. Por defecto el HTML real del repo en
+  // `../../Andres Giraldo/RadarMVP-Dashboard.html`, resuelto relativo a este
+  // script para que funcione en cualquier máquina (Mac/Windows/Linux).
+  // Override opcional: DASHBOARD_OUT=/ruta/personalizada.html
+  const here = dirname(fileURLToPath(import.meta.url));
+  const permanentPath =
+    process.env.DASHBOARD_OUT ??
+    join(here, '..', '..', 'Andres Giraldo', 'RadarMVP-Dashboard.html');
+  const tmpPath = join(tmpdir(), 'radar-dashboard.html');
   writeFileSync(permanentPath, html, 'utf8');
   writeFileSync(tmpPath, html, 'utf8');
   log.info(`✅ ${permanentPath} (${(html.length / 1024).toFixed(0)} KB)`);

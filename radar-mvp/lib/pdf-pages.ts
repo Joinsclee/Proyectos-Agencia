@@ -1,8 +1,10 @@
 /**
  * Utilidades para procesar PDFs página por página.
  *
- * Requiere poppler-utils instalado (pdftoppm, pdftotext, pdfinfo).
- *   brew install poppler
+ * Requiere poppler-utils instalado (pdftoppm, pdftotext, pdfinfo) en el PATH:
+ *   - macOS:   brew install poppler
+ *   - Windows: choco install poppler   (o scoop install poppler)
+ *   - Linux:   apt-get install poppler-utils
  *
  * Flow:
  * 1. downloadPdfDirect(url) o downloadPdfViaFirecrawl(url) → archivo local

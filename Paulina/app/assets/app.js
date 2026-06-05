@@ -1,61 +1,84 @@
 /* ========================================
-   Mi Barco — Lógica compartida
+   Mi Barco — Lógica + sincronización con Supabase
    Sistema de hábitos de Paulina Valencia
    Basado en los libros "No eres tú, son tus hábitos" y "Hábitos con cerebro"
+   --------------------------------------------------------------
+   IMPORTANTE: el progreso de la usuaria NO se guarda en localStorage.
+   Todo vive en Supabase (tabla mi_barco_state). Aquí solo mantenemos una
+   copia EN MEMORIA que se hidrata al iniciar sesión y se sincroniza
+   (upsert con debounce) en cada cambio.
    ======================================== */
+
+/* ====== CONFIGURACIÓN (EDITAR ANTES DE PUBLICAR) ======
+   1) Crea el proyecto en https://supabase.com y corre las migraciones de
+      Paulina/supabase/migrations/.
+   2) Pega aquí la URL y la anon key (Project Settings → API).
+   3) (Opcional) Pega la URL del video .mp4 del login tras subirlo a GHL.
+   Vuelve a ejecutar build-ghl.sh después de editar este archivo. */
+window.MI_BARCO_CONFIG = {
+  SUPABASE_URL: 'https://TU-PROYECTO.supabase.co',
+  SUPABASE_ANON_KEY: 'TU_ANON_KEY_PUBLICA',
+  VIDEO_URL: '' // URL del .mp4 del hero del login. Vacío = fondo gradiente navy/gold.
+};
 
 (function (global) {
   'use strict';
 
-  const STORAGE_PREFIX = 'mi_barco_v2';
+  // ----- Estado EN MEMORIA (la única fuente de verdad vive en Supabase) -----
+  const _store = { name: '', rueda: null, tracker: null, plan: null };
+  let _userId = null;
 
-  // ----- Identidad de usuario -----
-  function getUserId() {
-    const params = new URLSearchParams(window.location.search);
-    const emailParam = params.get('email');
-    if (emailParam) return emailParam.trim().toLowerCase();
+  const _hasContent = (v) => v && typeof v === 'object' && Object.keys(v).length > 0;
 
-    let anon = localStorage.getItem(`${STORAGE_PREFIX}__anon_id`);
-    if (!anon) {
-      anon = 'anon_' + Math.random().toString(36).slice(2, 10);
-      localStorage.setItem(`${STORAGE_PREFIX}__anon_id`, anon);
+  // Hidrata el estado desde una fila de Supabase (o vacío si la cuenta es nueva).
+  function hydrate(row, name) {
+    _store.name = name || '';
+    _store.rueda = _hasContent(row && row.rueda) ? row.rueda : null;
+    _store.tracker = _hasContent(row && row.tracker) ? row.tracker : null;
+    _store.plan = _hasContent(row && row.plan) ? row.plan : null;
+  }
+
+  function setUserId(id) { _userId = id; }
+  function getUserId() { return _userId; }
+
+  // Snapshot serializable para el upsert a Supabase.
+  function getState() {
+    return {
+      rueda: _store.rueda || {},
+      tracker: _store.tracker || {},
+      plan: _store.plan || {}
+    };
+  }
+
+  // Limpia el estado en memoria (al cerrar sesión).
+  function resetState() {
+    _store.name = '';
+    _store.rueda = null;
+    _store.tracker = null;
+    _store.plan = null;
+    _userId = null;
+  }
+
+  // Avisa a la capa de nube que hay cambios pendientes por sincronizar.
+  function _schedulePush() {
+    if (global.MiBarcoCloud && typeof global.MiBarcoCloud.schedulePush === 'function') {
+      global.MiBarcoCloud.schedulePush();
     }
-    return anon;
   }
 
-  function getUserName() {
-    const params = new URLSearchParams(window.location.search);
-    const nameParam = params.get('name');
-    if (nameParam) return nameParam.trim();
-    return localStorage.getItem(`${STORAGE_PREFIX}__name`) || '';
-  }
+  // ----- Identidad de usuario (el nombre proviene de la sesión de Supabase) -----
+  function getUserName() { return _store.name || ''; }
+  function setUserName(name) { if (name) { _store.name = name; } }
 
-  function setUserName(name) {
-    if (name) localStorage.setItem(`${STORAGE_PREFIX}__name`, name);
-  }
-
-  function storageKey(scope) {
-    return `${STORAGE_PREFIX}__${getUserId()}__${scope}`;
-  }
-
+  // ----- Acceso al estado en memoria (reemplaza por completo a localStorage) -----
   function load(scope, fallback) {
-    try {
-      const raw = localStorage.getItem(storageKey(scope));
-      return raw ? JSON.parse(raw) : fallback;
-    } catch (e) {
-      console.warn('Error leyendo storage:', e);
-      return fallback;
-    }
+    return _store[scope] != null ? _store[scope] : fallback;
   }
 
   function save(scope, data) {
-    try {
-      localStorage.setItem(storageKey(scope), JSON.stringify(data));
-      return true;
-    } catch (e) {
-      console.error('Error guardando en storage:', e);
-      return false;
-    }
+    _store[scope] = data;
+    _schedulePush();
+    return true;
   }
 
   // ----- Pilares de la Rueda (del libro de Paulina, pág. 188-190) -----
@@ -568,6 +591,7 @@
   // ----- Exponer API -----
   global.MisPliegues = {
     getUserId, getUserName, setUserName,
+    hydrate, setUserId, getState, resetState,
     PILARES_DEFAULT, NEUROPLIEGUES, OBSTACULOS, ICONS, icon,
     getRueda, saveRueda, getPilarMasBajo, getPromedioRueda,
     getTracker, saveTracker, getMesActual, getDiasDelMes, getDiaActual,
@@ -579,4 +603,342 @@
   global.icon = icon;
   // Alias para la nueva marca
   global.MiBarco = global.MisPliegues;
+})(window);
+
+
+/* ============================================================
+   MiBarcoCloud + Autenticación (Supabase)
+   - Gate de login obligatorio (estilo dashboard de Lina, branding Paulina)
+   - Sincroniza el estado de Mi Barco con la tabla `mi_barco_state`
+   - El progreso NO se guarda en localStorage; vive solo en Supabase.
+   ============================================================ */
+(function (global) {
+  'use strict';
+
+  const CFG = global.MI_BARCO_CONFIG || {};
+  const SUPABASE_URL = CFG.SUPABASE_URL || '';
+  const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || '';
+  const VIDEO_URL = CFG.VIDEO_URL || '';
+
+  const isConfigured = () =>
+    !!SUPABASE_URL && !!SUPABASE_ANON_KEY &&
+    !/TU-PROYECTO/.test(SUPABASE_URL) && !/TU_ANON_KEY/.test(SUPABASE_ANON_KEY);
+
+  let sb = null;
+  if (global.supabase && isConfigured()) {
+    sb = global.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' }
+    });
+  }
+
+  // ---------- Helpers de DOM ----------
+  const $ = (s) => document.querySelector(s);
+
+  function showAlert(id, msg, type = 'error') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg;
+    el.className = `alert show ${type}`;
+  }
+  function clearAlert(id) {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'alert'; el.textContent = ''; }
+  }
+  function clearAuthAlerts() {
+    ['alert-login', 'alert-register', 'alert-forgot', 'alert-reset'].forEach(clearAlert);
+  }
+  function setLoading(form, on) {
+    const btn = form.querySelector('button[type="submit"]');
+    if (!btn) return;
+    const sp = btn.querySelector('.spinner');
+    const txt = btn.querySelector('.txt');
+    btn.disabled = on;
+    if (sp) sp.classList.toggle('show', on);
+    if (txt) txt.style.opacity = on ? 0.6 : 1;
+  }
+  function showAuthCard(name) {
+    ['login', 'register', 'forgot', 'reset'].forEach((n) => {
+      const c = document.getElementById(`card-${n}`);
+      if (c) c.style.display = n === name ? 'block' : 'none';
+    });
+  }
+  function initials(name, email) {
+    const src = (name || '').trim() || (email || '').trim();
+    const parts = src.split(/\s+/);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return (src[0] || '·').toUpperCase();
+  }
+  function traducirError(msg = '') {
+    const m = msg.toLowerCase();
+    if (m.includes('invalid login')) return 'Correo o contraseña incorrectos.';
+    if (m.includes('user already registered')) return 'Ya existe una cuenta con ese correo.';
+    if (m.includes('password should be')) return 'La contraseña debe tener al menos 8 caracteres.';
+    if (m.includes('email rate limit')) return 'Demasiados intentos. Espera unos minutos.';
+    if (m.includes('unable to validate email')) return 'Correo inválido.';
+    if (m.includes('failed to fetch')) return 'No hay conexión con el servidor. Revisa tu internet.';
+    return msg || 'Ocurrió un error. Intenta de nuevo.';
+  }
+  function notifyToast(message) {
+    window.dispatchEvent(new CustomEvent('mibarco:toast', { detail: { message } }));
+  }
+
+  // ---------- Sincronización con Supabase ----------
+  let _ready = false;
+  let _pushTimer = null;
+  let _pushing = false;
+  let _pendingPush = false;
+
+  async function hydrate(session) {
+    const user = session.user;
+    const name = (user.user_metadata && user.user_metadata.full_name) ||
+      (user.email || '').split('@')[0] || '';
+    MisPliegues.setUserId(user.id);
+    let row = null;
+    try {
+      const { data, error } = await sb
+        .from('mi_barco_state')
+        .select('rueda,tracker,plan')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      row = data;
+    } catch (e) {
+      console.warn('No se pudo leer el estado de la nube:', e);
+    }
+    MisPliegues.hydrate(row || {}, name);
+    _ready = true;
+    MiBarcoCloud.ready = true;
+  }
+
+  function schedulePush() {
+    if (!sb || !_ready) return;
+    if (_pushTimer) clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(flushPush, 600);
+  }
+
+  async function flushPush() {
+    if (!sb || !_ready) return;
+    if (_pushing) { _pendingPush = true; return; }
+    const userId = MisPliegues.getUserId();
+    if (!userId) return;
+    _pushing = true;
+    try {
+      const payload = Object.assign(
+        { user_id: userId, updated_at: new Date().toISOString() },
+        MisPliegues.getState()
+      );
+      const { error } = await sb.from('mi_barco_state').upsert(payload, { onConflict: 'user_id' });
+      if (error) throw error;
+    } catch (e) {
+      console.error('Error guardando en Supabase:', e);
+      notifyToast('No se pudo guardar en la nube. Reintentando…');
+      _pendingPush = true;
+    } finally {
+      _pushing = false;
+      if (_pendingPush) { _pendingPush = false; setTimeout(flushPush, 1500); }
+    }
+  }
+
+  // ---------- Flujos de autenticación ----------
+  async function handleLogin(e) {
+    e.preventDefault();
+    clearAlert('alert-login');
+    const f = e.target;
+    setLoading(f, true);
+    const { email, password } = Object.fromEntries(new FormData(f));
+    const { data, error } = await sb.auth.signInWithPassword({
+      email: (email || '').trim().toLowerCase(), password
+    });
+    setLoading(f, false);
+    if (error) { showAlert('alert-login', traducirError(error.message)); return; }
+    enterApp(data.session);
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    clearAlert('alert-register');
+    const f = e.target;
+    setLoading(f, true);
+    const { name, email, password } = Object.fromEntries(new FormData(f));
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanName = (name || '').trim();
+    const { data, error } = await sb.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: { data: { full_name: cleanName } }
+    });
+    if (error) { setLoading(f, false); showAlert('alert-register', traducirError(error.message)); return; }
+
+    // Sin verificación por email: si hay sesión entramos directo; si no, login.
+    let session = data.session;
+    if (!session) {
+      const login = await sb.auth.signInWithPassword({ email: cleanEmail, password });
+      if (login.error) {
+        setLoading(f, false);
+        showAlert('alert-register', 'Cuenta creada. Inicia sesión para continuar.', 'success');
+        setTimeout(() => showAuthCard('login'), 1200);
+        return;
+      }
+      session = login.data.session;
+    }
+    setLoading(f, false);
+    enterApp(session);
+  }
+
+  async function handleForgot(e) {
+    e.preventDefault();
+    clearAlert('alert-forgot');
+    const f = e.target;
+    setLoading(f, true);
+    const { email } = Object.fromEntries(new FormData(f));
+    const { error } = await sb.auth.resetPasswordForEmail((email || '').trim().toLowerCase(), {
+      redirectTo: window.location.origin + window.location.pathname
+    });
+    setLoading(f, false);
+    if (error) { showAlert('alert-forgot', traducirError(error.message)); return; }
+    showAlert('alert-forgot', 'Te enviamos un enlace. Revisa tu correo (y spam por si acaso).', 'success');
+  }
+
+  async function handleReset(e) {
+    e.preventDefault();
+    clearAlert('alert-reset');
+    const f = e.target;
+    const { password, password2 } = Object.fromEntries(new FormData(f));
+    if (password !== password2) { showAlert('alert-reset', 'Las contraseñas no coinciden.'); return; }
+    setLoading(f, true);
+    const { error } = await sb.auth.updateUser({ password });
+    setLoading(f, false);
+    if (error) { showAlert('alert-reset', traducirError(error.message)); return; }
+    showAlert('alert-reset', 'Contraseña actualizada. Iniciando sesión…', 'success');
+    setTimeout(async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) enterApp(session); else showAuthCard('login');
+    }, 900);
+  }
+
+  async function doLogout() {
+    try { if (sb) await sb.auth.signOut(); } catch (e) { /* noop */ }
+    MisPliegues.resetState();
+    location.reload();
+  }
+
+  // ---------- Cambio de vista ----------
+  async function enterApp(session) {
+    const user = session.user;
+    const name = (user.user_metadata && user.user_metadata.full_name) ||
+      (user.email || '').split('@')[0] || '';
+    const elName = document.getElementById('userName');
+    const elAvatar = document.getElementById('userAvatar');
+    if (elName) elName.textContent = name || 'Mi cuenta';
+    if (elAvatar) elAvatar.textContent = initials(name, user.email);
+
+    const auth = document.getElementById('view-auth');
+    const app = document.getElementById('view-app');
+    if (auth) auth.style.display = 'none';
+    if (app) app.style.display = '';
+
+    await hydrate(session);
+    window.dispatchEvent(new CustomEvent('mibarco:ready'));
+  }
+
+  // ---------- Video del hero (login) ----------
+  function initHeroVideo() {
+    const v = document.getElementById('heroVideo');
+    if (!v) return;
+    if (!VIDEO_URL) { v.remove(); return; } // sin video: queda el fondo gradiente navy/gold
+    v.src = VIDEO_URL;
+    v.play().catch(() => { /* autoplay bloqueado: el loop arranca con gesto */ });
+  }
+
+  // ---------- Toggle mostrar/ocultar contraseña ----------
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-pwd-toggle]');
+    if (!btn) return;
+    const wrap = btn.closest('.pwd-wrap');
+    if (!wrap) return;
+    const input = wrap.querySelector('input');
+    if (!input) return;
+    const visible = input.type === 'text';
+    input.type = visible ? 'password' : 'text';
+    btn.classList.toggle('is-visible', !visible);
+    btn.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+  });
+
+  // ---------- API pública ----------
+  const MiBarcoCloud = {
+    ready: false,
+    schedulePush,
+    flushPush,
+    hydrate,
+    logout: doLogout,
+    getClient: () => sb,
+    isConfigured
+  };
+  global.MiBarcoCloud = MiBarcoCloud;
+
+  // ---------- Arranque ----------
+  document.addEventListener('DOMContentLoaded', async () => {
+    initHeroVideo();
+
+    // Navegación entre tarjetas de auth (data-nav="login|register|forgot")
+    document.body.addEventListener('click', (e) => {
+      const a = e.target.closest('[data-nav]');
+      if (a) { e.preventDefault(); clearAuthAlerts(); showAuthCard(a.dataset.nav); }
+    });
+
+    // Envío de formularios
+    const fl = $('#form-login'); if (fl) fl.addEventListener('submit', handleLogin);
+    const fr = $('#form-register'); if (fr) fr.addEventListener('submit', handleRegister);
+    const ff = $('#form-forgot'); if (ff) ff.addEventListener('submit', handleForgot);
+    const frs = $('#form-reset'); if (frs) frs.addEventListener('submit', handleReset);
+
+    // Menú de cuenta (chip + cerrar sesión)
+    const chip = $('#userChip');
+    if (chip) chip.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const m = $('#userMenu'); if (m) m.classList.toggle('show');
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.user-chip-wrap')) {
+        const m = $('#userMenu'); if (m) m.classList.remove('show');
+      }
+    });
+    const lo = $('#btnLogout'); if (lo) lo.addEventListener('click', doLogout);
+
+    const boot = document.getElementById('boot');
+
+    // Supabase sin configurar: mostramos login con aviso claro.
+    if (!sb) {
+      showAuthCard('login');
+      showAlert('alert-login', '⚙️ Falta configurar Supabase en app.js (SUPABASE_URL y anon key).');
+      if (boot) boot.classList.add('hide');
+      return;
+    }
+
+    // Flujo de recuperación de contraseña (Supabase redirige con token en la URL)
+    const hash = window.location.hash || '';
+    const isRecovery = hash.includes('type=recovery') ||
+      new URL(window.location.href).searchParams.get('type') === 'recovery';
+
+    sb.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        const auth = document.getElementById('view-auth');
+        const app = document.getElementById('view-app');
+        if (auth) auth.style.display = '';
+        if (app) app.style.display = 'none';
+        showAuthCard('reset');
+        if (boot) boot.classList.add('hide');
+      }
+    });
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (isRecovery) {
+      showAuthCard('reset');
+    } else if (session) {
+      await enterApp(session);
+    } else {
+      showAuthCard('login');
+    }
+    if (boot) setTimeout(() => boot.classList.add('hide'), 200);
+  });
 })(window);

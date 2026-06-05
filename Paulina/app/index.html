@@ -14,10 +14,194 @@
 
   <link rel="stylesheet" href="assets/styles.css" />
 
+  <!-- Supabase (auth + base de datos). Debe cargar ANTES de app.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script src="assets/app.js"></script>
 </head>
 <body>
+
+<!-- ===================== OVERLAY DE CARGA ===================== -->
+<div class="pv-boot" id="boot">
+  <div class="pv-boot-loader"></div>
+</div>
+
+<!-- ===================== LOGIN / REGISTRO ===================== -->
+<div class="auth-shell full-bleed" id="view-auth">
+  <!-- Hero con video (fallback: gradiente navy/gold) -->
+  <aside class="auth-hero">
+    <video class="auth-hero-video" id="heroVideo" autoplay loop muted playsinline preload="auto"></video>
+    <div class="auth-hero-overlay"></div>
+    <div class="auth-hero-content">
+      <div class="auth-hero-logo">
+        <span class="logo-img">
+          <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
+               alt="Paulina Valencia" />
+        </span>
+        <span class="logo-name">Paulina Valencia</span>
+      </div>
+      <h1>Construye tu identidad,<br/><em>un pliegue a la vez</em>.</h1>
+      <p class="lead">Diagnostica con la Rueda, comprende tu cerebro con los Neuropliegues y sostén tus hábitos con el Tracker.</p>
+    </div>
+    <div class="auth-hero-foot">Mi Barco · Mini-app del ecosistema de Paulina Valencia</div>
+  </aside>
+
+  <!-- Formularios -->
+  <section class="auth-form-wrap">
+    <div class="auth-form-inner">
+      <div class="auth-form-header">
+        <div class="auth-form-logo">
+          <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
+               alt="Paulina Valencia" />
+        </div>
+        <h1 class="auth-form-title">Tu bitácora de <em>hábitos</em>, siempre contigo.</h1>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="auth-card" id="card-login">
+        <div class="eyebrow">Bienvenida de vuelta</div>
+        <h2>Ingresa a Mi Barco</h2>
+        <p class="sub">Accede con el correo que usaste al registrarte.</p>
+        <div class="alert" id="alert-login"></div>
+        <form id="form-login" novalidate>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field-row">
+            <span></span>
+            <a data-nav="forgot">¿Olvidaste tu contraseña?</a>
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Iniciar sesión</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+        <div class="switch-auth">¿Aún no tienes cuenta? <a data-nav="register">Crea la tuya</a></div>
+      </div>
+
+      <!-- REGISTRO -->
+      <div class="auth-card" id="card-register" style="display:none">
+        <div class="eyebrow">Te damos la bienvenida</div>
+        <h2>Crea tu cuenta</h2>
+        <p class="sub">En un minuto empiezas a construir tu identidad.</p>
+        <div class="alert" id="alert-register"></div>
+        <form id="form-register" novalidate>
+          <div class="field">
+            <label>Nombre</label>
+            <input type="text" name="name" placeholder="Tu nombre" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+          </div>
+          <div class="field">
+            <label>Contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" minlength="8" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Crear mi cuenta</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+        <div class="switch-auth">¿Ya tienes cuenta? <a data-nav="login">Inicia sesión</a></div>
+      </div>
+
+      <!-- OLVIDÉ CONTRASEÑA -->
+      <div class="auth-card" id="card-forgot" style="display:none">
+        <div class="eyebrow">Recuperar acceso</div>
+        <h2>¿Olvidaste tu contraseña?</h2>
+        <p class="sub">Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
+        <div class="alert" id="alert-forgot"></div>
+        <form id="form-forgot" novalidate>
+          <div class="field">
+            <label>Correo electrónico</label>
+            <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Enviar enlace</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+        <div class="switch-auth"><a data-nav="login">Volver al inicio de sesión</a></div>
+      </div>
+
+      <!-- NUEVA CONTRASEÑA (reset desde el enlace de Supabase) -->
+      <div class="auth-card" id="card-reset" style="display:none">
+        <div class="eyebrow">Nueva contraseña</div>
+        <h2>Elige una contraseña</h2>
+        <p class="sub">Ingresa una nueva contraseña para tu cuenta.</p>
+        <div class="alert" id="alert-reset"></div>
+        <form id="form-reset" novalidate>
+          <div class="field">
+            <label>Nueva contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Confirmar contraseña</label>
+            <div class="pwd-wrap">
+              <input type="password" name="password2" minlength="8" required />
+              <button type="button" class="pwd-toggle" aria-label="Mostrar contraseña" data-pwd-toggle>
+                <svg class="eye-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="auth-btn auth-btn-primary">
+            <span class="txt">Guardar contraseña</span>
+            <span class="spinner"></span>
+          </button>
+        </form>
+      </div>
+
+    </div><!-- /auth-form-inner -->
+  </section>
+</div><!-- /view-auth -->
+
+<!-- ===================== APP (visible tras iniciar sesión) ===================== -->
+<div id="view-app" style="display:none">
+
+<!-- Barra de cuenta -->
+<div class="pv-account-bar">
+  <div class="pv-account-inner">
+    <div class="user-chip-wrap">
+      <button class="user-chip" id="userChip" type="button">
+        <span class="avatar" id="userAvatar">·</span>
+        <span id="userName">Mi cuenta</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <div class="user-menu" id="userMenu">
+        <button type="button" id="btnLogout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="pv-root">
   <div class="pv-container" x-data="miBarcoApp()" x-init="init()">
@@ -898,6 +1082,7 @@
     </footer>
   </div>
 </div>
+</div><!-- /view-app -->
 
 <script>
 function miBarcoApp() {
@@ -947,12 +1132,15 @@ function miBarcoApp() {
 
     // ====================================================
     init() {
-      this.userName = MisPliegues.getUserName();
-      this.rueda = MisPliegues.getRueda();
-      this.tracker = MisPliegues.getTracker();
-      this.plan = MisPliegues.getPlan();
-      this.mesActivo = MisPliegues.getMesActual();
-      if (this.tracker.habitos.length > 0) this.habitoActivo = this.tracker.habitos[0].id;
+      // Los datos viven en Supabase: cargamos el estado cuando la sesión
+      // está hidratada. La capa de auth (app.js) dispara 'mibarco:ready'.
+      if (window.MiBarcoCloud && window.MiBarcoCloud.ready) this.cargarEstado();
+      window.addEventListener('mibarco:ready', () => this.cargarEstado());
+
+      // Toast de errores de sincronización emitido por MiBarcoCloud.
+      window.addEventListener('mibarco:toast', (e) => {
+        this.showToast((e.detail && e.detail.message) || 'Aviso', 'var(--pv-coral)');
+      });
 
       const hash = window.location.hash.replace('#', '');
       if (['home','rueda','neuropliegues','tracker','plan'].includes(hash)) this.vista = hash;
@@ -960,6 +1148,15 @@ function miBarcoApp() {
         const h = window.location.hash.replace('#', '');
         if (['home','rueda','neuropliegues','tracker','plan'].includes(h)) this.vista = h;
       });
+    },
+
+    cargarEstado() {
+      this.userName = MisPliegues.getUserName();
+      this.rueda = MisPliegues.getRueda();
+      this.tracker = MisPliegues.getTracker();
+      this.plan = MisPliegues.getPlan();
+      this.mesActivo = MisPliegues.getMesActual();
+      if (this.tracker.habitos.length > 0) this.habitoActivo = this.tracker.habitos[0].id;
 
       const params = new URLSearchParams(window.location.search);
       const pilarParam = params.get('pilar');
@@ -968,6 +1165,10 @@ function miBarcoApp() {
         this.vista = 'tracker';
         setTimeout(() => this.abrirNuevoHabito(), 200);
       }
+    },
+
+    logout() {
+      if (window.MiBarcoCloud) window.MiBarcoCloud.logout();
     },
 
     cambiarVista(v) {

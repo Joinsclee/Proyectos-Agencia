@@ -3,6 +3,7 @@ import { VisitasVideo } from "./VisitasVideo";
 import { SistemaCreceVideo } from "./SistemaCreceVideo";
 import { SurveyVideo, SURVEY_VIDEO_DURATION } from "./SurveyVideo";
 import { SaviasVideo, SAVIAS_DURATION } from "./SaviasVideo";
+import { MiBarcoVideo, MI_BARCO_DURATION } from "./MiBarcoVideo";
 import { EncuestaLoopVideo, ENCUESTA_DURATION } from "./EncuestaLoopVideo";
 
 export const RemotionRoot = () => {
@@ -44,6 +45,14 @@ export const RemotionRoot = () => {
         id="SaviasVideo"
         component={SaviasVideo}
         durationInFrames={SAVIAS_DURATION}
+        fps={30}
+        width={1080}
+        height={1350}
+      />
+      <Composition
+        id="MiBarcoVideo"
+        component={MiBarcoVideo}
+        durationInFrames={MI_BARCO_DURATION}
         fps={30}
         width={1080}
         height={1350}

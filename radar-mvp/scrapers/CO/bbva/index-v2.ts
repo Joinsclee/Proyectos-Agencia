@@ -10,6 +10,7 @@
  * Datos exactos vía regex — sin LLM, sin créditos extra.
  */
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import {
   downloadPdf,
@@ -27,12 +28,13 @@ import {
 } from '../../../lib/supabase.js';
 import { createLogger } from '../../../lib/logger.js';
 import { normalizeCity, type Inmueble, type ScrapingRunResult } from '../../../lib/types.js';
+import { isEntrypoint } from '../../../lib/is-main.js';
 
 const SOURCE = 'bbva';
 const COUNTRY = 'CO';
 const LANDING_URL = 'https://www.bbva.com.co/personas/promocion/remates.html';
 const log = createLogger(SOURCE);
-const WORK_DIR = '/tmp/radar-pdf-work/bbva';
+const WORK_DIR = join(tmpdir(), 'radar-pdf-work', 'bbva');
 
 const PDF_TYPE_MAP: Record<string, 'apartment' | 'house' | 'commercial'> = {
   apartamentos: 'apartment',
@@ -299,7 +301,7 @@ export async function run(opts: { maxPages?: number } = {}): Promise<ScrapingRun
   }
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+const isMain = isEntrypoint(import.meta.url);
 if (isMain) {
   const arg = process.argv.find((a) => a.startsWith('--max='));
   const maxPages = arg ? parseInt(arg.split('=')[1]!, 10) : undefined;

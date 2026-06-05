@@ -12,6 +12,7 @@
  * Resultado esperado: ~300 inmuebles del PDF de 310 páginas con foto fiel.
  */
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { mkdirSync, rmSync, existsSync } from 'node:fs';
 import {
   downloadPdf,
@@ -28,13 +29,14 @@ import {
 } from '../../../lib/supabase.js';
 import { createLogger } from '../../../lib/logger.js';
 import { normalizeCity, type Inmueble, type ScrapingRunResult } from '../../../lib/types.js';
+import { isEntrypoint } from '../../../lib/is-main.js';
 
 const SOURCE = 'aval';
 const COUNTRY = 'CO';
 const LANDING_URL = 'https://www.avalvc.com.co/portal-inmobiliario';
 const log = createLogger(SOURCE);
 
-const WORK_DIR = '/tmp/radar-pdf-work/aval';
+const WORK_DIR = join(tmpdir(), 'radar-pdf-work', 'aval');
 
 // ────────────────────────────────────────────────────────────
 // PASO 1: Resolver URL del PDF (puede cambiar con la fecha)
@@ -287,7 +289,7 @@ export async function run(opts: { maxPages?: number } = {}): Promise<ScrapingRun
 }
 
 // CLI
-const isMain = import.meta.url === `file://${process.argv[1]}`;
+const isMain = isEntrypoint(import.meta.url);
 if (isMain) {
   const arg = process.argv.find((a) => a.startsWith('--max='));
   const maxPages = arg ? parseInt(arg.split('=')[1]!, 10) : undefined;
