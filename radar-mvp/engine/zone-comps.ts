@@ -13,6 +13,7 @@
  *    precio mediano de oferta del mismo tipo en la ciudad).
  */
 import { supabase } from '../lib/supabase.js';
+import { MAX_DISPLAY_PRICE } from '../lib/types.js';
 import { robustMedian, quantile, trimOutliers, robustSpread, haversineKm } from './stats.js';
 import { evaluate, DEFAULT_CONFIG, type Candidate, type Comp, type Verdict } from './comparables.js';
 
@@ -92,6 +93,7 @@ export async function loadCityPool(city: string): Promise<PoolRow[]> {
       .from('inmuebles')
       .select('type, price, area_m2, price_per_m2, zone, features, source_id')
       .eq('source', 'fincaraiz').eq('is_active', true).eq('city', c)
+      .lte('price', MAX_DISPLAY_PRICE) // excluir super-elevados del baseline (mediana limpia)
       .order('source_id').range(from, from + 999);
     if (error) throw new Error(`loadCityPool: ${error.message}`);
     for (const r of (data ?? []) as any[]) {

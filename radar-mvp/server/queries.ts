@@ -4,6 +4,7 @@
  * topes — se devuelven todos los resultados de cada ciudad, paginados.
  */
 import { supabase } from '../lib/supabase.js';
+import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT } from '../lib/types.js';
 
 export interface ListQuery {
   city?: string;
@@ -28,10 +29,16 @@ export interface ListQuery {
 
 /** Filtros compartidos de inmuebles (portal + bancos): precio/área/hab/estrato. */
 function applyInmuebleFilters(qb: any, q: ListQuery) {
+  // Tope del sistema: nunca mostrar valores super-elevados (fuera de segmento /
+  // errores de carga) que ensucian la percepción y las estadísticas.
+  qb = qb.lte('price', MAX_DISPLAY_PRICE);
+  // Descuentos imposibles (>70% = error de datos) fuera; se conservan los no
+  // evaluados (discount_pct null) para no ocultar listados sin veredicto.
+  qb = qb.or(`discount_pct.is.null,discount_pct.lte.${MAX_OPP_DISCOUNT}`);
   if (q.city) qb = qb.eq('city', q.city);
   if (q.type) qb = qb.eq('type', q.type);
   if (q.priceMin) qb = qb.gte('price', q.priceMin);
-  if (q.priceMax) qb = qb.lte('price', q.priceMax);
+  if (q.priceMax) qb = qb.lte('price', Math.min(q.priceMax, MAX_DISPLAY_PRICE));
   if (q.areaMin) qb = qb.gte('area_m2', q.areaMin);
   if (q.areaMax) qb = qb.lte('area_m2', q.areaMax);
   // Campos JSON (texto): comparación string segura para dígitos 1-9.
@@ -229,8 +236,8 @@ export async function stats() {
   const base = () => supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('source', 'fincaraiz');
   const [total, opps, high, bancos, remates] = await Promise.all([
     head(base()),
-    head(base().eq('is_opportunity', true)),
-    head(base().eq('is_opportunity', true).gte('discount_pct', 25).eq('features->market->>confidence', 'high')),
+    head(base().eq('is_opportunity', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
+    head(base().eq('is_opportunity', true).gte('discount_pct', 25).lte('discount_pct', MAX_OPP_DISCOUNT).eq('features->market->>confidence', 'high')),
     head(supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).neq('source', 'fincaraiz')),
     head(supabase.from('remates').select('id', { count: 'exact', head: true }).eq('is_active', true)),
   ]);

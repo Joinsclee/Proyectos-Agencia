@@ -19,6 +19,7 @@
  * reales. Se etiqueta como tal en el dashboard.
  */
 import { robustMedian, robustSpread, haversineKm, trimOutliers, quantile } from './stats.js';
+import { MAX_OPP_DISCOUNT } from '../lib/types.js';
 
 export interface Candidate {
   id: string;
@@ -211,7 +212,9 @@ export function evaluate(
     // relevante vs la mediana. Alta: en el decil más barato + descuento fuerte.
     const inLowTail = candidatePpm2 <= p25;
     const inDeepTail = candidatePpm2 <= p10;
-    const isOpp = inLowTail && discount >= cfg.discountThresholdPct && confidence !== 'low';
+    // Descuento por encima de MAX_OPP_DISCOUNT = error de datos, no oportunidad.
+    const plausible = discount <= MAX_OPP_DISCOUNT;
+    const isOpp = inLowTail && discount >= cfg.discountThresholdPct && plausible && confidence !== 'low';
     // Alta = señal fuerte Y bien soportada: decil más barato, descuento grande
     // y comparables homogéneos (alta confianza). Así la insignia dorada es rara.
     const isHigh = isOpp && inDeepTail && discount >= cfg.highDiscountPct && confidence === 'high';

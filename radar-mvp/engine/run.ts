@@ -20,6 +20,7 @@ import { supabase } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import { isEntrypoint } from '../lib/is-main.js';
 import { evaluate, DEFAULT_CONFIG, type Candidate, type Comp, type Verdict } from './comparables.js';
+import { MAX_DISPLAY_PRICE } from '../lib/types.js';
 
 const log = createLogger('engine');
 
@@ -133,6 +134,7 @@ async function loadPool(): Promise<Comp[]> {
   const pool: Comp[] = [];
   for (const r of rows) {
     if (r.is_project === true) continue; // proyectos preventa sesgan la mediana
+    if (num(r.price) != null && num(r.price)! > MAX_DISPLAY_PRICE) continue; // super-elevados no van al baseline
     const ppm2 = num(r.price_per_m2);
     const area = num(r.area_m2);
     if (!ppm2 || !area) continue;
