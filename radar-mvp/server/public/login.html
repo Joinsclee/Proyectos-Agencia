@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Radar de Oportunidades · Ingresa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root { --pp:#613174; --pp-dark:#4a2560; --pp-deep:#2a1438; --gold:#f2ca04; --ink:#1a1a1a; --line:#e7e2ee; --bg:#faf7fc; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; font-family: 'Barlow Semi Condensed', sans-serif; }
+    body { min-height: 100vh; display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: minmax(100vh, auto); background: var(--bg); color: var(--ink); }
+    .promo, .auth { min-height: 100vh; }
+
+    /* ───── Panel del video ─────
+       El video es 16:9; el panel es alto. Lo mostramos COMPLETO (sin recorte),
+       centrado sobre el degradado de marca, no con cover (que lo "zoomea"). */
+    .promo { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at top, #2a1438 0%, #120820 52%, #0a0414 100%); }
+    .promo video { width: 100%; height: auto; max-height: 100%; display: block; }
+    /* Degradado inferior solo para que el tagline sea legible. */
+    .promo .veil { position: absolute; left: 0; right: 0; bottom: 0; height: 55%; z-index: 1; pointer-events: none;
+      background: linear-gradient(180deg, transparent 0%, rgba(10,4,20,0.88) 100%); }
+    .promo .brand { position: absolute; top: 34px; left: 38px; z-index: 2; display: flex; align-items: center; gap: 12px; color: #fff; }
+    .promo .brand .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 0 rgba(242,202,4,0.6); animation: pulse 2.4s infinite; }
+    @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(242,202,4,0.55)} 70%{box-shadow:0 0 0 12px rgba(242,202,4,0)} 100%{box-shadow:0 0 0 0 rgba(242,202,4,0)} }
+    .promo .brand b { font-weight: 700; letter-spacing: 1px; font-size: 0.95rem; text-transform: uppercase; }
+    .promo .tagline { position: absolute; left: 38px; right: 38px; bottom: 40px; z-index: 2; color: #fff; }
+    .promo .tagline h2 { font-family: 'Tilt Warp', cursive; font-size: 2.4rem; line-height: 1.05; margin: 0 0 10px; }
+    .promo .tagline h2 .g { color: var(--gold); }
+    .promo .tagline p { margin: 0; font-size: 1.05rem; opacity: 0.85; max-width: 520px; }
+
+    /* ───── Panel del formulario ───── */
+    .auth { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .card { width: 100%; max-width: 420px; }
+    .card h1 { font-family: 'Tilt Warp', cursive; font-size: 2rem; margin: 0 0 6px; color: var(--pp-dark); }
+    .card .sub { color: #6b7280; font-size: 1rem; margin: 0 0 26px; }
+    .tabs { display: flex; background: #f0e6f7; border-radius: 12px; padding: 4px; margin-bottom: 24px; }
+    .tabs button { flex: 1; border: none; background: none; padding: 11px; font-family: inherit; font-weight: 700; font-size: 0.92rem; color: var(--pp); border-radius: 9px; cursor: pointer; transition: all 0.15s; }
+    .tabs button.active { background: #fff; color: var(--pp-dark); box-shadow: 0 2px 8px rgba(97,49,116,0.12); }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; margin-bottom: 6px; }
+    .field input { width: 100%; padding: 13px 14px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 1rem; transition: border-color 0.15s; }
+    .field input:focus { outline: none; border-color: var(--pp); box-shadow: 0 0 0 3px rgba(97,49,116,0.12); }
+    .submit { width: 100%; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--gold), #d4b000); color: var(--pp-deep); font-family: inherit; font-weight: 800; font-size: 1.05rem; cursor: pointer; margin-top: 6px; transition: transform 0.12s, box-shadow 0.15s; box-shadow: 0 8px 22px rgba(242,202,4,0.35); }
+    .submit:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(242,202,4,0.45); }
+    .submit:disabled { opacity: 0.6; cursor: default; transform: none; }
+    .google { width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font-family: inherit; font-size: 1rem; font-weight: 700; color: #3c4043; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
+    .google:hover { background: #f7f7fa; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    .google svg { width: 20px; height: 20px; }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: #9ca3af; font-size: 0.82rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+    .msg { margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; display: none; }
+    .msg.err { display: block; background: #fdecec; color: #c0392b; }
+    .msg.ok { display: block; background: #e8f7ee; color: #1e8e4f; }
+    .legal { margin-top: 20px; font-size: 0.78rem; color: #9ca3af; line-height: 1.5; }
+    .legal a { color: var(--pp); }
+
+    @media (max-width: 880px) {
+      body { grid-template-columns: 1fr; }
+      .promo { min-height: 230px; }
+      .promo .tagline h2 { font-size: 1.7rem; }
+      .promo .tagline { bottom: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="promo">
+    <video autoplay muted loop playsinline poster="/radar/login-poster.jpg">
+      <source src="/radar/login.mp4" type="video/mp4" />
+    </video>
+    <div class="veil"></div>
+    <div class="brand"><span class="dot"></span><b>Radar de Oportunidades · CRECE</b></div>
+    <div class="tagline">
+      <h2>Encuentra inmuebles hasta <span class="g">70% bajo el mercado.</span></h2>
+      <p>Bancos, remates judiciales y portal abierto — escaneados y comparados por ti, cada semana.</p>
+    </div>
+  </section>
+
+  <section class="auth">
+    <div class="card">
+      <h1 id="title">Crea tu cuenta</h1>
+      <p class="sub" id="subtitle">Empieza a ver las oportunidades antes que nadie.</p>
+
+      <button class="google" id="google-btn" type="button">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continuar con Google
+      </button>
+      <div class="divider">o con tu correo</div>
+
+      <div class="tabs">
+        <button id="tab-register" class="active" type="button">Crear cuenta</button>
+        <button id="tab-login" type="button">Iniciar sesión</button>
+      </div>
+
+      <form id="form" autocomplete="on">
+        <div class="field" id="name-field">
+          <label for="name">Nombre</label>
+          <input id="name" name="name" type="text" placeholder="Tu nombre" autocomplete="name" />
+        </div>
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+          <input id="email" name="email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <input id="password" name="password" type="password" placeholder="Mínimo 8 caracteres" autocomplete="current-password" required />
+        </div>
+        <button class="submit" id="submit" type="submit">Crear cuenta gratis →</button>
+        <div class="msg" id="msg"></div>
+      </form>
+
+      <p class="legal">Al registrarte aceptas recibir las mejores oportunidades inmobiliarias en tu correo. Tus datos se tratan conforme a la Ley 1581 de 2012 (Habeas Data).</p>
+    </div>
+  </section>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let mode = 'register';
+
+    function setMode(m) {
+      mode = m;
+      const reg = m === 'register';
+      $('tab-register').classList.toggle('active', reg);
+      $('tab-login').classList.toggle('active', !reg);
+      $('name-field').style.display = reg ? 'block' : 'none';
+      $('title').textContent = reg ? 'Crea tu cuenta' : 'Bienvenido de nuevo';
+      $('subtitle').textContent = reg ? 'Empieza a ver las oportunidades antes que nadie.' : 'Ingresa para ver tus oportunidades.';
+      $('submit').textContent = reg ? 'Crear cuenta gratis →' : 'Iniciar sesión →';
+      $('password').setAttribute('autocomplete', reg ? 'new-password' : 'current-password');
+      hideMsg();
+    }
+    $('tab-register').addEventListener('click', () => setMode('register'));
+    $('tab-login').addEventListener('click', () => setMode('login'));
+
+    // ── Registro/login con Google (OAuth de Supabase) ──
+    $('google-btn').addEventListener('click', async () => {
+      try {
+        const cfg = await fetch('/api/config').then((r) => r.json());
+        const redirect = encodeURIComponent(location.origin + '/auth/callback');
+        location.href = `${cfg.supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirect}`;
+      } catch {
+        showMsg('No se pudo iniciar Google. Intenta de nuevo.', false);
+      }
+    });
+
+    function showMsg(text, ok) { const m = $('msg'); m.textContent = text; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+    function hideMsg() { $('msg').className = 'msg'; }
+
+    $('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideMsg();
+      const btn = $('submit');
+      btn.disabled = true;
+      const payload = { email: $('email').value, password: $('password').value };
+      if (mode === 'register') payload.name = $('name').value;
+      try {
+        const res = await fetch('/api/auth/' + mode, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!data.ok) { showMsg(data.error || 'Algo salió mal.', false); btn.disabled = false; return; }
+        if (mode === 'register') {
+          showMsg('¡Cuenta creada! Iniciando sesión…', true);
+          // auto-login tras registro
+          const r2 = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: payload.email, password: payload.password }) });
+          const d2 = await r2.json();
+          if (d2.ok) { localStorage.setItem('radar_token', d2.token); location.href = '/'; }
+          else { setMode('login'); $('email').value = payload.email; }
+        } else {
+          showMsg('¡Bienvenido! Entrando…', true);
+          localStorage.setItem('radar_token', data.token);
+          setTimeout(() => (location.href = '/'), 500);
+        }
+      } catch (err) {
+        showMsg('Error de conexión. Intenta de nuevo.', false);
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

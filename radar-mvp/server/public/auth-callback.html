@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Entrando… · Radar de Oportunidades</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    :root { --pp:#613174; --gold:#f2ca04; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      font-family: 'Barlow Semi Condensed', sans-serif; color: #fff;
+      background: radial-gradient(ellipse at top, #2a1438 0%, #120820 45%, #0a0414 100%); text-align: center; }
+    .box { max-width: 440px; padding: 40px; }
+    .spinner { width: 54px; height: 54px; margin: 0 auto 26px; border: 4px solid rgba(255,255,255,0.15); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 { font-family: 'Tilt Warp', cursive; font-size: 1.8rem; margin: 0 0 10px; }
+    h1 .g { color: var(--gold); }
+    p { opacity: 0.8; font-size: 1rem; margin: 0; }
+    a { color: var(--gold); font-weight: 700; text-decoration: none; }
+    .err { display: none; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="spinner" id="spinner"></div>
+    <h1 id="title">Entrando a tu <span class="g">Radar</span>…</h1>
+    <p id="msg">Validando tu cuenta de Google.</p>
+    <div class="err" id="err">
+      <p style="margin-top:14px">No pudimos completar el ingreso.<br /><a href="/login">Volver a intentar</a></p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const params = new URLSearchParams(location.hash.slice(1));
+      const qparams = new URLSearchParams(location.search);
+      const token = params.get('access_token');
+      const error = params.get('error_description') || params.get('error') || qparams.get('error_description') || qparams.get('error');
+
+      function fail(text) {
+        document.getElementById('spinner').style.display = 'none';
+        document.getElementById('title').textContent = 'Ups…';
+        document.getElementById('msg').textContent = text || 'No se pudo iniciar sesión con Google.';
+        document.getElementById('err').style.display = 'block';
+      }
+
+      if (token) {
+        localStorage.setItem('radar_token', token);
+        const refresh = params.get('refresh_token');
+        if (refresh) localStorage.setItem('radar_refresh', refresh);
+        history.replaceState(null, '', '/auth/callback'); // limpia el token de la URL
+        location.replace('/');
+      } else if (error) {
+        fail(decodeURIComponent(error));
+      } else if (qparams.get('code')) {
+        // Flujo PKCE: requiere intercambio con la anon key (config pendiente).
+        fail('Falta completar la configuración de Google en Supabase (anon key / PKCE).');
+      } else {
+        fail();
+      }
+    })();
+  </script>
+</body>
+</html>
