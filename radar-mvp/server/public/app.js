@@ -7,7 +7,9 @@ const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Remate' }[s] || s);
 const srcIcon = (s) => ({ fincaraiz: '🏘', davivienda: '🏛', bbva: '🏛', aval: '🏢', bancolombia: '🏦' }[s] || '🏠');
-const isHighOpp = (d) => d.is_opportunity && d.features?.market?.confidence === 'high' && (d.discount_pct || 0) >= 25;
+// Oportunidad ALTA: la marca el motor (decil más barato + descuento grande +
+// comparables homogéneos) y viaja en la columna is_high.
+const isHighOpp = (d) => d.is_high === true;
 const PAGE_SIZE = 24;
 
 const ORDERS = {

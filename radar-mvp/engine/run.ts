@@ -74,6 +74,7 @@ type Row = {
   is_project: boolean | null;
   // Veredicto ya almacenado: permite no reescribir filas cuyo resultado no cambió.
   is_opportunity: boolean | null;
+  is_high: boolean | null;
   discount_pct: number | null;
 };
 
@@ -81,7 +82,7 @@ type Row = {
 // que traer `features` entero (medido: 0.8MB vs 11MB / 3 págs).
 const SELECT =
   'id, source, source_id, type, price, area_m2, price_per_m2, city, zone, ' +
-  'is_opportunity, discount_pct, ' +
+  'is_opportunity, is_high, discount_pct, ' +
   'lat:features->lat, lng:features->lng, stratum:features->stratum, ' +
   'bedrooms:features->bedrooms, garages:features->garages, ' +
   'neighborhood:features->neighborhood, is_project:features->is_project';
@@ -176,7 +177,7 @@ async function persist(row: Row, v: Verdict): Promise<boolean> {
   if (row.source === 'fincaraiz') {
     const { error } = await supabase
       .from('inmuebles')
-      .update({ is_opportunity: v.is_opportunity, discount_pct: v.discount_pct })
+      .update({ is_opportunity: v.is_opportunity, is_high: v.is_high, discount_pct: v.discount_pct })
       .eq('id', row.id);
     if (error) { log.error(`persist ${row.id}: ${error.message}`); return false; }
     return true;
@@ -198,7 +199,7 @@ async function persist(row: Row, v: Verdict): Promise<boolean> {
   };
   const { error } = await supabase
     .from('inmuebles')
-    .update({ is_opportunity: v.is_opportunity, discount_pct: v.discount_pct, features })
+    .update({ is_opportunity: v.is_opportunity, is_high: v.is_high, discount_pct: v.discount_pct, features })
     .eq('id', row.id);
   if (error) { log.error(`persist ${row.id}: ${error.message}`); return false; }
   return true;
@@ -284,6 +285,7 @@ export async function run(opts: Opts = parseArgs()) {
   const changed = toWrite.filter(({ row, v }) => {
     if (row.source !== 'fincaraiz') return true;
     const same = (row.is_opportunity ?? false) === v.is_opportunity
+      && (row.is_high ?? false) === v.is_high
       && Math.round((row.discount_pct ?? -999) * 10) === Math.round((v.discount_pct ?? -999) * 10);
     return !same;
   });

@@ -13,7 +13,7 @@ import { readFile } from 'node:fs/promises';
 import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
-import { queryPortal, queryBancos, queryRemates, facets, stats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
+import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly } from './analysis.js';
 import { warmCityPools } from '../engine/zone-comps.js';
@@ -191,12 +191,16 @@ const server = createServer(async (req, res) => {
 
 /** Ciudades con más inventario: se precargan sus comparables para que la primera
  *  ficha abra al instante en vez de esperar a que se cargue el baseline. */
-const WARM_CITIES = ['bogota', 'medellin', 'cali', 'barranquilla', 'bucaramanga', 'cartagena'];
+const WARM_CITIES = ['bogota', 'medellin', 'cali'];
 
 server.listen(PORT, () => {
   log.info(`Radar local en http://localhost:${PORT}`);
   log.info('API: /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
-  void warmCityPools(WARM_CITIES)
+  // Primero las estadísticas (es lo primero que pide el dashboard), luego los
+  // comparables de las ciudades grandes.
+  void warmStats()
+    .then(() => log.info('Estadísticas precargadas'))
+    .then(() => warmCityPools(WARM_CITIES))
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
     .catch(() => { /* el precalentamiento es best-effort */ });
 });

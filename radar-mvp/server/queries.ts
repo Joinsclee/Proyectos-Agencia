@@ -100,7 +100,7 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
     if (q.zone) qb = qb.eq('zone', q.zone);
     if (q.opp === '1') qb = qb.eq('is_opportunity', true);
     if (q.opp === 'high') {
-      qb = qb.eq('is_opportunity', true).gte('discount_pct', 25).eq('features->market->>confidence', 'high');
+      qb = qb.eq('is_high', true);
     }
     return applyOrderInmuebles(qb, order).range(from, from + pageSize - 1);
   };
@@ -231,13 +231,50 @@ export async function facets(source: 'portal' | 'bancos' = 'portal', city?: stri
 }
 
 /** Métricas de portada: totales y oportunidades por ciudad. */
+/**
+ * Estadísticas del dashboard, CACHEADAS.
+ *
+ * Sólo cambian cuando corre el motor o un scraper (1-2 veces al día), pero se
+ * piden en cada carga de la página y son 5 conteos sobre 105K filas. Se sirven de
+ * memoria y se refrescan por detrás: el cliente nunca espera por ellas.
+ */
+const STATS_TTL_MS = 10 * 60_000;
+let statsCache: { at: number; data: Awaited<ReturnType<typeof computeStats>> } | null = null;
+let statsInFlight: Promise<Awaited<ReturnType<typeof computeStats>>> | null = null;
+
 export async function stats() {
-  const head = (q: any) => q.then((r: any) => r.count ?? 0);
+  if (statsCache) {
+    if (Date.now() - statsCache.at >= STATS_TTL_MS && !statsInFlight) void refreshStats().catch(() => {});
+    return statsCache.data; // fresco o rancio: se responde ya
+  }
+  return statsInFlight ?? refreshStats();
+}
+
+function refreshStats() {
+  statsInFlight = computeStats()
+    .then((data) => { statsCache = { at: Date.now(), data }; return data; })
+    .finally(() => { statsInFlight = null; });
+  return statsInFlight;
+}
+
+/** Precalienta las estadísticas al arrancar (la primera carga no debe esperarlas). */
+export async function warmStats(): Promise<void> {
+  try { await refreshStats(); } catch { /* best-effort */ }
+}
+
+async function computeStats() {
+  // OJO: un count que falla NO puede devolver 0 en silencio — el dashboard llegó a
+  // anunciar "0 oportunidades" porque el timeout se tragaba aquí.
+  const head = async (q: any) => {
+    const r = await q;
+    if (r.error) throw new Error(`stats: ${r.error.message}`);
+    return r.count ?? 0;
+  };
   const base = () => supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('source', 'fincaraiz');
   const [total, opps, high, bancos, remates] = await Promise.all([
     head(base()),
     head(base().eq('is_opportunity', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
-    head(base().eq('is_opportunity', true).gte('discount_pct', 25).lte('discount_pct', MAX_OPP_DISCOUNT).eq('features->market->>confidence', 'high')),
+    head(base().eq('is_high', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
     head(supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).in('source', BANK_SOURCES as unknown as string[])),
     head(supabase.from('remates').select('id', { count: 'exact', head: true }).eq('is_active', true)),
   ]);

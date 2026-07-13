@@ -91,12 +91,12 @@ interface PoolRow {
 }
 
 /**
- * Caché en memoria del baseline por ciudad (TTL 15 min).
+ * Caché en memoria del baseline por ciudad.
  *
  * Cada análisis relee toda la ciudad de FincaRaíz (hasta ~20K filas = ~20 consultas).
- * Como el baseline sólo cambia cuando corre el scraper (1×/día), cachearlo evita
- * repetir ese costo en cada ficha abierta: la 1ª abre en segundos, las siguientes
- * de la misma ciudad son instantáneas.
+ * Como el baseline sólo cambia cuando corre el scraper, cachearlo evita repetir ese
+ * costo en cada ficha abierta: la 1ª abre en segundos, las siguientes de la misma
+ * ciudad son instantáneas.
  */
 const POOL_TTL_MS = 30 * 60_000;
 const poolCache = new Map<string, { at: number; rows: PoolRow[] }>();
@@ -145,7 +145,7 @@ function refreshPool(c: string): Promise<PoolRow[]> {
  * statement timeout. Se espera a que el arranque se asiente y se deja respirar
  * entre ciudades: el objetivo es que la primera ficha abra rápida, no llegar antes.
  */
-export async function warmCityPools(cities: string[], delayMs = 20_000): Promise<void> {
+export async function warmCityPools(cities: string[], delayMs = 30_000): Promise<void> {
   await sleep(delayMs);
   for (const c of cities) {
     // Vía refreshPool (no fetchCityPool directo): así queda registrada en
@@ -153,7 +153,7 @@ export async function warmCityPools(cities: string[], delayMs = 20_000): Promise
     // precarga espera a ESTA consulta en vez de lanzar otra igual en paralelo.
     try { await refreshPool(normCity(c)); }
     catch { /* una ciudad caída no debe afectar al servidor */ }
-    await sleep(3_000);
+    await sleep(5_000);
   }
 }
 
@@ -199,7 +199,7 @@ async function fetchCityPool(c: string): Promise<PoolRow[]> {
   let cursor = '';
   let pages = 0;
   for (;;) {
-    if (pages++ > 0) await sleep(120); // no acaparar la base: el dashboard sigue vivo
+    if (pages++ > 0) await sleep(250); // no acaparar la base: el dashboard sigue vivo
     const batch = await pageWithRetry(c, cursor);
     for (const r of batch) {
       if (r.is_project === true) continue;
