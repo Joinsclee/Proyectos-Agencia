@@ -104,6 +104,11 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
   const path = url.pathname;
   try {
+    // Health check de la plataforma (EasyPanel/Railway). Debe ser barato y NO tocar
+    // la base: si Supabase va lento, el contenedor no debe darse por muerto.
+    if (path === '/health') {
+      return sendJSON(res, 200, { ok: true, uptime_s: Math.round(process.uptime()) });
+    }
     if (path.startsWith('/api/')) {
       // ── Auth (POST) ──
       if (path === '/api/auth/register' || path === '/api/auth/login') {

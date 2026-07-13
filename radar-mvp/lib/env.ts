@@ -2,8 +2,11 @@ import 'dotenv/config';
 import { z } from 'zod';
 
 const EnvSchema = z.object({
-  // Firecrawl
-  FIRECRAWL_API_KEY: z.string().min(5),
+  // Firecrawl — SOLO lo usan los scrapers de bancos. Es opcional a propósito: el
+  // servidor web no scrapea nada, y exigirlo aquí hacía que el despliegue (donde
+  // sólo se sirve el dashboard) ni siquiera arrancara. Quien lo necesita lo valida
+  // al usarlo (requireFirecrawlKey).
+  FIRECRAWL_API_KEY: z.string().min(5).optional(),
   FIRECRAWL_API_URL: z.string().url().optional(),    // vacío = cloud; set si self-host
 
   // Supabase

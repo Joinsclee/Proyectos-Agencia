@@ -9,9 +9,20 @@ const log = createLogger('firecrawl');
  * Si FIRECRAWL_API_URL está seteado (self-host), apunta allí.
  */
 export const fc = new Firecrawl({
-  apiKey: env.FIRECRAWL_API_KEY,
+  // La key es opcional en el entorno (el servidor web no scrapea). Si alguien
+  // importa este cliente sin key, falla aquí con un mensaje claro en vez de
+  // impedir que arranque cualquier proceso que sólo toque este módulo de refilón.
+  apiKey: env.FIRECRAWL_API_KEY ?? '',
   ...(env.FIRECRAWL_API_URL ? { apiUrl: env.FIRECRAWL_API_URL } : {}),
 });
+
+/** Los scrapers que sí necesitan Firecrawl lo exigen explícitamente al arrancar. */
+export function requireFirecrawlKey(): string {
+  if (!env.FIRECRAWL_API_KEY) {
+    throw new Error('Falta FIRECRAWL_API_KEY: este scraper la necesita (el servidor web no).');
+  }
+  return env.FIRECRAWL_API_KEY;
+}
 
 /**
  * Scrape de una URL con schema JSON estructurado.
