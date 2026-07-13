@@ -6,7 +6,9 @@ const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Remate' }[s] || s);
-const srcIcon = (s) => ({ fincaraiz: '🏘', davivienda: '🏛', bbva: '🏛', aval: '🏢', bancolombia: '🏦' }[s] || '🏠');
+/** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
+const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
+const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
 // Oportunidad ALTA: la marca el motor (decil más barato + descuento grande +
 // comparables homogéneos) y viaja en la columna is_high.
 const isHighOpp = (d) => d.is_high === true;
@@ -44,7 +46,7 @@ function renderAuthBar() {
   const el = $('authbar'); if (!el) return;
   if (auth.user) {
     const who = auth.user.name || (auth.user.email || '').split('@')[0];
-    el.innerHTML = `<span class="auth-user">👤 ${esc(who)}</span><button class="auth-link" id="auth-logout">Salir</button>`;
+    el.innerHTML = `<span class="auth-user">${ic('user')}${esc(who)}</span><button class="auth-link" id="auth-logout">Salir</button>`;
     $('auth-logout').addEventListener('click', () => {
       localStorage.removeItem('radar_token'); localStorage.removeItem('radar_refresh'); location.reload();
     });
@@ -56,18 +58,18 @@ function renderAuthBar() {
 function updateFavCount() { const c = $('c-guardados'); if (c) c.textContent = favSet.size; }
 function favBtn(kind, id) {
   const on = favSet.has(favKey(kind, id));
-  return `<button class="fav-btn ${on ? 'on' : ''}" data-fav="${favKey(kind, id)}" title="Guardar" aria-label="Guardar" onclick="window.__toggleFav(event,'${kind}','${id}')">${on ? '♥' : '♡'}</button>`;
+  return `<button class="fav-btn ${on ? 'on' : ''}" data-fav="${favKey(kind, id)}" title="Guardar" aria-label="Guardar" onclick="window.__toggleFav(event,'${kind}','${id}')">${ic('heart')}</button>`;
 }
 function modalFavBtn(kind, id) {
   const on = favSet.has(favKey(kind, id));
-  return `<button class="modal-fav fav-btn ${on ? 'on' : ''}" data-fav="${favKey(kind, id)}" onclick="window.__toggleFav(event,'${kind}','${id}')">${on ? '♥ Guardado' : '♡ Guardar'}</button>`;
+  return `<button class="modal-fav fav-btn ${on ? 'on' : ''}" data-fav="${favKey(kind, id)}" onclick="window.__toggleFav(event,'${kind}','${id}')">${ic('heart')}<span>${on ? 'Guardado' : 'Guardar'}</span></button>`;
 }
 function paintFavs() {
   document.querySelectorAll('.fav-btn[data-fav]').forEach((b) => {
     const on = favSet.has(b.dataset.fav);
     b.classList.toggle('on', on);
-    if (b.classList.contains('modal-fav')) b.textContent = on ? '♥ Guardado' : '♡ Guardar';
-    else b.textContent = on ? '♥' : '♡';
+    const lbl = b.querySelector('span');
+    if (lbl) lbl.textContent = on ? 'Guardado' : 'Guardar';
   });
 }
 window.__toggleFav = async function (ev, kind, id) {
@@ -114,20 +116,31 @@ function gateFicha(id) {
 }
 function lockBox(label, sub) {
   return `<div class="section"><div class="lockbox" onclick="location.href='/login'" role="button" tabindex="0">
-    <span class="lock-ic">🔒</span>
+    <span class="lock-ic">${ic('lock')}</span>
     <div class="lock-txt"><strong>${label}</strong><span>${sub || 'Regístrate gratis para verlo'}</span></div>
     <span class="lock-cta">Desbloquear</span>
   </div></div>`;
 }
 function showRegisterWall(count) {
   gImgs = [];
+  const total = STATS ? STATS.portal_opps.toLocaleString('es-CO') : 'miles de';
   $('modal-content').innerHTML = `<div class="wall">
-    <div class="wall-ic">🔒</div>
-    <h2>Ya viste ${count} oportunidades</h2>
-    <p>Regístrate <strong>gratis</strong> para seguir viendo todas las propiedades, su dirección exacta,
-       el análisis con IA y para guardar tus favoritas.</p>
-    <a class="wall-cta" href="/login">Crear cuenta gratis</a>
-    <a class="wall-alt" href="/login">Ya tengo cuenta · Iniciar sesión</a>
+    <figure class="wall-art">
+      <img src="/img/wall-radar.jpg" alt="Vista aérea de un barrio en penumbra donde un barrido de radar ilumina unas pocas propiedades" width="900" height="1350">
+      <figcaption>El radar revisa el barrio entero y solo señala las pocas que están bajo el precio de su zona.</figcaption>
+    </figure>
+    <div class="wall-body">
+      <span class="wall-eyebrow">${ic('lock')} Límite gratuito</span>
+      <h2>Ya viste ${count} oportunidades</h2>
+      <p>Crea tu cuenta <strong>gratis</strong> y sigue viendo las ${total} que el radar tiene marcadas hoy.</p>
+      <ul class="wall-list">
+        <li>${ic('check')} Fichas ilimitadas, con dirección y fotos</li>
+        <li>${ic('check')} Análisis con IA contra los comparables del barrio</li>
+        <li>${ic('check')} Guarda tus favoritas y vuelve a ellas</li>
+      </ul>
+      <a class="wall-cta" href="/login">Crear cuenta gratis</a>
+      <a class="wall-alt" href="/login">Ya tengo cuenta · Iniciar sesión</a>
+    </div>
   </div>`;
   showModal();
 }
@@ -135,7 +148,7 @@ function showRegisterWall(count) {
 // ---------- Filtros ----------
 async function buildFilters() {
   const tab = state.tab;
-  if (tab === 'guardados') { $('filters').innerHTML = '<div class="f-note">Tus inmuebles guardados ♥</div>'; return; }
+  if (tab === 'guardados') { $('filters').innerHTML = `<div class="f-note">${ic('heart')} Tus inmuebles guardados</div>`; return; }
   let html = '';
   if (tab !== 'remates') {
     const fc = await fetch(`/api/facets?source=${tab === 'portal' ? 'portal' : 'bancos'}`).then((r) => r.json());
@@ -154,7 +167,7 @@ async function buildFilters() {
     html += `<div class="f"><label>Tipo</label><select id="f-type"><option value="">Todos</option>${RTYPES.map((t) => `<option value="${t}">${typeLbl(t)}</option>`).join('')}</select></div>`;
     // Demandante: dropdown con TODOS los bancos detectados (pedido del cliente).
     const bk = await fetch('/api/remate-banks').then((r) => r.json()).catch(() => ({ banks: [] }));
-    const bankOpts = ['<option value="">Todos los demandantes</option>', '<option value="1">🏦 Solo bancos (todos)</option>']
+    const bankOpts = ['<option value="">Todos los demandantes</option>', '<option value="1">Solo bancos (todos)</option>']
       .concat((bk.banks || []).map((b) => `<option value="${esc(b.name)}">${esc(b.name)} (${b.count})</option>`));
     html += `<div class="f"><label>Demandante (banco)</label><select id="f-bank">${bankOpts.join('')}</select></div>`;
     html += fRange('bid', 'Postura (millones)', 'mín', 'máx');
@@ -253,7 +266,7 @@ async function loadGuardados() {
     $('loading').style.display = 'none';
     $('count').textContent = '—';
     $('empty').style.display = 'block';
-    $('empty').innerHTML = '<div class="h">Inicia sesión para guardar</div><div>Crea tu cuenta gratis y guarda inmuebles con el ♥. <a href="/login">Iniciar sesión →</a></div>';
+    $('empty').innerHTML = '<div class="h">Inicia sesión para guardar</div><div>Crea tu cuenta gratis y guarda los inmuebles que te interesen. <a href="/login">Iniciar sesión</a></div>';
     return;
   }
   let props = [];
@@ -273,7 +286,7 @@ async function loadGuardados() {
   $('count').textContent = props.length + ' guardado' + (props.length === 1 ? '' : 's');
   $('loading').style.display = 'none';
   $('empty').style.display = props.length === 0 ? 'block' : 'none';
-  if (props.length === 0) $('empty').innerHTML = '<div class="h">Sin guardados aún</div><div>Toca el ♥ en cualquier inmueble para guardarlo aquí.</div>';
+  if (props.length === 0) $('empty').innerHTML = '<div class="h">Sin guardados aún</div><div>Toca el corazón en cualquier inmueble para guardarlo aquí.</div>';
 }
 
 function renderPager(total, page, pages) {
@@ -337,39 +350,53 @@ function inmuebleCard(p, kind) {
     : imgs[0]
       ? `<img src="${imgs[0]}" loading="lazy" onerror="window.__cardFallback(this.parentElement,'${p.source}','${p.type || ''}')">`
       : `<div class="card-ph">${srcIcon(p.source)}</div>`;
-  const opp = p.is_opportunity ? `<span class="opp-badge ${isHighOpp(p) ? 'high' : ''}">${isHighOpp(p) ? '★ ' : '▼ '}${p.discount_pct != null ? Math.round(p.discount_pct) + '%' : 'OPORTUNIDAD'}</span>` : '';
-  const ppm2 = p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' / m²' : '—';
+  const opp = p.is_opportunity
+    ? `<span class="opp-badge ${isHighOpp(p) ? 'high' : ''}">${ic(isHighOpp(p) ? 'star' : 'down')}${p.discount_pct != null ? Math.round(p.discount_pct) + '%' : 'Oportunidad'}</span>`
+    : '';
+  const ppm2 = p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + '/m²' : '';
   return `
     <div class="card-img-wrap">${cover}<span class="source-badge">${srcLbl(p.source)}</span>${opp}${favBtn(kind, p.id)}</div>
-    <div class="card-header"><div class="card-price">${fmtCOP(p.price)}</div><div class="card-price-sub">${ppm2}</div></div>
     <div class="card-body">
+      <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
       <div class="card-titulo">${typeLbl(p.type)}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}</div>
-      <div class="card-ubic">📍 ${p.zone ? p.zone + ' · ' : ''}<strong>${cap(p.city)}</strong></div>
+      <div class="card-ubic">${ic('pin')}<span>${p.zone ? esc(p.zone) + ' · ' : ''}<strong>${cap(p.city)}</strong></span></div>
       <div class="card-meta">
-        ${f.bedrooms ? `<span>🛏 ${f.bedrooms}</span>` : ''}
-        ${f.bathrooms ? `<span>🛁 ${f.bathrooms}</span>` : ''}
-        ${f.garages ? `<span>🚗 ${f.garages}</span>` : ''}
+        ${f.bedrooms ? `<span title="Habitaciones">${ic('bed')}${f.bedrooms}</span>` : ''}
+        ${f.bathrooms ? `<span title="Baños">${ic('bath')}${f.bathrooms}</span>` : ''}
+        ${f.garages ? `<span title="Parqueaderos">${ic('car')}${f.garages}</span>` : ''}
         ${f.stratum ? `<span class="e">Estrato ${f.stratum}</span>` : ''}
       </div>
-    </div>
-    <div class="card-cta">VER DETALLE COMPLETO →</div>`;
+    </div>`;
+}
+
+/**
+ * (definido arriba) Las fotos "genéricas" de los remates viven en Supabase Storage pesando ~1,9 MB
+ * cada una: con 24 tarjetas eran 45 MB por pantalla y las tarjetas salían en
+ * blanco mientras descargaban. Las mismas imágenes, optimizadas, se sirven desde
+ * /img/ph (~95 KB). Si algún día aparece un tipo nuevo, cae al remoto.
+ */
+const PH_LOCAL = ['parking', 'apartment', 'house', 'lot', 'vehicle', 'farm', 'office', 'commercial', 'rights', 'unknown'];
+function imgSrc(url) {
+  if (!url) return url;
+  const m = /placeholders\/ai\/([a-z]+)\.png$/.exec(url);
+  return m && PH_LOCAL.includes(m[1]) ? `/img/ph/${m[1]}.jpg` : url;
 }
 
 function remateCard(p, kind) {
-  const cover = p.image_url ? `<img src="${p.image_url}" loading="lazy">` : `<div class="card-ph">⚖️</div>`;
+  const cover = p.image_url ? `<img src="${imgSrc(p.image_url)}" loading="lazy" alt="">` : `<div class="card-ph">${ic('scale')}</div>`;
   return `
     <div class="card-img-wrap">${cover}<span class="source-badge">Remate</span>${countdownBadge(p.auction_date)}${favBtn(kind || 'remate', p.id)}</div>
-    <div class="card-header">
-      <div class="card-price-label">Postura mínima</div>
-      <div class="card-price big">${fmtCOP(p.minimum_bid)}</div>
-      <div class="card-price-sub">${p.appraisal_value ? 'Avalúo ' + fmtCOP(p.appraisal_value) + (p.minimum_bid_pct ? ' · postura al ' + p.minimum_bid_pct + '%' : '') : ''}</div>
-    </div>
     <div class="card-body">
+      <div class="card-price-label">Postura mínima</div>
+      <div class="card-price">${fmtCOP(p.minimum_bid)}</div>
+      ${p.appraisal_value ? `<div class="card-sub">Avalúo ${fmtCOP(p.appraisal_value)}${p.minimum_bid_pct ? ` · postura al ${p.minimum_bid_pct}%` : ''}</div>` : ''}
       <div class="card-titulo">${typeLbl(p.property_type)}</div>
-      <div class="card-ubic">📍 <strong>${cap(p.city)}</strong>${p.department ? ', ' + cap(p.department) : ''}</div>
-      <div class="card-meta">${p.auction_date ? `<span>📅 ${fmtDate(p.auction_date)}</span>` : ''}${p.auction_mode ? `<span class="e">${cap(p.auction_mode)}</span>` : ''}</div>
-    </div>
-    <div class="card-cta">VER DETALLE COMPLETO →</div>`;
+      <div class="card-ubic">${ic('pin')}<span><strong>${cap(p.city)}</strong>${p.department ? ', ' + cap(p.department) : ''}</span></div>
+      <div class="card-meta">
+        ${p.auction_date ? `<span title="Fecha de audiencia">${ic('calendar')}${fmtDate(p.auction_date)}</span>` : ''}
+        ${p.auction_mode ? `<span class="e">${cap(p.auction_mode)}</span>` : ''}
+      </div>
+    </div>`;
 }
 const fmtArea = (a) => (Number.isInteger(+a) ? a : (+a).toFixed(1)) + ' m²';
 
@@ -384,9 +411,9 @@ function countdownBadge(iso) {
   if (d == null) return '';
   if (d < 0) return '<span class="countdown past">Audiencia realizada</span>';
   if (d === 0) return '<span class="countdown now">¡HOY!</span>';
-  if (d === 1) return '<span class="countdown soon">⏰ Mañana</span>';
-  if (d <= 7) return `<span class="countdown soon">⏰ En ${d} días</span>`;
-  return `<span class="countdown">📅 En ${d} días</span>`;
+  if (d === 1) return `<span class="countdown soon">${ic('clock')}Mañana</span>`;
+  if (d <= 7) return `<span class="countdown soon">${ic('clock')}En ${d} días</span>`;
+  return `<span class="countdown">${ic('calendar')}En ${d} días</span>`;
 }
 // ── Calculadora de gastos de compra (pedido del cliente) ──
 // Tarifas Colombia (estimadas): notaría ~0.54% repartida 50/50 → comprador 0.27%;
@@ -459,7 +486,7 @@ function aiSection(kind, id) {
   if (!id) return '';
   return `<div class="section"><h3>Análisis con IA</h3>
     <div class="ai-wrap" id="ai-wrap-${id}">
-      <button class="ai-btn" onclick="window.__analyzeAI(this,'${kind}','${id}')">🤖 Analizar esta oportunidad con IA</button>
+      <button class="ai-btn" onclick="window.__analyzeAI(this,'${kind}','${id}')">${ic('spark')} Analizar esta oportunidad con IA</button>
       <p class="ai-hint">Compara contra el mercado de la zona (FincaRaíz) y da una opinión preliminar de inversión.</p>
     </div></div>`;
 }
@@ -468,7 +495,7 @@ function marketCtxHtml(m) {
   if (!m || !m.n) return '';
   const tipo = m.matched_type ? `mismo tipo` : `todos los tipos`;
   const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Insuficiente' }[m.confidence] || m.confidence;
-  const scopeIcon = m.scope === 'ciudad' ? '🏙️' : '📍';
+  const scopeIcon = ic(m.scope === 'ciudad' ? 'map' : 'pin');
   const scopeLbl = m.scope === 'ciudad' ? `${cap(m.city)} · toda la ciudad` : esc(m.scope_label || 'sector');
   const crit = (m.criteria || []).length
     ? `<div class="crit-chips" style="margin-bottom:10px">${m.criteria.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div>`
@@ -510,20 +537,26 @@ function renderAI(result) {
     </div>`;
 }
 // Recomendaciones: otras oportunidades en la misma ciudad (cruzando fuentes).
-const RKIND = { portal: ['🏠', 'Portal'], banco: ['🏦', 'Banco'], remate: ['⚖️', 'Remate'] };
+const RKIND = { portal: ['home', 'Portal'], banco: ['bank', 'Banco'], remate: ['scale', 'Remate'] };
+window.__recFallback = (el) => {
+  const w = el.parentElement;
+  if (w) w.innerHTML = `<div class="rec-ph">${ic('home', 'ic-lg')}</div>`;
+};
 function recCard(r) {
-  const k = RKIND[r.kind] || ['🏠', r.kind];
+  const k = RKIND[r.kind] || ['home', r.kind];
+  const ph = `<div class="rec-ph">${ic(k[0], 'ic-lg')}</div>`;
   const img = r.image
-    ? `<img src="${r.image}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=&quot;rec-ph&quot;>${k[0]}</div>'">`
-    : `<div class="rec-ph">${k[0]}</div>`;
+    ? `<img src="${r.image}" loading="lazy" onerror="window.__recFallback(this)">`
+    : ph;
   const disc = r.discount_pct != null ? `${Math.round(r.discount_pct)}% ${r.metric_label}` : '';
-  const star = r.same_type ? ' · mismo tipo' : '';
-  const zoneBadge = r.same_zone ? '<span class="rec-zone">📍 mismo barrio</span>' : '';
+  // El tipo del inmueble se lee en la línea de abajo: repetirlo aquí solo hacía
+  // que la etiqueta se cortara a media palabra.
+  const zoneBadge = r.same_zone ? `<span class="rec-zone">${ic('pin')}mismo barrio</span>` : '';
   const loc = `${r.zone ? esc(r.zone) + ', ' : ''}${cap(r.city)}`;
   return `<button class="rec-card" onclick="window.__openRec('${r.kind}','${r.id}')">
     <div class="rec-img">${img}<span class="rec-disc">−${Math.round(r.discount_pct || 0)}%</span>${zoneBadge}</div>
     <div class="rec-body">
-      <div class="rec-kind">${k[0]} ${k[1]}${star}</div>
+      <div class="rec-kind">${ic(k[0])}${k[1]}</div>
       <div class="rec-type">${typeLbl(r.type)} · ${loc}</div>
       <div class="rec-price">${fmtCOP(r.price)}</div>
       <div class="rec-meta">${disc}</div>
@@ -635,7 +668,7 @@ function openInmueble(p) {
     <div class="detail">
       <div class="detail-top"><span class="pill-src">${srcLbl(p.source)}</span>${fav}</div>
       <h2>${typeLbl(p.type)} en ${cap(p.city)}</h2>
-      <div class="loc">📍 ${p.zone ? p.zone + ', ' : ''}<strong>${cap(p.city)}</strong></div>
+      <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${cap(p.city)}</strong></div>
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}</div>
       ${mkt || marketLazyBox()}${aiBlock}${gastosSection(p.price, 'compra')}${addrBlock}${mapBlock}${descBlock}${amen}
@@ -714,7 +747,7 @@ function openRemate(p) {
   // el dato no está claro → no los mostramos como si fueran datos reales.
   const hasData = (v) => v && !/no se menciona|no se especific|no aparece|no se indica|no se identific/i.test(String(v));
   const datos = [];
-  if (hasData(p.plaintiff)) datos.push(['Demandante', esc(p.plaintiff) + (f.bank_name ? ` <span class="bank-tag">🏦 ${esc(f.bank_name)}</span>` : '')]);
+  if (hasData(p.plaintiff)) datos.push(['Demandante', esc(p.plaintiff) + (f.bank_name ? ` <span class="bank-tag">${ic('bank')}${esc(f.bank_name)}</span>` : '')]);
   if (hasData(p.defendant)) datos.push(['Demandado', esc(p.defendant)]);
   if (hasData(p.court)) datos.push(['Juzgado', esc(p.court)]);
   if (hasData(p.case_number)) datos.push(['Radicado del proceso', esc(p.case_number)]);
@@ -744,15 +777,15 @@ function openRemate(p) {
 
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
-      <div class="detail-top"><span class="pill-src">⚖️ Remate judicial</span>${fav}</div>
+      <div class="detail-top"><span class="pill-src">${ic('scale')}Remate judicial</span>${fav}</div>
       <h2>${typeLbl(p.property_type)} en ${cap(p.city)}</h2>
-      <div class="loc">📍 <strong>${cap(p.city)}</strong>${p.department ? ', ' + cap(p.department) : ''}</div>
+      <div class="loc">${ic('pin')}<strong>${cap(p.city)}</strong>${p.department ? ', ' + cap(p.department) : ''}</div>
       <div class="priceblock remate">
         <div class="pb-row">
           <div><div class="pb-label">Postura mínima</div><div class="pb-amount">${fmtCOP(p.minimum_bid)}</div></div>
           ${p.appraisal_value ? `<div class="pb-side"><div class="pb-label">Avalúo</div><div class="pb-aval">${fmtCOP(p.appraisal_value)}</div>${pct ? `<div class="pb-pct">postura al ${pct}%</div>` : ''}</div>` : ''}
         </div>
-        ${p.auction_date ? `<div class="pb-auction">📅 Audiencia: <strong>${fmtDate(p.auction_date)}</strong>${p.auction_time ? ' · ' + p.auction_time : ''} ${countdownBadge(p.auction_date)}</div>` : ''}
+        ${p.auction_date ? `<div class="pb-auction">${ic('calendar')} Audiencia: <strong>${fmtDate(p.auction_date)}</strong>${p.auction_time ? ' · ' + p.auction_time : ''} ${countdownBadge(p.auction_date)}</div>` : ''}
       </div>
       ${analisisSection(p)}
       ${aiBlock}
@@ -768,17 +801,17 @@ function openRemate(p) {
 const esc = (s) => String(s).replace(/[<>]/g, (c) => ({ '<': '&lt;', '>': '&gt;' }[c]));
 
 function gallery() {
-  if (!gImgs.length) return `<div class="gallery"><div class="gallery-main"><div class="card-ph" style="font-size:5rem;">🏠</div></div></div>`;
+  if (!gImgs.length) return `<div class="gallery"><div class="gallery-main"><div class="card-ph">${ic('home', 'ic-xl')}</div></div></div>`;
   return `<div class="gallery"><div class="gallery-main" id="gmain"></div>
     ${gImgs.length > 1 ? `<button class="gnav prev" onclick="gMove(-1)">‹</button><button class="gnav next" onclick="gMove(1)">›</button><div class="gcounter" id="gcount"></div><div class="gthumbs" id="gthumbs"></div>` : ''}</div>`;
 }
 function gRender() {
   const m = $('gmain'); if (!m) return;
-  m.innerHTML = `<img src="${gImgs[gIdx]}" alt="foto">`;
+  m.innerHTML = `<img src="${imgSrc(gImgs[gIdx])}" alt="Foto del inmueble">`;
   if ($('gcount')) $('gcount').textContent = `${gIdx + 1} / ${gImgs.length}`;
   const t = $('gthumbs');
   if (t && !t.dataset.built) {
-    t.innerHTML = gImgs.map((u, i) => `<div class="gthumb ${i === 0 ? 'active' : ''}" data-i="${i}"><img src="${u}" loading="lazy"></div>`).join('');
+    t.innerHTML = gImgs.map((u, i) => `<div class="gthumb ${i === 0 ? 'active' : ''}" data-i="${i}"><img src="${imgSrc(u)}" loading="lazy" alt=""></div>`).join('');
     t.dataset.built = '1';
     t.querySelectorAll('.gthumb').forEach((th) => th.addEventListener('click', () => { gIdx = Number(th.dataset.i); gRender(); }));
   }
@@ -877,16 +910,15 @@ function renderVStats() {
   const v = $('vstats');
   if (state.tab === 'portal') {
     const cities = STATS.perCity.length;
+    // El hero ya muestra listados y oportunidades: repetirlos aquí solo resta confianza.
     v.innerHTML = `
-      <div class="vstat"><div class="num">${STATS.portal_total.toLocaleString('es-CO')}</div><div class="lbl">Listados</div></div>
-      <div class="vstat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades</div></div>
-      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oport. altas</div></div>
-      <div class="vstat"><div class="num">${cities}</div><div class="lbl">Ciudades</div></div>`;
+      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades altas</div></div>
+      <div class="vstat"><div class="num">${cities}</div><div class="lbl">Ciudades cubiertas</div></div>`;
     $('legend').innerHTML = `<div class="legend-card">
-      <span class="legend-title">🏘 Cómo leer el portal abierto</span>
-      <span class="legend-item"><span class="badge-mini high">★ Alta</span> precio/m² en el decil más bajo + descuento grande + alta confianza</span>
-      <span class="legend-item"><span class="badge-mini opp">▼ Oportunidad</span> precio/m² en el cuartil más bajo frente a similares de la zona</span>
-      <span class="legend-item" style="opacity:0.7">Señal de cribado sobre precios de oferta, no avalúo.</span></div>`;
+      <span class="legend-title">${ic('chart')} Cómo leer el portal abierto</span>
+      <span class="legend-item"><span class="badge-mini high">${ic('star')}Alta</span> precio/m² en el decil más bajo, descuento grande y comparables homogéneos</span>
+      <span class="legend-item"><span class="badge-mini opp">${ic('down')}Oportunidad</span> precio/m² en el cuartil más bajo frente a similares de la zona</span>
+      <span class="legend-item note">Señal de cribado sobre precios de oferta, no un avalúo.</span></div>`;
   } else if (state.tab === 'guardados') {
     v.innerHTML = `<div class="vstat"><div class="num">${favSet.size}</div><div class="lbl">Inmuebles guardados</div></div>`;
     $('legend').innerHTML = '';
