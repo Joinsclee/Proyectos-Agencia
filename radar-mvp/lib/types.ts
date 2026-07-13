@@ -30,6 +30,16 @@ export const MAX_DISPLAY_PRICE = 3_000_000_000; // > $3.000M no se muestra
 export const MAX_OPP_DISCOUNT = 70; // %
 
 /**
+ * Fuentes de inmuebles de BANCO (todo lo que no es el portal FincaRaíz).
+ *
+ * Se enumeran en vez de filtrar por `source != 'fincaraiz'`: un filtro negado no
+ * puede usar el índice y obliga a escanear las 100K+ filas del portal (medido:
+ * timeout). Con `IN (…)` la consulta va directo al índice. Al añadir un banco
+ * nuevo, agrégalo aquí.
+ */
+export const BANK_SOURCES = ['davivienda', 'bbva', 'bancolombia', 'aval'] as const;
+
+/**
  * Heurística de outlier: descarta inmuebles con datos absurdos del scraping.
  * Razones típicas: parser malinterpretó una celda del PDF (2.55m² en vez de 255m²),
  * registro de prueba con precio simbólico, o un valor astronómico mal cargado.

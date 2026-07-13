@@ -14,6 +14,7 @@
  * permiten un ranking honesto. Se prioriza el MISMO tipo y luego el mayor descuento.
  */
 import { supabase } from '../lib/supabase.js';
+import { BANK_SOURCES } from '../lib/types.js';
 import { haversineKm } from '../engine/stats.js';
 import { normCity } from '../engine/zone-comps.js';
 
@@ -90,7 +91,7 @@ export async function recommendInZone(opts: {
 
   const [bancos, portal, remates] = await Promise.all([
     supabase.from('inmuebles').select(inmCols)
-      .eq('is_active', true).neq('source', 'fincaraiz').eq('city', city)
+      .eq('is_active', true).in('source', BANK_SOURCES as unknown as string[]).eq('city', city)
       .eq('is_opportunity', true).lte('discount_pct', REC_MAX_DISCOUNT)
       .order('discount_pct', { ascending: false, nullsFirst: false }).limit(POOL_INM),
     supabase.from('inmuebles').select(inmCols)

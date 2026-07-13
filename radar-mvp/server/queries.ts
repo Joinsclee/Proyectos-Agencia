@@ -4,7 +4,7 @@
  * topes — se devuelven todos los resultados de cada ciudad, paginados.
  */
 import { supabase } from '../lib/supabase.js';
-import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT } from '../lib/types.js';
+import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT, BANK_SOURCES } from '../lib/types.js';
 
 export interface ListQuery {
   city?: string;
@@ -136,7 +136,7 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
     .from('inmuebles')
     .select('*', { count: 'exact' })
     .eq('is_active', true)
-    .neq('source', 'fincaraiz');
+    .in('source', BANK_SOURCES as unknown as string[]);
 
   qb = applyInmuebleFilters(qb, q);
   if (q.opp === '1') qb = qb.eq('is_opportunity', true);
@@ -220,7 +220,7 @@ export async function remateBankFacets(): Promise<{ banks: Array<{ name: string;
 /** Valores únicos para poblar los filtros (ciudades, tipos, barrios por ciudad). */
 export async function facets(source: 'portal' | 'bancos' = 'portal', city?: string) {
   let qb = supabase.from('inmuebles').select('city, zone, type').eq('is_active', true).limit(8000);
-  qb = source === 'portal' ? qb.eq('source', 'fincaraiz') : qb.neq('source', 'fincaraiz');
+  qb = source === 'portal' ? qb.eq('source', 'fincaraiz') : qb.in('source', BANK_SOURCES as unknown as string[]);
   if (city) qb = qb.eq('city', city);
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
@@ -238,7 +238,7 @@ export async function stats() {
     head(base()),
     head(base().eq('is_opportunity', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
     head(base().eq('is_opportunity', true).gte('discount_pct', 25).lte('discount_pct', MAX_OPP_DISCOUNT).eq('features->market->>confidence', 'high')),
-    head(supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).neq('source', 'fincaraiz')),
+    head(supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).in('source', BANK_SOURCES as unknown as string[])),
     head(supabase.from('remates').select('id', { count: 'exact', head: true }).eq('is_active', true)),
   ]);
 

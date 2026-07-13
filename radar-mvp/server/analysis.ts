@@ -41,6 +41,69 @@ export async function analyzeProperty(
   return { ok: false, cached: false, error: 'kind inválido' };
 }
 
+/**
+ * Contexto de mercado SIN IA (gratis) para una ficha cualquiera — incluidas las
+ * del portal, que el motor batch no persiste (releerlas 105K veces sería caro).
+ * Es el "por qué" detrás del −X% de la tarjeta: contra qué comparables se midió.
+ */
+export async function marketOnly(
+  kind: 'portal' | 'banco' | 'remate',
+  id: string,
+): Promise<{
+  ok: boolean; error?: string;
+  market?: MarketContext;
+  verdict?: ReturnType<typeof evaluateBank>;
+  recommendations?: Rec[];
+}> {
+  if (kind === 'remate') {
+    const { data } = await supabase
+      .from('remates')
+      .select('id, property_type, city, appraisal_value, minimum_bid')
+      .eq('id', id).single();
+    if (!data) return { ok: false, error: 'remate no encontrado' };
+    const pool = await loadCityPool(data.city ?? '');
+    return { ok: true, market: summarizeMarket(pool, data.city ?? '', mapType(data.property_type)) };
+  }
+
+  const { data } = await supabase
+    .from('inmuebles')
+    .select('id, source, source_id, type, price, area_m2, city, zone, discount_pct, features')
+    .eq('id', id).single();
+  if (!data) return { ok: false, error: 'inmueble no encontrado' };
+  const f = (data.features ?? {}) as any;
+  const zone = data.zone ?? (f.neighborhood as string | null) ?? null;
+
+  const pool = await loadCityPool(data.city ?? '');
+  const propio = data.source === 'fincaraiz' ? data.source_id : null;
+  const market = summarizeMarket(pool, data.city ?? '', data.type, {
+    zone, lat: num(f.lat), lng: num(f.lng),
+    bedrooms: num(f.bedrooms), garages: num(f.garages),
+    excludeSourceId: propio,
+  });
+
+  // Veredicto del MISMO motor que produce el −X% de la tarjeta (precio por m²,
+  // cascada de condicionales). Es lo que se le muestra al usuario: así el
+  // porcentaje y los comparables que lo sustentan salen del mismo conjunto, en vez
+  // de enfrentar un descuento por m² contra una mediana de precios totales.
+  const verdict = evaluateBank(
+    {
+      id: data.id, source: data.source, source_id: data.source_id, type: data.type,
+      price: num(data.price), area_m2: num(data.area_m2),
+      lat: num(f.lat), lng: num(f.lng), stratum: num(f.stratum),
+      city: data.city, zone,
+      bedrooms: num(f.bedrooms), garages: num(f.garages),
+    },
+    propio ? pool.filter((r) => r.source_id !== propio) : pool, // no ser su propio comparable
+  );
+
+  const recommendations = await recommendInZone({
+    excludeKind: kind, excludeId: id, city: data.city, type: data.type,
+    zone, lat: num(f.lat), lng: num(f.lng),
+    minDiscount: verdict.discount_pct ?? num(data.discount_pct) ?? 0,
+  });
+  return { ok: true, market, verdict, recommendations };
+}
+
 async function persistCache(table: 'inmuebles' | 'remates', id: string, features: any, ai: AiResult) {
   const next = { ...(features ?? {}), ai_analysis: ai };
   await supabase.from(table).update({ features: next }).eq('id', id);
@@ -56,13 +119,17 @@ async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult
 
   const pool = await loadCityPool(data.city ?? '');
   const zone = data.zone ?? (f.neighborhood as string | null) ?? null;
-  const market = summarizeMarket(pool, data.city ?? '', data.type, { zone, lat: num(f.lat), lng: num(f.lng) });
+  const market = summarizeMarket(pool, data.city ?? '', data.type, {
+    zone, lat: num(f.lat), lng: num(f.lng),
+    bedrooms: num(f.bedrooms), garages: num(f.garages), // condicionales de similitud
+  });
   const verdict = evaluateBank(
     {
       id: data.id, source: 'banco', source_id: data.id, type: data.type,
       price: num(data.price), area_m2: num(data.area_m2),
       lat: num(f.lat), lng: num(f.lng), stratum: num(f.stratum),
       city: data.city, zone: data.zone ?? (f.neighborhood as string | null) ?? null,
+      bedrooms: num(f.bedrooms), garages: num(f.garages),
     },
     pool,
   );

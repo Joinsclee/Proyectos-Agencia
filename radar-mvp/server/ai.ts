@@ -50,8 +50,10 @@ export class NoOpenAIKeyError extends Error {
 function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: string): string {
   const tipoComp = market.matched_type ? `del mismo tipo (${market.type})` : `de todos los tipos (no hubo suficientes del tipo ${market.type ?? 'pedido'})`;
   const ambito = market.scope === 'ciudad' ? `en ${market.city} (toda la ciudad)` : `acotados a ${market.scope_label} (${market.scope === 'barrio' ? 'mismo sector' : 'mismo barrio'})`;
+  const crit = market.criteria?.length ? `Criterios de similitud aplicados: ${market.criteria.join('; ')}.` : '';
   const mkt = [
     `Comparables FincaRaíz ${ambito} ${tipoComp}: ${market.n} avisos (confianza ${market.confidence}).`,
+    crit,
     market.median_total != null ? `Precio TOTAL de oferta — mediana ${cop(market.median_total)}, cuartil bajo (P25) ${cop(market.p25_total)}.` : '',
     market.median_ppm2 != null ? `Precio por m² — mediana ${cop(market.median_ppm2)}/m², P25 ${cop(market.p25_ppm2)}/m² (n=${market.n_ppm2}).` : 'Sin suficientes áreas para precio por m².',
     market.sample.length ? `Muestra (más baratos): ${market.sample.map((s) => `${cop(s.price)}${s.area ? `/${s.area}m²` : ''}${s.zone ? ` (${s.zone})` : ''}`).join('; ')}.` : '',

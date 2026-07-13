@@ -33,6 +33,9 @@ export interface Candidate {
   stratum: number | null;
   city: string | null; // normalizado (sin tildes, lowercase)
   zone: string | null;
+  // Opcionales: si la fuente no los trae, la condición simplemente no se aplica.
+  bedrooms?: number | null; // habitaciones
+  garages?: number | null;  // parqueaderos
 }
 
 export interface Comp {
@@ -45,6 +48,8 @@ export interface Comp {
   stratum: number | null;
   city: string | null;
   zone: string | null;
+  bedrooms?: number | null;
+  garages?: number | null;
 }
 
 /** Normaliza texto de localidad para comparar (sin tildes, lowercase, trim). */
@@ -61,6 +66,7 @@ export interface ComparablesConfig {
   radiusKm: number; // radio base de búsqueda
   areaTolPct: number; // tolerancia de área (0.30 = ±30%)
   stratumTol: number; // ±estratos
+  bedroomsTol: number; // ±habitaciones
   minComparables: number; // n mínimo para confiar
   discountThresholdPct: number; // % bajo mercado para marcar oportunidad
   highDiscountPct: number; // % para "OPORTUNIDAD ALTA"
@@ -70,6 +76,7 @@ export const DEFAULT_CONFIG: ComparablesConfig = {
   radiusKm: 1.5,
   areaTolPct: 0.3,
   stratumTol: 1,
+  bedroomsTol: 1,
   minComparables: 8,
   discountThresholdPct: 12,
   highDiscountPct: 25,
@@ -88,6 +95,7 @@ export interface Verdict {
   confidence: Confidence;
   method: string; // qué nivel de la cascada se usó
   radius_used_km: number | null;
+  criteria: string[]; // condicionales realmente aplicadas (lo que se le muestra al usuario)
 }
 
 const INSUFFICIENT: Verdict = {
@@ -101,9 +109,17 @@ const INSUFFICIENT: Verdict = {
   confidence: 'insufficient',
   method: 'sin-datos',
   radius_used_km: null,
+  criteria: [],
 };
 
-/** Niveles de la cascada de relajación: del más estricto al más laxo. */
+/**
+ * Niveles de la cascada de relajación: del MÁS parecido al más laxo.
+ *
+ * Se arranca comparando con propiedades casi idénticas (mismo tipo, mismo barrio,
+ * mismas habitaciones, con/sin parqueadero, área y estrato similares) y solo se
+ * afloja si no hay suficientes comparables. Así el precio de referencia sale de
+ * inmuebles REALMENTE similares, no de "cualquier cosa en la ciudad".
+ */
 interface Level {
   name: string;
   radiusMult: number;
@@ -111,15 +127,19 @@ interface Level {
   useStratum: boolean;
   useArea: boolean;
   useZone: boolean; // solo aplica al régimen textual (sin geo)
+  useBedrooms: boolean;
+  useGarages: boolean;
 }
 
 const CASCADE: Level[] = [
-  { name: 'estricto', radiusMult: 1, areaTolMult: 1, useStratum: true, useArea: true, useZone: true },
-  { name: 'sin-estrato', radiusMult: 1, areaTolMult: 1, useStratum: false, useArea: true, useZone: true },
-  { name: 'area-amplia', radiusMult: 1, areaTolMult: 2, useStratum: false, useArea: true, useZone: true },
-  { name: 'radio-2x', radiusMult: 2, areaTolMult: 2, useStratum: false, useArea: true, useZone: false },
-  { name: 'radio-3x', radiusMult: 3, areaTolMult: 2, useStratum: false, useArea: true, useZone: false },
-  { name: 'solo-localidad', radiusMult: 3, areaTolMult: 1, useStratum: false, useArea: false, useZone: false },
+  { name: 'estricto',         radiusMult: 1, areaTolMult: 1, useStratum: true,  useArea: true,  useZone: true,  useBedrooms: true,  useGarages: true },
+  { name: 'sin-parqueadero',  radiusMult: 1, areaTolMult: 1, useStratum: true,  useArea: true,  useZone: true,  useBedrooms: true,  useGarages: false },
+  { name: 'sin-estrato',      radiusMult: 1, areaTolMult: 1, useStratum: false, useArea: true,  useZone: true,  useBedrooms: true,  useGarages: false },
+  { name: 'sin-habitaciones', radiusMult: 1, areaTolMult: 1, useStratum: false, useArea: true,  useZone: true,  useBedrooms: false, useGarages: false },
+  { name: 'area-amplia',      radiusMult: 1, areaTolMult: 2, useStratum: false, useArea: true,  useZone: true,  useBedrooms: false, useGarages: false },
+  { name: 'radio-2x',         radiusMult: 2, areaTolMult: 2, useStratum: false, useArea: true,  useZone: false, useBedrooms: false, useGarages: false },
+  { name: 'radio-3x',         radiusMult: 3, areaTolMult: 2, useStratum: false, useArea: true,  useZone: false, useBedrooms: false, useGarages: false },
+  { name: 'solo-localidad',   radiusMult: 3, areaTolMult: 1, useStratum: false, useArea: false, useZone: false, useBedrooms: false, useGarages: false },
 ];
 
 /** ¿La localidad coincide? Geo si ambos tienen lat/lng; si no, ciudad/zona textual. */
@@ -157,6 +177,17 @@ function matches(c: Candidate, comp: Comp, lvl: Level, cfg: ComparablesConfig): 
     if (Math.abs(c.stratum - comp.stratum) > cfg.stratumTol) return false;
   }
 
+  // Habitaciones dentro de ±tol: un 1-alcoba no se compara contra un 4-alcobas
+  // (aunque midan lo mismo, el mercado los valora distinto).
+  if (lvl.useBedrooms && c.bedrooms != null && comp.bedrooms != null) {
+    if (Math.abs(c.bedrooms - comp.bedrooms) > cfg.bedroomsTol) return false;
+  }
+
+  // Parqueadero: tener o no tener mueve el precio → comparar con-con y sin-sin.
+  if (lvl.useGarages && c.garages != null && comp.garages != null) {
+    if ((c.garages > 0) !== (comp.garages > 0)) return false;
+  }
+
   return true;
 }
 
@@ -164,10 +195,51 @@ function confidenceFor(ppm2s: number[], level: Level, cfg: ComparablesConfig): C
   const n = ppm2s.length;
   if (n < cfg.minComparables) return 'low';
   const spread = robustSpread(ppm2s);
-  const strict = level.name === 'estricto' || level.name === 'sin-estrato';
+  // La estrictez se DERIVA del nivel, no de una lista de nombres: al añadir
+  // niveles nuevos a la cascada, una lista se queda desactualizada en silencio y
+  // la confianza "alta" se vuelve inalcanzable sin que nadie se entere.
+  // Estricto = radio sin ampliar, banda de área sin ampliar y misma zona.
+  const strict = level.radiusMult === 1 && level.areaTolMult === 1 && level.useArea && level.useZone;
   if (n >= cfg.minComparables * 2 && spread < 0.25 && strict) return 'high';
   if (n >= cfg.minComparables && spread < 0.45) return 'medium';
   return 'low';
+}
+
+/**
+ * Criterios REALMENTE aplicados para elegir estos comparables.
+ *
+ * No basta con mirar el nivel de la cascada: una condición como "mismas
+ * habitaciones" se cumple vacíamente cuando el dato falta (los inmuebles de Aval,
+ * por ejemplo, salen de un PDF sin alcobas ni parqueadero). Afirmar en la ficha que
+ * se filtró por algo que nunca se filtró es mentirle al usuario, así que sólo se
+ * declara la condición si el candidato tiene el dato Y lo tiene la mayoría de los
+ * comparables elegidos.
+ */
+function criteriaFor(c: Candidate, comps: Comp[], lvl: Level, cfg: ComparablesConfig): string[] {
+  const out: string[] = [];
+  const mayoria = (f: (x: Comp) => boolean) => comps.length > 0 && comps.filter(f).length >= comps.length / 2;
+
+  if (c.type) out.push('mismo tipo de inmueble');
+  out.push(
+    lvl.radiusMult != null && c.lat != null && c.lng != null
+      ? `mismo sector (${Math.round(cfg.radiusKm * lvl.radiusMult * 10) / 10} km a la redonda)`
+      : lvl.useZone && c.zone
+        ? `mismo barrio (${c.zone})`
+        : 'misma ciudad',
+  );
+  if (lvl.useArea && c.area_m2) {
+    out.push(`área similar (±${Math.round(cfg.areaTolPct * lvl.areaTolMult * 100)}%)`);
+  }
+  if (lvl.useStratum && c.stratum != null && mayoria((x) => x.stratum != null)) {
+    out.push(`estrato ${c.stratum} (±${cfg.stratumTol})`);
+  }
+  if (lvl.useBedrooms && c.bedrooms != null && c.bedrooms > 0 && mayoria((x) => x.bedrooms != null)) {
+    out.push(`${c.bedrooms} habitaciones (±${cfg.bedroomsTol})`);
+  }
+  if (lvl.useGarages && c.garages != null && mayoria((x) => x.garages != null)) {
+    out.push(c.garages > 0 ? 'con parqueadero' : 'sin parqueadero');
+  }
+  return out;
 }
 
 /**
@@ -230,6 +302,7 @@ export function evaluate(
       confidence,
       method: `${regime}:${level.name}`,
       radius_used_km: hasGeo ? cfg.radiusKm * level.radiusMult : null,
+      criteria: criteriaFor(candidate, comps, level, cfg),
     };
   }
 

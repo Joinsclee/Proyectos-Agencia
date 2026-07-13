@@ -15,7 +15,8 @@ import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
 import { queryPortal, queryBancos, queryRemates, facets, stats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
 import { registerUser, loginUser } from './auth.js';
-import { analyzeProperty } from './analysis.js';
+import { analyzeProperty, marketOnly } from './analysis.js';
+import { warmCityPools } from '../engine/zone-comps.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import { env } from '../lib/env.js';
 
@@ -145,6 +146,16 @@ const server = createServer(async (req, res) => {
         const status = result.ok ? 200 : result.needs_key ? 503 : 400;
         return sendJSON(res, status, result);
       }
+      // Contexto de mercado (comparables) SIN IA — gratis, para justificar el −X%.
+      if (path === '/api/market') {
+        const kind = url.searchParams.get('kind');
+        const id = url.searchParams.get('id');
+        if ((kind !== 'portal' && kind !== 'banco' && kind !== 'remate') || !id) {
+          return sendJSON(res, 400, { ok: false, error: 'kind (portal|banco|remate) e id requeridos' });
+        }
+        const result = await marketOnly(kind, id);
+        return sendJSON(res, result.ok ? 200 : 404, result);
+      }
       // Una propiedad por id (para abrir una recomendación en su modal).
       if (path === '/api/property') {
         const kind = url.searchParams.get('kind');
@@ -178,7 +189,14 @@ const server = createServer(async (req, res) => {
   }
 });
 
+/** Ciudades con más inventario: se precargan sus comparables para que la primera
+ *  ficha abra al instante en vez de esperar a que se cargue el baseline. */
+const WARM_CITIES = ['bogota', 'medellin', 'cali', 'barranquilla', 'bucaramanga', 'cartagena'];
+
 server.listen(PORT, () => {
   log.info(`Radar local en http://localhost:${PORT}`);
   log.info('API: /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
+  void warmCityPools(WARM_CITIES)
+    .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
+    .catch(() => { /* el precalentamiento es best-effort */ });
 });

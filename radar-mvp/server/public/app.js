@@ -468,7 +468,11 @@ function marketCtxHtml(m) {
   const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Insuficiente' }[m.confidence] || m.confidence;
   const scopeIcon = m.scope === 'ciudad' ? '🏙️' : '📍';
   const scopeLbl = m.scope === 'ciudad' ? `${cap(m.city)} · toda la ciudad` : esc(m.scope_label || 'sector');
+  const crit = (m.criteria || []).length
+    ? `<div class="crit-chips" style="margin-bottom:10px">${m.criteria.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div>`
+    : '';
   return `<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
+  ${crit}
   <div class="ai-mkt">
     <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
     <div><span class="l">Cuartil bajo (P25)</span><strong>${COPn(m.p25_total)}</strong></div>
@@ -554,6 +558,8 @@ window.__analyzeAI = async function (btn, kind, id) {
       body: JSON.stringify({ kind, id }),
     });
     const data = await res.json();
+    const lazy = $('rec-lazy'); // ya las mostró el mercado bajo demanda: no duplicar
+    if (lazy) lazy.remove();
     wrap.innerHTML = renderAI(data) + renderRecs(data.recommendations);
   } catch (e) {
     wrap.innerHTML = `<div class="ai-note">No se pudo conectar con el análisis: ${esc(String(e))}.</div>`;
@@ -621,6 +627,7 @@ function openInmueble(p) {
   const mapBlock = anon ? '' : mapSection(p);
   const descBlock = anon ? (f.description ? lockBox('Descripción completa') : '') : desc;
   const fav = anon ? '' : modalFavBtn(p.source === 'fincaraiz' ? 'portal' : 'banco', p.id);
+  const mkt = marketSection(p);
 
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
@@ -629,10 +636,70 @@ function openInmueble(p) {
       <div class="loc">📍 ${p.zone ? p.zone + ', ' : ''}<strong>${cap(p.city)}</strong></div>
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}</div>
-      ${marketSection(p)}${aiBlock}${gastosSection(p.price, 'compra')}${addrBlock}${mapBlock}${descBlock}${amen}
+      ${mkt || marketLazyBox()}${aiBlock}${gastosSection(p.price, 'compra')}${addrBlock}${mapBlock}${descBlock}${amen}
       <a class="cta" href="${p.source_url}" target="_blank" rel="noopener">Ver en ${srcLbl(p.source)} ↗</a>
     </div>`;
   showModal();
+  // El motor sólo persiste el mercado en fichas de banco; en las del portal se
+  // calcula bajo demanda (gratis, sin IA) para justificar el −X% de la tarjeta.
+  if (!mkt) fillMarketLazy(p.source === 'fincaraiz' ? 'portal' : 'banco', p.id, p.discount_pct);
+}
+
+// Ficha abierta actualmente: si el usuario abre otra mientras el mercado carga, la
+// respuesta vieja llega tarde y no debe pintarse sobre la ficha nueva.
+let gFichaSeq = 0;
+
+function marketLazyBox() {
+  return `<div class="section" id="mkt-lazy"><h3>Análisis de mercado</h3>
+    <div class="market"><p class="market-note">Comparando contra inmuebles similares de la zona…</p></div></div>`;
+}
+async function fillMarketLazy(kind, id, disc) {
+  const box = $('mkt-lazy');
+  if (!box) return;
+  const seq = ++gFichaSeq;
+  try {
+    const r = await fetch(`/api/market?kind=${kind}&id=${encodeURIComponent(id)}`).then((x) => x.json());
+    const el = $('mkt-lazy'); // pudo cerrarse el modal mientras cargaba
+    if (!el || seq !== gFichaSeq) return; // el usuario ya está mirando otra ficha
+    if (!r.ok || !r.market) throw new Error('sin mercado'); // → caja de reintento
+    // Sin comparables suficientes se dice, no se esconde: una ficha muda parece rota
+    // y el usuario merece saber que aquí no hay evidencia para estimar el mercado.
+    if (r.market.n < 4) {
+      const n = r.market.n;
+      el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">
+        <p class="market-note">No hay suficientes avisos comparables publicados en esta zona
+        (${n} encontrado${n === 1 ? '' : 's'}) para estimar un precio de mercado fiable.
+        Suele pasar con lotes, bodegas y municipios pequeños: hay que valorarla con un avalúo en campo.</p></div>`;
+      return;
+    }
+    // Si el motor pudo evaluarla (precio + área + comparables), se muestra SU
+    // veredicto: precio/m² del inmueble, mediana/m² de los comparables y la
+    // posición entre ambos. Los tres números salen del mismo conjunto, así que la
+    // evidencia sostiene el porcentaje en vez de contradecirlo.
+    const v = r.verdict;
+    if (v && v.market_ppm2 != null && v.candidate_ppm2 != null) {
+      el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody(v, v.criteria)}`;
+    } else {
+      el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">${marketCtxHtml(r.market)}
+        <p class="market-note">Referencia de precios de OFERTA de ${r.market.n} inmuebles de la zona.
+        No se pudo calcular un precio por m² para este inmueble (falta el área), así que no se estima descuento.</p></div>`;
+    }
+    if (r.recommendations && r.recommendations.length) {
+      el.insertAdjacentHTML('afterend', `<div id="rec-lazy">${renderRecs(r.recommendations)}</div>`);
+    }
+  } catch {
+    const el = $('mkt-lazy');
+    if (!el || seq !== gFichaSeq) return;
+    el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">
+      <p class="market-note">No se pudo calcular el mercado en este momento.</p>
+      <button class="ai-btn" onclick="window.__retryMarket('${kind}','${id}',${disc == null ? 'null' : disc})">Reintentar</button></div>`;
+  }
+}
+window.__retryMarket = (kind, id, disc) => {
+  const el = $('mkt-lazy');
+  if (el) el.innerHTML = '<h3>Análisis de mercado</h3><div class="market"><p class="market-note">Comparando contra inmuebles similares de la zona…</p></div>';
+  gFichaSeq--; // fillMarketLazy vuelve a incrementarlo: este reintento sigue siendo la ficha vigente
+  fillMarketLazy(kind, id, disc);
 }
 function openRemate(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
@@ -717,18 +784,64 @@ function gRender() {
 }
 window.gMove = (d) => { gIdx = (gIdx + d + gImgs.length) % gImgs.length; gRender(); };
 
-function marketSection(p) {
-  const m = p.features?.market;
-  if (!m || m.market_ppm2 == null) return '';
+/**
+ * Traduce el método del motor (ej. "geo:estricto") a los criterios REALES que se
+ * usaron para elegir los comparables. Transparencia = credibilidad, y sin costo
+ * de IA: el usuario ve exactamente contra qué se comparó su inmueble.
+ */
+function criteriosComparacion(method, radiusKm) {
+  if (!method) return [];
+  const [regime, level] = String(method).split(':');
+  const loc = regime === 'geo'
+    ? `mismo sector (${radiusKm || 1.5} km a la redonda)`
+    : 'misma ciudad / barrio';
+  // SOLO lo que se puede afirmar mirando el nivel. Los atributos (habitaciones,
+  // parqueadero, estrato) NO se listan aquí: el nivel dice que se exigieron, pero
+  // si el inmueble no traía el dato la condición pasó vacía y afirmarlo sería
+  // mentir. Esos criterios los reporta el motor en market.criteria; esta función es
+  // solo el respaldo para fichas evaluadas antes de que existiera ese campo.
+  const porNivel = {
+    'area-amplia':    ['área similar (banda amplia)'],
+    'radio-2x':       ['área similar', 'radio ampliado 2×'],
+    'radio-3x':       ['área similar', 'radio ampliado 3×'],
+    'solo-localidad': ['comparación amplia (pocos similares en la zona)'],
+  };
+  return ['mismo tipo de inmueble', loc].concat(porNivel[level] || ['área similar']);
+}
+
+/**
+ * Cuerpo del análisis de mercado. Lo comparten la ficha de banco (veredicto que el
+ * motor ya guardó) y el cálculo bajo demanda del portal, para que los dos caminos
+ * no puedan mostrar cifras distintas de lo mismo.
+ * `m` = { candidate_ppm2, market_ppm2, discount_pct, n_comparables, confidence }.
+ */
+function marketBody(m, criteria) {
   const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Sin datos' }[m.confidence] || m.confidence;
-  const d = p.discount_pct;
-  const pos = d != null ? `<strong style="color:${d >= 0 ? '#16a34a' : '#dc2626'}">${d >= 0 ? '−' : '+'}${Math.abs(Math.round(d))}% vs mercado</strong>` : '—';
-  return `<div class="section"><h3>Análisis de mercado</h3><div class="market"><div class="market-grid">
+  const d = m.discount_pct;
+  const pos = d != null
+    ? `<strong style="color:${d >= 0 ? '#16a34a' : '#dc2626'}">${d >= 0 ? '−' : '+'}${Math.abs(Math.round(d))}% vs mercado</strong>`
+    : '—';
+  const crit = Array.isArray(criteria) && criteria.length ? criteria : [];
+  const critHtml = crit.length
+    ? `<div class="market-crit"><span class="crit-title">Criterios de comparación</span>
+        <div class="crit-chips">${crit.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div></div>`
+    : '';
+  return `<div class="market"><div class="market-grid">
     <div><span class="l">Este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Posición</span>${pos}</div>
     <div><span class="l">Comparables</span><strong>${m.n_comparables}</strong><span class="sub">confianza ${conf}</span></div>
-  </div><p class="market-note">Comparado contra precios de OFERTA de ${m.n_comparables} inmuebles similares (mismo tipo, área y zona). Señal de cribado, no avalúo.</p></div></div>`;
+  </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${m.n_comparables} inmuebles similares de la zona (precios de OFERTA). Señal de cribado, no un avalúo.</p></div>`;
+}
+
+function marketSection(p) {
+  const m = p.features?.market;
+  if (!m || m.market_ppm2 == null) return '';
+  // Criterios que el motor REALMENTE aplicó. Solo si la ficha es vieja (evaluada
+  // antes de que el motor los guardara) se deducen del nombre del método.
+  const crit = Array.isArray(m.criteria) && m.criteria.length ? m.criteria : criteriosComparacion(m.method, m.radius_km);
+  // discount_pct de la fila y market.* salen del mismo evaluate() del motor.
+  return `<div class="section"><h3>Análisis de mercado</h3>${marketBody({ ...m, discount_pct: p.discount_pct }, crit)}</div>`;
 }
 function mapSection(p) {
   const f = p.features || {};

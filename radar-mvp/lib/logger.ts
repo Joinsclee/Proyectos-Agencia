@@ -13,11 +13,27 @@ function shouldLog(level: Level): boolean {
   return ORDER[level] >= ORDER[env.SCRAPE_LOG_LEVEL];
 }
 
+/**
+ * Serializa el `extra` del log. OJO: `JSON.stringify(new Error('x'))` devuelve
+ * `{}` porque message/stack NO son enumerables — por eso los fallos salían como
+ * "Failed {}" (inservible). Los Error se formatean explícitamente.
+ */
+function serialize(extra: unknown): string {
+  if (typeof extra === 'string') return extra;
+  if (extra instanceof Error) {
+    const cause = (extra as any).cause;
+    const first = extra.stack?.split('\n')[1]?.trim();
+    return `${extra.name}: ${extra.message}` +
+      (cause ? ` · causa: ${cause instanceof Error ? cause.message : String(cause)}` : '') +
+      (first ? ` (${first})` : '');
+  }
+  try { return JSON.stringify(extra); } catch { return String(extra); }
+}
+
 function fmt(scope: string, level: Level, msg: string, extra?: unknown): string {
   const base = `${ts()} ${ICONS[level]} [${scope}] ${msg}`;
   if (extra === undefined) return base;
-  const ex = typeof extra === 'string' ? extra : JSON.stringify(extra);
-  return `${base} ${ex}`;
+  return `${base} ${serialize(extra)}`;
 }
 
 export interface Logger {

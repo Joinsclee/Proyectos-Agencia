@@ -131,3 +131,102 @@ test('evaluate: régimen textual cuando el candidato no tiene geo (banco PDF)', 
   assert.ok(v.method.startsWith('texto:'), v.method);
   assert.equal(v.is_opportunity, true);
 });
+
+// ── Condicionales nuevas: habitaciones y parqueadero ───────────────
+test('comparables: habitaciones filtran (1 alcoba NO se compara con 4 alcobas)', () => {
+  const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 10_000, bedrooms: 4, lat: 6.27 + i * 0.0001 }));
+  const candidate: Candidate = {
+    id: 'x', source: 'davivienda', source_id: 'D9', type: 'apartment',
+    price: 126_000_000, area_m2: 60,
+    lat: 6.2705, lng: -75.6102, stratum: 3, city: 'medellin', zone: 'robledo',
+    bedrooms: 1, garages: null,
+  };
+  const v = evaluate(candidate, pool, DEFAULT_CONFIG);
+  // Los niveles que exigen habitaciones no deben matchear → cae a uno más laxo.
+  assert.ok(!/:(estricto|sin-parqueadero|sin-estrato)$/.test(v.method),
+    `no debe usar un nivel que exige habitaciones, usó: ${v.method}`);
+});
+
+test('comparables: parqueadero separa (con parqueadero NO se compara con sin)', () => {
+  const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 10_000, bedrooms: 3, garages: 0, lat: 6.27 + i * 0.0001 }));
+  const candidate: Candidate = {
+    id: 'x', source: 'davivienda', source_id: 'D8', type: 'apartment',
+    price: 126_000_000, area_m2: 60,
+    lat: 6.2705, lng: -75.6102, stratum: 3, city: 'medellin', zone: 'robledo',
+    bedrooms: 3, garages: 2,
+  };
+  const v = evaluate(candidate, pool, DEFAULT_CONFIG);
+  assert.ok(!/:estricto$/.test(v.method),
+    `el nivel estricto exige mismo parqueadero, usó: ${v.method}`);
+});
+
+test('evaluate: descuento imposible (99%) NO es oportunidad (error de datos)', () => {
+  const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 10_000, lat: 6.27 + i * 0.0001 }));
+  const candidate: Candidate = {
+    id: 'err', source: 'fincaraiz', source_id: 'E1', type: 'apartment',
+    price: 1_800_000, area_m2: 60, // 30k/m² → ~99% "bajo mercado" = dato erróneo
+    lat: 6.2705, lng: -75.6102, stratum: 3, city: 'medellin', zone: 'robledo',
+  };
+  const v = evaluate(candidate, pool, DEFAULT_CONFIG);
+  assert.ok((v.discount_pct ?? 0) > 90, `descuento calculado: ${v.discount_pct}`);
+  assert.equal(v.is_opportunity, false, 'un 99% de descuento es error, no oportunidad');
+});
+
+// ── Regresiones encontradas en la revisión adversarial ──
+
+test('confianza ALTA es alcanzable en los niveles nuevos de la cascada', () => {
+  // Antes: confidenceFor tenía una lista blanca de nombres ('estricto',
+  // 'sin-estrato'), así que al añadir 'sin-parqueadero'/'sin-habitaciones' la
+  // confianza alta —y con ella la insignia OPORTUNIDAD ALTA— se volvía inalcanzable.
+  const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 20_000, bedrooms: 3, garages: 0, lat: 6.27 + i * 0.0001 }));
+  const candidate: Candidate = {
+    id: 'x', source: 'davivienda', source_id: 'D9', type: 'apartment',
+    price: 117_000_000, area_m2: 60, // ≈ $1.95M/m² → muy por debajo del P10
+    lat: 6.2705, lng: -75.6102, stratum: 3, city: 'medellin', zone: 'robledo',
+    bedrooms: 3, garages: 2, // el parqueadero no casa → cae a 'sin-parqueadero'
+  };
+  const v = evaluate(candidate, pool, DEFAULT_CONFIG);
+  assert.match(v.method, /sin-parqueadero/, `debe caer a sin-parqueadero, usó: ${v.method}`);
+  assert.equal(v.confidence, 'high', 'evidencia homogénea y n alto ⇒ confianza alta');
+  assert.ok(v.is_high, 'con descuento fuerte + confianza alta debe ser OPORTUNIDAD ALTA');
+});
+
+test('los criterios no afirman condiciones que no se aplicaron', () => {
+  // Los inmuebles de banco salen de PDFs sin habitaciones ni parqueadero: la
+  // condición pasa "vacía". La ficha no debe presumir de haber filtrado por ellas.
+  const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 20_000, bedrooms: null, garages: null, lat: 6.27 + i * 0.0001 }));
+  const candidate: Candidate = {
+    id: 'x', source: 'aval', source_id: 'A1', type: 'apartment',
+    price: 117_000_000, area_m2: 60,
+    lat: 6.2705, lng: -75.6102, stratum: null, city: 'medellin', zone: 'robledo',
+    bedrooms: null, garages: null, // sin datos → no se pudo filtrar por ellos
+  };
+  const v = evaluate(candidate, pool, DEFAULT_CONFIG);
+  const texto = v.criteria.join(' | ');
+  assert.ok(!/habitacion/i.test(texto), `no debe afirmar habitaciones: ${texto}`);
+  assert.ok(!/parqueadero/i.test(texto), `no debe afirmar parqueadero: ${texto}`);
+  assert.ok(!/estrato/i.test(texto), `no debe afirmar estrato: ${texto}`);
+  assert.ok(/tipo/i.test(texto) && /sector|barrio|ciudad/i.test(texto), `sí debe declarar tipo y ubicación: ${texto}`);
+});
+
+test('los criterios SÍ declaran lo que de verdad se filtró', () => {
+  const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 20_000, bedrooms: 3, garages: 1, stratum: 4, lat: 6.27 + i * 0.0001 }));
+  const candidate: Candidate = {
+    id: 'x', source: 'bbva', source_id: 'B1', type: 'apartment',
+    price: 117_000_000, area_m2: 60,
+    lat: 6.2705, lng: -75.6102, stratum: 4, city: 'medellin', zone: 'robledo',
+    bedrooms: 3, garages: 1,
+  };
+  const v = evaluate(candidate, pool, DEFAULT_CONFIG);
+  const texto = v.criteria.join(' | ');
+  assert.match(texto, /3 habitaciones/);
+  assert.match(texto, /con parqueadero/);
+  assert.match(texto, /estrato 4/);
+  assert.match(texto, /área similar/);
+});

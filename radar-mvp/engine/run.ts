@@ -36,6 +36,7 @@ const PROJECT_VERDICT: Verdict = {
   confidence: 'insufficient',
   method: 'proyecto-preventa',
   radius_used_km: null,
+  criteria: [],
 };
 
 interface Opts {
@@ -67,15 +68,22 @@ type Row = {
   lat: number | null;
   lng: number | null;
   stratum: number | null;
+  bedrooms: number | null;
+  garages: number | null;
   neighborhood: string | null;
   is_project: boolean | null;
+  // Veredicto ya almacenado: permite no reescribir filas cuyo resultado no cambió.
+  is_opportunity: boolean | null;
+  discount_pct: number | null;
 };
 
 // Proyección JSON: solo los escalares que el motor necesita. 14× menos payload
 // que traer `features` entero (medido: 0.8MB vs 11MB / 3 págs).
 const SELECT =
   'id, source, source_id, type, price, area_m2, price_per_m2, city, zone, ' +
+  'is_opportunity, discount_pct, ' +
   'lat:features->lat, lng:features->lng, stratum:features->stratum, ' +
+  'bedrooms:features->bedrooms, garages:features->garages, ' +
   'neighborhood:features->neighborhood, is_project:features->is_project';
 
 const num = (v: unknown): number | null => {
@@ -96,6 +104,8 @@ function toCandidate(r: Row): Candidate {
     stratum: num(r.stratum),
     city: r.city,
     zone: r.zone ?? r.neighborhood ?? null,
+    bedrooms: num(r.bedrooms),
+    garages: num(r.garages),
   };
 }
 
@@ -148,6 +158,8 @@ async function loadPool(): Promise<Comp[]> {
       stratum: num(r.stratum),
       city: r.city,
       zone: r.zone ?? r.neighborhood ?? null,
+      bedrooms: num(r.bedrooms),
+      garages: num(r.garages),
     });
   }
   return pool;
@@ -180,6 +192,7 @@ async function persist(row: Row, v: Verdict): Promise<boolean> {
       confidence: v.confidence,
       method: v.method,
       radius_km: v.radius_used_km,
+      criteria: v.criteria, // lo que de verdad se exigió para elegir los comparables
       evaluated_at: new Date().toISOString(),
     },
   };
@@ -264,9 +277,19 @@ export async function run(opts: Opts = parseArgs()) {
     return { evaluated: candidates.length, opportunities: tally.opp };
   }
 
-  log.info('Persistiendo veredictos…');
-  const written = await persistAll(toWrite);
-  log.info(`✅ ${written}/${toWrite.length} filas actualizadas`);
+  // Escribir SOLO lo que cambió: en un re-run diario la mayoría de veredictos son
+  // idénticos y reescribir las 100K+ filas cuesta ~20 min de UPDATEs inútiles que
+  // además saturan la base para el resto de la app. Los de banco siempre se
+  // escriben (ahí guardamos el detalle de mercado que consume la ficha).
+  const changed = toWrite.filter(({ row, v }) => {
+    if (row.source !== 'fincaraiz') return true;
+    const same = (row.is_opportunity ?? false) === v.is_opportunity
+      && Math.round((row.discount_pct ?? -999) * 10) === Math.round((v.discount_pct ?? -999) * 10);
+    return !same;
+  });
+  log.info(`Persistiendo veredictos… ${changed.length} con cambios (${toWrite.length - changed.length} sin cambio, se omiten)`);
+  const written = await persistAll(changed);
+  log.info(`✅ ${written}/${changed.length} filas actualizadas`);
   return { evaluated: candidates.length, opportunities: tally.opp, written };
 }
 
