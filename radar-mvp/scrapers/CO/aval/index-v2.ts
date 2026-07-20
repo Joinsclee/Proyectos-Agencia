@@ -35,6 +35,12 @@ import { isEntrypoint } from '../../../lib/is-main.js';
 const SOURCE = 'aval';
 const COUNTRY = 'CO';
 const LANDING_URL = 'https://www.avalvc.com.co/portal-inmobiliario';
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36';
+/** Ubicaciones conocidas del boletín, de la más reciente a la más antigua. */
+const CANDIDATOS_PDF = [
+  'https://www.avalvc.com.co/documents/d/guest/inmuebles-2',
+  'https://www.avalvc.com.co/documents/d/guest/inmuebles',
+];
 const log = createLogger(SOURCE);
 
 const WORK_DIR = join(tmpdir(), 'radar-pdf-work', 'aval');
@@ -43,16 +49,48 @@ const WORK_DIR = join(tmpdir(), 'radar-pdf-work', 'aval');
 // PASO 1: Resolver URL del PDF (puede cambiar con la fecha)
 // ────────────────────────────────────────────────────────────
 async function resolverPdfUrl(): Promise<string | null> {
-  const res = await fetch(LANDING_URL, {
-    headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' },
-  });
-  if (!res.ok) return null;
-  const html = await res.text();
-  // Patrón: /repositorio/Avalvc/portal-inmobiliario/DD-MM-YY/Inmuebles.pdf
-  const m = html.match(/\/repositorio\/[^"'\s]*Inmuebles\.pdf/i);
-  if (!m) return null;
-  const path = m[0].startsWith('http') ? m[0] : `https://www.avalvc.com.co${m[0]}`;
-  return path;
+  // Aval movió el boletín (jul-2026): la landing pasó a renderizarse con
+  // JavaScript y dejó de traer el enlace en el HTML. La URL estable actual es la
+  // del gestor documental. Se intenta primero esa y, si algún día vuelve a
+  // moverse, se cae al enlace de la landing.
+  for (const url of CANDIDATOS_PDF) {
+    if (await esPdfValido(url)) return url;
+    log.warn(`No sirvió como PDF: ${url}`);
+  }
+  // Respaldo: buscar el enlace dentro del HTML (funciona si vuelven a servirlo así)
+  try {
+    const res = await fetch(LANDING_URL, {
+      headers: { 'User-Agent': UA },
+    });
+    if (res.ok) {
+      const html = await res.text();
+      const m = html.match(/https?:\/\/[^"'\s]*\/documents\/[^"'\s]+|\/repositorio\/[^"'\s]*\.pdf/i);
+      if (m) {
+        const url = m[0].startsWith('http') ? m[0] : `https://www.avalvc.com.co${m[0]}`;
+        if (await esPdfValido(url)) return url;
+      }
+    }
+  } catch (e) { log.warn(`Landing de Aval no respondió: ${e instanceof Error ? e.message : e}`); }
+  return null;
+}
+
+/**
+ * Valida que la URL entregue un PDF DE VERDAD.
+ *
+ * No basta con el código 200: el servidor de Aval responde 200 con
+ * `content-type: application/pdf` y CERO bytes a cualquier ruta inventada bajo
+ * /repositorio — incluida una fecha imposible como 99-99-99. Fiarse del status
+ * daría por buena una URL muerta y el scraper fallaría más adelante, lejos de la
+ * causa. Se comprueba tamaño y cabecera %PDF.
+ */
+async function esPdfValido(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': UA }, redirect: 'follow' });
+    if (!res.ok) return false;
+    const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length < 50_000) return false;                 // un boletín real pesa megas
+    return buf.subarray(0, 4).toString('latin1') === '%PDF';
+  } catch { return false; }
 }
 
 // ────────────────────────────────────────────────────────────

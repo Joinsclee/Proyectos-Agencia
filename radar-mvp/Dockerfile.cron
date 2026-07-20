@@ -1,0 +1,28 @@
+# Planificador de scraping del Radar — servicio SEPARADO del servidor web.
+#
+# Va aparte a propósito: el web sirve peticiones y debe reiniciarse rápido y sin
+# consecuencias; el planificador arranca navegadores y procesa PDFs de 18 MB. Si
+# compartieran contenedor, un scrape pesado dejaría el dashboard sin memoria, y
+# escalar el web a dos réplicas duplicaría las corridas.
+#
+# El calendario vive en Supabase (`radar_cron_jobs`), así que este contenedor es
+# desechable: si se reinicia, retoma donde iba.
+FROM node:22-slim
+
+WORKDIR /app
+
+# Aquí SÍ hacen falta los navegadores: el scraper de remates entra con sesión.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Dependencias de sistema que Chromium necesita en la imagen slim.
+RUN npx playwright install --with-deps chromium
+
+COPY . .
+
+ENV NODE_ENV=production
+ENV TZ=America/Bogota
+
+CMD ["npm", "run", "cron"]
