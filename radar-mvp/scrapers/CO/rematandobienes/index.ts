@@ -326,6 +326,35 @@ async function extractAvisoRaw(
 // ──────────────────────────────────────────────────────────────────
 // Main
 // ──────────────────────────────────────────────────────────────────
+/**
+ * Comprueba que la sesión guardada sigue siendo válida.
+ *
+ * Se abre un aviso cualquiera y se exige que aparezca el campo "Demandante",
+ * visible solo con sesión. Si falta, la sesión caducó: hay que correr
+ * `npm run remates:login` (pide resolver un reCAPTCHA a mano).
+ */
+async function verificarSesionPremium(page: import('playwright').Page): Promise<void> {
+  const SONDA = 'https://rematandobienes.com/remates-judiciales/';
+  try {
+    await page.goto(SONDA, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    const primero = await page.locator('a[href*="/remates-judiciales/"]').nth(3).getAttribute('href');
+    if (!primero) return; // sin avisos que sondear: no bloquear por esto
+    await page.goto(primero, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    const texto = (await page.locator('body').innerText().catch(() => '')) || '';
+    if (!/demandante/i.test(texto)) {
+      throw new Error(
+        'Sesión premium caducada: el aviso no muestra "Demandante". ' +
+        'Sin ella se pierden el demandante y la copia del aviso, y la matriz de ' +
+        'acceso de remates queda inservible. Corre `npm run remates:login` ' +
+        '(requiere resolver el reCAPTCHA a mano) y repite el scrape.',
+      );
+    }
+  } catch (e) {
+    if (e instanceof Error && /Sesión premium caducada/.test(e.message)) throw e;
+    log.warn(`No se pudo verificar la sesión premium (${e instanceof Error ? e.message : e}); se continúa.`);
+  }
+}
+
 export async function run(opts: Opts = {}): Promise<{
   records_found: number;
   records_inserted: number;
@@ -353,6 +382,16 @@ export async function run(opts: Opts = {}): Promise<{
   context.setDefaultNavigationTimeout(90_000);
   context.setDefaultTimeout(45_000);
   const page = await context.newPage();
+
+  // La sesión premium se valida ANTES de scrapear nada.
+  //
+  // Sin ella el sitio responde igual, con código 200 y avisos completos en
+  // apariencia, pero recorta "Demandante" y la copia del aviso judicial. El
+  // scrape termina "con éxito" y deja la base sin los datos de los que depende
+  // la matriz de acceso de remates: todo pasa a demandante particular y el
+  // contenido de pago desaparece. Pasó de verdad el 2026-07-20 y nada avisó,
+  // así que ahora se aborta fuerte en vez de guardar datos mutilados.
+  await verificarSesionPremium(page);
 
   const remates: Remate[] = [];
   let processed = 0;
