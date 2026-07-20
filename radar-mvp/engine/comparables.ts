@@ -20,6 +20,7 @@
  */
 import { robustMedian, robustSpread, haversineKm, trimOutliers, quantile } from './stats.js';
 import { MAX_OPP_DISCOUNT } from '../lib/types.js';
+import { creceIndex, clasificar, type CreceTier } from './crece.js';
 
 export interface Candidate {
   id: string;
@@ -36,6 +37,8 @@ export interface Candidate {
   // Opcionales: si la fuente no los trae, la condición simplemente no se aplica.
   bedrooms?: number | null; // habitaciones
   garages?: number | null;  // parqueaderos
+  /** construida | terreno | no_especificada. Ver nota en matches(). */
+  area_tipo?: string | null;
 }
 
 export interface Comp {
@@ -50,6 +53,7 @@ export interface Comp {
   zone: string | null;
   bedrooms?: number | null;
   garages?: number | null;
+  area_tipo?: string | null;
 }
 
 /** Normaliza texto de localidad para comparar (sin tildes, lowercase, trim). */
@@ -77,7 +81,7 @@ export const DEFAULT_CONFIG: ComparablesConfig = {
   areaTolPct: 0.3,
   stratumTol: 1,
   bedroomsTol: 1,
-  minComparables: 8,
+  minComparables: 5, // regla de muestra mínima de la spec Radar CRECE (antes 8)
   discountThresholdPct: 12,
   highDiscountPct: 25,
 };
@@ -96,6 +100,11 @@ export interface Verdict {
   method: string; // qué nivel de la cascada se usó
   radius_used_km: number | null;
   criteria: string[]; // condicionales realmente aplicadas (lo que se le muestra al usuario)
+  /** Índice CRECE: precio/m² ÷ mediana del grupo comparable (tabla maestra en crece.ts). */
+  crece_index: number | null;
+  crece_tier: CreceTier | null;
+  /** Nivel de la cascada con el que se logró la muestra: barrio | zona_ampliada | ciudad. */
+  cascada_nivel: string | null;
 }
 
 const INSUFFICIENT: Verdict = {
@@ -110,6 +119,9 @@ const INSUFFICIENT: Verdict = {
   method: 'sin-datos',
   radius_used_km: null,
   criteria: [],
+  crece_index: null,
+  crece_tier: null,
+  cascada_nivel: null,
 };
 
 /**
@@ -161,6 +173,13 @@ function sameLocality(c: Candidate, comp: Comp, lvl: Level, cfg: ComparablesConf
 function matches(c: Candidate, comp: Comp, lvl: Level, cfg: ComparablesConfig): boolean {
   // Mismo tipo (apartamento con apartamento)
   if (c.type && comp.type && c.type !== comp.type) return false;
+
+  // El metro cuadrado de TERRENO y el de CONSTRUIDA son mercados distintos: un
+  // lote de 8.000 m² a $1.800/m² y un apartamento a $4.000.000/m² no se comparan.
+  // Esta regla NO se relaja en ningún nivel de la cascada — mezclarlos no es una
+  // aproximación aceptable, es un número sin sentido.
+  const ac = c.area_tipo, aq = comp.area_tipo;
+  if (ac && aq && ac !== 'no_especificada' && aq !== 'no_especificada' && ac !== aq) return false;
 
   if (!sameLocality(c, comp, lvl, cfg)) return false;
 
@@ -278,6 +297,9 @@ export function evaluate(
     const p25 = quantile(clean, 0.25);
     const p10 = quantile(clean, 0.1);
     const discount = ((market - candidatePpm2) / market) * 100;
+    // Índice CRECE: la métrica primaria de la spec. El descuento es su otra cara
+    // (descuento = (1 − índice) × 100) y se conserva porque es como lo lee el usuario.
+    const crece = creceIndex(candidatePpm2, market);
     const confidence = confidenceFor(ppm2s, level, cfg);
 
     // Oportunidad: en el cuartil más barato POR m² Y con descuento absoluto
@@ -303,6 +325,9 @@ export function evaluate(
       method: `${regime}:${level.name}`,
       radius_used_km: hasGeo ? cfg.radiusKm * level.radiusMult : null,
       criteria: criteriaFor(candidate, comps, level, cfg),
+      crece_index: crece,
+      crece_tier: crece != null ? clasificar(crece).tier : null,
+      cascada_nivel: cascadaNivel(level),
     };
   }
 
@@ -312,4 +337,16 @@ export function evaluate(
     evaluable: true,
     candidate_ppm2: Math.round(candidatePpm2),
   };
+}
+
+/**
+ * Traduce el nivel interno de la cascada al vocabulario de la HU
+ * (barrio / zona_ampliada / ciudad), que es el que se audita y se muestra.
+ * Los niveles estrictos siguen acotados al sector del inmueble; los que amplían
+ * radio o sueltan la zona ya son "zona ampliada"; el último es la ciudad entera.
+ */
+function cascadaNivel(lvl: Level): string {
+  if (lvl.name === 'solo-localidad') return 'ciudad';
+  if (lvl.radiusMult > 1 || !lvl.useZone) return 'zona_ampliada';
+  return 'barrio';
 }

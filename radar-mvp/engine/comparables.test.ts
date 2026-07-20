@@ -230,3 +230,35 @@ test('los criterios SÍ declaran lo que de verdad se filtró', () => {
   assert.match(texto, /estrato 4/);
   assert.match(texto, /área similar/);
 });
+
+test('un lote NUNCA se compara contra apartamentos (area_tipo)', () => {
+  // El m² de terreno y el de construida son mercados distintos: un lote a
+  // $1.800/m² frente a apartamentos a $4.000.000/m² daría un índice absurdo.
+  // La regla no se relaja en ningún nivel de la cascada.
+  const pool: Comp[] = Array.from({ length: 30 }, (_, i) =>
+    comp({ ppm2: 4_000_000 + i * 10_000, lat: 6.27 + i * 0.0001, area_m2: 60, area_tipo: 'construida' }));
+  const lote: Candidate = {
+    id: 'x', source: 'aval', source_id: 'A9', type: 'apartment', // mismo tipo a propósito
+    price: 126_000_000, area_m2: 70_000,
+    lat: 6.2705, lng: -75.6102, stratum: null, city: 'medellin', zone: 'robledo',
+    area_tipo: 'terreno',
+  };
+  const v = evaluate(lote, pool, DEFAULT_CONFIG);
+  assert.equal(v.n_comparables, 0, 'no debe encontrar comparables de área construida');
+  assert.equal(v.crece_index, null, 'sin comparables válidos no hay índice');
+});
+
+test('area_tipo ausente no bloquea la comparación', () => {
+  // La mayoría de fuentes no reportan la etiqueta; exigirla dejaría sin evaluar
+  // casi todo el inventario.
+  const pool: Comp[] = Array.from({ length: 30 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 20_000, lat: 6.27 + i * 0.0001 }));
+  const c: Candidate = {
+    id: 'x', source: 'fincaraiz', source_id: 'F1', type: 'apartment',
+    price: 120_000_000, area_m2: 60,
+    lat: 6.2705, lng: -75.6102, stratum: null, city: 'medellin', zone: 'robledo',
+  };
+  const v = evaluate(c, pool, DEFAULT_CONFIG);
+  assert.ok(v.n_comparables > 0, 'sin area_tipo debe comparar igual');
+  assert.ok(v.crece_index != null);
+});

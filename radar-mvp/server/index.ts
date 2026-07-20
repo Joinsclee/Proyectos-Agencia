@@ -17,6 +17,7 @@ import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getPr
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly } from './analysis.js';
 import { warmCityPools } from '../engine/zone-comps.js';
+import { planDe, redactarLista, redactar, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import { env } from '../lib/env.js';
 
@@ -51,6 +52,10 @@ async function readJsonBody(req: import('node:http').IncomingMessage): Promise<u
     req.on('error', () => resolve({}));
   });
 }
+
+/** Token Bearer de la petición, si viene. */
+const bearer = (req: import('node:http').IncomingMessage): string | null =>
+  (req.headers.authorization ?? '').replace(/^Bearer\s+/i, '') || null;
 
 function parseListQuery(url: URL): ListQuery {
   const g = (k: string) => url.searchParams.get(k) ?? undefined;
@@ -171,9 +176,17 @@ const server = createServer(async (req, res) => {
         const row = await getProperty(kind, id);
         return row ? sendJSON(res, 200, { ok: true, kind, data: row }) : sendJSON(res, 404, { ok: false, error: 'no encontrado' });
       }
-      if (path === '/api/portal') return sendJSON(res, 200, await queryPortal(parseListQuery(url)));
-      if (path === '/api/bancos') return sendJSON(res, 200, await queryBancos(parseListQuery(url)));
-      if (path === '/api/remates') return sendJSON(res, 200, await queryRemates(parseListQuery(url)));
+      // Los listados se filtran según el plan ANTES de salir del servidor: lo que
+      // el usuario no ha pagado no debe viajar en la respuesta (antes el muro era
+      // solo visual y los datos iban igual, visibles desde el navegador).
+      if (path === '/api/portal' || path === '/api/bancos' || path === '/api/remates') {
+        const plan = planDe(await getUserFromToken(bearer(req)));
+        const esRemate = path === '/api/remates';
+        const q = parseListQuery(url);
+        const r = esRemate ? await queryRemates(q)
+          : path === '/api/portal' ? await queryPortal(q) : await queryBancos(q);
+        return sendJSON(res, 200, { ...r, plan, data: redactarLista(r.data as any[], plan, esRemate ? 'remate' : 'inmueble') });
+      }
       if (path === '/api/facets') {
         const source = (url.searchParams.get('source') as 'portal' | 'bancos') ?? 'portal';
         return sendJSON(res, 200, await facets(source, url.searchParams.get('city') ?? undefined));

@@ -16,7 +16,13 @@ const log = createLogger('favorites');
 
 export type FavKind = 'portal' | 'banco' | 'remate';
 export interface FavRef { kind: FavKind; id: string; at: string }
-export interface AuthUser { id: string; email: string; name?: string }
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  /** 'free' | 'suscrito'. Decide si se entregan las fichas de oportunidad. */
+  plan?: string;
+}
 
 const MAX_FAVS = 500;
 
@@ -29,6 +35,8 @@ export async function getUserFromToken(token: string | null): Promise<AuthUser |
     id: data.user.id,
     email: data.user.email ?? '',
     name: (data.user.user_metadata?.name as string | undefined) ?? undefined,
+    // Plan de suscripción: decide si se entregan las fichas de oportunidad.
+    plan: (data.user.user_metadata?.plan as string | undefined) ?? 'free',
   };
 }
 

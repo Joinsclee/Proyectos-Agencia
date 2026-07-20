@@ -37,6 +37,9 @@ const PROJECT_VERDICT: Verdict = {
   method: 'proyecto-preventa',
   radius_used_km: null,
   criteria: [],
+  crece_index: null,
+  crece_tier: null,
+  cascada_nivel: null,
 };
 
 interface Opts {
@@ -72,20 +75,24 @@ type Row = {
   garages: number | null;
   neighborhood: string | null;
   is_project: boolean | null;
+  area_tipo: string | null;
   // Veredicto ya almacenado: permite no reescribir filas cuyo resultado no cambió.
   is_opportunity: boolean | null;
   is_high: boolean | null;
   discount_pct: number | null;
+  crece_index: number | null;
+  crece_tier: string | null;
+  cascada_nivel: string | null;
 };
 
 // Proyección JSON: solo los escalares que el motor necesita. 14× menos payload
 // que traer `features` entero (medido: 0.8MB vs 11MB / 3 págs).
 const SELECT =
   'id, source, source_id, type, price, area_m2, price_per_m2, city, zone, ' +
-  'is_opportunity, is_high, discount_pct, ' +
+  'is_opportunity, is_high, discount_pct, crece_index, crece_tier, cascada_nivel, ' +
   'lat:features->lat, lng:features->lng, stratum:features->stratum, ' +
   'bedrooms:features->bedrooms, garages:features->garages, ' +
-  'neighborhood:features->neighborhood, is_project:features->is_project';
+  'neighborhood:features->neighborhood, is_project:features->is_project, area_tipo:features->area_tipo';
 
 const num = (v: unknown): number | null => {
   const n = typeof v === 'string' ? Number(v) : (v as number);
@@ -107,6 +114,7 @@ function toCandidate(r: Row): Candidate {
     zone: r.zone ?? r.neighborhood ?? null,
     bedrooms: num(r.bedrooms),
     garages: num(r.garages),
+    area_tipo: r.area_tipo,
   };
 }
 
@@ -161,6 +169,7 @@ async function loadPool(): Promise<Comp[]> {
       zone: r.zone ?? r.neighborhood ?? null,
       bedrooms: num(r.bedrooms),
       garages: num(r.garages),
+      area_tipo: r.area_tipo,
     });
   }
   return pool;
@@ -177,7 +186,8 @@ async function persist(row: Row, v: Verdict): Promise<boolean> {
   if (row.source === 'fincaraiz') {
     const { error } = await supabase
       .from('inmuebles')
-      .update({ is_opportunity: v.is_opportunity, is_high: v.is_high, discount_pct: v.discount_pct })
+      .update({ is_opportunity: v.is_opportunity, is_high: v.is_high, discount_pct: v.discount_pct,
+                crece_index: v.crece_index, crece_tier: v.crece_tier, cascada_nivel: v.cascada_nivel })
       .eq('id', row.id);
     if (error) { log.error(`persist ${row.id}: ${error.message}`); return false; }
     return true;
@@ -199,7 +209,8 @@ async function persist(row: Row, v: Verdict): Promise<boolean> {
   };
   const { error } = await supabase
     .from('inmuebles')
-    .update({ is_opportunity: v.is_opportunity, is_high: v.is_high, discount_pct: v.discount_pct, features })
+    .update({ is_opportunity: v.is_opportunity, is_high: v.is_high, discount_pct: v.discount_pct, features,
+              crece_index: v.crece_index, crece_tier: v.crece_tier, cascada_nivel: v.cascada_nivel })
     .eq('id', row.id);
   if (error) { log.error(`persist ${row.id}: ${error.message}`); return false; }
   return true;
@@ -286,6 +297,8 @@ export async function run(opts: Opts = parseArgs()) {
     if (row.source !== 'fincaraiz') return true;
     const same = (row.is_opportunity ?? false) === v.is_opportunity
       && (row.is_high ?? false) === v.is_high
+      && (row.crece_tier ?? null) === (v.crece_tier ?? null)
+      && Math.round((row.crece_index ?? -1) * 100) === Math.round((v.crece_index ?? -1) * 100)
       && Math.round((row.discount_pct ?? -999) * 10) === Math.round((v.discount_pct ?? -999) * 10);
     return !same;
   });

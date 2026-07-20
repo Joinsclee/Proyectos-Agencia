@@ -27,6 +27,7 @@ import {
   startScrapingLog,
   finishScrapingLog,
 } from '../../../lib/supabase.js';
+import { parseAreaCO, clasificarAreaTipo } from '../../../lib/numeros.js';
 import { createLogger } from '../../../lib/logger.js';
 import { normalizeCity, type Inmueble, type ScrapingRunResult } from '../../../lib/types.js';
 import { isEntrypoint } from '../../../lib/is-main.js';
@@ -89,12 +90,10 @@ function parseNumericPrice(raw: string): number {
   return isNaN(n) ? 0 : n;
 }
 
-function parseNumericArea(raw: string): number | null {
-  // "52.30" o "143,57" → 52.30 / 143.57
-  const clean = raw.replace(/\./g, '.').replace(',', '.');
-  const n = parseFloat(clean);
-  return isNaN(n) ? null : n;
-}
+// El parser vive en lib/numeros.ts: el que había aquí leía "8.008 m²" como 8 m²
+// porque trataba el punto como decimal, y eso multiplicaba por mil el precio por
+// m² de todos los lotes.
+const parseNumericArea = (raw: string): number | null => parseAreaCO(raw);
 
 /**
  * Parsea texto plano de una página de Aval. Retorna null si no es una ficha.
@@ -162,6 +161,9 @@ function toInmueble(fields: AvalFields, imageUrl: string, sourcePdfUrl: string, 
     pdf_url: sourcePdfUrl,
   };
   if (fields.area_raw) features.area_raw = fields.area_raw;
+  // Obligatorio para el motor: el m² de un LOTE (terreno) no puede compararse
+  // contra la mediana de apartamentos (construida). Son mercados distintos.
+  features.area_tipo = clasificarAreaTipo(fields.area_raw, fields.type);
   if (fields.type_raw) features.type_raw = fields.type_raw;
   if (fields.description) features.description = fields.description;
   if (fields.observaciones) features.observaciones = fields.observaciones;

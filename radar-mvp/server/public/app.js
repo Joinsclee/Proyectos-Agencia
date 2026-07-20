@@ -5,7 +5,7 @@ const $ = (id) => document.getElementById(id);
 const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos' }[t] || (t ? cap(t) : 'Inmueble'));
-const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Remate' }[s] || s);
+const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Rama Judicial' }[s] || s);
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
@@ -105,13 +105,14 @@ function recordView(id) {
   const s = viewedIds(); s.add(id);
   try { localStorage.setItem('radar_viewed', JSON.stringify([...s].slice(-100))); } catch (e) {}
 }
-/** ¿Puede abrirse la ficha? Si el anónimo superó el cupo, muestra el muro y devuelve false. */
+/**
+ * Antes había un cupo de 5 fichas por visitante. La spec lo reemplazó: el acceso
+ * ya no se mide por cantidad sino por la CATEGORÍA del Índice CRECE, y lo decide
+ * el servidor (las fichas de pago llegan ya sin dirección ni enlace). Aquí solo
+ * queda el registro de vistas, que sigue sirviendo para la analítica.
+ */
 function gateFicha(id) {
-  if (auth.token) return true;            // registrado → sin límite
-  const s = viewedIds();
-  if (s.has(id)) return true;             // re-ver una ya vista no consume cupo
-  if (s.size >= FREE_VIEW_LIMIT) { showRegisterWall(s.size); return false; }
-  recordView(id);
+  if (!auth.token) recordView(id);
   return true;
 }
 function lockBox(label, sub) {
@@ -355,7 +356,7 @@ function inmuebleCard(p, kind) {
     : '';
   const ppm2 = p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + '/m²' : '';
   return `
-    <div class="card-img-wrap">${cover}<span class="source-badge">${srcLbl(p.source)}</span>${opp}${favBtn(kind, p.id)}</div>
+    <div class="card-img-wrap">${cover}<span class="source-badge">${srcLbl(p.source)}</span>${opp}${favBtn(kind, p.id)}${selloSuscripcion(p)}</div>
     <div class="card-body">
       <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
       <div class="card-titulo">${typeLbl(p.type)}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}</div>
@@ -366,6 +367,7 @@ function inmuebleCard(p, kind) {
         ${f.garages ? `<span title="Parqueaderos">${ic('car')}${f.garages}</span>` : ''}
         ${f.stratum ? `<span class="e">Estrato ${f.stratum}</span>` : ''}
       </div>
+      ${frescura(p)}
     </div>`;
 }
 
@@ -382,6 +384,50 @@ function imgSrc(url) {
   return m && PH_LOCAL.includes(m[1]) ? `/img/ph/${m[1]}.jpg` : url;
 }
 
+/**
+ * Alerta jurídica de cuota-parte (HU Motor de Remates Judiciales).
+ *
+ * Cuando el juzgado remata solo un porcentaje del bien, quien puja creyendo que
+ * compra el inmueble entero termina de copropietario con un desconocido. Por eso
+ * la alerta va en la TARJETA, antes de abrir la ficha: si solo estuviera en el
+ * detalle, quien no entra a leerlo no se entera.
+ */
+const TEXTO_CUOTA_PARTE = 'El remate tiene una alerta amarilla porque se está rematando un porcentaje del bien, no el dominio o titularidad completa. Leer con detalle el aviso.';
+const tieneCuotaParte = (p) => p && p.cuota_parte != null && Number(p.cuota_parte) !== 100;
+/** ¿El servidor entregó esta ficha recortada por plan? */
+const esBloqueada = (p) => p && p._bloqueada === true;
+
+/**
+ * Frescura de la ficha.
+ *
+ * A un activo de banco se le dice cuándo se VERIFICÓ que sigue disponible, nunca
+ * su antigüedad: un inmueble en dación de pago puede llevar meses publicado sin
+ * que eso signifique nada malo, y "Publicado hace 2 meses" lo mata sin motivo.
+ * En el portal sí interesa cuándo se vio por última vez.
+ */
+const SIN_CADUCIDAD = ['davivienda', 'bancolombia', 'bbva', 'aval'];
+function frescura(p) {
+  const iso = p.last_seen_at || p.updated_at;
+  if (!iso) return '';
+  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (!Number.isFinite(d) || d < 0) return '';
+  const cuando = d === 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`;
+  const verbo = SIN_CADUCIDAD.includes(p.source) ? 'Verificado' : 'Visto';
+  return `<span class="frescura" title="Última vez que el motor confirmó que sigue publicado">${ic('check')}${verbo} ${cuando}</span>`;
+}
+
+/** Sello sobre la foto: la ficha existe y se ve el descuento, falta desbloquearla. */
+function selloSuscripcion(p) {
+  if (!esBloqueada(p)) return '';
+  const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
+  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `Descuento del ${d}%` : 'Oportunidad'}</span><em>Desbloquear con suscripción</em></div>`;
+}
+
+function avisoCuotaParte(p) {
+  if (!tieneCuotaParte(p)) return '';
+  return `<span class="cuota-badge" title="${TEXTO_CUOTA_PARTE}">${ic('alert')}Solo el ${Number(p.cuota_parte)}% del bien</span>`;
+}
+
 function remateCard(p, kind) {
   const cover = p.image_url ? `<img src="${imgSrc(p.image_url)}" loading="lazy" alt="">` : `<div class="card-ph">${ic('scale')}</div>`;
   return `
@@ -390,7 +436,7 @@ function remateCard(p, kind) {
       <div class="card-price-label">Postura mínima</div>
       <div class="card-price">${fmtCOP(p.minimum_bid)}</div>
       ${p.appraisal_value ? `<div class="card-sub">Avalúo ${fmtCOP(p.appraisal_value)}${p.minimum_bid_pct ? ` · postura al ${p.minimum_bid_pct}%` : ''}</div>` : ''}
-      <div class="card-titulo">${typeLbl(p.property_type)}</div>
+      <div class="card-titulo">${typeLbl(p.property_type)}${avisoCuotaParte(p)}</div>
       <div class="card-ubic">${ic('pin')}<span><strong>${cap(p.city)}</strong>${p.department ? ', ' + cap(p.department) : ''}</span></div>
       <div class="card-meta">
         ${p.auction_date ? `<span title="Fecha de audiencia">${ic('calendar')}${fmtDate(p.auction_date)}</span>` : ''}
@@ -505,7 +551,7 @@ function marketCtxHtml(m) {
   <div class="ai-mkt">
     <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
     <div><span class="l">Cuartil bajo (P25)</span><strong>${COPn(m.p25_total)}</strong></div>
-    <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${tipo} · confianza ${conf}</span></div>
+    <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${tipo}</span></div>
   </div>`;
 }
 function renderAI(result) {
@@ -533,7 +579,7 @@ function renderAI(result) {
       </div>
       <h4>🔎 Verificar (due diligence)</h4>${li(ai.riesgos_due_diligence)}
       <p class="ai-reco"><strong>Recomendación:</strong> ${esc(ai.recomendacion)}</p>
-      <p class="ai-meta">Generado por IA (${esc(ai._meta?.model || 'modelo')}) · ${ai._meta?.comparables_n ?? m?.n ?? 0} comparables · confianza ${esc(ai._meta?.confidence || m?.confidence || '')}${result.cached ? ' · cacheado' : ''}. Opinión orientativa; no sustituye estudio de títulos ni asesoría profesional.</p>
+      <p class="ai-meta">Generado por IA (${esc(ai._meta?.model || 'modelo')}) · ${ai._meta?.comparables_n ?? m?.n ?? 0} comparables${result.cached ? ' · cacheado' : ''}. Opinión orientativa; no sustituye estudio de títulos ni asesoría profesional.</p>
     </div>`;
 }
 // Recomendaciones: otras oportunidades en la misma ciudad (cruzando fuentes).
@@ -657,10 +703,13 @@ function openInmueble(p) {
   const desc = f.description ? `<div class="section"><h3>Descripción</h3><p>${esc(String(f.description).slice(0, 900))}</p></div>` : '';
   const addr = p.address ? `<div class="section"><h3>Dirección</h3><p>${esc(p.address)}</p></div>` : '';
   // Bloqueos para anónimo (freemium)
-  const aiBlock = anon ? lockBox('Análisis con IA', 'Compáralo contra el mercado del barrio. Regístrate gratis.') : aiSection('banco', p.id);
-  const addrBlock = anon ? (p.address ? lockBox('Dirección exacta') : '') : addr;
-  const mapBlock = anon ? '' : mapSection(p);
-  const descBlock = anon ? (f.description ? lockBox('Descripción completa') : '') : desc;
+  // El servidor ya recortó lo que el plan no cubre; aquí solo se explica por qué.
+  const bloq = esBloqueada(p);
+  const aiBlock = bloq ? '' : aiSection('banco', p.id);
+  const addrBlock = bloq ? '' : addr;
+  const mapBlock = bloq ? '' : mapSection(p);
+  const descBlock = bloq ? '' : desc;
+  const muro = bloq ? panelSuscripcion(p) : '';
   const fav = anon ? '' : modalFavBtn(p.source === 'fincaraiz' ? 'portal' : 'banco', p.id);
   const mkt = marketSection(p);
 
@@ -671,7 +720,7 @@ function openInmueble(p) {
       <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${cap(p.city)}</strong></div>
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('')}</div>
-      ${mkt || marketLazyBox()}${aiBlock}${gastosSection(p.price, 'compra')}${addrBlock}${mapBlock}${descBlock}${amen}
+      ${muro}${mkt || marketLazyBox()}${aiBlock}${gastosSection(p.price, 'compra')}${addrBlock}${mapBlock}${descBlock}${amen}
       <a class="cta" href="${p.source_url}" target="_blank" rel="noopener">Ver en ${srcLbl(p.source)} ↗</a>
     </div>`;
   showModal();
@@ -683,6 +732,26 @@ function openInmueble(p) {
 // Ficha abierta actualmente: si el usuario abre otra mientras el mercado carga, la
 // respuesta vieja llega tarde y no debe pintarse sobre la ficha nueva.
 let gFichaSeq = 0;
+
+/**
+ * Panel de la ficha de pago. Enseña exactamente lo que la spec permite (precio,
+ * descuento, unas fotos) y nombra lo que falta, para que el usuario sepa qué
+ * está comprando en vez de encontrarse un hueco sin explicación.
+ */
+function panelSuscripcion(p) {
+  const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
+  return `<div class="section"><div class="muro-sus">
+    <div class="muro-cab">${ic('lock')}<strong>${d != null && d >= 20 ? `Oportunidad con ${d}% de descuento` : 'Oportunidad destacada'}</strong></div>
+    <p>Esta ficha es de suscripción. Ya puedes ver el precio, el área y cuánto está por debajo del mercado de su zona.</p>
+    <ul class="muro-lista">
+      <li>${ic('lock')} Dirección exacta y ubicación en el mapa</li>
+      <li>${ic('lock')} Descripción completa y todas las fotos</li>
+      <li>${ic('lock')} Fuente original y datos de contacto</li>
+      <li>${ic('lock')} Análisis detallado de la oportunidad</li>
+    </ul>
+    <a class="wall-cta" href="/login">Desbloquear con suscripción</a>
+  </div></div>`;
+}
 
 function marketLazyBox() {
   return `<div class="section" id="mkt-lazy"><h3>Análisis de mercado</h3>
@@ -778,6 +847,7 @@ function openRemate(p) {
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
       <div class="detail-top"><span class="pill-src">${ic('scale')}Remate judicial</span>${fav}</div>
+      ${tieneCuotaParte(p) ? `<div class="alerta-legal">${ic('alert')}<div><strong>Se remata solo el ${Number(p.cuota_parte)}% del bien</strong><span>${TEXTO_CUOTA_PARTE}</span></div></div>` : ''}
       <h2>${typeLbl(p.property_type)} en ${cap(p.city)}</h2>
       <div class="loc">${ic('pin')}<strong>${cap(p.city)}</strong>${p.department ? ', ' + cap(p.department) : ''}</div>
       <div class="priceblock remate">
@@ -794,7 +864,7 @@ function openRemate(p) {
       ${descBlock}
       ${copiaBlock}
       ${mapSection({ address: null, city: p.city })}
-      <a class="src-link" href="${p.source_url}" target="_blank" rel="noopener">Fuente: rematandobienes.com ↗</a>
+      <p class="src-note">Fuente: Rama Judicial de Colombia · aviso de remate publicado por el juzgado.</p>
     </div>`;
   showModal();
 }
@@ -865,8 +935,8 @@ function marketBody(m, criteria) {
     <div><span class="l">Este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Posición</span>${pos}</div>
-    <div><span class="l">Comparables</span><strong>${m.n_comparables}</strong><span class="sub">confianza ${conf}</span></div>
-  </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${m.n_comparables} inmuebles similares de la zona (precios de OFERTA). Señal de cribado, no un avalúo.</p></div>`;
+    <div><span class="l">Comparables</span><strong>${m.n_comparables}</strong></div>
+  </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${m.n_comparables} inmuebles similares de la zona (precios de OFERTA).</p></div>`;
 }
 
 function marketSection(p) {
@@ -918,7 +988,7 @@ function renderVStats() {
       <span class="legend-title">${ic('chart')} Cómo leer el portal abierto</span>
       <span class="legend-item"><span class="badge-mini high">${ic('star')}Alta</span> precio/m² en el decil más bajo, descuento grande y comparables homogéneos</span>
       <span class="legend-item"><span class="badge-mini opp">${ic('down')}Oportunidad</span> precio/m² en el cuartil más bajo frente a similares de la zona</span>
-      <span class="legend-item note">Señal de cribado sobre precios de oferta, no un avalúo.</span></div>`;
+      <span class="legend-item note">Comparado contra precios de oferta publicados.</span></div>`;
   } else if (state.tab === 'guardados') {
     v.innerHTML = `<div class="vstat"><div class="num">${favSet.size}</div><div class="lbl">Inmuebles guardados</div></div>`;
     $('legend').innerHTML = '';

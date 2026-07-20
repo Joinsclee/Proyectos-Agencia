@@ -5,6 +5,7 @@
  */
 import { supabase } from '../lib/supabase.js';
 import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT, BANK_SOURCES } from '../lib/types.js';
+import { rotarSemanal } from '../engine/rotacion.js';
 
 export interface ListQuery {
   city?: string;
@@ -146,7 +147,11 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   const { data, count, error } = await qb;
   if (error) throw new Error(`queryBancos: ${error.message}`);
   const total = count ?? 0;
-  return { data: data ?? [], total, page, pageSize, pages: Math.ceil(total / pageSize) };
+  // Rotación semanal del pool bancario (HU de frescura): el inventario de bancos
+  // cambia poco, así que sin esto el usuario recurrente ve siempre la misma
+  // pantalla. Se rota la página ya paginada para no alterar el conteo ni repetir
+  // fichas entre páginas.
+  return { data: rotarSemanal(data ?? []), total, page, pageSize, pages: Math.ceil(total / pageSize) };
 }
 
 /** Remates judiciales activos. */
