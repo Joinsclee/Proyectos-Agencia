@@ -24,7 +24,7 @@
  */
 import type { RemateAvisoRaw, Remate, PropertyType, AuctionMode } from './types.js';
 import { normalizeCity } from '../../../lib/types.js';
-import { bankName } from './bank-detect.js';
+import { bankName, limpiarDemandante } from './bank-detect.js';
 
 // Tarjeta branded por tipo (subidas por scripts/upload-placeholders.ts).
 // El portal de remates NO trae fotos del inmueble — solo datos jurídicos. Usamos
@@ -227,7 +227,7 @@ export function parseAviso(raw: RemateAvisoRaw): Remate {
   const court_email = (court && RE_EMAIL.exec(ft)?.[1]) || null;
   const trustee = afterLabel('Secuestre');
   const defendant = afterLabel('Demandado');
-  const plaintiff = afterLabel('Demandante');
+  const plaintiff = limpiarDemandante(afterLabel('Demandante'));
 
   // Copia exacta de la publicación (texto oficial completo del aviso; premium).
   let copia_publicacion: string | null = null;

@@ -77,3 +77,25 @@ export function bankName(plaintiff: string | null | undefined): string | null {
   for (const [re, name] of STRUCTURAL) if (re.test(t)) return name;
   return null;
 }
+
+/**
+ * Recorta el nombre del demandante cuando arrastra el resto del aviso.
+ *
+ * rematandobienes cambió el formato y ahora "Demandante:" trae el valor en la
+ * misma línea. Como el aviso entero viene sin saltos, el extractor capturaba
+ * "BANCO DAVIVIENDA S.A NIT 860... DEMANDADO: ... Dentro del proceso ...": miles
+ * de caracteres. El nombre real termina donde empieza el siguiente marcador
+ * (NIT, cédula, el demandado, el radicado, la narración del auto…).
+ */
+export function limpiarDemandante(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  let v = raw.replace(/\s+/g, ' ').trim();
+  // Corta en el primer marcador de "aquí ya no es el nombre".
+  const STOP = /\s+(?:nit\b|nit[.\/]|c\.?\s?c\.?[:\s.]|c[eé]dula|identificad|demandad|radicaci|radicad|juzgad|hace\s+saber|pasa\s+al\b|dentro\s+del\s+proceso|proceso\s+ejecutivo|fecha\s+(?:del|y|de)\b|bienes?\s+(?:materia|objeto|de)\b|aval[uú]o\b|matr[ií]cula|postor\b|postura\b|secuestre\b|direcci[oó]n[:\s]|link\b|https?:)/i;
+  const m = STOP.exec(v);
+  if (m && m.index > 0) v = v.slice(0, m.index).trim();
+  v = v.replace(/[\s.,;:-]+$/, '').trim();
+  // Un demandante de más de 200 caracteres es casi seguro texto desbordado.
+  if (v.length > 200) v = v.slice(0, 200).trim();
+  return v || null;
+}
