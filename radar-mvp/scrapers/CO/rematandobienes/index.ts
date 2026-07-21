@@ -341,10 +341,15 @@ async function verificarSesionPremium(page: import('playwright').Page): Promise<
     if (!primero) return; // sin avisos que sondear: no bloquear por esto
     await page.goto(primero, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     const texto = (await page.locator('body').innerText().catch(() => '')) || '';
-    if (!/demandante/i.test(texto)) {
+    // No basta con que aparezca la palabra "Demandante": la etiqueta sale siempre,
+    // incluso sin sesión, y a veces vacía. Se exige que tenga un VALOR — que es lo
+    // que de verdad falta cuando la sesión caducó. Sin esto, el guardián se dejaba
+    // engañar y dejaba pasar un scrape que luego descartaba todo.
+    const conValor = /demandante\s*:\s*\S+/i.test(texto) || /demandante\s*:?\s*\n+\s*\S+/i.test(texto);
+    if (!conValor) {
       throw new Error(
-        'Sesión premium caducada: el aviso no muestra "Demandante". ' +
-        'Sin ella se pierden el demandante y la copia del aviso, y la matriz de ' +
+        'Sesión premium caducada: el aviso muestra "Demandante" sin valor. ' +
+        'Sin ese dato se pierden el demandante y la copia del aviso, y la matriz de ' +
         'acceso de remates queda inservible. Corre `npm run remates:login` ' +
         '(requiere resolver el reCAPTCHA a mano) y repite el scrape.',
       );

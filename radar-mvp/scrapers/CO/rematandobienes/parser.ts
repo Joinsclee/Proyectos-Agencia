@@ -193,11 +193,15 @@ export function parseAviso(raw: RemateAvisoRaw): Remate {
   //    en la línea siguiente a la etiqueta; "Ver detalles del remate" = gated → null.
   const ft = raw.full_text;
   const afterLabel = (label: string): string | null => {
-    const re = new RegExp(label + '\\s*:?\\s*\\n+\\s*([^\\n]+)', 'i');
+    // El valor va tras la etiqueta, y rematandobienes cambió el formato: antes
+    // caía en la LÍNEA SIGUIENTE ("Demandante:\nBANCOLOMBIA S.A."), ahora en la
+    // MISMA línea ("Demandante: BANCOLOMBIA S.A."). Se aceptan ambos, o el
+    // scraper vuelve a guardar todos los campos en null sin que nada falle.
+    const re = new RegExp(label + '\\s*:\\s*([^\\n]+)|' + label + '\\s*:?\\s*\\n+\\s*([^\\n]+)', 'i');
     const m = re.exec(ft);
     if (!m) return null;
-    const v = m[1]!.trim();
-    if (!v || /ver detalles del remate|copia exacta de la publicaci/i.test(v)) return null;
+    const v = (m[1] ?? m[2] ?? '').trim();
+    if (!v || /^ver detalles del remate|copia exacta de la publicaci/i.test(v)) return null;
     return v;
   };
 
