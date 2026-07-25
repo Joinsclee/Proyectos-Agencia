@@ -80,6 +80,7 @@ async function init() {
   if (accountResponse?.ok) {
     const accountData = await accountResponse.json();
     account = accountData.account;
+    document.getElementById('account-link').hidden = true;
     document.getElementById('session-link').textContent = 'Mi cuenta';
     document.getElementById('session-link').href = '/cuenta';
   }
