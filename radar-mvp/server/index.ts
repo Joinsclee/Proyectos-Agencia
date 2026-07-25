@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
 import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
 import { registerUser, loginUser } from './auth.js';
-import { analyzeProperty, marketOnly } from './analysis.js';
+import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactar, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
@@ -371,6 +371,17 @@ const server = createServer(async (req, res) => {
           return sendJSON(res, 400, { ok: false, error: 'kind (portal|banco|remate) e id requeridos' });
         }
         const result = await marketOnly(kind, id);
+        return sendJSON(res, result.ok ? 200 : 404, result);
+      }
+      // Comparables de arriendo separados del mercado de venta para que cada
+      // panel cargue de forma independiente y una fuente no bloquee la otra.
+      if (path === '/api/rental-market') {
+        const kind = url.searchParams.get('kind');
+        const id = url.searchParams.get('id');
+        if ((kind !== 'portal' && kind !== 'banco') || !id) {
+          return sendJSON(res, 400, { ok: false, error: 'kind (portal|banco) e id requeridos' });
+        }
+        const result = await rentalOnly(kind, id);
         return sendJSON(res, result.ok ? 200 : 404, result);
       }
       // Una propiedad por id (para abrir una recomendación en su modal).
