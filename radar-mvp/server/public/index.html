@@ -4,9 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Radar de Oportunidades Inmobiliarias</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+  <a class="skip-link" href="#results">Saltar a los resultados</a>
   <!--
     Iconos: un sprite SVG en vez de emoji. Los emoji los dibuja el sistema
     operativo (se ven distintos en Mac, Windows y Android), no heredan el color
@@ -35,6 +39,7 @@
       <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></symbol>
       <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 21.5 20H2.5L12 3.5Z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7"/></symbol>
+      <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></symbol>
     </defs>
   </svg>
 
@@ -47,12 +52,12 @@
     </div>
   </header>
 
-  <nav class="tabs-bar">
+  <nav class="tabs-bar" aria-label="Secciones principales">
     <div class="tabs-inner">
       <div class="tabs-group" id="tabs">
-        <button class="tab-btn active" data-tab="portal"><svg class="ic"><use href="#i-home"/></svg> Portal abierto <span class="tab-count" id="c-portal">—</span></button>
+        <button class="tab-btn active" data-tab="portal" aria-current="page"><svg class="ic"><use href="#i-home"/></svg> Portal <span class="tab-count" id="c-portal">—</span></button>
         <button class="tab-btn" data-tab="bancos"><svg class="ic"><use href="#i-bank"/></svg> Bancos <span class="tab-count" id="c-bancos">—</span></button>
-        <button class="tab-btn" data-tab="remates"><svg class="ic"><use href="#i-scale"/></svg> Remates judiciales <span class="tab-count" id="c-remates">—</span></button>
+        <button class="tab-btn" data-tab="remates"><svg class="ic"><use href="#i-scale"/></svg> Remates <span class="tab-count" id="c-remates">—</span></button>
       </div>
       <div class="nav-right">
         <button class="tab-btn tab-fav" data-tab="guardados"><svg class="ic"><use href="#i-heart"/></svg> <span class="nav-label">Guardados</span> <span class="tab-count" id="c-guardados">0</span></button>
@@ -66,21 +71,35 @@
 
   <div class="legend" id="legend"></div>
 
-  <section class="controls"><div class="controls-inner">
-    <div class="filters-row" id="filters"></div>
-    <div class="results-info"><span id="count">—</span> · <button class="btn-clear" id="clear">Limpiar filtros</button></div>
-  </div></section>
+  <section class="radar-setup" id="radar-setup" aria-label="Personaliza tu Radar" aria-live="polite"></section>
 
-  <main class="content">
+  <section class="controls" aria-label="Filtros de búsqueda">
+    <div class="controls-mobilebar">
+      <button class="filters-toggle" id="filters-toggle" type="button" aria-expanded="false" aria-controls="filters-panel">
+        <svg class="ic"><use href="#i-filter"/></svg>
+        Filtros
+        <span class="filter-count" id="filter-count" hidden>0</span>
+      </button>
+      <span class="mobile-count" id="mobile-count" aria-live="polite">Buscando…</span>
+    </div>
+    <div class="controls-inner" id="filters-panel">
+      <div class="filters-row" id="filters"></div>
+      <div class="results-info"><span id="count" aria-live="polite">—</span> · <button class="btn-clear" id="clear">Limpiar filtros</button></div>
+    </div>
+  </section>
+
+  <main class="content" id="results" tabindex="-1">
     <div class="cards-grid" id="grid"></div>
-    <div class="loading" id="loading" style="display:none;">Cargando…</div>
+    <div class="loading" id="loading" role="status" style="display:none;">Cargando…</div>
     <div class="empty" id="empty" style="display:none;"><div class="h">Sin resultados</div><div>Ajusta los filtros para ver más.</div></div>
   </main>
-  <nav class="pager" id="pager"></nav>
+  <nav class="pager" id="pager" aria-label="Paginación de resultados"></nav>
 
-  <div class="modal" id="modal">
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Detalle del inmueble" aria-hidden="true">
     <div class="modal-box">
-      <button class="modal-close" id="modal-close">×</button>
+      <button class="modal-close" id="modal-close" aria-label="Cerrar detalle">×</button>
       <div id="modal-content" style="display:contents;"></div>
     </div>
   </div>

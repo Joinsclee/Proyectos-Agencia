@@ -14,6 +14,7 @@ import {
 } from '../engine/zone-comps.js';
 import { analyzeWithAI, NoOpenAIKeyError, type AiResult, type AiPropertyFacts } from './ai.js';
 import { recommendInZone, type Rec } from './recommend.js';
+import { sanitizeRemateForDisplay } from './data-quality.js';
 
 const num = (v: unknown): number | null => {
   const n = typeof v === 'string' ? Number(v) : (v as number);
@@ -161,32 +162,40 @@ async function analyzeRemate(id: string, refresh: boolean): Promise<AnalyzeResul
     .select('id, property_type, city, department, appraisal_value, minimum_bid, minimum_bid_pct, features, description')
     .eq('id', id).single();
   if (error || !data) return { ok: false, cached: false, error: 'remate no encontrado' };
-  const f = (data.features ?? {}) as any;
+  const safeData = sanitizeRemateForDisplay(data);
+  if (safeData._data_warnings?.length) {
+    return {
+      ok: false,
+      cached: false,
+      error: 'Los datos financieros de este remate están en revisión.',
+    };
+  }
+  const f = (safeData.features ?? {}) as any;
 
-  const frType = mapType(data.property_type);
-  const pool = await loadCityPool(data.city ?? '');
-  const market = summarizeMarket(pool, data.city ?? '', frType);
-  const av = num(data.appraisal_value); const bid = num(data.minimum_bid);
+  const frType = mapType(safeData.property_type);
+  const pool = await loadCityPool(safeData.city ?? '');
+  const market = summarizeMarket(pool, safeData.city ?? '', frType);
+  const av = num(safeData.appraisal_value); const bid = num(safeData.minimum_bid);
   const auctionDisc = av && bid && av > 0 ? (1 - bid / av) * 100 : 0;
   const recommendations = await recommendInZone({
-    excludeKind: 'remate', excludeId: id, city: data.city, type: data.property_type,
+    excludeKind: 'remate', excludeId: id, city: safeData.city, type: safeData.property_type,
     minDiscount: auctionDisc,
   });
 
   if (f.ai_analysis && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis as AiResult, recommendations };
 
   const facts: AiPropertyFacts = {
-    kind: 'remate', tipo: data.property_type, ciudad: data.city, zona: data.department,
+    kind: 'remate', tipo: safeData.property_type, ciudad: safeData.city, zona: safeData.department,
     area_m2: num(f.area_m2) ?? num(f.area),
     estrato: num(f.stratum),
-    avaluo_cop: num(data.appraisal_value), postura_cop: num(data.minimum_bid),
-    postura_pct: num(data.minimum_bid_pct), banco_demandante: f.is_bank_plaintiff === true,
+    avaluo_cop: num(safeData.appraisal_value), postura_cop: num(safeData.minimum_bid),
+    postura_pct: num(safeData.minimum_bid_pct), banco_demandante: f.is_bank_plaintiff === true,
   };
-  const avisoText = (f.copia_publicacion as string | null) ?? data.description ?? undefined;
+  const avisoText = (f.copia_publicacion as string | null) ?? safeData.description ?? undefined;
 
   try {
     const ai = await analyzeWithAI(facts, market, avisoText);
-    await persistCache('remates', id, data.features, ai);
+    await persistCache('remates', id, safeData.features, ai);
     return { ok: true, cached: false, market, ai, recommendations };
   } catch (e) {
     if (e instanceof NoOpenAIKeyError) return { ok: false, cached: false, needs_key: true, market, recommendations, error: e.message };

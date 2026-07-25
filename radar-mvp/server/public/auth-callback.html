@@ -30,35 +30,6 @@
       <p style="margin-top:14px">No pudimos completar el ingreso.<br /><a href="/login">Volver a intentar</a></p>
     </div>
   </div>
-  <script>
-    (function () {
-      const params = new URLSearchParams(location.hash.slice(1));
-      const qparams = new URLSearchParams(location.search);
-      const token = params.get('access_token');
-      const error = params.get('error_description') || params.get('error') || qparams.get('error_description') || qparams.get('error');
-
-      function fail(text) {
-        document.getElementById('spinner').style.display = 'none';
-        document.getElementById('title').textContent = 'Ups…';
-        document.getElementById('msg').textContent = text || 'No se pudo iniciar sesión con Google.';
-        document.getElementById('err').style.display = 'block';
-      }
-
-      if (token) {
-        localStorage.setItem('radar_token', token);
-        const refresh = params.get('refresh_token');
-        if (refresh) localStorage.setItem('radar_refresh', refresh);
-        history.replaceState(null, '', '/auth/callback'); // limpia el token de la URL
-        location.replace('/');
-      } else if (error) {
-        fail(decodeURIComponent(error));
-      } else if (qparams.get('code')) {
-        // Flujo PKCE: requiere intercambio con la anon key (config pendiente).
-        fail('Falta completar la configuración de Google en Supabase (anon key / PKCE).');
-      } else {
-        fail();
-      }
-    })();
-  </script>
+  <script src="/auth-callback.js"></script>
 </body>
 </html>
