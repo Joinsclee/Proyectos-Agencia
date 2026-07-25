@@ -12,6 +12,10 @@ import {
   loadCityPool, summarizeMarket, evaluateBank, mapType,
   type MarketContext,
 } from '../engine/zone-comps.js';
+import {
+  rentalMarketForProperty,
+  type RentalMarketContext,
+} from '../engine/rental-comparables.js';
 import { analyzeWithAI, NoOpenAIKeyError, type AiResult, type AiPropertyFacts } from './ai.js';
 import { recommendInZone, type Rec } from './recommend.js';
 import { sanitizeRemateForDisplay } from './data-quality.js';
@@ -74,8 +78,8 @@ export async function marketOnly(
   const f = (data.features ?? {}) as any;
   const zone = data.zone ?? (f.neighborhood as string | null) ?? null;
 
-  const pool = await loadCityPool(data.city ?? '');
   const propio = data.source === 'fincaraiz' ? data.source_id : null;
+  const pool = await loadCityPool(data.city ?? '');
   const market = summarizeMarket(pool, data.city ?? '', data.type, {
     zone, lat: num(f.lat), lng: num(f.lng),
     bedrooms: num(f.bedrooms), garages: num(f.garages),
@@ -103,6 +107,41 @@ export async function marketOnly(
     minDiscount: verdict.discount_pct ?? num(data.discount_pct) ?? 0,
   });
   return { ok: true, market, verdict, recommendations };
+}
+
+/**
+ * Mercado de arriendo aislado del mercado de venta. Mantener ambos endpoints
+ * separados evita que la carga inicial de comparables de arriendo retrase el
+ * análisis de venta de la ficha.
+ */
+export async function rentalOnly(
+  kind: 'portal' | 'banco',
+  id: string,
+): Promise<{ ok: boolean; error?: string; rental_market?: RentalMarketContext }> {
+  const { data } = await supabase
+    .from('inmuebles')
+    .select('id, source, type, area_m2, city, zone, features')
+    .eq('id', id)
+    .single();
+  if (!data) return { ok: false, error: 'inmueble no encontrado' };
+
+  if (
+    (kind === 'portal' && data.source !== 'fincaraiz')
+    || (kind === 'banco' && data.source === 'fincaraiz')
+  ) {
+    return { ok: false, error: 'tipo de inmueble inválido' };
+  }
+
+  const f = (data.features ?? {}) as any;
+  const rentalMarket = await rentalMarketForProperty(data.city ?? '', data.type, {
+    area_m2: num(data.area_m2),
+    zone: data.zone ?? (f.neighborhood as string | null) ?? null,
+    lat: num(f.lat),
+    lng: num(f.lng),
+    bedrooms: num(f.bedrooms),
+    garages: num(f.garages),
+  });
+  return { ok: true, rental_market: rentalMarket };
 }
 
 async function persistCache(table: 'inmuebles' | 'remates', id: string, features: any, ai: AiResult) {

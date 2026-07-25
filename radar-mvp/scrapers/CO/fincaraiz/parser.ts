@@ -5,7 +5,7 @@
  *
  * NO redondea ningún valor: precio, área y estrato salen exactos del portal.
  */
-import { normalizeCity, type Inmueble } from '../../../lib/types.js';
+import { normalizeCity, type Inmueble, type RentalListing } from '../../../lib/types.js';
 import type { RadarZona } from './zonas.js';
 
 const BASE = 'https://www.fincaraiz.com.co';
@@ -204,6 +204,31 @@ export function mapFincaRaiz(raw: FincaRaizRaw, zona: RadarZona): Inmueble | nul
     source_id: id,
     source_url: sourceUrl,
     image_url: image,
+  };
+}
+
+/**
+ * Traduce el mismo aviso normalizado al modelo mensual de arriendo. Reutilizar
+ * `mapFincaRaiz` mantiene idénticas la taxonomía, ubicación, fotos y
+ * características, pero cambia el significado monetario de forma explícita.
+ */
+export function mapFincaRaizRental(raw: FincaRaizRaw, zona: RadarZona): RentalListing | null {
+  const normalized = mapFincaRaiz(raw, zona);
+  if (!normalized?.price) return null;
+  return {
+    country_code: normalized.country_code,
+    city: normalized.city,
+    zone: normalized.zone,
+    address: normalized.address,
+    type: normalized.type,
+    monthly_rent: normalized.price,
+    currency: normalized.currency,
+    area_m2: normalized.area_m2,
+    features: normalized.features,
+    source: normalized.source,
+    source_id: normalized.source_id,
+    source_url: normalized.source_url,
+    image_url: normalized.image_url,
   };
 }
 

@@ -90,23 +90,35 @@ const CIUDADES: RadarZona[] = [
 
 const PILOTO: RadarZona[] = [...BARRIOS_MED, ...CIUDADES];
 
-export async function loadActiveZonas(filterSlug?: string): Promise<RadarZona[]> {
+export async function loadActiveZonas(
+  filterSlug?: string,
+  operation: 'venta' | 'arriendo' = 'venta',
+): Promise<RadarZona[]> {
   const match = (z: RadarZona) =>
     !filterSlug || z.neighborhood_slug === filterSlug || z.city_slug === filterSlug;
+  const fallback = operation === 'venta'
+    ? PILOTO
+    : PILOTO.map((z) => ({
+      ...z,
+      operation: 'arriendo',
+      price_min: null,
+      price_max: null,
+    }));
 
   const { data, error } = await supabase
     .from('radar_zonas_monitoreadas')
     .select('*')
     .eq('is_active', true)
-    .eq('portal', 'fincaraiz');
+    .eq('portal', 'fincaraiz')
+    .eq('operation', operation);
 
   if (error) {
     log.warn(`No se pudo leer radar_zonas_monitoreadas (${error.message}). Uso barrios piloto.`);
-    return PILOTO.filter(match);
+    return fallback.filter(match);
   }
   if (!data || data.length === 0) {
-    log.warn('radar_zonas_monitoreadas vacía. Uso barrios piloto hardcodeados.');
-    return PILOTO.filter(match);
+    log.warn(`radar_zonas_monitoreadas sin zonas de ${operation}. Uso piloto hardcodeado.`);
+    return fallback.filter(match);
   }
 
   return (data as RadarZona[]).filter(match);

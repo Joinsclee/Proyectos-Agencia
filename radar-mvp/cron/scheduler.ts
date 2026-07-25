@@ -44,7 +44,12 @@ interface Job {
 
 /** Qué ejecuta cada trabajo. Import dinámico: no cargar Playwright si no toca. */
 const TAREAS: Record<string, () => Promise<unknown>> = {
-  fincaraiz: async () => (await import('../scrapers/CO/fincaraiz/index.js')).run({}),
+  fincaraiz: async () => {
+    const scraper = await import('../scrapers/CO/fincaraiz/index.js');
+    const venta = await scraper.run({});
+    const arriendo = await scraper.runRentals({});
+    return { venta, arriendo };
+  },
   bancos: async () => (await import('./orchestrator.js')).runAll(),
   remates: async () => (await import('../scrapers/CO/rematandobienes/index.js')).run({}),
   motor: async () => {
