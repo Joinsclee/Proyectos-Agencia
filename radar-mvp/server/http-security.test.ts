@@ -34,6 +34,7 @@ describe('HTTP security baseline', () => {
     assert.match(csp, /script-src 'self'/);
     assert.doesNotMatch(csp, /script-src[^;]*unsafe-inline/);
     assert.match(csp, /frame-ancestors 'none'/);
+    assert.match(csp, /form-action 'self' https:\/\/checkout\.wompi\.co/);
     assert.equal(headers.get('X-Request-Id'), 'request-123');
   });
 

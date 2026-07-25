@@ -36,6 +36,9 @@ cp .env.example .env
 # Editar y completar:
 #   FIRECRAWL_API_KEY=fc-...     (obtener en firecrawl.dev)
 #   SUPABASE_SERVICE_ROLE_KEY=... (Supabase Dashboard → Settings → API)
+#   WOMPI_PUBLIC_KEY=pub_test_...  (solo para el checkout demo Sandbox)
+#   WOMPI_INTEGRITY_SECRET=test_integrity_...
+#   WOMPI_EVENTS_SECRET=test_events_...
 ```
 
 ## Aplicar schema en Supabase
@@ -44,6 +47,11 @@ Pegar [supabase/migrations/20260531000001_inmuebles_multipais.sql](supabase/migr
 en el SQL Editor del proyecto `uqlfgnylvnefhyuvtncd.supabase.co` (Andrés Giraldo).
 
 Verifica que aparezcan: tabla `inmuebles`, `precios_mercado`, `scraping_logs` + vistas `oportunidades_publicas` y `oportunidades_stats`.
+
+Para la demo comercial, aplica además
+[`supabase/migrations/20260725000002_wompi_demo_payments.sql`](supabase/migrations/20260725000002_wompi_demo_payments.sql).
+El frontend muestra la oferta, pero solo habilita el checkout cuando las tres
+llaves Sandbox están configuradas; nunca usa credenciales de producción.
 
 ## Comandos
 
@@ -104,7 +112,7 @@ radar-mvp/
 | 1 | Scraping bancario (Davivienda, Bancolombia, BBVA, Aval) | 🚧 en validación |
 | 2 | Rematandobienes con login + eval Octoparse | ⏳ |
 | 3 | Motor de comparables vs FincaRaíz → marcar `is_opportunity` | ⏳ |
-| 4 | Frontend Next.js + paywall Wompi/Stripe | ⏳ |
+| 4 | Frontend nativo + paywall Wompi Sandbox | 🚧 código listo; credenciales y aceptación pendientes |
 
 ## Convenciones
 

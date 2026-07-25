@@ -29,6 +29,11 @@ function publicAccount(user: { id: string; email?: string; user_metadata?: Metad
     name: typeof metadata.name === 'string' ? metadata.name : undefined,
     plan,
     subscriptionStatus: subscriptionStatusFromMetadata(metadata),
+    subscriptionValidUntil: typeof metadata.subscription_valid_until === 'string'
+      && Number.isFinite(Date.parse(metadata.subscription_valid_until))
+      ? metadata.subscription_valid_until
+      : null,
+    subscriptionSource: metadata.subscription_source === 'wompi_sandbox' ? 'wompi_sandbox' : metadata.subscription_source === 'admin' ? 'admin' : null,
     role: isAdminMetadata(metadata) ? 'admin' : 'user',
     preferences: RadarPreferencesSchema.safeParse(metadata.radar_preferences).success
       ? metadata.radar_preferences
@@ -297,6 +302,85 @@ export async function updateAdminSubscription(
     return metadata;
   });
   return { ok: true as const, account, event: auditEvent };
+}
+
+export async function applyWompiSubscription(
+  userId: string,
+  input: {
+    status: 'APPROVED' | 'VOIDED';
+    reference: string;
+    transactionId: string;
+    validUntil: string | null;
+    eventAt: string;
+  },
+) {
+  return updateMetadata(userId, (metadata) => {
+    const history = readSubscriptionAudit(metadata);
+    const existingEvent = history.find((event) =>
+      event.source === 'wompi_sandbox'
+      && event.providerReference === input.reference
+      && event.providerTransactionId === input.transactionId
+      && event.toStatus === (input.status === 'APPROVED' ? 'active' : 'canceled'));
+
+    if (input.status === 'VOIDED' && metadata.subscription_payment_reference !== input.reference) {
+      return metadata;
+    }
+    const currentValidUntil = Date.parse(String(metadata.subscription_valid_until ?? ''));
+    const incomingValidUntil = Date.parse(String(input.validUntil ?? ''));
+    if (
+      input.status === 'APPROVED'
+      && metadata.subscription_source === 'wompi_sandbox'
+      && metadata.subscription_payment_reference !== input.reference
+      && Number.isFinite(currentValidUntil)
+      && Number.isFinite(incomingValidUntil)
+      && currentValidUntil >= incomingValidUntil
+    ) {
+      return metadata;
+    }
+    if (
+      input.status === 'APPROVED'
+      && metadata.subscription_status === 'active'
+      && metadata.subscription_payment_reference === input.reference
+      && metadata.subscription_transaction_id === input.transactionId
+      && existingEvent
+    ) {
+      return metadata;
+    }
+
+    const fromStatus = subscriptionStatusFromMetadata(metadata);
+    const toStatus = input.status === 'APPROVED' ? 'active' : 'canceled';
+    const now = new Date().toISOString();
+    metadata.subscription_status = toStatus;
+    metadata.plan = toStatus === 'active' ? 'pro' : 'free';
+    metadata.subscription_updated_at = now;
+    metadata.subscription_source = 'wompi_sandbox';
+    metadata.subscription_payment_reference = input.reference;
+    metadata.subscription_transaction_id = input.transactionId;
+    if (input.validUntil) metadata.subscription_valid_until = input.validUntil;
+    if (!existingEvent) {
+      const event: SubscriptionAuditEvent = {
+        id: randomUUID(),
+        at: input.eventAt,
+        fromStatus,
+        toStatus,
+        source: 'wompi_sandbox',
+        providerReference: input.reference,
+        providerTransactionId: input.transactionId,
+        note: input.status === 'APPROVED'
+          ? 'Pago demo confirmado por Wompi Sandbox'
+          : 'Transacción anulada por Wompi Sandbox',
+      };
+      metadata.subscription_audit = [event, ...history].slice(0, 50);
+    }
+    if (metadata.plan_interest && typeof metadata.plan_interest === 'object') {
+      metadata.plan_interest = {
+        ...metadata.plan_interest,
+        status: toStatus === 'active' ? 'converted' : 'closed',
+        updatedAt: now,
+      };
+    }
+    return metadata;
+  });
 }
 
 export async function exportAccount(userId: string) {

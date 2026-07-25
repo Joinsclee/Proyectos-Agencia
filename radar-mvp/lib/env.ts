@@ -25,6 +25,14 @@ const EnvSchema = z.object({
   ALERTS_CRON_SECRET: z.string().min(16).optional(),
   APP_BASE_URL: z.string().url().default('http://localhost:8787'),
 
+  // Fase 2 comercial: checkout demo exclusivamente en Wompi Sandbox.
+  // La llave privada se reserva para futuras consultas servidor-servidor; el
+  // checkout Web solo necesita pública, integridad y eventos.
+  WOMPI_PUBLIC_KEY: z.string().regex(/^pub_test_[A-Za-z0-9_-]+$/).optional(),
+  WOMPI_INTEGRITY_SECRET: z.string().regex(/^test_integrity_[A-Za-z0-9_-]+$/).optional(),
+  WOMPI_EVENTS_SECRET: z.string().regex(/^test_events_[A-Za-z0-9_-]+$/).optional(),
+  WOMPI_PRIVATE_KEY: z.string().regex(/^prv_test_[A-Za-z0-9_-]+$/).optional(),
+
   // Fase 3
   FINCARAIZ_API_KEY: z.string().optional(),
 });

@@ -19,7 +19,9 @@ Hay dos usos históricos del término “Fase 2” en los documentos del proyect
    aproximadamente al 92%.
 2. La Fase 2 comercial/expansión, que incluye planes, alertas, rentabilidad,
    comparador, administración, pagos e integraciones, queda aproximadamente al
-   74% con este corte.
+   79% con el corte local de Wompi Sandbox. La migración ya está aplicada; el
+   80% solo se certificará después de completar una transacción de prueba de
+   extremo a extremo con credenciales reales del comercio.
 
 La conclusión honesta es: el producto supera el 80% comprometido para Fase 1 y
 la Fase 2 comercial ya tiene un recorrido demostrable en local. El proveedor de
@@ -32,8 +34,18 @@ como monetización ni como una automatización semanal operativa en producción.
 
 - Catálogo de planes Explorador y Radar Pro servido por API.
 - Página pública `/planes` responsive.
-- Precio Pro explícitamente “por definir con el cliente”.
-- Ningún cobro automático ni botón que simule una compra.
+- Oferta demo definida en $49.900 COP por 30 días y renovación manual.
+- Integración Web Checkout preparada exclusivamente para Wompi Sandbox.
+- Firma de integridad SHA-256 generada en servidor; los secretos no llegan al
+  navegador.
+- Página `/pago` para estado pendiente, aprobado, rechazado, error o anulado.
+- Webhook firmado como fuente autoritativa; el retorno del navegador nunca
+  activa permisos.
+- Migración `radar_payments` con RLS, referencias opacas e idempotencia
+  transaccional aplicada y verificada en el proyecto remoto.
+- Vigencia automática de 30 días; después del vencimiento se pierde el acceso
+  Pro hasta una renovación manual.
+- Ningún cobro real ni renovación automática en este corte.
 - Registro de interés comercial en la cuenta del usuario.
 - Compatibilidad con las marcas históricas `suscrito`, `premium` y la nueva
   denominación `pro`.
@@ -111,16 +123,18 @@ como monetización ni como una automatización semanal operativa en producción.
 | Comparador y exportación | 15% | 85% | 12,8 |
 | Canon y rentabilidad | 15% | 35% | 5,3 |
 | Administración | 10% | 90% | 9,0 |
-| Pagos e integraciones externas | 10% | 10% | 1,0 |
-| **Total** | **100%** |  | **73,6% ≈ 74%** |
+| Pagos e integraciones externas | 10% | 65% | 6,5 |
+| **Total** | **100%** |  | **79,1% ≈ 79%** |
 
 Este porcentaje no reduce el 84% de Fase 1. Mide un alcance adicional que todavía
-depende de decisiones comerciales, credenciales y proveedores.
+depende de credenciales y proveedores. Cuando la migración se aplique y el
+checkout Sandbox confirme una compra de punta a punta, este bloque sube a 80%
+o más sin atribuirle cobros reales.
 
 ## 4. Evidencia de calidad local
 
 - TypeScript: sin errores.
-- Pruebas unitarias e integración: 113/113 aprobadas.
+- Pruebas unitarias e integración: 118/118 aprobadas.
 - Recorridos E2E: 6/6 aprobados.
 - Errores de JavaScript observados: 0.
 - QA visual en 1440 × 1000 y 375 × 812.
@@ -148,6 +162,8 @@ depende de decisiones comerciales, credenciales y proveedores.
 - Herramienta de backup lógico con checksum, manifiesto y verificación
   `pg_restore` preparada; restauración en un Supabase de ensayo aún pendiente.
 - No se crearon, modificaron o eliminaron usuarios reales durante el QA.
+- Supabase verificado después de la migración: tabla `radar_payments` disponible
+  con cero registros y RPC `apply_wompi_payment_event` expuesto por PostgREST.
 
 ## 5. Stack vigente
 
@@ -158,6 +174,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 | Frontend | HTML, CSS y JavaScript nativos |
 | Datos | Supabase PostgreSQL, Auth y Storage |
 | Correo transaccional | Resend, dominio verificado e idempotencia por entrega |
+| Pagos demo | Wompi Web Checkout Sandbox, SHA-256 y webhook idempotente |
 | Validación | Zod |
 | Extracción | Firecrawl, Playwright y parsers PDF |
 | Motor | Estadística robusta, comparables e Índice CRECE |
@@ -185,11 +202,19 @@ depende de decisiones comerciales, credenciales y proveedores.
 
 ### Prioridad 2: cerrar planes y pago
 
-- Aprobar precio, moneda, periodicidad, prueba y política de cancelación.
-- Elegir proveedor de pago.
-- Implementar checkout y webhooks.
-- Conectar los webhooks al ciclo de vida de suscripción ya implementado.
-- Probar idempotencia, renovación, fallo de cobro y cancelación.
+- Completado para la demo: $49.900 COP, 30 días y renovación manual.
+- Completado: proveedor Wompi en modo Sandbox.
+- Completado en código: checkout firmado y webhook verificado.
+- Completado en código: activación, anulación, caducidad e idempotencia.
+- Pendiente externo: obtener las llaves de prueba pública, integridad y eventos.
+- Decisión del 25 de julio: aplazar la apertura del comercio Wompi hasta contar
+  con la información real solicitada por el proveedor; no se inventarán datos.
+- Completado: migración aplicada en Supabase y verificada sin crear pagos.
+- Pendiente, cuando se retome Wompi: registrar
+  `https://joinsclee-radar.juno8i.easypanel.host/api/payments/wompi/events`
+  como URL de eventos.
+- Pendiente de aceptación: ejecutar una compra Sandbox aprobada, repetir el
+  webhook y comprobar que solo existe una activación.
 
 ### Prioridad 3: canon observado
 
@@ -211,8 +236,8 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 
 | Dependencia | Decisión necesaria | Estado del código |
 |---|---|---|
-| Precio Radar Pro | Tarifa, periodicidad y beneficios definitivos | Página y catálogo listos |
-| Proveedor de pago | Mercado Pago, Wompi, Stripe u otro | Estados y permisos listos; checkout no seleccionado |
+| Precio Radar Pro | Confirmar si la tarifa demo será la definitiva | Demo $49.900 / 30 días implementada |
+| Wompi Sandbox | Aplazado hasta contar con datos reales del comercio | Código listo y oculto detrás de configuración |
 | Resend | Ejecutar canary dirigido | Proveedor, dominio, secretos y despliegue listos |
 | EasyPanel cron | Validar destinatario y habilitar | Trabajo semanal desplegado pero deshabilitado |
 | Canon de arriendo | Fuente autorizada | Calculadora manual lista |
@@ -221,7 +246,7 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 
 ## 8. Qué no debe afirmarse al cliente todavía
 
-- Que Radar Pro ya cobra o renueva una suscripción.
+- Que Radar Pro ya cobra dinero real o renueva automáticamente.
 - Que las alertas ya llegan a correos reales.
 - Que el canon mostrado proviene de una fuente de mercado.
 - Que Low Ticket o Tradentia ya están integrados.
@@ -242,25 +267,31 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 
 ## 10. Guion de demostración de Fase 2
 
-1. Abrir `/planes` y explicar que no se publica una tarifa no aprobada.
-2. Iniciar sesión y abrir `/cuenta`.
-3. Mostrar preferencias sincronizadas y crear una alerta semanal.
-4. Guardar dos inmuebles y abrir `/comparador`.
-5. Abrir una ficha e ingresar canon y administración en la rentabilidad.
-6. Descargar el archivo de cuenta.
-7. Mostrar `/admin` únicamente con una cuenta autorizada y procesar una solicitud
+1. Abrir `/planes` y mostrar la oferta demo de $49.900 COP por 30 días.
+2. Aclarar que Wompi está en Sandbox, no mueve dinero real y la renovación es
+   manual.
+3. Iniciar sesión y abrir `/cuenta`.
+4. Mostrar preferencias sincronizadas y crear una alerta semanal.
+5. Guardar dos inmuebles y abrir `/comparador`.
+6. Abrir una ficha e ingresar canon y administración en la rentabilidad.
+7. Descargar el archivo de cuenta.
+8. Mostrar `/admin` únicamente con una cuenta autorizada y procesar una solicitud
    de prueba sin presentarla como cobro.
-8. Mostrar cómo un estado `past_due` pausa el acceso Pro en la cuenta.
-9. Cerrar con la lista de dependencias externas para alcanzar 80% de Fase 2.
+9. Mostrar cómo un estado `past_due` pausa el acceso Pro en la cuenta.
+10. Cerrar con las tres credenciales y la prueba de aceptación necesarias para
+    certificar 80% de Fase 2.
 
 ## 11. Dictamen
 
 El producto está listo para una demostración local de Fase 2 y mantiene el
-cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 74%:
+cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 79%:
 la experiencia y la base técnica existen, Resend ya entregó un correo controlado
-y el dominio está verificado; pagos, automatización semanal en producción, canon
-observado e integraciones todavía requieren decisiones y configuración externa.
+y el flujo Wompi está implementado y probado localmente. No se certifica todavía
+el 80% porque faltan las llaves Sandbox y completar una transacción aprobada de
+extremo a extremo.
 
-La recomendación es ejecutar un canary dirigido y habilitar el trabajo semanal
-solo después de revisar el destinatario. Después debe priorizarse pago o canon
-observado para acercar el avance comercial al 80%.
+El canal de correo ya tuvo un canary dirigido, pero el trabajo automático
+permanece deshabilitado. Canon observado e integraciones todavía requieren
+decisiones y configuración externa. Wompi queda preparado pero aplazado; el
+siguiente incremento debe venir de tareas que no dependan de inventar datos del
+comercio.
