@@ -39,7 +39,8 @@ Estado: **en curso**
 - [x] Evitar comparables históricos en fichas del Portal; recalcularlos al abrir para
   que coincidan con el endpoint vigente.
 - [x] Actualizar dependencias compatibles y eliminar vulnerabilidades de severidad alta.
-- [ ] Migrar `node-cron` 3 → 4 y cerrar las dos alertas moderadas restantes de `uuid`.
+- [x] Retirar `node-cron`, que ya no era utilizado, y cerrar las dos alertas
+  moderadas transitivas de `uuid`.
 - [ ] Validar también en ingestión y base de datos; enviar outliers a cuarentena.
 
 Criterio de salida: ninguna cadena externa entra en un sink HTML o URL sin validación,
@@ -89,10 +90,10 @@ primera acción útil sin tener que comprender toda la aplicación.
 
 Estado: **en curso**
 
-- CI para typecheck, pruebas, migraciones y análisis de dependencias.
+- [x] CI para typecheck, pruebas y análisis de dependencias de producción.
 - [x] Pruebas automatizadas de API pública, móvil y recorridos E2E críticos.
 - [x] Suite E2E crítica de seis recorridos, ejecutable en local y producción.
-- [ ] Integrar typecheck, 80 pruebas y E2E en CI.
+- [x] Integrar typecheck, 102 pruebas y smoke E2E diario de producción en CI.
 - Logs estructurados, métricas de latencia, seguimiento de errores y alertas.
 - [x] Endpoint de readiness separado de liveness y apagado controlado con
   `SIGTERM`/`SIGINT`, incluyendo drenaje de conexiones y timeout defensivo.
@@ -100,7 +101,9 @@ Estado: **en curso**
   usuario no-root.
 - [x] Degradación explícita de estadísticas: una caída temporal de Supabase no
   inventa ceros ni rompe la navegación y los resultados.
-- Backups con restauración ensayada, rotación de secretos y runbook de incidentes.
+- [x] Runbook versionado para despliegue, rollback, incidentes, backups y
+  rotación de secretos.
+- [ ] Ejecutar y cronometrar una restauración real en un Supabase de ensayo.
 - Presupuesto de Core Web Vitals y observación de p75.
 
 Criterio de salida: despliegue reproducible, observable y recuperable sin depender de

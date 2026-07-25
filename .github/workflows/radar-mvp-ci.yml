@@ -1,0 +1,94 @@
+name: Radar MVP CI
+
+on:
+  pull_request:
+    paths:
+      - "radar-mvp/**"
+      - ".github/workflows/radar-mvp-ci.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "radar-mvp/**"
+      - ".github/workflows/radar-mvp-ci.yml"
+  schedule:
+    - cron: "17 12 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: radar-mvp-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: TypeScript y pruebas
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: radar-mvp
+    env:
+      SUPABASE_URL: https://ci-placeholder.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key-000000
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: radar-mvp/package-lock.json
+
+      - name: Instalar dependencias reproducibles
+        run: npm ci
+
+      - name: Validar TypeScript
+        run: npm run typecheck
+
+      - name: Ejecutar pruebas unitarias e integración
+        run: npm test
+
+      - name: Auditar dependencias de producción
+        run: npm audit --omit=dev --audit-level=high
+
+  production-smoke:
+    name: Smoke de producción
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: radar-mvp
+    env:
+      E2E_BASE_URL: https://joinsclee-radar.juno8i.easypanel.host
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: radar-mvp/package-lock.json
+
+      - name: Instalar dependencias reproducibles
+        run: npm ci
+
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Validar recorridos críticos en producción
+        run: npm run test:e2e
+
+      - name: Resumir fallo operativo
+        if: failure()
+        run: |
+          echo "## Radar CRECE: smoke de producción falló" >> "$GITHUB_STEP_SUMMARY"
+          echo "Revisar EasyPanel, Supabase y el runbook en radar-mvp/docs/PRODUCTION_RUNBOOK.md." >> "$GITHUB_STEP_SUMMARY"
