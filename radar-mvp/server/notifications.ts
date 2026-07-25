@@ -18,8 +18,35 @@ interface AlertMatch {
   discount_pct: number | null;
 }
 
+export interface AlertDispatchCanary {
+  email: string;
+  alertId: string;
+}
+
+export type AlertDispatchCanaryParseResult =
+  | { ok: true; canary?: AlertDispatchCanary }
+  | { ok: false; error: string };
+
 export function emailDeliveryReady(): boolean {
   return Boolean(env.RESEND_API_KEY && env.ALERTS_FROM_EMAIL);
+}
+
+export function parseAlertDispatchCanary(input: unknown): AlertDispatchCanaryParseResult {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return { ok: true };
+  const body = input as Record<string, unknown>;
+  const rawEmail = typeof body.canaryEmail === 'string' ? body.canaryEmail.trim().toLowerCase() : '';
+  const rawAlertId = typeof body.canaryAlertId === 'string' ? body.canaryAlertId.trim() : '';
+  if (!rawEmail && !rawAlertId) return { ok: true };
+  if (!rawEmail || !rawAlertId) {
+    return { ok: false, error: 'La prueba canario requiere correo e identificador de alerta' };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
+    return { ok: false, error: 'Correo canario inválido' };
+  }
+  if (!/^[A-Za-z0-9-]{1,128}$/.test(rawAlertId)) {
+    return { ok: false, error: 'Identificador de alerta canario inválido' };
+  }
+  return { ok: true, canary: { email: rawEmail, alertId: rawAlertId } };
 }
 
 function escapeHtml(value: unknown): string {
@@ -51,7 +78,13 @@ export function buildAlertDigestHtml(alert: RadarAlert, matches: AlertMatch[]): 
   </body></html>`;
 }
 
-async function alertMatches(alert: RadarAlert): Promise<AlertMatch[]> {
+export function alertMatchSince(alert: RadarAlert, includeExistingMatches = false): string | null {
+  if (includeExistingMatches) return null;
+  const since = alert.lastCheckedAt || alert.createdAt;
+  return Number.isFinite(Date.parse(since)) ? since : null;
+}
+
+async function alertMatches(alert: RadarAlert, includeExistingMatches = false): Promise<AlertMatch[]> {
   let query = supabase
     .from('inmuebles')
     .select('id,source,type,city,price,discount_pct')
@@ -62,8 +95,8 @@ async function alertMatches(alert: RadarAlert): Promise<AlertMatch[]> {
     .limit(12);
   if (alert.type) query = query.eq('type', alert.type);
   if (alert.budget) query = query.lte('price', Number(alert.budget) * 1_000_000);
-  const since = alert.lastCheckedAt || alert.createdAt;
-  if (Number.isFinite(Date.parse(since))) query = query.gte('created_at', since);
+  const since = alertMatchSince(alert, includeExistingMatches);
+  if (since) query = query.gte('first_seen_at', since);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as AlertMatch[];
@@ -113,7 +146,7 @@ async function sendDigest(
   return { sent: true as const, providerMessageId: result.id };
 }
 
-export async function runAlertDispatch(now = new Date()) {
+export async function runAlertDispatch(now = new Date(), canary?: AlertDispatchCanary) {
   if (!emailDeliveryReady()) {
     return {
       ok: false as const,
@@ -133,23 +166,33 @@ export async function runAlertDispatch(now = new Date()) {
   let noMatches = 0;
   let failed = 0;
   const errors: string[] = [];
+  let targetFound = !canary;
+  let targetAlertFound = !canary;
+  let targetAlertActive = !canary;
 
   for (let page = 1; page <= 10; page += 1) {
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) throw new Error(error.message);
-    scannedUsers += data.users.length;
     for (const user of data.users) {
+      if (canary && (user.email ?? '').trim().toLowerCase() !== canary.email) continue;
+      scannedUsers += 1;
+      if (canary) targetFound = true;
       const metadata = { ...(user.user_metadata ?? {}) };
       const alerts = readAlerts(metadata);
       const deliveries = readDeliveryHistory(metadata);
       let changed = false;
       for (const alert of alerts) {
-        if (!isAlertDue(alert, now)) continue;
+        if (canary && alert.id !== canary.alertId) continue;
+        if (canary) {
+          targetAlertFound = true;
+          targetAlertActive = alert.active;
+        }
+        if (canary ? !alert.active : !isAlertDue(alert, now)) continue;
         dueAlerts += 1;
         const attemptedAt = now.toISOString();
         let matchCount = 0;
         try {
-          const matches = await alertMatches(alert);
+          const matches = await alertMatches(alert, Boolean(canary));
           matchCount = matches.length;
           let delivery: RadarDeliveryRecord;
           if (matches.length) {
@@ -223,13 +266,20 @@ export async function runAlertDispatch(now = new Date()) {
         });
         if (updateError) errors.push(`${user.id.slice(0, 8)} metadata ${updateError.message}`);
       }
+      if (canary) break;
     }
+    if (canary && targetFound) break;
     if (data.users.length < 1000) break;
   }
+
+  if (canary && !targetFound) errors.push('Cuenta canario no encontrada');
+  if (canary && targetFound && !targetAlertFound) errors.push('Alerta canario no encontrada');
+  if (canary && targetAlertFound && !targetAlertActive) errors.push('La alerta canario está inactiva');
 
   return {
     ok: errors.length === 0,
     configured: true,
+    mode: canary ? 'canary' as const : 'scheduled' as const,
     scannedUsers,
     dueAlerts,
     sent,
