@@ -13,6 +13,7 @@ depender de memoria o improvisación.
 | `radar-cron` | Scrapers, motor CRECE y alertas programadas | EasyPanel |
 | Supabase | PostgreSQL, Auth y Storage | Supabase |
 | Resend | Correo transaccional | Resend |
+| Wompi Sandbox | Checkout y eventos de pago de prueba | Wompi |
 | GitHub Actions | Calidad en PR y smoke diario de producción | GitHub |
 
 El trabajo `alertas` de `radar_cron_jobs` debe permanecer deshabilitado hasta que
@@ -33,7 +34,7 @@ git diff --check
 Condiciones de salida:
 
 - TypeScript sin errores.
-- 113 pruebas o más aprobadas.
+- 118 pruebas o más aprobadas.
 - 6/6 recorridos E2E aprobados.
 - Sin secretos, `.env`, sesiones o archivos de salida en el diff.
 - PR revisado y checks remotos en verde.
@@ -51,6 +52,15 @@ Condiciones de salida:
    `Dockerfile.cron` o dependencias compartidas.
 6. Nunca activar un trabajo deshabilitado como parte incidental de un
    despliegue.
+
+Si el cambio incluye Wompi, antes de desplegar:
+
+1. Aplicar `supabase/migrations/20260725000002_wompi_demo_payments.sql`.
+2. Configurar en `radar` las llaves de prueba `WOMPI_PUBLIC_KEY`,
+   `WOMPI_INTEGRITY_SECRET` y `WOMPI_EVENTS_SECRET`.
+3. Mantener fuera de `radar-cron` las llaves de pago: ese servicio no las usa.
+4. Registrar en Wompi la URL
+   `https://joinsclee-radar.juno8i.easypanel.host/api/payments/wompi/events`.
 
 ## 4. Verificación posterior
 
@@ -72,7 +82,8 @@ Resultados esperados:
 
 - `/health`: `200`, `ok: true`, estado `alive`.
 - `/ready`: `200`, `ok: true`, estado `ready`.
-- `/api/config`: Supabase público válido y estado del canal de correo.
+- `/api/config`: Supabase público válido, estado del correo y
+  `paymentDemoReady: true` cuando Wompi Sandbox esté habilitado.
 - E2E: 6/6.
 - Sin incremento sostenido de respuestas `500` en los logs.
 
@@ -191,6 +202,9 @@ Secretos a controlar:
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `ALERTS_CRON_SECRET`
+- `WOMPI_INTEGRITY_SECRET`
+- `WOMPI_EVENTS_SECRET`
+- `WOMPI_PRIVATE_KEY` si se habilitan consultas servidor-servidor
 - credenciales de scrapers autenticados
 - claves de proveedores externos
 

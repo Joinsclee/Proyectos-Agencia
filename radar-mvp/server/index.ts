@@ -46,6 +46,12 @@ import {
   runAlertDispatch,
   type AlertDispatchCanary,
 } from './notifications.js';
+import {
+  createWompiCheckout,
+  getWompiPayment,
+  processWompiEvent,
+  wompiPaymentDemoReady,
+} from './payments.js';
 
 const log = createLogger('server');
 const PORT = Number(process.env.PORT ?? 8787);
@@ -198,6 +204,13 @@ const server = createServer(async (req, res) => {
       });
     }
     if (path.startsWith('/api/')) {
+      if (path === '/api/payments/wompi/events') {
+        if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        const checksumHeader = req.headers['x-event-checksum'];
+        const checksum = Array.isArray(checksumHeader) ? checksumHeader[0] : checksumHeader;
+        const result = await processWompiEvent(await readJsonBody(req), checksum);
+        return sendJSON(res, result.status, result);
+      }
       if (path === '/api/plans') {
         if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
         return sendJSON(res, 200, { ok: true, plans: listPlans() });
@@ -259,6 +272,15 @@ const server = createServer(async (req, res) => {
           if (rateLimited(res, `plan-interest:${user.id}`, { limit: 5, windowMs: 24 * 60 * 60 * 1000 })) return;
           const result = await registerPlanInterest(user.id, await readJsonBody(req));
           return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        if (path === '/api/account/checkout' && req.method === 'POST') {
+          if (rateLimited(res, `checkout:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 })) return;
+          const result = await createWompiCheckout(user);
+          return sendJSON(res, result.ok ? 200 : result.status, result);
+        }
+        if (path === '/api/account/payment' && req.method === 'GET') {
+          const result = await getWompiPayment(user.id, url.searchParams.get('reference'));
+          return sendJSON(res, result.ok ? 200 : result.status, result);
         }
         if (path === '/api/account/export' && req.method === 'GET') {
           return sendDownload(res, `radar-cuenta-${user.id.slice(0, 8)}.json`, await exportAccount(user.id));
@@ -395,6 +417,7 @@ const server = createServer(async (req, res) => {
       if (path === '/api/config') return sendJSON(res, 200, {
         supabaseUrl: env.SUPABASE_URL,
         alertEmailDeliveryReady: emailDeliveryReady(),
+        paymentDemoReady: wompiPaymentDemoReady(),
       });
       return sendJSON(res, 404, { error: 'ruta API no encontrada' });
     }
@@ -402,6 +425,7 @@ const server = createServer(async (req, res) => {
     if (path === '/auth/callback') return await serveStatic(res, '/auth-callback.html');
     if (path === '/planes') return await serveStatic(res, '/planes.html');
     if (path === '/cuenta') return await serveStatic(res, '/cuenta.html');
+    if (path === '/pago') return await serveStatic(res, '/pago.html');
     if (path === '/comparador') return await serveStatic(res, '/comparador.html');
     if (path === '/admin') return await serveStatic(res, '/admin.html');
     return await serveStatic(res, path);

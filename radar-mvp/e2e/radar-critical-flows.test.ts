@@ -206,19 +206,25 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     }
   });
 
-  test('expone la base comercial de Fase 2 sin fingir cobros ni permisos', async () => {
+  test('expone el checkout demo de Fase 2 sin abrir rutas protegidas', async () => {
     const { context, page, assertClean } = await openIsolatedPage();
     try {
       const plansApi = await page.request.get(`${baseUrl}/api/plans`);
       assert.equal(plansApi.status(), 200);
       const plans = (await plansApi.json()).plans;
       assert.deepEqual(plans.map((plan: { code: string }) => plan.code), ['free', 'pro']);
-      assert.equal(plans[1].priceMonthlyCop, null);
+      assert.equal(plans[1].priceMonthlyCop, 49_900);
+      assert.equal(plans[1].billingPeriodDays, 30);
+      assert.equal(plans[1].renewalMode, 'manual');
 
       const accountApi = await page.request.get(`${baseUrl}/api/account`);
       assert.equal(accountApi.status(), 401);
       const csvExport = await page.request.get(`${baseUrl}/api/account/export.csv`);
       assert.equal(csvExport.status(), 401);
+      const checkout = await page.request.post(`${baseUrl}/api/account/checkout`);
+      assert.equal(checkout.status(), 401);
+      const payment = await page.request.get(`${baseUrl}/api/account/payment?reference=RADAR-ABC123ABC123ABC123ABC123`);
+      assert.equal(payment.status(), 401);
       const adminApi = await page.request.get(`${baseUrl}/api/admin/summary`);
       assert.equal(adminApi.status(), 401);
       const commercialQueue = await page.request.get(`${baseUrl}/api/admin/plan-interests`);
@@ -239,8 +245,15 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
 
       await page.goto(`${baseUrl}/planes`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Elige cuánto quieres profundizar' }).waitFor();
-      await page.getByText('Por definir').waitFor();
-      assert.equal(await page.getByText('No se realizará ningún cargo desde esta versión.').count(), 1);
+      await page.getByText('$49.900', { exact: false }).waitFor();
+      await page.getByText('Piloto Pro', { exact: true }).waitFor();
+      assert.equal(await page.getByText('sin cobros automáticos', { exact: false }).count() >= 1, true);
+      await page.screenshot({ path: `${screenshotsDir}/06-planes-wompi-demo.png`, fullPage: true });
+
+      await page.goto(`${baseUrl}/pago?reference=RADAR-ABC123ABC123ABC123ABC123`, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('heading', { name: 'Inicia sesión para consultar el pago' }).waitFor();
+      assert.equal(await page.getByText('Wompi Sandbox · entorno de prueba').count(), 1);
+      await page.screenshot({ path: `${screenshotsDir}/07-pago-demo-signed-out.png`, fullPage: true });
 
       await page.goto(`${baseUrl}/cuenta`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Inicia sesión para continuar' }).waitFor();

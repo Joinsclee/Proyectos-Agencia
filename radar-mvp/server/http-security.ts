@@ -7,7 +7,7 @@ const CONTENT_SECURITY_POLICY = [
   "base-uri 'self'",
   "connect-src 'self'",
   "font-src 'self' https://fonts.gstatic.com",
-  "form-action 'self'",
+  "form-action 'self' https://checkout.wompi.co",
   'frame-ancestors \'none\'',
   'frame-src https://www.google.com',
   "img-src 'self' data: https:",

@@ -113,6 +113,11 @@ function renderAccount() {
       : account.plan === 'pro'
     ? 'Tienes acceso a fichas completas y hasta cinco alertas.'
     : 'Puedes explorar el mercado y mantener una alerta semanal.';
+  const validity = document.getElementById('plan-validity');
+  validity.hidden = !account.subscriptionValidUntil;
+  validity.textContent = account.subscriptionValidUntil
+    ? `Vigencia demo hasta ${formatDate(account.subscriptionValidUntil)} · renovación manual`
+    : '';
   document.getElementById('admin-link-card').hidden = account.role !== 'admin';
   const preferences = account.preferences;
   if (preferences) {

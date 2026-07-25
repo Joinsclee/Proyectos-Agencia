@@ -16,8 +16,11 @@ export const PLAN_CATALOG = [
   {
     code: 'pro',
     name: 'Radar Pro',
-    priceMonthlyCop: null,
-    description: 'Para evaluar primero las oportunidades de mayor señal.',
+    priceMonthlyCop: 49_900,
+    billingPeriodDays: 30,
+    renewalMode: 'manual',
+    sandboxDemo: true,
+    description: 'Demo de 30 días para evaluar primero las oportunidades de mayor señal.',
     features: [
       'Fichas completas de oportunidades',
       'Datos de contacto y fuente original',
@@ -38,11 +41,13 @@ export const SubscriptionUpdateSchema = z.object({
 export const SubscriptionAuditEventSchema = z.object({
   id: z.string().uuid(),
   at: z.string().datetime(),
-  actorUserId: z.string().uuid(),
+  actorUserId: z.string().uuid().optional(),
   fromStatus: z.enum(['none', 'interested', 'trialing', 'active', 'past_due', 'canceled']),
   toStatus: z.enum(['none', 'trialing', 'active', 'past_due', 'canceled']),
-  source: z.literal('admin'),
+  source: z.enum(['admin', 'wompi_sandbox']),
   note: z.string().trim().max(500).optional(),
+  providerReference: z.string().trim().max(100).optional(),
+  providerTransactionId: z.string().trim().max(200).optional(),
 }).strict();
 
 export type SubscriptionUpdate = z.infer<typeof SubscriptionUpdateSchema>;
@@ -128,8 +133,13 @@ export function commercialPlanFromMetadata(metadata: Record<string, unknown> | n
 
 export function subscriptionStatusFromMetadata(
   metadata: Record<string, unknown> | null | undefined,
+  now = new Date(),
 ): SubscriptionStatus {
   const value = String(metadata?.subscription_status ?? '').toLowerCase();
+  if (['trialing', 'active'].includes(value) && metadata?.subscription_source === 'wompi_sandbox') {
+    const validUntil = Date.parse(String(metadata.subscription_valid_until ?? ''));
+    if (Number.isFinite(validUntil) && validUntil <= now.getTime()) return 'past_due';
+  }
   if (['none', 'trialing', 'active', 'past_due', 'canceled'].includes(value)) return value as SubscriptionStatus;
   if (commercialPlanFromMetadata(metadata) === 'pro') return 'active';
   if (metadata?.plan_interest) return 'interested';
@@ -143,8 +153,9 @@ export function subscriptionStatusFromMetadata(
  */
 export function entitledPlanFromMetadata(
   metadata: Record<string, unknown> | null | undefined,
+  now = new Date(),
 ): CommercialPlan {
-  const status = subscriptionStatusFromMetadata(metadata);
+  const status = subscriptionStatusFromMetadata(metadata, now);
   return status === 'trialing' || status === 'active' ? 'pro' : 'free';
 }
 

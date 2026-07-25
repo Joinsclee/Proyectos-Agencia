@@ -28,6 +28,14 @@ test('el acceso Pro sigue el estado real de la suscripción', () => {
   assert.equal(entitledPlanFromMetadata({ plan: 'pro', subscription_status: 'past_due' }), 'free');
   assert.equal(entitledPlanFromMetadata({ plan: 'pro', subscription_status: 'canceled' }), 'free');
   assert.equal(entitledPlanFromMetadata({ plan: 'premium' }), 'pro');
+  const expiredSandbox = {
+    plan: 'pro',
+    subscription_status: 'active',
+    subscription_source: 'wompi_sandbox',
+    subscription_valid_until: '2026-07-24T12:00:00.000Z',
+  };
+  assert.equal(subscriptionStatusFromMetadata(expiredSandbox, new Date('2026-07-25T12:00:00.000Z')), 'past_due');
+  assert.equal(entitledPlanFromMetadata(expiredSandbox, new Date('2026-07-25T12:00:00.000Z')), 'free');
 });
 
 test('un plan histórico activo prevalece sobre una solicitud antigua', () => {
@@ -166,4 +174,15 @@ test('valida y limita la auditoría de suscripciones', () => {
   assert.deepEqual(readSubscriptionAudit({
     subscription_audit: [event, { source: 'unknown' }],
   }), [event]);
+
+  const wompiEvent = {
+    id: '7bb8f487-5602-4cec-bfc9-998cb784fb34',
+    at: '2026-07-25T12:00:00.000Z',
+    fromStatus: 'interested',
+    toStatus: 'active',
+    source: 'wompi_sandbox',
+    providerReference: 'RADAR-ABC123ABC123ABC123ABC123',
+    providerTransactionId: 'wompi-transaction-1',
+  };
+  assert.deepEqual(readSubscriptionAudit({ subscription_audit: [wompiEvent] }), [wompiEvent]);
 });
