@@ -91,11 +91,15 @@ Estado: **en curso**
 
 - CI para typecheck, pruebas, migraciones y análisis de dependencias.
 - [x] Pruebas automatizadas de API pública, móvil y recorridos E2E críticos.
-- [x] La misma suite E2E pasa en local y producción (5/5 en cada entorno).
+- [x] Suite E2E crítica de seis recorridos, ejecutable en local y producción.
 - [ ] Integrar typecheck, 80 pruebas y E2E en CI.
 - Logs estructurados, métricas de latencia, seguimiento de errores y alertas.
-- Endpoint de readiness y apagado controlado con `SIGTERM`.
-- Imagen Docker multi-stage y ejecución como usuario no-root.
+- [x] Endpoint de readiness separado de liveness y apagado controlado con
+  `SIGTERM`/`SIGINT`, incluyendo drenaje de conexiones y timeout defensivo.
+- [x] Imagen Docker web multi-stage, dependencias de producción y ejecución como
+  usuario no-root.
+- [x] Degradación explícita de estadísticas: una caída temporal de Supabase no
+  inventa ceros ni rompe la navegación y los resultados.
 - Backups con restauración ensayada, rotación de secretos y runbook de incidentes.
 - Presupuesto de Core Web Vitals y observación de p75.
 
