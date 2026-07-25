@@ -38,7 +38,11 @@ import {
   startScrapingLog,
   finishScrapingLog,
 } from '../../../lib/supabase.js';
-import type { Inmueble, RentalListing } from '../../../lib/types.js';
+import {
+  isReasonableRental,
+  type Inmueble,
+  type RentalListing,
+} from '../../../lib/types.js';
 import { loadActiveZonas, zonaLabel, type RadarZona } from './zonas.js';
 import { mapFincaRaiz, mapFincaRaizRental, isEligible, type FincaRaizRaw } from './parser.js';
 
@@ -125,6 +129,7 @@ interface ZoneStats {
   pages: number;
   seen: number;
   eligible: number;
+  rejected: number;
   total_portal: number;
   completed: boolean; // alcanzó lastPage (no quedó capado por max_pages)
 }
@@ -170,7 +175,15 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
     const hardCap = cliCap ?? zoneCap ?? Infinity;
     const label = zonaLabel(z);
     log.info(`▸ ${label} · ${z.operation}/${z.property_type} (tope ${hardCap === Infinity ? 'auto' : hardCap} págs)`);
-    const st: ZoneStats = { zona: label, pages: 0, seen: 0, eligible: 0, total_portal: 0, completed: false };
+    const st: ZoneStats = {
+      zona: label,
+      pages: 0,
+      seen: 0,
+      eligible: 0,
+      rejected: 0,
+      total_portal: 0,
+      completed: false,
+    };
 
     const ingest = (data: FincaRaizRaw[]) => {
       st.seen += data.length;
@@ -179,7 +192,12 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
           ? mapFincaRaizRental(raw, z)
           : mapFincaRaiz(raw, z);
         if (!it) continue;
-        // Guardamos TODO el baseline; isEligible solo cuenta para el reporte.
+        if (operation === 'arriendo' && !isReasonableRental(it as RentalListing)) {
+          st.rejected++;
+          continue;
+        }
+        // En venta guardamos todo el baseline; isEligible solo cuenta para el
+        // reporte. En arriendo sí excluimos cánones/áreas absurdos antes del buffer.
         if (operation === 'arriendo' || isEligible(it as Inmueble, z)) st.eligible++;
         buffer.push(it);
       }
@@ -221,7 +239,11 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
       await sleep(80 + Math.floor(Math.random() * 120)); // pausa cortés entre lotes
     }
     st.completed = limit >= lastPage; // completo si el tope no cortó antes del final
-    log.info(`  ${label}: ${st.seen} avisos (${st.eligible} en segmento; portal: ${st.total_portal}; ${st.completed ? 'completo' : 'parcial'})`);
+    log.info(
+      `  ${label}: ${st.seen} avisos (${st.eligible} utilizables`
+      + `${st.rejected ? `; ${st.rejected} fuera de rango` : ''}; portal: ${st.total_portal}; `
+      + `${st.completed ? 'completo' : 'parcial'})`,
+    );
     stats.push(st);
   }
 
@@ -245,6 +267,7 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
 
   const totalSeen = stats.reduce((a, s) => a + s.seen, 0);
   const totalEligible = stats.reduce((a, s) => a + s.eligible, 0);
+  const totalRejected = stats.reduce((a, s) => a + s.rejected, 0);
 
   if (!opts.dry) {
     await finishScrapingLog(logId, errors.length === 0 ? 'success' : 'partial', {
@@ -252,12 +275,21 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
       records_inserted: totalInserted,
       records_updated: 0,
       errors,
-      meta: { run_start: runStartISO, zonas: stats, eligible: totalEligible, inactivated, full_run: fullRun },
+      meta: {
+        run_start: runStartISO,
+        zonas: stats,
+        eligible: totalEligible,
+        rejected: totalRejected,
+        inactivated,
+        full_run: fullRun,
+      },
     });
   }
 
   log.info(
-    `✅ FincaRaíz ${modeLabel}: ${totalSeen} avisos (${totalEligible} utilizables) · ${totalInserted} filas${opts.dry ? ' (DRY, no escrito)' : ''}`,
+    `✅ FincaRaíz ${modeLabel}: ${totalSeen} avisos (${totalEligible} utilizables`
+    + `${totalRejected ? `; ${totalRejected} fuera de rango` : ''}) · ${totalInserted} filas`
+    + `${opts.dry ? ' (DRY, no escrito)' : ''}`,
   );
   return { records_found: totalSeen, records_inserted: totalInserted, records_eligible: totalEligible, errors };
 }
