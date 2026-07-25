@@ -47,7 +47,7 @@ los tokens no son accesibles desde JavaScript y un dato imposible no llega a la 
 
 ## Etapa 2 — Navegación móvil y accesibilidad
 
-Estado: **completada localmente, pendiente de revisión del cliente**
+Estado: **completada y desplegada**
 
 - [x] Reemplazar la navegación horizontal superpuesta por navegación móvil dedicada.
 - [x] Llevar resultados y controles por encima del contenido explicativo.
@@ -57,8 +57,8 @@ Estado: **completada localmente, pendiente de revisión del cliente**
 - [x] Garantizar targets táctiles de 44 px y textos alternativos útiles.
 - [x] Poner el formulario de login en el primer viewport móvil.
 
-Validación local: 375 × 812, 390 × 844 y 1440 × 900; sin desbordamiento
-horizontal, navegación de cinco destinos visible y 24 resultados renderizados.
+Validación local y en producción: 375 × 812 y 1440 × 1000; sin desbordamiento
+horizontal, navegación principal visible y resultados renderizados.
 
 Criterio de salida: los flujos Portal, Bancos, Remates, Guardados y Login son utilizables
 con teclado y en 375 px sin elementos ocultos o superpuestos.
@@ -87,10 +87,12 @@ primera acción útil sin tener que comprender toda la aplicación.
 
 ## Etapa 4 — Operación de producción
 
-Estado: **pendiente**
+Estado: **en curso**
 
 - CI para typecheck, pruebas, migraciones y análisis de dependencias.
-- Pruebas de API, autorización, móvil y recorridos E2E.
+- [x] Pruebas automatizadas de API pública, móvil y recorridos E2E críticos.
+- [x] La misma suite E2E pasa en local y producción (5/5 en cada entorno).
+- [ ] Integrar typecheck, 80 pruebas y E2E en CI.
 - Logs estructurados, métricas de latencia, seguimiento de errores y alertas.
 - Endpoint de readiness y apagado controlado con `SIGTERM`.
 - Imagen Docker multi-stage y ejecución como usuario no-root.
@@ -102,9 +104,10 @@ intervención manual improvisada.
 
 ## Etapa 5 — QA, canary y salida
 
-Estado: **pendiente**
+Estado: **en curso**
 
-- QA completo en el dominio final y dispositivos reales.
+- [x] QA automatizado en el dominio final, escritorio y viewport móvil.
+- [ ] QA ampliado en dispositivos físicos y navegadores adicionales.
 - Prueba de carga sobre rutas públicas y de autenticación.
 - Revisión legal de privacidad, marketing y tratamiento de datos.
 - Canary con monitoreo de errores, latencia y calidad de datos.
