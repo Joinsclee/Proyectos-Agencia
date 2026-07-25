@@ -32,7 +32,12 @@ import {
   syncAccount,
   updateAdminSubscription,
 } from './account.js';
-import { applySecurityHeaders, contentTypeFor, createRequestId } from './http-security.js';
+import {
+  allowCrossOriginImageEmbedding,
+  applySecurityHeaders,
+  contentTypeFor,
+  createRequestId,
+} from './http-security.js';
 import { checkRateLimit, clientAddress, type RateLimitPolicy } from './rate-limit.js';
 import { env } from '../lib/env.js';
 import {
@@ -149,11 +154,13 @@ async function serveStatic(res: import('node:http').ServerResponse, pathname: st
   try {
     const file = join(PUBLIC, rel);
     const buf = await readFile(file);
+    const contentType = contentTypeFor(file);
+    allowCrossOriginImageEmbedding(res, contentType);
     // no-cache: el navegador SIEMPRE revalida los estáticos. Evita el bug de
     // assets desincronizados (HTML nuevo + app.js viejo cacheado → pantalla
     // colgada). En producción se versionarían los assets; aquí no-cache basta.
     res.writeHead(200, {
-      'Content-Type': contentTypeFor(file),
+      'Content-Type': contentType,
       'Cache-Control': 'no-cache, must-revalidate',
     });
     res.end(buf);

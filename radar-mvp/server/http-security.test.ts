@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { applySecurityHeaders, contentTypeFor, createRequestId, SECURITY_HEADERS } from './http-security.js';
+import {
+  allowCrossOriginImageEmbedding,
+  applySecurityHeaders,
+  contentTypeFor,
+  createRequestId,
+  SECURITY_HEADERS,
+} from './http-security.js';
 
 describe('HTTP security baseline', () => {
   it('returns exact MIME types for public assets', () => {
@@ -36,5 +42,22 @@ describe('HTTP security baseline', () => {
     const second = createRequestId();
     assert.match(first, /^[0-9a-f-]{36}$/);
     assert.notEqual(first, second);
+  });
+
+  it('permite embeber imágenes públicas sin relajar HTML o scripts', () => {
+    const headers = new Map<string, string>();
+    const response = {
+      setHeader(name: string, value: string) {
+        headers.set(name, value);
+      },
+    };
+
+    applySecurityHeaders(response as never, 'request-123');
+    allowCrossOriginImageEmbedding(response as never, 'image/jpeg');
+    assert.equal(headers.get('Cross-Origin-Resource-Policy'), 'cross-origin');
+
+    applySecurityHeaders(response as never, 'request-456');
+    allowCrossOriginImageEmbedding(response as never, 'text/html; charset=utf-8');
+    assert.equal(headers.get('Cross-Origin-Resource-Policy'), 'same-origin');
   });
 });
