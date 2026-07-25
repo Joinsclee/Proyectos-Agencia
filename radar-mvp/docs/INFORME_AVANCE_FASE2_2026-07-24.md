@@ -19,7 +19,7 @@ Hay dos usos históricos del término “Fase 2” en los documentos del proyect
    aproximadamente al 92%.
 2. La Fase 2 comercial/expansión, que incluye planes, alertas, rentabilidad,
    comparador, administración, pagos e integraciones, queda aproximadamente al
-   73% con este corte.
+   74% con este corte.
 
 La conclusión honesta es: el producto supera el 80% comprometido para Fase 1 y
 la Fase 2 comercial ya tiene un recorrido demostrable en local. El proveedor de
@@ -107,12 +107,12 @@ como monetización ni como una automatización semanal operativa en producción.
 |---|---:|---:|---:|
 | Base comercial, cuenta y UX | 15% | 90% | 13,5 |
 | Planes, acceso y suscripción | 15% | 80% | 12,0 |
-| Alertas y notificaciones | 20% | 97% | 19,4 |
+| Alertas y notificaciones | 20% | 100% | 20,0 |
 | Comparador y exportación | 15% | 85% | 12,8 |
 | Canon y rentabilidad | 15% | 35% | 5,3 |
 | Administración | 10% | 90% | 9,0 |
 | Pagos e integraciones externas | 10% | 10% | 1,0 |
-| **Total** | **100%** |  | **73,0% ≈ 73%** |
+| **Total** | **100%** |  | **73,6% ≈ 74%** |
 
 Este porcentaje no reduce el 84% de Fase 1. Mide un alcance adicional que todavía
 depende de decisiones comerciales, credenciales y proveedores.
@@ -120,7 +120,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 ## 4. Evidencia de calidad local
 
 - TypeScript: sin errores.
-- Pruebas unitarias e integración: 98/98 aprobadas.
+- Pruebas unitarias e integración: 113/113 aprobadas.
 - Recorridos E2E: 6/6 aprobados.
 - Errores de JavaScript observados: 0.
 - QA visual en 1440 × 1000 y 375 × 812.
@@ -140,8 +140,13 @@ depende de decisiones comerciales, credenciales y proveedores.
 - Secretos guardados en EasyPanel para `radar` y `radar-cron`.
 - Servicios `radar` y `radar-cron` desplegados desde el merge del PR #2.
 - Producción responde `alertEmailDeliveryReady: true`.
+- Canary dirigido entregado correctamente a la cuenta autorizada.
 - Trabajo persistido en Supabase con cadencia de siete días y
-  `habilitado=false` hasta completar el canary dirigido.
+  `habilitado=false` hasta la aprobación explícita de la automatización.
+- Monitor sintético con presupuestos de latencia, reporte auditable e incidentes
+  automáticos preparado y validado contra producción.
+- Herramienta de backup lógico con checksum, manifiesto y verificación
+  `pg_restore` preparada; restauración en un Supabase de ensayo aún pendiente.
 - No se crearon, modificaron o eliminaron usuarios reales durante el QA.
 
 ## 5. Stack vigente
@@ -172,8 +177,9 @@ depende de decisiones comerciales, credenciales y proveedores.
 - Completado en código: trabajo semanal posterior al motor y migración segura.
 - Completado: secretos guardados en EasyPanel y servicios desplegados.
 - Completado: trabajo persistido en Supabase y deshabilitado hasta el canary.
-- Pendiente: ejecutar un canary de producción dirigido a una cuenta autorizada.
-- Pendiente: habilitar el trabajo semanal después de validar el destinatario.
+- Completado: canary de producción dirigido a una cuenta autorizada.
+- Pendiente: aprobar expresamente y habilitar el trabajo semanal; el destinatario
+  canario ya fue validado.
 - Migrar el historial de metadata a una tabla dedicada cuando el volumen lo
   justifique.
 
@@ -250,7 +256,7 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 ## 11. Dictamen
 
 El producto está listo para una demostración local de Fase 2 y mantiene el
-cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 73%:
+cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 74%:
 la experiencia y la base técnica existen, Resend ya entregó un correo controlado
 y el dominio está verificado; pagos, automatización semanal en producción, canon
 observado e integraciones todavía requieren decisiones y configuración externa.

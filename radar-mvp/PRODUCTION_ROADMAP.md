@@ -93,8 +93,10 @@ Estado: **en curso**
 - [x] CI para typecheck, pruebas y análisis de dependencias de producción.
 - [x] Pruebas automatizadas de API pública, móvil y recorridos E2E críticos.
 - [x] Suite E2E crítica de seis recorridos, ejecutable en local y producción.
-- [x] Integrar typecheck, 102 pruebas y smoke E2E diario de producción en CI.
-- Logs estructurados, métricas de latencia, seguimiento de errores y alertas.
+- [x] Integrar typecheck, 113 pruebas y smoke E2E diario de producción en CI.
+- [x] Monitor sintético de liveness, readiness y configuración con presupuestos
+  de latencia, artefacto auditable e issue automático de incidente/recuperación.
+- [ ] Centralizar logs, errores y trazas; calcular latencia p75 por ruta.
 - [x] Endpoint de readiness separado de liveness y apagado controlado con
   `SIGTERM`/`SIGINT`, incluyendo drenaje de conexiones y timeout defensivo.
 - [x] Imagen Docker web multi-stage, dependencias de producción y ejecución como
@@ -103,6 +105,8 @@ Estado: **en curso**
   inventa ceros ni rompe la navegación y los resultados.
 - [x] Runbook versionado para despliegue, rollback, incidentes, backups y
   rotación de secretos.
+- [x] Automatizar creación de backup lógico, checksum, manifiesto y verificación
+  de archivo sin credenciales.
 - [ ] Ejecutar y cronometrar una restauración real en un Supabase de ensayo.
 - Presupuesto de Core Web Vitals y observación de p75.
 
