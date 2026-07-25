@@ -4,6 +4,7 @@
  * Cadencias (decisión del cliente, 2026-07-20):
  *   · fincaraiz → cada  7 días   · remates → cada  7 días
  *   · bancos    → cada  7 días   · motor   → cada  1 día
+ *   · alertas   → cada  7 días (se habilita después del canary de correo)
  *
  * Los bancos se verifican semanalmente para cumplir la cadencia acordada con el
  * cliente y mantener alineadas todas las fuentes del Radar.
@@ -51,6 +52,11 @@ const TAREAS: Record<string, () => Promise<unknown>> = {
     // sus campos jurídicos al día.
     await (await import('../scripts/clasificar-remates.js')).clasificarRemates(false);
     return (await import('../engine/run.js')).run();
+  },
+  alertas: async () => {
+    // Se ejecuta al final para que el correo use las oportunidades ya
+    // actualizadas por los scrapers y el motor.
+    return (await import('../server/notifications.js')).runAlertDispatch();
   },
 };
 
@@ -128,8 +134,9 @@ export async function revisar(forzar?: string) {
     log.info(`Nada pendiente. Próximas: ${prox || '—'}`);
     return;
   }
-  // Orden importante: el motor va al final, para clasificar con los datos nuevos.
-  const orden = ['fincaraiz', 'bancos', 'remates', 'motor'];
+  // Orden importante: el motor clasifica los datos nuevos y las alertas salen
+  // después, para no enviar coincidencias calculadas sobre un corte anterior.
+  const orden = ['fincaraiz', 'bancos', 'remates', 'motor', 'alertas'];
   pendientes.sort((a, b) => orden.indexOf(a.nombre) - orden.indexOf(b.nombre));
   log.info(`Pendientes: ${pendientes.map((p) => p.nombre).join(', ')}`);
   for (const j of pendientes) await ejecutar(j.nombre);

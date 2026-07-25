@@ -2,10 +2,10 @@
 
 ## Informe de avance de producto y Fase 2
 
-**Corte:** 24 de julio de 2026  
+**Corte:** 25 de julio de 2026
 **Estado:** corte funcional validado localmente  
 **Producción vigente:** `https://joinsclee-radar.juno8i.easypanel.host/`  
-**Versión local de Fase 2:** commit `cc6c0e0`
+**Versión local de Fase 2:** commit `b4b25e1`
 
 ## 1. Resumen ejecutivo
 
@@ -19,11 +19,12 @@ Hay dos usos históricos del término “Fase 2” en los documentos del proyect
    aproximadamente al 92%.
 2. La Fase 2 comercial/expansión, que incluye planes, alertas, rentabilidad,
    comparador, administración, pagos e integraciones, queda aproximadamente al
-   71% con este corte.
+   73% con este corte.
 
 La conclusión honesta es: el producto supera el 80% comprometido para Fase 1 y
-la Fase 2 comercial ya tiene un recorrido demostrable en local, pero todavía no
-debe venderse como monetización o notificaciones plenamente operativas.
+la Fase 2 comercial ya tiene un recorrido demostrable en local. El proveedor de
+correo y el dominio de envío quedaron validados, pero todavía no debe venderse
+como monetización ni como una automatización semanal operativa en producción.
 
 ## 2. Qué se implementó en este corte
 
@@ -65,6 +66,9 @@ debe venderse como monetización o notificaciones plenamente operativas.
 - Historial de envíos, ciclos sin coincidencias y fallos.
 - Reintentos a 15 minutos, una hora, seis horas y veinticuatro horas.
 - Endpoint interno protegido para ejecutar el ciclo.
+- Trabajo semanal integrado al planificador persistido después del motor.
+- Migración preparada con el trabajo `alertas` deshabilitado por defecto, para
+  impedir envíos antes del canary.
 - Degradación segura: sin proveedor o secreto, el sistema responde que el canal
   no está configurado y no finge un envío.
 
@@ -103,12 +107,12 @@ debe venderse como monetización o notificaciones plenamente operativas.
 |---|---:|---:|---:|
 | Base comercial, cuenta y UX | 15% | 90% | 13,5 |
 | Planes, acceso y suscripción | 15% | 80% | 12,0 |
-| Alertas y notificaciones | 20% | 85% | 17,0 |
+| Alertas y notificaciones | 20% | 95% | 19,0 |
 | Comparador y exportación | 15% | 85% | 12,8 |
 | Canon y rentabilidad | 15% | 35% | 5,3 |
 | Administración | 10% | 90% | 9,0 |
 | Pagos e integraciones externas | 10% | 10% | 1,0 |
-| **Total** | **100%** |  | **70,6% ≈ 71%** |
+| **Total** | **100%** |  | **72,6% ≈ 73%** |
 
 Este porcentaje no reduce el 84% de Fase 1. Mide un alcance adicional que todavía
 depende de decisiones comerciales, credenciales y proveedores.
@@ -116,7 +120,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 ## 4. Evidencia de calidad local
 
 - TypeScript: sin errores.
-- Pruebas unitarias e integración: 97/97 aprobadas.
+- Pruebas unitarias e integración: 98/98 aprobadas.
 - Recorridos E2E: 6/6 aprobados.
 - Errores de JavaScript observados: 0.
 - QA visual en 1440 × 1000 y 375 × 812.
@@ -125,6 +129,14 @@ depende de decisiones comerciales, credenciales y proveedores.
 - API de cuenta sin token: 401.
 - APIs administrativas y mutación de suscripción sin token: 401.
 - Ejecutor de alertas sin configuración: 503 seguro.
+- Plan gratuito de Resend confirmado: 3.000 correos mensuales y 100 diarios.
+- Dominio `joinsclee.com` verificado en Resend.
+- Clave de pruebas restringida exclusivamente a envío y al dominio verificado.
+- Instancia local temporal con `alertEmailDeliveryReady: true`.
+- Envío controlado desde `radar@joinsclee.com` aceptado y entregado por Resend
+  al buzón seguro `delivered@resend.dev`.
+- Identificador auditable de la prueba:
+  `895fb08a-0c5c-4390-8e6e-e913a591c85c`.
 - No se crearon, modificaron o eliminaron usuarios reales durante el QA.
 
 ## 5. Stack vigente
@@ -135,6 +147,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 | Servidor | HTTP nativo de Node y API JSON |
 | Frontend | HTML, CSS y JavaScript nativos |
 | Datos | Supabase PostgreSQL, Auth y Storage |
+| Correo transaccional | Resend, dominio verificado e idempotencia por entrega |
 | Validación | Zod |
 | Extracción | Firecrawl, Playwright y parsers PDF |
 | Motor | Estadística robusta, comparables e Índice CRECE |
@@ -146,12 +159,16 @@ depende de decisiones comerciales, credenciales y proveedores.
 
 ### Prioridad 1: activar alertas reales
 
-- Crear o aprobar una cuenta de Resend.
-- Verificar el dominio de envío.
-- Configurar `RESEND_API_KEY`, `ALERTS_FROM_EMAIL`,
+- Completado: cuenta gratuita de Resend disponible.
+- Completado: dominio `joinsclee.com` verificado.
+- Completado: envío controlado y estado `delivered` comprobado.
+- Completado en local temporal: `RESEND_API_KEY`, `ALERTS_FROM_EMAIL`,
   `ALERTS_CRON_SECRET` y `APP_BASE_URL`.
-- Crear el trabajo semanal en EasyPanel.
-- Ejecutar un envío controlado a correos de prueba.
+- Completado en código: trabajo semanal posterior al motor y migración segura.
+- Pendiente: guardar las variables como secretos de EasyPanel sin exponerlas.
+- Pendiente: aplicar la migración y mantener el trabajo deshabilitado hasta el
+  canary.
+- Ejecutar un canary de producción dirigido a una cuenta autorizada.
 - Migrar el historial de metadata a una tabla dedicada cuando el volumen lo
   justifique.
 
@@ -185,7 +202,7 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 |---|---|---|
 | Precio Radar Pro | Tarifa, periodicidad y beneficios definitivos | Página y catálogo listos |
 | Proveedor de pago | Mercado Pago, Wompi, Stripe u otro | Estados y permisos listos; checkout no seleccionado |
-| Resend | Cuenta, dominio y API key | Adaptador listo |
+| Resend | Guardar secretos en EasyPanel y ejecutar canary | Proveedor, dominio y envío local validados |
 | EasyPanel cron | Secreto y horario semanal | Endpoint listo |
 | Canon de arriendo | Fuente autorizada | Calculadora manual lista |
 | Low Ticket/Tradentia | API, contrato o especificación | Pendiente externo |
@@ -228,11 +245,12 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 ## 11. Dictamen
 
 El producto está listo para una demostración local de Fase 2 y mantiene el
-cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 71%:
-la experiencia y la base técnica existen, mientras que pagos, entrega de correo,
-canon observado e integraciones todavía requieren decisiones y configuración
-externa.
+cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 73%:
+la experiencia y la base técnica existen, Resend ya entregó un correo controlado
+y el dominio está verificado; pagos, automatización semanal en producción, canon
+observado e integraciones todavía requieren decisiones y configuración externa.
 
-La recomendación es no desplegar este corte hasta aprobar el texto comercial,
-configurar el primer canal externo y repetir el smoke test local. Después puede
-publicarse mediante PR y despliegue controlado.
+La recomendación es guardar los secretos en EasyPanel, crear el cron semanal y
+ejecutar un canary dirigido antes de afirmar que las alertas están operativas en
+producción. Después debe priorizarse pago o canon observado para acercar el
+avance comercial al 80%.
