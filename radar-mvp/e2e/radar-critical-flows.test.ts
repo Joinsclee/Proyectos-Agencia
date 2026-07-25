@@ -193,6 +193,36 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     }
   });
 
+  test('expone la base comercial de Fase 2 sin fingir cobros ni permisos', async () => {
+    const { context, page, assertClean } = await openIsolatedPage();
+    try {
+      const plansApi = await page.request.get(`${baseUrl}/api/plans`);
+      assert.equal(plansApi.status(), 200);
+      const plans = (await plansApi.json()).plans;
+      assert.deepEqual(plans.map((plan: { code: string }) => plan.code), ['free', 'pro']);
+      assert.equal(plans[1].priceMonthlyCop, null);
+
+      const accountApi = await page.request.get(`${baseUrl}/api/account`);
+      assert.equal(accountApi.status(), 401);
+      const adminApi = await page.request.get(`${baseUrl}/api/admin/summary`);
+      assert.equal(adminApi.status(), 401);
+
+      await page.goto(`${baseUrl}/planes`, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('heading', { name: 'Elige cuánto quieres profundizar' }).waitFor();
+      await page.getByText('Por definir').waitFor();
+      assert.equal(await page.getByText('No se realizará ningún cargo desde esta versión.').count(), 1);
+
+      await page.goto(`${baseUrl}/cuenta`, { waitUntil: 'domcontentloaded' });
+      await page.getByRole('heading', { name: 'Inicia sesión para continuar' }).waitFor();
+
+      await page.goto(`${baseUrl}/comparador`, { waitUntil: 'domcontentloaded' });
+      await page.waitForURL(/\/login$/);
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
   test('ofrece navegación y filtros utilizables en móvil', async () => {
     const { context, page, assertClean } = await openIsolatedPage({ mobile: true });
     try {

@@ -20,8 +20,9 @@ export interface AuthUser {
   id: string;
   email: string;
   name?: string;
-  /** 'free' | 'suscrito'. Decide si se entregan las fichas de oportunidad. */
+  /** 'free' | 'suscrito' | 'pro'. Decide si se entregan las fichas de oportunidad. */
   plan?: string;
+  role?: 'user' | 'admin';
 }
 
 const MAX_FAVS = 500;
@@ -37,6 +38,9 @@ export async function getUserFromToken(token: string | null): Promise<AuthUser |
     name: (data.user.user_metadata?.name as string | undefined) ?? undefined,
     // Plan de suscripción: decide si se entregan las fichas de oportunidad.
     plan: (data.user.user_metadata?.plan as string | undefined) ?? 'free',
+    role: data.user.user_metadata?.role === 'admin' || data.user.user_metadata?.is_admin === true
+      ? 'admin'
+      : 'user',
   };
 }
 
