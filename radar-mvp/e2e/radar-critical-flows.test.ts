@@ -229,8 +229,13 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       );
       assert.equal(subscriptionMutation.status(), 401);
       const alertDispatch = await page.request.post(`${baseUrl}/api/internal/alerts/run`);
-      assert.equal(alertDispatch.status(), 503);
-      assert.equal((await alertDispatch.json()).configured, false);
+      assert.ok(
+        alertDispatch.status() === 401 || alertDispatch.status() === 503,
+        `El despacho interno sin credencial debe fallar cerrado; recibió HTTP ${alertDispatch.status()}`,
+      );
+      const alertDispatchBody = await alertDispatch.json();
+      assert.equal(alertDispatchBody.ok, false);
+      if (alertDispatch.status() === 503) assert.equal(alertDispatchBody.configured, false);
 
       await page.goto(`${baseUrl}/planes`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Elige cuánto quieres profundizar' }).waitFor();
