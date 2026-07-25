@@ -79,7 +79,11 @@ function setMode(nextMode) {
   $('title').textContent = register ? 'Crea tu cuenta' : 'Bienvenido de nuevo';
   $('subtitle').textContent = pendingSubtitle(register);
   $('submit').textContent = register ? 'Crear cuenta gratis →' : 'Iniciar sesión →';
-  $('password').setAttribute('autocomplete', register ? 'new-password' : 'current-password');
+  const password = $('password');
+  password.setAttribute('autocomplete', register ? 'new-password' : 'current-password');
+  password.setAttribute('placeholder', register ? 'Mínimo 8 caracteres' : 'Tu contraseña');
+  if (register) password.setAttribute('minlength', '8');
+  else password.removeAttribute('minlength');
   hideMsg();
 }
 
