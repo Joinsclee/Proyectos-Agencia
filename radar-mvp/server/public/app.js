@@ -338,10 +338,13 @@ function setResultText(text) {
 
 async function buildFilters() {
   const tab = state.tab;
+  const controls = document.querySelector('.controls');
+  const workspace = $('search-workspace');
+  const filtersAreRelevant = tab !== 'guardados';
+  if (controls) controls.hidden = !filtersAreRelevant;
+  if (workspace) workspace.classList.toggle('is-results-only', !filtersAreRelevant);
   if (tab === 'guardados') {
-    $('filters').innerHTML = auth.token
-      ? `<div class="f-note">${ic('heart')} Tus inmuebles guardados y sincronizados</div>`
-      : `<div class="f-note">${ic('heart')} Guardados en este dispositivo · <a href="/login">Sincronizar con una cuenta</a></div>`;
+    $('filters').innerHTML = '';
     updateFilterCount();
     return;
   }
