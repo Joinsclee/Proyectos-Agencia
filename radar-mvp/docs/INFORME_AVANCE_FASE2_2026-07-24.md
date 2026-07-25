@@ -3,9 +3,9 @@
 ## Informe de avance de producto y Fase 2
 
 **Corte:** 25 de julio de 2026
-**Estado:** corte funcional validado localmente  
+**Estado:** corte funcional validado localmente y desplegado
 **Producción vigente:** `https://joinsclee-radar.juno8i.easypanel.host/`  
-**Versión local de Fase 2:** commit `b4b25e1`
+**Versión desplegada de Fase 2:** PR #2, merge `b89770c`
 
 ## 1. Resumen ejecutivo
 
@@ -107,12 +107,12 @@ como monetización ni como una automatización semanal operativa en producción.
 |---|---:|---:|---:|
 | Base comercial, cuenta y UX | 15% | 90% | 13,5 |
 | Planes, acceso y suscripción | 15% | 80% | 12,0 |
-| Alertas y notificaciones | 20% | 95% | 19,0 |
+| Alertas y notificaciones | 20% | 97% | 19,4 |
 | Comparador y exportación | 15% | 85% | 12,8 |
 | Canon y rentabilidad | 15% | 35% | 5,3 |
 | Administración | 10% | 90% | 9,0 |
 | Pagos e integraciones externas | 10% | 10% | 1,0 |
-| **Total** | **100%** |  | **72,6% ≈ 73%** |
+| **Total** | **100%** |  | **73,0% ≈ 73%** |
 
 Este porcentaje no reduce el 84% de Fase 1. Mide un alcance adicional que todavía
 depende de decisiones comerciales, credenciales y proveedores.
@@ -137,6 +137,11 @@ depende de decisiones comerciales, credenciales y proveedores.
   al buzón seguro `delivered@resend.dev`.
 - Identificador auditable de la prueba:
   `895fb08a-0c5c-4390-8e6e-e913a591c85c`.
+- Secretos guardados en EasyPanel para `radar` y `radar-cron`.
+- Servicios `radar` y `radar-cron` desplegados desde el merge del PR #2.
+- Producción responde `alertEmailDeliveryReady: true`.
+- Trabajo persistido en Supabase con cadencia de siete días y
+  `habilitado=false` hasta completar el canary dirigido.
 - No se crearon, modificaron o eliminaron usuarios reales durante el QA.
 
 ## 5. Stack vigente
@@ -165,10 +170,10 @@ depende de decisiones comerciales, credenciales y proveedores.
 - Completado en local temporal: `RESEND_API_KEY`, `ALERTS_FROM_EMAIL`,
   `ALERTS_CRON_SECRET` y `APP_BASE_URL`.
 - Completado en código: trabajo semanal posterior al motor y migración segura.
-- Pendiente: guardar las variables como secretos de EasyPanel sin exponerlas.
-- Pendiente: aplicar la migración y mantener el trabajo deshabilitado hasta el
-  canary.
-- Ejecutar un canary de producción dirigido a una cuenta autorizada.
+- Completado: secretos guardados en EasyPanel y servicios desplegados.
+- Completado: trabajo persistido en Supabase y deshabilitado hasta el canary.
+- Pendiente: ejecutar un canary de producción dirigido a una cuenta autorizada.
+- Pendiente: habilitar el trabajo semanal después de validar el destinatario.
 - Migrar el historial de metadata a una tabla dedicada cuando el volumen lo
   justifique.
 
@@ -202,8 +207,8 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 |---|---|---|
 | Precio Radar Pro | Tarifa, periodicidad y beneficios definitivos | Página y catálogo listos |
 | Proveedor de pago | Mercado Pago, Wompi, Stripe u otro | Estados y permisos listos; checkout no seleccionado |
-| Resend | Guardar secretos en EasyPanel y ejecutar canary | Proveedor, dominio y envío local validados |
-| EasyPanel cron | Secreto y horario semanal | Endpoint listo |
+| Resend | Ejecutar canary dirigido | Proveedor, dominio, secretos y despliegue listos |
+| EasyPanel cron | Validar destinatario y habilitar | Trabajo semanal desplegado pero deshabilitado |
 | Canon de arriendo | Fuente autorizada | Calculadora manual lista |
 | Low Ticket/Tradentia | API, contrato o especificación | Pendiente externo |
 | Rol administrador | Usuario que debe recibirlo | Control de acceso listo |
@@ -250,7 +255,6 @@ la experiencia y la base técnica existen, Resend ya entregó un correo controla
 y el dominio está verificado; pagos, automatización semanal en producción, canon
 observado e integraciones todavía requieren decisiones y configuración externa.
 
-La recomendación es guardar los secretos en EasyPanel, crear el cron semanal y
-ejecutar un canary dirigido antes de afirmar que las alertas están operativas en
-producción. Después debe priorizarse pago o canon observado para acercar el
-avance comercial al 80%.
+La recomendación es ejecutar un canary dirigido y habilitar el trabajo semanal
+solo después de revisar el destinatario. Después debe priorizarse pago o canon
+observado para acercar el avance comercial al 80%.
