@@ -22,6 +22,7 @@ import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } f
 import {
   deleteAlert,
   exportAccount,
+  exportAccountCsv,
   getAccount,
   getAdminSummary,
   listPlans,
@@ -30,6 +31,7 @@ import {
   syncAccount,
 } from './account.js';
 import { applySecurityHeaders, contentTypeFor, createRequestId } from './http-security.js';
+import { checkRateLimit, clientAddress, type RateLimitPolicy } from './rate-limit.js';
 import { env } from '../lib/env.js';
 import { emailDeliveryReady, runAlertDispatch } from './notifications.js';
 
@@ -55,6 +57,36 @@ function sendDownload(
     'Cache-Control': 'no-store',
   });
   res.end(payload);
+}
+
+function sendTextDownload(
+  res: import('node:http').ServerResponse,
+  filename: string,
+  contentType: string,
+  body: string,
+) {
+  res.writeHead(200, {
+    'Content-Type': contentType,
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Cache-Control': 'no-store',
+  });
+  res.end(body);
+}
+
+function rateLimited(
+  res: import('node:http').ServerResponse,
+  key: string,
+  policy: RateLimitPolicy,
+): boolean {
+  const result = checkRateLimit(key, policy);
+  if (result.allowed) return false;
+  res.setHeader('Retry-After', String(result.retryAfterSeconds));
+  sendJSON(res, 429, {
+    ok: false,
+    error: 'Demasiadas solicitudes. Intenta de nuevo más tarde.',
+    retryAfterSeconds: result.retryAfterSeconds,
+  });
+  return true;
 }
 
 async function readJsonBody(req: import('node:http').IncomingMessage): Promise<unknown> {
@@ -153,6 +185,7 @@ const server = createServer(async (req, res) => {
       // ── Auth (POST) ──
       if (path === '/api/auth/register' || path === '/api/auth/login') {
         if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (rateLimited(res, `auth:${clientAddress(req)}`, { limit: 20, windowMs: 15 * 60 * 1000 })) return;
         const body = await readJsonBody(req);
         const result = path.endsWith('register') ? await registerUser(body) : await loginUser(body);
         return sendJSON(res, result.ok ? 200 : 400, result);
@@ -166,24 +199,36 @@ const server = createServer(async (req, res) => {
           return sendJSON(res, 200, { ok: true, account: await getAccount(user.id) });
         }
         if (path === '/api/account/sync' && req.method === 'POST') {
+          if (rateLimited(res, `account-write:${user.id}`, { limit: 120, windowMs: 60 * 60 * 1000 })) return;
           const result = await syncAccount(user.id, await readJsonBody(req));
           return sendJSON(res, result.ok ? 200 : 400, result);
         }
         if (path === '/api/account/alerts' && req.method === 'POST') {
+          if (rateLimited(res, `alert-write:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
           const result = await saveAlert(user.id, await readJsonBody(req));
           return sendJSON(res, result.ok ? 200 : 400, result);
         }
         if (path.startsWith('/api/account/alerts/') && req.method === 'DELETE') {
+          if (rateLimited(res, `alert-write:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
           const alertId = decodeURIComponent(path.slice('/api/account/alerts/'.length));
           if (!alertId) return sendJSON(res, 400, { ok: false, error: 'Alerta requerida' });
           return sendJSON(res, 200, await deleteAlert(user.id, alertId));
         }
         if (path === '/api/account/plan-interest' && req.method === 'POST') {
+          if (rateLimited(res, `plan-interest:${user.id}`, { limit: 5, windowMs: 24 * 60 * 60 * 1000 })) return;
           const result = await registerPlanInterest(user.id, await readJsonBody(req));
           return sendJSON(res, result.ok ? 200 : 400, result);
         }
         if (path === '/api/account/export' && req.method === 'GET') {
           return sendDownload(res, `radar-cuenta-${user.id.slice(0, 8)}.json`, await exportAccount(user.id));
+        }
+        if (path === '/api/account/export.csv' && req.method === 'GET') {
+          return sendTextDownload(
+            res,
+            `radar-seguimiento-${user.id.slice(0, 8)}.csv`,
+            'text/csv; charset=utf-8',
+            `\uFEFF${await exportAccountCsv(user.id)}`,
+          );
         }
         return sendJSON(res, 405, { ok: false, error: 'Método o ruta de cuenta no permitido' });
       }
@@ -229,6 +274,7 @@ const server = createServer(async (req, res) => {
       // Análisis IA de una propiedad (POST { kind:'banco'|'remate', id, refresh? }).
       if (path === '/api/analyze') {
         if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (rateLimited(res, `analyze:${clientAddress(req)}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
         const body = (await readJsonBody(req)) as { kind?: string; id?: string; refresh?: boolean };
         if ((body.kind !== 'banco' && body.kind !== 'remate') || !body.id) {
           return sendJSON(res, 400, { ok: false, error: 'kind (banco|remate) e id requeridos' });

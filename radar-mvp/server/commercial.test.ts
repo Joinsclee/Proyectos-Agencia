@@ -7,6 +7,7 @@ import {
   isAlertDue,
   maxAlertsForPlan,
   readAlerts,
+  readDeliveryHistory,
 } from './commercial.js';
 
 test('normaliza planes históricos al catálogo comercial', () => {
@@ -58,6 +59,71 @@ test('detecta alertas semanales vencidas sin enviar duplicados', () => {
   };
   assert.equal(isAlertDue(alert, new Date('2026-07-24T00:00:00.000Z')), false);
   assert.equal(isAlertDue(alert, new Date('2026-07-28T00:00:01.000Z')), true);
+});
+
+test('recupera alertas persistidas con sus campos operativos', () => {
+  const stored = {
+    id: 'a1',
+    city: 'bogota',
+    budget: '500',
+    type: 'apartment',
+    frequency: 'weekly',
+    active: true,
+    createdAt: '2026-07-01T00:00:00.000Z',
+    updatedAt: '2026-07-02T00:00:00.000Z',
+    lastCheckedAt: '2026-07-20T00:00:00.000Z',
+    lastDeliveryStatus: 'no_matches',
+    lastMatchCount: 0,
+  };
+  assert.deepEqual(readAlerts({ radar_alerts: [stored] }), [stored]);
+});
+
+test('un reintento pendiente prevalece sobre la cadencia semanal', () => {
+  const alert = readAlerts({ radar_alerts: [{
+    id: 'retry-1',
+    city: 'bogota',
+    budget: '500',
+    type: '',
+    frequency: 'weekly',
+    active: true,
+    createdAt: '2026-07-01T00:00:00.000Z',
+    updatedAt: '2026-07-24T00:00:00.000Z',
+    lastCheckedAt: '2026-07-24T00:00:00.000Z',
+    nextRetryAt: '2026-07-24T01:00:00.000Z',
+    consecutiveFailures: 2,
+    lastDeliveryStatus: 'failed',
+  }] })[0];
+  assert.equal(isAlertDue(alert, new Date('2026-07-24T00:30:00.000Z')), false);
+  assert.equal(isAlertDue(alert, new Date('2026-07-24T01:00:00.000Z')), true);
+});
+
+test('un cambio de criterios se procesa en el siguiente ciclo', () => {
+  const alert = readAlerts({ radar_alerts: [{
+    id: 'updated-1',
+    city: 'medellin',
+    budget: '700',
+    type: 'house',
+    frequency: 'weekly',
+    active: true,
+    createdAt: '2026-07-01T00:00:00.000Z',
+    updatedAt: '2026-07-24T10:00:00.000Z',
+    lastCheckedAt: '2026-07-24T09:00:00.000Z',
+  }] })[0];
+  assert.equal(isAlertDue(alert, new Date('2026-07-24T10:01:00.000Z')), true);
+});
+
+test('limita e ignora entregas corruptas guardadas en metadata', () => {
+  const delivery = {
+    id: 'delivery-1',
+    alertId: 'a1',
+    attemptedAt: '2026-07-24T00:00:00.000Z',
+    status: 'sent',
+    matchCount: 2,
+    providerMessageId: 'provider-1',
+  };
+  assert.deepEqual(readDeliveryHistory({
+    radar_alert_deliveries: [delivery, { status: 'bad' }],
+  }), [delivery]);
 });
 
 test('ignora alertas corruptas guardadas en metadata', () => {

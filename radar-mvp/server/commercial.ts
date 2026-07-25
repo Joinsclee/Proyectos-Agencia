@@ -58,13 +58,33 @@ export const RadarAlertInputSchema = z.object({
 }).strict();
 
 export type RadarAlertInput = z.infer<typeof RadarAlertInputSchema>;
-export interface RadarAlert extends RadarAlertInput {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  lastCheckedAt?: string;
-  lastSentAt?: string;
-}
+export const RadarAlertSchema = RadarAlertInputSchema.extend({
+  id: z.string().trim().min(1).max(80),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  lastCheckedAt: z.string().datetime().optional(),
+  lastSentAt: z.string().datetime().optional(),
+  nextRetryAt: z.string().datetime().optional(),
+  consecutiveFailures: z.number().int().min(0).max(10).optional(),
+  lastError: z.string().trim().max(500).optional(),
+  lastDeliveryStatus: z.enum(['sent', 'no_matches', 'failed']).optional(),
+  lastMatchCount: z.number().int().min(0).max(100).optional(),
+}).strict();
+
+export type RadarAlert = z.infer<typeof RadarAlertSchema>;
+
+export const RadarDeliveryRecordSchema = z.object({
+  id: z.string().trim().min(1).max(100),
+  alertId: z.string().trim().min(1).max(80),
+  attemptedAt: z.string().datetime(),
+  status: z.enum(['sent', 'no_matches', 'failed']),
+  matchCount: z.number().int().min(0).max(100),
+  providerMessageId: z.string().trim().max(200).optional(),
+  error: z.string().trim().max(500).optional(),
+  retryAt: z.string().datetime().optional(),
+}).strict();
+
+export type RadarDeliveryRecord = z.infer<typeof RadarDeliveryRecordSchema>;
 
 export const SimulationSchema = z.object({
   key: z.string().min(1).max(200),
@@ -104,15 +124,21 @@ export function maxAlertsForPlan(plan: CommercialPlan): number {
 export function readAlerts(metadata: Record<string, unknown> | null | undefined): RadarAlert[] {
   if (!Array.isArray(metadata?.radar_alerts)) return [];
   return metadata.radar_alerts
-    .filter((item): item is RadarAlert => {
-      if (!item || typeof item !== 'object') return false;
-      const value = item as Record<string, unknown>;
-      return typeof value.id === 'string'
-        && typeof value.createdAt === 'string'
-        && typeof value.updatedAt === 'string'
-        && RadarAlertInputSchema.safeParse(value).success;
-    })
+    .map((item) => RadarAlertSchema.safeParse(item))
+    .filter((result) => result.success)
+    .map((result) => result.data)
     .slice(0, 5);
+}
+
+export function readDeliveryHistory(
+  metadata: Record<string, unknown> | null | undefined,
+): RadarDeliveryRecord[] {
+  if (!Array.isArray(metadata?.radar_alert_deliveries)) return [];
+  return metadata.radar_alert_deliveries
+    .map((item) => RadarDeliveryRecordSchema.safeParse(item))
+    .filter((result) => result.success)
+    .map((result) => result.data)
+    .slice(0, 50);
 }
 
 export function isAdminMetadata(metadata: Record<string, unknown> | null | undefined): boolean {
@@ -121,9 +147,15 @@ export function isAdminMetadata(metadata: Record<string, unknown> | null | undef
 
 export function isAlertDue(alert: RadarAlert, now = new Date()): boolean {
   if (!alert.active) return false;
+  if (alert.nextRetryAt) {
+    const retryAt = Date.parse(alert.nextRetryAt);
+    return !Number.isFinite(retryAt) || retryAt <= now.getTime();
+  }
+  const updatedAt = Date.parse(alert.updatedAt);
+  const checkedAt = Date.parse(alert.lastCheckedAt ?? '');
+  if (Number.isFinite(updatedAt) && Number.isFinite(checkedAt) && updatedAt > checkedAt) return true;
   const anchor = alert.lastCheckedAt || alert.lastSentAt || alert.createdAt;
   const timestamp = Date.parse(anchor);
   if (!Number.isFinite(timestamp)) return true;
   return now.getTime() - timestamp >= 7 * 24 * 60 * 60 * 1000;
 }
-

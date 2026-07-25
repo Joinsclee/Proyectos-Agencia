@@ -10,6 +10,7 @@ import {
   isAdminMetadata,
   maxAlertsForPlan,
   readAlerts,
+  readDeliveryHistory,
   subscriptionStatusFromMetadata,
   type RadarAlert,
 } from './commercial.js';
@@ -31,6 +32,7 @@ function publicAccount(user: { id: string; email?: string; user_metadata?: Metad
       : null,
     simulations: Array.isArray(metadata.radar_simulations) ? metadata.radar_simulations.slice(0, 50) : [],
     alerts: readAlerts(metadata),
+    deliveryHistory: readDeliveryHistory(metadata).slice(0, 20),
     planInterest: metadata.plan_interest ?? null,
     entitlements: {
       fullOpportunityDetails: plan === 'pro',
@@ -84,6 +86,7 @@ export async function syncAccount(userId: string, input: unknown) {
       });
       const now = new Date().toISOString();
       const primary: RadarAlert = {
+        ...current[0],
         ...alertInput,
         id: current[0]?.id ?? randomUUID(),
         active: true,
@@ -112,12 +115,11 @@ export async function saveAlert(userId: string, input: unknown) {
     }
     const now = new Date().toISOString();
     const next: RadarAlert = {
+      ...existing,
       ...parsed.data,
       id: existing?.id ?? randomUUID(),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
-      lastCheckedAt: existing?.lastCheckedAt,
-      lastSentAt: existing?.lastSentAt,
     };
     metadata.radar_alerts = [next, ...current.filter((alert) => alert.id !== next.id)];
     return metadata;
@@ -165,6 +167,17 @@ export async function getAdminSummary(requesterId: string) {
   }
 
   const accounts = users.map(publicAccount);
+  const statusCounts = accounts.reduce<Record<string, number>>((counts, account) => {
+    counts[account.subscriptionStatus] = (counts[account.subscriptionStatus] ?? 0) + 1;
+    return counts;
+  }, {});
+  const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const recentDeliveries = accounts
+    .flatMap((account) => account.deliveryHistory)
+    .filter((delivery) => Date.parse(delivery.attemptedAt) >= thirtyDaysAgo);
+  const sentDeliveries = recentDeliveries.filter((delivery) => delivery.status === 'sent').length;
+  const failedDeliveries = recentDeliveries.filter((delivery) => delivery.status === 'failed').length;
+  const deliveryAttempts = sentDeliveries + failedDeliveries;
   return {
     generatedAt: new Date().toISOString(),
     users: accounts.length,
@@ -175,6 +188,22 @@ export async function getAdminSummary(requesterId: string) {
       0,
     ),
     completedProfiles: accounts.filter((account) => account.preferences).length,
+    subscriptionFunnel: {
+      none: statusCounts.none ?? 0,
+      interested: statusCounts.interested ?? 0,
+      trialing: statusCounts.trialing ?? 0,
+      active: statusCounts.active ?? 0,
+      pastDue: statusCounts.past_due ?? 0,
+      canceled: statusCounts.canceled ?? 0,
+    },
+    deliveriesLast30Days: recentDeliveries.length,
+    sentDeliveries,
+    failedDeliveries,
+    deliverySuccessRate: deliveryAttempts ? Math.round((sentDeliveries / deliveryAttempts) * 1000) / 10 : null,
+    lastDeliveryAt: recentDeliveries
+      .map((delivery) => delivery.attemptedAt)
+      .sort()
+      .at(-1) ?? null,
   };
 }
 
@@ -184,4 +213,71 @@ export async function exportAccount(userId: string) {
     exportedAt: new Date().toISOString(),
     account,
   };
+}
+
+function csvCell(value: unknown): string {
+  const text = value == null ? '' : typeof value === 'string' ? value : JSON.stringify(value);
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+export async function exportAccountCsv(userId: string) {
+  const account = await getAccount(userId);
+  const rows: unknown[][] = [
+    ['tipo_registro', 'id', 'fecha', 'ciudad', 'presupuesto_millones', 'tipo_inmueble', 'estado', 'detalle'],
+    ['cuenta', account.id, '', '', '', '', account.subscriptionStatus, {
+      email: account.email,
+      name: account.name ?? '',
+      plan: account.plan,
+      role: account.role,
+    }],
+  ];
+  if (account.preferences) {
+    rows.push([
+      'preferencias',
+      account.id,
+      '',
+      account.preferences.city,
+      account.preferences.budget,
+      account.preferences.type,
+      'activa',
+      '',
+    ]);
+  }
+  for (const simulation of account.simulations) {
+    rows.push(['simulacion', simulation.id, '', '', '', simulation.kind, 'guardada', simulation]);
+  }
+  for (const alert of account.alerts) {
+    rows.push([
+      'alerta',
+      alert.id,
+      alert.createdAt,
+      alert.city,
+      alert.budget,
+      alert.type,
+      alert.active ? 'activa' : 'pausada',
+      {
+        ultima_revision: alert.lastCheckedAt ?? '',
+        ultimo_envio: alert.lastSentAt ?? '',
+        ultima_entrega: alert.lastDeliveryStatus ?? '',
+      },
+    ]);
+  }
+  for (const delivery of account.deliveryHistory) {
+    rows.push([
+      'entrega',
+      delivery.id,
+      delivery.attemptedAt,
+      '',
+      '',
+      '',
+      delivery.status,
+      {
+        alerta: delivery.alertId,
+        coincidencias: delivery.matchCount,
+        proveedor: delivery.providerMessageId ?? '',
+        error: delivery.error ?? '',
+      },
+    ]);
+  }
+  return rows.map((row) => row.map(csvCell).join(',')).join('\r\n');
 }

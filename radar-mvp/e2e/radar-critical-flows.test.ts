@@ -204,8 +204,13 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
 
       const accountApi = await page.request.get(`${baseUrl}/api/account`);
       assert.equal(accountApi.status(), 401);
+      const csvExport = await page.request.get(`${baseUrl}/api/account/export.csv`);
+      assert.equal(csvExport.status(), 401);
       const adminApi = await page.request.get(`${baseUrl}/api/admin/summary`);
       assert.equal(adminApi.status(), 401);
+      const alertDispatch = await page.request.post(`${baseUrl}/api/internal/alerts/run`);
+      assert.equal(alertDispatch.status(), 503);
+      assert.equal((await alertDispatch.json()).configured, false);
 
       await page.goto(`${baseUrl}/planes`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Elige cuánto quieres profundizar' }).waitFor();
@@ -214,6 +219,7 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
 
       await page.goto(`${baseUrl}/cuenta`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Inicia sesión para continuar' }).waitFor();
+      assert.equal(await page.locator('#export-csv-link').getAttribute('href'), '/api/account/export.csv');
 
       await page.goto(`${baseUrl}/comparador`, { waitUntil: 'domcontentloaded' });
       await page.waitForURL(/\/login$/);

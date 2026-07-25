@@ -17,6 +17,24 @@ function typeLabel(value) {
   return ({ apartment: 'Apartamento', house: 'Casa', lot: 'Lote', commercial: 'Local', office: 'Oficina' }[value] || 'Cualquier tipo');
 }
 
+function formatDate(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+}
+
+function alertOperationalCopy(alert) {
+  if (alert.lastDeliveryStatus === 'sent') return `Último envío: ${formatDate(alert.lastSentAt)}`;
+  if (alert.lastDeliveryStatus === 'no_matches') return `Revisada sin nuevas coincidencias: ${formatDate(alert.lastCheckedAt)}`;
+  if (alert.lastDeliveryStatus === 'failed') {
+    return `Entrega pendiente · próximo reintento: ${formatDate(alert.nextRetryAt) || 'por programar'}`;
+  }
+  return 'Aún no se ha procesado';
+}
+
 function renderAlerts() {
   const root = document.getElementById('alerts-list');
   if (!account.alerts.length) {
@@ -26,9 +44,31 @@ function renderAlerts() {
   root.innerHTML = account.alerts.map((alert) => `<article class="alert-item">
     <div><strong>${esc(typeLabel(alert.type))} en ${esc(alert.city)}</strong>
       <span>${alert.budget ? `Hasta $${Number(alert.budget).toLocaleString('es-CO')} millones · ` : ''}Resumen semanal · ${alert.active ? 'Activa' : 'Pausada'}</span>
+      <small class="operational-copy">${esc(alertOperationalCopy(alert))}</small>
     </div>
     <button class="danger-link" type="button" data-delete-alert="${encodeURIComponent(alert.id)}">Eliminar</button>
   </article>`).join('');
+}
+
+function renderDeliveryHistory() {
+  const root = document.getElementById('delivery-history');
+  const deliveries = account.deliveryHistory || [];
+  if (!deliveries.length) {
+    root.innerHTML = '<div class="empty-state">El historial aparecerá después del primer ciclo de revisión.</div>';
+    return;
+  }
+  root.innerHTML = deliveries.slice(0, 8).map((delivery) => {
+    const labels = {
+      sent: ['Enviado', 'history-ok'],
+      no_matches: ['Sin coincidencias', 'history-neutral'],
+      failed: ['Reintento pendiente', 'history-error'],
+    };
+    const [label, className] = labels[delivery.status] || ['Procesado', 'history-neutral'];
+    return `<article class="history-item">
+      <div><strong>${esc(label)}</strong><span>${esc(formatDate(delivery.attemptedAt))}</span></div>
+      <div class="history-result ${className}">${Number(delivery.matchCount || 0).toLocaleString('es-CO')} coincidencias</div>
+    </article>`;
+  }).join('');
 }
 
 function renderAccount() {
@@ -47,6 +87,19 @@ function renderAccount() {
     document.getElementById('alert-type').value = preferences.type || '';
   }
   renderAlerts();
+  renderDeliveryHistory();
+}
+
+async function downloadAccountExport(path, filename) {
+  const result = await fetch(path, { headers: authHeaders() });
+  if (!result.ok) throw new Error('No se pudo preparar la descarga');
+  const blob = await result.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 async function init() {
@@ -76,14 +129,11 @@ async function init() {
   const exportLink = document.getElementById('export-link');
   exportLink.addEventListener('click', async (event) => {
     event.preventDefault();
-    const result = await fetch('/api/account/export', { headers: authHeaders() });
-    const blob = await result.blob();
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `radar-cuenta-${account.id.slice(0, 8)}.json`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+    await downloadAccountExport('/api/account/export', `radar-cuenta-${account.id.slice(0, 8)}.json`);
+  });
+  document.getElementById('export-csv-link').addEventListener('click', async (event) => {
+    event.preventDefault();
+    await downloadAccountExport('/api/account/export.csv', `radar-seguimiento-${account.id.slice(0, 8)}.csv`);
   });
   renderAccount();
 }
