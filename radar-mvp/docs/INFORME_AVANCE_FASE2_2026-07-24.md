@@ -156,7 +156,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 | Validación | Zod |
 | Extracción | Firecrawl, Playwright y parsers PDF |
 | Motor | Estadística robusta, comparables e Índice CRECE |
-| Programación | node-cron y scheduler persistido |
+| Programación | Scheduler persistido en PostgreSQL y temporizador nativo |
 | QA | node:test, Playwright y Chromium |
 | Infraestructura | Docker, VPS y EasyPanel |
 

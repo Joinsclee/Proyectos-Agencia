@@ -112,10 +112,10 @@ verificación de correo, endurecimiento del contenedor y observabilidad operativ
 - Resultado:
   - se actualizaron de forma compatible Axios, FormData y la cadena de Firecrawl;
   - `npm audit --omit=dev --audit-level=high` termina correctamente;
-  - las 79 pruebas y el typecheck pasan después de la actualización.
-- Riesgo residual: quedan dos alertas moderadas en `uuid`, introducidas por
-  `node-cron@3`. Resolverlas exige migrar a `node-cron@4`, un cambio mayor que debe
-  probarse sobre el scheduler antes de producción; no se aplicó `npm audit fix --force`.
+  - las 102 pruebas y el typecheck pasan después de la actualización;
+  - `node-cron` y su cadena vulnerable de `uuid` se retiraron al comprobar que
+    el scheduler persistido ya no importaba esa dependencia.
+- Riesgo residual: `npm audit --omit=dev` no reporta vulnerabilidades conocidas.
 
 ### SEC-007A — Barrera de calidad para datos financieros de remates
 

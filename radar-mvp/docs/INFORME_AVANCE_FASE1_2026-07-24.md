@@ -142,7 +142,7 @@ ensayo; prueba de carga, canary y rollback probado.
 | Extracción | Firecrawl, lectura SSR, parsers PDF y Playwright donde aplica |
 | Motor | Estadística robusta, Índice CRECE y reglas de dominio TypeScript |
 | Validación | Zod |
-| Automatización | `node-cron`, scheduler persistido en PostgreSQL y cerrojo |
+| Automatización | Scheduler persistido en PostgreSQL, temporizador nativo y cerrojo |
 | QA | `node:test`, TypeScript y Playwright/Chromium |
 | Infraestructura | Docker, VPS y EasyPanel |
 | Código y entrega | Git/GitHub; PR y despliegue controlado |
@@ -168,8 +168,8 @@ ensayo; prueba de carga, canary y rollback probado.
    `HttpOnly`.
 3. El análisis IA necesita límites de consumo antes de abrir campañas masivas.
 4. El cron funciona y la cadencia vive en la base, pero falta observabilidad central.
-5. `npm audit` no reporta vulnerabilidades críticas ni altas; quedan dos moderadas por
-   `node-cron@3 → uuid`. La solución requiere migrar a `node-cron@4`, no un `--force`.
+5. `npm audit --omit=dev` no reporta vulnerabilidades conocidas; se retiró
+   `node-cron` porque el scheduler persistido ya no lo utilizaba.
 6. EasyPanel tiene el despliegue automático deshabilitado; hoy la publicación es manual.
 7. Los volúmenes son una fotografía del 24 de julio de 2026 y cambian con las fuentes.
 
@@ -223,4 +223,3 @@ un **84% real**, sin contar funcionalidades de Fase 2 como deuda. La aplicación
 desplegada, funciona con datos reales y tiene una base técnica probada. La recomendación
 es presentarla como **MVP funcional en producción, apto para demo y piloto controlado**,
 acompañada de un plan corto de endurecimiento antes de campañas o tráfico masivo.
-

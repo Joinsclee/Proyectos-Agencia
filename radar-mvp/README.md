@@ -74,7 +74,7 @@ radar-mvp/
 │   ├── bbva/           ✅ listado único
 │   └── aval/           ✅ PDF parser nativo
 ├── engine/             📋 Fase 3: motor de comparables vs FincaRaíz
-├── cron/               📋 Orchestrator + node-cron
+├── cron/               📋 Orchestrator + scheduler persistido en PostgreSQL
 ├── lib/
 │   ├── env.ts          validación zod de .env
 │   ├── types.ts        InmuebleSchema (zod)
