@@ -6,6 +6,7 @@ import {
 } from './rental-comparables.js';
 import { mapFincaRaizRental } from '../scrapers/CO/fincaraiz/parser.js';
 import type { RadarZona } from '../scrapers/CO/fincaraiz/zonas.js';
+import { canMarkSourceStale } from '../scrapers/CO/fincaraiz/index.js';
 
 const rental = (overrides: Partial<RentalPoolRow> = {}): RentalPoolRow => ({
   type: 'apartment',
@@ -107,4 +108,11 @@ test('el parser de arriendo conserva atributos pero separa el canon', () => {
   assert.equal(parsed?.area_m2, 75);
   assert.equal(parsed?.features.bedrooms, 3);
   assert.equal(parsed?.features.operation, 'Arriendo');
+});
+
+test('el lifecycle no desactiva avisos cuando faltó una zona o página', () => {
+  assert.equal(canMarkSourceStale(2, [{ completed: true }, { completed: true }], 0, false, false), true);
+  assert.equal(canMarkSourceStale(2, [{ completed: true }], 0, false, false), false);
+  assert.equal(canMarkSourceStale(2, [{ completed: true }, { completed: false }], 1, false, false), false);
+  assert.equal(canMarkSourceStale(2, [{ completed: true }, { completed: true }], 0, true, false), false);
 });

@@ -130,8 +130,27 @@ interface ZoneStats {
   seen: number;
   eligible: number;
   rejected: number;
+  failed_pages: number;
   total_portal: number;
   completed: boolean; // alcanzó lastPage (no quedó capado por max_pages)
+}
+
+/**
+ * El lifecycle solo es seguro cuando se observaron todas las zonas y páginas.
+ * Un fallo parcial no significa que el aviso desapareció del portal.
+ */
+export function canMarkSourceStale(
+  requestedZones: number,
+  stats: Array<Pick<ZoneStats, 'completed'>>,
+  errorCount: number,
+  scopedRun: boolean,
+  dryRun: boolean,
+): boolean {
+  return !scopedRun
+    && !dryRun
+    && errorCount === 0
+    && stats.length === requestedZones
+    && stats.every((item) => item.completed);
 }
 
 async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
@@ -181,6 +200,7 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
       seen: 0,
       eligible: 0,
       rejected: 0,
+      failed_pages: 0,
       total_portal: 0,
       completed: false,
     };
@@ -207,6 +227,7 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
     const first = await fetchPage(zoneUrl(z, 1));
     if (!first) {
       errors.push({ message: `${label} pagina 1 no disponible` });
+      st.failed_pages++;
       stats.push(st);
       continue;
     }
@@ -231,14 +252,18 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
       for (let pg = start; pg < start + PAGE_CONCURRENCY && pg <= limit; pg++) pages.push(pg);
       const results = await Promise.all(pages.map((pg) => fetchPage(zoneUrl(z, pg))));
       results.forEach((res, i) => {
-        if (!res) { errors.push({ message: `${label} pagina ${pages[i]} no disponible` }); return; }
+        if (!res) {
+          st.failed_pages++;
+          errors.push({ message: `${label} pagina ${pages[i]} no disponible` });
+          return;
+        }
         ingest(res.data);
         st.pages = Math.max(st.pages, pages[i]);
       });
       await flush();
       await sleep(80 + Math.floor(Math.random() * 120)); // pausa cortés entre lotes
     }
-    st.completed = limit >= lastPage; // completo si el tope no cortó antes del final
+    st.completed = st.failed_pages === 0 && limit >= lastPage;
     log.info(
       `  ${label}: ${st.seen} avisos (${st.eligible} utilizables`
       + `${st.rejected ? `; ${st.rejected} fuera de rango` : ''}; portal: ${st.total_portal}; `
@@ -254,7 +279,13 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
   // normalmente NO completamos → no marcamos stale para evitar desactivar
   // listings que solo se movieron de página. El historial de precios + last_seen_at
   // siguen reflejando frescura.
-  const fullRun = !opts.slug && !opts.maxPages && !opts.dry && stats.every((s) => s.completed);
+  const fullRun = canMarkSourceStale(
+    zonas.length,
+    stats,
+    errors.length,
+    Boolean(opts.slug || opts.maxPages),
+    Boolean(opts.dry),
+  );
   let inactivated = 0;
   if (fullRun) {
     const r = operation === 'arriendo'
