@@ -65,3 +65,9 @@ export function applySecurityHeaders(res: ServerResponse, requestId: string): vo
   }
   res.setHeader('X-Request-Id', requestId);
 }
+
+export function allowCrossOriginImageEmbedding(res: ServerResponse, contentType: string): void {
+  if (contentType.startsWith('image/')) {
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  }
+}

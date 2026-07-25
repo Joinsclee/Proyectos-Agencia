@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  ALERT_EMAIL_TEMPLATE_VERSION,
   alertMatchSince,
   alertDeliveryIdempotencyKey,
   buildAlertDigestHtml,
+  buildAlertDigestText,
   nextAlertRetryAt,
   parseAlertDispatchCanary,
 } from './notifications.js';
@@ -23,13 +25,45 @@ test('el resumen de alerta escapa contenido y contiene una ruta administrable', 
     source: '<script>alert(1)</script>',
     type: 'Apartamento',
     city: 'Bogotá',
+    zone: 'Chapinero',
+    price: 300_000_000,
+    discount_pct: 25,
+    area_m2: 72,
+    image_url: 'https://images.example.com/property.jpg',
+  }]);
+  assert.match(html, /RADAR <span style="color:#f2ca04">CRECE/);
+  assert.match(html, /resumen personalizado/i);
+  assert.match(html, /300\.000\.000/);
+  assert.match(html, /Chapinero/);
+  assert.match(html, /property\.jpg/);
+  assert.match(html, /login-poster\.jpg/);
+  assert.doesNotMatch(html, /<script>/);
+  assert.match(html, /city=bogota/);
+  assert.match(html, /administrar o eliminar esta alerta/);
+});
+
+test('incluye una alternativa de texto útil para clientes sin HTML', () => {
+  const text = buildAlertDigestText({
+    id: 'alert-1',
+    city: 'bogota',
+    budget: '500',
+    type: 'apartment',
+    frequency: 'weekly',
+    active: true,
+    createdAt: '2026-07-01T00:00:00.000Z',
+    updatedAt: '2026-07-01T00:00:00.000Z',
+  }, [{
+    id: 'property-1',
+    source: 'fincaraiz',
+    type: 'apartment',
+    city: 'bogota',
     price: 300_000_000,
     discount_pct: 25,
   }]);
-  assert.match(html, /Resumen semanal/);
-  assert.match(html, /300\.000\.000/);
-  assert.doesNotMatch(html, /<script>/);
-  assert.match(html, /city=bogota/);
+  assert.match(text, /RADAR CRECE/);
+  assert.match(text, /Apartamento en Bogotá/);
+  assert.match(text, /300\.000\.000/);
+  assert.match(text, /Administra o elimina esta alerta/);
 });
 
 test('genera una clave estable para reintentos del mismo correo', () => {
@@ -54,6 +88,7 @@ test('genera una clave estable para reintentos del mismo correo', () => {
   assert.equal(first, retry);
   assert.notEqual(first, alertDeliveryIdempotencyKey('user-2', alert, []));
   assert.ok(first.length <= 256);
+  assert.match(ALERT_EMAIL_TEMPLATE_VERSION, /^v\d/);
 });
 
 test('programa reintentos crecientes y con tope de 24 horas', () => {
