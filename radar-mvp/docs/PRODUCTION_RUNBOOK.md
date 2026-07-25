@@ -33,7 +33,7 @@ git diff --check
 Condiciones de salida:
 
 - TypeScript sin errores.
-- 102 pruebas o más aprobadas.
+- 113 pruebas o más aprobadas.
 - 6/6 recorridos E2E aprobados.
 - Sin secretos, `.env`, sesiones o archivos de salida en el diff.
 - PR revisado y checks remotos en verde.
@@ -119,6 +119,9 @@ un P1 si los listados y fichas continúan operativos.
 
 ## 7. Backups y restauración ensayada
 
+La herramienta y el procedimiento versionados están en
+[`docs/SUPABASE_RECOVERY_DRILL.md`](./SUPABASE_RECOVERY_DRILL.md).
+
 Antes de migraciones o cambios masivos:
 
 1. Confirmar que existe una copia reciente de PostgreSQL administrada por
@@ -141,7 +144,38 @@ pg_dump "$RADAR_DATABASE_URL" \
 No guardar `RADAR_DATABASE_URL`, claves de servicio, tokens o contraseñas dentro
 del repositorio, logs, PR o artefactos públicos.
 
-## 8. Rotación de secretos
+Comandos operativos:
+
+```bash
+npm run backup:preflight
+npm run backup:create
+npm run backup:verify -- /ruta/segura/radar-fecha.dump
+```
+
+`backup:create` exige un directorio fuera del repositorio, verifica el archivo
+con `pg_restore`, calcula SHA-256 y genera un manifiesto sin credenciales.
+
+## 8. Monitor sintético e incidentes
+
+```bash
+npm run monitor:production
+```
+
+El monitor valida liveness, readiness, contrato de configuración y presupuestos
+de latencia. Solo conserva estado HTTP, duración y diagnóstico mínimo; no guarda
+el cuerpo de Supabase ni información de usuarios.
+
+GitHub Actions ejecuta el monitor antes del E2E, conserva el reporte por catorce
+días y, en ejecuciones programadas o manuales:
+
+- abre o actualiza un issue si producción falla;
+- enlaza la ejecución y este runbook;
+- cierra el issue automáticamente cuando producción se recupera.
+
+Una alerta del monitor no autoriza por sí sola un rollback. Aplicar los criterios
+de las secciones 5 y 6.
+
+## 9. Rotación de secretos
 
 Orden recomendado:
 
@@ -160,7 +194,7 @@ Secretos a controlar:
 - credenciales de scrapers autenticados
 - claves de proveedores externos
 
-## 9. Evidencia mínima por cambio
+## 10. Evidencia mínima por cambio
 
 Cada entrega debe conservar:
 
@@ -170,4 +204,3 @@ Cada entrega debe conservar:
 - respuesta de `/health` y `/ready`.
 - resultado del smoke de producción.
 - decisión explícita si el cambio toca alertas automáticas, pagos o datos.
-

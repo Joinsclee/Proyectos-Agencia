@@ -62,7 +62,16 @@ SCRAPE_LOG_LEVEL=debug npm run scrape:davivienda -- --max=3
 
 # Typecheck
 npm run typecheck
+
+# Operación de producción
+npm run monitor:production
+npm run backup:preflight
 ```
+
+Los respaldos lógicos se crean únicamente fuera del repositorio con
+`npm run backup:create` y se validan con `npm run backup:verify -- archivo.dump`.
+Consulta [`docs/SUPABASE_RECOVERY_DRILL.md`](docs/SUPABASE_RECOVERY_DRILL.md)
+antes de cualquier ensayo de recuperación.
 
 ## Estructura
 
