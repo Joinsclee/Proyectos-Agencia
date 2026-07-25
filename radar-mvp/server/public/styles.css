@@ -135,7 +135,7 @@ h1 .gold { color: var(--gold); }
 .setup-alert-row strong { color: #2d1837; font-size: 0.86rem; }
 .setup-alert-row span { color: #6b7280; font-size: 0.78rem; line-height: 1.35; }
 .setup-alert-action {
-  flex: 0 0 auto; min-height: 40px; padding: 0 13px; display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto; min-height: 44px; padding: 0 13px; display: inline-flex; align-items: center; justify-content: center;
   border: 1px solid #d9c7e6; border-radius: 9px; background: #fff; color: var(--pp);
   font-family: inherit; font-size: 0.8rem; font-weight: 800; text-decoration: none; cursor: pointer;
 }
@@ -165,9 +165,12 @@ h1 .gold { color: var(--gold); }
 .setup-flow-actions > div { display: flex; gap: 8px; }
 
 /* ───── CONTROLS ───── */
+.search-workspace { min-width: 0; }
+.results-column { min-width: 0; }
 .controls { max-width: 1280px; margin: 18px auto 0; padding: 0 24px; }
 .controls-mobilebar { display: none; }
 .controls-inner { background: #fff; border: 1px solid rgba(97,49,116,0.10); border-radius: 14px; padding: 18px; }
+.controls-heading { display: none; }
 .filters-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .f { display: flex; flex-direction: column; gap: 4px; }
 .f label { font-size: 0.66rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -356,6 +359,18 @@ h1 .gold { color: var(--gold); }
 .rent-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .rent-head .calc-label { margin: 0; }
 .rent-head small { color: #7c6a86; }
+.rent-market-status { margin-top: 10px; padding: 12px; border: 1px solid rgba(97,49,116,.16); border-radius: 10px; background: #fff; color: #5f5268; font-size: .78rem; line-height: 1.45; }
+.rent-market-status.is-empty { background: #fffaf0; border-color: #eadca5; color: #675d3d; }
+.rent-market-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.rent-market-title span { color: #5f5268; font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.rent-market-title strong { color: var(--pp-dark); font-family: 'Tilt Warp', cursive; font-size: 1.08rem; text-align: right; }
+.rent-market-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+.rent-market-grid > div { padding: 8px; border-radius: 8px; background: #f8f3fa; }
+.rent-market-grid span, .rent-market-grid strong { display: block; }
+.rent-market-grid span { color: #74657c; font-size: .68rem; }
+.rent-market-grid strong { margin-top: 2px; color: #2f1a37; font-size: .82rem; }
+.rent-market-status .crit-chips { margin-top: 9px; }
+.rent-market-status p { margin: 9px 0 0; color: #766a7d; font-size: .7rem; }
 .rent-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 .rent-inputs label { color: #5f5268; font-size: .72rem; font-weight: 800; }
 .rent-input { width: 100%; min-height: 42px; margin-top: 5px; padding: 8px 10px; border: 1px solid #d9c7e6; border-radius: 8px; background: #fff; color: #23132b; font-family: inherit; font-size: .92rem; }
@@ -435,9 +450,9 @@ h1 .gold { color: var(--gold); }
 .detail-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .detail-top .pill-src { margin-bottom: 0; }
 .authbar { display: flex; align-items: center; gap: 12px; }
-.auth-user { font-size: 0.82rem; font-weight: 700; color: var(--pp-dark); display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+.auth-user { min-height: 44px; font-size: 0.82rem; font-weight: 700; color: var(--pp-dark); display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
 .auth-plan { padding: 2px 6px; border-radius: 99px; background: var(--gold); color: var(--pp-dark); font-size: 0.62rem; font-weight: 900; text-transform: uppercase; }
-.auth-link { font-size: 0.8rem; font-weight: 700; color: var(--pp); text-decoration: none; cursor: pointer; background: none; border: none; padding: 6px 8px; font-family: inherit; }
+.auth-link { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: var(--pp); text-decoration: none; cursor: pointer; background: none; border: none; padding: 6px 8px; font-family: inherit; }
 .auth-link.primary { background: var(--pp); color: #fff; padding: 8px 16px; border-radius: 99px; }
 .auth-link.primary:hover { background: var(--pp-dark); }
 .tab-fav .ic { color: #e23e6a; opacity: 1; }
@@ -541,6 +556,77 @@ h1 .gold { color: var(--gold); }
   .legend-card { display: grid; grid-template-columns: auto minmax(0, 1fr); }
   .legend-body { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; }
   .legend-item.note { margin-left: auto; }
+  .detail-top { padding-right: 52px; }
+}
+
+/* El espacio principal sigue el patrón habitual de portales inmobiliarios:
+   filtros persistentes a la izquierda y resultados comparables a la derecha. */
+@media (min-width: 981px) {
+  .search-workspace {
+    width: min(1280px, 100%);
+    margin: 18px auto 0;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 276px minmax(0, 1fr);
+    align-items: start;
+    gap: 18px;
+  }
+  .search-workspace.is-results-only { grid-template-columns: minmax(0, 1fr); }
+  .controls {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    position: sticky;
+    top: 72px;
+    align-self: start;
+  }
+  .controls-inner {
+    padding: 18px 16px 16px;
+    max-height: calc(100dvh - 88px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+  .controls-heading { display: block; margin-bottom: 16px; }
+  .controls-heading span {
+    display: block;
+    margin-bottom: 4px;
+    color: #7c6a86;
+    font-size: 0.64rem;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+  .controls-heading h2 {
+    margin: 0;
+    color: var(--pp-dark);
+    font-family: 'Tilt Warp', cursive;
+    font-size: 1.15rem;
+    font-weight: 400;
+    line-height: 1.15;
+  }
+  .filters-row { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .f, .f:has(.f-range) { min-width: 0; }
+  .f select, .f input { width: 100%; min-width: 0; height: 44px; }
+  .f-range input, .f-range select { width: 100%; }
+  .results-info {
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .btn-clear { padding-inline: 0; }
+  .content { max-width: none; margin: 0; padding: 0 0 10px; }
+  .pager { padding-inline: 0; }
+}
+
+/* En monitores amplios usamos el margen exterior disponible para que los
+   filtros dobles respiren, sin castigar la grilla de 3 columnas en laptops. */
+@media (min-width: 1440px) {
+  .search-workspace {
+    width: min(1500px, 100%);
+    grid-template-columns: 324px minmax(0, 1fr);
+    gap: 20px;
+  }
 }
 
 /* ───── EXPERIENCIA MÓVIL ─────
@@ -640,7 +726,7 @@ h1 .gold { color: var(--gold); }
   .calc-grand, .calc-save-row { align-items: stretch; flex-direction: column; }
   .calc-grand strong { text-align: left; }
   .calc-save { width: 100%; }
-  .rent-inputs, .rent-result { grid-template-columns: 1fr; }
+  .rent-inputs, .rent-result, .rent-market-grid { grid-template-columns: 1fr; }
   .rent-result small { grid-column: auto; }
 
   .controls { margin-top: 12px; padding: 0 12px; }

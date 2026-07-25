@@ -338,10 +338,13 @@ function setResultText(text) {
 
 async function buildFilters() {
   const tab = state.tab;
+  const controls = document.querySelector('.controls');
+  const workspace = $('search-workspace');
+  const filtersAreRelevant = tab !== 'guardados';
+  if (controls) controls.hidden = !filtersAreRelevant;
+  if (workspace) workspace.classList.toggle('is-results-only', !filtersAreRelevant);
   if (tab === 'guardados') {
-    $('filters').innerHTML = auth.token
-      ? `<div class="f-note">${ic('heart')} Tus inmuebles guardados y sincronizados</div>`
-      : `<div class="f-note">${ic('heart')} Guardados en este dispositivo · <a href="/login">Sincronizar con una cuenta</a></div>`;
+    $('filters').innerHTML = '';
     updateFilterCount();
     return;
   }
@@ -1256,7 +1259,10 @@ function gastosSection(valor, mode, context) {
       <div class="calc-total">${tot}</div>
       <div class="calc-grand">${grand}</div>
       ${mode !== 'remate' ? `<div class="rent-box">
-        <div class="rent-head"><span class="calc-label">Rentabilidad por arriendo</span><small>Canon ingresado por el usuario</small></div>
+        <div class="rent-head"><span class="calc-label">Rentabilidad por arriendo</span><small data-rent-origin>Buscando arriendos comparables…</small></div>
+        <div class="rent-market-status" data-rental-market aria-live="polite">
+          <span class="spinner"></span> Estimando el canon con avisos similares de la zona…
+        </div>
         <div class="rent-inputs">
           <label>Canon mensual esperado<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
           <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0"></label>
@@ -1348,11 +1354,13 @@ function openInmueble(p) {
   // El motor sólo persiste el mercado en fichas de banco; en las del portal se
   // calcula bajo demanda (gratis, sin IA) para justificar el −X% de la tarjeta.
   if (!mkt) fillMarketLazy(p.source === 'fincaraiz' ? 'portal' : 'banco', p.id, p.discount_pct);
+  fillRentalMarket(kind, p.id);
 }
 
 // Ficha abierta actualmente: si el usuario abre otra mientras el mercado carga, la
 // respuesta vieja llega tarde y no debe pintarse sobre la ficha nueva.
 let gFichaSeq = 0;
+let gRentalSeq = 0;
 
 /**
  * Panel de la ficha de pago. Enseña exactamente lo que la spec permite (precio,
@@ -1418,6 +1426,65 @@ async function fillMarketLazy(kind, id, disc) {
     el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">
       <p class="market-note">No se pudo calcular el mercado en este momento.</p>
       <button class="ai-btn retry-market" data-market-kind="${esc(kind)}" data-market-id="${esc(id)}" data-market-disc="${disc == null ? '' : Number(disc)}">Reintentar</button></div>`;
+  }
+}
+
+function rentalConfidenceLabel(value) {
+  return { high: 'Alta', medium: 'Media', low: 'Exploratoria', insufficient: 'Sin datos' }[value] || 'Exploratoria';
+}
+
+function applyRentalMarket(market) {
+  const status = document.querySelector('[data-rental-market]');
+  const calc = status?.closest('.calc');
+  if (!status || !calc) return;
+  const origin = calc.querySelector('[data-rent-origin]');
+  const rentInput = calc.querySelector('[data-rent]');
+
+  if (!market?.available || !market.median_monthly_rent) {
+    const n = Number(market?.n) || 0;
+    status.classList.add('is-empty');
+    status.innerHTML = market?.reason === 'source_unavailable'
+      ? 'El mercado de arriendos se está preparando. Puedes ingresar tu propio canon para simular.'
+      : `Aún no hay suficientes arriendos similares en esta zona (${n} encontrado${n === 1 ? '' : 's'}). Puedes ingresar tu propio canon.`;
+    if (origin) origin.textContent = 'Canon ajustable por el usuario';
+    return;
+  }
+
+  const median = Number(market.median_monthly_rent);
+  const low = Number(market.p25_monthly_rent) || median;
+  const high = Number(market.p75_monthly_rent) || median;
+  const ppm2 = Number(market.median_rent_per_m2) || 0;
+  const criteria = Array.isArray(market.criteria) ? market.criteria : [];
+  status.classList.remove('is-empty');
+  status.innerHTML = `<div class="rent-market-title">
+      <span>Canon estimado de mercado</span>
+      <strong>${fmtCOP(median)}/mes</strong>
+    </div>
+    <div class="rent-market-grid">
+      <div><span>Rango central</span><strong>${fmtCOP(low)} – ${fmtCOP(high)}</strong></div>
+      <div><span>Canon por m²</span><strong>${ppm2 ? `${fmtCOP(ppm2)}/m²` : '—'}</strong></div>
+      <div><span>Comparables</span><strong>${Number(market.n) || 0}</strong></div>
+      <div><span>Confianza</span><strong>${esc(rentalConfidenceLabel(market.confidence))}</strong></div>
+    </div>
+    ${criteria.length ? `<div class="crit-chips">${criteria.map((item) => `<span class="crit-chip">${esc(item)}</span>`).join('')}</div>` : ''}
+    <p>Referencia basada en precios de oferta, no en contratos cerrados. El canon puede incluir o excluir administración según cada aviso.</p>`;
+  if (origin) origin.textContent = `${Number(market.n) || 0} avisos similares · ${market.scope_label || 'misma ciudad'}`;
+  if (rentInput && (!rentInput.value || rentInput.dataset.rentSource === 'market')) {
+    rentInput.value = fmtCOP(median);
+    rentInput.dataset.rentSource = 'market';
+    window.__recalcRent(rentInput);
+  }
+}
+
+async function fillRentalMarket(kind, id) {
+  const seq = ++gRentalSeq;
+  try {
+    const result = await fetch(`/api/rental-market?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`).then((response) => response.json());
+    if (seq !== gRentalSeq) return;
+    applyRentalMarket(result.rental_market);
+  } catch {
+    if (seq !== gRentalSeq) return;
+    applyRentalMarket({ available: false, reason: 'source_unavailable', n: 0 });
   }
 }
 window.__retryMarket = (kind, id, disc) => {
@@ -1737,6 +1804,11 @@ document.addEventListener('input', (event) => {
   if (event.target instanceof Element && event.target.matches('.calc-input')) {
     window.__recalcGastos(event.target);
   } else if (event.target instanceof Element && event.target.matches('.rent-input')) {
+    if (event.target.matches('[data-rent]')) {
+      event.target.dataset.rentSource = 'custom';
+      const origin = event.target.closest('.calc')?.querySelector('[data-rent-origin]');
+      if (origin) origin.textContent = 'Canon ajustado por ti';
+    }
     window.__recalcRent(event.target);
   }
 });

@@ -3,8 +3,11 @@ import { env } from './env.js';
 import { createLogger } from './logger.js';
 import {
   InmuebleSchema,
+  RentalListingSchema,
   isReasonableInmueble,
+  isReasonableRental,
   type Inmueble,
+  type RentalListing,
   type ScrapingRunResult,
   type ScrapingRunStatus,
 } from './types.js';
@@ -139,6 +142,82 @@ export async function upsertInmuebles(items: unknown[]): Promise<{
 }
 
 /**
+ * Upsert idempotente del inventario mensual de arriendos. La tabla y la
+ * validación son deliberadamente distintas de `inmuebles`: mezclar ambos
+ * precios contaminaría tanto el precio/m² de venta como el índice CRECE.
+ */
+export async function upsertRentalListings(items: unknown[]): Promise<{
+  inserted: number;
+  updated: number;
+  invalid: number;
+  errors: Array<{ index: number; message: string }>;
+}> {
+  const errors: Array<{ index: number; message: string }> = [];
+  const valid: RentalListing[] = [];
+
+  items.forEach((raw, i) => {
+    const parsed = RentalListingSchema.safeParse(raw);
+    if (parsed.success) valid.push(parsed.data);
+    else {
+      errors.push({
+        index: i,
+        message: parsed.error.issues.map((iss) => `${iss.path.join('.')}: ${iss.message}`).join('; '),
+      });
+    }
+  });
+
+  const reasonable = valid.filter(isReasonableRental);
+  const outliersDropped = valid.length - reasonable.length;
+  const deduped = new Map<string, RentalListing>();
+  for (const item of reasonable) {
+    deduped.set(`${item.country_code}|${item.source}|${item.source_id}`, item);
+  }
+  const nowISO = new Date().toISOString();
+  const enriched = [...deduped.values()].map((item) => ({
+    ...item,
+    last_seen_at: nowISO,
+    times_missed: 0,
+    is_active: true,
+    deactivated_at: null,
+  }));
+
+  if (enriched.length === 0) {
+    return { inserted: 0, updated: 0, invalid: errors.length + outliersDropped, errors };
+  }
+  if (outliersDropped > 0) {
+    log.warn(`Arriendos: descartados ${outliersDropped} cánones/áreas fuera de rango`);
+  }
+
+  const { data, error, count } = await supabase
+    .from('rental_listings')
+    .upsert(enriched, {
+      onConflict: 'country_code,source,source_id',
+      ignoreDuplicates: false,
+      count: 'exact',
+    })
+    .select('id, source, source_id');
+
+  if (error) {
+    log.error('Upsert de arriendos falló', error);
+    return {
+      inserted: 0,
+      updated: 0,
+      invalid: errors.length + outliersDropped,
+      errors: [...errors, { index: -1, message: error.message }],
+    };
+  }
+
+  const touched = data?.length ?? count ?? 0;
+  log.info(`Upsert arriendos OK: ${touched} filas tocadas`);
+  return {
+    inserted: touched,
+    updated: 0,
+    invalid: errors.length + outliersDropped,
+    errors,
+  };
+}
+
+/**
  * Lifecycle: tras un scrape COMPLETO de una fuente, marca como "missed"
  * los inmuebles de esa fuente que no se vieron en este run, y desactiva
  * los que ya pasaron el threshold (default 2 runs sin verse).
@@ -176,6 +255,29 @@ export async function markStaleInmuebles(
     log.info(`Lifecycle ${source}: +${incremented} missed, ${deactivated} desactivados`);
   }
   return { incremented, deactivated };
+}
+
+export async function markStaleRentalListings(
+  source: string,
+  country: string,
+  runStartISO: string,
+  threshold = 2,
+): Promise<{ incremented: number; deactivated: number }> {
+  const { data, error } = await supabase.rpc('mark_stale_rental_listings', {
+    p_source: source,
+    p_country: country,
+    p_run_start: runStartISO,
+    p_threshold: threshold,
+  });
+  if (error) {
+    log.error(`markStaleRentalListings(${source}): ${error.message}`);
+    return { incremented: 0, deactivated: 0 };
+  }
+  const row = Array.isArray(data) ? data[0] : data;
+  return {
+    incremented: Number(row?.incremented ?? 0),
+    deactivated: Number(row?.deactivated ?? 0),
+  };
 }
 
 /**

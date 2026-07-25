@@ -162,6 +162,53 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     }
   });
 
+  test('muestra el canon estimado y recalcula la rentabilidad con comparables de arriendo', async () => {
+    const { context, page, assertClean } = await openIsolatedPage();
+    try {
+      await page.route('**/api/rental-market?*', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            rental_market: {
+              available: true,
+              reason: 'ok',
+              city: 'medellin',
+              type: 'apartment',
+              scope: 'zona',
+              scope_label: 'barrio Laureles',
+              radius_km: null,
+              criteria: ['mismo tipo de inmueble', 'mismo barrio (Laureles)', 'área similar (±25% de 82 m²)'],
+              n: 14,
+              n_rent_per_m2: 12,
+              median_monthly_rent: 4_850_000,
+              p25_monthly_rent: 4_200_000,
+              p75_monthly_rent: 5_500_000,
+              median_rent_per_m2: 59_146,
+              spread: 0.22,
+              confidence: 'high',
+              sample: [],
+            },
+          }),
+        });
+      });
+
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await waitForResults(page);
+      await page.locator('#grid article.card .card-open').first().click();
+
+      const rentalPanel = page.locator('[data-rental-market]');
+      await rentalPanel.getByText('Canon estimado de mercado').waitFor();
+      assert.match(await rentalPanel.textContent() ?? '', /4[.\s]850[.\s]000\/mes/);
+      assert.match(await page.locator('[data-rent]').inputValue(), /4[.\s]850[.\s]000/);
+      assert.match(await page.locator('.rent-result').textContent() ?? '', /\d+[,.]\d+%/);
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
   test('guarda un inmueble anónimo, persiste y lo muestra en Guardados', async () => {
     const { context, page, assertClean } = await openIsolatedPage();
     try {

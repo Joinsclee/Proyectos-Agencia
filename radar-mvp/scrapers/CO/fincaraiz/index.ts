@@ -32,13 +32,19 @@ import { createLogger } from '../../../lib/logger.js';
 import { isEntrypoint } from '../../../lib/is-main.js';
 import {
   upsertInmuebles,
+  upsertRentalListings,
   markStaleInmuebles,
+  markStaleRentalListings,
   startScrapingLog,
   finishScrapingLog,
 } from '../../../lib/supabase.js';
-import type { Inmueble } from '../../../lib/types.js';
+import {
+  isReasonableRental,
+  type Inmueble,
+  type RentalListing,
+} from '../../../lib/types.js';
 import { loadActiveZonas, zonaLabel, type RadarZona } from './zonas.js';
-import { mapFincaRaiz, isEligible, type FincaRaizRaw } from './parser.js';
+import { mapFincaRaiz, mapFincaRaizRental, isEligible, type FincaRaizRaw } from './parser.js';
 
 const log = createLogger('fincaraiz');
 
@@ -54,6 +60,7 @@ interface Opts {
   slug?: string; // filtra por neighborhood_slug o city_slug
   maxPages?: number;
   dry?: boolean;
+  operation?: 'venta' | 'arriendo';
 }
 
 function parseArgs(): Opts {
@@ -62,6 +69,8 @@ function parseArgs(): Opts {
     if (a.startsWith('--zona=')) o.slug = a.split('=')[1];
     else if (a.startsWith('--city=')) o.slug = a.split('=')[1];
     else if (a.startsWith('--max-pages=')) o.maxPages = Number(a.split('=')[1]);
+    else if (a === '--rentals' || a === '--operation=arriendo') o.operation = 'arriendo';
+    else if (a === '--operation=venta') o.operation = 'venta';
     else if (a === '--dry') o.dry = true;
   }
   return o;
@@ -120,24 +129,48 @@ interface ZoneStats {
   pages: number;
   seen: number;
   eligible: number;
+  rejected: number;
+  failed_pages: number;
   total_portal: number;
   completed: boolean; // alcanzó lastPage (no quedó capado por max_pages)
 }
 
-export async function run(opts: Opts = parseArgs()) {
+/**
+ * El lifecycle solo es seguro cuando se observaron todas las zonas y páginas.
+ * Un fallo parcial no significa que el aviso desapareció del portal.
+ */
+export function canMarkSourceStale(
+  requestedZones: number,
+  stats: Array<Pick<ZoneStats, 'completed'>>,
+  errorCount: number,
+  scopedRun: boolean,
+  dryRun: boolean,
+): boolean {
+  return !scopedRun
+    && !dryRun
+    && errorCount === 0
+    && stats.length === requestedZones
+    && stats.every((item) => item.completed);
+}
+
+async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
   const runStartISO = new Date().toISOString();
-  const zonas = await loadActiveZonas(opts.slug);
+  const zonas = await loadActiveZonas(opts.slug, operation);
   if (zonas.length === 0) {
     log.warn('No hay zonas activas que coincidan. Nada que hacer.');
     return { records_found: 0, records_inserted: 0, errors: [] };
   }
 
-  log.info(`Zonas a procesar: ${zonas.map(zonaLabel).join(', ')}${opts.dry ? ' (DRY)' : ''}`);
-  const logId = opts.dry ? null : await startScrapingLog(SOURCE, COUNTRY);
+  const modeLabel = operation === 'arriendo' ? 'arriendos' : 'ventas';
+  log.info(`${modeLabel}: zonas a procesar: ${zonas.map(zonaLabel).join(', ')}${opts.dry ? ' (DRY)' : ''}`);
+  const logId = opts.dry ? null : await startScrapingLog(
+    operation === 'arriendo' ? 'fincaraiz-arriendo' : SOURCE,
+    COUNTRY,
+  );
 
   const errors: Array<{ message: string; context?: unknown }> = [];
   const stats: ZoneStats[] = [];
-  let buffer: Inmueble[] = [];
+  let buffer: Array<Inmueble | RentalListing> = [];
   let totalInserted = 0;
 
   const flush = async (force = false) => {
@@ -145,7 +178,9 @@ export async function run(opts: Opts = parseArgs()) {
     if (!force && buffer.length < FLUSH_EVERY) return;
     const batch = buffer;
     buffer = [];
-    const r = await upsertInmuebles(batch);
+    const r = operation === 'arriendo'
+      ? await upsertRentalListings(batch)
+      : await upsertInmuebles(batch);
     totalInserted += r.inserted;
     errors.push(...r.errors.map((e) => ({ message: e.message })));
     log.info(`  ⤓ flush: ${r.inserted} filas tocadas (acum ${totalInserted})`);
@@ -159,15 +194,31 @@ export async function run(opts: Opts = parseArgs()) {
     const hardCap = cliCap ?? zoneCap ?? Infinity;
     const label = zonaLabel(z);
     log.info(`▸ ${label} · ${z.operation}/${z.property_type} (tope ${hardCap === Infinity ? 'auto' : hardCap} págs)`);
-    const st: ZoneStats = { zona: label, pages: 0, seen: 0, eligible: 0, total_portal: 0, completed: false };
+    const st: ZoneStats = {
+      zona: label,
+      pages: 0,
+      seen: 0,
+      eligible: 0,
+      rejected: 0,
+      failed_pages: 0,
+      total_portal: 0,
+      completed: false,
+    };
 
     const ingest = (data: FincaRaizRaw[]) => {
       st.seen += data.length;
       for (const raw of data) {
-        const it = mapFincaRaiz(raw, z);
+        const it = operation === 'arriendo'
+          ? mapFincaRaizRental(raw, z)
+          : mapFincaRaiz(raw, z);
         if (!it) continue;
-        // Guardamos TODO el baseline; isEligible solo cuenta para el reporte.
-        if (isEligible(it, z)) st.eligible++;
+        if (operation === 'arriendo' && !isReasonableRental(it as RentalListing)) {
+          st.rejected++;
+          continue;
+        }
+        // En venta guardamos todo el baseline; isEligible solo cuenta para el
+        // reporte. En arriendo sí excluimos cánones/áreas absurdos antes del buffer.
+        if (operation === 'arriendo' || isEligible(it as Inmueble, z)) st.eligible++;
         buffer.push(it);
       }
     };
@@ -176,6 +227,7 @@ export async function run(opts: Opts = parseArgs()) {
     const first = await fetchPage(zoneUrl(z, 1));
     if (!first) {
       errors.push({ message: `${label} pagina 1 no disponible` });
+      st.failed_pages++;
       stats.push(st);
       continue;
     }
@@ -200,15 +252,23 @@ export async function run(opts: Opts = parseArgs()) {
       for (let pg = start; pg < start + PAGE_CONCURRENCY && pg <= limit; pg++) pages.push(pg);
       const results = await Promise.all(pages.map((pg) => fetchPage(zoneUrl(z, pg))));
       results.forEach((res, i) => {
-        if (!res) { errors.push({ message: `${label} pagina ${pages[i]} no disponible` }); return; }
+        if (!res) {
+          st.failed_pages++;
+          errors.push({ message: `${label} pagina ${pages[i]} no disponible` });
+          return;
+        }
         ingest(res.data);
         st.pages = Math.max(st.pages, pages[i]);
       });
       await flush();
       await sleep(80 + Math.floor(Math.random() * 120)); // pausa cortés entre lotes
     }
-    st.completed = limit >= lastPage; // completo si el tope no cortó antes del final
-    log.info(`  ${label}: ${st.seen} avisos (${st.eligible} en segmento; portal: ${st.total_portal}; ${st.completed ? 'completo' : 'parcial'})`);
+    st.completed = st.failed_pages === 0 && limit >= lastPage;
+    log.info(
+      `  ${label}: ${st.seen} avisos (${st.eligible} utilizables`
+      + `${st.rejected ? `; ${st.rejected} fuera de rango` : ''}; portal: ${st.total_portal}; `
+      + `${st.completed ? 'completo' : 'parcial'})`,
+    );
     stats.push(st);
   }
 
@@ -219,10 +279,18 @@ export async function run(opts: Opts = parseArgs()) {
   // normalmente NO completamos → no marcamos stale para evitar desactivar
   // listings que solo se movieron de página. El historial de precios + last_seen_at
   // siguen reflejando frescura.
-  const fullRun = !opts.slug && !opts.maxPages && !opts.dry && stats.every((s) => s.completed);
+  const fullRun = canMarkSourceStale(
+    zonas.length,
+    stats,
+    errors.length,
+    Boolean(opts.slug || opts.maxPages),
+    Boolean(opts.dry),
+  );
   let inactivated = 0;
   if (fullRun) {
-    const r = await markStaleInmuebles(SOURCE, COUNTRY, runStartISO);
+    const r = operation === 'arriendo'
+      ? await markStaleRentalListings(SOURCE, COUNTRY, runStartISO)
+      : await markStaleInmuebles(SOURCE, COUNTRY, runStartISO);
     inactivated = r.deactivated;
   } else if (!opts.dry) {
     log.info('Scrape por muestreo (no completo) → se omite marcado de stale.');
@@ -230,6 +298,7 @@ export async function run(opts: Opts = parseArgs()) {
 
   const totalSeen = stats.reduce((a, s) => a + s.seen, 0);
   const totalEligible = stats.reduce((a, s) => a + s.eligible, 0);
+  const totalRejected = stats.reduce((a, s) => a + s.rejected, 0);
 
   if (!opts.dry) {
     await finishScrapingLog(logId, errors.length === 0 ? 'success' : 'partial', {
@@ -237,18 +306,36 @@ export async function run(opts: Opts = parseArgs()) {
       records_inserted: totalInserted,
       records_updated: 0,
       errors,
-      meta: { run_start: runStartISO, zonas: stats, eligible: totalEligible, inactivated, full_run: fullRun },
+      meta: {
+        run_start: runStartISO,
+        zonas: stats,
+        eligible: totalEligible,
+        rejected: totalRejected,
+        inactivated,
+        full_run: fullRun,
+      },
     });
   }
 
   log.info(
-    `✅ FincaRaíz: ${totalSeen} avisos baseline (${totalEligible} en segmento) · ${totalInserted} filas${opts.dry ? ' (DRY, no escrito)' : ''}`,
+    `✅ FincaRaíz ${modeLabel}: ${totalSeen} avisos (${totalEligible} utilizables`
+    + `${totalRejected ? `; ${totalRejected} fuera de rango` : ''}) · ${totalInserted} filas`
+    + `${opts.dry ? ' (DRY, no escrito)' : ''}`,
   );
   return { records_found: totalSeen, records_inserted: totalInserted, records_eligible: totalEligible, errors };
 }
 
+export async function run(opts: Opts = parseArgs()) {
+  return runOperation('venta', opts);
+}
+
+export async function runRentals(opts: Opts = parseArgs()) {
+  return runOperation('arriendo', opts);
+}
+
 if (isEntrypoint(import.meta.url)) {
-  run()
+  const opts = parseArgs();
+  (opts.operation === 'arriendo' ? runRentals(opts) : run(opts))
     .then((r) => {
       log.info('Done', r);
       process.exit(0);

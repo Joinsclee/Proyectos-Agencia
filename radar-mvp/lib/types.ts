@@ -54,6 +54,20 @@ export function isReasonableInmueble(item: { price?: number | null; area_m2?: nu
 }
 
 /**
+ * Validación separada para cánones mensuales. No puede reutilizar
+ * `isReasonableInmueble`: su mínimo de $30M es correcto para ventas, pero
+ * descartaría todos los arriendos reales.
+ */
+export function isReasonableRental(item: { monthly_rent?: number | null; area_m2?: number | null }): boolean {
+  if (!item.monthly_rent || item.monthly_rent < 200_000) return false;
+  if (item.monthly_rent > 100_000_000) return false;
+  if (item.area_m2 != null && item.area_m2 < 5) return false;
+  if (item.area_m2 != null && item.area_m2 > 100_000) return false;
+  if (item.area_m2 && item.monthly_rent / item.area_m2 > 1_000_000) return false;
+  return true;
+}
+
+/**
  * Modelo unificado de inmueble. Todos los scrapers normalizan a esta forma
  * antes de hacer upsert a Supabase.
  *
@@ -77,6 +91,28 @@ export const InmuebleSchema = z.object({
 });
 
 export type Inmueble = z.infer<typeof InmuebleSchema>;
+
+/**
+ * Oferta mensual de arriendo. Se persiste aparte de `inmuebles` para que un
+ * canon nunca pueda entrar por accidente al motor de precios de venta.
+ */
+export const RentalListingSchema = z.object({
+  country_code: z.string().length(2),
+  city: z.string().min(1),
+  zone: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  type: z.string().nullable().optional(),
+  monthly_rent: z.number().positive(),
+  currency: z.string().length(3).default('COP'),
+  area_m2: z.number().positive().nullable().optional(),
+  features: z.record(z.unknown()).default({}),
+  source: z.string().min(1),
+  source_id: z.string().min(1),
+  source_url: z.string().url(),
+  image_url: z.string().url().nullable().optional(),
+});
+
+export type RentalListing = z.infer<typeof RentalListingSchema>;
 
 /**
  * Status de un run de scraper. Se persiste en `scraping_logs`.
