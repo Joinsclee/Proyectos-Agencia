@@ -35,7 +35,12 @@ import {
 import { applySecurityHeaders, contentTypeFor, createRequestId } from './http-security.js';
 import { checkRateLimit, clientAddress, type RateLimitPolicy } from './rate-limit.js';
 import { env } from '../lib/env.js';
-import { emailDeliveryReady, runAlertDispatch } from './notifications.js';
+import {
+  emailDeliveryReady,
+  parseAlertDispatchCanary,
+  runAlertDispatch,
+  type AlertDispatchCanary,
+} from './notifications.js';
 
 const log = createLogger('server');
 const PORT = Number(process.env.PORT ?? 8787);
@@ -173,7 +178,7 @@ const server = createServer(async (req, res) => {
         if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
         return sendJSON(res, 200, { ok: true, plans: listPlans() });
       }
-      if (path === '/api/internal/alerts/run') {
+      if (path === '/api/internal/alerts/run' || path === '/api/internal/alerts/canary') {
         if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
         if (!env.ALERTS_CRON_SECRET) {
           return sendJSON(res, 503, { ok: false, configured: false, error: 'Despacho de alertas no configurado' });
@@ -181,7 +186,17 @@ const server = createServer(async (req, res) => {
         if (bearer(req) !== env.ALERTS_CRON_SECRET) {
           return sendJSON(res, 401, { ok: false, error: 'Credencial de proceso inválida' });
         }
-        const result = await runAlertDispatch();
+        let canary: AlertDispatchCanary | undefined;
+        if (path.endsWith('/canary')) {
+          const parsedCanary = parseAlertDispatchCanary(await readJsonBody(req));
+          if (!parsedCanary.ok || !parsedCanary.canary) {
+            return sendJSON(res, 400, parsedCanary.ok
+              ? { ok: false, error: 'La prueba canario requiere correo e identificador de alerta' }
+              : parsedCanary);
+          }
+          canary = parsedCanary.canary;
+        }
+        const result = await runAlertDispatch(new Date(), canary);
         return sendJSON(res, result.ok ? 200 : result.configured ? 207 : 503, result);
       }
       // ── Auth (POST) ──
