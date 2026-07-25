@@ -24,10 +24,10 @@ test('cron: respeta la cadencia de 7 días', () => {
   assert.ok(toca(job({ ultima_corrida: haceDias(9) }), AHORA));
 });
 
-test('cron: los bancos van a 15 días, no a 7', () => {
-  const bancos = job({ cadencia_dias: 15, ultima_corrida: haceDias(8) });
-  assert.ok(!toca(bancos, AHORA), 'a los 8 días todavía no');
-  assert.ok(toca(job({ cadencia_dias: 15, ultima_corrida: haceDias(15) }), AHORA));
+test('cron: los bancos se verifican cada 7 días', () => {
+  const bancos = job({ nombre: 'bancos', cadencia_dias: 7, ultima_corrida: haceDias(6) });
+  assert.ok(!toca(bancos, AHORA), 'a los 6 días todavía no');
+  assert.ok(toca(job({ nombre: 'bancos', cadencia_dias: 7, ultima_corrida: haceDias(7) }), AHORA));
 });
 
 test('cron: un trabajo deshabilitado nunca corre', () => {

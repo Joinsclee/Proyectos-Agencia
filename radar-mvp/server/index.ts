@@ -10,7 +10,7 @@
 import 'dotenv/config';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { join, dirname, extname } from 'node:path';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
 import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
@@ -19,19 +19,12 @@ import { analyzeProperty, marketOnly } from './analysis.js';
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactar, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
+import { applySecurityHeaders, contentTypeFor, createRequestId } from './http-security.js';
 import { env } from '../lib/env.js';
 
 const log = createLogger('server');
 const PORT = Number(process.env.PORT ?? 8787);
 const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), 'public');
-
-const MIME: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-};
 
 function sendJSON(res: import('node:http').ServerResponse, status: number, body: unknown) {
   const payload = JSON.stringify(body);
@@ -96,7 +89,7 @@ async function serveStatic(res: import('node:http').ServerResponse, pathname: st
     // assets desincronizados (HTML nuevo + app.js viejo cacheado → pantalla
     // colgada). En producción se versionarían los assets; aquí no-cache basta.
     res.writeHead(200, {
-      'Content-Type': MIME[extname(file)] ?? 'application/octet-stream',
+      'Content-Type': contentTypeFor(file),
       'Cache-Control': 'no-cache, must-revalidate',
     });
     res.end(buf);
@@ -106,6 +99,8 @@ async function serveStatic(res: import('node:http').ServerResponse, pathname: st
 }
 
 const server = createServer(async (req, res) => {
+  const requestId = createRequestId();
+  applySecurityHeaders(res, requestId);
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
   const path = url.pathname;
   try {
@@ -202,8 +197,8 @@ const server = createServer(async (req, res) => {
     return await serveStatic(res, path);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    log.error(`${path}: ${msg}`);
-    return sendJSON(res, 500, { error: msg });
+    log.error(`${requestId} ${path}: ${msg}`);
+    return sendJSON(res, 500, { error: 'Error interno del servidor', requestId });
   }
 });
 

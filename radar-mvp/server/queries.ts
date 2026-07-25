@@ -6,6 +6,7 @@
 import { supabase } from '../lib/supabase.js';
 import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT, BANK_SOURCES } from '../lib/types.js';
 import { rotarSemanal } from '../engine/rotacion.js';
+import { sanitizeRemateForDisplay } from './data-quality.js';
 
 export interface ListQuery {
   city?: string;
@@ -189,7 +190,13 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
   const { data, count, error } = await qb;
   if (error) throw new Error(`queryRemates: ${error.message}`);
   const total = count ?? 0;
-  return { data: data ?? [], total, page, pageSize, pages: Math.ceil(total / pageSize) };
+  return {
+    data: (data ?? []).map(sanitizeRemateForDisplay),
+    total,
+    page,
+    pageSize,
+    pages: Math.ceil(total / pageSize),
+  };
 }
 
 /** Una sola propiedad por id (para abrir una recomendación en su modal). */
@@ -197,7 +204,7 @@ export async function getProperty(kind: 'portal' | 'banco' | 'remate', id: strin
   const table = kind === 'remate' ? 'remates' : 'inmuebles';
   const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
   if (error) return null;
-  return data;
+  return kind === 'remate' ? sanitizeRemateForDisplay(data) : data;
 }
 
 /** Bancos demandantes (distintos) en remates con audiencia futura, con conteo. */
