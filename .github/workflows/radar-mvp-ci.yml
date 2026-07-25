@@ -36,10 +36,10 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key-000000
     steps:
       - name: Descargar repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Preparar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -72,10 +72,10 @@ jobs:
       E2E_BASE_URL: https://joinsclee-radar.juno8i.easypanel.host
     steps:
       - name: Descargar repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Preparar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -89,7 +89,7 @@ jobs:
 
       - name: Conservar diagnóstico del monitor
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: radar-production-monitor-${{ github.run_id }}
           path: radar-mvp/artifacts/production-monitor.json
@@ -110,7 +110,7 @@ jobs:
 
       - name: Abrir o actualizar incidente
         if: failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = '[Radar CRECE] Monitor de producción fallando';
@@ -145,7 +145,7 @@ jobs:
 
       - name: Cerrar incidente recuperado
         if: success() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const title = '[Radar CRECE] Monitor de producción fallando';
