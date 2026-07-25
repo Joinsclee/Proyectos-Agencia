@@ -241,13 +241,13 @@ def title_block(doc):
     run = subtitle.add_run("Base comercial, alertas, comparador, rentabilidad y operación")
     set_font(run, size=13, color=MUTED)
 
-    callout(doc, "Conclusión", "Fase 1 permanece en 84%. La Fase 2 comercial alcanza 60% con un recorrido funcional validado en local; pagos, correo entregado, canon observado e integraciones todavía requieren decisiones externas.", "60%", PALE_BLUE, NAVY)
+    callout(doc, "Conclusión", "Fase 1 permanece en 84%. La Fase 2 comercial alcanza 67% con un recorrido funcional validado en local; pagos, correo entregado, canon observado e integraciones todavía requieren decisiones externas.", "67%", PALE_BLUE, NAVY)
 
     meta = [
         ("Preparado para", "Andrés Giraldo"),
         ("Corte", "24 de julio de 2026"),
         ("Estado", "Listo para demostración local; no desplegado"),
-        ("Versión local", "6d84175"),
+        ("Versión local", "f606520"),
         ("Producción vigente", "joinsclee-radar.juno8i.easypanel.host"),
     ]
     table = doc.add_table(rows=len(meta), cols=2)
@@ -388,7 +388,7 @@ def build():
     body(doc, "El compromiso de llegar a por lo menos 80% de la Fase 1 ya se cumplió. El corte defendible de esa fase sigue siendo 84%. La ejecución actual agrega una base comercial y operativa de Fase 2 sin convertir maquetas en promesas.")
     heading(doc, "Dos significados de Fase 2", 2)
     bullet(doc, "Fase 2 técnica original: motor de remates judiciales, aproximadamente 92%.")
-    bullet(doc, "Fase 2 comercial/expansión: planes, alertas, rentabilidad, comparador, administración, pagos e integraciones, aproximadamente 60%.")
+    bullet(doc, "Fase 2 comercial/expansión: planes, alertas, rentabilidad, comparador, administración, pagos e integraciones, aproximadamente 67%.")
     callout(doc, "Dictamen para el cliente", "El producto supera el 80% comprometido para Fase 1 y la Fase 2 comercial ya tiene un recorrido demostrable en local. Todavía no debe venderse como monetización o notificaciones plenamente operativas.", None, PALE_GREEN, GREEN)
 
     heading(doc, "Qué puede demostrarse hoy", 2)
@@ -413,19 +413,19 @@ def build():
         ]),
         ("Cuenta y alertas", [
             "Centro /cuenta y continuidad de preferencias, simulaciones y alertas.",
-            "Validación de ciudad, presupuesto, tipo, frecuencia y estado.",
-            "Procesamiento semanal, búsqueda de coincidencias y plantilla segura.",
-            "Adaptador Resend y endpoint interno protegido.",
+            "Validación separada de entradas y alertas persistidas.",
+            "Historial de entrega, idempotencia y reintentos escalonados.",
+            "Adaptador Resend y proceso semanal protegido.",
         ]),
         ("Comparación y rentabilidad", [
             "Comparador /comparador con criterios homogéneos.",
             "Respeto del muro de acceso al recuperar favoritos.",
             "Rentabilidad bruta y neta con vacancia, mantenimiento y administración.",
-            "Separación explícita entre canon declarado y canon observado.",
+            "Exportación CSV y separación entre canon declarado y observado.",
         ]),
         ("Administración", [
             "Panel /admin protegido por rol.",
-            "Usuarios, Pro, solicitudes, alertas y perfiles completos.",
+            "Usuarios, embudo Pro, alertas, perfiles y estado de entregas.",
             "Exportación JSON sin contraseñas ni tokens.",
         ]),
     ]
@@ -437,21 +437,21 @@ def build():
     page_break(doc)
     heading(doc, "3. Avance ponderado de Fase 2 comercial")
     score_rows = [
-        ["Base comercial, cuenta y UX", "15%", "85%", "12,8"],
+        ["Base comercial, cuenta y UX", "15%", "90%", "13,5"],
         ["Planes, acceso y suscripción", "15%", "65%", "9,8"],
-        ["Alertas y notificaciones", "20%", "70%", "14,0"],
-        ["Comparador y exportación", "15%", "75%", "11,3"],
+        ["Alertas y notificaciones", "20%", "85%", "17,0"],
+        ["Comparador y exportación", "15%", "85%", "12,8"],
         ["Canon y rentabilidad", "15%", "35%", "5,3"],
-        ["Administración", "10%", "60%", "6,0"],
+        ["Administración", "10%", "75%", "7,5"],
         ["Pagos e integraciones", "10%", "10%", "1,0"],
-        ["TOTAL", "100%", "", "60,0%"],
+        ["TOTAL", "100%", "", "66,8% ≈ 67%"],
     ]
     table(doc, ["Bloque", "Peso", "Cumpl.", "Aporte"], score_rows, [5000, 1200, 1500, 1660], 8.7)
     body(doc, "Este porcentaje mide alcance adicional y no reduce el 84% de Fase 1. La diferencia hasta 80% se concentra en proveedores, datos autorizados y operación comercial.")
     heading(doc, "Evidencia de calidad local", 2)
     evidence = [
         ["TypeScript", "Sin errores"],
-        ["Unitarias/integración", "86/86"],
+        ["Unitarias/integración", "94/94"],
         ["Recorridos E2E", "6/6"],
         ["Errores de consola", "0"],
         ["QA visual", "1440×1000 y 375×812"],
@@ -482,18 +482,20 @@ def build():
         "Rol administrativo explícito.",
         "Contenido premium redactado antes de salir del servidor.",
         "Escape de contenido HTML en correos.",
+        "Idempotencia de proveedor, historial y reintentos.",
+        "Límites de abuso para endpoints sensibles.",
         "Proceso interno cerrado si falta secreto o proveedor.",
         "Límites y validación de payloads.",
     ]:
         bullet(doc, item)
 
     page_break(doc)
-    heading(doc, "5. Ruta de 60% a 80%")
+    heading(doc, "5. Ruta de 67% a 80%")
     heading(doc, "Prioridad 1: activar alertas", 2)
     for item in [
         "Aprobar Resend, verificar dominio y configurar las cuatro variables.",
         "Crear el trabajo semanal en EasyPanel.",
-        "Ejecutar envío controlado y registrar historial, deduplicación y reintentos.",
+        "Ejecutar un envío controlado y verificar historial, deduplicación y reintentos.",
     ]:
         numbered(doc, item)
     heading(doc, "Prioridad 2: cerrar planes y pago", 2)
@@ -548,7 +550,7 @@ def build():
     heading(doc, "Antes de apertura comercial", 2)
     hardening = [
         ["Sesión", "Cookies HttpOnly/Secure/SameSite y CSRF"],
-        ["Abuso", "Rate limiting para auth, IA y procesos"],
+        ["Abuso", "Contadores compartidos al operar varias réplicas"],
         ["Identidad", "Verificación de correo"],
         ["Operación", "CI/CD, métricas, alarmas y trazas"],
         ["Recuperación", "Restore de backup y rollback"],
@@ -571,7 +573,7 @@ def build():
     demo_num_id = new_numbering_sequence(doc)
     for item in demo:
         numbered(doc, item, demo_num_id)
-    callout(doc, "Frase de cierre", "“La Fase 1 ya superó el 80%. En Fase 2 no estamos mostrando maquetas: ya existen planes, cuenta, alertas, comparador y rentabilidad. Lo pendiente son decisiones y servicios externos que no debemos fingir.”", None, PALE_BLUE, NAVY)
+    callout(doc, "Frase de cierre", "“La Fase 1 ya superó el 80%. En Fase 2 ya existen planes, cuenta, alertas trazables, comparador, exportación y rentabilidad. Lo pendiente son decisiones y servicios externos que no debemos fingir.”", None, PALE_BLUE, NAVY)
     heading(doc, "Criterio de publicación", 2)
     body(doc, "No desplegar este corte hasta aprobar el texto comercial, configurar el primer canal externo y repetir el smoke test local. Después puede publicarse mediante PR y despliegue controlado.")
 

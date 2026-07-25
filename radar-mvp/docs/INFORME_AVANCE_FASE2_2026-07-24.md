@@ -5,7 +5,7 @@
 **Corte:** 24 de julio de 2026  
 **Estado:** corte funcional validado localmente  
 **Producción vigente:** `https://joinsclee-radar.juno8i.easypanel.host/`  
-**Versión local de Fase 2:** commit `6d84175`
+**Versión local de Fase 2:** commit `f606520`
 
 ## 1. Resumen ejecutivo
 
@@ -19,7 +19,7 @@ Hay dos usos históricos del término “Fase 2” en los documentos del proyect
    aproximadamente al 92%.
 2. La Fase 2 comercial/expansión, que incluye planes, alertas, rentabilidad,
    comparador, administración, pagos e integraciones, queda aproximadamente al
-   60% con este corte.
+   67% con este corte.
 
 La conclusión honesta es: el producto supera el 80% comprometido para Fase 1 y
 la Fase 2 comercial ya tiene un recorrido demostrable en local, pero todavía no
@@ -51,12 +51,16 @@ debe venderse como monetización o notificaciones plenamente operativas.
 ### Alertas semanales
 
 - Alertas persistentes en metadata de Supabase Auth.
+- Contrato separado para validar entradas y alertas ya persistidas.
 - Validación de ciudad, presupuesto, tipo, frecuencia y estado.
 - Límite por plan y actualización idempotente de la alerta primaria.
 - Detección de alertas vencidas cada siete días.
 - Búsqueda de nuevas oportunidades por ciudad, presupuesto y tipo.
 - Plantilla de correo segura, con contenido escapado.
 - Adaptador real para Resend.
+- Clave de idempotencia por entrega para evitar correos duplicados.
+- Historial de envíos, ciclos sin coincidencias y fallos.
+- Reintentos a 15 minutos, una hora, seis horas y veinticuatro horas.
 - Endpoint interno protegido para ejecutar el ciclo.
 - Degradación segura: sin proveedor o secreto, el sistema responde que el canal
   no está configurado y no finge un envío.
@@ -72,26 +76,34 @@ debe venderse como monetización o notificaciones plenamente operativas.
 - Descuento explícito de vacancia, mantenimiento y administración.
 - La interfaz aclara que el canon es declarado por el usuario, no observado en
   una fuente externa.
+- Exportación tabular CSV de cuenta, simulaciones, alertas y entregas.
 
 ### Administración
 
 - Panel `/admin` protegido por rol.
 - Indicadores agregados de usuarios, cuentas Pro, solicitudes Pro, alertas
   activas y perfiles personalizados.
+- Embudo de suscripciones y métricas de entrega de los últimos treinta días.
 - Sin exposición de contraseñas, tokens o listados completos de usuarios.
+
+### Controles operativos
+
+- Límites de solicitudes para autenticación, análisis y escrituras sensibles.
+- Respuesta `429` con tiempo de reintento.
+- Contadores separados por IP, usuario y tipo de acción.
 
 ## 3. Avance ponderado de la Fase 2 comercial
 
 | Bloque | Peso | Cumplimiento | Aporte |
 |---|---:|---:|---:|
-| Base comercial, cuenta y UX | 15% | 85% | 12,8 |
+| Base comercial, cuenta y UX | 15% | 90% | 13,5 |
 | Planes, acceso y suscripción | 15% | 65% | 9,8 |
-| Alertas y notificaciones | 20% | 70% | 14,0 |
-| Comparador y exportación | 15% | 75% | 11,3 |
+| Alertas y notificaciones | 20% | 85% | 17,0 |
+| Comparador y exportación | 15% | 85% | 12,8 |
 | Canon y rentabilidad | 15% | 35% | 5,3 |
-| Administración | 10% | 60% | 6,0 |
+| Administración | 10% | 75% | 7,5 |
 | Pagos e integraciones externas | 10% | 10% | 1,0 |
-| **Total** | **100%** |  | **60,0%** |
+| **Total** | **100%** |  | **66,8% ≈ 67%** |
 
 Este porcentaje no reduce el 84% de Fase 1. Mide un alcance adicional que todavía
 depende de decisiones comerciales, credenciales y proveedores.
@@ -99,7 +111,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 ## 4. Evidencia de calidad local
 
 - TypeScript: sin errores.
-- Pruebas unitarias e integración: 86/86 aprobadas.
+- Pruebas unitarias e integración: 94/94 aprobadas.
 - Recorridos E2E: 6/6 aprobados.
 - Errores de JavaScript observados: 0.
 - QA visual en 1440 × 1000 y 375 × 812.
@@ -134,7 +146,8 @@ depende de decisiones comerciales, credenciales y proveedores.
   `ALERTS_CRON_SECRET` y `APP_BASE_URL`.
 - Crear el trabajo semanal en EasyPanel.
 - Ejecutar un envío controlado a correos de prueba.
-- Añadir historial durable de entregas, deduplicación y reintentos.
+- Migrar el historial de metadata a una tabla dedicada cuando el volumen lo
+  justifique.
 
 ### Prioridad 2: cerrar planes y pago
 
@@ -153,8 +166,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 
 ### Prioridad 4: operación comercial
 
-- Convertir la exportación de seguimiento a PDF/CSV.
-- Ampliar el panel administrativo con embudo y estado de entregas.
+- Añadir una exportación ejecutiva en PDF.
 - Añadir auditoría de cambios comerciales.
 - Definir y conectar las integraciones Low Ticket/Tradentia.
 
@@ -187,7 +199,8 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 ## 9. Endurecimiento antes de apertura comercial
 
 - Migrar sesión a cookies HttpOnly/Secure/SameSite y protección CSRF.
-- Añadir rate limiting a login, registro, análisis y procesos internos.
+- Migrar los límites de abuso a un almacén compartido si se ejecutan varias
+  réplicas del servidor.
 - Activar verificación de correo.
 - Añadir CI/CD, métricas, alertas y trazas centralizadas.
 - Ejecutar restauración de backup y rollback.
@@ -208,7 +221,7 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 ## 11. Dictamen
 
 El producto está listo para una demostración local de Fase 2 y mantiene el
-cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 60%:
+cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 67%:
 la experiencia y la base técnica existen, mientras que pagos, entrega de correo,
 canon observado e integraciones todavía requieren decisiones y configuración
 externa.
@@ -216,4 +229,3 @@ externa.
 La recomendación es no desplegar este corte hasta aprobar el texto comercial,
 configurar el primer canal externo y repetir el smoke test local. Después puede
 publicarse mediante PR y despliegue controlado.
-
