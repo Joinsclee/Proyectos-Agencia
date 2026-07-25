@@ -11,6 +11,7 @@
  */
 import { supabase, authClient } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
+import { entitledPlanFromMetadata, subscriptionStatusFromMetadata, type SubscriptionStatus } from './commercial.js';
 
 const log = createLogger('favorites');
 
@@ -20,8 +21,10 @@ export interface AuthUser {
   id: string;
   email: string;
   name?: string;
-  /** 'free' | 'suscrito'. Decide si se entregan las fichas de oportunidad. */
+  /** 'free' | 'suscrito' | 'pro'. Decide si se entregan las fichas de oportunidad. */
   plan?: string;
+  subscriptionStatus?: SubscriptionStatus;
+  role?: 'user' | 'admin';
 }
 
 const MAX_FAVS = 500;
@@ -31,12 +34,17 @@ export async function getUserFromToken(token: string | null): Promise<AuthUser |
   if (!token) return null;
   const { data, error } = await authClient.auth.getUser(token); // cliente aislado (no contamina datos)
   if (error || !data.user) return null;
+  const metadata = data.user.user_metadata ?? {};
   return {
     id: data.user.id,
     email: data.user.email ?? '',
-    name: (data.user.user_metadata?.name as string | undefined) ?? undefined,
-    // Plan de suscripción: decide si se entregan las fichas de oportunidad.
-    plan: (data.user.user_metadata?.plan as string | undefined) ?? 'free',
+    name: (metadata.name as string | undefined) ?? undefined,
+    // El permiso efectivo considera el ciclo de vida, no solo la etiqueta del plan.
+    plan: entitledPlanFromMetadata(metadata),
+    subscriptionStatus: subscriptionStatusFromMetadata(metadata),
+    role: metadata.role === 'admin' || metadata.is_admin === true
+      ? 'admin'
+      : 'user',
   };
 }
 

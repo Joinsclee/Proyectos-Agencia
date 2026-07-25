@@ -43,7 +43,7 @@ function writeStoredJson(key, value) {
 }
 
 // ---------- Auth + favoritos ----------
-const auth = { token: localStorage.getItem('radar_token') || null, user: null };
+const auth = { token: localStorage.getItem('radar_token') || null, user: null, account: null };
 const favKey = (kind, id) => `${kind}:${id}`;
 const guestFavorites = new Map(
   (Array.isArray(readStoredJson(GUEST_FAVS_KEY, [])) ? readStoredJson(GUEST_FAVS_KEY, []) : [])
@@ -57,7 +57,7 @@ const savedSimulations = new Map(
 );
 let radarAlertDraft = (() => {
   const value = readStoredJson(RADAR_ALERT_KEY, null);
-  return value?.status === 'draft' && typeof value?.city === 'string' ? value : null;
+  return ['draft', 'active'].includes(value?.status) && typeof value?.city === 'string' ? value : null;
 })();
 const favSet = new Set(guestFavorites.keys()); // claves "kind:id"
 const propertyCache = new Map();
@@ -74,6 +74,7 @@ async function initAuth() {
     favSet.clear();
     (d.favorites || []).forEach((f) => favSet.add(favKey(f.kind, f.id)));
     await syncGuestFavorites();
+    await syncAccountContext();
   } catch (e) { /* sin red: queda anónimo */ }
   renderAuthBar();
   paintFavs();
@@ -104,16 +105,47 @@ async function syncGuestFavorites() {
     showToast('Tus guardados de este dispositivo ya están sincronizados.');
   }
 }
+async function syncAccountContext() {
+  if (!auth.token) return;
+  const response = await fetch('/api/account/sync', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({
+      preferences: radarPreferences.complete ? radarPreferences : null,
+      simulations: savedSimulations.size ? [...savedSimulations.values()].slice(0, 50) : undefined,
+      alertDraft: radarAlertDraft?.status === 'draft' ? radarAlertDraft : null,
+    }),
+  });
+  if (!response.ok) return;
+  const data = await response.json();
+  if (!data.ok || !data.account) return;
+  auth.account = data.account;
+  if (!radarPreferences.complete && data.account.preferences) {
+    radarPreferences = normalizeRadarPreferences(data.account.preferences);
+    writeStoredJson(RADAR_PREFS_KEY, radarPreferences);
+  }
+  if (Array.isArray(data.account.simulations) && savedSimulations.size === 0) {
+    data.account.simulations.forEach((item) => {
+      if (item?.key) savedSimulations.set(String(item.key), item);
+    });
+    writeStoredJson(RADAR_SIMULATIONS_KEY, [...savedSimulations.values()]);
+  }
+  if (data.account.alerts?.[0]) {
+    radarAlertDraft = { ...data.account.alerts[0], status: 'active' };
+    persistRadarAlert();
+  }
+}
 function renderAuthBar() {
   const el = $('authbar'); if (!el) return;
   if (auth.user) {
     const who = auth.user.name || (auth.user.email || '').split('@')[0];
-    el.innerHTML = `<span class="auth-user">${ic('user')}${esc(who)}</span><button class="auth-link" id="auth-logout">${ic('user')}<span>Salir</span></button>`;
+    const plan = auth.account?.plan === 'pro' ? '<span class="auth-plan">Pro</span>' : '';
+    el.innerHTML = `<a class="auth-user" href="/cuenta">${ic('user')}${esc(who)}${plan}</a><a class="auth-link" href="/planes">Planes</a><button class="auth-link" id="auth-logout"><span>Salir</span></button>`;
     $('auth-logout').addEventListener('click', () => {
       localStorage.removeItem('radar_token'); localStorage.removeItem('radar_refresh'); location.reload();
     });
   } else {
-    el.innerHTML = `<a class="auth-link primary" href="/login">${ic('user')}<span>Ingresar</span></a>`;
+    el.innerHTML = `<a class="auth-link" href="/planes">Planes</a><a class="auth-link primary" href="/login">${ic('user')}<span>Ingresar</span></a>`;
   }
   updateFavCount();
 }
@@ -461,6 +493,13 @@ function prepareRadarAlert() {
   };
   persistRadarAlert();
 }
+async function activateRadarAlert() {
+  prepareRadarAlert();
+  if (!auth.token) return false;
+  await syncAccountContext();
+  renderAuthBar();
+  return radarAlertDraft?.status === 'active';
+}
 function setupProgress(step) {
   const value = step === 1 ? 50 : step === 2 ? 75 : 90;
   return `<div class="setup-progress-row">
@@ -523,7 +562,8 @@ function renderRadarSetup() {
   if (radarPreferences.complete) {
     const savedChip = favSet.size ? `<span class="setup-chip">${favSet.size} guardado${favSet.size === 1 ? '' : 's'}</span>` : '';
     const simulationChip = savedSimulations.size ? `<span class="setup-chip">${savedSimulations.size} simulación${savedSimulations.size === 1 ? '' : 'es'}</span>` : '';
-    const alertChip = radarAlertDraft ? '<span class="setup-chip">Alerta preparada</span>' : '';
+    const alertActive = radarAlertDraft?.status === 'active';
+    const alertChip = radarAlertDraft ? `<span class="setup-chip">${alertActive ? 'Alerta activa' : 'Alerta preparada'}</span>` : '';
     root.innerHTML = `<div class="radar-setup-card is-complete">
       <div class="setup-copy">
         <span class="setup-kicker">${ic('check')} Tu Radar está personalizado · 100%</span>
@@ -544,11 +584,13 @@ function renderRadarSetup() {
       <div class="setup-alert-row">
         <div>
           <strong>Alerta semanal</strong>
-          <span>${radarAlertDraft ? 'Preparada en este dispositivo; falta activar el envío por correo.' : 'Prepara el seguimiento de nuevas coincidencias con estas preferencias.'}</span>
+          <span>${alertActive ? 'Guardada en tu cuenta y lista para el proceso de notificación.' : radarAlertDraft ? 'Preparada en este dispositivo; inicia sesión para guardarla en tu cuenta.' : 'Prepara el seguimiento de nuevas coincidencias con estas preferencias.'}</span>
         </div>
-        ${radarAlertDraft
-          ? '<a class="setup-alert-action" href="/login">Activar por correo</a>'
-          : '<button class="setup-alert-action" type="button" data-setup-alert>Preparar alerta</button>'}
+        ${alertActive
+          ? '<a class="setup-alert-action" href="/cuenta">Administrar</a>'
+          : radarAlertDraft && !auth.token
+            ? '<a class="setup-alert-action" href="/login">Guardar en mi cuenta</a>'
+            : `<button class="setup-alert-action" type="button" data-setup-alert>${auth.token ? 'Activar seguimiento' : 'Preparar alerta'}</button>`}
       </div>
     </div>`;
     return;
@@ -631,9 +673,11 @@ $('radar-setup').addEventListener('click', async (event) => {
     return;
   }
   if (event.target.closest('[data-setup-alert]')) {
-    prepareRadarAlert();
+    const active = await activateRadarAlert();
     renderRadarSetup();
-    showToast('Alerta semanal preparada. Inicia sesión para activar el envío por correo.');
+    showToast(active
+      ? 'Alerta semanal guardada en tu cuenta.'
+      : 'Alerta semanal preparada. Inicia sesión para guardarla en tu cuenta.');
     return;
   }
   if (event.target.closest('[data-setup-next]')) {
@@ -650,6 +694,7 @@ $('radar-setup').addEventListener('click', async (event) => {
     localStorage.removeItem(RADAR_SETUP_DISMISSED_KEY);
     radarSetupState.open = false;
     await applyRadarPreferences(radarPreferences, true);
+    if (auth.token) await syncAccountContext();
     renderRadarSetup();
     showToast('Tu Radar quedó personalizado en este dispositivo.');
   }
@@ -734,6 +779,9 @@ async function loadGuardados() {
   setResultText(props.length + ' guardado' + (props.length === 1 ? '' : 's'));
   $('loading').style.display = 'none';
   $('empty').style.display = props.length === 0 ? 'block' : 'none';
+  if (props.length >= 2) {
+    $('pager').innerHTML = '<a class="compare-cta" href="/comparador">Comparar hasta 3 guardados</a>';
+  }
   if (props.length === 0) $('empty').innerHTML = '<div class="h">Sin guardados aún</div><div>Toca el corazón en cualquier inmueble para guardarlo aquí.</div>';
 }
 
@@ -953,6 +1001,24 @@ function renderCalc(valor, mode) {
   const grand = `<span>${mode === 'remate' ? 'Base + registro estimado' : 'Costo estimado de adquisición'}</span><strong>${fmtCOP(Math.round(valor + total))}</strong>`;
   return { rows, tot, grand, expenses: total, acquisitionTotal: valor + total };
 }
+function calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin = 0) {
+  const annualGross = monthlyRent * 12;
+  const vacancy = annualGross * 0.08;
+  const maintenance = annualGross * 0.05;
+  const annualNet = Math.max(0, annualGross - vacancy - maintenance - monthlyAdmin * 12);
+  return {
+    grossYield: acquisitionTotal > 0 ? (annualGross / acquisitionTotal) * 100 : 0,
+    netYield: acquisitionTotal > 0 ? (annualNet / acquisitionTotal) * 100 : 0,
+    annualNet,
+  };
+}
+function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
+  if (!monthlyRent) return '<span>Ingresa un canon esperado para calcular la rentabilidad.</span>';
+  const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
+  return `<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
+    <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
+    <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento y administración.</small>`;
+}
 window.__recalcGastos = function (input) {
   const calc = input.closest('.calc');
   const valor = Number((input.value || '').replace(/[^0-9]/g, '')) || 0;
@@ -965,6 +1031,20 @@ window.__recalcGastos = function (input) {
     const key = favKey(calc.dataset.kind, calc.dataset.id);
     saveButton.textContent = savedSimulations.has(key) ? 'Actualizar simulación' : 'Guardar simulación';
   }
+  const rentResult = calc.querySelector('.rent-result');
+  if (rentResult) {
+    const rent = Number((calc.querySelector('[data-rent]')?.value || '').replace(/[^0-9]/g, '')) || 0;
+    const admin = Number((calc.querySelector('[data-admin]')?.value || '').replace(/[^0-9]/g, '')) || 0;
+    rentResult.innerHTML = renderRentalYield(valor + renderCalc(valor, calc.dataset.mode).expenses, rent, admin);
+  }
+};
+window.__recalcRent = function (input) {
+  const calc = input.closest('.calc');
+  const valor = Number((calc.querySelector('.calc-input')?.value || '').replace(/[^0-9]/g, '')) || 0;
+  const rent = Number((calc.querySelector('[data-rent]')?.value || '').replace(/[^0-9]/g, '')) || 0;
+  const admin = Number((calc.querySelector('[data-admin]')?.value || '').replace(/[^0-9]/g, '')) || 0;
+  const { acquisitionTotal } = renderCalc(valor, calc.dataset.mode);
+  calc.querySelector('.rent-result').innerHTML = renderRentalYield(acquisitionTotal, rent, admin);
 };
 function persistSimulations() {
   writeStoredJson(RADAR_SIMULATIONS_KEY, [...savedSimulations.values()]);
@@ -985,6 +1065,8 @@ function saveSimulation(calc) {
     base: valor,
     expenses: Math.round(expenses),
     acquisitionTotal: Math.round(acquisitionTotal),
+    monthlyRent: Number((calc.querySelector('[data-rent]')?.value || '').replace(/[^0-9]/g, '')) || 0,
+    monthlyAdmin: Number((calc.querySelector('[data-admin]')?.value || '').replace(/[^0-9]/g, '')) || 0,
     savedAt: new Date().toISOString(),
   });
   persistSimulations();
@@ -992,8 +1074,9 @@ function saveSimulation(calc) {
   if (button) button.textContent = 'Simulación guardada ✓';
   const status = calc.querySelector('.calc-save-status');
   if (status) status.textContent = 'Disponible en este dispositivo para retomarla después.';
+  if (auth.token) void syncAccountContext();
   renderRadarSetup();
-  showToast('Simulación guardada en este dispositivo.');
+  showToast(auth.token ? 'Simulación guardada y sincronizándose con tu cuenta.' : 'Simulación guardada en este dispositivo.');
 }
 // ── Análisis preliminar automático del aviso (pedido del cliente) ──
 // Rule-based: escanea la publicación + tipo + números y señala banderas para
@@ -1158,7 +1241,7 @@ window.__analyzeAI = async function (btn, kind, id) {
 
 function gastosSection(valor, mode, context) {
   if (!valor || valor <= 0) return '';
-  const { rows, tot, grand } = renderCalc(valor, mode);
+  const { rows, tot, grand, acquisitionTotal } = renderCalc(valor, mode);
   const titulo = mode === 'remate' ? 'Calculadora de gastos (registro de la adjudicación)' : 'Calculadora de gastos de compra';
   const key = context?.kind && context?.id ? favKey(context.kind, context.id) : '';
   const saved = key ? savedSimulations.has(key) : false;
@@ -1172,6 +1255,14 @@ function gastosSection(valor, mode, context) {
       <div class="calc-rows">${rows}</div>
       <div class="calc-total">${tot}</div>
       <div class="calc-grand">${grand}</div>
+      ${mode !== 'remate' ? `<div class="rent-box">
+        <div class="rent-head"><span class="calc-label">Rentabilidad por arriendo</span><small>Canon ingresado por el usuario</small></div>
+        <div class="rent-inputs">
+          <label>Canon mensual esperado<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0"></label>
+        </div>
+        <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
+      </div>` : ''}
       ${key ? `<div class="calc-save-row">
         <button class="calc-save" type="button" data-save-simulation>${saved ? 'Actualizar simulación' : 'Guardar simulación'}</button>
         <span class="calc-save-status" aria-live="polite">${saved ? 'Ya guardada en este dispositivo.' : 'No necesitas crear una cuenta.'}</span>
@@ -1627,6 +1718,8 @@ document.addEventListener('click', (event) => {
 document.addEventListener('input', (event) => {
   if (event.target instanceof Element && event.target.matches('.calc-input')) {
     window.__recalcGastos(event.target);
+  } else if (event.target instanceof Element && event.target.matches('.rent-input')) {
+    window.__recalcRent(event.target);
   }
 });
 document.addEventListener('error', (event) => {

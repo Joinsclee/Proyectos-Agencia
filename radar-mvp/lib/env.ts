@@ -20,6 +20,10 @@ const EnvSchema = z.object({
   // Fase 2
   REMATES_USERNAME: z.string().optional(),
   REMATES_PASSWORD: z.string().optional(),
+  RESEND_API_KEY: z.string().min(10).optional(),
+  ALERTS_FROM_EMAIL: z.string().email().optional(),
+  ALERTS_CRON_SECRET: z.string().min(16).optional(),
+  APP_BASE_URL: z.string().url().default('http://localhost:8787'),
 
   // Fase 3
   FINCARAIZ_API_KEY: z.string().optional(),

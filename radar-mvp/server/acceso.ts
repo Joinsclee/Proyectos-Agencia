@@ -23,7 +23,7 @@ export type Plan = 'anonimo' | 'free' | 'suscrito';
 /** Plan del usuario. Sin sesión es anónimo; la suscripción se marca en su metadata. */
 export function planDe(user: { plan?: string | null } | null | undefined): Plan {
   if (!user) return 'anonimo';
-  return user.plan === 'suscrito' ? 'suscrito' : 'free';
+  return ['suscrito', 'pro', 'premium'].includes(String(user.plan ?? '').toLowerCase()) ? 'suscrito' : 'free';
 }
 
 export interface Acceso {

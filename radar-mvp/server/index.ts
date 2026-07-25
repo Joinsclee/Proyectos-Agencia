@@ -19,8 +19,23 @@ import { analyzeProperty, marketOnly } from './analysis.js';
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactar, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
+import {
+  deleteAlert,
+  exportAccount,
+  exportAccountCsv,
+  getAccount,
+  getAdminSummary,
+  listAdminPlanInterests,
+  listPlans,
+  registerPlanInterest,
+  saveAlert,
+  syncAccount,
+  updateAdminSubscription,
+} from './account.js';
 import { applySecurityHeaders, contentTypeFor, createRequestId } from './http-security.js';
+import { checkRateLimit, clientAddress, type RateLimitPolicy } from './rate-limit.js';
 import { env } from '../lib/env.js';
+import { emailDeliveryReady, runAlertDispatch } from './notifications.js';
 
 const log = createLogger('server');
 const PORT = Number(process.env.PORT ?? 8787);
@@ -30,6 +45,50 @@ function sendJSON(res: import('node:http').ServerResponse, status: number, body:
   const payload = JSON.stringify(body);
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(payload);
+}
+
+function sendDownload(
+  res: import('node:http').ServerResponse,
+  filename: string,
+  body: unknown,
+) {
+  const payload = JSON.stringify(body, null, 2);
+  res.writeHead(200, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Cache-Control': 'no-store',
+  });
+  res.end(payload);
+}
+
+function sendTextDownload(
+  res: import('node:http').ServerResponse,
+  filename: string,
+  contentType: string,
+  body: string,
+) {
+  res.writeHead(200, {
+    'Content-Type': contentType,
+    'Content-Disposition': `attachment; filename="${filename}"`,
+    'Cache-Control': 'no-store',
+  });
+  res.end(body);
+}
+
+function rateLimited(
+  res: import('node:http').ServerResponse,
+  key: string,
+  policy: RateLimitPolicy,
+): boolean {
+  const result = checkRateLimit(key, policy);
+  if (result.allowed) return false;
+  res.setHeader('Retry-After', String(result.retryAfterSeconds));
+  sendJSON(res, 429, {
+    ok: false,
+    error: 'Demasiadas solicitudes. Intenta de nuevo más tarde.',
+    retryAfterSeconds: result.retryAfterSeconds,
+  });
+  return true;
 }
 
 async function readJsonBody(req: import('node:http').IncomingMessage): Promise<unknown> {
@@ -110,12 +169,96 @@ const server = createServer(async (req, res) => {
       return sendJSON(res, 200, { ok: true, uptime_s: Math.round(process.uptime()) });
     }
     if (path.startsWith('/api/')) {
+      if (path === '/api/plans') {
+        if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        return sendJSON(res, 200, { ok: true, plans: listPlans() });
+      }
+      if (path === '/api/internal/alerts/run') {
+        if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (!env.ALERTS_CRON_SECRET) {
+          return sendJSON(res, 503, { ok: false, configured: false, error: 'Despacho de alertas no configurado' });
+        }
+        if (bearer(req) !== env.ALERTS_CRON_SECRET) {
+          return sendJSON(res, 401, { ok: false, error: 'Credencial de proceso inválida' });
+        }
+        const result = await runAlertDispatch();
+        return sendJSON(res, result.ok ? 200 : result.configured ? 207 : 503, result);
+      }
       // ── Auth (POST) ──
       if (path === '/api/auth/register' || path === '/api/auth/login') {
         if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (rateLimited(res, `auth:${clientAddress(req)}`, { limit: 20, windowMs: 15 * 60 * 1000 })) return;
         const body = await readJsonBody(req);
         const result = path.endsWith('register') ? await registerUser(body) : await loginUser(body);
         return sendJSON(res, result.ok ? 200 : 400, result);
+      }
+      // ── Cuenta, planes y alertas persistentes ──
+      if (path.startsWith('/api/account')) {
+        const user = await getUserFromToken(bearer(req));
+        if (!user) return sendJSON(res, 401, { ok: false, error: 'Inicia sesión para administrar tu Radar' });
+
+        if (path === '/api/account' && req.method === 'GET') {
+          return sendJSON(res, 200, { ok: true, account: await getAccount(user.id) });
+        }
+        if (path === '/api/account/sync' && req.method === 'POST') {
+          if (rateLimited(res, `account-write:${user.id}`, { limit: 120, windowMs: 60 * 60 * 1000 })) return;
+          const result = await syncAccount(user.id, await readJsonBody(req));
+          return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        if (path === '/api/account/alerts' && req.method === 'POST') {
+          if (rateLimited(res, `alert-write:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
+          const result = await saveAlert(user.id, await readJsonBody(req));
+          return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        if (path.startsWith('/api/account/alerts/') && req.method === 'DELETE') {
+          if (rateLimited(res, `alert-write:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
+          const alertId = decodeURIComponent(path.slice('/api/account/alerts/'.length));
+          if (!alertId) return sendJSON(res, 400, { ok: false, error: 'Alerta requerida' });
+          return sendJSON(res, 200, await deleteAlert(user.id, alertId));
+        }
+        if (path === '/api/account/plan-interest' && req.method === 'POST') {
+          if (rateLimited(res, `plan-interest:${user.id}`, { limit: 5, windowMs: 24 * 60 * 60 * 1000 })) return;
+          const result = await registerPlanInterest(user.id, await readJsonBody(req));
+          return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        if (path === '/api/account/export' && req.method === 'GET') {
+          return sendDownload(res, `radar-cuenta-${user.id.slice(0, 8)}.json`, await exportAccount(user.id));
+        }
+        if (path === '/api/account/export.csv' && req.method === 'GET') {
+          return sendTextDownload(
+            res,
+            `radar-seguimiento-${user.id.slice(0, 8)}.csv`,
+            'text/csv; charset=utf-8',
+            `\uFEFF${await exportAccountCsv(user.id)}`,
+          );
+        }
+        return sendJSON(res, 405, { ok: false, error: 'Método o ruta de cuenta no permitido' });
+      }
+      // ── Operación comercial para administradores ──
+      if (path.startsWith('/api/admin/')) {
+        const user = await getUserFromToken(bearer(req));
+        if (!user) return sendJSON(res, 401, { ok: false, error: 'Inicia sesión' });
+        if (path === '/api/admin/summary') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          const summary = await getAdminSummary(user.id);
+          if (!summary) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, summary });
+        }
+        if (path === '/api/admin/plan-interests') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          const interests = await listAdminPlanInterests(user.id);
+          if (!interests) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, interests });
+        }
+        if (path.startsWith('/api/admin/subscriptions/') && req.method === 'PATCH') {
+          if (rateLimited(res, `admin-subscription:${user.id}`, { limit: 60, windowMs: 60 * 60 * 1000 })) return;
+          const targetUserId = decodeURIComponent(path.slice('/api/admin/subscriptions/'.length));
+          if (!targetUserId) return sendJSON(res, 400, { ok: false, error: 'Usuario requerido' });
+          const result = await updateAdminSubscription(user.id, targetUserId, await readJsonBody(req));
+          if (!result) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        return sendJSON(res, 405, { ok: false, error: 'Método o ruta administrativa no permitido' });
       }
       // ── Favoritos (requieren Bearer token del usuario) ──
       if (path === '/api/me' || path.startsWith('/api/favorites')) {
@@ -135,7 +278,14 @@ const server = createServer(async (req, res) => {
         if (path === '/api/favorites') {
           const full = url.searchParams.get('full') === '1';
           const favorites = await listFavorites(user.id);
-          const properties = full ? await favoriteProperties(user.id) : undefined;
+          const rawProperties = full ? await favoriteProperties(user.id) : undefined;
+          const userPlan = planDe(user);
+          const properties = rawProperties?.map((property) => redactar(
+            property,
+            property._kind === 'remate'
+              ? accesoRemateFicha(property, userPlan)
+              : accesoInmueble(property.crece_tier, userPlan),
+          ));
           return sendJSON(res, 200, { ok: true, user, favorites, properties });
         }
         return sendJSON(res, 404, { ok: false, error: 'ruta de favoritos no encontrada' });
@@ -143,6 +293,7 @@ const server = createServer(async (req, res) => {
       // Análisis IA de una propiedad (POST { kind:'banco'|'remate', id, refresh? }).
       if (path === '/api/analyze') {
         if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (rateLimited(res, `analyze:${clientAddress(req)}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
         const body = (await readJsonBody(req)) as { kind?: string; id?: string; refresh?: boolean };
         if ((body.kind !== 'banco' && body.kind !== 'remate') || !body.id) {
           return sendJSON(res, 400, { ok: false, error: 'kind (banco|remate) e id requeridos' });
@@ -189,11 +340,18 @@ const server = createServer(async (req, res) => {
       if (path === '/api/remate-banks') return sendJSON(res, 200, await remateBankFacets());
       if (path === '/api/stats') return sendJSON(res, 200, await stats());
       // Config pública para el cliente (URL de Supabase para iniciar OAuth de Google).
-      if (path === '/api/config') return sendJSON(res, 200, { supabaseUrl: env.SUPABASE_URL });
+      if (path === '/api/config') return sendJSON(res, 200, {
+        supabaseUrl: env.SUPABASE_URL,
+        alertEmailDeliveryReady: emailDeliveryReady(),
+      });
       return sendJSON(res, 404, { error: 'ruta API no encontrada' });
     }
     if (path === '/login') return await serveStatic(res, '/login.html');
     if (path === '/auth/callback') return await serveStatic(res, '/auth-callback.html');
+    if (path === '/planes') return await serveStatic(res, '/planes.html');
+    if (path === '/cuenta') return await serveStatic(res, '/cuenta.html');
+    if (path === '/comparador') return await serveStatic(res, '/comparador.html');
+    if (path === '/admin') return await serveStatic(res, '/admin.html');
     return await serveStatic(res, path);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

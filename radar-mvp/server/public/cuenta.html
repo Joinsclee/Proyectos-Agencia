@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi cuenta · Radar de Oportunidades</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tilt+Warp&family=Barlow+Semi+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/portal.css">
+</head>
+<body>
+  <nav class="portal-nav" aria-label="Navegación principal">
+    <a class="brand" href="/"><span class="brand-mark">R</span>Radar CRECE</a>
+    <div class="portal-links">
+      <a class="portal-link" href="/">Explorar</a>
+      <a class="portal-link" href="/planes">Planes</a>
+      <button class="portal-button secondary" id="logout" type="button">Salir</button>
+    </div>
+  </nav>
+  <main class="portal-main">
+    <header class="portal-hero">
+      <span class="eyebrow">Centro de cuenta</span>
+      <h1>Tu Radar, en un solo lugar</h1>
+      <p>Administra el plan, las alertas y la información que sincronizaste desde tus dispositivos.</p>
+    </header>
+    <section id="signed-out" class="account-card" hidden>
+      <h2>Inicia sesión para continuar</h2>
+      <p>Las alertas y preferencias de esta sección están asociadas a tu cuenta.</p>
+      <a class="portal-button" href="/login">Ingresar</a>
+    </section>
+    <section id="account-content" class="account-layout" hidden>
+      <div>
+        <article class="account-card">
+          <div class="profile-row">
+            <div><span class="eyebrow">Perfil</span><h2 id="account-name">Cuenta</h2><p id="account-email"></p></div>
+            <span class="plan-chip" id="account-plan">Free</span>
+          </div>
+        </article>
+        <article class="account-card">
+          <span class="eyebrow">Seguimiento</span>
+          <h2>Alertas semanales</h2>
+          <p>Recibe un resumen cuando haya oportunidades que coincidan con tu ciudad, presupuesto y tipo de inmueble.</p>
+          <div class="status-note" id="delivery-note" hidden></div>
+          <form class="form-grid" id="alert-form">
+            <div class="field"><label for="alert-city">Ciudad</label><input id="alert-city" name="city" required minlength="2" maxlength="80"></div>
+            <div class="field"><label for="alert-budget">Presupuesto máximo (millones)</label><input id="alert-budget" name="budget" inputmode="numeric" placeholder="500"></div>
+            <div class="field"><label for="alert-type">Tipo</label>
+              <select id="alert-type" name="type">
+                <option value="">Cualquier tipo</option><option value="apartment">Apartamento</option>
+                <option value="house">Casa</option><option value="lot">Lote</option>
+                <option value="commercial">Local</option><option value="office">Oficina</option>
+              </select>
+            </div>
+            <div class="field"><label for="alert-frequency">Frecuencia</label><select id="alert-frequency" disabled><option>Semanal</option></select></div>
+            <div class="form-actions"><button class="portal-button" type="submit">Crear alerta</button></div>
+          </form>
+          <div class="alerts-list" id="alerts-list"></div>
+          <p class="message" id="alert-message" role="status"></p>
+        </article>
+        <article class="account-card">
+          <span class="eyebrow">Operación verificable</span>
+          <h2>Historial de revisiones</h2>
+          <p>Consulta si el ciclo encontró coincidencias, envió el resumen o dejó un reintento pendiente.</p>
+          <div class="delivery-history" id="delivery-history"></div>
+        </article>
+      </div>
+      <aside>
+        <article class="account-card">
+          <span class="eyebrow">Plan</span>
+          <h2 id="plan-title">Explorador</h2>
+          <span class="status-chip" id="subscription-status">Sin suscripción</span>
+          <p id="plan-copy"></p>
+          <div class="subscription-history" id="subscription-history"></div>
+          <a class="portal-button" href="/planes">Ver planes</a>
+        </article>
+        <article class="account-card">
+          <span class="eyebrow">Decisión</span>
+          <h2>Comparador de guardados</h2>
+          <p>Revisa hasta tres oportunidades lado a lado con los mismos criterios.</p>
+          <a class="portal-button secondary" href="/comparador">Abrir comparador</a>
+        </article>
+        <article class="account-card">
+          <span class="eyebrow">Portabilidad</span>
+          <h2>Descarga tus datos</h2>
+          <p>Conserva el respaldo completo en JSON o abre el seguimiento en una hoja de cálculo.</p>
+          <div class="button-stack">
+            <a class="portal-button secondary" id="export-csv-link" href="/api/account/export.csv">Descargar CSV</a>
+            <a class="portal-link" id="export-link" href="/api/account/export">Descargar JSON</a>
+          </div>
+        </article>
+        <article class="account-card" id="admin-link-card" hidden>
+          <span class="eyebrow">Administración</span>
+          <h2>Estado comercial</h2>
+          <p>Consulta usuarios, solicitudes Pro y alertas activas.</p>
+          <a class="portal-button secondary" href="/admin">Abrir panel</a>
+        </article>
+      </aside>
+    </section>
+  </main>
+  <script src="/cuenta.js"></script>
+</body>
+</html>

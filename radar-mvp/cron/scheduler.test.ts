@@ -30,6 +30,26 @@ test('cron: los bancos se verifican cada 7 días', () => {
   assert.ok(toca(job({ nombre: 'bancos', cadencia_dias: 7, ultima_corrida: haceDias(7) }), AHORA));
 });
 
+test('cron: las alertas respetan la cadencia semanal y el interruptor operativo', () => {
+  const alertaReciente = job({
+    nombre: 'alertas',
+    cadencia_dias: 7,
+    ultima_corrida: haceDias(6),
+  });
+  assert.ok(!toca(alertaReciente, AHORA), 'a los 6 días todavía no');
+  assert.ok(toca(job({
+    nombre: 'alertas',
+    cadencia_dias: 7,
+    ultima_corrida: haceDias(7),
+  }), AHORA));
+  assert.ok(!toca(job({
+    nombre: 'alertas',
+    cadencia_dias: 7,
+    habilitado: false,
+    ultima_corrida: haceDias(30),
+  }), AHORA), 'no se activa antes del canary');
+});
+
 test('cron: un trabajo deshabilitado nunca corre', () => {
   assert.ok(!toca(job({ habilitado: false, ultima_corrida: haceDias(90) }), AHORA));
 });
