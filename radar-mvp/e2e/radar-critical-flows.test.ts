@@ -208,6 +208,13 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       assert.equal(csvExport.status(), 401);
       const adminApi = await page.request.get(`${baseUrl}/api/admin/summary`);
       assert.equal(adminApi.status(), 401);
+      const commercialQueue = await page.request.get(`${baseUrl}/api/admin/plan-interests`);
+      assert.equal(commercialQueue.status(), 401);
+      const subscriptionMutation = await page.request.patch(
+        `${baseUrl}/api/admin/subscriptions/00000000-0000-4000-8000-000000000000`,
+        { data: { status: 'active', note: 'prueba no autorizada' } },
+      );
+      assert.equal(subscriptionMutation.status(), 401);
       const alertDispatch = await page.request.post(`${baseUrl}/api/internal/alerts/run`);
       assert.equal(alertDispatch.status(), 503);
       assert.equal((await alertDispatch.json()).configured, false);

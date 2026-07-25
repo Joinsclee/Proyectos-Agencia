@@ -30,6 +30,24 @@ export const PLAN_CATALOG = [
 export type CommercialPlan = (typeof PLAN_CATALOG)[number]['code'];
 export type SubscriptionStatus = 'none' | 'interested' | 'trialing' | 'active' | 'past_due' | 'canceled';
 
+export const SubscriptionUpdateSchema = z.object({
+  status: z.enum(['none', 'trialing', 'active', 'past_due', 'canceled']),
+  note: z.string().trim().max(500).optional(),
+}).strict();
+
+export const SubscriptionAuditEventSchema = z.object({
+  id: z.string().uuid(),
+  at: z.string().datetime(),
+  actorUserId: z.string().uuid(),
+  fromStatus: z.enum(['none', 'interested', 'trialing', 'active', 'past_due', 'canceled']),
+  toStatus: z.enum(['none', 'trialing', 'active', 'past_due', 'canceled']),
+  source: z.literal('admin'),
+  note: z.string().trim().max(500).optional(),
+}).strict();
+
+export type SubscriptionUpdate = z.infer<typeof SubscriptionUpdateSchema>;
+export type SubscriptionAuditEvent = z.infer<typeof SubscriptionAuditEventSchema>;
+
 const CitySchema = z.string().trim().toLowerCase().min(2).max(80)
   .regex(/^[a-záéíóúüñ0-9 -]+$/i, 'Ciudad inválida');
 const PropertyTypeSchema = z.enum([
@@ -112,9 +130,22 @@ export function subscriptionStatusFromMetadata(
   metadata: Record<string, unknown> | null | undefined,
 ): SubscriptionStatus {
   const value = String(metadata?.subscription_status ?? '').toLowerCase();
-  if (['trialing', 'active', 'past_due', 'canceled'].includes(value)) return value as SubscriptionStatus;
+  if (['none', 'trialing', 'active', 'past_due', 'canceled'].includes(value)) return value as SubscriptionStatus;
+  if (commercialPlanFromMetadata(metadata) === 'pro') return 'active';
   if (metadata?.plan_interest) return 'interested';
-  return commercialPlanFromMetadata(metadata) === 'pro' ? 'active' : 'none';
+  return 'none';
+}
+
+/**
+ * El acceso Pro depende del ciclo de vida de la suscripción. Los planes
+ * históricos sin subscription_status se conservan como activos por
+ * compatibilidad; past_due y canceled pierden el contenido restringido.
+ */
+export function entitledPlanFromMetadata(
+  metadata: Record<string, unknown> | null | undefined,
+): CommercialPlan {
+  const status = subscriptionStatusFromMetadata(metadata);
+  return status === 'trialing' || status === 'active' ? 'pro' : 'free';
 }
 
 export function maxAlertsForPlan(plan: CommercialPlan): number {
@@ -136,6 +167,17 @@ export function readDeliveryHistory(
   if (!Array.isArray(metadata?.radar_alert_deliveries)) return [];
   return metadata.radar_alert_deliveries
     .map((item) => RadarDeliveryRecordSchema.safeParse(item))
+    .filter((result) => result.success)
+    .map((result) => result.data)
+    .slice(0, 50);
+}
+
+export function readSubscriptionAudit(
+  metadata: Record<string, unknown> | null | undefined,
+): SubscriptionAuditEvent[] {
+  if (!Array.isArray(metadata?.subscription_audit)) return [];
+  return metadata.subscription_audit
+    .map((item) => SubscriptionAuditEventSchema.safeParse(item))
     .filter((result) => result.success)
     .map((result) => result.data)
     .slice(0, 50);

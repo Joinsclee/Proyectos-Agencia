@@ -6,20 +6,23 @@ import {
   PLAN_CATALOG,
   RadarAlertInputSchema,
   RadarPreferencesSchema,
-  commercialPlanFromMetadata,
+  SubscriptionUpdateSchema,
+  entitledPlanFromMetadata,
   isAdminMetadata,
   maxAlertsForPlan,
   readAlerts,
   readDeliveryHistory,
+  readSubscriptionAudit,
   subscriptionStatusFromMetadata,
   type RadarAlert,
+  type SubscriptionAuditEvent,
 } from './commercial.js';
 
 type Metadata = Record<string, any>;
 
 function publicAccount(user: { id: string; email?: string; user_metadata?: Metadata | null }) {
   const metadata = user.user_metadata ?? {};
-  const plan = commercialPlanFromMetadata(metadata);
+  const plan = entitledPlanFromMetadata(metadata);
   return {
     id: user.id,
     email: user.email ?? '',
@@ -33,6 +36,9 @@ function publicAccount(user: { id: string; email?: string; user_metadata?: Metad
     simulations: Array.isArray(metadata.radar_simulations) ? metadata.radar_simulations.slice(0, 50) : [],
     alerts: readAlerts(metadata),
     deliveryHistory: readDeliveryHistory(metadata).slice(0, 20),
+    subscriptionHistory: readSubscriptionAudit(metadata)
+      .slice(0, 20)
+      .map(({ actorUserId: _actorUserId, ...event }) => event),
     planInterest: metadata.plan_interest ?? null,
     entitlements: {
       fullOpportunityDetails: plan === 'pro',
@@ -56,6 +62,17 @@ async function updateMetadata(userId: string, updater: (metadata: Metadata) => M
   return publicAccount(data.user);
 }
 
+async function listAllUsers() {
+  const users: any[] = [];
+  for (let page = 1; page <= 10; page += 1) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
+    if (error) throw new Error(error.message);
+    users.push(...data.users);
+    if (data.users.length < 1000) break;
+  }
+  return users;
+}
+
 export function listPlans() {
   return PLAN_CATALOG;
 }
@@ -74,7 +91,7 @@ export async function syncAccount(userId: string, input: unknown) {
     if (parsed.data.preferences) metadata.radar_preferences = parsed.data.preferences;
     if (parsed.data.simulations) metadata.radar_simulations = parsed.data.simulations;
     if (parsed.data.alertDraft) {
-      const plan = commercialPlanFromMetadata(metadata);
+      const plan = entitledPlanFromMetadata(metadata);
       const current = readAlerts(metadata);
       const alertInput = RadarAlertInputSchema.parse({
         id: parsed.data.alertDraft.id,
@@ -108,7 +125,7 @@ export async function saveAlert(userId: string, input: unknown) {
 
   const account = await updateMetadata(userId, (metadata) => {
     const current = readAlerts(metadata);
-    const plan = commercialPlanFromMetadata(metadata);
+    const plan = entitledPlanFromMetadata(metadata);
     const existing = parsed.data.id ? current.find((alert) => alert.id === parsed.data.id) : undefined;
     if (!existing && current.length >= maxAlertsForPlan(plan)) {
       throw new Error(`Tu plan permite ${maxAlertsForPlan(plan)} alerta${maxAlertsForPlan(plan) === 1 ? '' : 's'}`);
@@ -158,14 +175,7 @@ export async function getAdminSummary(requesterId: string) {
   const requester = await adminUser(requesterId);
   if (!isAdminMetadata(requester.user_metadata ?? {})) return null;
 
-  const users: any[] = [];
-  for (let page = 1; page <= 10; page += 1) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
-    if (error) throw new Error(error.message);
-    users.push(...data.users);
-    if (data.users.length < 1000) break;
-  }
-
+  const users = await listAllUsers();
   const accounts = users.map(publicAccount);
   const statusCounts = accounts.reduce<Record<string, number>>((counts, account) => {
     counts[account.subscriptionStatus] = (counts[account.subscriptionStatus] ?? 0) + 1;
@@ -205,6 +215,88 @@ export async function getAdminSummary(requesterId: string) {
       .sort()
       .at(-1) ?? null,
   };
+}
+
+export async function listAdminPlanInterests(requesterId: string) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(requester.user_metadata ?? {})) return null;
+
+  const users = await listAllUsers();
+  return users
+    .map((user) => {
+      const metadata = user.user_metadata ?? {};
+      const account = publicAccount(user);
+      const interest = metadata.plan_interest && typeof metadata.plan_interest === 'object'
+        ? metadata.plan_interest
+        : null;
+      const latestAudit = readSubscriptionAudit(metadata)[0] ?? null;
+      return {
+        userId: user.id,
+        email: user.email ?? '',
+        name: typeof metadata.name === 'string' ? metadata.name : '',
+        plan: account.plan,
+        subscriptionStatus: account.subscriptionStatus,
+        requestedAt: typeof interest?.requestedAt === 'string' ? interest.requestedAt : null,
+        interestStatus: typeof interest?.status === 'string' ? interest.status : null,
+        note: typeof interest?.note === 'string' ? interest.note : '',
+        lastChangedAt: latestAudit?.at ?? null,
+      };
+    })
+    .filter((item) => item.requestedAt || item.subscriptionStatus !== 'none')
+    .sort((a, b) => String(b.requestedAt ?? b.lastChangedAt ?? '')
+      .localeCompare(String(a.requestedAt ?? a.lastChangedAt ?? '')));
+}
+
+export async function updateAdminSubscription(
+  requesterId: string,
+  targetUserId: string,
+  input: unknown,
+) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(requester.user_metadata ?? {})) return null;
+  if (!z.string().uuid().safeParse(targetUserId).success) {
+    return { ok: false as const, error: 'Usuario inválido' };
+  }
+  const parsed = SubscriptionUpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? 'Cambio inválido' };
+  }
+
+  let auditEvent: SubscriptionAuditEvent | null = null;
+  const account = await updateMetadata(targetUserId, (metadata) => {
+    const fromStatus = subscriptionStatusFromMetadata(metadata);
+    const now = new Date().toISOString();
+    auditEvent = {
+      id: randomUUID(),
+      at: now,
+      actorUserId: requesterId,
+      fromStatus,
+      toStatus: parsed.data.status,
+      source: 'admin',
+      ...(parsed.data.note ? { note: parsed.data.note } : {}),
+    };
+    metadata.subscription_status = parsed.data.status;
+    metadata.plan = parsed.data.status === 'active' || parsed.data.status === 'trialing' ? 'pro' : 'free';
+    metadata.subscription_updated_at = now;
+    metadata.subscription_source = 'admin';
+    metadata.subscription_audit = [
+      auditEvent,
+      ...readSubscriptionAudit(metadata),
+    ].slice(0, 50);
+    if (metadata.plan_interest && typeof metadata.plan_interest === 'object') {
+      metadata.plan_interest = {
+        ...metadata.plan_interest,
+        status: parsed.data.status === 'active' || parsed.data.status === 'trialing'
+          ? 'converted'
+          : parsed.data.status === 'canceled'
+            ? 'closed'
+            : 'contacted',
+        updatedAt: now,
+      };
+    }
+    return metadata;
+  });
+  return { ok: true as const, account, event: auditEvent };
 }
 
 export async function exportAccount(userId: string) {

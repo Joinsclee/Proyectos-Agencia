@@ -71,12 +71,46 @@ function renderDeliveryHistory() {
   }).join('');
 }
 
+function renderSubscriptionHistory() {
+  const root = document.getElementById('subscription-history');
+  const history = account.subscriptionHistory || [];
+  if (!history.length) {
+    root.innerHTML = '';
+    return;
+  }
+  const labels = {
+    none: 'Sin suscripción',
+    trialing: 'Prueba iniciada',
+    active: 'Suscripción activa',
+    past_due: 'Pago pendiente',
+    canceled: 'Suscripción cancelada',
+  };
+  const latest = history[0];
+  root.innerHTML = `<small>Último cambio</small><strong>${esc(labels[latest.toStatus] || latest.toStatus)}</strong>
+    <span>${esc(formatDate(latest.at))}${latest.note ? ` · ${esc(latest.note)}` : ''}</span>`;
+}
+
 function renderAccount() {
+  const statusLabels = {
+    none: 'Sin suscripción',
+    interested: 'Solicitud recibida',
+    trialing: 'En prueba',
+    active: 'Activa',
+    past_due: 'Pago pendiente',
+    canceled: 'Cancelada',
+  };
   document.getElementById('account-name').textContent = account.name || 'Mi cuenta';
   document.getElementById('account-email').textContent = account.email;
   document.getElementById('account-plan').textContent = account.plan === 'pro' ? 'Radar Pro' : 'Explorador';
   document.getElementById('plan-title').textContent = account.plan === 'pro' ? 'Radar Pro' : 'Explorador';
-  document.getElementById('plan-copy').textContent = account.plan === 'pro'
+  const status = document.getElementById('subscription-status');
+  status.textContent = statusLabels[account.subscriptionStatus] || 'Sin suscripción';
+  status.className = `status-chip status-${account.subscriptionStatus || 'none'}`;
+  document.getElementById('plan-copy').textContent = account.subscriptionStatus === 'past_due'
+    ? 'El acceso Pro está pausado hasta regularizar el pago con el equipo comercial.'
+    : account.subscriptionStatus === 'canceled'
+      ? 'La suscripción está cancelada y la cuenta conserva el acceso Explorador.'
+      : account.plan === 'pro'
     ? 'Tienes acceso a fichas completas y hasta cinco alertas.'
     : 'Puedes explorar el mercado y mantener una alerta semanal.';
   document.getElementById('admin-link-card').hidden = account.role !== 'admin';
@@ -88,6 +122,7 @@ function renderAccount() {
   }
   renderAlerts();
   renderDeliveryHistory();
+  renderSubscriptionHistory();
 }
 
 async function downloadAccountExport(path, filename) {

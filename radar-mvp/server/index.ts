@@ -25,10 +25,12 @@ import {
   exportAccountCsv,
   getAccount,
   getAdminSummary,
+  listAdminPlanInterests,
   listPlans,
   registerPlanInterest,
   saveAlert,
   syncAccount,
+  updateAdminSubscription,
 } from './account.js';
 import { applySecurityHeaders, contentTypeFor, createRequestId } from './http-security.js';
 import { checkRateLimit, clientAddress, type RateLimitPolicy } from './rate-limit.js';
@@ -232,14 +234,31 @@ const server = createServer(async (req, res) => {
         }
         return sendJSON(res, 405, { ok: false, error: 'Método o ruta de cuenta no permitido' });
       }
-      // ── Resumen comercial para administradores ──
-      if (path === '/api/admin/summary') {
-        if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+      // ── Operación comercial para administradores ──
+      if (path.startsWith('/api/admin/')) {
         const user = await getUserFromToken(bearer(req));
         if (!user) return sendJSON(res, 401, { ok: false, error: 'Inicia sesión' });
-        const summary = await getAdminSummary(user.id);
-        if (!summary) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
-        return sendJSON(res, 200, { ok: true, summary });
+        if (path === '/api/admin/summary') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          const summary = await getAdminSummary(user.id);
+          if (!summary) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, summary });
+        }
+        if (path === '/api/admin/plan-interests') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          const interests = await listAdminPlanInterests(user.id);
+          if (!interests) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, interests });
+        }
+        if (path.startsWith('/api/admin/subscriptions/') && req.method === 'PATCH') {
+          if (rateLimited(res, `admin-subscription:${user.id}`, { limit: 60, windowMs: 60 * 60 * 1000 })) return;
+          const targetUserId = decodeURIComponent(path.slice('/api/admin/subscriptions/'.length));
+          if (!targetUserId) return sendJSON(res, 400, { ok: false, error: 'Usuario requerido' });
+          const result = await updateAdminSubscription(user.id, targetUserId, await readJsonBody(req));
+          if (!result) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        return sendJSON(res, 405, { ok: false, error: 'Método o ruta administrativa no permitido' });
       }
       // ── Favoritos (requieren Bearer token del usuario) ──
       if (path === '/api/me' || path.startsWith('/api/favorites')) {
