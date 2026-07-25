@@ -208,10 +208,10 @@ def configure(doc):
 
     footer = section.footer
     fp = footer.paragraphs[0]
-    fp.text = "Estado local validado · No representa activación de cobros o correo"
+    fp.text = "Validado localmente y desplegado · Alertas automáticas aún deshabilitadas"
     set_font(fp.runs[0], size=8, color=MUTED)
     footer_table = footer.add_table(rows=1, cols=2, width=Inches(6.5))
-    footer_table.cell(0, 0).paragraphs[0].add_run("Radar CRECE · 24 jul 2026")
+    footer_table.cell(0, 0).paragraphs[0].add_run("Radar CRECE · 25 jul 2026")
     set_font(footer_table.cell(0, 0).paragraphs[0].runs[0], size=8, color=MUTED)
     page_number(footer_table.cell(0, 1).paragraphs[0])
     apply_table_geometry(footer_table, [7800, 1560])
@@ -241,13 +241,13 @@ def title_block(doc):
     run = subtitle.add_run("Base comercial, alertas, comparador, rentabilidad y operación")
     set_font(run, size=13, color=MUTED)
 
-    callout(doc, "Conclusión", "Fase 1 permanece en 84%. La Fase 2 comercial alcanza 71% con un recorrido funcional validado en local; pagos, correo entregado, canon observado e integraciones todavía requieren decisiones externas.", "71%", PALE_BLUE, NAVY)
+    callout(doc, "Conclusión", "Fase 1 permanece en 84%. La Fase 2 comercial alcanza 73%: Resend, el dominio y ambos servicios están desplegados; pagos, canon observado y la activación del canary todavía requieren decisiones.", "73%", PALE_BLUE, NAVY)
 
     meta = [
         ("Preparado para", "Andrés Giraldo"),
-        ("Corte", "24 de julio de 2026"),
-        ("Estado", "Listo para demostración local; no desplegado"),
-        ("Versión local", "cc6c0e0"),
+        ("Corte", "25 de julio de 2026"),
+        ("Estado", "Validado localmente y desplegado"),
+        ("Versión desplegada", "PR #2 · b89770c"),
         ("Producción vigente", "joinsclee-radar.juno8i.easypanel.host"),
     ]
     table = doc.add_table(rows=len(meta), cols=2)
@@ -388,8 +388,8 @@ def build():
     body(doc, "El compromiso de llegar a por lo menos 80% de la Fase 1 ya se cumplió. El corte defendible de esa fase sigue siendo 84%. La ejecución actual agrega una base comercial y operativa de Fase 2 sin convertir maquetas en promesas.")
     heading(doc, "Dos significados de Fase 2", 2)
     bullet(doc, "Fase 2 técnica original: motor de remates judiciales, aproximadamente 92%.")
-    bullet(doc, "Fase 2 comercial/expansión: planes, alertas, rentabilidad, comparador, administración, pagos e integraciones, aproximadamente 71%.")
-    callout(doc, "Dictamen para el cliente", "El producto supera el 80% comprometido para Fase 1 y la Fase 2 comercial ya tiene un recorrido demostrable en local. Todavía no debe venderse como monetización o notificaciones plenamente operativas.", None, PALE_GREEN, GREEN)
+    bullet(doc, "Fase 2 comercial/expansión: planes, alertas, rentabilidad, comparador, administración, pagos e integraciones, aproximadamente 73%.")
+    callout(doc, "Dictamen para el cliente", "El producto supera el 80% comprometido para Fase 1. Resend ya está conectado y desplegado, pero todavía no debe venderse como monetización ni como automatización semanal activa.", None, PALE_GREEN, GREEN)
 
     heading(doc, "Qué puede demostrarse hoy", 2)
     for item in [
@@ -398,7 +398,7 @@ def build():
         "Comparador de dos o tres inmuebles guardados.",
         "Rentabilidad bruta y neta a partir de canon declarado.",
         "Panel administrativo agregado y exportación de cuenta.",
-        "Degradación segura cuando correo o pagos no están configurados.",
+        "Resend conectado en producción, con automatización deshabilitada hasta el canary.",
     ]:
         bullet(doc, item)
 
@@ -416,7 +416,7 @@ def build():
             "Centro /cuenta y continuidad de preferencias, simulaciones y alertas.",
             "Validación separada de entradas y alertas persistidas.",
             "Historial de entrega, idempotencia y reintentos escalonados.",
-            "Adaptador Resend y proceso semanal protegido.",
+            "Resend desplegado y proceso semanal protegido, deshabilitado hasta el canary.",
         ]),
         ("Comparación y rentabilidad", [
             "Comparador /comparador con criterios homogéneos.",
@@ -441,24 +441,26 @@ def build():
     score_rows = [
         ["Base comercial, cuenta y UX", "15%", "90%", "13,5"],
         ["Planes, acceso y suscripción", "15%", "80%", "12,0"],
-        ["Alertas y notificaciones", "20%", "85%", "17,0"],
+        ["Alertas y notificaciones", "20%", "97%", "19,4"],
         ["Comparador y exportación", "15%", "85%", "12,8"],
         ["Canon y rentabilidad", "15%", "35%", "5,3"],
         ["Administración", "10%", "90%", "9,0"],
         ["Pagos e integraciones", "10%", "10%", "1,0"],
-        ["TOTAL", "100%", "", "70,6% ≈ 71%"],
+        ["TOTAL", "100%", "", "73,0% ≈ 73%"],
     ]
     table(doc, ["Bloque", "Peso", "Cumpl.", "Aporte"], score_rows, [5000, 1200, 1500, 1660], 8.7)
     body(doc, "Este porcentaje mide alcance adicional y no reduce el 84% de Fase 1. La diferencia hasta 80% se concentra en proveedores, datos autorizados y operación comercial.")
     heading(doc, "Evidencia de calidad local", 2)
     evidence = [
         ["TypeScript", "Sin errores"],
-        ["Unitarias/integración", "97/97"],
+        ["Unitarias/integración", "98/98"],
         ["Recorridos E2E", "6/6"],
         ["Errores de consola", "0"],
         ["QA visual", "1440×1000 y 375×812"],
         ["Salud ponderada", "98,6/100"],
         ["Usuarios reales alterados", "0"],
+        ["Resend controlado", "Entregado"],
+        ["Producción", "Correo listo; cron deshabilitado"],
     ]
     table(doc, ["Control", "Resultado"], evidence, [4800, 4560], 9)
 
@@ -469,6 +471,7 @@ def build():
         ["Servidor", "HTTP nativo de Node y API JSON"],
         ["Frontend", "HTML, CSS y JavaScript nativos"],
         ["Datos", "Supabase PostgreSQL, Auth y Storage"],
+        ["Correo", "Resend y dominio joinsclee.com"],
         ["Validación", "Zod"],
         ["Extracción", "Firecrawl, Playwright y parsers PDF"],
         ["Motor", "Comparables, estadística robusta e Índice CRECE"],
@@ -492,12 +495,12 @@ def build():
         bullet(doc, item)
 
     page_break(doc)
-    heading(doc, "5. Ruta de 71% a 80%")
+    heading(doc, "5. Ruta de 73% a 80%")
     heading(doc, "Prioridad 1: activar alertas", 2)
     for item in [
-        "Aprobar Resend, verificar dominio y configurar las cuatro variables.",
-        "Crear el trabajo semanal en EasyPanel.",
-        "Ejecutar un envío controlado y verificar historial, deduplicación y reintentos.",
+        "Ejecutar un canary dirigido a una cuenta autorizada.",
+        "Revisar el destinatario y habilitar el trabajo semanal.",
+        "Monitorear el primer ciclo automático y su historial de entregas.",
     ]:
         numbered(doc, item)
     heading(doc, "Prioridad 2: cerrar planes y pago", 2)
@@ -521,8 +524,8 @@ def build():
     dependencies = [
         ["Precio Radar Pro", "Tarifa y beneficios", "Página y catálogo listos"],
         ["Proveedor de pago", "Elegir proveedor", "Estados listos; checkout pendiente"],
-        ["Resend", "Cuenta, dominio y API key", "Adaptador listo"],
-        ["EasyPanel cron", "Secreto y horario", "Endpoint listo"],
+        ["Resend", "Ejecutar canary dirigido", "Dominio, secretos y despliegue listos"],
+        ["EasyPanel cron", "Validar y habilitar", "Trabajo semanal desplegado"],
         ["Canon", "Fuente autorizada", "Cálculo manual listo"],
         ["Low Ticket/Tradentia", "API o especificación", "Pendiente externo"],
         ["Administrador", "Usuario autorizado", "Control listo"],
@@ -536,14 +539,14 @@ def build():
         "APP_BASE_URL",
     ]:
         bullet(doc, item)
-    callout(doc, "Comportamiento seguro", "Sin estas variables la alerta se guarda, pero la aplicación informa que el correo sigue pendiente. El proceso devuelve 503 y no marca entregas falsas.", None, PALE_AMBER, AMBER)
+    callout(doc, "Comportamiento seguro", "Las variables ya están guardadas en EasyPanel. El trabajo semanal permanece deshabilitado en Supabase hasta revisar el destinatario y completar el canary.", None, PALE_AMBER, AMBER)
 
     page_break(doc)
     heading(doc, "7. Límites y endurecimiento")
     heading(doc, "No debe afirmarse todavía", 2)
     for item in [
         "Que Radar Pro ya cobra o renueva.",
-        "Que las alertas ya llegan a correos reales.",
+        "Que las alertas semanales ya están activadas para usuarios reales.",
         "Que el canon proviene de una fuente de mercado.",
         "Que Low Ticket o Tradentia ya están integrados.",
         "Que existe un SLA empresarial.",
@@ -578,7 +581,7 @@ def build():
         numbered(doc, item, demo_num_id)
     callout(doc, "Frase de cierre", "“La Fase 1 ya superó el 80%. En Fase 2 ya existen planes, cuenta, alertas trazables, comparador, exportación y rentabilidad. Lo pendiente son decisiones y servicios externos que no debemos fingir.”", None, PALE_BLUE, NAVY)
     heading(doc, "Criterio de publicación", 2)
-    body(doc, "No desplegar este corte hasta aprobar el texto comercial, configurar el primer canal externo y repetir el smoke test local. Después puede publicarse mediante PR y despliegue controlado.")
+    body(doc, "El corte ya está desplegado. El siguiente control es ejecutar un canary dirigido y habilitar el trabajo semanal solo después de revisar el destinatario.")
 
     return doc
 
