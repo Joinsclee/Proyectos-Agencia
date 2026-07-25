@@ -90,13 +90,15 @@ after(async () => {
   await browser?.close();
   if (server && !server.killed) {
     server.kill('SIGTERM');
-    await new Promise<void>((resolve) => {
-      const timer = setTimeout(resolve, 2_000);
+    const exitedCleanly = await new Promise<boolean>((resolve) => {
+      const timer = setTimeout(() => resolve(false), 2_000);
       server?.once('exit', () => {
         clearTimeout(timer);
-        resolve();
+        resolve(true);
       });
     });
+    assert.equal(exitedCleanly, true, 'El servidor debe cerrar antes del timeout de despliegue');
+    assert.equal(server.exitCode, 0, `El cierre SIGTERM debe terminar con código 0.\n${serverOutput.slice(-2_000)}`);
   }
 });
 
@@ -106,6 +108,17 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     try {
       const health = await page.request.get(`${baseUrl}/health`);
       assert.equal(health.status(), 200);
+      const healthBody = await health.json();
+      assert.equal(healthBody.ok, true);
+      assert.equal(healthBody.status, 'alive');
+      assert.equal(typeof healthBody.uptime_s, 'number');
+
+      const readiness = await page.request.get(`${baseUrl}/ready`);
+      assert.equal(readiness.status(), 200);
+      const readinessBody = await readiness.json();
+      assert.equal(readinessBody.ok, true);
+      assert.equal(readinessBody.status, 'ready');
+      assert.equal(typeof readinessBody.uptime_s, 'number');
 
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
       await waitForResults(page);

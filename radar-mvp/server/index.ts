@@ -50,6 +50,9 @@ import {
 const log = createLogger('server');
 const PORT = Number(process.env.PORT ?? 8787);
 const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), 'public');
+const SHUTDOWN_TIMEOUT_MS = 10_000;
+let serviceReady = false;
+let shuttingDown = false;
 
 function sendJSON(res: import('node:http').ServerResponse, status: number, body: unknown) {
   const payload = JSON.stringify(body);
@@ -178,7 +181,21 @@ const server = createServer(async (req, res) => {
     // Health check de la plataforma (EasyPanel/Railway). Debe ser barato y NO tocar
     // la base: si Supabase va lento, el contenedor no debe darse por muerto.
     if (path === '/health') {
-      return sendJSON(res, 200, { ok: true, uptime_s: Math.round(process.uptime()) });
+      return sendJSON(res, 200, {
+        ok: true,
+        status: shuttingDown ? 'stopping' : 'alive',
+        uptime_s: Math.round(process.uptime()),
+      });
+    }
+    // Readiness separada de liveness: durante un despliegue EasyPanel deja de
+    // enviar tráfico antes de que cerremos conexiones existentes.
+    if (path === '/ready') {
+      const ready = serviceReady && !shuttingDown;
+      return sendJSON(res, ready ? 200 : 503, {
+        ok: ready,
+        status: shuttingDown ? 'stopping' : ready ? 'ready' : 'starting',
+        uptime_s: Math.round(process.uptime()),
+      });
     }
     if (path.startsWith('/api/')) {
       if (path === '/api/plans') {
@@ -360,7 +377,20 @@ const server = createServer(async (req, res) => {
         return sendJSON(res, 200, await facets(source, url.searchParams.get('city') ?? undefined));
       }
       if (path === '/api/remate-banks') return sendJSON(res, 200, await remateBankFacets());
-      if (path === '/api/stats') return sendJSON(res, 200, await stats());
+      if (path === '/api/stats') {
+        try {
+          return sendJSON(res, 200, { available: true, ...await stats() });
+        } catch (statsError) {
+          const detail = statsError instanceof Error ? statsError.message : String(statsError);
+          log.warn(`${requestId} stats temporalmente no disponibles: ${detail}`);
+          // No inventamos ceros: el cliente recibe una indisponibilidad explícita
+          // y puede seguir mostrando los inmuebles sin romper toda la portada.
+          return sendJSON(res, 200, {
+            available: false,
+            error: 'Estadísticas temporalmente no disponibles',
+          });
+        }
+      }
       // Config pública para el cliente (URL de Supabase para iniciar OAuth de Google).
       if (path === '/api/config') return sendJSON(res, 200, {
         supabaseUrl: env.SUPABASE_URL,
@@ -387,8 +417,9 @@ const server = createServer(async (req, res) => {
 const WARM_CITIES = ['bogota', 'medellin', 'cali'];
 
 server.listen(PORT, () => {
+  serviceReady = true;
   log.info(`Radar local en http://localhost:${PORT}`);
-  log.info('API: /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
+  log.info('API: /health · /ready · /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
   // Primero las estadísticas (es lo primero que pide el dashboard), luego los
   // comparables de las ciudades grandes.
   void warmStats()
@@ -397,3 +428,31 @@ server.listen(PORT, () => {
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
     .catch(() => { /* el precalentamiento es best-effort */ });
 });
+
+function shutdown(signal: NodeJS.Signals) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  serviceReady = false;
+  log.info(`${signal} recibido; cerrando el servidor sin cortar solicitudes activas`);
+
+  const forceExit = setTimeout(() => {
+    log.error(`Cierre forzado después de ${SHUTDOWN_TIMEOUT_MS / 1_000}s`);
+    server.closeAllConnections();
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+  forceExit.unref();
+
+  server.close((error) => {
+    clearTimeout(forceExit);
+    if (error) {
+      log.error(`Error durante el cierre: ${error.message}`);
+      process.exit(1);
+    }
+    log.info('Servidor cerrado correctamente');
+    process.exit(0);
+  });
+  server.closeIdleConnections();
+}
+
+process.once('SIGTERM', () => shutdown('SIGTERM'));
+process.once('SIGINT', () => shutdown('SIGINT'));

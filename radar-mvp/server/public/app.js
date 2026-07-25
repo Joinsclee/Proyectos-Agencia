@@ -1603,8 +1603,26 @@ function closeModal() {
 
 // ---------- Stats + leyenda + tabs ----------
 let STATS = null;
+function renderStatsUnavailable() {
+  STATS = null;
+  $('c-portal').textContent = '—';
+  $('c-bancos').textContent = '—';
+  $('c-remates').textContent = '—';
+  $('summary').innerHTML = `
+    <div class="summary-stat muted">
+      <div class="num">Actualizando</div>
+      <div class="lbl">Las estadísticas volverán automáticamente; los resultados siguen disponibles.</div>
+    </div>`;
+}
 async function loadStats() {
-  STATS = await fetch('/api/stats').then((r) => r.json());
+  const response = await fetch('/api/stats');
+  if (!response.ok) throw new Error(`stats HTTP ${response.status}`);
+  const payload = await response.json();
+  if (payload.available === false) {
+    renderStatsUnavailable();
+    return;
+  }
+  STATS = payload;
   $('c-portal').textContent = STATS.portal_total.toLocaleString('es-CO');
   $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
   $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
@@ -1755,7 +1773,7 @@ document.addEventListener('keydown', (e) => {
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.
 initAuth();
-loadStats().catch((e) => console.error('stats:', e));
+loadStats().catch(() => renderStatsUnavailable());
 buildFilters().then(async () => {
   await applyRadarPreferences(radarPreferences);
   renderRadarSetup();
