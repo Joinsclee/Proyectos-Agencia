@@ -3,11 +3,10 @@
  *
  * Cadencias (decisión del cliente, 2026-07-20):
  *   · fincaraiz → cada  7 días   · remates → cada  7 días
- *   · bancos    → cada 15 días   · motor   → cada  1 día
+ *   · bancos    → cada  7 días   · motor   → cada  1 día
  *
- * Por qué los bancos van a 15 y no a 7: su inventario es de dación en pago y
- * rota de verdad muy despacio — un mismo activo puede seguir disponible meses.
- * Scrapearlos semanalmente gastaría cuota de Firecrawl sin traer nada nuevo.
+ * Los bancos se verifican semanalmente para cumplir la cadencia acordada con el
+ * cliente y mantener alineadas todas las fuentes del Radar.
  *
  * DISEÑO: el calendario está en la base (`radar_cron_jobs`), no en la memoria del
  * proceso. Este planificador solo despierta cada cierto rato y pregunta "¿algún

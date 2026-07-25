@@ -323,7 +323,7 @@ async function buildFilters() {
     html += fRange('price', 'Precio (millones)', 'mín', 'máx');
     html += fRange('area', 'Área (m²)', 'mín', 'máx');
     html += `<div class="f"><label for="f-bedroomsMin">Habitaciones</label><select id="f-bedroomsMin"><option value="">Todas</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></div>`;
-    html += fStratum();
+    if (tab === 'portal') html += fStratum();
   } else {
     const fc = await fetch('/api/facets?source=portal').then((r) => r.json());
     html += fSelect('city', 'Ciudad', fc.cities);

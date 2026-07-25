@@ -22,14 +22,14 @@ create table if not exists public.radar_cron_jobs (
 );
 
 comment on table public.radar_cron_jobs is
-  'Calendario de scraping. Cadencia en días: 7 para portal y remates, 15 para activos bancarios (los bancos rotan mucho más lento).';
+  'Calendario de scraping. Cadencia semanal para portal, remates y activos bancarios; motor CRECE diario.';
 
 -- Cadencias iniciales. Cambiar una es un UPDATE: no requiere desplegar código,
 -- igual que los rangos de precio por ciudad.
 insert into public.radar_cron_jobs (nombre, cadencia_dias) values
   ('fincaraiz', 7),   -- portal abierto: construye la mediana, tiene que estar fresco
   ('remates',   7),   -- las audiencias cambian de una semana a otra
-  ('bancos',   15),   -- dación en pago: inventario de rotación lenta
+  ('bancos',    7),   -- activos bancarios: verificación semanal acordada
   ('motor',     1)    -- reevaluar el Índice CRECE a diario es barato (solo escribe lo que cambia)
 on conflict (nombre) do nothing;
 
