@@ -5,7 +5,7 @@
 **Corte:** 24 de julio de 2026  
 **Estado:** corte funcional validado localmente  
 **Producción vigente:** `https://joinsclee-radar.juno8i.easypanel.host/`  
-**Versión local de Fase 2:** commit `f606520`
+**Versión local de Fase 2:** commit `cc6c0e0`
 
 ## 1. Resumen ejecutivo
 
@@ -19,7 +19,7 @@ Hay dos usos históricos del término “Fase 2” en los documentos del proyect
    aproximadamente al 92%.
 2. La Fase 2 comercial/expansión, que incluye planes, alertas, rentabilidad,
    comparador, administración, pagos e integraciones, queda aproximadamente al
-   67% con este corte.
+   71% con este corte.
 
 La conclusión honesta es: el producto supera el 80% comprometido para Fase 1 y
 la Fase 2 comercial ya tiene un recorrido demostrable en local, pero todavía no
@@ -36,6 +36,9 @@ debe venderse como monetización o notificaciones plenamente operativas.
 - Registro de interés comercial en la cuenta del usuario.
 - Compatibilidad con las marcas históricas `suscrito`, `premium` y la nueva
   denominación `pro`.
+- Ciclo de vida manual para `trialing`, `active`, `past_due` y `canceled`.
+- El acceso Pro se activa únicamente para cuentas activas o en prueba; un pago
+  pendiente o una cancelación devuelve la cuenta al acceso Explorador.
 - Límites por plan: una alerta para Free y hasta cinco para Pro.
 - Fichas completas reservadas al plan Pro desde el servidor.
 
@@ -84,7 +87,9 @@ debe venderse como monetización o notificaciones plenamente operativas.
 - Indicadores agregados de usuarios, cuentas Pro, solicitudes Pro, alertas
   activas y perfiles personalizados.
 - Embudo de suscripciones y métricas de entrega de los últimos treinta días.
-- Sin exposición de contraseñas, tokens o listados completos de usuarios.
+- Cola operable de solicitudes Radar Pro con cambio de estado y motivo.
+- Historial auditable de cambios comerciales, sin exponerlo como un cobro.
+- Sin exposición de contraseñas o tokens.
 
 ### Controles operativos
 
@@ -97,13 +102,13 @@ debe venderse como monetización o notificaciones plenamente operativas.
 | Bloque | Peso | Cumplimiento | Aporte |
 |---|---:|---:|---:|
 | Base comercial, cuenta y UX | 15% | 90% | 13,5 |
-| Planes, acceso y suscripción | 15% | 65% | 9,8 |
+| Planes, acceso y suscripción | 15% | 80% | 12,0 |
 | Alertas y notificaciones | 20% | 85% | 17,0 |
 | Comparador y exportación | 15% | 85% | 12,8 |
 | Canon y rentabilidad | 15% | 35% | 5,3 |
-| Administración | 10% | 75% | 7,5 |
+| Administración | 10% | 90% | 9,0 |
 | Pagos e integraciones externas | 10% | 10% | 1,0 |
-| **Total** | **100%** |  | **66,8% ≈ 67%** |
+| **Total** | **100%** |  | **70,6% ≈ 71%** |
 
 Este porcentaje no reduce el 84% de Fase 1. Mide un alcance adicional que todavía
 depende de decisiones comerciales, credenciales y proveedores.
@@ -111,13 +116,14 @@ depende de decisiones comerciales, credenciales y proveedores.
 ## 4. Evidencia de calidad local
 
 - TypeScript: sin errores.
-- Pruebas unitarias e integración: 94/94 aprobadas.
+- Pruebas unitarias e integración: 97/97 aprobadas.
 - Recorridos E2E: 6/6 aprobados.
 - Errores de JavaScript observados: 0.
 - QA visual en 1440 × 1000 y 375 × 812.
 - Salud ponderada del corte: 98,6/100.
 - API de planes sin sesión: 200.
 - API de cuenta sin token: 401.
+- APIs administrativas y mutación de suscripción sin token: 401.
 - Ejecutor de alertas sin configuración: 503 seguro.
 - No se crearon, modificaron o eliminaron usuarios reales durante el QA.
 
@@ -154,7 +160,7 @@ depende de decisiones comerciales, credenciales y proveedores.
 - Aprobar precio, moneda, periodicidad, prueba y política de cancelación.
 - Elegir proveedor de pago.
 - Implementar checkout y webhooks.
-- Persistir suscripción y estados `trialing`, `active`, `past_due` y `canceled`.
+- Conectar los webhooks al ciclo de vida de suscripción ya implementado.
 - Probar idempotencia, renovación, fallo de cobro y cancelación.
 
 ### Prioridad 3: canon observado
@@ -167,7 +173,6 @@ depende de decisiones comerciales, credenciales y proveedores.
 ### Prioridad 4: operación comercial
 
 - Añadir una exportación ejecutiva en PDF.
-- Añadir auditoría de cambios comerciales.
 - Definir y conectar las integraciones Low Ticket/Tradentia.
 
 Con alertas entregadas, checkout funcional y una primera fuente de canon
@@ -179,7 +184,7 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 | Dependencia | Decisión necesaria | Estado del código |
 |---|---|---|
 | Precio Radar Pro | Tarifa, periodicidad y beneficios definitivos | Página y catálogo listos |
-| Proveedor de pago | Mercado Pago, Wompi, Stripe u otro | No seleccionado |
+| Proveedor de pago | Mercado Pago, Wompi, Stripe u otro | Estados y permisos listos; checkout no seleccionado |
 | Resend | Cuenta, dominio y API key | Adaptador listo |
 | EasyPanel cron | Secreto y horario semanal | Endpoint listo |
 | Canon de arriendo | Fuente autorizada | Calculadora manual lista |
@@ -215,13 +220,15 @@ pueden permanecer en el tramo posterior si el cliente no entrega especificación
 4. Guardar dos inmuebles y abrir `/comparador`.
 5. Abrir una ficha e ingresar canon y administración en la rentabilidad.
 6. Descargar el archivo de cuenta.
-7. Mostrar `/admin` únicamente con una cuenta autorizada.
-8. Cerrar con la lista de cuatro dependencias externas para alcanzar 80% de Fase 2.
+7. Mostrar `/admin` únicamente con una cuenta autorizada y procesar una solicitud
+   de prueba sin presentarla como cobro.
+8. Mostrar cómo un estado `past_due` pausa el acceso Pro en la cuenta.
+9. Cerrar con la lista de dependencias externas para alcanzar 80% de Fase 2.
 
 ## 11. Dictamen
 
 El producto está listo para una demostración local de Fase 2 y mantiene el
-cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 67%:
+cumplimiento superior al 80% de Fase 1. El nuevo alcance comercial está en 71%:
 la experiencia y la base técnica existen, mientras que pagos, entrega de correo,
 canon observado e integraciones todavía requieren decisiones y configuración
 externa.

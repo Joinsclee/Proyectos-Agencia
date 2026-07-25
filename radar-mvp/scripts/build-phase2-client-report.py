@@ -241,13 +241,13 @@ def title_block(doc):
     run = subtitle.add_run("Base comercial, alertas, comparador, rentabilidad y operación")
     set_font(run, size=13, color=MUTED)
 
-    callout(doc, "Conclusión", "Fase 1 permanece en 84%. La Fase 2 comercial alcanza 67% con un recorrido funcional validado en local; pagos, correo entregado, canon observado e integraciones todavía requieren decisiones externas.", "67%", PALE_BLUE, NAVY)
+    callout(doc, "Conclusión", "Fase 1 permanece en 84%. La Fase 2 comercial alcanza 71% con un recorrido funcional validado en local; pagos, correo entregado, canon observado e integraciones todavía requieren decisiones externas.", "71%", PALE_BLUE, NAVY)
 
     meta = [
         ("Preparado para", "Andrés Giraldo"),
         ("Corte", "24 de julio de 2026"),
         ("Estado", "Listo para demostración local; no desplegado"),
-        ("Versión local", "f606520"),
+        ("Versión local", "cc6c0e0"),
         ("Producción vigente", "joinsclee-radar.juno8i.easypanel.host"),
     ]
     table = doc.add_table(rows=len(meta), cols=2)
@@ -388,7 +388,7 @@ def build():
     body(doc, "El compromiso de llegar a por lo menos 80% de la Fase 1 ya se cumplió. El corte defendible de esa fase sigue siendo 84%. La ejecución actual agrega una base comercial y operativa de Fase 2 sin convertir maquetas en promesas.")
     heading(doc, "Dos significados de Fase 2", 2)
     bullet(doc, "Fase 2 técnica original: motor de remates judiciales, aproximadamente 92%.")
-    bullet(doc, "Fase 2 comercial/expansión: planes, alertas, rentabilidad, comparador, administración, pagos e integraciones, aproximadamente 67%.")
+    bullet(doc, "Fase 2 comercial/expansión: planes, alertas, rentabilidad, comparador, administración, pagos e integraciones, aproximadamente 71%.")
     callout(doc, "Dictamen para el cliente", "El producto supera el 80% comprometido para Fase 1 y la Fase 2 comercial ya tiene un recorrido demostrable en local. Todavía no debe venderse como monetización o notificaciones plenamente operativas.", None, PALE_GREEN, GREEN)
 
     heading(doc, "Qué puede demostrarse hoy", 2)
@@ -409,6 +409,7 @@ def build():
             "Catálogo API y página pública /planes.",
             "Precio Pro explícitamente por definir; no hay cobro simulado.",
             "Solicitud de plan y compatibilidad con marcas históricas de suscripción.",
+            "Estados de prueba, activo, pago pendiente y cancelado con permisos efectivos.",
             "Una alerta para Free y hasta cinco para Pro.",
         ]),
         ("Cuenta y alertas", [
@@ -426,6 +427,7 @@ def build():
         ("Administración", [
             "Panel /admin protegido por rol.",
             "Usuarios, embudo Pro, alertas, perfiles y estado de entregas.",
+            "Cola de solicitudes, cambios de estado con motivo e historial auditable.",
             "Exportación JSON sin contraseñas ni tokens.",
         ]),
     ]
@@ -438,20 +440,20 @@ def build():
     heading(doc, "3. Avance ponderado de Fase 2 comercial")
     score_rows = [
         ["Base comercial, cuenta y UX", "15%", "90%", "13,5"],
-        ["Planes, acceso y suscripción", "15%", "65%", "9,8"],
+        ["Planes, acceso y suscripción", "15%", "80%", "12,0"],
         ["Alertas y notificaciones", "20%", "85%", "17,0"],
         ["Comparador y exportación", "15%", "85%", "12,8"],
         ["Canon y rentabilidad", "15%", "35%", "5,3"],
-        ["Administración", "10%", "75%", "7,5"],
+        ["Administración", "10%", "90%", "9,0"],
         ["Pagos e integraciones", "10%", "10%", "1,0"],
-        ["TOTAL", "100%", "", "66,8% ≈ 67%"],
+        ["TOTAL", "100%", "", "70,6% ≈ 71%"],
     ]
     table(doc, ["Bloque", "Peso", "Cumpl.", "Aporte"], score_rows, [5000, 1200, 1500, 1660], 8.7)
     body(doc, "Este porcentaje mide alcance adicional y no reduce el 84% de Fase 1. La diferencia hasta 80% se concentra en proveedores, datos autorizados y operación comercial.")
     heading(doc, "Evidencia de calidad local", 2)
     evidence = [
         ["TypeScript", "Sin errores"],
-        ["Unitarias/integración", "94/94"],
+        ["Unitarias/integración", "97/97"],
         ["Recorridos E2E", "6/6"],
         ["Errores de consola", "0"],
         ["QA visual", "1440×1000 y 375×812"],
@@ -490,7 +492,7 @@ def build():
         bullet(doc, item)
 
     page_break(doc)
-    heading(doc, "5. Ruta de 67% a 80%")
+    heading(doc, "5. Ruta de 71% a 80%")
     heading(doc, "Prioridad 1: activar alertas", 2)
     for item in [
         "Aprobar Resend, verificar dominio y configurar las cuatro variables.",
@@ -518,7 +520,7 @@ def build():
     heading(doc, "6. Dependencias externas")
     dependencies = [
         ["Precio Radar Pro", "Tarifa y beneficios", "Página y catálogo listos"],
-        ["Proveedor de pago", "Elegir proveedor", "No seleccionado"],
+        ["Proveedor de pago", "Elegir proveedor", "Estados listos; checkout pendiente"],
         ["Resend", "Cuenta, dominio y API key", "Adaptador listo"],
         ["EasyPanel cron", "Secreto y horario", "Endpoint listo"],
         ["Canon", "Fuente autorizada", "Cálculo manual listo"],
@@ -567,7 +569,8 @@ def build():
         "Guardar dos inmuebles y abrir /comparador.",
         "Ingresar canon y administración en una ficha.",
         "Descargar la exportación de cuenta.",
-        "Abrir /admin solo con una cuenta autorizada.",
+        "Abrir /admin y procesar una prueba sin presentarla como cobro.",
+        "Mostrar que pago pendiente pausa el acceso Pro.",
         "Cerrar con las dependencias para llegar a 80% de Fase 2.",
     ]
     demo_num_id = new_numbering_sequence(doc)
