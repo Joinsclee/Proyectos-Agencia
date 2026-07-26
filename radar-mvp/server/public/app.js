@@ -12,6 +12,10 @@ const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', b
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
+const emptyState = (icon, title, description, tone = '') => `
+  <div class="empty-icon${tone ? ` is-${tone}` : ''}">${ic(icon, icon === 'alert-triangle' || icon === 'check-circle' ? 'ic-reicon' : '')}</div>
+  <div class="h">${esc(title)}</div>
+  <div>${esc(description)}</div>`;
 // Oportunidad ALTA: la marca el motor (decil más barato + descuento grande +
 // comparables homogéneos) y viaja en la columna is_high.
 const isHighOpp = (d) => d.is_high === true;
@@ -732,7 +736,7 @@ async function load(page) {
     console.error('load:', e);
     $('loading').style.display = 'none'; state.loading = false;
     $('empty').style.display = 'block';
-    $('empty').innerHTML = '<div class="h">No se pudo cargar</div><div>Revisa la conexión y reintenta.</div>';
+    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Revisa la conexión y reintenta.', 'warning');
     setResultText('No disponible');
     return;
   }
@@ -760,7 +764,7 @@ async function loadGuardados() {
     setResultText(props.length + ' guardado' + (props.length === 1 ? '' : 's') + ' en este dispositivo');
     $('empty').style.display = props.length === 0 ? 'block' : 'none';
     $('empty').innerHTML = props.length === 0
-      ? '<div class="h">Aún no has guardado inmuebles</div><div>Toca el corazón en cualquier oportunidad para compararla después.</div>'
+      ? emptyState('heart', 'Aún no has guardado inmuebles', 'Toca el corazón en cualquier oportunidad para compararla después.', 'saved')
       : '';
     return;
   }
@@ -774,7 +778,7 @@ async function loadGuardados() {
   } catch (e) {
     $('loading').style.display = 'none';
     $('empty').style.display = 'block';
-    $('empty').innerHTML = '<div class="h">No se pudo cargar</div><div>Reintenta.</div>';
+    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Reintenta.', 'warning');
     setResultText('No disponible');
     return;
   }
@@ -785,7 +789,7 @@ async function loadGuardados() {
   if (props.length >= 2) {
     $('pager').innerHTML = '<a class="compare-cta" href="/comparador">Comparar hasta 3 guardados</a>';
   }
-  if (props.length === 0) $('empty').innerHTML = '<div class="h">Sin guardados aún</div><div>Toca el corazón en cualquier inmueble para guardarlo aquí.</div>';
+  if (props.length === 0) $('empty').innerHTML = emptyState('heart', 'Sin guardados aún', 'Toca el corazón en cualquier inmueble para guardarlo aquí.', 'saved');
 }
 
 function renderPager(total, page, pages) {
@@ -1112,8 +1116,16 @@ function analisisRemate(p) {
 function analisisSection(p) {
   const { nivel, flags } = analisisRemate(p);
   if (!flags.length) return '';
-  const meta = { buena: ['🟢', 'Oportunidad atractiva'], media: ['🟡', 'Requiere revisión'], precaucion: ['🟠', 'Revisar con cuidado'] }[nivel];
-  const icon = { pos: '✅', warn: '⚠️', neg: '🔎' };
+  const meta = {
+    buena: [ic('check-circle', 'ic-reicon analysis-icon is-positive'), 'Oportunidad atractiva'],
+    media: [ic('magnifier', 'analysis-icon is-review'), 'Requiere revisión'],
+    precaucion: [ic('alert-triangle', 'ic-reicon analysis-icon is-warning'), 'Revisar con cuidado'],
+  }[nivel];
+  const icon = {
+    pos: ic('check-circle', 'ic-reicon analysis-icon is-positive'),
+    warn: ic('alert-triangle', 'ic-reicon analysis-icon is-warning'),
+    neg: ic('magnifier', 'analysis-icon is-review'),
+  };
   return `<div class="section"><h3>Análisis preliminar automático</h3>
     <div class="analisis analisis-${nivel}">
       <div class="analisis-head">${meta[0]} <strong>${meta[1]}</strong></div>
@@ -1153,12 +1165,16 @@ function renderAI(result) {
   const m = result.market;
   if (!result.ok) {
     if (result.needs_key) {
-      return `${marketCtxHtml(m)}<div class="ai-note">⚠️ La opinión con IA aún no está activa: falta configurar la clave de OpenAI en el servidor. Arriba ves los comparables de mercado de la zona.</div>`;
+      return `${marketCtxHtml(m)}<div class="ai-note">${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')}<span>La opinión con IA aún no está activa: falta configurar la clave de OpenAI en el servidor. Arriba ves los comparables de mercado de la zona.</span></div>`;
     }
     return `${marketCtxHtml(m)}<div class="ai-note">No se pudo generar el análisis: ${esc(result.error || 'error')}.</div>`;
   }
   const ai = result.ai;
-  const meta = { atractiva: ['🟢', 'Atractiva', 'ai-buena'], neutral: ['🟡', 'Neutral', 'ai-media'], riesgosa: ['🟠', 'Riesgosa', 'ai-precaucion'] }[ai.veredicto] || ['🟡', ai.veredicto, 'ai-media'];
+  const meta = {
+    atractiva: [ic('check-circle', 'ic-reicon analysis-icon is-positive'), 'Atractiva', 'ai-buena'],
+    neutral: [ic('magnifier', 'analysis-icon is-review'), 'Neutral', 'ai-media'],
+    riesgosa: [ic('alert-triangle', 'ic-reicon analysis-icon is-warning'), 'Riesgosa', 'ai-precaucion'],
+  }[ai.veredicto] || [ic('magnifier', 'analysis-icon is-review'), ai.veredicto, 'ai-media'];
   const li = (arr) => (arr && arr.length ? `<ul class="ai-list">${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="ai-empty">—</p>');
   const estim = ai.estimado_mercado_cop != null
     ? `<div class="ai-estim"><div><span class="l">Valor de mercado estimado</span><strong>${COPn(ai.estimado_mercado_cop)}</strong></div>${ai.descuento_estimado_pct != null ? `<div><span class="l">Descuento estimado</span><strong style="color:${ai.descuento_estimado_pct >= 0 ? '#16a34a' : '#dc2626'}">${ai.descuento_estimado_pct >= 0 ? '−' : '+'}${Math.abs(ai.descuento_estimado_pct)}%</strong></div>` : ''}</div>`
@@ -1169,10 +1185,10 @@ function renderAI(result) {
       ${estim}
       ${marketCtxHtml(m)}
       <div class="ai-cols">
-        <div><h4>✅ A favor</h4>${li(ai.a_favor)}</div>
-        <div><h4>⚠️ En contra</h4>${li(ai.en_contra)}</div>
+        <div><h4>${ic('check-circle', 'ic-reicon analysis-icon is-positive')} A favor</h4>${li(ai.a_favor)}</div>
+        <div><h4>${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')} En contra</h4>${li(ai.en_contra)}</div>
       </div>
-      <h4>🔎 Verificar (due diligence)</h4>${li(ai.riesgos_due_diligence)}
+      <h4>${ic('magnifier', 'analysis-icon is-review')} Verificar (due diligence)</h4>${li(ai.riesgos_due_diligence)}
       <p class="ai-reco"><strong>Recomendación:</strong> ${esc(ai.recomendacion)}</p>
       <p class="ai-meta">Generado por IA (${esc(ai._meta?.model || 'modelo')}) · ${ai._meta?.comparables_n ?? m?.n ?? 0} comparables${result.cached ? ' · cacheado' : ''}. Opinión orientativa; no sustituye estudio de títulos ni asesoría profesional.</p>
     </div>`;
