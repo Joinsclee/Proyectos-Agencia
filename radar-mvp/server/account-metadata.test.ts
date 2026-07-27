@@ -111,6 +111,34 @@ test('cuenta: se distingue un ascenso de un resto inofensivo', () => {
   assert.equal(pareceIntentoDeAscenso({ subscription_status: 'active' }), true);
 });
 
+test('cuenta: un permiso que el servidor ya concedió no es un intento de ascenso', () => {
+  // `scripts/otorgar-plan.ts` escribe el permiso en LAS DOS bolsas mientras
+  // convivan el lector viejo y el nuevo. Sin esta comparación, cada petición de
+  // una cuenta legítimamente Pro dejaba un aviso de ataque en el log.
+  assert.equal(
+    pareceIntentoDeAscenso(
+      { plan: 'pro', subscription_status: 'active' },
+      { plan: 'pro', subscription_status: 'active' },
+    ),
+    false,
+  );
+  assert.equal(pareceIntentoDeAscenso({ role: 'admin' }, { role: 'admin' }), false);
+});
+
+test('cuenta: reclamar más de lo concedido sí es un intento de ascenso', () => {
+  // El caso que el aviso tiene que seguir cazando: el servidor le dio Pro y la
+  // cuenta se escribe además el rol de administrador.
+  assert.equal(
+    pareceIntentoDeAscenso({ plan: 'pro', role: 'admin' }, { plan: 'pro' }),
+    true,
+  );
+  // O el servidor canceló y la cuenta intenta revivir el acceso por su cuenta.
+  assert.equal(
+    pareceIntentoDeAscenso({ plan: 'pro' }, { plan: 'free', subscription_status: 'canceled' }),
+    true,
+  );
+});
+
 test('cuenta: la lista de campos cubre todo lo que decide acceso', () => {
   // Si alguien añade un campo de permiso nuevo y olvida meterlo aquí, vuelve a
   // ser escribible por el usuario sin que nada lo avise.

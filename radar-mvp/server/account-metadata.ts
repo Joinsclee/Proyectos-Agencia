@@ -110,14 +110,30 @@ export function privilegiosEnBolsaDelUsuario(
   return CAMPOS_AUTORIZACION.filter((campo) => bolsa[campo] !== undefined);
 }
 
-/** ¿Alguno de esos campos intenta conceder un permiso, y no solo ruido heredado? */
+const PLANES_PAGOS = new Set(['pro', 'suscrito', 'premium']);
+const ESTADOS_CON_ACCESO = new Set(['active', 'trialing']);
+
+const reclamaAdmin = (b: Record<string, unknown>) => b.role === 'admin' || b.is_admin === true;
+const reclamaPago = (b: Record<string, unknown>) => PLANES_PAGOS.has(String(b.plan ?? '').toLowerCase());
+const reclamaVigencia = (b: Record<string, unknown>) => ESTADOS_CON_ACCESO.has(String(b.subscription_status ?? '').toLowerCase());
+
+/**
+ * ¿La bolsa del usuario intenta conceder un permiso que el servidor NO le dio?
+ *
+ * Se compara contra `app_metadata` en vez de mirar solo la bolsa del usuario. La
+ * razón es concreta: `scripts/otorgar-plan.ts` escribe el permiso en las dos
+ * bolsas a propósito, para que valga en la producción todavía sin desplegar. Sin
+ * esta comparación, cada petición de una cuenta legítimamente Pro dejaba un aviso
+ * de intento de ascenso en el log — y un aviso que salta con lo normal deja de
+ * mirarse justo cuando salta con lo anormal.
+ */
 export function pareceIntentoDeAscenso(
   userMetadata: Record<string, unknown> | null | undefined,
+  appMetadata?: Record<string, unknown> | null,
 ): boolean {
-  const bolsa = userMetadata ?? {};
-  const plan = String(bolsa.plan ?? '').toLowerCase();
-  return bolsa.role === 'admin'
-    || bolsa.is_admin === true
-    || plan === 'pro' || plan === 'suscrito' || plan === 'premium'
-    || ['active', 'trialing'].includes(String(bolsa.subscription_status ?? '').toLowerCase());
+  const propios = userMetadata ?? {};
+  const servidor = appMetadata ?? {};
+  return (reclamaAdmin(propios) && !reclamaAdmin(servidor))
+    || (reclamaPago(propios) && !reclamaPago(servidor))
+    || (reclamaVigencia(propios) && !reclamaVigencia(servidor));
 }

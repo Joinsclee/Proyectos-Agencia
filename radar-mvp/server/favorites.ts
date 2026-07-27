@@ -28,7 +28,7 @@ const log = createLogger('favorites');
  * se ignoró; esto solo deja rastro para poder verlo.
  */
 function avisarSiHayPrivilegiosPropios(user: CuentaSupabase & { id?: string }): void {
-  if (!pareceIntentoDeAscenso(user.user_metadata)) return;
+  if (!pareceIntentoDeAscenso(user.user_metadata, user.app_metadata)) return;
   const campos = privilegiosEnBolsaDelUsuario(user.user_metadata).join(', ');
   log.warn(`cuenta ${String(user.id ?? '').slice(0, 8)}: privilegios en user_metadata ignorados (${campos})`);
 }
