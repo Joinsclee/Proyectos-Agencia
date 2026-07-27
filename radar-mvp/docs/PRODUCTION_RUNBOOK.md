@@ -34,8 +34,8 @@ git diff --check
 Condiciones de salida:
 
 - TypeScript sin errores.
-- 118 pruebas o más aprobadas.
-- 6/6 recorridos E2E aprobados.
+- 129 pruebas o más aprobadas.
+- 10/10 recorridos E2E aprobados.
 - Sin secretos, `.env`, sesiones o archivos de salida en el diff.
 - PR revisado y checks remotos en verde.
 - Commit de merge identificado antes de abrir EasyPanel.
@@ -84,7 +84,7 @@ Resultados esperados:
 - `/ready`: `200`, `ok: true`, estado `ready`.
 - `/api/config`: Supabase público válido, estado del correo y
   `paymentDemoReady: true` cuando Wompi Sandbox esté habilitado.
-- E2E: 6/6.
+- E2E: 10/10.
 - Sin incremento sostenido de respuestas `500` en los logs.
 
 ## 5. Rollback

@@ -103,6 +103,30 @@ after(async () => {
 });
 
 describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, () => {
+  test('muestra skeletons geométricos y los retira al completar la carga', async () => {
+    const { context, page, assertClean } = await openIsolatedPage();
+    try {
+      await page.route('**/api/portal?*', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        await route.continue();
+      });
+
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await page.locator('#grid .skeleton-card').first().waitFor();
+      assert.equal(await page.locator('#grid .skeleton-card').count(), 9);
+      assert.equal(await page.locator('#grid').getAttribute('aria-busy'), 'true');
+      assert.equal(await page.locator('#loading').getAttribute('role'), 'status');
+
+      await waitForResults(page);
+      assert.equal(await page.locator('#grid .skeleton-card').count(), 0);
+      assert.equal(await page.locator('#grid').getAttribute('aria-busy'), null);
+      assert.equal(await page.locator('#loading').isVisible(), false);
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
   test('carga el dashboard y expone APIs/configuración sanas', async () => {
     const { context, page, assertClean } = await openIsolatedPage();
     try {

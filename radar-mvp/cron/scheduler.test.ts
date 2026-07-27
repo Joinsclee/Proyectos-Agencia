@@ -5,7 +5,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toca } from './scheduler.js';
+import { toca, tomarCerrojoCon, type ActualizarCerrojo } from './scheduler.js';
 
 const AHORA = new Date('2026-07-20T12:00:00Z');
 const haceDias = (n: number) => new Date(AHORA.getTime() - n * 86_400_000).toISOString();
@@ -69,4 +69,58 @@ test('cron: un cerrojo viejo se ignora (el proceso anterior murió)', () => {
 test('cron: tras una caída larga recupera lo pendiente', () => {
   // El calendario vive en la base, así que estar caído 20 días no salta corridas.
   assert.ok(toca(job({ cadencia_dias: 7, ultima_corrida: haceDias(20) }), AHORA));
+});
+
+const resultado = (tomado: boolean, error?: string) => ({
+  data: tomado ? [{ nombre: 'motor' }] : [],
+  error: error ? { message: error } : null,
+});
+
+test('cron: toma un cerrojo libre sin consultar vencimiento', async () => {
+  const llamadas: Parameters<ActualizarCerrojo>[] = [];
+  const actualizar: ActualizarCerrojo = async (...args) => {
+    llamadas.push(args);
+    return resultado(true);
+  };
+
+  assert.equal(await tomarCerrojoCon(actualizar, 'motor', AHORA), AHORA.toISOString());
+  assert.equal(llamadas.length, 1);
+  assert.equal(llamadas[0][0], 'libre');
+  assert.equal(llamadas[0][1], 'motor');
+  assert.equal(llamadas[0][2], AHORA.toISOString());
+  assert.equal(llamadas[0][3], new Date(AHORA.getTime() - 6 * 60 * 60_000).toISOString());
+});
+
+test('cron: recupera un cerrojo vencido después de comprobar que no está libre', async () => {
+  const estados: string[] = [];
+  const actualizar: ActualizarCerrojo = async (estado) => {
+    estados.push(estado);
+    return resultado(estado === 'vencido');
+  };
+
+  assert.equal(await tomarCerrojoCon(actualizar, 'motor', AHORA), AHORA.toISOString());
+  assert.deepEqual(estados, ['libre', 'vencido']);
+});
+
+test('cron: no toma un cerrojo ocupado y vigente', async () => {
+  const actualizar: ActualizarCerrojo = async () => resultado(false);
+  assert.equal(await tomarCerrojoCon(actualizar, 'motor', AHORA), null);
+});
+
+test('cron: un error al comprobar el cerrojo libre corta sin una segunda escritura', async () => {
+  let llamadas = 0;
+  const actualizar: ActualizarCerrojo = async () => {
+    llamadas++;
+    return resultado(false, 'fallo PostgREST');
+  };
+
+  assert.equal(await tomarCerrojoCon(actualizar, 'motor', AHORA), null);
+  assert.equal(llamadas, 1);
+});
+
+test('cron: un error al recuperar el cerrojo vencido también impide ejecutar', async () => {
+  const actualizar: ActualizarCerrojo = async (estado) => (
+    estado === 'libre' ? resultado(false) : resultado(false, 'fallo PostgREST')
+  );
+  assert.equal(await tomarCerrojoCon(actualizar, 'motor', AHORA), null);
 });

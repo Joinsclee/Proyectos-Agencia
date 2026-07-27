@@ -80,20 +80,65 @@ export function toca(job: Job, ahora = new Date()): boolean {
   return dias >= job.cadencia_dias;
 }
 
-async function tomarCerrojo(nombre: string): Promise<boolean> {
+type ResultadoCerrojo = {
+  data: Array<{ nombre: string }> | null;
+  error: { message: string } | null;
+};
+
+export type ActualizarCerrojo = (
+  estado: 'libre' | 'vencido',
+  nombre: string,
+  tomadoEn: string,
+  limite: string,
+) => Promise<ResultadoCerrojo>;
+
+/**
+ * Decisión testeable del cerrojo. La escritura concreta se inyecta para poder
+ * verificar todos los caminos sin tocar Supabase durante las pruebas.
+ */
+export async function tomarCerrojoCon(
+  actualizar: ActualizarCerrojo,
+  nombre: string,
+  ahora = new Date(),
+): Promise<string | null> {
   // Solo se toma si sigue libre (o vencido): dos réplicas no pueden ganar ambas.
-  const limite = new Date(Date.now() - CERROJO_MAX_MS).toISOString();
-  const { data, error } = await supabase
-    .from('radar_cron_jobs')
-    .update({ corriendo_desde: new Date().toISOString() })
-    .eq('nombre', nombre)
-    .or(`corriendo_desde.is.null,corriendo_desde.lt.${limite}`)
-    .select('nombre');
-  if (error) { log.error(`cerrojo ${nombre}: ${error.message}`); return false; }
-  return (data ?? []).length > 0;
+  //
+  // PostgREST rechaza en UPDATE el filtro OR que mezcla IS NULL y LT, aunque el
+  // mismo filtro sí funciona en SELECT. Hacemos dos UPDATE condicionales: ambos
+  // siguen siendo atómicos porque la condición se evalúa en la base.
+  const limite = new Date(ahora.getTime() - CERROJO_MAX_MS).toISOString();
+  const tomadoEn = ahora.toISOString();
+  const libre = await actualizar('libre', nombre, tomadoEn, limite);
+  if (libre.error) { log.error(`cerrojo ${nombre}: ${libre.error.message}`); return null; }
+  if ((libre.data ?? []).length > 0) return tomadoEn;
+
+  const vencido = await actualizar('vencido', nombre, tomadoEn, limite);
+  if (vencido.error) { log.error(`cerrojo ${nombre}: ${vencido.error.message}`); return null; }
+  return (vencido.data ?? []).length > 0 ? tomadoEn : null;
 }
 
-async function soltarCerrojo(nombre: string, estado: 'ok' | 'error', detalle: string, seg: number) {
+const actualizarCerrojo: ActualizarCerrojo = async (estado, nombre, tomadoEn, limite) => {
+  const base = supabase
+    .from('radar_cron_jobs')
+    .update({ corriendo_desde: tomadoEn })
+    .eq('nombre', nombre);
+
+  return estado === 'libre'
+    ? base.is('corriendo_desde', null).select('nombre')
+    : base.lt('corriendo_desde', limite).select('nombre');
+};
+
+async function tomarCerrojo(nombre: string): Promise<string | null> {
+  return tomarCerrojoCon(actualizarCerrojo, nombre);
+}
+
+async function soltarCerrojo(
+  nombre: string,
+  token: string,
+  estado: 'ok' | 'error',
+  detalle: string,
+  seg: number,
+) {
   await supabase.from('radar_cron_jobs').update({
     corriendo_desde: null,
     ultima_corrida: new Date().toISOString(),
@@ -101,24 +146,29 @@ async function soltarCerrojo(nombre: string, estado: 'ok' | 'error', detalle: st
     ultimo_detalle: detalle.slice(0, 500),
     duracion_seg: seg,
     actualizado_en: new Date().toISOString(),
-  }).eq('nombre', nombre);
+  })
+    .eq('nombre', nombre)
+    // Si el cerrojo venció y otra réplica lo recuperó, la corrida anterior ya
+    // no es propietaria y no puede borrar ni sobrescribir el estado de la nueva.
+    .eq('corriendo_desde', token);
 }
 
 async function ejecutar(nombre: string) {
   if (!TAREAS[nombre]) { log.warn(`Sin tarea definida para "${nombre}"`); return; }
-  if (!(await tomarCerrojo(nombre))) { log.info(`${nombre}: ya lo está corriendo otro proceso`); return; }
+  const token = await tomarCerrojo(nombre);
+  if (!token) { log.info(`${nombre}: ya lo está corriendo otro proceso`); return; }
   const t0 = Date.now();
   log.info(`▶ ${nombre}`);
   try {
     const r = await TAREAS[nombre]();
     const seg = Math.round((Date.now() - t0) / 1000);
-    await soltarCerrojo(nombre, 'ok', JSON.stringify(r ?? {}), seg);
+    await soltarCerrojo(nombre, token, 'ok', JSON.stringify(r ?? {}), seg);
     log.info(`✅ ${nombre} en ${seg}s`);
   } catch (e) {
     const seg = Math.round((Date.now() - t0) / 1000);
     // Se suelta el cerrojo SIEMPRE: si un fallo lo dejara tomado, el trabajo no
     // volvería a correr nunca y el radar se quedaría congelado en silencio.
-    await soltarCerrojo(nombre, 'error', e instanceof Error ? e.message : String(e), seg);
+    await soltarCerrojo(nombre, token, 'error', e instanceof Error ? e.message : String(e), seg);
     log.error(`✖ ${nombre}`, e);
   }
 }
