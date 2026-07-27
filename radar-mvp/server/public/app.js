@@ -708,14 +708,41 @@ $('radar-setup').addEventListener('click', async (event) => {
 });
 
 // ---------- Carga (paginación numerada) ----------
+function renderLoadingSkeletons(count = 9) {
+  const grid = $('grid');
+  grid.setAttribute('aria-busy', 'true');
+  grid.innerHTML = Array.from({ length: count }, (_, index) => `
+    <article class="card skeleton-card" aria-hidden="true" style="--skeleton-delay:${index * 55}ms">
+      <div class="card-img-wrap skeleton-media"></div>
+      <div class="card-body skeleton-body">
+        <div class="skeleton-line skeleton-price"></div>
+        <div class="skeleton-line skeleton-title"></div>
+        <div class="skeleton-line skeleton-location"></div>
+        <div class="card-meta skeleton-meta">
+          <span class="skeleton-pill"></span>
+          <span class="skeleton-pill short"></span>
+          <span class="skeleton-pill tiny"></span>
+        </div>
+        <div class="skeleton-line skeleton-freshness"></div>
+      </div>
+    </article>`).join('');
+  $('loading').innerHTML = '<span class="sr-only">Cargando resultados…</span>';
+  $('loading').style.display = 'block';
+}
+
+function clearLoadingSkeletons() {
+  $('grid').removeAttribute('aria-busy');
+  $('loading').style.display = 'none';
+  $('loading').innerHTML = '<span class="sr-only">Cargando resultados…</span>';
+}
+
 async function load(page) {
   if (state.tab === 'guardados') return loadGuardados();
   const loadSeq = ++state.loadSeq;
   state.loading = true;
   state.page = page;
   setResultText('Buscando…');
-  $('grid').innerHTML = '';
-  $('loading').style.display = 'block';
+  renderLoadingSkeletons();
   $('empty').style.display = 'none';
   $('pager').innerHTML = '';
 
@@ -734,7 +761,9 @@ async function load(page) {
   } catch (e) {
     if (loadSeq !== state.loadSeq) return;
     console.error('load:', e);
-    $('loading').style.display = 'none'; state.loading = false;
+    $('grid').innerHTML = '';
+    clearLoadingSkeletons();
+    state.loading = false;
     $('empty').style.display = 'block';
     $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Revisa la conexión y reintenta.', 'warning');
     setResultText('No disponible');
@@ -745,7 +774,7 @@ async function load(page) {
   $('grid').innerHTML = '';
   renderCards(res.data);
   setResultText(res.total.toLocaleString('es-CO') + ' resultado' + (res.total === 1 ? '' : 's'));
-  $('loading').style.display = 'none';
+  clearLoadingSkeletons();
   $('empty').style.display = res.total === 0 ? 'block' : 'none';
   renderPager(res.total, res.page, res.pages);
   state.loading = false;
@@ -756,9 +785,10 @@ async function loadGuardados() {
   $('grid').innerHTML = '';
   $('pager').innerHTML = '';
   $('empty').style.display = 'none';
-  $('loading').style.display = 'block';
+  renderLoadingSkeletons(6);
   if (!auth.token) {
-    $('loading').style.display = 'none';
+    $('grid').innerHTML = '';
+    clearLoadingSkeletons();
     const props = [...guestFavorites.values()].map((item) => item.property);
     renderCards(props);
     setResultText(props.length + ' guardado' + (props.length === 1 ? '' : 's') + ' en este dispositivo');
@@ -776,15 +806,17 @@ async function loadGuardados() {
     (d.favorites || []).forEach((f) => favSet.add(favKey(f.kind, f.id)));
     updateFavCount();
   } catch (e) {
-    $('loading').style.display = 'none';
+    $('grid').innerHTML = '';
+    clearLoadingSkeletons();
     $('empty').style.display = 'block';
     $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Reintenta.', 'warning');
     setResultText('No disponible');
     return;
   }
+  $('grid').innerHTML = '';
   renderCards(props);
   setResultText(props.length + ' guardado' + (props.length === 1 ? '' : 's'));
-  $('loading').style.display = 'none';
+  clearLoadingSkeletons();
   $('empty').style.display = props.length === 0 ? 'block' : 'none';
   if (props.length >= 2) {
     $('pager').innerHTML = '<a class="compare-cta" href="/comparador">Comparar hasta 3 guardados</a>';

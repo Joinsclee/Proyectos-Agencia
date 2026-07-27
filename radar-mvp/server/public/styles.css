@@ -238,6 +238,41 @@ h1 .gold { color: var(--gold); }
 .bank-ph-type { font-family: 'Tilt Warp', cursive; font-size: 1.3rem; }
 
 .loading, .empty { text-align: center; padding: 60px 20px; color: #6b7280; }
+.loading:has(.sr-only) { padding: 0; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* Skeletons geométricos: reproducen la tarjeta final para evitar saltos de
+   layout y mantener la jerarquía visual durante cargas y cambios de filtro. */
+.skeleton-card { pointer-events: none; }
+.skeleton-card:hover { transform: none; box-shadow: none; border-color: rgba(97,49,116,0.10); }
+.skeleton-media, .skeleton-line, .skeleton-pill {
+  position: relative; overflow: hidden;
+  background: #eee8f1;
+}
+.skeleton-media::after, .skeleton-line::after, .skeleton-pill::after {
+  content: ''; position: absolute; inset: 0;
+  transform: translateX(-105%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.76), transparent);
+  animation: skeleton-shimmer 1.45s ease-in-out infinite;
+  animation-delay: var(--skeleton-delay, 0ms);
+}
+.skeleton-body { gap: 0; }
+.skeleton-line { border-radius: 6px; }
+.skeleton-price { width: 70%; height: 22px; }
+.skeleton-title { width: 48%; height: 13px; margin-top: 12px; }
+.skeleton-location { width: 62%; height: 11px; margin-top: 9px; }
+.skeleton-meta { min-height: 35px; }
+.skeleton-pill { display: block; width: 54px; height: 10px; border-radius: 99px; }
+.skeleton-pill.short { width: 38px; }
+.skeleton-pill.tiny { width: 28px; margin-left: auto; }
+.skeleton-freshness { width: 40%; height: 10px; margin-top: 13px; }
+@keyframes skeleton-shimmer { 55%, 100% { transform: translateX(105%); } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-media::after, .skeleton-line::after, .skeleton-pill::after { animation: none; }
+}
 .empty .h { font-size: 1.1rem; font-weight: 700; color: var(--pp); margin-top: 10px; }
 .empty-icon {
   width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 16px;
