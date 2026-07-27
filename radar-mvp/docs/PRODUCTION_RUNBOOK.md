@@ -53,6 +53,27 @@ Condiciones de salida:
 6. Nunca activar un trabajo deshabilitado como parte incidental de un
    despliegue.
 
+### Conceder o retirar el plan Pro a una cuenta
+
+El panel `/admin` es el camino previsto, pero hoy no hay ninguna cuenta
+administradora y crear una implicaría dar acceso al correo de todos los usuarios.
+Mientras tanto:
+
+```bash
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com                  # simulacro
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com --aplicar        # 365 días
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com --dias=30 --aplicar
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com --retirar --aplicar
+```
+
+Escribe en `app_metadata` **y** en `user_metadata` a propósito, para que el permiso
+valga tanto en la producción actual como tras desplegar el arreglo de privilegios.
+Queda registrado en el historial de suscripción de la cuenta, visible en `/cuenta`.
+
+`--admin` concede además el rol de administrador. Va aparte del plan porque no es
+«el plan más alto»: el panel expone el correo de todas las cuentas y permite
+cambiarle la suscripción a terceros.
+
 ### Migración de privilegios a `app_metadata` (una sola vez)
 
 Desde el 2026-07-27 el plan, el rol y el ciclo de la suscripción se leen de
