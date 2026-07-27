@@ -223,7 +223,7 @@ def main():
             ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, text=True
         ).strip()
     except Exception:
-        commit = "e193049"
+        commit = "no disponible"
 
     core = doc.core_properties
     core.title = "Seguimiento de Historias de Usuario — Fases 1 y 2 — Radar de Oportunidades"
@@ -333,7 +333,7 @@ def main():
     add_complementary_hu_table(
         doc,
         [
-            ("HU-F2-01", "Ingresar con Google y mantener una sesión segura.", "95%", "Validada", "Monitoreo y política de acceso."),
+            ("HU-F2-01", "Ingresar con Google y mantener una sesión segura.", "95%", "Validada manualmente", "Monitoreo y política de acceso."),
             ("HU-F2-02", "Acceder a funciones según cuenta y plan freemium/Pro.", "80%", "Demo funcional", "Permisos y activación real."),
             ("HU-F2-03", "Recibir alertas profesionales por correo.", "85%", "Operativa", "Agenda, métricas y dominio."),
             ("HU-F2-04", "Administrar usuarios, intereses y operación.", "70%", "Parcial", "Roles, auditoría y piloto."),
@@ -485,7 +485,7 @@ def main():
             ("done", "Completar OAuth y conservar la sesión del usuario."),
             ("partial", "Monitorear altas, errores y políticas de acceso en operación."),
         ],
-        "Flujo OAuth configurado y recorrido E2E local aprobado.",
+        "Proveedor OAuth y retorno validados manualmente; el E2E local comprueba disponibilidad del acceso y reglas de autenticación sin automatizar la pantalla externa de Google.",
         "Acordar política de acceso y monitorear los primeros usuarios reales.",
     )
     add_phase2_story_block(
@@ -557,7 +557,7 @@ def main():
             ("done", "Calcular comparables de alquiler y una estimación de rentabilidad."),
             ("partial", "Mostrar cobertura, muestra mínima y nivel de confianza."),
         ],
-        "Piloto para Medellín —seis barrios—, Bucaramanga, Pereira y Manizales; recorrido E2E de rentabilidad aprobado.",
+        "Piloto para Medellín, Bogotá, Cali, Barranquilla y Bucaramanga; recorrido E2E de rentabilidad aprobado.",
         "Ejecutar ingestas recurrentes, medir cobertura y aprobar reglas de muestra y confianza.",
     )
     add_phase2_story_block(
@@ -662,9 +662,9 @@ def main():
     ui.add_heading(doc, "8. Evidencia técnica asociada", 1)
     for text in [
         "TypeScript: compilación sin errores.",
-        "Pruebas unitarias e integración: 122 de 122 aprobadas.",
-        "Recorridos E2E locales: 9 de 9 aprobados.",
-        "E2E cubiertos: dashboard, Bancos, Remates, arriendos/rentabilidad, guardados, login, Google OAuth, checkout demo, móvil y filtros.",
+        "Pruebas unitarias e integración: suite completa aprobada sin fallos en el corte.",
+        "Recorridos E2E locales: suite crítica aprobada sin fallos en el corte.",
+        "E2E cubiertos: dashboard, Bancos, Remates, arriendos/rentabilidad, guardados, login, disponibilidad del acceso con Google, checkout demo, móvil, filtros y estados de carga.",
         f"Versión evaluada: {commit}.",
         "Producción: https://joinsclee-radar.juno8i.easypanel.host/",
     ]:

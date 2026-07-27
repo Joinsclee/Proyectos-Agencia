@@ -480,7 +480,7 @@ def main():
         "Como inversionista, quiero estimar el canon de arriendo de una propiedad y su rentabilidad con "
         "comparables similares para tomar una decisión más completa.",
         "Complementa la lectura de compra con una expectativa realista de ingreso y retorno.",
-        "El análisis muestra muestra comparable, canon estimado, rentabilidad y nivel de confianza.",
+        "El análisis muestra comparables, canon estimado, rentabilidad y nivel de confianza.",
         [
             "Separar correctamente ofertas de venta y arriendo.",
             "Comparar inmuebles por zona, tipo, área y atributos relevantes.",

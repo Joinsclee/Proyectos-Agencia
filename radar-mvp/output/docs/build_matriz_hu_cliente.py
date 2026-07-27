@@ -537,7 +537,7 @@ def main():
             ["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, text=True
         ).strip()
     except Exception:
-        commit = "e193049"
+        commit = "no disponible"
 
     # Customer-pack opening.
     p = doc.add_paragraph()
@@ -765,7 +765,7 @@ def main():
         "Navegación responsive y accesible con filtros laterales en escritorio y panel desplegable en móvil.",
         "Tarjetas, modales, estados de carga, foco, teclado y targets táctiles mejorados.",
         "Favoritos anónimos y sincronización al iniciar sesión.",
-        "Registro por correo y acceso con Google OAuth probado.",
+        "Registro por correo y acceso con Google OAuth disponible; el proveedor externo se validó manualmente.",
         "Valor visible antes del registro: comparables, costos y señales CRECE.",
     ]:
         add_list_item(doc, item, bullet_id)
@@ -803,7 +803,7 @@ def main():
         doc,
         [
             ("Rediseño visual y filtros laterales", "Desplegado", "Extensión UX", "Validación final con usuarios y revisión WCAG."),
-            ("Inicio de sesión con Google", "Validado", "Extensión Auth", "Monitorear altas externas y políticas de acceso."),
+            ("Inicio de sesión con Google", "Validado manualmente", "Extensión Auth", "Monitorear altas externas y políticas de acceso."),
             ("Alertas por correo con Resend", "Operativo", "Nueva HU", "Activar programación con canary, métricas y límites controlados."),
             ("Planes, cuenta, comparador y panel admin", "Demo funcional", "Fase 2 comercial", "Validar prioridades, permisos y operación con usuarios piloto."),
             ("Wompi Web Checkout", "Preparado", "Fase 2 / tercero", "Retomar cuando existan credenciales legítimas y ejecutar compra Sandbox E2E."),
@@ -815,7 +815,7 @@ def main():
         doc,
         "El flujo ya separa el mercado de venta del mercado de arriendo, almacena cánones mensuales, calcula "
         "una referencia de alquiler para propiedades similares y permite recalcular rentabilidad. El piloto "
-        "controlado cubre Medellín —seis barrios—, Bucaramanga, Pereira y Manizales."
+        "controlado cubre Medellín, Bogotá, Cali, Barranquilla y Bucaramanga."
     )
     add_body(
         doc,
@@ -874,9 +874,9 @@ def main():
     add_heading(doc, "9. Evidencia técnica del corte", 1)
     for item in [
         "TypeScript: compilación sin errores.",
-        "Pruebas unitarias e integración: 122 de 122 aprobadas.",
-        "Recorridos E2E locales: 9 de 9 aprobados.",
-        "Cobertura E2E actual: dashboard/configuración, Bancos, Remates, rentabilidad con arriendos, guardados, login, Google OAuth, checkout demo, móvil y filtros laterales.",
+        "Pruebas unitarias e integración: suite completa aprobada sin fallos en el corte.",
+        "Recorridos E2E locales: suite crítica aprobada sin fallos en el corte.",
+        "Cobertura E2E actual: dashboard/configuración, Bancos, Remates, rentabilidad con arriendos, guardados, login, disponibilidad del acceso con Google, checkout demo, móvil, filtros laterales y estados de carga.",
         f"Versión de código evaluada: {commit}.",
         "Producción: https://joinsclee-radar.juno8i.easypanel.host/",
     ]:
