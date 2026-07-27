@@ -53,6 +53,23 @@ Condiciones de salida:
 6. Nunca activar un trabajo deshabilitado como parte incidental de un
    despliegue.
 
+### Migración de privilegios a `app_metadata` (una sola vez)
+
+Desde el 2026-07-27 el plan, el rol y el ciclo de la suscripción se leen de
+`app_metadata`. Las cuentas creadas antes los tienen en `user_metadata` y, hasta
+que se migren, **aparecen como `free` aunque hubieran pagado**. No al revés: nadie
+gana permisos por no migrar.
+
+Justo después de desplegar:
+
+```bash
+npx tsx scripts/migrar-privilegios-app-metadata.ts            # simulacro
+npx tsx scripts/migrar-privilegios-app-metadata.ts --aplicar  # escribe
+```
+
+Es idempotente. Al terminar debe reportar `0 errores`, y una segunda corrida debe
+decir que todas las cuentas ya estaban migradas.
+
 Si el cambio incluye Wompi, antes de desplegar:
 
 1. Aplicar `supabase/migrations/20260725000002_wompi_demo_payments.sql`.

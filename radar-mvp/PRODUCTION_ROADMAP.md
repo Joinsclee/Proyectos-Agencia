@@ -47,6 +47,15 @@ Estado: **en curso**
 - [ ] Activar verificación de correo y retirar correos completos de los logs.
       Sigue abierto: `server/auth.ts:37` crea con `email_confirm: true` y `:46,49`
       registran la dirección completa.
+- [x] Sacar plan, rol y ciclo de suscripción de `user_metadata`, que el propio titular
+      reescribe con su access token. Ahora se leen solo de `app_metadata`
+      (`server/account-metadata.ts`), sin respaldo al valor viejo. Verificado de punta a
+      punta: con el código anterior una cuenta que se escribía `role: admin` obtenía el
+      panel completo con el correo de todos los usuarios; ahora recibe 403.
+      Migración de las cuentas previas: `scripts/migrar-privilegios-app-metadata.ts`.
+- [x] Que el dashboard no afirme una frescura que no tiene: «Actualizado» sale de
+      `radar_cron_jobs` vía `server/frescura.ts`, no de la fecha del navegador, y avisa
+      cuando una fuente pasa del doble de su cadencia o falla.
 - [x] Impedir que avalúos, posturas y porcentajes imposibles lleguen a la UI o a la IA.
       Parcial: `server/data-quality.ts` los enmascara al presentar, pero el valor crudo
       sigue entrando a la base y participa en orden y conteos (ver la casilla de ingestión).

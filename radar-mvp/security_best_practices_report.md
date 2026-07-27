@@ -90,6 +90,25 @@ verificación de correo, endurecimiento del contenedor y observabilidad operativ
 
 ## Corregido en esta iteración
 
+### SEC-010 — Escalada de privilegios desde `user_metadata`
+
+- Estado: **corregido** (2026-07-27)
+- Severidad original: **Crítica**
+- Ubicación: `server/account-metadata.ts`, `server/account.ts`, `server/favorites.ts`
+- Evidencia del defecto: `plan`, `role`, `is_admin` y el ciclo de la suscripción vivían en
+  `user_metadata`, que el propio titular reescribe con su access token mediante
+  `PUT /auth/v1/user`. Reproducido contra el servidor sobre el commit `7fcbf9c`: una cuenta
+  recién creada que se escribe `role: admin` obtiene `/api/admin/summary` → **200**, con el
+  correo de los 30 usuarios y la capacidad de cambiarle la suscripción a terceros; y
+  `plan: pro`, que entrega gratis el contenido restringido por `server/acceso.ts`.
+- Corrección: esos campos se leen **solo** de `app_metadata`, que únicamente escribe la
+  llave de servicio. La separación ocurre en un único punto, para que ningún sitio de
+  negocio tenga que acordarse de dónde vive cada campo. No hay respaldo al valor anterior:
+  un respaldo reabriría el agujero completo. Un intento de ascenso se ignora y se registra.
+- Verificación posterior: la misma reproducción devuelve `plan: free`, `role: user` y
+  `/api/admin/summary` → **403**.
+- Migración de cuentas previas: `scripts/migrar-privilegios-app-metadata.ts`.
+
 ### SEC-007 — Contenedor web ejecutado como root
 
 - Estado: **corregido**
