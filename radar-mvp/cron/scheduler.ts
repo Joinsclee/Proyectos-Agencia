@@ -82,15 +82,29 @@ export function toca(job: Job, ahora = new Date()): boolean {
 
 async function tomarCerrojo(nombre: string): Promise<boolean> {
   // Solo se toma si sigue libre (o vencido): dos réplicas no pueden ganar ambas.
+  //
+  // PostgREST rechaza en UPDATE el filtro OR que mezcla IS NULL y LT, aunque el
+  // mismo filtro sí funciona en SELECT. Hacemos dos UPDATE condicionales: ambos
+  // siguen siendo atómicos porque la condición se evalúa en la base.
   const limite = new Date(Date.now() - CERROJO_MAX_MS).toISOString();
-  const { data, error } = await supabase
+  const tomadoEn = new Date().toISOString();
+  const libre = await supabase
     .from('radar_cron_jobs')
-    .update({ corriendo_desde: new Date().toISOString() })
+    .update({ corriendo_desde: tomadoEn })
     .eq('nombre', nombre)
-    .or(`corriendo_desde.is.null,corriendo_desde.lt.${limite}`)
+    .is('corriendo_desde', null)
     .select('nombre');
-  if (error) { log.error(`cerrojo ${nombre}: ${error.message}`); return false; }
-  return (data ?? []).length > 0;
+  if (libre.error) { log.error(`cerrojo ${nombre}: ${libre.error.message}`); return false; }
+  if ((libre.data ?? []).length > 0) return true;
+
+  const vencido = await supabase
+    .from('radar_cron_jobs')
+    .update({ corriendo_desde: tomadoEn })
+    .eq('nombre', nombre)
+    .lt('corriendo_desde', limite)
+    .select('nombre');
+  if (vencido.error) { log.error(`cerrojo ${nombre}: ${vencido.error.message}`); return false; }
+  return (vencido.data ?? []).length > 0;
 }
 
 async function soltarCerrojo(nombre: string, estado: 'ok' | 'error', detalle: string, seg: number) {
