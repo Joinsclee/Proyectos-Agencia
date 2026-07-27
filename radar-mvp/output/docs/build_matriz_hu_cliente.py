@@ -490,8 +490,8 @@ def add_metric_strip(doc):
     set_table_geometry(table, [2340, 2340, 2340, 2340])
     metrics = [
         ("84%", "Fase 1 defendible"),
-        ("122 / 122", "Pruebas aprobadas"),
-        ("9 / 9", "Recorridos E2E locales"),
+        ("129 / 129", "Pruebas aprobadas"),
+        ("10 / 10", "Recorridos E2E locales"),
         ("0", "Errores TypeScript"),
     ]
     for idx, (value, label) in enumerate(metrics):
