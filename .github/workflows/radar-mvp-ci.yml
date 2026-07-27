@@ -108,17 +108,26 @@ jobs:
           echo "## Radar CRECE: smoke de producción falló" >> "$GITHUB_STEP_SUMMARY"
           echo "Revisar EasyPanel, Supabase y el runbook en radar-mvp/docs/PRODUCTION_RUNBOOK.md." >> "$GITHUB_STEP_SUMMARY"
 
+      # Se abre incidente en cualquier ejecución del smoke, incluida la de push a
+      # main: el fallo del 2026-07-27 justo tras el merge del PR #15 no abrió
+      # ninguno porque este paso filtraba por evento, que es cuando más falta hace.
       - name: Abrir o actualizar incidente
-        if: failure() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        if: failure()
         uses: actions/github-script@v8
         with:
           script: |
             const title = '[Radar CRECE] Monitor de producción fallando';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            // El evento importa para leer el incidente: en `push` el despliegue en
+            // EasyPanel todavía no ocurrió, así que lo medido es el build anterior.
             const body = [
               'El smoke automático detectó una degradación de producción.',
               '',
               `Ejecución: ${runUrl}`,
+              `Disparador: \`${context.eventName}\` · commit del repositorio: \`${context.sha.slice(0, 7)}\``,
+              context.eventName === 'push'
+                ? 'Aviso: en un push el despliegue todavía es manual, así que el smoke midió la revisión anterior, no este commit.'
+                : 'Lo medido es la revisión que hay desplegada en este momento.',
               'Runbook: `radar-mvp/docs/PRODUCTION_RUNBOOK.md`',
               '',
               'Revisar primero `/health`, `/ready`, EasyPanel y Supabase.',
@@ -143,6 +152,9 @@ jobs:
               });
             }
 
+      # Asimetría deliberada: abrir es ungated, cerrar no. El despliegue en
+      # EasyPanel es manual (runbook §3), así que el smoke de un push mide todavía
+      # el build anterior: un verde ahí no acredita que el incidente esté resuelto.
       - name: Cerrar incidente recuperado
         if: success() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         uses: actions/github-script@v8

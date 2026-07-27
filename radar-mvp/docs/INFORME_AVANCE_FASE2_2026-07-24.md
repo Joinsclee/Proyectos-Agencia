@@ -7,6 +7,14 @@
 **Producción vigente:** `https://joinsclee-radar.juno8i.easypanel.host/`  
 **Versión desplegada de Fase 2:** PR #2, merge `b89770c`
 
+> **Fe de erratas (2026-07-27).** Este documento es una fotografía del corte del 25
+> de julio y se conserva sin reescribir. Una cifra suya no era exacta ya entonces:
+> el bloque «Alertas y notificaciones» de la sección 3 aparece al 100%, pero eso mide
+> el canal de correo construido y probado, no la entrega. El trabajo `alertas` de
+> `radar_cron_jobs` está deshabilitado por decisión de producto y no se ha enviado
+> ninguna alerta automática. Léase ese 100% como «implementado y listo para activar».
+> El estado vigente está en [`ESTADO_2026-07-27.md`](ESTADO_2026-07-27.md).
+
 ## 1. Resumen ejecutivo
 
 El compromiso de llegar a por lo menos 80% de la Fase 1 ya se cumplió: el corte

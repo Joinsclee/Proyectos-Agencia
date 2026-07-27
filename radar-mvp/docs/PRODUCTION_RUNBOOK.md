@@ -177,11 +177,15 @@ de latencia. Solo conserva estado HTTP, duración y diagnóstico mínimo; no gua
 el cuerpo de Supabase ni información de usuarios.
 
 GitHub Actions ejecuta el monitor antes del E2E, conserva el reporte por catorce
-días y, en ejecuciones programadas o manuales:
+días y, en **cualquier** ejecución del smoke —push a `main`, programada o manual—:
 
 - abre o actualiza un issue si producción falla;
 - enlaza la ejecución y este runbook;
 - cierra el issue automáticamente cuando producción se recupera.
+
+Hasta el 2026-07-27 estos dos pasos filtraban por tipo de evento y el smoke rojo
+posterior a un merge no abría incidente. Era justo el caso en el que hace falta:
+el despliegue recién publicado es el sospechoso número uno.
 
 Una alerta del monitor no autoriza por sí sola un rollback. Aplicar los criterios
 de las secciones 5 y 6.

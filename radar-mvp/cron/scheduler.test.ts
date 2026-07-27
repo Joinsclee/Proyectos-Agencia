@@ -5,7 +5,14 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { toca, tomarCerrojoCon, type ActualizarCerrojo } from './scheduler.js';
+import {
+  toca,
+  tomarCerrojoCon,
+  soltarCerrojoCon,
+  crearRevisionSerializada,
+  type ActualizarCerrojo,
+  type LiberarCerrojo,
+} from './scheduler.js';
 
 const AHORA = new Date('2026-07-20T12:00:00Z');
 const haceDias = (n: number) => new Date(AHORA.getTime() - n * 86_400_000).toISOString();
@@ -123,4 +130,135 @@ test('cron: un error al recuperar el cerrojo vencido también impide ejecutar', 
     estado === 'libre' ? resultado(false) : resultado(false, 'fallo PostgREST')
   );
   assert.equal(await tomarCerrojoCon(actualizar, 'motor', AHORA), null);
+});
+
+test('cron: soltar el cerrojo escribe el estado de la corrida y lo confirma', async () => {
+  const escrituras: Array<Parameters<LiberarCerrojo>> = [];
+  const liberar: LiberarCerrojo = async (...args) => {
+    escrituras.push(args);
+    return resultado(true);
+  };
+
+  assert.equal(
+    await soltarCerrojoCon(liberar, 'motor', 'token-1', 'ok', '{"evaluated":10}', 42, AHORA),
+    true,
+  );
+  assert.equal(escrituras.length, 1);
+  const [nombre, token, cambios] = escrituras[0];
+  assert.equal(nombre, 'motor');
+  assert.equal(token, 'token-1');
+  assert.equal(cambios.corriendo_desde, null);
+  assert.equal(cambios.ultima_corrida, AHORA.toISOString());
+  assert.equal(cambios.ultimo_estado, 'ok');
+  assert.equal(cambios.duracion_seg, 42);
+});
+
+test('cron: el detalle del cerrojo se recorta a 500 caracteres', async () => {
+  // `ultimo_detalle` guarda el JSON del resultado; una corrida de FincaRaíz puede
+  // traer miles de errores de validación y reventaría la columna.
+  let guardado = '';
+  const liberar: LiberarCerrojo = async (_n, _t, cambios) => {
+    guardado = String(cambios.ultimo_detalle);
+    return resultado(true);
+  };
+
+  await soltarCerrojoCon(liberar, 'fincaraiz', 'token-1', 'error', 'x'.repeat(2000), 1, AHORA);
+  assert.equal(guardado.length, 500);
+});
+
+test('cron: si la liberación falla se informa y no se da por soltado', async () => {
+  // Sin esto el trabajo quedaba bloqueado hasta que venciera el cerrojo (6 h) y
+  // el radar se congelaba en silencio.
+  const liberar: LiberarCerrojo = async () => resultado(false, 'fallo PostgREST');
+  assert.equal(
+    await soltarCerrojoCon(liberar, 'motor', 'token-1', 'ok', '{}', 1, AHORA),
+    false,
+  );
+});
+
+test('cron: si el cerrojo ya no es propio no se sobrescribe el estado ajeno', async () => {
+  // Cero filas: el cerrojo venció y otra réplica recuperó el trabajo.
+  const liberar: LiberarCerrojo = async () => resultado(false);
+  assert.equal(
+    await soltarCerrojoCon(liberar, 'motor', 'token-viejo', 'ok', '{}', 1, AHORA),
+    false,
+  );
+});
+
+test('cron: dos ticks solapados no abren dos revisiones', async () => {
+  // El cerrojo impide repetir el MISMO trabajo, no que un tick lance otro trabajo
+  // mientras un scraper largo todavía inserta.
+  let corridas = 0;
+  let liberar!: () => void;
+  const enEspera = new Promise<void>((resolve) => { liberar = resolve; });
+  const revisar = crearRevisionSerializada(async () => { corridas++; await enEspera; });
+
+  const primera = revisar();
+  const segunda = revisar();
+  assert.equal(corridas, 1, 'el segundo tick se engancha al primero');
+
+  liberar();
+  await Promise.all([primera, segunda]);
+  assert.equal(corridas, 1);
+});
+
+test('cron: terminada una revisión, el siguiente tick vuelve a entrar', async () => {
+  let corridas = 0;
+  const revisar = crearRevisionSerializada(async () => { corridas++; });
+
+  await revisar();
+  await revisar();
+  assert.equal(corridas, 2);
+});
+
+test('cron: una pasada colgada no enmudece el planificador para siempre', async () => {
+  // Sin techo, un `fetch` sin `signal` en un scraper dejaría la promesa sin
+  // asentarse y TODOS los ticks siguientes se engancharían a ella: el radar
+  // dejaría de scrapear, reclasificar y alertar en absoluto silencio.
+  let corridas = 0;
+  let reloj = 0;
+  const revisar = crearRevisionSerializada(
+    async () => { corridas++; await new Promise<void>(() => {}); },
+    () => reloj,
+  );
+
+  void revisar();
+  assert.equal(corridas, 1);
+
+  reloj += 4 * 60 * 60_000; // 4 h: todavía dentro del margen
+  void revisar();
+  assert.equal(corridas, 1, 'a las 4 h sigue esperando a la pasada en curso');
+
+  reloj += 2 * 60 * 60_000; // 6 h en total: se da por colgada
+  void revisar();
+  assert.equal(corridas, 2, 'pasado el techo se abre una pasada nueva');
+});
+
+test('cron: el techo de la revisión es menor que el del cerrojo', async () => {
+  // Si fuese al revés, el tick que entra encontraría el cerrojo todavía vigente
+  // y `toca()` lo descartaría: no se recuperaría nada.
+  let reloj = 0;
+  let corridas = 0;
+  const revisar = crearRevisionSerializada(
+    async () => { corridas++; await new Promise<void>(() => {}); },
+    () => reloj,
+  );
+  void revisar();
+  reloj += 6 * 60 * 60_000; // CERROJO_MAX_MS
+  void revisar();
+  assert.equal(corridas, 2, 'a las 6 h el cerrojo ya venció y la revisión ya se soltó');
+});
+
+test('cron: una revisión que falla no deja el planificador bloqueado', async () => {
+  // Si el `finally` no limpiara la promesa en curso, un error dejaría el cron
+  // mudo para siempre.
+  let corridas = 0;
+  const revisar = crearRevisionSerializada(async () => {
+    corridas++;
+    throw new Error('Supabase caído');
+  });
+
+  await assert.rejects(revisar());
+  await assert.rejects(revisar());
+  assert.equal(corridas, 2);
 });

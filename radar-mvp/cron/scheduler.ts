@@ -132,6 +132,54 @@ async function tomarCerrojo(nombre: string): Promise<string | null> {
   return tomarCerrojoCon(actualizarCerrojo, nombre);
 }
 
+export type LiberarCerrojo = (
+  nombre: string,
+  token: string,
+  cambios: Record<string, unknown>,
+) => Promise<ResultadoCerrojo>;
+
+/**
+ * Decisión testeable de la liberación. Antes esta escritura era ciega: si fallaba,
+ * el cerrojo quedaba tomado hasta vencer (6 h) y el trabajo no volvía a correr sin
+ * que nadie se enterara. Ahora cada camino deja rastro en el log.
+ */
+export async function soltarCerrojoCon(
+  liberar: LiberarCerrojo,
+  nombre: string,
+  token: string,
+  estado: 'ok' | 'error',
+  detalle: string,
+  seg: number,
+  ahora = new Date(),
+): Promise<boolean> {
+  const marca = ahora.toISOString();
+  const { data, error } = await liberar(nombre, token, {
+    corriendo_desde: null,
+    ultima_corrida: marca,
+    ultimo_estado: estado,
+    ultimo_detalle: detalle.slice(0, 500),
+    duracion_seg: seg,
+    actualizado_en: marca,
+  });
+
+  if (error) { log.error(`soltar cerrojo ${nombre}: ${error.message}`); return false; }
+  if (!(data ?? []).length) {
+    // Cero filas no es un fallo: el cerrojo venció y otra réplica recuperó el
+    // trabajo. Se registra porque significa que esta corrida tardó más de 6 h.
+    log.warn(`soltar cerrojo ${nombre}: el cerrojo ya no es propio; no se sobrescribe el estado de la corrida vigente`);
+    return false;
+  }
+  return true;
+}
+
+const liberarCerrojo: LiberarCerrojo = async (nombre, token, cambios) =>
+  supabase.from('radar_cron_jobs').update(cambios)
+    .eq('nombre', nombre)
+    // Si el cerrojo venció y otra réplica lo recuperó, la corrida anterior ya
+    // no es propietaria y no puede borrar ni sobrescribir el estado de la nueva.
+    .eq('corriendo_desde', token)
+    .select('nombre');
+
 async function soltarCerrojo(
   nombre: string,
   token: string,
@@ -139,18 +187,7 @@ async function soltarCerrojo(
   detalle: string,
   seg: number,
 ) {
-  await supabase.from('radar_cron_jobs').update({
-    corriendo_desde: null,
-    ultima_corrida: new Date().toISOString(),
-    ultimo_estado: estado,
-    ultimo_detalle: detalle.slice(0, 500),
-    duracion_seg: seg,
-    actualizado_en: new Date().toISOString(),
-  })
-    .eq('nombre', nombre)
-    // Si el cerrojo venció y otra réplica lo recuperó, la corrida anterior ya
-    // no es propietaria y no puede borrar ni sobrescribir el estado de la nueva.
-    .eq('corriendo_desde', token);
+  await soltarCerrojoCon(liberarCerrojo, nombre, token, estado, detalle, seg);
 }
 
 async function ejecutar(nombre: string) {
@@ -197,15 +234,59 @@ export async function revisar(forzar?: string) {
   for (const j of pendientes) await ejecutar(j.nombre);
 }
 
+/**
+ * Una pasada que lleva más de esto se da por colgada y deja pasar al siguiente
+ * tick. Tiene que ser MENOR que `CERROJO_MAX_MS` para que, cuando el tick vuelva
+ * a entrar, el cerrojo de base ya esté vencido y pueda recuperarse el trabajo.
+ */
+const REVISION_MAX_MS = 5 * 60 * 60_000;
+
+/**
+ * Serializa las revisiones: un tick que llega con otra revisión en curso se
+ * engancha a ella en vez de abrir una segunda pasada.
+ *
+ * El cerrojo de `radar_cron_jobs` ya impide que dos pasadas corran el MISMO
+ * trabajo, pero no que la segunda arranque OTRO. Con FincaRaíz ocupando más de
+ * una hora (4.196 s el 2026-07-27) pasan cuatro ticks de 15 min, y el primero que
+ * viera el motor vencido lo lanzaría mientras el scraper todavía inserta — justo
+ * el orden que `revisar()` promete respetar más arriba.
+ *
+ * PERO serializar sin techo sería peor que el problema que resuelve: los scrapers
+ * hacen `fetch` sin `signal` (p. ej. `scrapers/CO/aval/index-v2.ts`), así que una
+ * petición colgada dejaría la promesa sin asentarse, todos los ticks siguientes se
+ * engancharían a ella y el planificador entero enmudecería — incluidos los cuatro
+ * trabajos que nada tienen que ver con el que se colgó. Por eso, pasado
+ * `REVISION_MAX_MS`, se suelta la pasada y el cerrojo vencido vuelve a ser la red
+ * de seguridad que el diseño ya tenía.
+ */
+export function crearRevisionSerializada(
+  ejecutar: () => Promise<void>,
+  ahora = () => Date.now(),
+): () => Promise<void> {
+  let enCurso: Promise<void> | null = null;
+  let desde = 0;
+  return () => {
+    if (enCurso && ahora() - desde < REVISION_MAX_MS) return enCurso;
+    if (enCurso) {
+      log.error(`Revisión colgada desde hace ${Math.round((ahora() - desde) / 60_000)} min; se abre una nueva pasada`);
+    }
+    desde = ahora();
+    const pasada = ejecutar().finally(() => { if (enCurso === pasada) enCurso = null; });
+    enCurso = pasada;
+    return pasada;
+  };
+}
+
 if (isEntrypoint(import.meta.url)) {
   const forzar = process.argv.find((a) => a.startsWith('--forzar='))?.split('=')[1];
   const once = process.argv.includes('--once') || !!forzar;
+  const revisarSerializado = crearRevisionSerializada(() => revisar());
 
   revisar(forzar)
     .then(() => {
       if (once) process.exit(0);
       log.info(`Planificador activo · revisión cada ${INTERVALO_REVISION_MS / 60000} min`);
-      setInterval(() => { void revisar(); }, INTERVALO_REVISION_MS);
+      setInterval(() => { void revisarSerializado(); }, INTERVALO_REVISION_MS);
     })
     .catch((e) => { log.error('Failed', e); process.exit(1); });
 }

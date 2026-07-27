@@ -162,9 +162,16 @@ async function init() {
   const config = await configResponse.json();
   const deliveryNote = document.getElementById('delivery-note');
   deliveryNote.hidden = false;
-  deliveryNote.textContent = config.alertEmailDeliveryReady
-    ? 'El canal de correo está configurado. Las alertas se procesan en el ciclo semanal.'
-    : 'La alerta se guardará, pero el envío por correo seguirá pendiente hasta configurar el proveedor y el ciclo programado.';
+  // Tres estados reales, no dos: el proveedor de correo puede estar listo y el
+  // despachador semanal seguir apagado. Prometer envíos que no salen es la forma
+  // más rápida de perder la confianza en el Radar.
+  if (!config.alertEmailDeliveryReady) {
+    deliveryNote.textContent = 'La alerta se guardará, pero el envío por correo seguirá pendiente hasta configurar el proveedor y el ciclo programado.';
+  } else if (config.alertDispatchEnabled) {
+    deliveryNote.textContent = 'El canal de correo está configurado. Las alertas se procesan en el ciclo semanal.';
+  } else {
+    deliveryNote.textContent = 'El canal de correo está configurado y tu alerta queda guardada. El envío automático está en pausa hasta que se apruebe la activación.';
+  }
   document.getElementById('account-content').hidden = false;
   const exportLink = document.getElementById('export-link');
   exportLink.addEventListener('click', async (event) => {

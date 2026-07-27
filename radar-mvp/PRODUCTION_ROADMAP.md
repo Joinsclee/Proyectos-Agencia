@@ -1,7 +1,11 @@
 # Radar MVP — etapas para producción
 
-Estado de referencia: 24 de julio de 2026
+Estado de referencia: 27 de julio de 2026
 Despliegue auditado: `https://joinsclee-radar.juno8i.easypanel.host/`
+
+> Recalibrado el 2026-07-27 contra el código, no contra la memoria: cada casilla
+> que cambió de estado cita el `archivo:línea` que la respalda. El detalle del
+> corte está en [`docs/ESTADO_2026-07-27.md`](docs/ESTADO_2026-07-27.md).
 
 ## Principios de trabajo
 
@@ -32,16 +36,29 @@ Estado: **en curso**
 - [x] Eliminar handlers inline, escapar datos externos y validar URLs en tarjetas,
   modales y recomendaciones.
 - [ ] Migrar la sesión fuera de `localStorage` a cookies `HttpOnly`, `Secure` y `SameSite`.
-- [ ] Proteger registro, login y análisis IA con límites por identidad/IP y concurrencia.
-- [ ] Restringir `refresh` de análisis a operaciones autorizadas.
+      Hoy se guardan ahí el access **y** el refresh token (`server/public/login.js:149,158`,
+      `server/public/auth-callback.js:16-18`); no hay una sola cabecera `Set-Cookie` en `server/*.ts`.
+- [x] Proteger registro, login y análisis IA con límites por identidad/IP.
+      `server/rate-limit.ts` aplicado en siete puntos de `server/index.ts`.
+- [ ] Añadir control de concurrencia a las operaciones caras (no hay semáforo ni cola).
+- [x] Restringir `refresh` de análisis a operaciones autorizadas.
+      `server/analysis-access.ts` + `server/index.ts`: solo un administrador autenticado
+      fuerza el recálculo; para el resto el flag se ignora y se devuelve la caché.
 - [ ] Activar verificación de correo y retirar correos completos de los logs.
+      Sigue abierto: `server/auth.ts:37` crea con `email_confirm: true` y `:46,49`
+      registran la dirección completa.
 - [x] Impedir que avalúos, posturas y porcentajes imposibles lleguen a la UI o a la IA.
+      Parcial: `server/data-quality.ts` los enmascara al presentar, pero el valor crudo
+      sigue entrando a la base y participa en orden y conteos (ver la casilla de ingestión).
 - [x] Evitar comparables históricos en fichas del Portal; recalcularlos al abrir para
   que coincidan con el endpoint vigente.
 - [x] Actualizar dependencias compatibles y eliminar vulnerabilidades de severidad alta.
 - [x] Retirar `node-cron`, que ya no era utilizado, y cerrar las dos alertas
   moderadas transitivas de `uuid`.
 - [ ] Validar también en ingestión y base de datos; enviar outliers a cuarentena.
+      No existe cuarentena (`lib/supabase.ts:75,169` descarta con un `log.warn`),
+      `lib/remates-db.ts:31-46` inserta sin zod, y no hay CHECK de precio/área en
+      ninguna migración.
 
 Criterio de salida: ninguna cadena externa entra en un sink HTML o URL sin validación,
 los tokens no son accesibles desde JavaScript y un dato imposible no llega a la interfaz.
@@ -75,7 +92,13 @@ Estado: **en curso**
 - [x] Crear personalización de tres pasos: ciudad, presupuesto y tipo de inmueble.
 - [x] Usar defaults editables, progreso visible y divulgación progresiva en filtros.
 - [x] Preparar la primera alerta semanal desde las preferencias antes del registro.
-- [ ] Activar entrega de alertas por correo y completar el onboarding posterior al registro.
+- [ ] Activar la entrega de alertas por correo. El canal está implementado y probado
+      (`server/notifications.ts`, función `sendDigest`; Resend configurado en producción); falta
+      **solo** habilitar el trabajo `alertas` de `radar_cron_jobs`, hoy en `false` por
+      decisión de producto (runbook §1). Mientras siga apagado, `/api/config` publica
+      `alertDispatchEnabled: false` y la cuenta dice "envío en pausa" en vez de prometerlo.
+- [ ] Completar el onboarding posterior al registro: `server/public/login.js:148-150`
+      redirige a `/` sin ningún paso guiado.
 - [x] Mostrar comparables y costo total antes de cualquier CTA de pago.
 - [ ] Sustituir imágenes genéricas de remates por evidencia neutral y trazable.
 
@@ -93,12 +116,25 @@ Estado: **en curso**
 - [x] CI para typecheck, pruebas y análisis de dependencias de producción.
 - [x] Pruebas automatizadas de API pública, móvil y recorridos E2E críticos.
 - [x] Suite E2E crítica de seis recorridos, ejecutable en local y producción.
-- [x] Integrar typecheck, 113 pruebas y smoke E2E diario de producción en CI.
+- [x] Integrar typecheck, 141 pruebas y smoke E2E diario de producción en CI.
 - [x] Monitor sintético de liveness, readiness y configuración con presupuestos
   de latencia, artefacto auditable e issue automático de incidente/recuperación.
+  Desde el 2026-07-27 el incidente se abre en **cualquier** ejecución del smoke,
+  incluida la de push a `main`; antes se filtraba por evento y el fallo posterior
+  a un merge pasaba en silencio. El cierre automático sigue limitado a corridas
+  programadas o manuales: con despliegue manual, un verde en el push mide el build
+  anterior y no acredita recuperación.
 - [ ] Centralizar logs, errores y trazas; calcular latencia p75 por ruta.
-- [x] Endpoint de readiness separado de liveness y apagado controlado con
-  `SIGTERM`/`SIGINT`, incluyendo drenaje de conexiones y timeout defensivo.
+      Hoy la observabilidad es `console.log` (`lib/logger.ts:48-51`) sin retención:
+      el `X-Request-Id` que se devuelve en los 500 no es rastreable en ningún sistema.
+- [x] Apagado controlado con `SIGTERM`/`SIGINT`, incluyendo drenaje de conexiones
+  y timeout defensivo (`server/index.ts`, función `shutdown`).
+- [ ] Que `/ready` refleje de verdad la disponibilidad: hoy `server/index.ts` marca
+      `serviceReady = true` dentro del callback de `server.listen` y el precalentamiento
+      de comparables arranca después (`warmStats` → `warmCityPools` de
+      `engine/zone-comps.ts`), así que el proxy
+      manda tráfico a un proceso que todavía está cargando. Es la explicación más
+      plausible de los smokes rojos del 26 y 27 de julio.
 - [x] Imagen Docker web multi-stage, dependencias de producción y ejecución como
   usuario no-root.
 - [x] Degradación explícita de estadísticas: una caída temporal de Supabase no
@@ -119,9 +155,15 @@ Estado: **en curso**
 
 - [x] QA automatizado en el dominio final, escritorio y viewport móvil.
 - [ ] QA ampliado en dispositivos físicos y navegadores adicionales.
-- Prueba de carga sobre rutas públicas y de autenticación.
-- Revisión legal de privacidad, marketing y tratamiento de datos.
-- Canary con monitoreo de errores, latencia y calidad de datos.
-- Checklist de rollback y aprobación de lanzamiento.
+- [ ] Prueba de carga sobre rutas públicas y de autenticación. Bloqueada por la
+      casilla de `/ready`: medir capacidad contra un proceso que se declara listo
+      mientras precarga no produce un número interpretable.
+- [ ] Revisión legal de privacidad, marketing y tratamiento de datos. Hoy solo hay
+      una frase suelta sobre la Ley 1581 en `server/public/login.html:138`, sin
+      política ni términos enlazados desde las pantallas que capturan datos o cobran.
+- [ ] Canary con monitoreo de errores, latencia y calidad de datos.
+- [x] Checklist de rollback y aprobación de lanzamiento:
+      `docs/PRODUCTION_RUNBOOK.md:22-41` (previo) y `:90-109` (disparadores y
+      procedimiento de rollback).
 
 Criterio de salida: cero bloqueantes P0, métricas dentro de presupuesto y rollback probado.

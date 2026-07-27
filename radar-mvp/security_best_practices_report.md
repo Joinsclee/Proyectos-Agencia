@@ -49,14 +49,10 @@ verificación de correo, endurecimiento del contenedor y observabilidad operativ
 
 ### SEC-003 — Análisis IA público sin control de abuso
 
-- Regla: `EXPRESS-AUTH-001`, `EXPRESS-DOS-001`
-- Severidad: **Alta**
-- Ubicación: `server/index.ts:143-152`
-- Evidencia: `/api/analyze` acepta peticiones anónimas y el parámetro `refresh`.
-- Impacto: consumo no autorizado de OpenAI, saturación del proceso y aumento de costos.
-- Corrección: autenticación, cuota por usuario/IP, límite de concurrencia, circuit breaker
-  y autorización especial para `refresh`.
-- Mitigación: límites equivalentes en EasyPanel/proxy mientras se implementa en aplicación.
+- Estado: **corregido el 2026-07-27** en lo que respecta a `refresh`; ver la ficha en
+  «Corregido en esta iteración».
+- Pendiente residual: límite de concurrencia y circuit breaker sobre la llamada a OpenAI.
+  La cuota por IP ya existe (`server/rate-limit.ts`, 30 análisis/h).
 
 ### SEC-004 — Registro auto-confirmado y sin protección propia contra abuso
 
@@ -92,18 +88,29 @@ verificación de correo, endurecimiento del contenedor y observabilidad operativ
 - Corrección: hash estable o correo parcialmente enmascarado, retención definida y acceso
   restringido.
 
+## Corregido en esta iteración
+
 ### SEC-007 — Contenedor web ejecutado como root
 
-- Regla: mínimo privilegio
-- Severidad: **Media**
-- Ubicación: `Dockerfile:3-29`
-- Evidencia: no existe instrucción `USER` y se copia todo el proyecto al contenedor.
-- Impacto: una ejecución remota tendría más privilegios dentro del contenedor y mayor
-  superficie de archivos.
-- Corrección: build multi-stage, salida compilada, dependencias de producción y usuario
-  no-root con filesystem de solo lectura cuando EasyPanel lo permita.
+- Estado: **corregido**
+- Ubicación: `Dockerfile:3,18,29`
+- Resultado: build multi-stage con dependencias de producción y `USER node`; el proceso
+  web ya no corre como root. Queda pendiente el filesystem de solo lectura, sujeto a lo
+  que permita EasyPanel.
 
-## Corregido en esta iteración
+### SEC-003 — Análisis IA público sin control de abuso
+
+- Estado: **parcialmente corregido** (2026-07-27)
+- Ubicación: `server/analysis-access.ts`, `server/index.ts` (`/api/analyze`)
+- Resultado: `refresh:true` exige administrador autenticado; para el resto el flag se
+  ignora y se devuelve el análisis cacheado. Un anónimo ya no puede **forzar** el
+  recálculo ni sobrescribir un `features.ai_analysis` existente.
+- Pendiente explícito: el **primer** análisis de una ficha sigue siendo anónimo. Si no
+  hay `ai_analysis` guardado, `server/analysis.ts:182` (y `:224` para remates) cae en
+  `analyzeWithAI` y en `persistCache`, que escribe con la llave de servicio. El gasto
+  está acotado por el límite de 30 análisis/hora por IP (`server/index.ts`), no por
+  autenticación. Cerrarlo del todo exige decidir si el análisis IA es una función
+  pública del producto o una función de cuenta.
 
 ### SEC-009 — Dependencias transitivas vulnerables
 

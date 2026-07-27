@@ -57,6 +57,10 @@ const configValidator = (body: unknown): string | null => {
   } catch {
     return 'URL pública de Supabase inválida';
   }
+  // Nota: `/api/config` publica además `alertDispatchEnabled`, pero el monitor no
+  // lo exige. Este validador corre contra la producción ya desplegada, así que
+  // endurecer el contrato aquí pondría el smoke en rojo —y abriría incidente—
+  // durante toda la ventana entre el merge y el despliegue en EasyPanel.
   return typeof value.alertEmailDeliveryReady === 'boolean'
     ? null
     : 'Estado del canal de correo ausente';

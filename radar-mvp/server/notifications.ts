@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { env } from '../lib/env.js';
 import { supabase } from '../lib/supabase.js';
+import { createLogger } from '../lib/logger.js';
 import {
   isAlertDue,
   readAlerts,
@@ -36,8 +37,58 @@ export type AlertDispatchCanaryParseResult =
   | { ok: true; canary?: AlertDispatchCanary }
   | { ok: false; error: string };
 
+const log = createLogger('alertas');
+
 export function emailDeliveryReady(): boolean {
   return Boolean(env.RESEND_API_KEY && env.ALERTS_FROM_EMAIL);
+}
+
+/**
+ * Tener Resend configurado NO significa que salgan correos: el despachador es el
+ * trabajo `alertas` de `radar_cron_jobs`, que nace deshabilitado y solo se activa
+ * con la aprobación expresa del responsable del producto (runbook §1).
+ *
+ * Hasta el 2026-07-27 la cuenta le decía al usuario "las alertas se procesan en el
+ * ciclo semanal" mirando solo el proveedor, con el despachador apagado.
+ */
+const DESPACHO_TTL_MS = 60_000;
+/** `/api/config` es sonda del monitor (presupuesto 3 s) y bloquea el render de
+ *  `/cuenta` y del botón de Google: esta consulta no puede tardar más que esto. */
+const DESPACHO_TIMEOUT_MS = 800;
+let despachoCache: { at: number; enabled: boolean } | null = null;
+let despachoEnVuelo: Promise<boolean> | null = null;
+
+export async function alertDispatchEnabled(now = Date.now()): Promise<boolean> {
+  if (despachoCache && now - despachoCache.at < DESPACHO_TTL_MS) return despachoCache.enabled;
+  // Se memoriza la promesa, no solo el valor: `/api/config` no tiene límite de
+  // tasa, y una ráfaga sobre la caché fría dispararía N consultas simultáneas.
+  if (despachoEnVuelo) return despachoEnVuelo;
+
+  despachoEnVuelo = (async () => {
+    try {
+      const { data, error } = await supabase
+        .from('radar_cron_jobs')
+        .select('habilitado')
+        .eq('nombre', 'alertas')
+        .abortSignal(AbortSignal.timeout(DESPACHO_TIMEOUT_MS))
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      const enabled = (data as { habilitado?: boolean } | null)?.habilitado === true;
+      despachoCache = { at: Date.now(), enabled };
+      return enabled;
+    } catch (e) {
+      // Ante la duda se informa "en pausa": prometer de menos es preferible a
+      // decirle a alguien que recibirá correos que nadie va a enviar. NO se
+      // cachea el fallo — un hipo de Supabase no debe apagar el mensaje durante
+      // un minuto entero para todos los usuarios.
+      log.warn(`alertDispatchEnabled: ${e instanceof Error ? e.message : String(e)}`);
+      return false;
+    } finally {
+      despachoEnVuelo = null;
+    }
+  })();
+
+  return despachoEnVuelo;
 }
 
 export function parseAlertDispatchCanary(input: unknown): AlertDispatchCanaryParseResult {

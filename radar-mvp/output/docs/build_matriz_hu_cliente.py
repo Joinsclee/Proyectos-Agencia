@@ -490,7 +490,7 @@ def add_metric_strip(doc):
     set_table_geometry(table, [2340, 2340, 2340, 2340])
     metrics = [
         ("84%", "Fase 1 defendible"),
-        ("129 / 129", "Pruebas aprobadas"),
+        ("141 / 141", "Pruebas aprobadas"),
         ("10 / 10", "Recorridos E2E locales"),
         ("0", "Errores TypeScript"),
     ]
@@ -804,7 +804,10 @@ def main():
         [
             ("Rediseño visual y filtros laterales", "Desplegado", "Extensión UX", "Validación final con usuarios y revisión WCAG."),
             ("Inicio de sesión con Google", "Validado manualmente", "Extensión Auth", "Monitorear altas externas y políticas de acceso."),
-            ("Alertas por correo con Resend", "Operativo", "Nueva HU", "Activar programación con canary, métricas y límites controlados."),
+            # "Operativo" pinta la celda en verde y afirma que salen correos. El canal
+            # está construido y probado, pero el trabajo `alertas` de `radar_cron_jobs`
+            # sigue deshabilitado por decisión de producto: hoy no se envía ninguno.
+            ("Alertas por correo con Resend", "Configurado, envío en pausa", "Nueva HU", "Ejecutar el canary dirigido y habilitar el despachador semanal cuando el responsable del producto lo apruebe."),
             ("Planes, cuenta, comparador y panel admin", "Demo funcional", "Fase 2 comercial", "Validar prioridades, permisos y operación con usuarios piloto."),
             ("Wompi Web Checkout", "Preparado", "Fase 2 / tercero", "Retomar cuando existan credenciales legítimas y ejecutar compra Sandbox E2E."),
             ("Comparables de arriendo y rentabilidad", "Piloto", "Nueva HU", "Consolidar cobertura, calidad y confianza del canon observado."),

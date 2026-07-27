@@ -16,6 +16,7 @@ import { createLogger } from '../lib/logger.js';
 import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
+import { puedeForzarAnalisis } from './analysis-access.js';
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactar, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
@@ -41,6 +42,7 @@ import {
 import { checkRateLimit, clientAddress, type RateLimitPolicy } from './rate-limit.js';
 import { env } from '../lib/env.js';
 import {
+  alertDispatchEnabled,
   emailDeliveryReady,
   parseAlertDispatchCanary,
   runAlertDispatch,
@@ -359,7 +361,13 @@ const server = createServer(async (req, res) => {
         if ((body.kind !== 'banco' && body.kind !== 'remate') || !body.id) {
           return sendJSON(res, 400, { ok: false, error: 'kind (banco|remate) e id requeridos' });
         }
-        const result = await analyzeProperty(body.kind, body.id, body.refresh === true);
+        // Consultar es gratis y anónimo; forzar el recálculo cuesta dinero y
+        // reescribe el análisis guardado, así que solo lo hace un administrador.
+        // Para el resto el flag se ignora y se devuelve la caché.
+        const forzar = body.refresh === true
+          ? puedeForzarAnalisis(true, await getUserFromToken(bearer(req)))
+          : false;
+        const result = await analyzeProperty(body.kind, body.id, forzar);
         const status = result.ok ? 200 : result.needs_key ? 503 : 400;
         return sendJSON(res, status, result);
       }
@@ -428,6 +436,9 @@ const server = createServer(async (req, res) => {
       if (path === '/api/config') return sendJSON(res, 200, {
         supabaseUrl: env.SUPABASE_URL,
         alertEmailDeliveryReady: emailDeliveryReady(),
+        // Proveedor configurado y despachador encendido son cosas distintas: sin
+        // las dos no sale ningún correo, y la cuenta no debe prometer lo contrario.
+        alertDispatchEnabled: await alertDispatchEnabled(),
         paymentDemoReady: wompiPaymentDemoReady(),
       });
       return sendJSON(res, 404, { error: 'ruta API no encontrada' });
@@ -461,6 +472,9 @@ server.listen(PORT, () => {
     .then(() => log.info('Estadísticas precargadas'))
     .then(() => warmCityPools(WARM_CITIES))
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
+    // Al final y sin prisa: si compite con los dos precalentamientos anteriores
+    // agota su propio timeout de 800 ms y solo deja un aviso inútil en el log.
+    .then(() => alertDispatchEnabled())
     .catch(() => { /* el precalentamiento es best-effort */ });
 });
 
