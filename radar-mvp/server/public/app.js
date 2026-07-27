@@ -1741,14 +1741,36 @@ async function loadStats() {
   $('c-portal').textContent = STATS.portal_total.toLocaleString('es-CO');
   $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
   $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
-  const hoy = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  const actualizado = renderActualizado(STATS.frescura);
   $('summary').innerHTML = `
     <div class="summary-stat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades</div></div>
     <div class="summary-stat"><div class="num">${STATS.portal_total.toLocaleString('es-CO')}</div><div class="lbl">Listados portal</div></div>
     <div class="summary-stat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">En bancos</div></div>
     <div class="summary-stat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates</div></div>
-    <div class="summary-stat muted"><div class="num">${hoy}</div><div class="lbl">Actualizado</div></div>`;
+    ${actualizado}`;
   renderVStats();
+}
+/**
+ * La casilla "Actualizado" del resumen.
+ *
+ * Antes era `new Date()` del navegador: decía "hoy" aunque el cron llevara un mes
+ * muerto. Ahora sale de `radar_cron_jobs` (server/frescura.ts) y tiene tres
+ * estados, porque "no lo sé" es una respuesta distinta de "está al día".
+ */
+function renderActualizado(frescura) {
+  if (!frescura || !frescura.actualizadoEn) {
+    return `<div class="summary-stat muted" title="No se pudo consultar el estado de las corridas">
+      <div class="num">—</div><div class="lbl">Actualizado</div></div>`;
+  }
+  const fecha = new Date(frescura.actualizadoEn);
+  const etiqueta = fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  if (!frescura.degradada) {
+    return `<div class="summary-stat muted" title="Última corrida: ${esc(fecha.toLocaleString('es-CO'))}">
+      <div class="num">${esc(etiqueta)}</div><div class="lbl">Actualizado</div></div>`;
+  }
+  return `<div class="summary-stat muted stat-degradada" title="${esc(frescura.motivo || '')}">
+    <div class="num">${esc(etiqueta)}</div>
+    <div class="lbl">Actualizado · datos atrasados</div></div>`;
 }
 function renderVStats() {
   if (!STATS) return;
