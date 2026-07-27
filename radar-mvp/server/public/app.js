@@ -754,7 +754,10 @@ async function load(page) {
 
   let res;
   try {
-    res = await fetch(`/api/${state.tab}?${qs}`, { signal: AbortSignal.timeout(25000) }).then((r) => {
+    // La cabecera NO es opcional: el servidor decide con `planDe(getUserFromToken(...))`
+    // qué campos entrega, así que sin ella un suscriptor se identifica como anónimo y
+    // recibe todas las fichas bloqueadas por más que haya pagado.
+    res = await fetch(`/api/${state.tab}?${qs}`, { headers: authHeaders(), signal: AbortSignal.timeout(25000) }).then((r) => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     });
@@ -1263,7 +1266,7 @@ function renderRecs(recs) {
 }
 window.__openRec = async function (kind, id) {
   try {
-    const res = await fetch(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`);
+    const res = await fetch(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, { headers: authHeaders() });
     const data = await res.json();
     if (!data.ok) return;
     if (kind === 'remate') openRemate(data.data);

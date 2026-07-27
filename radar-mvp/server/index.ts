@@ -400,7 +400,15 @@ const server = createServer(async (req, res) => {
           return sendJSON(res, 400, { ok: false, error: 'kind (portal|banco|remate) e id requeridos' });
         }
         const row = await getProperty(kind, id);
-        return row ? sendJSON(res, 200, { ok: true, kind, data: row }) : sendJSON(res, 404, { ok: false, error: 'no encontrado' });
+        if (!row) return sendJSON(res, 404, { ok: false, error: 'no encontrado' });
+        // Esta ruta se saltaba el muro entero: devolvía la fila cruda a cualquiera,
+        // así que bastaba pedir por id una ficha que el listado sí bloqueaba para
+        // leer su dirección. Se aplica el mismo criterio que en los listados.
+        const planFicha = planDe(await getUserFromToken(bearer(req)));
+        const acceso = kind === 'remate'
+          ? accesoRemateFicha(row as any, planFicha)
+          : accesoInmueble((row as any).crece_tier, planFicha);
+        return sendJSON(res, 200, { ok: true, kind, plan: planFicha, data: redactar(row as any, acceso) });
       }
       // Los listados se filtran según el plan ANTES de salir del servidor: lo que
       // el usuario no ha pagado no debe viajar en la respuesta (antes el muro era
