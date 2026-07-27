@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { supabase } from '../lib/supabase.js';
+import { metadatosDeCuenta, separarMetadatos } from './account-metadata.js';
 import {
   AccountSyncSchema,
   PLAN_CATALOG,
@@ -20,8 +21,20 @@ import {
 
 type Metadata = Record<string, any>;
 
-function publicAccount(user: { id: string; email?: string; user_metadata?: Metadata | null }) {
-  const metadata = user.user_metadata ?? {};
+/**
+ * Cuenta tal como la devuelve Supabase. `app_metadata` importa tanto como
+ * `user_metadata`: es donde viven plan, rol y suscripción (ver
+ * `account-metadata.ts`), y sin ella la vista saldría sin permisos.
+ */
+type CuentaCruda = {
+  id: string;
+  email?: string;
+  user_metadata?: Metadata | null;
+  app_metadata?: Metadata | null;
+};
+
+function publicAccount(user: CuentaCruda) {
+  const metadata = metadatosDeCuenta(user) as Metadata;
   const plan = entitledPlanFromMetadata(metadata);
   return {
     id: user.id,
@@ -59,10 +72,20 @@ async function adminUser(userId: string) {
   return data.user;
 }
 
+/**
+ * Los updaters siguen viendo UNA bolsa, como siempre. El reparto entre
+ * `user_metadata` y `app_metadata` ocurre aquí, en el borde: así ningún sitio de
+ * negocio tiene que acordarse de dónde vive cada campo, y un campo de permiso no
+ * puede acabar por descuido en la bolsa que el usuario reescribe.
+ */
 async function updateMetadata(userId: string, updater: (metadata: Metadata) => Metadata) {
   const user = await adminUser(userId);
-  const metadata = updater({ ...(user.user_metadata ?? {}) });
-  const { data, error } = await supabase.auth.admin.updateUserById(userId, { user_metadata: metadata });
+  const bolsa = updater(metadatosDeCuenta(user) as Metadata);
+  const { userMetadata, appMetadata } = separarMetadatos(bolsa, user.app_metadata);
+  const { data, error } = await supabase.auth.admin.updateUserById(userId, {
+    user_metadata: userMetadata,
+    app_metadata: appMetadata,
+  });
   if (error || !data.user) throw new Error(error?.message ?? 'No se pudo actualizar la cuenta');
   return publicAccount(data.user);
 }
@@ -178,7 +201,7 @@ export async function registerPlanInterest(userId: string, input: unknown) {
 
 export async function getAdminSummary(requesterId: string) {
   const requester = await adminUser(requesterId);
-  if (!isAdminMetadata(requester.user_metadata ?? {})) return null;
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
 
   const users = await listAllUsers();
   const accounts = users.map(publicAccount);
@@ -224,12 +247,12 @@ export async function getAdminSummary(requesterId: string) {
 
 export async function listAdminPlanInterests(requesterId: string) {
   const requester = await adminUser(requesterId);
-  if (!isAdminMetadata(requester.user_metadata ?? {})) return null;
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
 
   const users = await listAllUsers();
   return users
     .map((user) => {
-      const metadata = user.user_metadata ?? {};
+      const metadata = metadatosDeCuenta(user) as Metadata;
       const account = publicAccount(user);
       const interest = metadata.plan_interest && typeof metadata.plan_interest === 'object'
         ? metadata.plan_interest
@@ -258,7 +281,7 @@ export async function updateAdminSubscription(
   input: unknown,
 ) {
   const requester = await adminUser(requesterId);
-  if (!isAdminMetadata(requester.user_metadata ?? {})) return null;
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
   if (!z.string().uuid().safeParse(targetUserId).success) {
     return { ok: false as const, error: 'Usuario inválido' };
   }

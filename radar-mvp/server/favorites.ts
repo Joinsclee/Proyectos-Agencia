@@ -12,8 +12,26 @@
 import { supabase, authClient } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import { entitledPlanFromMetadata, subscriptionStatusFromMetadata, type SubscriptionStatus } from './commercial.js';
+import {
+  metadatosDeCuenta,
+  pareceIntentoDeAscenso,
+  privilegiosEnBolsaDelUsuario,
+  type CuentaSupabase,
+} from './account-metadata.js';
 
 const log = createLogger('favorites');
+
+/**
+ * Después de migrar, ninguna cuenta debería traer permisos en su propia bolsa.
+ * Si los trae con un valor que concede algo, o la cuenta no se migró, o alguien
+ * está probando a ascenderse con `PUT /auth/v1/user`. En ambos casos el valor ya
+ * se ignoró; esto solo deja rastro para poder verlo.
+ */
+function avisarSiHayPrivilegiosPropios(user: CuentaSupabase & { id?: string }): void {
+  if (!pareceIntentoDeAscenso(user.user_metadata)) return;
+  const campos = privilegiosEnBolsaDelUsuario(user.user_metadata).join(', ');
+  log.warn(`cuenta ${String(user.id ?? '').slice(0, 8)}: privilegios en user_metadata ignorados (${campos})`);
+}
 
 export type FavKind = 'portal' | 'banco' | 'remate';
 export interface FavRef { kind: FavKind; id: string; at: string }
@@ -34,7 +52,10 @@ export async function getUserFromToken(token: string | null): Promise<AuthUser |
   if (!token) return null;
   const { data, error } = await authClient.auth.getUser(token); // cliente aislado (no contamina datos)
   if (error || !data.user) return null;
-  const metadata = data.user.user_metadata ?? {};
+  // Vista con los permisos tomados de app_metadata: lo que el usuario escriba en
+  // su propia bolsa no decide su plan ni su rol. Ver `account-metadata.ts`.
+  const metadata = metadatosDeCuenta(data.user);
+  avisarSiHayPrivilegiosPropios(data.user);
   return {
     id: data.user.id,
     email: data.user.email ?? '',
