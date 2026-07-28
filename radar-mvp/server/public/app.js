@@ -932,13 +932,6 @@ function renderAvisoBloqueo(plan, bloqueo, cupo) {
   const mejor = bloqueo.mejorDescuentoBloqueado;
   const visible = bloqueo.descuentoMedioVisible;
 
-  // Solo se compara cuando la comparación favorece de verdad: si lo visible
-  // tuviera mejor descuento, decirlo sería mentir al revés.
-  const comparativa = medio != null && visible != null && medio > visible
-    ? ` Su descuento medio es del <strong>${medio}%</strong>, frente al ${visible}% de las que sí puedes abrir.`
-    : medio != null ? ` Su descuento medio es del <strong>${medio}%</strong>.` : '';
-  const punta = mejor != null ? ` La mayor llega al <strong>${mejor}%</strong> bajo el mercado de su zona.` : '';
-
   const anonimo = plan === 'anonimo';
   const sinCupo = !anonimo && cupo && !cupo.ilimitado && cupo.restantes === 0;
 
@@ -951,19 +944,34 @@ function renderAvisoBloqueo(plan, bloqueo, cupo) {
       : `Te quedan ${cupo?.restantes ?? 0} de ${cupo?.limite ?? CUPO_FREE_MENSUAL} fichas este mes`;
 
   const cuerpo = anonimo
-    ? `Son las de mayor descuento de esta búsqueda.${comparativa}${punta} Crea tu cuenta gratis y abre ${CUPO_FREE_MENSUAL} al mes.`
+    ? `Son las de mayor descuento de esta búsqueda. Crea tu cuenta gratis y abre ${CUPO_FREE_MENSUAL} al mes.`
     : sinCupo
-      ? `Aquí siguen ${fichas} sin abrir.${comparativa}${punta} Con el plan completo no hay límite.`
-      : `Úsalas en las que más te interesen: ${fichas} de esta búsqueda están cerradas.${comparativa}`;
+      ? 'Son las de mayor descuento de esta búsqueda. Con el plan completo no hay límite.'
+      : `${fichas} de esta búsqueda siguen cerradas. Úsalas en las que más te interesen.`;
+
+  // Las cifras van en su propia franja en vez de dentro de la frase: son el
+  // argumento y así se leen de un vistazo, sin partir el párrafo en pedazos.
+  const cifras = [];
+  if (medio != null) cifras.push([`${medio}%`, 'descuento medio']);
+  if (mejor != null && mejor !== medio) cifras.push([`${mejor}%`, 'la mayor']);
+  // Solo se compara cuando la comparación favorece de verdad: si lo visible
+  // tuviera mejor descuento, enseñarlo sería mentir al revés.
+  if (medio != null && visible != null && medio > visible) cifras.push([`${visible}%`, 'las que sí puedes abrir']);
+  const cifrasHtml = cifras.length
+    ? `<dl class="aviso-cifras">${cifras.map(([v, k], idx) => `<div${idx === cifras.length - 1 && cifras.length > 1 ? ' class="es-contraste"' : ''}><dt>${esc(v)}</dt><dd>${esc(k)}</dd></div>`).join('')}</dl>`
+    : '';
 
   const cta = anonimo
     ? '<a class="aviso-cta" href="/login">Crear cuenta gratis</a>'
     : '<a class="aviso-cta" href="/planes">Ver el plan completo</a>';
 
   caja.innerHTML = `<aside class="aviso-bloqueo${sinCupo ? ' is-agotado' : ''}">
-    <span class="aviso-icono">${ic('lock')}</span>
-    <div class="aviso-texto"><strong>${esc(titulo)}</strong><p>${cuerpo}</p></div>
-    ${cta}
+    <div class="aviso-cabecera">
+      <span class="aviso-icono">${ic('lock')}</span>
+      <div class="aviso-texto"><strong>${esc(titulo)}</strong><p>${esc(cuerpo)}</p></div>
+      ${cta}
+    </div>
+    ${cifrasHtml}
   </aside>`;
 }
 
