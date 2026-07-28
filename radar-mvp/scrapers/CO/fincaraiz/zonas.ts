@@ -121,5 +121,46 @@ export async function loadActiveZonas(
     return fallback.filter(match);
   }
 
-  return (data as RadarZona[]).filter(match);
+  const zonas = (data as RadarZona[]).filter(match);
+  return operation === 'arriendo' ? await soloDondeSeVende(zonas) : zonas;
+}
+
+const clave = (ciudad: string | null | undefined) => String(ciudad ?? '').trim().toLowerCase();
+
+/**
+ * El canon solo se busca donde el Radar vende.
+ *
+ * Las dos operaciones tienen que recorrer las MISMAS ciudades: un arriendo sirve
+ * únicamente como comparable de una venta de su zona, así que traer canon de una
+ * ciudad donde no se vende nada es gastar tiempo de scraping en comparables que
+ * nadie va a consultar. Y al revés duele más: una ciudad con inventario en venta
+ * y sin arriendos no puede estimar rentabilidad, que es lo que en el panel de
+ * administración aparece como «sin cobertura».
+ *
+ * Se deriva de la configuración de venta en vez de mantener dos listas en
+ * paralelo. Cuando se abra una ciudad nueva a la venta, sus arriendos entran
+ * solos en la siguiente corrida — sin que nadie se acuerde de activarlos.
+ */
+async function soloDondeSeVende(zonasArriendo: RadarZona[]): Promise<RadarZona[]> {
+  const { data, error } = await supabase
+    .from('radar_zonas_monitoreadas')
+    .select('city')
+    .eq('is_active', true)
+    .eq('portal', 'fincaraiz')
+    .eq('operation', 'venta');
+
+  if (error || !data?.length) {
+    // Sin la lista de venta no se puede derivar nada. Se sigue con lo configurado
+    // en vez de no scrapear: quedarse sin arriendos es peor que scrapear de más.
+    log.warn('No se pudo leer las zonas de venta para cruzarlas; uso las de arriendo tal cual.');
+    return zonasArriendo;
+  }
+
+  const ciudadesConVenta = new Set((data as Array<{ city: string | null }>).map((z) => clave(z.city)));
+  const cruzadas = zonasArriendo.filter((z) => ciudadesConVenta.has(clave(z.city)));
+  const descartadas = zonasArriendo.length - cruzadas.length;
+  if (descartadas > 0) {
+    log.info(`${descartadas} zona(s) de arriendo omitidas: su ciudad no está activa en venta.`);
+  }
+  return cruzadas;
 }
