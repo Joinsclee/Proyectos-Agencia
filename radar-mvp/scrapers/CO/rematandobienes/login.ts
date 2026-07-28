@@ -17,7 +17,9 @@ import { chromium } from 'playwright';
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import 'dotenv/config';
+import { hostname } from 'node:os';
 import { createLogger } from '../../../lib/logger.js';
+import { publicarSesion } from '../../../lib/sesion-scraper.js';
 
 const log = createLogger('remates-login');
 
@@ -130,7 +132,18 @@ async function main() {
 
   await context.storageState({ path: STORAGE_PATH });
   log.info(`✅ Sesión guardada en ${STORAGE_PATH}`);
-  log.info('   Esta sesión se usará en scrapeos siguientes. Re-login solo si expira.');
+
+  // Y se publica en la base: el contenedor del cron se construye desde el
+  // repositorio y nunca verá este archivo. Sin este paso el login solo sirve en
+  // el equipo donde se hizo, que es exactamente por qué falló la corrida
+  // automática del 2026-07-28.
+  try {
+    await publicarSesion('rematandobienes', STORAGE_PATH, `login manual desde ${hostname()}`);
+    log.info('   Publicada: la corrida automática del servidor ya puede usarla.');
+  } catch (e) {
+    log.error('   NO se pudo publicar en la base. La sesión sirve en este equipo, pero el cron seguirá fallando.', e);
+  }
+  log.info('   Re-login solo si expira.');
 
   await browser.close();
 }

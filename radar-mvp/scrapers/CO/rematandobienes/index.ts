@@ -26,6 +26,7 @@ import { createLogger } from '../../../lib/logger.js';
 import { isEntrypoint } from '../../../lib/is-main.js';
 import { upsertRemates, markInactiveRemates } from '../../../lib/remates-db.js';
 import { startScrapingLog, finishScrapingLog } from '../../../lib/supabase.js';
+import { asegurarSesionLocal } from '../../../lib/sesion-scraper.js';
 import { parseAviso } from './parser.js';
 import type { RemateAvisoRaw, Remate } from './types.js';
 
@@ -368,9 +369,18 @@ export async function run(opts: Opts = {}): Promise<{
 }> {
   const args = { ...parseArgs(), ...opts };
 
-  if (!existsSync(STORAGE_PATH)) {
-    throw new Error(`No hay sesión guardada en ${STORAGE_PATH}. Corre primero: npm run remates:login`);
+  // El contenedor del cron arranca sin `_session/`: se construye desde el
+  // repositorio y ese archivo está —con razón— en .gitignore. Se recoge del
+  // almacén compartido, donde lo dejó el último login manual.
+  const origenSesion = await asegurarSesionLocal('rematandobienes', STORAGE_PATH);
+  if (origenSesion === 'ninguna') {
+    throw new Error(
+      'No hay sesión de rematandobienes ni en disco ni publicada en la base. '
+      + 'Corre `npm run remates:login` en un equipo con pantalla (el portal pide captcha): '
+      + 'el login la publica solo y el servidor la recoge en la siguiente corrida.',
+    );
   }
+  log.info(`Sesión tomada de ${origenSesion === 'disco' ? 'disco local' : 'la base'}.`);
 
   const runStartISO = new Date().toISOString();
   const logId = await startScrapingLog(SOURCE, COUNTRY);
