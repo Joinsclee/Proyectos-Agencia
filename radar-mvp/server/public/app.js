@@ -547,6 +547,17 @@ async function buildFilters() {
     html += fRange('bid', 'Postura (millones)', 'mín', 'máx');
   }
   html += `<div class="f"><label for="f-order">Orden</label><select id="f-order">${ORDERS[tab].map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>`;
+  // Entre el `await` de las facetas y esta línea el usuario puede haber cambiado
+  // de pestaña. Sin esta comprobación, la respuesta lenta pisa a la rápida: el
+  // caso medido era Remates → Portal en menos de dos segundos, y Portal acababa
+  // con los filtros de Remates —Demandante, Postura— porque Remates hace dos
+  // peticiones y aterrizaba la última. El usuario se quedaba sin Barrio, Estrato,
+  // Precio ni Área hasta recargar, y lo que escribía viajaba como parámetros que
+  // el listado del portal ignora en silencio.
+  //
+  // Mismo criterio que `state.loadSeq` usa para los listados: el que llega tarde
+  // se descarta.
+  if (state.tab !== tab) return;
   $('filters').innerHTML = html;
   updateFilterCount();
 
