@@ -440,14 +440,22 @@ const COLS_DESTACADOS_REMATE =
   + 'auction_date, auction_mode, cuota_parte, origen_demandante, source, image_url, updated_at';
 
 /** Tamaño de los pools que se piden. Holgados a propósito: los bloques descuentan
- *  lo que ya usó el anterior, así que el último debe seguir teniendo de dónde elegir. */
-const POOL_PORTAL = 220;
+ *  lo que ya usó el anterior, así que el último debe seguir teniendo de dónde elegir.
+ *
+ *  Se dimensionan contra lo que la portada pinta COMPLETA (≈190 fichas entre los
+ *  cuatro bloques), no contra lo que se ve de entrada. El bloque por ciudad es el
+ *  que manda: necesita doce fichas de una MISMA ciudad, y en un pool ordenado por
+ *  descuento las ciudades llegan muy repartidas. Medido contra la base: hay ~990
+ *  fichas del portal que pasan el filtro de portada, así que 600 no es un límite
+ *  que recorte la calidad de lo elegido, solo el trabajo de traerlas. */
+const POOL_PORTAL = 600;
 // Los bancos van holgados porque más de la mitad de sus fichas con buen descuento
-// tienen confianza baja y `esInmuebleDestacable` las descarta.
-const POOL_BANCOS = 140;
+// tienen confianza baja y `esInmuebleDestacable` las descarta: de 144 candidatas
+// medidas en producción quedan 80.
+const POOL_BANCOS = 250;
 // Los remates se filtran y ordenan en TS (su descuento no sale de una columna),
 // así que el pool es de las audiencias más próximas: lo lejano no es accionable.
-const POOL_REMATES = 160;
+const POOL_REMATES = 260;
 
 /**
  * Reconstruye el `features` que espera el resto del sistema.

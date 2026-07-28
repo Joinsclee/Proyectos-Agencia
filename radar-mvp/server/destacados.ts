@@ -41,15 +41,29 @@ export type FuenteDestacado = 'portal' | 'banco' | 'remate';
 export const DESCUENTO_MIN = 20;
 export const DESCUENTO_MAX = 60;
 
-/** Cuántas fichas trae cada bloque. */
+/**
+ * Cuántas fichas trae cada bloque, y cuántas se pintan antes de pedir "ver todas".
+ *
+ * Son DOS números por bloque a propósito. La portada tiene que caber en una
+ * pantalla —si para llegar al segundo bloque hay que rodar cuarenta tarjetas,
+ * los otros tres criterios no existen—, pero enseñar seis fichas de un inventario
+ * de más de mil hace ver el Radar mucho más pequeño de lo que es. Así que cada
+ * bloque viaja completo y se pinta recortado: `preview` de entrada, el resto a un
+ * clic y SIN volver a la red, porque las fichas ya llegaron —y ya pasaron por el
+ * muro de pago— en la misma respuesta.
+ */
 export const TAMANOS = {
   /** Ventana que rota cada semana. Todas sus fichas deben poder ser portada. */
-  poolSemana: 48,
-  semana: 6,
-  mes: 6,
-  ciudades: 4,
-  porCiudad: 3,
-  porFuente: 3,
+  poolSemana: 120,
+  /** Fichas visibles de entrada en un bloque de un solo grupo. */
+  preview: 10,
+  semana: 40,
+  mes: 40,
+  ciudades: 6,
+  porCiudad: 12,
+  /** En las filas por ciudad el recorte es más corto: una fila limpia por ciudad. */
+  previewCiudad: 3,
+  porFuente: 12,
 } as const;
 
 export interface FilaInmueble {
@@ -108,6 +122,15 @@ export interface GrupoDestacados {
   etiqueta: string | null;
   detalle: string | null;
   fichas: FichaDestacada[];
+  /**
+   * Cuántas de `fichas` se pintan antes de que el usuario pida ver el resto.
+   *
+   * Lo decide el servidor y no el navegador porque es una decisión de producto —
+   * cuánto enseña la portada de entrada— y tiene que poder cambiarse sin tocar el
+   * cliente. Si vale lo mismo que `fichas.length`, no hay nada que expandir y la
+   * interfaz no debe ofrecer el botón.
+   */
+  preview: number;
 }
 
 export interface BloqueDestacados {
@@ -352,8 +375,8 @@ const porRemate = (a: FichaDestacada, b: FichaDestacada): number =>
   || String(a.auction_date ?? '9999').localeCompare(String(b.auction_date ?? '9999'))
   || String(a.id).localeCompare(String(b.id));
 
-const grupoUnico = (fichas: FichaDestacada[]): GrupoDestacados[] =>
-  [{ clave: 'todas', etiqueta: null, detalle: null, fichas }];
+const grupoUnico = (fichas: FichaDestacada[], preview: number): GrupoDestacados[] =>
+  [{ clave: 'todas', etiqueta: null, detalle: null, fichas, preview: Math.min(preview, fichas.length) }];
 
 /**
  * Bloque "Destacados de la semana".
@@ -375,9 +398,13 @@ export function bloqueSemana(
   const rotada = rotarSemanal(ventana, semana);
   // Muestra REPARTIDA por la ventana en vez de un tramo contiguo. Con los datos
   // reales el descuento se repite mucho —hay decenas de fichas clavadas en el
-  // mismo 55%—, así que seis posiciones seguidas dan seis tarjetas con el mismo
-  // número y la portada parece rota aunque el dato sea correcto. Tomando una de
-  // cada n se recorre todo el tramo alto y se ve el rango real.
+  // mismo 55%—, así que tomar posiciones seguidas da tarjetas con el mismo número
+  // y la portada parece rota aunque el dato sea correcto. Tomando una de cada n se
+  // recorre todo el tramo alto y se ve el rango real.
+  //
+  // El reparto se calcula contra el bloque COMPLETO, no contra lo que se pinta de
+  // entrada: si se repartiera sobre las diez primeras, al expandir aparecerían las
+  // treinta restantes ya sin repartir y el bloque cambiaría de criterio a mitad.
   const paso = Math.max(1, Math.floor(rotada.length / tamanos.semana));
   const elegidas: FichaDestacada[] = [];
   for (let i = 0; elegidas.length < tamanos.semana && i < rotada.length; i += paso) elegidas.push(rotada[i]);
@@ -390,7 +417,7 @@ export function bloqueSemana(
       + `(vas por la ${semana}): dentro de la semana no se mueve, así que un enlace compartido sigue `
       + 'enseñando lo mismo.',
     icono: 'spark',
-    grupos: grupoUnico(elegidas.sort(porDescuento)),
+    grupos: grupoUnico(elegidas.sort(porDescuento), tamanos.preview),
   };
 }
 
@@ -414,7 +441,7 @@ export function bloqueMes(
     criterio: 'Fichas que entraron al Radar durante el mes en curso, ordenadas por Índice CRECE: '
       + 'las que tienen el precio por m² más bajo frente a la mediana de su propia zona.',
     icono: 'calendar',
-    grupos: grupoUnico([...pool].sort(porIndice).slice(0, tamanos.mes)),
+    grupos: grupoUnico([...pool].sort(porIndice).slice(0, tamanos.mes), tamanos.preview),
   };
 }
 
@@ -438,17 +465,27 @@ export function bloqueCiudades(
     porCiudad.set(ciudad, lista);
   }
   const grupos = [...porCiudad.entries()]
-    // Solo compiten las ciudades que llenan la fila: una tarjeta suelta bajo un
-    // título de ciudad se lee como un hueco, no como una recomendación.
-    .filter(([, fichas]) => fichas.length >= tamanos.porCiudad)
+    // Solo compiten las ciudades que llenan la fila VISIBLE: una tarjeta suelta bajo
+    // un título de ciudad se lee como un hueco, no como una recomendación. El corte
+    // se mide contra lo que se pinta de entrada y no contra el máximo por ciudad, o
+    // exigiríamos doce fichas para enseñar tres y se caerían ciudades que sí tienen
+    // una fila digna.
+    .filter(([, fichas]) => fichas.length >= tamanos.previewCiudad)
     .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
     .slice(0, tamanos.ciudades)
-    .map(([ciudad, fichas]) => ({
-      clave: ciudad,
-      etiqueta: ciudad,
-      detalle: `${fichas.length} oportunidades marcadas`,
-      fichas: [...fichas].sort(porDescuento).slice(0, tamanos.porCiudad),
-    }));
+    .map(([ciudad, fichas]) => {
+      const elegidas = [...fichas].sort(porDescuento).slice(0, tamanos.porCiudad);
+      return {
+        clave: ciudad,
+        etiqueta: ciudad,
+        // El detalle cuenta TODO lo marcado en la ciudad, que casi siempre es más
+        // que lo que cabe en el bloque. Es el número honesto: decir "12
+        // oportunidades" cuando hay 83 en Envigado vendería el Radar por debajo.
+        detalle: `${fichas.length} oportunidades marcadas`,
+        fichas: elegidas,
+        preview: Math.min(tamanos.previewCiudad, elegidas.length),
+      };
+    });
   return {
     id: 'ciudades',
     titulo: 'Las mejores por ciudad',
@@ -494,7 +531,7 @@ export function bloqueFuentes(
       + 'legal de toda subasta es el 70% del avalúo, así que se ordenan por riesgo jurídico '
       + '—primero los de demandante bancario— y por audiencia más próxima.',
     icono: 'chart',
-    grupos: grupoUnico(fichas),
+    grupos: grupoUnico(fichas, tamanos.preview),
   };
 }
 
@@ -517,8 +554,15 @@ export interface Destacados {
   semana: number;
   periodo: string;
   bloques: BloqueDestacados[];
+  /** Todas las fichas seleccionadas, incluidas las que empiezan plegadas. */
   total: number;
+  /** Las que se pintan antes de que nadie pulse nada. */
+  visibles: number;
 }
+
+/** Cuántas fichas de un bloque se pintan de entrada. */
+export const visiblesDe = (bloque: BloqueDestacados): number =>
+  bloque.grupos.reduce((suma, grupo) => suma + grupo.preview, 0);
 
 /** Todas las fichas de un bloque, en orden de pintado. */
 export const fichasDe = (bloque: BloqueDestacados): FichaDestacada[] =>
@@ -604,5 +648,6 @@ export function armarDestacados(pools: PoolsDestacados, opciones: OpcionesDestac
     periodo,
     bloques,
     total: bloques.reduce((suma, bloque) => suma + fichasDe(bloque).length, 0),
+    visibles: bloques.reduce((suma, bloque) => suma + visiblesDe(bloque), 0),
   };
 }

@@ -9,6 +9,7 @@
  */
 import 'dotenv/config';
 import { createServer } from 'node:http';
+import { gzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -85,10 +86,49 @@ const SHUTDOWN_TIMEOUT_MS = 10_000;
 let serviceReady = false;
 let shuttingDown = false;
 
+/**
+ * Desde dónde compensa comprimir.
+ *
+ * Por debajo del tamaño de un paquete de red no se gana nada —el cuerpo viaja en
+ * el mismo viaje comprimido o no— y sí se paga el CPU. La inmensa mayoría de las
+ * respuestas de esta API (un `ok: true`, un cupo, una config) caen aquí.
+ */
+const MIN_GZIP = 1400;
+
+/**
+ * Respuesta JSON, comprimida cuando vale la pena.
+ *
+ * El detonante fue la portada: al pasar de 33 fichas a ~190 la respuesta se iba a
+ * 240 KB, que en un móvil colombiano es medio segundo de espera antes de ver la
+ * primera tarjeta. El mismo JSON comprime un 85% —es texto con las mismas veinte
+ * claves repetidas cientos de veces—, así que la portada entera pesa menos
+ * comprimida que las 33 fichas de antes en crudo. Los listados paginados, que
+ * tienen exactamente la misma forma, se benefician igual sin tocarlos.
+ *
+ * `gzipSync` y no la versión asíncrona a propósito: comprimir 240 KB cuesta unos
+ * pocos milisegundos y este servidor atiende a un puñado de usuarios, así que
+ * bloquear el bucle ese rato es mejor negocio que la complejidad de volver
+ * asíncronas las ~60 llamadas a esta función.
+ *
+ * `Vary` es obligatorio, no decorativo: sin él una caché intermedia puede servirle
+ * el cuerpo comprimido a un cliente que no pidió gzip.
+ */
 function sendJSON(res: import('node:http').ServerResponse, status: number, body: unknown) {
-  const payload = JSON.stringify(body);
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(payload);
+  const payload = Buffer.from(JSON.stringify(body), 'utf8');
+  const cabeceras: Record<string, string> = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    Vary: 'Accept-Encoding',
+  };
+  const acepta = String(res.req?.headers['accept-encoding'] ?? '');
+  if (payload.length < MIN_GZIP || !/\bgzip\b/i.test(acepta)) {
+    res.writeHead(status, cabeceras);
+    res.end(payload);
+    return;
+  }
+  const comprimido = gzipSync(payload);
+  res.writeHead(status, { ...cabeceras, 'Content-Encoding': 'gzip' });
+  res.end(comprimido);
 }
 
 function sendDownload(
@@ -726,6 +766,7 @@ const server = createServer(async (req, res) => {
           semana: seleccion.semana,
           periodo: seleccion.periodo,
           total: todas.length,
+          visibles: seleccion.visibles,
           bloqueo: resumenBloqueo(todas),
           bloques,
         });
