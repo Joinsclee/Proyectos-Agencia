@@ -42,6 +42,11 @@ after(async () => {
 
 test('organiza los filtros en una columna lateral y los oculta en Guardados', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  // El tutorial de bienvenida tapa la portada en la primera visita; estas pruebas
+  // miden la disposición de filtros y resultados, no el tutorial.
+  await context.addInitScript(() => {
+    try { localStorage.setItem('radar_onboarding_v1', '1'); } catch { /* modo privado */ }
+  });
   const page = await context.newPage();
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => /\d[\d.,]*\s+resultados?/.test(document.getElementById('count')?.textContent || ''));
@@ -61,6 +66,11 @@ test('organiza los filtros en una columna lateral y los oculta en Guardados', as
 
 test('mantiene los filtros como panel desplegable en móvil', async () => {
   const context = await browser.newContext({ viewport: { width: 375, height: 812 } });
+  // El tutorial de bienvenida tapa la portada en la primera visita; estas pruebas
+  // miden la disposición de filtros y resultados, no el tutorial.
+  await context.addInitScript(() => {
+    try { localStorage.setItem('radar_onboarding_v1', '1'); } catch { /* modo privado */ }
+  });
   const page = await context.newPage();
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => /\d[\d.,]*\s+resultados?/.test(document.getElementById('count')?.textContent || ''));

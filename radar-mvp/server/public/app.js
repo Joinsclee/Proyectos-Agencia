@@ -33,6 +33,8 @@ const RADAR_PREFS_KEY = 'radar_preferences_v1';
 const RADAR_SETUP_DISMISSED_KEY = 'radar_setup_dismissed_v1';
 const RADAR_SIMULATIONS_KEY = 'radar_simulations_v1';
 const RADAR_ALERT_KEY = 'radar_alert_v1';
+/** Debe coincidir con CUPO_MENSUAL_FREE de server/cupo.ts. El servidor manda; esto es solo el texto. */
+const CUPO_FREE_MENSUAL = 20;
 
 function readStoredJson(key, fallback) {
   try {
@@ -306,9 +308,9 @@ function showRegisterWall(count) {
     <div class="wall-body">
       <span class="wall-eyebrow">${ic('lock')} Límite gratuito</span>
       <h2>Ya viste ${count} oportunidades</h2>
-      <p>Crea tu cuenta <strong>gratis</strong> y sigue viendo las ${total} que el radar tiene marcadas hoy.</p>
+      <p>Crea tu cuenta <strong>gratis</strong> y abre ${CUPO_FREE_MENSUAL} fichas completas cada mes, de las ${total} que el radar tiene marcadas hoy.</p>
       <ul class="wall-list">
-        <li>${ic('check')} Fichas ilimitadas, con dirección y fotos</li>
+        <li>${ic('check')} ${CUPO_FREE_MENSUAL} fichas completas al mes, con dirección y fotos</li>
         <li>${ic('check')} Análisis con IA contra los comparables del barrio</li>
         <li>${ic('check')} Guarda tus favoritas y vuelve a ellas</li>
       </ul>
@@ -317,6 +319,76 @@ function showRegisterWall(count) {
     </div>
   </div>`;
   showModal();
+}
+
+// ---------- Onboarding ----------
+/**
+ * Tutorial de bienvenida.
+ *
+ * Reusa `#modal` con el mismo molde que `showRegisterWall`: vaciar `gImgs` para
+ * neutralizar la galería, inyectar el bloque y llamar a `showModal()`. Así hereda
+ * gratis el foco inicial, la trampa de Tab, el cierre con ESC y con el fondo, y la
+ * devolución del foco al elemento que lo abrió.
+ *
+ * Los videos todavía no existen: `src` vacío pinta un marcador. Para publicarlos
+ * basta dejar el archivo en `server/public/radar/` y poner su ruta aquí — no hay
+ * que tocar nada más.
+ */
+const ONBOARDING_KEY = 'radar_onboarding_v1';
+const ONBOARDING_VIDEOS = [
+  {
+    titulo: 'Qué encuentra el Radar',
+    pie: 'De dónde salen los inmuebles y por qué unos aparecen marcados como oportunidad.',
+    src: '',
+    poster: '',
+  },
+  {
+    titulo: 'Cómo leer una ficha',
+    pie: 'Comparables del barrio, descuento real y qué mirar antes de ir a verla.',
+    src: '',
+    poster: '',
+  },
+];
+
+function onboardingVideo(video, indice) {
+  const cuerpo = video.src
+    ? `<video class="ob-video-player" controls preload="metadata"${video.poster ? ` poster="${esc(video.poster)}"` : ''}>
+         <source src="${esc(video.src)}" type="video/mp4">
+         Tu navegador no puede reproducir este video.
+       </video>`
+    : `<div class="ob-video-pendiente">${ic('clock')}<span>Video en preparación</span></div>`;
+  return `<figure class="ob-video">
+    ${cuerpo}
+    <figcaption><strong>${indice + 1}. ${esc(video.titulo)}</strong><span>${esc(video.pie)}</span></figcaption>
+  </figure>`;
+}
+
+function abrirOnboarding() {
+  gImgs = [];
+  $('modal').setAttribute('aria-label', 'Cómo usar el Radar');
+  $('modal-content').innerHTML = `<div class="onboarding">
+    <header class="ob-head">
+      <span class="ob-eyebrow">${ic('spark')} Bienvenido</span>
+      <h2>Cómo usar el Radar en tres pasos</h2>
+      <p>El Radar compara cada inmueble contra el precio real de su propio barrio y te señala solo los que están por debajo. Esto es lo que necesitas saber para empezar.</p>
+    </header>
+    <div class="ob-videos">${ONBOARDING_VIDEOS.map(onboardingVideo).join('')}</div>
+    <ol class="ob-steps">
+      <li><strong>Filtra por lo tuyo</strong><span>Ciudad, presupuesto y tipo de inmueble. Puedes hacerlo en tres pasos desde la portada.</span></li>
+      <li><strong>Mira el descuento, no el precio</strong><span>El porcentaje compara contra ofertas similares de la misma zona, no contra el promedio del país.</span></li>
+      <li><strong>Abre la ficha y guarda las que te sirvan</strong><span>Dentro están la dirección, las fotos y el análisis contra los comparables.</span></li>
+    </ol>
+    <div class="ob-actions">
+      <button class="ob-cta" type="button" data-onboarding-cerrar>Empezar a explorar</button>
+      <p class="ob-nota">Puedes volver a ver esto cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
+    </div>
+  </div>`;
+  showModal();
+}
+
+/** Marca el tutorial como visto para que no vuelva a salir solo. */
+function marcarOnboardingVisto() {
+  try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch { /* modo privado */ }
 }
 
 // ---------- Filtros ----------
@@ -977,11 +1049,22 @@ function frescura(p) {
   return `<span class="frescura" title="Última vez que el motor confirmó que sigue publicado">${ic('check')}${verbo} ${cuando}</span>`;
 }
 
-/** Sello sobre la foto: la ficha existe y se ve el descuento, falta desbloquearla. */
+/**
+ * Sello sobre la foto: la ficha existe y se ve el descuento, falta desbloquearla.
+ *
+ * El texto depende de qué le falta a ESTE usuario, que es lo que el servidor
+ * manda en `_acceso.requiere`. Antes decía "Desbloquear con suscripción" a todo
+ * el mundo, incluido a quien solo tenía que registrarse: se le pedía pagar por
+ * algo que ya podía obtener gratis.
+ */
 function selloSuscripcion(p) {
   if (!esBloqueada(p)) return '';
   const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
-  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad detectada'}</span><em>Desbloquear con suscripción</em></div>`;
+  const requiere = p._acceso?.requiere;
+  const accion = requiere === 'registro' ? 'Crea tu cuenta gratis para verla'
+    : requiere === 'cupo' ? 'Ábrela con tu cupo del mes'
+    : 'Desbloquear con suscripción';
+  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad detectada'}</span><em>${accion}</em></div>`;
 }
 
 function avisoCuotaParte(p) {
@@ -1713,6 +1796,9 @@ function showModal() {
 }
 function closeModal() {
   if (!$('modal').classList.contains('open')) return;
+  // El diálogo se comparte entre ficha, muro y tutorial: si no se restituye la
+  // etiqueta, el lector de pantalla anunciaría la anterior sobre el contenido nuevo.
+  $('modal').setAttribute('aria-label', 'Detalle del inmueble');
   $('modal').classList.remove('open');
   $('modal').setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
@@ -1837,6 +1923,10 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   }
 }));
 $('modal-close').addEventListener('click', closeModal);
+$('ver-tutorial').addEventListener('click', abrirOnboarding);
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-onboarding-cerrar]')) { marcarOnboardingVisto(); closeModal(); }
+});
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
@@ -1900,7 +1990,7 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' && gImgs.length > 1) window.gMove(-1);
   if (e.key === 'ArrowRight' && gImgs.length > 1) window.gMove(1);
   if (e.key === 'Tab') {
-    const focusable = [...$('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    const focusable = [...$('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])')]
       .filter((element) => element.getClientRects().length);
     if (!focusable.length) return;
     const first = focusable[0];
@@ -1914,6 +2004,17 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+// El tutorial se abre solo la primera vez. Va antes de cargar resultados porque
+// no depende de ellos, y el fondo bloqueado evita que el usuario empiece a tocar
+// filtros con el diálogo abierto. En modo privado `localStorage` puede lanzar: si
+// no se puede recordar la visita, es mejor no mostrarlo que mostrarlo siempre.
+try {
+  if (!localStorage.getItem(ONBOARDING_KEY)) {
+    marcarOnboardingVisto();
+    abrirOnboarding();
+  }
+} catch { /* sin almacenamiento no se insiste */ }
 
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.

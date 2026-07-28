@@ -7,6 +7,7 @@ const headers = (json = false) => ({
 });
 let account = null;
 let paymentDemoReady = false;
+let demoPlanActivation = false;
 
 function esc(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
@@ -27,11 +28,17 @@ function render(plans) {
   document.getElementById('plans').innerHTML = plans.map((plan) => {
     const current = account?.plan === plan.code;
     const requested = plan.code === 'pro' && account?.subscriptionStatus === 'interested';
-    const proAction = paymentDemoReady ? 'Activar demo por 30 días' : requested ? 'Solicitud recibida' : 'Solicitar acceso demo';
-    const label = current ? 'Plan actual' : plan.code === 'free' ? 'Empezar gratis' : proAction;
+    // Tres caminos posibles para el plan de pago, en este orden: activación de
+    // demostración (regala el acceso, se controla con RADAR_DEMO_PLAN), checkout
+    // Sandbox de Wompi, o dejar constancia del interés.
+    const proAction = demoPlanActivation
+      ? 'Obtener acceso completo'
+      : paymentDemoReady ? 'Activar demo por 30 días' : requested ? 'Solicitud recibida' : 'Solicitar acceso demo';
+    const label = current ? 'Plan actual' : plan.code === 'free' ? (token ? 'Tu plan actual' : 'Empezar gratis') : proAction;
     const href = !token && plan.code === 'pro' ? '/login' : plan.code === 'free' ? '/' : '#';
     const action = plan.code === 'pro' && token && !current
-      ? paymentDemoReady ? 'data-start-checkout' : !requested ? 'data-request-plan' : ''
+      ? demoPlanActivation ? 'data-activate-demo'
+        : paymentDemoReady ? 'data-start-checkout' : !requested ? 'data-request-plan' : ''
       : '';
     return `<article class="plan-card ${plan.code === 'pro' ? 'featured' : ''}">
       ${plan.code === 'pro' ? `<span class="plan-badge">${paymentDemoReady ? 'Wompi Sandbox' : 'Piloto Pro'}</span>` : ''}
@@ -77,6 +84,7 @@ async function init() {
   const plansData = await plansResponse.json();
   const config = await configResponse.json();
   paymentDemoReady = config.paymentDemoReady === true;
+  demoPlanActivation = config.demoPlanActivation === true;
   if (accountResponse?.ok) {
     const accountData = await accountResponse.json();
     account = accountData.account;
@@ -85,30 +93,36 @@ async function init() {
     document.getElementById('session-link').href = '/cuenta';
   }
   const availability = document.getElementById('payment-availability');
-  availability.textContent = paymentDemoReady
-    ? 'Checkout de prueba habilitado con Wompi Sandbox. No mueve dinero real y la renovación es manual.'
-    : 'El piloto Pro se activa manualmente. El checkout externo queda reservado para una etapa posterior.';
+  availability.textContent = demoPlanActivation
+    ? 'Acceso completo de cortesía durante el piloto: se activa al instante, sin cobro ni datos de pago, con vigencia de 30 días.'
+    : paymentDemoReady
+      ? 'Checkout de prueba habilitado con Wompi Sandbox. No mueve dinero real y la renovación es manual.'
+      : 'El piloto Pro se activa manualmente. El checkout externo queda reservado para una etapa posterior.';
   render(plansData.plans || []);
 }
 
 document.addEventListener('click', async (event) => {
+  const demoButton = event.target.closest('[data-activate-demo]');
   const checkoutButton = event.target.closest('[data-start-checkout]');
   const interestButton = event.target.closest('[data-request-plan]');
-  const button = checkoutButton || interestButton;
+  const button = demoButton || checkoutButton || interestButton;
   if (!button) return;
   event.preventDefault();
   if (button.getAttribute('aria-disabled') === 'true') return;
   button.setAttribute('aria-disabled', 'true');
   const message = document.getElementById('message');
   message.className = 'message';
-  message.textContent = checkoutButton ? 'Preparando un checkout seguro…' : 'Registrando tu solicitud…';
+  message.textContent = demoButton ? 'Activando tu acceso completo…'
+    : checkoutButton ? 'Preparando un checkout seguro…' : 'Registrando tu solicitud…';
 
+  const endpoint = demoButton ? '/api/account/activar-demo'
+    : checkoutButton ? '/api/account/checkout' : '/api/account/plan-interest';
   const response = await fetch(
-    checkoutButton ? '/api/account/checkout' : '/api/account/plan-interest',
+    endpoint,
     {
       method: 'POST',
       headers: headers(true),
-      body: checkoutButton ? '{}' : JSON.stringify({ plan: 'pro' }),
+      body: interestButton ? JSON.stringify({ plan: 'pro' }) : '{}',
     },
   );
   const data = await response.json();

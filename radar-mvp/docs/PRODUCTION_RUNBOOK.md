@@ -53,6 +53,28 @@ Condiciones de salida:
 6. Nunca activar un trabajo deshabilitado como parte incidental de un
    despliegue.
 
+### Modos de uso y el interruptor de la puerta abierta
+
+| Modo | Quién | Qué ve |
+|---|---|---|
+| Anónimo | sin registrar | fichas de oportunidad bloqueadas; se le pide crear cuenta |
+| Explorador (free) | registrado | 20 fichas completas por mes calendario |
+| Radar Pro | de pago | sin límite |
+
+El cupo vive en `app_metadata.unlock_quota` y se reinicia solo al cambiar de mes,
+sin ningún proceso programado. Una ficha ya abierta no vuelve a consumir cupo.
+
+`RADAR_DEMO_PLAN=1` hace que el botón del plan de pago conceda el acceso completo
+**sin cobrar nada**, marcando la cuenta con `subscription_source: 'demo'` para
+poder separarla después de quien pagó de verdad. Es dinero regalado a propósito,
+para poder enseñar el producto entero mientras la pasarela no está lista.
+`/api/config` publica `demoPlanActivation` para que se note desde fuera si la
+puerta está abierta.
+
+**Antes de cobrar de verdad hay que ponerlo en `0`.** Es un cambio de variable de
+entorno, sin desplegar código. Para revisar quién entró por ahí:
+`subscription_source = 'demo'` en `app_metadata`.
+
 ### Conceder o retirar el plan Pro a una cuenta
 
 El panel `/admin` es el camino previsto, pero hoy no hay ninguna cuenta
