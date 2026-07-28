@@ -41,6 +41,9 @@ export const CAMPOS_AUTORIZACION = [
   'subscription_payment_reference',
   'subscription_transaction_id',
   'subscription_audit',
+  // El cupo mensual del plan gratuito. Va aquí y no en `user_metadata` por la
+  // razón obvia: un límite que el limitado puede reescribir no es un límite.
+  'unlock_quota',
 ] as const;
 
 export type CampoAutorizacion = (typeof CAMPOS_AUTORIZACION)[number];

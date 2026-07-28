@@ -33,16 +33,49 @@ export interface Acceso {
   motivo: 'oportunidad' | 'remate' | null;
   /** Aviso de riesgo legal (remates particulares en el tramo gancho). */
   avisoRiesgo: boolean;
+  /**
+   * Qué le falta a ESTE usuario para abrirla. Es lo que decide el texto del sello:
+   * a un anónimo se le pide cuenta, a un registrado con cupo se le ofrece gastar
+   * una, y a uno sin cupo se le ofrece el plan. Antes los tres veían
+   * "Desbloquear con suscripción", que a un anónimo le pedía pagar cuando en
+   * realidad le bastaba registrarse.
+   */
+  requiere?: 'registro' | 'cupo' | 'suscripcion';
 }
 
 const LIBRE: Acceso = { completa: true, motivo: null, avisoRiesgo: false };
 
+/**
+ * Qué se le pide a este plan para abrir una ficha de pago.
+ *
+ * `desbloqueada` significa que la ficha ya se abrió con el cupo de este mes.
+ */
+function bloqueo(
+  plan: Plan,
+  motivo: 'oportunidad' | 'remate',
+  cupo?: { desbloqueada?: boolean; restantes?: number | null },
+): Acceso {
+  if (plan === 'anonimo') return { completa: false, motivo, avisoRiesgo: false, requiere: 'registro' };
+  if (cupo?.desbloqueada) return LIBRE;
+  const quedan = cupo?.restantes ?? 0;
+  return {
+    completa: false,
+    motivo,
+    avisoRiesgo: false,
+    requiere: quedan > 0 ? 'cupo' : 'suscripcion',
+  };
+}
+
 /** Acceso a un inmueble de portal o banco, según su categoría CRECE. */
-export function accesoInmueble(tier: string | null | undefined, plan: Plan): Acceso {
+export function accesoInmueble(
+  tier: string | null | undefined,
+  plan: Plan,
+  cupo?: { desbloqueada?: boolean; restantes?: number | null },
+): Acceso {
   if (plan === 'suscrito') return LIBRE;
   if (!tier) return LIBRE; // sin clasificar no es contenido de pago
   const c = clasificar(tierIndiceRef(tier as CreceTier));
-  return c.requiereSuscripcion ? { completa: false, motivo: 'oportunidad', avisoRiesgo: false } : LIBRE;
+  return c.requiereSuscripcion ? bloqueo(plan, 'oportunidad', cupo) : LIBRE;
 }
 
 /**
@@ -62,6 +95,7 @@ function tierIndiceRef(tier: CreceTier): number {
 export function accesoRemateFicha(
   row: { origen_demandante?: string | null; appraisal_value?: number | null; minimum_bid?: number | null },
   plan: Plan,
+  cupo?: { desbloqueada?: boolean; restantes?: number | null },
 ): Acceso {
   if (plan === 'suscrito') return LIBRE;
   const av = Number(row.appraisal_value ?? 0);
@@ -69,7 +103,7 @@ export function accesoRemateFicha(
   const descuento = av > 0 && bid > 0 ? (1 - bid / av) * 100 : 0;
   const origen = row.origen_demandante === 'bancario' ? 'bancario' : origenDemandante(false);
   const a = accesoRemate(origen, descuento);
-  if (requiereSuscripcionRemate(a)) return { completa: false, motivo: 'remate', avisoRiesgo: false };
+  if (requiereSuscripcionRemate(a)) return bloqueo(plan, 'remate', cupo);
   return { completa: true, motivo: null, avisoRiesgo: a === 'gratis_con_aviso' };
 }
 
@@ -107,12 +141,23 @@ export function redactar<T extends Record<string, any>>(row: T, acceso: Acceso):
   } as T;
 }
 
-/** Aplica el control a una lista completa de resultados. */
+/**
+ * Aplica el control a una lista completa de resultados.
+ *
+ * `desbloqueadas` son los ids que el usuario ya abrió con su cupo de este mes:
+ * esas fichas viajan completas también en el listado, o el usuario habría gastado
+ * cupo para que la tarjeta siguiera tapada al volver a la lista.
+ */
 export function redactarLista<T extends Record<string, any>>(
   rows: T[], plan: Plan, tipo: 'inmueble' | 'remate',
+  cupo?: { desbloqueadas?: string[]; restantes?: number | null },
 ): T[] {
-  return rows.map((r) => redactar(
-    r,
-    tipo === 'remate' ? accesoRemateFicha(r, plan) : accesoInmueble(r.crece_tier, plan),
-  ));
+  const abiertas = new Set(cupo?.desbloqueadas ?? []);
+  return rows.map((r) => {
+    const estado = { desbloqueada: abiertas.has(String(r.id)), restantes: cupo?.restantes ?? null };
+    return redactar(
+      r,
+      tipo === 'remate' ? accesoRemateFicha(r, plan, estado) : accesoInmueble(r.crece_tier, plan, estado),
+    );
+  });
 }

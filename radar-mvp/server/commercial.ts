@@ -5,9 +5,10 @@ export const PLAN_CATALOG = [
     code: 'free',
     name: 'Explorador',
     priceMonthlyCop: 0,
-    description: 'Para conocer el mercado y guardar oportunidades.',
+    description: 'Para conocer el mercado y evaluar unas cuantas oportunidades al mes.',
     features: [
       'Búsqueda en portal, bancos y remates',
+      '20 fichas de oportunidad completas al mes',
       'Favoritos y simulaciones',
       'Contexto de mercado',
       'Hasta 1 alerta semanal',
@@ -22,7 +23,7 @@ export const PLAN_CATALOG = [
     sandboxDemo: true,
     description: 'Demo de 30 días para evaluar primero las oportunidades de mayor señal.',
     features: [
-      'Fichas completas de oportunidades',
+      'Fichas de oportunidad completas, sin límite mensual',
       'Datos de contacto y fuente original',
       'Hasta 5 alertas personalizadas',
       'Análisis y exportación de seguimiento',

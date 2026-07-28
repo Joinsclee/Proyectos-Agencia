@@ -12,6 +12,7 @@
 import { supabase, authClient } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import { entitledPlanFromMetadata, subscriptionStatusFromMetadata, type SubscriptionStatus } from './commercial.js';
+import { leerCupo, type Cupo } from './cupo.js';
 import {
   metadatosDeCuenta,
   pareceIntentoDeAscenso,
@@ -43,6 +44,12 @@ export interface AuthUser {
   plan?: string;
   subscriptionStatus?: SubscriptionStatus;
   role?: 'user' | 'admin';
+  /**
+   * Cupo mensual ya resuelto. Se adjunta aquí porque validar el token ya trae la
+   * metadata completa: leerlo aparte sería una segunda ida a Supabase en el
+   * camino caliente de cada listado.
+   */
+  cupo?: Cupo;
 }
 
 const MAX_FAVS = 500;
@@ -66,6 +73,7 @@ export async function getUserFromToken(token: string | null): Promise<AuthUser |
     role: metadata.role === 'admin' || metadata.is_admin === true
       ? 'admin'
       : 'user',
+    cupo: leerCupo(metadata),
   };
 }
 

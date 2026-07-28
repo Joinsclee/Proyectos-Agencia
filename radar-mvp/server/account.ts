@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { supabase } from '../lib/supabase.js';
 import { metadatosDeCuenta, separarMetadatos } from './account-metadata.js';
+import { estadoCupo, leerCupo, type Cupo } from './cupo.js';
+import { env } from '../lib/env.js';
+import { createLogger } from '../lib/logger.js';
 import {
   AccountSyncSchema,
   PLAN_CATALOG,
@@ -18,6 +21,8 @@ import {
   type RadarAlert,
   type SubscriptionAuditEvent,
 } from './commercial.js';
+
+const log = createLogger('cuenta');
 
 type Metadata = Record<string, any>;
 
@@ -46,7 +51,9 @@ function publicAccount(user: CuentaCruda) {
       && Number.isFinite(Date.parse(metadata.subscription_valid_until))
       ? metadata.subscription_valid_until
       : null,
-    subscriptionSource: metadata.subscription_source === 'wompi_sandbox' ? 'wompi_sandbox' : metadata.subscription_source === 'admin' ? 'admin' : null,
+    subscriptionSource: ['wompi_sandbox', 'admin', 'demo'].includes(String(metadata.subscription_source))
+      ? (metadata.subscription_source as 'wompi_sandbox' | 'admin' | 'demo')
+      : null,
     role: isAdminMetadata(metadata) ? 'admin' : 'user',
     preferences: RadarPreferencesSchema.safeParse(metadata.radar_preferences).success
       ? metadata.radar_preferences
@@ -63,6 +70,9 @@ function publicAccount(user: CuentaCruda) {
       maxAlerts: maxAlertsForPlan(plan),
       exports: plan === 'pro',
     },
+    // Cuántas fichas de oportunidad le quedan este mes. Sin esto el usuario del
+    // plan gratuito descubre su límite cuando se lo choca.
+    cupo: estadoCupo(leerCupo(metadata), plan === 'pro' ? 'suscrito' : 'free'),
   };
 }
 
@@ -88,6 +98,60 @@ async function updateMetadata(userId: string, updater: (metadata: Metadata) => M
   });
   if (error || !data.user) throw new Error(error?.message ?? 'No se pudo actualizar la cuenta');
   return publicAccount(data.user);
+}
+
+/**
+ * Deja constancia de que el usuario gastó una ficha de su cupo mensual.
+ *
+ * Pasa por `updateMetadata` a propósito, no por un `updateUserById` suelto: así
+ * el cupo cae en `app_metadata` por la misma frontera que el resto de la
+ * autorización y nadie tiene que acordarse de dónde va.
+ */
+export async function registrarDesbloqueo(userId: string, cupo: Cupo): Promise<void> {
+  await updateMetadata(userId, (metadata) => {
+    metadata.unlock_quota = cupo;
+    return metadata;
+  });
+}
+
+/**
+ * Concede el plan de pago sin cobrar, para poder enseñar el producto completo
+ * mientras la pasarela no está operativa.
+ *
+ * Queda marcado con `subscription_source: 'demo'`, distinto de `wompi_sandbox` y
+ * de `admin`: así una consulta puede separar en cualquier momento quién pagó de
+ * quién entró por la puerta abierta, y el evento queda en el historial que el
+ * propio usuario ve en `/cuenta`.
+ *
+ * Se controla con `RADAR_DEMO_PLAN`. Es dinero regalado a propósito y hay que
+ * poder cerrarlo con un cambio de variable, sin desplegar.
+ */
+export async function activarPlanDemo(userId: string, dias = 30) {
+  if (env.RADAR_DEMO_PLAN !== '1') {
+    return { ok: false as const, error: 'La activación de demostración está desactivada' };
+  }
+  let evento: SubscriptionAuditEvent | null = null;
+  const account = await updateMetadata(userId, (metadata) => {
+    const desde = subscriptionStatusFromMetadata(metadata);
+    const ahora = new Date();
+    evento = {
+      id: randomUUID(),
+      at: ahora.toISOString(),
+      fromStatus: desde,
+      toStatus: 'active',
+      source: 'admin',
+      note: 'Activación de demostración: acceso completo sin cobro',
+    };
+    metadata.subscription_status = 'active';
+    metadata.plan = 'pro';
+    metadata.subscription_source = 'demo';
+    metadata.subscription_updated_at = ahora.toISOString();
+    metadata.subscription_valid_until = new Date(ahora.getTime() + dias * 86_400_000).toISOString();
+    metadata.subscription_audit = [evento, ...readSubscriptionAudit(metadata)].slice(0, 50);
+    return metadata;
+  });
+  log.warn(`plan demo activado para ${userId.slice(0, 8)} · ${dias} días sin cobro`);
+  return { ok: true as const, account, event: evento };
 }
 
 async function listAllUsers() {
