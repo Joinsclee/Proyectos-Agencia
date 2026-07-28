@@ -408,9 +408,20 @@ h1 .gold { color: var(--gold); }
 .pb-auction { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 0.95rem; color: rgba(255,255,255,0.92); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .pb-auction .countdown { position: static; box-shadow: none; }
 /* Datos del proceso (kv) */
-.kv { display: grid; grid-template-columns: 150px 1fr; gap: 8px 14px; }
-.kv-k { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--pp); }
-.kv-v { font-size: 0.9rem; color: #374151; }
+/* `minmax(0, …)` y `min-width: 0` son obligatorios: por defecto una celda de
+   rejilla no se encoge por debajo de su contenido, así que un valor largo sin
+   espacios —el campo "Secuestre" de algunos remates trae miles de caracteres con
+   direcciones y correos pegados— ensanchaba la ficha y obligaba a desplazarse en
+   horizontal. `overflow-wrap: anywhere` parte esa tirada aunque no tenga espacios. */
+.kv { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 8px 14px; }
+.kv-k { min-width: 0; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--pp); overflow-wrap: anywhere; }
+.kv-v { min-width: 0; font-size: 0.9rem; color: #374151; overflow-wrap: anywhere; }
+/* Un dato desmedido no debe empujar la ficha entera: se muestra el principio y el
+   resto queda a un clic, con el mismo patrón que la copia de la publicación. */
+.kv-largo > summary { cursor: pointer; color: var(--pp); font-weight: 600; }
+.kv-largo > summary::marker { color: var(--pp); }
+.kv-largo[open] > summary { margin-bottom: 6px; }
+.kv-largo p { margin: 0; }
 .pub { white-space: pre-line; font-size: 0.88rem; line-height: 1.65; color: #374151; }
 /* Botón colapsable "Ver copia exacta de la publicación" (pedido del cliente) */
 .pub-toggle { display: inline-flex; align-items: center; gap: 8px; background: #f0e6f7; color: var(--pp); border: 1px solid #e3d4ee; border-radius: 10px; padding: 11px 16px; font-family: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.15s; }

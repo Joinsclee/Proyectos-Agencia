@@ -1627,6 +1627,28 @@ window.__retryMarket = (kind, id, disc) => {
   gFichaSeq--; // fillMarketLazy vuelve a incrementarlo: este reintento sigue siendo la ficha vigente
   fillMarketLazy(kind, id, disc);
 }
+/** A partir de aquí un dato del proceso deja de ser un dato y es un párrafo. */
+const LARGO_MAXIMO_DATO = 220;
+
+/**
+ * Repliega un valor desmedido.
+ *
+ * Los remates traen campos que el portal rellenó a granel: el "Secuestre" de
+ * algunos incluye dirección, teléfono, correo y notas al comprador, y llega a
+ * pasar de cuatro mil caracteres. Mostrarlo entero convierte la ficha en un muro
+ * de texto. Se enseña el principio y el resto queda a un clic, sin recortar nada:
+ * el dato completo sigue estando.
+ *
+ * Recibe HTML YA ESCAPADO, así que aquí no se vuelve a escapar; el corte se hace
+ * en un espacio para no partir una entidad HTML por la mitad.
+ */
+function valorLargo(html) {
+  if (html.length <= LARGO_MAXIMO_DATO) return html;
+  const corte = html.lastIndexOf(' ', LARGO_MAXIMO_DATO);
+  const inicio = html.slice(0, corte > 80 ? corte : LARGO_MAXIMO_DATO);
+  return `<details class="kv-largo"><summary>${inicio}… <em>ver completo</em></summary><p>${html}</p></details>`;
+}
+
 function openRemate(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
@@ -1642,7 +1664,7 @@ function openRemate(p) {
   if (hasData(p.defendant)) datos.push(['Demandado', esc(p.defendant)]);
   if (hasData(p.court)) datos.push(['Juzgado', esc(p.court)]);
   if (hasData(p.case_number)) datos.push(['Radicado del proceso', esc(p.case_number)]);
-  if (hasData(p.trustee)) datos.push(['Secuestre', esc(p.trustee).replace(/^secuestre:?\s*/i, '')]);
+  if (hasData(p.trustee)) datos.push(['Secuestre', valorLargo(esc(p.trustee).replace(/^secuestre:?\s*/i, ''))]);
   if (hasData(p.matricula_inmobiliaria)) datos.push(['Matrícula inmobiliaria', esc(p.matricula_inmobiliaria)]);
   if (p.deposit_pct) datos.push(['Depósito para participar', p.deposit_pct + '%']);
   const datosHtml = datos.length
