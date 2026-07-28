@@ -259,6 +259,71 @@ a { color: inherit; }
   color: var(--ink);
   font: 500 .85rem 'Barlow Semi Condensed', sans-serif;
 }
+/* ── Oportunidades por zona (panel de administración) ─────────────────────
+   La tabla tiene nueve columnas de cifras y no cabe en 375 px sin volverse
+   ilegible. En vez de apilarla, se deja desplazar SOLO a ella dentro de su
+   contenedor (`.zone-table-wrap`) y se fija la columna de ciudad, para que al
+   arrastrar hacia la derecha nunca se pierda de vista a qué ciudad pertenece la
+   cifra que se está leyendo. La página, por fuera, no se desplaza. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.zone-summary { margin-top: 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.zone-summary div { padding: 12px; border-radius: 11px; background: #f8f4fa; }
+.zone-summary strong, .zone-summary span { display: block; }
+.zone-summary strong { font-size: 1.35rem; color: var(--purple); font-variant-numeric: tabular-nums; }
+.zone-summary span { margin-top: 3px; color: var(--muted); font-size: .75rem; }
+.zone-scope { margin: 12px 0 0; color: var(--muted); font-size: .82rem; font-weight: 700; }
+.zone-table-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+.zone-table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.zone-table th, .zone-table td {
+  padding: 11px 13px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.zone-table thead th {
+  background: var(--purple-dark);
+  color: #fff;
+  font-size: .72rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.zone-table tbody tr:last-child th, .zone-table tbody tr:last-child td { border-bottom: 0; }
+.zone-table tbody th { color: var(--purple-dark); font-weight: 800; background: #fff; }
+.zone-table tbody tr:nth-child(even) th, .zone-table tbody tr:nth-child(even) td { background: #faf7fb; }
+/* Columna fija: necesita fondo opaco propio o el resto de la tabla se le vería
+   por debajo al desplazar en horizontal. */
+.zone-table th:first-child, .zone-table td:first-child { position: sticky; left: 0; text-align: left; z-index: 1; }
+.zone-table thead th:first-child { z-index: 2; }
+.zone-table .zone-empty { color: var(--muted); font-weight: 400; }
+/* Sin comparables de arriendo: la ciudad se marca en el borde de la columna
+   fija (que viaja con la vista) además del distintivo en su celda. */
+.zone-row-sin-arriendos th:first-child { box-shadow: inset 4px 0 0 var(--gold); }
+.zone-flag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: #fdf3d0;
+  color: #7a5b00;
+  font-size: .72rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.zone-legend { margin: 12px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.zone-retry { min-height: 44px; margin-top: 6px; }
 .message { min-height: 24px; margin-top: 12px; color: var(--muted); font-weight: 700; }
 .message.ok { color: var(--success); }
 .message.error { color: #b42318; }
@@ -351,6 +416,8 @@ a { color: inherit; }
   .plans-grid, .account-layout { grid-template-columns: 1fr; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .funnel-grid { grid-template-columns: repeat(2, 1fr); }
+  .zone-summary { grid-template-columns: repeat(2, 1fr); }
+  .zone-table th, .zone-table td { padding: 10px; }
   .commercial-item, .commercial-actions { grid-template-columns: 1fr; }
   .compare-picker { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }

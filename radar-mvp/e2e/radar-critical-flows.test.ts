@@ -372,6 +372,10 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       assert.equal(adminApi.status(), 401);
       const commercialQueue = await page.request.get(`${baseUrl}/api/admin/plan-interests`);
       assert.equal(commercialQueue.status(), 401);
+      // Las oportunidades por zona son inventario agregado del negocio: sin
+      // sesión no se asoman, igual que el resto del panel.
+      const zoneStats = await page.request.get(`${baseUrl}/api/admin/oportunidades-por-zona`);
+      assert.equal(zoneStats.status(), 401);
       const subscriptionMutation = await page.request.patch(
         `${baseUrl}/api/admin/subscriptions/00000000-0000-4000-8000-000000000000`,
         { data: { status: 'active', note: 'prueba no autorizada' } },

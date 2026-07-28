@@ -41,6 +41,27 @@ export interface ListQuery {
   bidMax?: number; // remates: postura máxima (COP)
 }
 
+/**
+ * Qué cuenta como inventario PUBLICABLE del portal abierto.
+ *
+ * Vive en un solo sitio porque lo usan tres consumidores que tienen que decir el
+ * mismo número: las estadísticas del dashboard, el listado paginado y la tabla
+ * de oportunidades por zona del panel. Cuando esta definición estaba duplicada,
+ * la pestaña anunciaba 115.636 y el paginador de adentro ofrecía otra cifra —la
+ * contradicción más fácil de detectar que puede tener un tablero, porque se ve
+ * sin hacer clic en nada—.
+ *
+ * Fuera quedan los proyectos de preventa (no son un inmueble que se pueda ir a
+ * ver) y todo lo que supere el tope de precio del sistema.
+ */
+function soloPortalPublicable(qb: any) {
+  return qb
+    .eq('is_active', true)
+    .eq('source', 'fincaraiz')
+    .or('features->>is_project.is.null,features->>is_project.eq.false')
+    .lte('price', MAX_DISPLAY_PRICE);
+}
+
 /** Filtros compartidos de inmuebles (portal + bancos): precio/área/hab/estrato. */
 function applyInmuebleFilters(qb: any, q: ListQuery) {
   // Tope del sistema: nunca mostrar valores super-elevados (fuera de segmento /
@@ -345,14 +366,11 @@ async function computeStats() {
     if (r.error) throw new Error(`stats: ${r.error.message}`);
     return r.count ?? 0;
   };
-  // Los MISMOS filtros que el listado: sin proyectos de preventa y bajo el tope de
-  // precio. Sin esto el contador de la pestaña anunciaba 115.636 y al abrirla el
-  // paginador ofrecía otra cifra, que es la contradicción más fácil de detectar
-  // que puede tener un tablero: se ve sin hacer clic en nada.
-  const base = () => supabase.from('inmuebles').select('id', { count: 'exact', head: true })
-    .eq('is_active', true).eq('source', 'fincaraiz')
-    .or('features->>is_project.is.null,features->>is_project.eq.false')
-    .lte('price', MAX_DISPLAY_PRICE);
+  // Los MISMOS filtros que el listado y que el panel de zonas, en una sola
+  // definición (`soloPortalPublicable`) para que no puedan volver a divergir.
+  const base = () => soloPortalPublicable(
+    supabase.from('inmuebles').select('id', { count: 'exact', head: true }),
+  );
   const [total, opps, high, bancos, remates] = await Promise.all([
     head(base()),
     head(base().eq('is_opportunity', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
@@ -396,23 +414,31 @@ async function leerFrescura(): Promise<Frescura | null> {
 // El panel promete «estadísticas de uso Y DE OPORTUNIDADES POR ZONA». Lo de uso
 // sale de `server/account.ts`; esto es lo otro: dónde está el inventario.
 //
-// La restricción real es que son 116.000 inmuebles y Supabase no expone GROUP BY
-// por PostgREST. Traerlos todos al servidor para agrupar en memoria son ~116
-// peticiones de 1.000 filas y decenas de MB por cada carga del panel: inviable.
-// La salida es no tocar nunca la tabla completa:
-//   · las OPORTUNIDADES sí se traen enteras (~20.500 filas, 3 columnas) porque
-//     el promedio y el mejor descuento no se pueden calcular con un conteo;
-//   · bancos (~460) y remates (~690) son pequeños y se traen enteros;
-//   · de arriendos solo interesa la ciudad, y son ~10.300 filas;
-//   · el total de inmuebles activos por ciudad se resuelve con `head: true`, que
-//     no transporta ni una fila, y solo para las ciudades que caben en la tabla.
+// La restricción real es que son ~116.000 inmuebles (108.016 publicables) y que
+// PostgREST no expone GROUP BY. Traerlos todos al servidor para agrupar en
+// memoria son ~116 peticiones de 1.000 filas y decenas de MB por cada carga del
+// panel: inviable. La salida es no leer nunca la tabla entera:
+//   · las OPORTUNIDADES sí se traen completas (~20.300 filas, 3 columnas) porque
+//     el promedio y el mejor descuento no se pueden calcular con un conteo, pero
+//     se entra por el índice de descuento, no por la clave primaria;
+//   · los inmuebles de banco (~460) caben en una sola respuesta;
+//   · remates (~690) y arriendos (~10.300) son tablas propias y pequeñas, así
+//     que ahí sí sale barato recorrerlas por franjas de `id`;
+//   · el inventario por ciudad se resuelve con `head: true`, que no transporta ni
+//     una fila, y solo para las ciudades que caben en la tabla.
 // El conteo global del sistema se reutiliza de `stats()` en vez de repetirlo:
-// ese conteo sobre las 116.000 filas tarda ~3 s por sí solo y ya está cacheado y
-// precalentado al arrancar. De paso garantiza que el panel y el dashboard
-// publiquen exactamente el mismo número, que es medio problema menos.
+// ese conteo sobre las 116.000 filas tarda segundos por sí solo y ya está
+// cacheado y precalentado al arrancar. De paso garantiza que el panel y el
+// dashboard publiquen exactamente el mismo número, que es medio problema menos.
+//
+// Medición del cálculo completo contra producción (2026-07-28): ~3 s en frío,
+// caché de 10 minutos por delante y precalentado al arrancar el servidor.
 
 const LOTE_ZONAS = 1000;      // tope duro de filas por respuesta de PostgREST
-const CONCURRENCIA_ZONAS = 8; // medido: por encima el pool de Supabase deja de mejorar
+// Medido contra producción el 2026-07-28: el cuello no es la base sino la latencia
+// de ida y vuelta de cada petición. Con 6 en paralelo el recorrido de
+// oportunidades tardaba 5,2 s y con 12 tarda 1,0 s; de 12 a 20 ya no mejora.
+const CONCURRENCIA_ZONAS = 12;
 
 /** Recorre `items` con un número fijo de trabajadores en paralelo. */
 async function enParalelo<T>(
@@ -437,16 +463,20 @@ type ConsultaLote = (columnas: string) => any;
 /**
  * Franjas del espacio de UUID por su primer dígito hexadecimal.
  *
- * POR QUÉ NO SE PAGINA CON `OFFSET`: la primera versión pedía las 21 páginas de
- * oportunidades con `range(20000, 20999)` y compañía. Funcionaba en pruebas
- * aisladas y se caía con «canceling statement due to statement timeout» en
- * cuanto la base tenía algo más de trabajo encima (el precalentamiento de
- * comparables del arranque bastaba), porque cada página profunda obliga a
- * Postgres a recorrer y descartar decenas de miles de filas antes de empezar a
- * devolver. Recortando por rango de `id` no hay nada que descartar: cada franja
- * entra por el índice de la clave primaria y ninguna consulta pasa de ~1.300
- * filas. Sale más barato, y sobre todo deja de depender de que la base esté
- * ociosa.
+ * POR QUÉ NO SE PAGINA CON `OFFSET`: la primera versión pedía las páginas con
+ * `range(9000, 9999)` y compañía, y cada página profunda obliga a Postgres a
+ * recorrer y descartar miles de filas antes de empezar a devolver: funcionaba en
+ * pruebas aisladas y se caía con «canceling statement due to statement timeout»
+ * en cuanto la base tenía algo de trabajo encima. Recortando por rango de `id`
+ * no hay nada que descartar y ninguna consulta se vuelve más cara que la
+ * anterior.
+ *
+ * OJO CON CUÁNDO USARLO: recorrer por `id` obliga a entrar por la clave
+ * primaria, así que solo vale la pena sobre tablas donde se quiere CASI TODA la
+ * tabla (`rental_listings`, `remates`). Para un subconjunto pequeño de una tabla
+ * grande —las oportunidades dentro de los 116.000 inmuebles— sale carísimo: se
+ * paga leer las 116.000 filas para quedarse con 20.000. Ese caso va por
+ * `traerOportunidades`, que entra por el índice de descuento.
  */
 const FRANJAS_UUID = (() => {
   const digitos = '0123456789abcdef'.split('');
@@ -456,6 +486,42 @@ const FRANJAS_UUID = (() => {
     hasta: i + 1 < digitos.length ? limite(digitos[i + 1]) : null,
   }));
 })();
+
+/**
+ * Reintenta una consulta que Postgres cortó por «statement timeout».
+ *
+ * No es defensa gratuita: estas consultas conviven con el cron de scraping, con
+ * el precalentamiento de comparables del arranque y con el propio dashboard, y
+ * basta que coincidan para que una franja suelta se pase del tiempo permitido.
+ * Reintentarla cuesta milisegundos; dejar caer el panel entero por eso es lo que
+ * hace que el administrador deje de confiar en la pantalla. Los errores que NO
+ * son de tiempo (permisos, columna inexistente) se relanzan de inmediato: ahí
+ * reintentar solo retrasa el diagnóstico.
+ */
+interface RespuestaSupabase {
+  data?: unknown;
+  count?: number | null;
+  error: { message: string } | null;
+}
+
+async function conReintentoPorTimeout<R extends RespuestaSupabase>(
+  etiqueta: string,
+  ejecutar: () => PromiseLike<R>,
+): Promise<R> {
+  const INTENTOS = 3;
+  for (let intento = 1; ; intento += 1) {
+    // La consulta se reconstruye en cada intento a propósito: los constructores
+    // de supabase-js se ejecutan al esperarlos y no está garantizado que
+    // reutilizar el mismo objeto vuelva a lanzar la petición.
+    const resultado = await ejecutar();
+    if (!resultado.error) return resultado;
+    if (intento >= INTENTOS || !isTimeout(resultado.error.message)) {
+      throw new Error(`${etiqueta}: ${resultado.error.message}`);
+    }
+    log.warn(`${etiqueta}: timeout, reintento ${intento} de ${INTENTOS - 1}`);
+    await new Promise((listo) => setTimeout(listo, 300 * intento));
+  }
+}
 
 /**
  * Trae TODAS las filas de una consulta, por franjas de `id` y en paralelo.
@@ -482,20 +548,104 @@ async function traerTodasLasFilas<T>(
   await enParalelo(FRANJAS_UUID, CONCURRENCIA_ZONAS, async (franja) => {
     let cursor: string | null = null;
     for (;;) {
-      let qb = consulta(`id, ${columnas}`).order('id').limit(LOTE_ZONAS);
-      // La primera vuelta incluye el borde de la franja (`gte`); las siguientes
-      // arrancan justo después de la última fila vista (`gt`), que es lo que
-      // impide repetirla.
-      qb = cursor === null ? qb.gte('id', franja.desde) : qb.gt('id', cursor);
-      if (franja.hasta) qb = qb.lt('id', franja.hasta);
-      const { data, error } = await qb;
-      if (error) throw new Error(`${etiqueta}: ${error.message}`);
+      const { data } = await conReintentoPorTimeout(etiqueta, () => {
+        let qb = consulta(`id, ${columnas}`).order('id').limit(LOTE_ZONAS);
+        // La primera vuelta incluye el borde de la franja (`gte`); las
+        // siguientes arrancan justo después de la última fila vista (`gt`), que
+        // es lo que impide repetirla.
+        qb = cursor === null ? qb.gte('id', franja.desde) : qb.gt('id', cursor);
+        if (franja.hasta) qb = qb.lt('id', franja.hasta);
+        return qb;
+      });
       const lote = (data ?? []) as ConId[];
       filas.push(...lote);
       if (lote.length < LOTE_ZONAS) return;
       cursor = lote[lote.length - 1].id ?? null;
       if (cursor === null) throw new Error(`${etiqueta}: lote sin id, no se puede avanzar el cursor`);
     }
+  });
+  return filas;
+}
+
+/**
+ * Conjuntos que caben de sobra en una sola respuesta (los ~460 inmuebles de
+ * banco activos).
+ *
+ * Se pide sin ordenar para que el planificador entre por el índice que quiera —
+ * ordenar por `id` lo forzaría a la clave primaria y a leer los 116.000
+ * inmuebles para quedarse con 460—. Si algún día no cupieran en una respuesta se
+ * avisa y se recurre al recorrido por franjas, que es más caro pero correcto:
+ * quedarse callado con las primeras 1.000 filas sería publicar un conteo falso.
+ */
+async function traerConjuntoPequeno<T>(
+  etiqueta: string,
+  consulta: ConsultaLote,
+  columnas: string,
+): Promise<T[]> {
+  const { data } = await conReintentoPorTimeout(etiqueta, () => consulta(columnas).limit(LOTE_ZONAS));
+  const filas = (data ?? []) as T[];
+  if (filas.length < LOTE_ZONAS) return filas;
+  log.warn(`${etiqueta}: pasó de ${LOTE_ZONAS} filas, se recorre por franjas de id`);
+  return traerTodasLasFilas<T>(etiqueta, consulta, columnas);
+}
+
+/**
+ * Ancho de los tramos de descuento en que se parte el recorrido de
+ * oportunidades. Con ~20.300 repartidas entre 0 % y 70 %, tramos de 1 punto dan
+ * ~290 filas cada uno y ninguno se acerca al tope de 1.000. Medido: con tramos
+ * de 2 puntos nueve de ellos llegaban al tope y había que partirlos sobre la
+ * marcha, que salía más lento que pedir el doble de tramos pequeños.
+ */
+const TRAMO_DESCUENTO = 1;
+
+/** Suelo defensivo por si el motor llegara a marcar un descuento negativo. */
+const DESCUENTO_MINIMO = -10_000;
+
+/**
+ * Recorre las oportunidades del portal por TRAMOS DE DESCUENTO.
+ *
+ * Es el mismo conjunto de filas que devolvería un recorrido por `id`, pero por
+ * un camino radicalmente más barato: existe el índice parcial
+ * `inmuebles_opp_source_idx (source, discount_pct) where is_opportunity and
+ * is_active`, así que acotar por descuento entra directo por él y solo se tocan
+ * las ~20.500 filas que interesan. Recorriendo por `id` había que leer las
+ * 116.000 del portal para descartar 95.000, y eso es exactamente lo que hacía
+ * saltar el «statement timeout» cuando la base tenía algo más que hacer.
+ *
+ * Si un tramo llegara al tope de 1.000 filas se parte en dos y se vuelve a
+ * pedir: perder filas en silencio falsearía los conteos del panel, que es el
+ * único error que este archivo no se puede permitir.
+ */
+async function traerOportunidades<T>(consulta: ConsultaLote, columnas: string): Promise<T[]> {
+  const etiqueta = 'zonas/oportunidades';
+
+  const traerTramo = async (desde: number, hasta: number, profundidad: number): Promise<T[]> => {
+    const { data } = await conReintentoPorTimeout(etiqueta, () => {
+      const qb = consulta(columnas).gte('discount_pct', desde).limit(LOTE_ZONAS);
+      // El último tramo cierra inclusivo para no dejar fuera el descuento máximo.
+      return hasta >= MAX_OPP_DISCOUNT ? qb.lte('discount_pct', hasta) : qb.lt('discount_pct', hasta);
+    });
+    const filas = (data ?? []) as T[];
+    if (filas.length < LOTE_ZONAS) return filas;
+    if (profundidad >= 8) {
+      throw new Error(`${etiqueta}: el tramo [${desde}, ${hasta}) no se puede partir más`);
+    }
+    const medio = (desde + hasta) / 2;
+    const [bajo, alto] = await Promise.all([
+      traerTramo(desde, medio, profundidad + 1),
+      traerTramo(medio, hasta, profundidad + 1),
+    ]);
+    return [...bajo, ...alto];
+  };
+
+  const tramos: Array<[number, number]> = [[DESCUENTO_MINIMO, 0]];
+  for (let d = 0; d < MAX_OPP_DISCOUNT; d += TRAMO_DESCUENTO) {
+    tramos.push([d, Math.min(d + TRAMO_DESCUENTO, MAX_OPP_DISCOUNT)]);
+  }
+
+  const filas: T[] = [];
+  await enParalelo(tramos, CONCURRENCIA_ZONAS, async ([desde, hasta]) => {
+    filas.push(...await traerTramo(desde, hasta, 0));
   });
   return filas;
 }
@@ -579,10 +729,11 @@ async function totalActivosDelSistema(): Promise<number | null> {
 async function contarActivosPorCiudad(ciudades: readonly string[]): Promise<Map<string, number>> {
   const activos = new Map<string, number>();
   await enParalelo(ciudades, CONCURRENCIA_ZONAS, async (ciudad) => {
-    const { count, error } = await supabase
-      .from('inmuebles').select('id', { count: 'exact', head: true })
-      .eq('is_active', true).eq('source', 'fincaraiz').eq('city', ciudad);
-    if (error) throw new Error(`zonas/activos(${ciudad}): ${error.message}`);
+    const { count } = await conReintentoPorTimeout(`zonas/activos(${ciudad})`, () => (
+      soloPortalPublicable(
+        supabase.from('inmuebles').select('id', { count: 'exact', head: true }),
+      ).eq('city', ciudad)
+    ));
     activos.set(ciudad, count ?? 0);
   });
   return activos;
@@ -591,9 +742,10 @@ async function contarActivosPorCiudad(ciudades: readonly string[]): Promise<Map<
 async function computarZonas(): Promise<TablaZonas> {
   const inicio = Date.now();
 
-  const oportunidadesActivas: ConsultaLote = (columnas) => supabase
-    .from('inmuebles').select(columnas)
-    .eq('is_active', true).eq('source', 'fincaraiz').eq('is_opportunity', true)
+  const oportunidadesActivas: ConsultaLote = (columnas) => soloPortalPublicable(
+    supabase.from('inmuebles').select(columnas),
+  )
+    .eq('is_opportunity', true)
     // Mismo tope que `stats()`: un «descuento» del 95 % es un error de datos, no
     // una ganga. Si el panel no lo aplicara, sus totales no cuadrarían con los
     // que el dashboard le muestra al usuario final.
@@ -611,13 +763,17 @@ async function computarZonas(): Promise<TablaZonas> {
   // que pedir el conteo de inventario. Dejando que los conteos por ciudad se
   // solapen con los recorridos que siguen en vuelo, el cálculo completo baja de
   // ~7 s a ~3 s; hacerlo en dos fases limpias costaba el doble por nada.
-  const bancosEnVuelo = sinRechazoHuerfano(traerTodasLasFilas<FilaCiudad>('zonas/bancos', bancosActivos, 'city'));
+  // Cada conjunto se recorre por donde le sale barato: los bancos son un
+  // subconjunto diminuto de una tabla enorme (una respuesta basta), remates y
+  // arriendos son tablas pequeñas que se quieren casi enteras (franjas de `id`),
+  // y las oportunidades entran por el índice de descuento.
+  const bancosEnVuelo = sinRechazoHuerfano(traerConjuntoPequeno<FilaCiudad>('zonas/bancos', bancosActivos, 'city'));
   const rematesEnVuelo = sinRechazoHuerfano(traerTodasLasFilas<FilaCiudad>('zonas/remates', rematesActivos, 'city'));
   const arriendosEnVuelo = sinRechazoHuerfano(traerTodasLasFilas<FilaCiudad>('zonas/arriendos', arriendosActivos, 'city'));
   const totalEnVuelo = sinRechazoHuerfano(totalActivosDelSistema());
 
-  const oportunidades = await traerTodasLasFilas<FilaOportunidad>(
-    'zonas/oportunidades', oportunidadesActivas, 'city, discount_pct, is_high',
+  const oportunidades = await traerOportunidades<FilaOportunidad>(
+    oportunidadesActivas, 'city, discount_pct, is_high',
   );
 
   // El corte va ANTES de los conteos por ciudad: son 133 ciudades y cada una

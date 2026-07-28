@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { supabase } from '../lib/supabase.js';
 import { metadatosDeCuenta, separarMetadatos } from './account-metadata.js';
 import { estadoCupo, leerCupo, type Cupo } from './cupo.js';
+import { oportunidadesPorZona } from './queries.js';
 import { env } from '../lib/env.js';
 import { createLogger } from '../lib/logger.js';
 import {
@@ -307,6 +308,25 @@ export async function getAdminSummary(requesterId: string) {
       .sort()
       .at(-1) ?? null,
   };
+}
+
+/**
+ * Estadísticas de oportunidades por zona (la otra mitad del panel).
+ *
+ * El cálculo vive en `server/queries.ts` porque es puro inventario y no tiene
+ * nada que ver con las cuentas; lo que se hace aquí —y por eso está en este
+ * archivo y no en el enrutador— es pasar por el MISMO guardia que el resumen y
+ * la cola comercial. Un endpoint administrativo con su propia comprobación de
+ * rol es la forma habitual de que una de las cuatro se quede desactualizada.
+ *
+ * El rol se lee de la bolsa separada (`metadatosDeCuenta`), nunca de
+ * `user_metadata`: esa bolsa la reescribe el propio titular y hasta el
+ * 2026-07-27 cualquier registrado podía ascenderse a administrador.
+ */
+export async function getAdminZoneOpportunities(requesterId: string) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
+  return oportunidadesPorZona();
 }
 
 export async function listAdminPlanInterests(requesterId: string) {

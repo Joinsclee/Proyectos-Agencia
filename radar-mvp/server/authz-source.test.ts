@@ -38,18 +38,30 @@ test('autorización: ningún lector de permisos recibe user_metadata directament
   }
 });
 
-test('autorización: los tres guardias de administrador separan la bolsa', async () => {
-  // Son los que protegen el panel: resumen, cola comercial y cambio de
-  // suscripción de terceros. Cada uno recibe el `requester` recién leído de
-  // Supabase, así que es ahí donde importa de qué bolsa sale el rol.
+test('autorización: los cuatro guardias de administrador separan la bolsa', async () => {
+  // Son los que protegen el panel: resumen, oportunidades por zona, cola
+  // comercial y cambio de suscripción de terceros. Cada uno recibe el
+  // `requester` recién leído de Supabase, así que es ahí donde importa de qué
+  // bolsa sale el rol.
   const fuente = await leer('server/account.ts');
   const separados = fuente.match(/isAdminMetadata\(metadatosDeCuenta\(requester\)\)/g) ?? [];
-  assert.equal(separados.length, 3, 'deben ser tres y los tres con la bolsa separada');
+  assert.equal(separados.length, 4, 'deben ser cuatro y los cuatro con la bolsa separada');
   assert.doesNotMatch(
     fuente,
     /isAdminMetadata\(\s*requester/,
     'un guardia lee el requester sin separar la bolsa',
   );
+  // Ninguna OTRA forma de llamarlo: además de los cuatro guardias solo se admite
+  // `isAdminMetadata(metadata)`, donde `metadata` ya es la vista separada que
+  // arma `publicAccount`. Cualquier argumento nuevo —empezando por
+  // `user.user_metadata`— hace fallar esto en la revisión, que es cuando sirve.
+  const ARGUMENTOS_PERMITIDOS = ['metadatosDeCuenta', 'metadata'];
+  for (const [, argumento] of fuente.matchAll(/isAdminMetadata\(\s*([\w.]+)/g)) {
+    assert.ok(
+      ARGUMENTOS_PERMITIDOS.includes(argumento),
+      `isAdminMetadata(${argumento}) no lee la bolsa separada`,
+    );
+  }
 });
 
 test('autorización: la sesión se construye desde la vista separada', async () => {
