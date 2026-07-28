@@ -93,10 +93,16 @@ function applyInmuebleFilters(qb: any, q: ListQuery) {
   if (q.priceMax) qb = qb.lte('price', Math.min(q.priceMax, MAX_DISPLAY_PRICE));
   if (q.areaMin) qb = qb.gte('area_m2', q.areaMin);
   if (q.areaMax) qb = qb.lte('area_m2', q.areaMax);
-  // Campos JSON (texto): comparación string segura para dígitos 1-9.
-  if (q.bedroomsMin) qb = qb.gte('features->>bedrooms', String(q.bedroomsMin));
-  if (q.stratumMin) qb = qb.gte('features->>stratum', String(q.stratumMin));
-  if (q.stratumMax) qb = qb.lte('features->>stratum', String(q.stratumMax));
+  // Campos JSON, comparados como NÚMERO (`->`) y no como texto (`->>`).
+  //
+  // Con `->>` la comparación es alfabética, y ahí '11' < '2': una casa de once
+  // habitaciones desaparecía al pedir «2 o más». Medido sobre Bogotá, el filtro
+  // perdía todas las de 10, 11, 13 y 16 — justo las fincas y casas grandes, que
+  // son de las fichas más caras del inventario. El estrato se salvaba de milagro
+  // porque solo llega hasta 6.
+  if (q.bedroomsMin) qb = qb.gte('features->bedrooms', q.bedroomsMin);
+  if (q.stratumMin) qb = qb.gte('features->stratum', q.stratumMin);
+  if (q.stratumMax) qb = qb.lte('features->stratum', q.stratumMax);
   return qb;
 }
 
@@ -106,20 +112,79 @@ export interface ListResult<T = Record<string, unknown>> {
   page: number;
   pageSize: number;
   pages: number;
+  /** `true` cuando `total` es la estimación del planificador y no un conteo real. */
+  totalAproximado?: boolean;
+  /** `true` cuando quedan resultados más allá de la última página navegable. */
+  paginasLimitadas?: boolean;
 }
 
 const clampPage = (p?: number) => Math.max(1, Math.floor(p ?? 1));
 const clampSize = (s?: number) => Math.min(60, Math.max(6, Math.floor(s ?? 24)));
 
+/**
+ * ¿El usuario pidió un rango que ningún inmueble puede cumplir?
+ *
+ * Un mínimo por encima de su máximo describe el conjunto vacío, y eso se sabe
+ * antes de preguntarle nada a la base. Mandarlo igual costaba caro: con estrato
+ * mínimo 6 y máximo 1, la consulta recorría las 108.000 filas buscando algo
+ * imposible y devolvía **HTTP 500 a los 25 segundos**. El usuario veía "no se
+ * pudo cargar" cuando lo correcto era el estado vacío.
+ */
+function rangoImposible(q: ListQuery): boolean {
+  const pares: Array<[number | undefined, number | undefined]> = [
+    [q.priceMin, q.priceMax],
+    [q.areaMin, q.areaMax],
+    [q.stratumMin, q.stratumMax],
+    [q.bidMin, q.bidMax],
+  ];
+  return pares.some(([min, max]) => min != null && max != null && min > max);
+}
+
+/** Respuesta vacía coherente, sin tocar la base. */
+const listaVacia = (page: number, pageSize: number): ListResult =>
+  ({ data: [], total: 0, page, pageSize, pages: 0 });
+
+/**
+ * Hasta qué página puede servirse un listado.
+ *
+ * Medido contra la base real: las páginas 1 a 30 responden en menos de un segundo
+ * y la 45 tarda **49 segundos y falla**. La causa es el desplazamiento profundo:
+ * para servir la página N, Postgres recorre y descarta N×24 filas ya ordenadas.
+ * No es algo que se arregle afinando la consulta, es cómo funciona `OFFSET`.
+ *
+ * Así que el paginador deja de ofrecer 4.503 páginas de las que solo puede servir
+ * unas cuarenta. Ofrecer un botón que siempre falla —y los dos botones de «ir al
+ * final» fallaban siempre— es peor que no ofrecerlo: la respuesta honesta es
+ * enseñar el tramo que existe y decir que para llegar más lejos hay que filtrar.
+ */
+export const MAX_PAGINAS_NAVEGABLES = 40;
+
+/**
+ * Desempate estable para cualquier orden paginado.
+ *
+ * Sin él, la paginación repite y pierde fichas. Todas las columnas por las que se
+ * ordena tienen empates masivos —`scraped_at` es idéntico para todo un lote del
+ * scraper, `auction_date` agrupa decenas de remates el mismo día, `price` se
+ * repite en los valores redondos— y con OFFSET, Postgres es libre de devolver los
+ * empatados en otro orden en cada petición: una fila puede aparecer en la página 2
+ * y otra vez en la 3, mientras otra no sale en ninguna.
+ *
+ * Medido antes del arreglo: en Remates, 12 fichas repetidas de 288; ordenando el
+ * Portal por «más recientes», 55 repetidas y solo 188 únicas de 288 filas
+ * devueltas. Añadir el identificador como último criterio hace el orden total y
+ * por tanto reproducible entre páginas.
+ */
+const conDesempate = (qb: any) => qb.order('id', { ascending: true });
+
 function applyOrderInmuebles(qb: any, order?: string) {
   switch (order) {
     case 'none': return qb; // sin orden: salida de respaldo cuando ordenar haría timeout
-    case 'precio_asc': return qb.order('price', { ascending: true, nullsFirst: false });
-    case 'precio_desc': return qb.order('price', { ascending: false, nullsFirst: false });
-    case 'precio_m2_asc': return qb.order('price_per_m2', { ascending: true, nullsFirst: false });
-    case 'recent': return qb.order('scraped_at', { ascending: false });
+    case 'precio_asc': return conDesempate(qb.order('price', { ascending: true, nullsFirst: false }));
+    case 'precio_desc': return conDesempate(qb.order('price', { ascending: false, nullsFirst: false }));
+    case 'precio_m2_asc': return conDesempate(qb.order('price_per_m2', { ascending: true, nullsFirst: false }));
+    case 'recent': return conDesempate(qb.order('scraped_at', { ascending: false }));
     case 'discount_desc':
-    default: return qb.order('discount_pct', { ascending: false, nullsFirst: false });
+    default: return conDesempate(qb.order('discount_pct', { ascending: false, nullsFirst: false }));
   }
 }
 
@@ -129,6 +194,7 @@ const isTimeout = (msg?: string) => !!msg && /statement timeout|57014/i.test(msg
 export async function queryPortal(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
   const pageSize = clampSize(q.pageSize);
+  if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
 
   // Conteo: EXACTO cuando hay filtros (conjunto acotado → rápido y preciso, que
@@ -139,17 +205,28 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   // antes de aplicar el migration de índices → en ese caso se usa planned.
   const cheapFilter = !!(q.city || q.zone || q.type || q.priceMin || q.priceMax ||
     q.areaMin || q.areaMax || q.opp);
+  // Los filtros que viven dentro del JSON (`features->bedrooms`, `->stratum`) no
+  // tienen índice que los cubra, así que CONTARLOS de forma exacta sobre 108.000
+  // filas no cabe en el tiempo de una consulta. Da igual que vengan acompañados
+  // de un filtro barato: la combinación seguía agotando el tiempo.
+  //
+  // Se decide aquí y no en la escalera de reintentos porque un intento fallido
+  // cuesta sus 25 segundos completos: dejarlo probar y caer daba HTTP 500 antes,
+  // y después del primer arreglo devolvía la respuesta correcta pero a los 27-35
+  // segundos, con el navegador ya rendido. Renunciar de entrada a la cifra exacta
+  // deja la consulta en menos de dos segundos.
+  const hayFiltroJson = !!(q.bedroomsMin || q.stratumMin || q.stratumMax);
   // Sin filtros NO se usa el estimador del planificador de Postgres: se equivoca
   // por dos órdenes de magnitud. Medido el 2026-07-28 en producción — estimaba
   // 1.010 fichas cuando hay 108.016, así que el paginador ofrecía 43 páginas de
   // las ~4.500 reales y contradecía al contador de la pestaña en la primera
   // pantalla que ve cualquiera. El conteo exacto tarda 5,4 s, demasiado para una
   // carga, así que se hace UNA vez y se cachea, igual que las estadísticas.
-  const countMode = cheapFilter ? 'exact' : 'planned';
-  const build = (order?: string) => {
+  const countMode: 'exact' | 'planned' = cheapFilter && !hayFiltroJson ? 'exact' : 'planned';
+  const build = (order?: string, modo: 'exact' | 'planned' = countMode) => {
     let qb = supabase
       .from('inmuebles')
-      .select('*', { count: countMode })
+      .select('*', { count: modo })
       .eq('is_active', true)
       .eq('source', 'fincaraiz')
       // excluir proyectos preventa (is_project null o false)
@@ -171,17 +248,50 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   // Caso lento conocido: filtro JSON (hab/estrato) SIN filtro barato (ciudad/
   // precio/área) sobre 87K + orden → timeout. Ahí se omite el orden de entrada
   // (responde en ms); con ciudad/precio se ordena normal.
-  const jsonOnly = !!(q.bedroomsMin || q.stratumMin || q.stratumMax) && !cheapFilter;
-  let { data, count, error } = await build(jsonOnly ? 'none' : q.order);
+  const jsonOnly = hayFiltroJson && !cheapFilter;
+  let modoUsado: 'exact' | 'planned' = jsonOnly ? 'planned' : countMode;
+  let { data, count, error } = await build(jsonOnly ? 'none' : q.order, modoUsado);
   if (error && isTimeout(error.message) && q.order !== 'recent') {
-    ({ data, count, error } = await build('recent'));
+    ({ data, count, error } = await build('recent', modoUsado));
   }
   if (error && isTimeout(error.message)) {
-    ({ data, count, error } = await build('none'));
+    ({ data, count, error } = await build('none', modoUsado));
+  }
+  // Última salida, y la que faltaba: si después de renunciar al orden sigue
+  // agotándose el tiempo, lo caro NO es ordenar sino CONTAR. Un filtro de
+  // habitaciones o estrato junto a cualquier otro ponía el conteo en modo exacto
+  // sobre 108.000 filas y la escalera anterior —que solo probaba órdenes
+  // distintos— moría tres veces igual y devolvía HTTP 500 a los 25 segundos.
+  // Medido: `type=house&bedroomsMin=3`, `opp=1&bedroomsMin=3` y
+  // `priceMin=…&stratumMin=4` fallaban los tres. Un total aproximado es
+  // infinitamente mejor que una pantalla de error.
+  if (error && isTimeout(error.message) && modoUsado === 'exact') {
+    modoUsado = 'planned';
+    ({ data, count, error } = await build(q.order, 'planned'));
+    if (error && isTimeout(error.message)) {
+      ({ data, count, error } = await build('none', 'planned'));
+    }
   }
   if (error) throw new Error(`queryPortal: ${error.message}`);
-  const total = cheapFilter ? (count ?? 0) : await totalPortalSinFiltros(count ?? 0);
-  return { data: data ?? [], total, page, pageSize, pages: Math.ceil(total / pageSize) };
+
+  // El total tiene que reflejar los filtros SIEMPRE. Antes, con un filtro de
+  // habitaciones o estrato como único criterio, se devolvía el total del portal
+  // entero: la pantalla decía «108.060 resultados» con un filtro aplicado, y con
+  // un rango imposible (estrato mín 6, máx 1) seguía diciendo lo mismo en vez de
+  // mostrar el estado vacío.
+  const hayFiltros = cheapFilter || hayFiltroJson;
+  const total = hayFiltros ? (count ?? 0) : await totalPortalSinFiltros(count ?? 0);
+  const paginasReales = Math.ceil(total / pageSize);
+  const pages = Math.min(paginasReales, MAX_PAGINAS_NAVEGABLES);
+  return {
+    data: data ?? [],
+    total,
+    page,
+    pageSize,
+    pages,
+    totalAproximado: modoUsado === 'planned' && hayFiltros,
+    paginasLimitadas: paginasReales > pages,
+  };
 }
 
 /**
@@ -233,6 +343,7 @@ export async function warmTotalPortal(): Promise<void> {
 export async function queryBancos(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
   const pageSize = clampSize(q.pageSize);
+  if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
 
   let qb = supabase
@@ -242,7 +353,17 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
     .in('source', BANK_SOURCES as unknown as string[]);
 
   qb = applyInmuebleFilters(qb, q);
+  // Filtro por entidad. Se valida contra la lista blanca en vez de pasar el valor
+  // a la consulta: `bank` viene de la URL y en la pestaña de remates el MISMO
+  // parámetro lleva el nombre del demandante, así que aquí puede llegar cualquier
+  // cosa. Un valor desconocido se ignora en vez de devolver cero resultados, que
+  // se leería como "este banco no tiene inventario".
+  if (q.bank && (BANK_SOURCES as readonly string[]).includes(q.bank)) qb = qb.eq('source', q.bank);
   if (q.opp === '1') qb = qb.eq('is_opportunity', true);
+  // «Solo altas» existía en el desplegable de Bancos —se pinta con el mismo código
+  // que el de Portal— pero aquí no tenía rama: el parámetro viajaba y la consulta
+  // lo ignoraba, así que elegirlo devolvía las 413 fichas, idéntico a no filtrar.
+  if (q.opp === 'high') qb = qb.eq('is_high', true);
   qb = applyOrderInmuebles(qb, q.order ?? 'precio_m2_asc');
   qb = qb.range(from, from + pageSize - 1);
 
@@ -253,13 +374,25 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   // cambia poco, así que sin esto el usuario recurrente ve siempre la misma
   // pantalla. Se rota la página ya paginada para no alterar el conteo ni repetir
   // fichas entre páginas.
-  return { data: rotarSemanal(data ?? []), total, page, pageSize, pages: Math.ceil(total / pageSize) };
+  // La rotación semanal cumple la HU de frescura —que el inventario bancario no
+  // se vea idéntico entre visitas— pero solo puede aplicarse cuando el usuario NO
+  // ha pedido un orden concreto. Aplicada siempre, contradecía lo que acababa de
+  // elegir: con «precio menor» el más barato salía en la posición 18 y la lista
+  // daba un salto hacia atrás a mitad de página. Un orden que el usuario pide es
+  // una instrucción, no una sugerencia.
+  const filas = data ?? [];
+  const rotables = !q.order || q.order === 'precio_m2_asc'; // el defecto del módulo
+  return {
+    data: rotables ? rotarSemanal(filas) : filas,
+    total, page, pageSize, pages: Math.ceil(total / pageSize),
+  };
 }
 
 /** Remates judiciales activos. */
 export async function queryRemates(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
   const pageSize = clampSize(q.pageSize);
+  if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
 
   let qb = supabase
@@ -282,10 +415,13 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
   if (q.bidMin) qb = qb.gte('minimum_bid', q.bidMin);
   if (q.bidMax) qb = qb.lte('minimum_bid', q.bidMax);
   const order = q.order ?? 'auction_asc';
-  if (order === 'auction_asc') qb = qb.order('auction_date', { ascending: true, nullsFirst: false });
-  else if (order === 'min_asc') qb = qb.order('minimum_bid', { ascending: true, nullsFirst: false });
+  if (order === 'min_asc') qb = qb.order('minimum_bid', { ascending: true, nullsFirst: false });
   else if (order === 'min_desc') qb = qb.order('minimum_bid', { ascending: false, nullsFirst: false });
   else qb = qb.order('auction_date', { ascending: true, nullsFirst: false });
+  // Mismo motivo que en los inmuebles: `auction_date` agrupa decenas de remates
+  // en el mismo día y sin desempate la paginación los baraja entre peticiones.
+  // Medido: 37 remates no se alcanzaban por ningún camino del paginador.
+  qb = conDesempate(qb);
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;
@@ -331,16 +467,69 @@ export async function remateBankFacets(): Promise<{ banks: Array<{ name: string;
 }
 
 /** Valores únicos para poblar los filtros (ciudades, tipos, barrios por ciudad). */
+/**
+ * Ciudades y tipos que existen DE VERDAD en el inventario de remates.
+ *
+ * La pestaña de Remates ofrecía las facetas del portal, y son dos universos
+ * distintos: un remate puede estar en un municipio donde FincaRaíz no publica
+ * nada. Medido, 19 ciudades con remates reales —Popayán, Yopal, Buenaventura,
+ * Chaparral…— no aparecían en el desplegable y no había forma de llegar a ellas,
+ * mientras que decenas de ciudades ofrecidas no tenían ni un remate y solo servían
+ * para vaciar la pantalla.
+ *
+ * Los remates son unos cientos, así que se cuentan enteros sin tope.
+ */
+export async function facetsRemates() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('remates')
+    .select('city, property_type')
+    .eq('is_active', true)
+    .gte('auction_date', hoy)
+    .limit(5000);
+  if (error) throw new Error(`facetsRemates: ${error.message}`);
+  const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
+  const types = [...new Set((data ?? []).map((r) => r.property_type).filter(Boolean))].sort();
+  return { cities, zones: [], types };
+}
+
 export async function facets(source: 'portal' | 'bancos' = 'portal', city?: string) {
-  let qb = supabase.from('inmuebles').select('city, zone, type').eq('is_active', true).limit(8000);
+  let qb = supabase.from('inmuebles').select('city, zone, type, source').eq('is_active', true).limit(8000);
   qb = source === 'portal' ? qb.eq('source', 'fincaraiz') : qb.in('source', BANK_SOURCES as unknown as string[]);
+  // Los MISMOS dos filtros de saneamiento que aplica el listado (`applyInmuebleFilters`).
+  // Sin ellos las opciones prometen inventario que la pestaña no va a enseñar: el
+  // desplegable diría «Aval (219)» y al elegirlo saldrían 186. Ya pasó una vez
+  // entre el contador de la pestaña y el paginador, y se lee como un fallo.
+  qb = qb.lte('price', MAX_DISPLAY_PRICE);
+  qb = qb.or(`discount_pct.is.null,discount_pct.lte.${MAX_OPP_DISCOUNT}`);
   if (city) qb = qb.eq('city', city);
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
   const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
   const zones = [...new Set((data ?? []).map((r) => r.zone).filter(Boolean))].sort();
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
-  return { cities, zones, types };
+
+  // Entidades con inventario, para el desplegable de la pestaña de Bancos.
+  //
+  // El conteo se saca de las filas que esta consulta ya trajo, y eso es exacto
+  // AQUÍ porque el inventario bancario entero son unos cientos de fichas, muy por
+  // debajo del tope de 8.000. En el portal —108.000 filas— el mismo cálculo daría
+  // un número truncado, así que no se ofrece: solo se calcula para bancos.
+  //
+  // Se listan solo las entidades que hoy tienen algo. Ofrecer un banco con cero
+  // fichas es ofrecer un filtro que solo puede vaciar la pantalla.
+  let banks: Array<{ source: string; count: number }> | undefined;
+  if (source === 'bancos') {
+    const porFuente = new Map<string, number>();
+    for (const fila of data ?? []) {
+      if (!fila.source) continue;
+      porFuente.set(fila.source, (porFuente.get(fila.source) ?? 0) + 1);
+    }
+    banks = [...porFuente.entries()]
+      .map(([s, count]) => ({ source: s, count }))
+      .sort((a, b) => b.count - a.count || a.source.localeCompare(b.source));
+  }
+  return { cities, zones, types, banks };
 }
 
 /** Métricas de portada: totales y oportunidades por ciudad. */

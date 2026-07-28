@@ -101,27 +101,44 @@ async function openIsolatedPage(options?: { mobile?: boolean; conOnboarding?: bo
  * día; una prueba que dependa de eso falla los días en que la portada trae otra
  * mezcla, sin que nada se haya roto.
  */
+/**
+ * Fuerza el estado de acceso de las fichas, para probar la interfaz sin depender
+ * de qué haya bloqueado hoy el inventario.
+ *
+ * Intercepta DOS rutas, y esa es la parte importante: el listado y la ficha
+ * individual. Desde que se corrigió el muro, abrir una tarjeta ya no dibuja la
+ * fila que el navegador tenía —eso era justo el fallo que dejaba el plan gratuito
+ * inalcanzable— sino que la pide a `/api/property`. Interceptar solo el listado
+ * dejaba el modal mostrando el veredicto real del servidor y contradiciendo lo
+ * que la prueba acababa de forzar.
+ */
 async function forzarBloqueoDelListado(page: Page, bloqueadas: boolean) {
-  await page.unroute('**/api/portal?*').catch(() => {});
-  await page.route('**/api/portal?*', async (route) => {
-    const original = await route.fetch();
-    const cuerpo = await original.json();
-    cuerpo.data = (cuerpo.data ?? []).map((fila: Record<string, unknown>) => ({
-      ...fila,
-      _bloqueada: bloqueadas || undefined,
-      _acceso: bloqueadas
-        ? { completa: false, motivo: 'oportunidad', avisoRiesgo: false, requiere: 'registro' }
-        : { completa: true, motivo: null, avisoRiesgo: false },
-    }));
-    // Se reconstruye la respuesta en vez de reusar la original: al cambiar el
-    // cuerpo, las cabeceras de la original (largo y codificación) dejan de
-    // describirlo y el navegador se queda esperando bytes que no llegan.
-    await route.fulfill({
-      status: original.status(),
-      contentType: 'application/json; charset=utf-8',
-      body: JSON.stringify(cuerpo),
-    });
+  const acceso = bloqueadas
+    ? { completa: false, motivo: 'oportunidad', avisoRiesgo: false, requiere: 'registro' }
+    : { completa: true, motivo: null, avisoRiesgo: false };
+  const sellar = (fila: Record<string, unknown>) => ({
+    ...fila,
+    _bloqueada: bloqueadas || undefined,
+    _acceso: acceso,
   });
+
+  for (const patron of ['**/api/portal?*', '**/api/property?*']) {
+    await page.unroute(patron).catch(() => {});
+    await page.route(patron, async (route) => {
+      const original = await route.fetch();
+      const cuerpo = await original.json();
+      if (Array.isArray(cuerpo.data)) cuerpo.data = cuerpo.data.map(sellar);
+      else if (cuerpo.data && typeof cuerpo.data === 'object') cuerpo.data = sellar(cuerpo.data);
+      // Se reconstruye la respuesta en vez de reusar la original: al cambiar el
+      // cuerpo, las cabeceras de la original (largo y codificación) dejan de
+      // describirlo y el navegador se queda esperando bytes que no llegan.
+      await route.fulfill({
+        status: original.status(),
+        contentType: 'application/json; charset=utf-8',
+        body: JSON.stringify(cuerpo),
+      });
+    });
+  }
 }
 
 before(async () => {

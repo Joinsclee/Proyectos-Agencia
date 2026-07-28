@@ -71,10 +71,34 @@ test('reporte: si la ficha está bloqueada NO se cobra el reporte', () => {
   assert.equal(conCupoDeFichas.ok === false && conCupoDeFichas.requiere, 'ficha');
   assert.deepEqual(conCupoDeFichas.cupo.generados, [], 'no se le gastó nada');
 
+  // `plan` y no `suscripcion`: son dos rechazos distintos y decirlos igual llevó a
+  // que a alguien con 19 reportes disponibles se le anunciara que los había
+  // agotado, contradiciendo al contador que viajaba en la misma respuesta. Lo que
+  // le falta aquí es el plan para ABRIR la ficha, no más reportes.
   const sinCupoDeFichas = decidirReporte({
     plan: 'free', acceso: { completa: false, requiere: 'suscripcion' }, cupo: cupo(), id: 'x',
   });
-  assert.equal(sinCupoDeFichas.ok === false && sinCupoDeFichas.requiere, 'suscripcion');
+  assert.equal(sinCupoDeFichas.ok === false && sinCupoDeFichas.requiere, 'plan');
+  assert.deepEqual(sinCupoDeFichas.cupo.generados, [], 'no se le gastó nada');
+  assert.doesNotMatch(MENSAJE_RECHAZO.plan, /agotaste/i, 'no se le puede decir que agotó lo que no ha usado');
+});
+
+test('reporte: una ficha abierta para todos no gasta cupo de reportes', () => {
+  // El cupo de reportes existe para el contenido de pago. Cobrarlo por una ficha
+  // que el Radar le enseña hasta a un anónimo hace que el plan gratuito se quede
+  // sin sus 20 descargas sin haber abierto una sola ficha cerrada.
+  const gratis = decidirReporte({
+    plan: 'free', acceso: LIBRE, cupo: cupo(), id: 'abierta-para-todos', esDePago: false,
+  });
+  assert.equal(gratis.ok, true);
+  assert.equal(gratis.ok === true && gratis.consume, false, 'no debe consumir');
+  assert.deepEqual(gratis.cupo.generados, [], 'el contador no se movió');
+
+  // Y la de pago sigue cobrando.
+  const dePago = decidirReporte({
+    plan: 'free', acceso: LIBRE, cupo: cupo(), id: 'de-pago', esDePago: true,
+  });
+  assert.equal(dePago.ok === true && dePago.consume, true);
 });
 
 test('reporte: el registrado gasta uno y repetirlo no le cuesta otro', () => {

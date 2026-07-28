@@ -114,11 +114,38 @@ export type ResultadoValidacion =
  * que va a multiplicar el precio de un inmueble en la pantalla de un cliente.
  */
 export function validarParametrosGastos(entrada: unknown): ResultadoValidacion {
-  const parsed = ParametrosGastosSchema.safeParse(entrada);
+  const crudo = (entrada ?? {}) as Record<string, unknown>;
+  const normalizado = {
+    notaria: aNumeroEscrito(crudo.notaria),
+    impuestoRegistro: aNumeroEscrito(crudo.impuestoRegistro),
+    derechosRegistro: aNumeroEscrito(crudo.derechosRegistro),
+  };
+  const parsed = ParametrosGastosSchema.safeParse(normalizado);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'Parámetros inválidos' };
   }
   return { ok: true, parametros: parsed.data };
+}
+
+/**
+ * Un porcentaje que de verdad venía como número, o `NaN`.
+ *
+ * `Number()` a secas es demasiado complaciente para este sitio, y ya lo demostró:
+ * enviando `{"notaria": null}` a la API, `Number(null)` daba **0**, superaba el
+ * `min(0)` del esquema y la notaría quedaba al 0 % en la base — la calculadora de
+ * gastos de todas las fichas dejaba de cobrarla. Con las mismas reglas `true`
+ * habría entrado como 1, es decir un 100 %, y `[]` como otro 0.
+ *
+ * Por eso aquí no se convierte NADA: se acepta un `number` y punto. El formulario
+ * del panel envía números (`valores.notaria / 100`), así que no se pierde ningún
+ * caso legítimo, y cualquier otra forma sale como `NaN` para que el `finite()` del
+ * esquema la rechace con un mensaje claro.
+ *
+ * Es el mismo descuido que ya nos costó una media de descuentos mal calculada en
+ * `resumenBloqueo`, donde `Number(null)` convertía "sin dato" en "0 %".
+ */
+export function aNumeroEscrito(valor: unknown): number {
+  return typeof valor === 'number' ? valor : Number.NaN;
 }
 
 /**

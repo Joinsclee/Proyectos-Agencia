@@ -782,11 +782,18 @@ function renderZonas(data) {
 
   const tbody = document.getElementById('zonas-tbody');
   if (!data.zonas.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="zone-empty">Todavía no hay oportunidades detectadas por el motor.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="zone-empty">Todavía no hay oportunidades detectadas por el motor.</td></tr>';
     return;
   }
+  // La columna de arriendos se retiró por decisión del cliente (reunión del
+  // 28-jul: «menos es más, sería mejor quitar el tema de arriendos por ahora, por
+  // lo menos de este dashboard»). El motivo es honesto: FincaRaíz publica pocos
+  // arriendos y la mayoría de ciudades salían marcadas «sin cobertura», así que
+  // la columna informaba sobre todo de un hueco de la fuente. El dato se sigue
+  // calculando y el motor de rentabilidad lo sigue usando; solo deja de ocupar
+  // una columna en la vista de operación.
   tbody.innerHTML = data.zonas.map((zona) => `
-    <tr class="${zona.coberturaArriendos ? '' : 'zone-row-sin-arriendos'}">
+    <tr>
       <th scope="row">${esc(nombreCiudad(zona.ciudad))}</th>
       <td>${esc(numero(zona.inmueblesActivos))}</td>
       <td>${esc(numero(zona.oportunidades))}</td>
@@ -795,9 +802,6 @@ function renderZonas(data) {
       <td>${esc(porcentaje(zona.mejorDescuento))}</td>
       <td>${esc(numero(zona.inmueblesBanco))}</td>
       <td>${esc(numero(zona.rematesActivos))}</td>
-      <td>${zona.coberturaArriendos
-        ? esc(numero(zona.arriendos))
-        : '<span class="zone-flag">Sin cobertura</span>'}</td>
     </tr>
   `).join('');
 }
@@ -812,14 +816,11 @@ async function loadZonas() {
   try {
     const data = await adminFetch('/api/admin/oportunidades-por-zona');
     renderZonas(data);
-    const sinArriendos = data.resumen.ciudadesSinArriendos;
     message.className = 'message';
     // Separador «·» y no punto: `toLocaleString('es-CO')` ya termina en «a. m.»
     // y encadenar un punto dejaba un «a. m..» a la vista del cliente.
     message.textContent = `Corte del inventario ${new Date(data.generadoEn).toLocaleString('es-CO')} · `
-      + (sinArriendos
-        ? `${numero(sinArriendos)} de las ciudades listadas no tienen comparables de arriendo`
-        : 'todas las ciudades listadas tienen comparables de arriendo');
+      + `${numero(data.zonas.length)} ciudades con inventario`;
   } catch (error) {
     // Que falle el inventario no puede tumbar el resto del panel: la operación
     // comercial se sigue pudiendo usar aunque Supabase se demore en los conteos.

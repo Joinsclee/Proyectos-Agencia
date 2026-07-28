@@ -107,3 +107,17 @@ test('parámetros: una fila fuera de rango se descarta en vez de publicarse', ()
   assert.equal(parametrosDesdeFila(null), null);
   assert.equal(parametrosDesdeFila({}), null);
 });
+
+test('parámetros: null, booleanos y arrays no se convierten en 0 %', () => {
+  // Enviando `{"notaria": null}` a la API, `Number(null)` daba 0, superaba el
+  // `min(0)` y la notaría quedaba al 0 % en la base: la calculadora de todas las
+  // fichas dejaba de cobrarla. `true` habría entrado como 1 (100 %) y `[]` como
+  // otro 0. Ninguno de los tres es un porcentaje escrito por nadie.
+  for (const basura of [null, true, false, [], {}, '', '0.01']) {
+    const r = validarParametrosGastos({ ...validos, notaria: basura });
+    assert.equal(r.ok, false, `${JSON.stringify(basura)} no puede pasar como porcentaje`);
+  }
+  // Y el caso legítimo sigue entrando.
+  assert.equal(validarParametrosGastos({ ...validos, notaria: 0.0027 }).ok, true);
+  assert.equal(validarParametrosGastos({ ...validos, notaria: 0 }).ok, true, 'un 0 % explícito sí es válido');
+});

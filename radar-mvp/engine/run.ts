@@ -129,17 +129,7 @@ async function loadAll(filterSource?: string): Promise<Row[]> {
   const PAGE = 1000;
   let lastId = '00000000-0000-0000-0000-000000000000'; // piso uuid válido ('' no lo es)
   for (;;) {
-    let q = supabase
-      .from('inmuebles')
-      .select(SELECT)
-      .eq('is_active', true)
-      .gt('id', lastId)
-      .order('id')
-      .limit(PAGE);
-    if (filterSource) q = q.eq('source', filterSource);
-    const { data, error } = await q;
-    if (error) throw new Error(`loadAll: ${error.message}`);
-    const batch = (data ?? []) as unknown as Row[];
+    const batch = await cargarPagina(lastId, PAGE, filterSource);
     rows.push(...batch);
     if (batch.length < PAGE) break;
     lastId = batch[batch.length - 1].id;
@@ -147,9 +137,56 @@ async function loadAll(filterSource?: string): Promise<Row[]> {
   return rows;
 }
 
-/** Baseline de mercado = listados FincaRaíz con ppm2 calculable. */
-async function loadPool(): Promise<Comp[]> {
-  const rows = await loadAll('fincaraiz');
+/** Códigos y mensajes de Postgres que significan «vuelve a intentarlo». */
+const ES_TRANSITORIO = /statement timeout|canceling statement|57014|timeout|ECONNRESET|fetch failed/i;
+
+/**
+ * Una página del inventario, con reintentos ante fallo transitorio.
+ *
+ * El motor lee más de cien páginas seguidas y tarda varios minutos. Medido contra
+ * la base real: la mediana de una página es 2,4 s y la peor 4,6 s — ninguna se
+ * acerca por sí sola al `statement_timeout`. Aun así la corrida se cayó, y se cayó
+ * justo cuando había un scraper escribiendo y varias sesiones leyendo: el problema
+ * no es una consulta lenta, es CONTENCIÓN puntual.
+ *
+ * Contra eso, abortar quince minutos de trabajo por una página que llegó tarde es
+ * la peor respuesta posible. Se reintenta esa página, con espera creciente para no
+ * empujar más una base que ya va justa. Un error que no sea transitorio —una
+ * columna que no existe, un permiso— sigue abortando de inmediato: ahí reintentar
+ * solo retrasaría el diagnóstico.
+ */
+async function cargarPagina(lastId: string, page: number, filterSource?: string): Promise<Row[]> {
+  const INTENTOS = 4;
+  let ultimo = '';
+  for (let intento = 1; intento <= INTENTOS; intento += 1) {
+    let q = supabase
+      .from('inmuebles')
+      .select(SELECT)
+      .eq('is_active', true)
+      .gt('id', lastId)
+      .order('id')
+      .limit(page);
+    if (filterSource) q = q.eq('source', filterSource);
+    const { data, error } = await q;
+    if (!error) return (data ?? []) as unknown as Row[];
+
+    ultimo = error.message;
+    if (!ES_TRANSITORIO.test(ultimo) || intento === INTENTOS) break;
+    const espera = 2000 * intento; // 2s, 4s, 6s
+    log.warn(`loadAll: página tras ${lastId.slice(0, 8)} falló (${ultimo}). Reintento ${intento}/${INTENTOS - 1} en ${espera / 1000}s`);
+    await new Promise((r) => setTimeout(r, espera));
+  }
+  throw new Error(`loadAll: ${ultimo}`);
+}
+
+/**
+ * Baseline de mercado = listados FincaRaíz con ppm2 calculable.
+ *
+ * Recibe las filas ya cargadas en vez de pedirlas: el que llama suele tener en la
+ * mano el inventario COMPLETO, y FincaRaíz es el 99,6% de él. Pedirlo aparte
+ * traería casi las mismas 116.000 filas por segunda vez.
+ */
+function poolDesde(rows: Row[]): Comp[] {
   const pool: Comp[] = [];
   for (const r of rows) {
     if (r.is_project === true) continue; // proyectos preventa sesgan la mediana
@@ -229,8 +266,23 @@ async function persistAll(items: Array<{ row: Row; v: Verdict }>): Promise<numbe
 }
 
 export async function run(opts: Opts = parseArgs()) {
-  log.info('Cargando baseline FincaRaíz…');
-  const pool = await loadPool();
+  // UNA sola pasada por la tabla siempre que se pueda.
+  //
+  // El baseline son las filas de FincaRaíz y los candidatos son todas las filas.
+  // Pedirlos por separado traía casi el mismo inventario dos veces —FincaRaíz es
+  // el 99,6%—: medido, 116 páginas y 285 segundos cada carga. Diez minutos de red
+  // para leer dos veces lo mismo, y diez minutos expuestos al `statement_timeout`
+  // que ya tumbó la corrida en producción y que se reprodujo en local en cuanto la
+  // base tuvo algo más de trabajo encima.
+  //
+  // Solo cuando se acota a una fuente que NO es FincaRaíz hacen falta dos cargas,
+  // porque el baseline siempre es FincaRaíz completo. Pero en ese caso la segunda
+  // es de unos cientos de filas, no de cien mil.
+  const unaPasada = !opts.source || opts.source === 'fincaraiz';
+
+  log.info(unaPasada ? 'Cargando inventario…' : 'Cargando baseline FincaRaíz…');
+  const todas = unaPasada ? await loadAll() : null;
+  const pool = poolDesde(todas ? todas.filter((r) => r.source === 'fincaraiz') : await loadAll('fincaraiz'));
   log.info(`Baseline: ${pool.length} comparables (geo: ${pool.filter((p) => p.lat != null).length})`);
   if (pool.length === 0) {
     log.warn('Baseline vacío. Corre primero el scraper de FincaRaíz. Abortando.');
@@ -247,8 +299,11 @@ export async function run(opts: Opts = parseArgs()) {
     poolByCity.get(key)!.push(c);
   }
 
-  log.info(`Cargando candidatos${opts.source ? ` (source=${opts.source})` : ''}…`);
-  const candidates = await loadAll(opts.source);
+  // Los candidatos salen de la carga que ya se hizo; solo se vuelve a la base
+  // cuando se acotó a una fuente distinta de FincaRaíz.
+  const candidates = todas
+    ? (opts.source ? todas.filter((r) => r.source === opts.source) : todas)
+    : await loadAll(opts.source);
   log.info(`Candidatos: ${candidates.length}`);
 
   const toWrite: Array<{ row: Row; v: Verdict }> = [];

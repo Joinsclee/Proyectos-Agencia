@@ -247,6 +247,20 @@ a { color: inherit; }
 .subscription-history strong { margin-top: 3px; color: var(--purple-dark); }
 .subscription-history span { margin-top: 3px; color: var(--muted); font-size: .76rem; }
 .commercial-actions { display: grid; grid-template-columns: minmax(130px, .7fr) minmax(180px, 1fr) auto; align-items: end; gap: 9px; }
+
+/* La fila de la cola comercial pide 680px solo en columnas, más separaciones y
+   relleno: no baja de ~745px. El único punto de apilado estaba en 760px, es decir
+   JUSTO por debajo del ancho al que ya no cabe, así que entre 761 y 816px la
+   página entera se arrastraba en horizontal — un iPad vertical (768px) caía de
+   lleno ahí. Se apila donde de verdad deja de caber, no donde se supuso.
+   `min-width: 0` es obligatorio: sin él, un correo largo del solicitante ensancha
+   su columna y vuelve a empujar la fila fuera de la pantalla. */
+@media (max-width: 980px) {
+  .commercial-item { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .commercial-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .commercial-actions > :last-child { grid-column: 1 / -1; }
+}
+.commercial-item > * { min-width: 0; }
 .commercial-actions label { color: #594b60; font-size: .72rem; font-weight: 900; }
 .commercial-actions select, .commercial-actions input {
   width: 100%;

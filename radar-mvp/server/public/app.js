@@ -514,16 +514,31 @@ async function buildFilters() {
     html += fSelect('city', 'Ciudad', fc.cities);
     if (tab === 'portal') html += fSelect('zone', 'Barrio', fc.zones);
     html += fSelect('type', 'Tipo', fc.types, typeLbl);
+    // En Bancos, la entidad es lo primero que la gente quiere acotar: cada banco
+    // publica su cartera con criterios distintos. Solo se listan las que hoy
+    // tienen inventario, con cuántas fichas trae cada una, para que se vea de
+    // antemano si acotar merece la pena.
+    if (tab === 'bancos' && (fc.banks || []).length > 1) {
+      const opts = ['<option value="">Todos los bancos</option>'].concat(
+        fc.banks.map((b) => `<option value="${esc(b.source)}">${esc(srcLbl(b.source))} (${b.count})</option>`),
+      );
+      html += `<div class="f"><label for="f-bank">Banco</label><select id="f-bank">${opts.join('')}</select></div>`;
+    }
     html += `<div class="f"><label for="f-opp">Oportunidad</label><select id="f-opp"><option value="">Todas</option><option value="1">Solo oportunidades</option><option value="high">Solo altas</option></select></div>`;
     html += fRange('price', 'Precio (millones)', 'mín', 'máx');
     html += fRange('area', 'Área (m²)', 'mín', 'máx');
     html += `<div class="f"><label for="f-bedroomsMin">Habitaciones</label><select id="f-bedroomsMin"><option value="">Todas</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></div>`;
     if (tab === 'portal') html += fStratum();
   } else {
-    const fc = await fetch('/api/facets?source=portal').then((r) => r.json());
+    // Las facetas de REMATES, no las del portal. Son dos universos distintos: un
+    // remate puede estar en un municipio donde FincaRaíz no publica nada, y así el
+    // desplegable dejaba fuera 19 ciudades con remates reales —Popayán, Yopal,
+    // Buenaventura— mientras ofrecía decenas que no tenían ninguno.
+    const fc = await fetch('/api/facets?source=remates').then((r) => r.json());
     html += fSelect('city', 'Ciudad', fc.cities);
-    const RTYPES = ['apartment', 'house', 'lot', 'office', 'commercial', 'farm', 'parking'];
-    html += `<div class="f"><label for="f-type">Tipo</label><select id="f-type"><option value="">Todos</option>${RTYPES.map((t) => `<option value="${t}">${typeLbl(t)}</option>`).join('')}</select></div>`;
+    // Los tipos también salen del inventario: la lista fija omitía `vehicle` y
+    // `rights`, que son 64 fichas reales que nadie podía acotar.
+    html += fSelect('type', 'Tipo', fc.types, typeLbl);
     // Demandante: dropdown con TODOS los bancos detectados (pedido del cliente).
     const bk = await fetch('/api/remate-banks').then((r) => r.json()).catch(() => ({ banks: [] }));
     const bankOpts = ['<option value="">Todos los demandantes</option>', '<option value="1">Solo bancos (todos)</option>']
@@ -532,6 +547,17 @@ async function buildFilters() {
     html += fRange('bid', 'Postura (millones)', 'mín', 'máx');
   }
   html += `<div class="f"><label for="f-order">Orden</label><select id="f-order">${ORDERS[tab].map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>`;
+  // Entre el `await` de las facetas y esta línea el usuario puede haber cambiado
+  // de pestaña. Sin esta comprobación, la respuesta lenta pisa a la rápida: el
+  // caso medido era Remates → Portal en menos de dos segundos, y Portal acababa
+  // con los filtros de Remates —Demandante, Postura— porque Remates hace dos
+  // peticiones y aterrizaba la última. El usuario se quedaba sin Barrio, Estrato,
+  // Precio ni Área hasta recargar, y lo que escribía viajaba como parámetros que
+  // el listado del portal ignora en silencio.
+  //
+  // Mismo criterio que `state.loadSeq` usa para los listados: el que llega tarde
+  // se descarta.
+  if (state.tab !== tab) return;
   $('filters').innerHTML = html;
   updateFilterCount();
 
@@ -1122,12 +1148,23 @@ async function load(page) {
 
   if (loadSeq !== state.loadSeq) return;
   $('grid').innerHTML = '';
-  renderCards(res.data);
+  // `true` = la ficha se PIDE a `/api/property` al abrirla, en vez de dibujarse
+  // con la fila que el listado ya tiene en el navegador. Es obligatorio: esa ruta
+  // es la única que aplica el plan del usuario y la única que gasta el cupo del
+  // mes. Sin esto la tarjeta prometía "ábrela con tu cupo", el clic no consumía
+  // nada y el modal enseñaba el muro — el plan gratuito era inalcanzable desde
+  // las tres pestañas, y solo funcionaba desde la portada, que sí lo pasaba.
+  renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
-  setResultText(res.total.toLocaleString('es-CO') + ' resultado' + (res.total === 1 ? '' : 's'));
+  // El "≈" cuando el servidor avisa de que el número es una estimación. Sobre
+  // 108.000 filas hay filtros cuyo conteo exacto no cabe en el tiempo de una
+  // consulta; ahí se prefiere una cifra aproximada y honesta a una pantalla de
+  // error, pero no se puede presentar como si fuera exacta.
+  const cifra = (res.totalAproximado ? '≈ ' : '') + res.total.toLocaleString('es-CO');
+  setResultText(cifra + ' resultado' + (res.total === 1 ? '' : 's'));
   clearLoadingSkeletons();
   $('empty').style.display = res.total === 0 ? 'block' : 'none';
-  renderPager(res.total, res.page, res.pages);
+  renderPager(res.total, res.page, res.pages, res);
   state.loading = false;
 }
 
@@ -1230,7 +1267,10 @@ async function loadGuardados() {
     return;
   }
   $('grid').innerHTML = '';
-  renderCards(props);
+  // Guardados con sesión: también por la API. Una ficha que el usuario ya abrió
+  // con su cupo tiene que seguir abriéndose desde aquí, y una que nunca abrió
+  // tiene que seguir cobrando.
+  renderCards(props, $('grid'), true);
   setResultText(props.length + ' guardado' + (props.length === 1 ? '' : 's'));
   clearLoadingSkeletons();
   $('empty').style.display = props.length === 0 ? 'block' : 'none';
@@ -1240,10 +1280,19 @@ async function loadGuardados() {
   if (props.length === 0) $('empty').innerHTML = emptyState('heart', 'Sin guardados aún', 'Toca el corazón en cualquier inmueble para guardarlo aquí.', 'saved');
 }
 
-function renderPager(total, page, pages) {
+function renderPager(total, page, pages, meta = {}) {
   const el = $('pager');
   if (total === 0) { el.innerHTML = ''; return; }
-  let html = `<div class="pinfo">Página ${page} de ${pages} · ${total.toLocaleString('es-CO')} resultados</div>`;
+  const aprox = meta.totalAproximado ? '≈ ' : '';
+  // Cuando quedan resultados más allá de la última página servible se dice, y se
+  // dice qué hacer. Antes el paginador ofrecía 4.503 páginas y las de arriba de
+  // la 40 tardaban 49 segundos y fallaban: los dos botones de "ir al final"
+  // fallaban siempre. Enseñar el tramo que existe y explicar cómo llegar al resto
+  // es más honesto que prometer un botón roto.
+  const aviso = meta.paginasLimitadas
+    ? `<div class="pinfo-nota">Se pueden recorrer las primeras ${pages} páginas. Afina los filtros —ciudad, precio o tipo— para llegar al resto.</div>`
+    : '';
+  let html = `<div class="pinfo">Página ${page} de ${pages} · ${aprox}${total.toLocaleString('es-CO')} resultados</div>${aviso}`;
   const btn = (p, label, o = {}) => `<button data-page="${p}" class="${o.active ? 'active' : ''}" ${o.disabled ? 'disabled' : ''}>${label || p}</button>`;
   if (pages > 1) {
     const set = new Set([1, 2, pages - 1, pages, page - 1, page, page + 1]);
@@ -1905,16 +1954,45 @@ let gRentalSeq = 0;
  */
 function panelSuscripcion(p) {
   const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
+  // Qué le falta a ESTE usuario, que es lo que el servidor ya calculó en
+  // `_acceso.requiere`. El sello de la tarjeta lo respetaba y este muro no: a un
+  // anónimo —que solo tiene que registrarse— se le pedía pagar una suscripción, y
+  // a un registrado con cupo disponible también. Pedir dinero a quien no lo
+  // necesita es la peor forma posible de perder un registro.
+  const requiere = p?._acceso?.requiere ?? 'suscripcion';
+  const COPY = {
+    registro: {
+      cuerpo: 'Ya viste los comparables y el costo estimado. Crea tu cuenta gratis y abre esta ficha con tu cupo del mes.',
+      cta: 'Crear cuenta gratis',
+      href: '/login',
+    },
+    cupo: {
+      cuerpo: 'Ya viste los comparables y el costo estimado. Ábrela con una de las fichas de tu cupo de este mes.',
+      cta: 'Abrir con mi cupo',
+      href: null,
+    },
+    suscripcion: {
+      cuerpo: 'Ya viste los comparables y el costo estimado. La suscripción desbloquea los datos necesarios para profundizar la evaluación.',
+      cta: 'Desbloquear con suscripción',
+      href: '/planes',
+    },
+  };
+  const t = COPY[requiere] ?? COPY.suscripcion;
+  // Al que le queda cupo no se le manda a ninguna parte: el clic en la tarjeta ya
+  // gasta la ficha, así que un enlace aquí solo lo sacaría de donde está.
+  const cta = t.href
+    ? `<a class="wall-cta" href="${t.href}">${t.cta}</a>`
+    : `<span class="wall-cta wall-cta-inerte">${t.cta}</span>`;
   return `<div class="section"><div class="muro-sus">
     <div class="muro-cab">${ic('lock')}<strong>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad destacada'}</strong></div>
-    <p>Ya viste los comparables y el costo estimado. La suscripción desbloquea los datos necesarios para profundizar la evaluación.</p>
+    <p>${t.cuerpo}</p>
     <ul class="muro-lista">
       <li>${ic('lock')} Dirección exacta y ubicación en el mapa</li>
       <li>${ic('lock')} Descripción completa y todas las fotos</li>
       <li>${ic('lock')} Fuente original y datos de contacto</li>
       <li>${ic('lock')} Análisis detallado de la oportunidad</li>
     </ul>
-    <a class="wall-cta" href="/login">Desbloquear con suscripción</a>
+    ${cta}
   </div></div>`;
 }
 
@@ -2165,6 +2243,12 @@ function valorLargo(html) {
 function openRemate(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
+  // Lo que se cobra se decide por el VEREDICTO DEL SERVIDOR, no por tener sesión.
+  // Con `anon` a secas, cualquiera con cuenta gratuita veía enteros los datos del
+  // proceso —nombre y cédula del demandado, correo y celular del secuestre— de un
+  // remate que la tarjeta marcaba como de pago, y además sin gastar cupo. Todos
+  // los remates de suscripción eran gratis para cualquiera registrado.
+  const bloq = esBloqueada(p);
   gImgs = p.image_url ? [p.image_url] : []; gIdx = 0;
   const pct = p.minimum_bid && p.appraisal_value ? Math.round((p.minimum_bid / p.appraisal_value) * 100) : (p.minimum_bid_pct || null);
   const f = p.features || {};
@@ -2195,13 +2279,18 @@ function openRemate(p) {
     : '';
   // Bloqueos para anónimo (freemium). El análisis preliminar (semáforo) y la
   // calculadora quedan visibles como gancho; lo sensible/valioso se bloquea.
-  const aiBlock = anon ? lockBox('Análisis con IA', 'Opinión de inversión + comparables del barrio. Regístrate gratis.') : aiSection('remate', p.id);
-  const datosBlock = anon ? lockBox('Datos del proceso', 'Demandante, juzgado, radicado, secuestre y más. Regístrate gratis.') : datosHtml;
-  const copiaBlock = anon ? (f.copia_publicacion ? lockBox('Copia exacta de la publicación') : '') : copiaHtml;
-  const descBlock = anon ? (p.description ? lockBox('Descripción del bien') : '') : descHtml;
+  // `bloq` gobierna todo lo que es contenido de pago. `anon` solo gobierna lo que
+  // necesita una cuenta para existir —los favoritos—, que es otra cosa.
+  const tapado = bloq || anon;
+  const aiBlock = tapado ? lockBox('Análisis con IA', 'Opinión de inversión + comparables del barrio.') : aiSection('remate', p.id);
+  const datosBlock = tapado ? lockBox('Datos del proceso', 'Demandante, juzgado, radicado, secuestre y más.') : datosHtml;
+  const copiaBlock = tapado ? (f.copia_publicacion ? lockBox('Copia exacta de la publicación') : '') : copiaHtml;
+  const descBlock = tapado ? (p.description ? lockBox('Descripción del bien') : '') : descHtml;
   const fav = anon ? '' : modalFavBtn('remate', p.id);
-  // Igual que en la ficha de inmueble: sin acceso completo no se ofrece el botón.
-  const reporte = esBloqueada(p) ? '' : reporteSection('remate', p);
+  // Igual que en la ficha de inmueble: sin acceso completo no se ofrece el botón,
+  // y se explica qué falta para abrirla en vez de dejar huecos sin motivo.
+  const reporte = bloq ? '' : reporteSection('remate', p);
+  const muro = bloq ? panelSuscripcion(p) : '';
 
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
@@ -2217,6 +2306,7 @@ function openRemate(p) {
         ${p.auction_date ? `<div class="pb-auction">${ic('calendar')} Audiencia: <strong>${fmtDate(p.auction_date)}</strong>${p.auction_time ? ' · ' + esc(p.auction_time) : ''} ${countdownBadge(p.auction_date)}</div>` : ''}
       </div>
       ${analisisSection(p)}
+      ${muro}
       ${aiBlock}
       ${datosBlock}
       ${gastosSection(p.minimum_bid, 'remate', {
@@ -2368,13 +2458,22 @@ async function loadStats() {
   $('c-portal').textContent = STATS.portal_total.toLocaleString('es-CO');
   $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
   $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
-  const actualizado = renderActualizado(STATS.frescura);
+  // Tres cifras, y las tres del mismo tipo: oportunidades. Decisión de la reunión
+  // del 28-jul, y las dos razones que se dieron son buenas:
+  //
+  //  · «Listados portal» invitaba a competir en cantidad, y esa es una carrera
+  //    perdida —siempre habrá un portal con más inventario—. El producto no vende
+  //    volumen, vende criterio: por eso las tres cifras cuentan oportunidades.
+  //  · La fecha de actualización es un dato interno. A un visitante que lee
+  //    «actualizado hace dos días» le suena a desactualizado, cuando el Radar
+  //    nunca prometió tiempo real: promete un corte semanal bien hecho.
+  //
+  // Y quitarlas resuelve de paso lo que más molestó al verlo: había cifras en tres
+  // filas distintas —resumen, pestañas y franja— y varias eran la misma repetida.
   $('summary').innerHTML = `
-    <div class="summary-stat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades</div></div>
-    <div class="summary-stat"><div class="num">${STATS.portal_total.toLocaleString('es-CO')}</div><div class="lbl">Listados portal</div></div>
+    <div class="summary-stat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades en portal</div></div>
     <div class="summary-stat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">En bancos</div></div>
-    <div class="summary-stat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates</div></div>
-    ${actualizado}`;
+    <div class="summary-stat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates judiciales</div></div>`;
   renderVStats();
 }
 /**
@@ -2407,12 +2506,13 @@ function renderVStats() {
   if (!STATS) return;
   const v = $('vstats');
   if (state.tab === 'home') {
-    // En la portada la cifra que importa es de dónde sale lo destacado, no cuánto
-    // hay: las tres fuentes juntas son el argumento del producto.
+    // Solo lo que NO está ya en el resumen de arriba. Antes esta franja repetía
+    // bancos y remates, así que la misma cifra aparecía dos veces en la primera
+    // pantalla —y con «listados portal» eran cifras en tres filas distintas—.
+    // Lo único que aporta aquí es el subconjunto de mayor señal, que es además el
+    // dato que el cliente señaló como el más potente de todos.
     v.innerHTML = `
-      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades altas</div></div>
-      <div class="vstat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">Inmuebles de banco</div></div>
-      <div class="vstat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates judiciales</div></div>`;
+      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades de mayor señal</div></div>`;
     $('legend').innerHTML = '';
     return;
   }

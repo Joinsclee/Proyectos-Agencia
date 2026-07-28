@@ -62,7 +62,7 @@ export function urlSegura(valor: unknown): string | null {
 
 // ─────────────────────────── Decisión de entrega ───────────────────────────
 
-export type RequisitoReporte = 'registro' | 'ficha' | 'suscripcion';
+export type RequisitoReporte = 'registro' | 'ficha' | 'plan' | 'suscripcion';
 
 export type DecisionReporte =
   | { ok: true; consume: boolean; cupo: CupoReportes }
@@ -90,14 +90,31 @@ export function decidirReporte(args: {
   acceso: Pick<Acceso, 'completa' | 'requiere'>;
   cupo: CupoReportes;
   id: string;
+  /**
+   * ¿Esta ficha es contenido de pago para un plan gratuito?
+   *
+   * Es distinto de `acceso.completa`, que dice si ESTE usuario puede verla ahora.
+   * Una ficha que el Radar enseña a cualquiera —incluido un anónimo— no puede
+   * gastar cupo de reportes: si lo gasta, un usuario del plan gratuito quema sus
+   * 20 descargas en fichas que nunca estuvieron cerradas.
+   *
+   * Por defecto `true` para que el descuido, si lo hay, sea cobrar de más y no
+   * regalar el producto.
+   */
+  esDePago?: boolean;
 }): DecisionReporte {
-  const { plan, acceso, cupo, id } = args;
+  const { plan, acceso, cupo, id, esDePago = true } = args;
   if (plan === 'anonimo') return { ok: false, requiere: 'registro', cupo };
   if (!acceso.completa) {
-    // `requiere: 'cupo'` significa que le queda cupo de FICHAS y sólo tiene que
-    // abrirla; cualquier otra cosa ya es asunto de suscripción.
-    return { ok: false, requiere: acceso.requiere === 'cupo' ? 'ficha' : 'suscripcion', cupo };
+    // Tres motivos distintos, tres mensajes distintos. Mapearlos todos a
+    // "suscripcion" hacía que a alguien con 19 reportes disponibles se le dijera
+    // que los había agotado, contradiciendo al propio contador que viajaba en la
+    // misma respuesta.
+    if (acceso.requiere === 'cupo') return { ok: false, requiere: 'ficha', cupo };
+    return { ok: false, requiere: 'plan', cupo };
   }
+  // Gratis para todos: se entrega sin tocar el contador.
+  if (!esDePago) return { ok: true, consume: false, cupo };
   const consumo = consumirCupoReportes(cupo, id, plan);
   if (!consumo.permitido) return { ok: false, requiere: 'suscripcion', cupo: consumo.cupo };
   return { ok: true, consume: consumo.consumido, cupo: consumo.cupo };
@@ -108,6 +125,7 @@ export function decidirReporte(args: {
 export const MENSAJE_RECHAZO: Record<RequisitoReporte, string> = {
   registro: 'Crea tu cuenta gratis para descargar reportes de los inmuebles.',
   ficha: 'Abre primero la ficha completa de este inmueble: el reporte incluye datos que ahí se desbloquean.',
+  plan: 'Esta ficha es del plan de pago. Actívalo para abrirla y descargar su reporte.',
   suscripcion: 'Agotaste los reportes gratuitos de este mes. El plan de pago los deja sin límite.',
 };
 

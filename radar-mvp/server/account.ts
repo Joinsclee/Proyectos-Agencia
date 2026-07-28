@@ -378,14 +378,14 @@ export async function updateAdminExpenseParameters(requesterId: string, input: u
   const requester = await adminUser(requesterId);
   if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
   const body = (input ?? {}) as Record<string, unknown>;
-  return guardarParametrosGastos(
-    {
-      notaria: Number(body.notaria),
-      impuestoRegistro: Number(body.impuestoRegistro),
-      derechosRegistro: Number(body.derechosRegistro),
-    },
-    { id: requesterId, nota: typeof body.nota === 'string' ? body.nota : undefined },
-  );
+  // El cuerpo va CRUDO a `guardarParametrosGastos`: la conversión a número vive
+  // dentro de `validarParametrosGastos`, que es el único punto que puede decidir
+  // qué es un porcentaje válido. Convertir aquí con `Number()` era justo lo que
+  // dejaba pasar un `null` como 0 %.
+  return guardarParametrosGastos(body, {
+    id: requesterId,
+    nota: typeof body.nota === 'string' ? body.nota : undefined,
+  });
 }
 
 export async function listAdminPlanInterests(requesterId: string) {

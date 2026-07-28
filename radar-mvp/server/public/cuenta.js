@@ -176,7 +176,9 @@ async function init() {
   const exportLink = document.getElementById('export-link');
   exportLink.addEventListener('click', async (event) => {
     event.preventDefault();
-    await downloadAccountExport('/api/account/export', `radar-cuenta-${account.id.slice(0, 8)}.json`);
+    // Hoja imprimible en vez del volcado JSON: el usuario la guarda como PDF
+    // desde el propio navegador. Decisión de la reunión del 28-jul.
+    await downloadAccountExport('/api/account/resumen', `radar-cuenta-${account.id.slice(0, 8)}.html`);
   });
   document.getElementById('export-csv-link').addEventListener('click', async (event) => {
     event.preventDefault();

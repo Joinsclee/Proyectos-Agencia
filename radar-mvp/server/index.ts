@@ -15,7 +15,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
 import {
-  queryPortal, queryBancos, queryRemates, facets, stats, getProperty, remateBankFacets,
+  queryPortal, queryBancos, queryRemates, facets, facetsRemates, stats, getProperty, remateBankFacets,
   warmStats, warmTotalPortal, warmZonas, warmMetricas, destacados, warmDestacados,
   type ListQuery,
 } from './queries.js';
@@ -35,6 +35,7 @@ import {
   type ArriendoReporte,
   type ComparablesReporte,
 } from './reporte.js';
+import { construirResumenCuenta, nombreArchivoResumen } from './resumen-cuenta.js';
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactarMixta, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
@@ -473,6 +474,18 @@ const server = createServer(async (req, res) => {
             `\uFEFF${await exportAccountCsv(user.id)}`,
           );
         }
+        // Resumen imprimible, el que sustituye al bot\u00F3n de JSON en la pantalla de
+        // cuenta. La ruta JSON de arriba sigue viva para portabilidad de datos;
+        // lo que cambia es qu\u00E9 se le ofrece al usuario por delante.
+        if (path === '/api/account/resumen' && req.method === 'GET') {
+          const cuenta = await getAccount(user.id);
+          return sendTextDownload(
+            res,
+            nombreArchivoResumen(user.id),
+            'text/html; charset=utf-8',
+            construirResumenCuenta(cuenta as any, new Date().toISOString()),
+          );
+        }
         return sendJSON(res, 405, { ok: false, error: 'Método o ruta de cuenta no permitido' });
       }
       // ── Operación comercial para administradores ──
@@ -547,12 +560,27 @@ const server = createServer(async (req, res) => {
           const favorites = await listFavorites(user.id);
           const rawProperties = full ? await favoriteProperties(user.id) : undefined;
           const userPlan = planDe(user);
-          const properties = rawProperties?.map((property) => redactar(
-            property,
-            property._kind === 'remate'
-              ? accesoRemateFicha(property, userPlan)
-              : accesoInmueble(property.crece_tier, userPlan),
-          ));
+          // El cupo también cuenta aquí. Sin este tercer argumento, una ficha que
+          // el usuario YA abrió gastando una de sus 20 volvía a aparecer bloqueada
+          // en Guardados, pidiéndole suscripción por algo que ya había pagado.
+          const cupoFav = user?.cupo ?? leerCupo(null);
+          const accesoFav = {
+            desbloqueadas: cupoFav.desbloqueadas,
+            restantes: estadoCupo(cupoFav, userPlan).restantes,
+          };
+          const abiertas = new Set(accesoFav.desbloqueadas ?? []);
+          const properties = rawProperties?.map((property) => {
+            const estado = {
+              desbloqueada: abiertas.has(String(property.id)),
+              restantes: accesoFav.restantes,
+            };
+            return redactar(
+              property,
+              property._kind === 'remate'
+                ? accesoRemateFicha(property, userPlan, estado)
+                : accesoInmueble(property.crece_tier, userPlan, estado),
+            );
+          });
           return sendJSON(res, 200, { ok: true, user, favorites, properties });
         }
         return sendJSON(res, 404, { ok: false, error: 'ruta de favoritos no encontrada' });
@@ -634,8 +662,18 @@ const server = createServer(async (req, res) => {
           ? accesoRemateFicha(fila as any, plan, estadoFichas)
           : accesoInmueble((fila as any).crece_tier, plan, estadoFichas);
 
+        // ¿La ficha es contenido de pago, o el Radar se la enseña a cualquiera?
+        // Se calcula con el plan gratuito y SIN cupo, que es la pregunta correcta:
+        // no «puede verla este usuario» sino «estuvo cerrada alguna vez». Una ficha
+        // abierta para todos no puede gastar cupo de reportes, o el usuario del
+        // plan gratuito quema sus 20 descargas en fichas que nunca estuvieron
+        // cerradas.
+        const esDePago = !(kind === 'remate'
+          ? accesoRemateFicha(fila as any, 'free')
+          : accesoInmueble((fila as any).crece_tier, 'free')).completa;
+
         const cupoReportes = usuario.cupoReportes ?? leerCupoReportes(null);
-        const decision = decidirReporte({ plan, acceso, cupo: cupoReportes, id });
+        const decision = decidirReporte({ plan, acceso, cupo: cupoReportes, id, esDePago });
         if (!decision.ok) {
           return sendJSON(res, 403, {
             ok: false,
@@ -772,7 +810,8 @@ const server = createServer(async (req, res) => {
         });
       }
       if (path === '/api/facets') {
-        const source = (url.searchParams.get('source') as 'portal' | 'bancos') ?? 'portal';
+        const source = (url.searchParams.get('source') as 'portal' | 'bancos' | 'remates') ?? 'portal';
+        if (source === 'remates') return sendJSON(res, 200, await facetsRemates());
         return sendJSON(res, 200, await facets(source, url.searchParams.get('city') ?? undefined));
       }
       if (path === '/api/remate-banks') return sendJSON(res, 200, await remateBankFacets());
