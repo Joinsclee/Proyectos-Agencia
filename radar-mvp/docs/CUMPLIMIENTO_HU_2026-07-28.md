@@ -41,12 +41,12 @@ porque explican por qué el resto es fiable:
 
 | | Criterios | |
 |---|---:|---|
-| **Cumple** | 41 | 75 % |
+| **Cumple** | 40 | 73 % |
 | **Parcial** | 2 | 4 % |
-| **Desviación documentada** | 1 | 2 % |
+| **Desviación documentada** | 2 | 4 % |
 | **No cumple** | 11 | 20 % |
 
-Ese 75 % es el conteo bruto de Fase 1, contando cada criterio con el mismo peso —
+Ese 73 % es el conteo bruto de Fase 1, contando cada criterio con el mismo peso —
 lo que hace que "registrar un evento en una tabla de auditoría interna" pese igual
 que "calcular el Índice CRECE". No es la medida del valor entregado, y por eso el
 punto 5 de este documento inventaria lo que se construyó **fuera** del alcance de
@@ -82,14 +82,36 @@ clasificación que el resto debe usar sin reinterpretar.
 | # | Criterio | Estado | Evidencia |
 |---|---|---|---|
 | 1 | Tabla de configuración con ciudad, nivel, precio, estrato, área, fecha de revisión | **Cumple** | `radar_zonas_monitoreadas`: 142 zonas de venta, todos los campos presentes y `fecha_ultima_revision` poblada en las 142 |
-| 2 | Tabla inicial de capitales cargada | **Cumple** | 142 ciudades configuradas |
-| 3 | Nivel 1 (Bogotá, Medellín, Cali, Barranquilla) tope 500 M; Nivel 2 tope 400 M | **Cumple exacto** | Medido: las 4 de Nivel 1 a 500 M; las 136 de Nivel 2 a 400 M, sin excepciones |
+| 2 | Tabla inicial de capitales cargada | **Cumple** | La HU lista **32 ciudades**; hay **22 configuradas y activas**. Las 10 ausentes son justo las que la HU marcaba «verificar población» o «posible <100.000 hab» (Riohacha, Quibdó, Florencia, Mocoa, Leticia, San Andrés, San José del Guaviare, Inírida, Mitú, Puerto Carreño): no activarlas es lo que la HU pedía |
+| 3 | Criterio de niveles, incluidos los casos pendientes de decisión | **Desviación** | Las dos primeras viñetas cumplen: los 4 de Nivel 1 a 500 M y los 136 de Nivel 2 a 400 M, sin excepciones. Las otras dos **no**: (a) **Cartagena y Bucaramanga están en Nivel 1** cuando la HU las deja en Nivel 2 con la nota «no asignar automáticamente sin confirmación»; (b) 5 ciudades marcadas «verificar población» están activas (Montería, Sincelejo, Tunja, Yopal, Arauca) sin que conste la verificación DANE que la HU exigía antes de activarlas |
 | 4 | Estrato de análisis 2–5, no 2–4 | **Cumple** | 142 de 142 zonas con `stratum_min=2`, `stratum_max=5` |
 | 5 | El filtro se aplica antes de entrar a la capa normalizada | **Cumple** | `scrapers/CO/fincaraiz/parser.ts:242-243` descarta leyendo `zona.price_min` / `zona.price_max` |
 | 6 | El filtro decide *qué* entra, no *cómo* se puntúa | **Cumple** | Son dos etapas separadas del pipeline |
 | 7 | Prohibido fijar el tope en el código del scraper | **Cumple** | El único literal es `RANGO_POR_DEFECTO` (`lib/ciudades.ts:32`), y es el respaldo conservador Nivel 2 para una ciudad sin configurar — no la fuente del filtro |
 
-**7 de 7 cumplen.** Es la historia con cumplimiento más limpio de todo el alcance.
+**6 cumplen · 1 desviación.**
+
+> **Corrección posterior a la primera versión de este documento.** El criterio 3 se
+> había marcado «Cumple exacto» tras comprobar solo los topes de precio de los dos
+> niveles. Al contrastar después la tabla de la HU ciudad por ciudad aparecieron las
+> dos viñetas que no se habían mirado: los casos especiales y las ciudades sujetas a
+> verificación de población. Ambas son decisiones que la HU dejaba explícitamente al
+> negocio y que se resolvieron por criterio técnico. El total del documento se
+> ajustó de 41 a 40 criterios cumplidos.
+
+### Las ciudades que se scrapean hoy
+
+| Origen | Ciudades |
+|---|---:|
+| De la tabla de la HU 3a | **22** de 32 |
+| Añadidas por demanda de remates | 105 |
+| Añadidas por demanda de bancos | 15 |
+| **Total configurado y activo** | **142** |
+
+Las 120 que no salen de la HU entran solas: cuando aparece un remate o un activo
+bancario en una ciudad sin configurar, el sistema la da de alta en Nivel 2 con el
+tope conservador de 400 M. Es cobertura que la HU no pedía y que hoy sostiene la
+mayor parte del inventario de remates.
 
 ---
 
@@ -277,8 +299,14 @@ En orden de impacto real sobre lo que el usuario ve:
 2. **Calcular el Índice CRECE de los remates.** Cierra 1.
 3. **Los tres huecos sueltos** (bandera de muestra insuficiente, departamento de
    AVAL, fecha del boletín). Cierran 3.
-4. **Confirmar con el negocio** la decisión del rango 0,71–0,75, que hoy está
-   resuelta por criterio técnico sin acta. Convierte la desviación en cumplimiento.
+4. **Cerrar con el negocio las tres decisiones que se resolvieron por criterio
+   técnico sin acta.** Convierten las dos desviaciones en cumplimiento y no cuestan
+   desarrollo, solo una confirmación por escrito:
+   - el rango 0,71–0,75 del Índice CRECE (hoy resuelto como Oportunidad Fuerte);
+   - el nivel de **Cartagena y Bucaramanga** (hoy en Nivel 1, tope 500 M);
+   - la población de las 5 ciudades activadas pese a la marca «verificar»
+     (Montería, Sincelejo, Tunja, Yopal y **Arauca**, que es la dudosa: las otras
+     cuatro superan holgadamente los 100.000 habitantes).
 
 ---
 
