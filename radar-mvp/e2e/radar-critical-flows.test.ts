@@ -120,10 +120,27 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       const dialogo = page.locator('#modal');
       await dialogo.waitFor({ state: 'visible' });
       assert.equal(await dialogo.getAttribute('aria-label'), 'Cómo usar el Radar');
-      assert.equal(await page.locator('.onboarding .ob-video').count(), 2, 'deben ofrecerse los dos videos');
       // El foco arranca dentro del diálogo: si se quedara en el fondo, quien
       // navega con teclado seguiría tabulando por una página que no puede tocar.
       assert.equal(await page.evaluate(() => document.activeElement?.id), 'modal-close');
+
+      // Recorrido por pasos: una tarjeta cada vez, con el avance a la vista.
+      const pasos = await page.locator('.ob-puntitos li').count();
+      assert.ok(pasos >= 3, `el tutorial debe tener varios pasos, tiene ${pasos}`);
+      const activo = () => page.evaluate(() =>
+        Array.from(document.querySelectorAll('.ob-puntitos li')).findIndex((l) => l.classList.contains('is-activo')));
+      assert.equal(await activo(), 0);
+
+      await page.locator('[data-onboarding-siguiente]').click();
+      assert.equal(await activo(), 1, 'Siguiente debe avanzar un paso');
+      assert.ok(await page.locator('[data-onboarding-atras]').isVisible(), 'a partir del segundo hay vuelta atrás');
+      await page.locator('[data-onboarding-atras]').click();
+      assert.equal(await activo(), 0, 'Atrás debe devolver al paso anterior');
+
+      // Hasta el final: el último paso ofrece cerrar, no seguir.
+      for (let i = 1; i < pasos; i += 1) await page.locator('[data-onboarding-siguiente]').click();
+      assert.equal(await activo(), pasos - 1);
+      assert.equal(await page.locator('[data-onboarding-siguiente]').count(), 0, 'en el último paso no hay "Siguiente"');
 
       // Se espera a que la portada termine de cargar ANTES de recargar: si no, la
       // recarga aborta los `fetch` en vuelo y el error de red aparecería como un

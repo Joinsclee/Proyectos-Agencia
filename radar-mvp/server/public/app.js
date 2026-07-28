@@ -335,55 +335,108 @@ function showRegisterWall(count) {
  * que tocar nada más.
  */
 const ONBOARDING_KEY = 'radar_onboarding_v1';
-const ONBOARDING_VIDEOS = [
+
+/**
+ * Pasos del tutorial, en orden.
+ *
+ * Cada uno es una tarjeta. Los que llevan `video` muestran el reproductor; los
+ * demás, una ilustración de texto. `src` vacío pinta un marcador: para publicar un
+ * video basta dejar el archivo en `server/public/radar/` y poner aquí su ruta.
+ */
+const ONBOARDING_PASOS = [
   {
-    titulo: 'Qué encuentra el Radar',
-    pie: 'De dónde salen los inmuebles y por qué unos aparecen marcados como oportunidad.',
-    src: '',
-    poster: '',
+    etiqueta: 'Bienvenido',
+    titulo: 'El Radar compara contra el barrio, no contra el país',
+    texto: 'Cada inmueble se mide contra el precio real de ofertas similares en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional.',
+    video: { src: '', poster: '', pie: 'Qué encuentra el Radar y de dónde salen los inmuebles.' },
   },
   {
-    titulo: 'Cómo leer una ficha',
-    pie: 'Comparables del barrio, descuento real y qué mirar antes de ir a verla.',
-    src: '',
-    poster: '',
+    etiqueta: 'Paso 1',
+    titulo: 'Filtra por lo tuyo',
+    texto: 'Ciudad, presupuesto y tipo de inmueble. Puedes dejarlo listo en tres pasos desde la portada y el Radar recuerda tus preferencias.',
+    puntos: ['Portal abierto, inmuebles de bancos y remates judiciales', 'Filtros por barrio, área, habitaciones y estrato'],
+  },
+  {
+    etiqueta: 'Paso 2',
+    titulo: 'Mira el descuento, no el precio',
+    texto: 'El porcentaje de cada tarjeta compara contra ofertas parecidas de la misma zona. Las categorías Oportunidad y Oportunidad Fuerte son las de mayor señal.',
+    video: { src: '', poster: '', pie: 'Cómo leer una ficha: comparables, descuento real y qué revisar.' },
+  },
+  {
+    etiqueta: 'Paso 3',
+    titulo: 'Abre la ficha y guarda las que te sirvan',
+    texto: 'Dentro están la dirección, las fotos, los comparables del barrio y el análisis. Guarda las que te interesen con el corazón y vuelve a ellas cuando quieras.',
+    puntos: ['Sin cuenta puedes explorar y comparar', 'Con cuenta gratis abres ' + CUPO_FREE_MENSUAL + ' fichas completas al mes'],
   },
 ];
 
-function onboardingVideo(video, indice) {
-  const cuerpo = video.src
-    ? `<video class="ob-video-player" controls preload="metadata"${video.poster ? ` poster="${esc(video.poster)}"` : ''}>
-         <source src="${esc(video.src)}" type="video/mp4">
+/** Paso que se está mostrando. Vive aquí y no en el DOM para poder volver atrás. */
+let onboardingPaso = 0;
+
+function onboardingMedia(paso) {
+  if (!paso.video) return '';
+  const cuerpo = paso.video.src
+    ? `<video class="ob-video-player" controls preload="metadata"${paso.video.poster ? ` poster="${esc(paso.video.poster)}"` : ''}>
+         <source src="${esc(paso.video.src)}" type="video/mp4">
          Tu navegador no puede reproducir este video.
        </video>`
     : `<div class="ob-video-pendiente">${ic('clock')}<span>Video en preparación</span></div>`;
-  return `<figure class="ob-video">
-    ${cuerpo}
-    <figcaption><strong>${indice + 1}. ${esc(video.titulo)}</strong><span>${esc(video.pie)}</span></figcaption>
-  </figure>`;
+  return `<figure class="ob-media">${cuerpo}<figcaption>${esc(paso.video.pie)}</figcaption></figure>`;
+}
+
+/**
+ * Pinta UN paso dentro del diálogo ya abierto.
+ *
+ * Se repinta solo el interior de la tarjeta, no el diálogo entero: así el modal no
+ * se cierra ni parpadea al avanzar, y el foco puede moverse al botón que
+ * corresponde sin que el navegador lo pierda entre repintados.
+ */
+function renderOnboardingPaso() {
+  const total = ONBOARDING_PASOS.length;
+  const i = Math.min(Math.max(onboardingPaso, 0), total - 1);
+  const paso = ONBOARDING_PASOS[i];
+  const ultimo = i === total - 1;
+
+  const puntos = paso.puntos
+    ? `<ul class="ob-puntos">${paso.puntos.map((x) => `<li>${ic('check')}${esc(x)}</li>`).join('')}</ul>`
+    : '';
+
+  $('modal-content').innerHTML = `<div class="onboarding">
+    <div class="ob-tarjeta">
+      <span class="ob-eyebrow">${ic('spark')} ${esc(paso.etiqueta)}</span>
+      <h2>${esc(paso.titulo)}</h2>
+      ${onboardingMedia(paso)}
+      <p class="ob-texto">${esc(paso.texto)}</p>
+      ${puntos}
+    </div>
+    <nav class="ob-nav" aria-label="Avance del tutorial">
+      <ol class="ob-puntitos">${ONBOARDING_PASOS.map((_, n) => `<li class="${n === i ? 'is-activo' : n < i ? 'is-visto' : ''}"><span class="sr-only">Paso ${n + 1} de ${total}</span></li>`).join('')}</ol>
+      <div class="ob-botones">
+        ${i > 0 ? '<button class="ob-atras" type="button" data-onboarding-atras>Atrás</button>' : '<button class="ob-atras" type="button" data-onboarding-cerrar>Saltar</button>'}
+        <button class="ob-cta" type="button" ${ultimo ? 'data-onboarding-cerrar' : 'data-onboarding-siguiente'}>${ultimo ? 'Empezar a explorar' : 'Siguiente'}</button>
+      </div>
+    </nav>
+    <p class="ob-nota">Puedes volver a ver esto cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
+  </div>`;
+}
+
+/** Mueve el foco al botón de avanzar, para poder recorrer el tutorial con Enter. */
+function enfocarAvanceOnboarding() {
+  requestAnimationFrame(() => document.querySelector('.ob-cta')?.focus({ preventScroll: true }));
 }
 
 function abrirOnboarding() {
   gImgs = [];
+  onboardingPaso = 0;
   $('modal').setAttribute('aria-label', 'Cómo usar el Radar');
-  $('modal-content').innerHTML = `<div class="onboarding">
-    <header class="ob-head">
-      <span class="ob-eyebrow">${ic('spark')} Bienvenido</span>
-      <h2>Cómo usar el Radar en tres pasos</h2>
-      <p>El Radar compara cada inmueble contra el precio real de su propio barrio y te señala solo los que están por debajo. Esto es lo que necesitas saber para empezar.</p>
-    </header>
-    <div class="ob-videos">${ONBOARDING_VIDEOS.map(onboardingVideo).join('')}</div>
-    <ol class="ob-steps">
-      <li><strong>Filtra por lo tuyo</strong><span>Ciudad, presupuesto y tipo de inmueble. Puedes hacerlo en tres pasos desde la portada.</span></li>
-      <li><strong>Mira el descuento, no el precio</strong><span>El porcentaje compara contra ofertas similares de la misma zona, no contra el promedio del país.</span></li>
-      <li><strong>Abre la ficha y guarda las que te sirvan</strong><span>Dentro están la dirección, las fotos y el análisis contra los comparables.</span></li>
-    </ol>
-    <div class="ob-actions">
-      <button class="ob-cta" type="button" data-onboarding-cerrar>Empezar a explorar</button>
-      <p class="ob-nota">Puedes volver a ver esto cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
-    </div>
-  </div>`;
+  renderOnboardingPaso();
   showModal();
+}
+
+function avanzarOnboarding(delta) {
+  onboardingPaso = Math.min(Math.max(onboardingPaso + delta, 0), ONBOARDING_PASOS.length - 1);
+  renderOnboardingPaso();
+  enfocarAvanceOnboarding();
 }
 
 /** Marca el tutorial como visto para que no vuelva a salir solo. */
@@ -2006,6 +2059,8 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
 $('modal-close').addEventListener('click', closeModal);
 $('ver-tutorial').addEventListener('click', abrirOnboarding);
 document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-onboarding-siguiente]')) { avanzarOnboarding(1); return; }
+  if (e.target.closest('[data-onboarding-atras]')) { avanzarOnboarding(-1); return; }
   if (e.target.closest('[data-onboarding-cerrar]')) { marcarOnboardingVisto(); closeModal(); }
 });
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
@@ -2068,8 +2123,11 @@ document.addEventListener('error', (event) => {
 document.addEventListener('keydown', (e) => {
   if (!$('modal').classList.contains('open')) return;
   if (e.key === 'Escape') closeModal();
-  if (e.key === 'ArrowLeft' && gImgs.length > 1) window.gMove(-1);
-  if (e.key === 'ArrowRight' && gImgs.length > 1) window.gMove(1);
+  // Las flechas sirven a la galería de una ficha o al avance del tutorial, según
+  // qué haya abierto. Nunca a los dos: el tutorial vacía `gImgs` al abrirse.
+  const enTutorial = !!document.querySelector('.onboarding');
+  if (e.key === 'ArrowLeft') { if (enTutorial) avanzarOnboarding(-1); else if (gImgs.length > 1) window.gMove(-1); }
+  if (e.key === 'ArrowRight') { if (enTutorial) avanzarOnboarding(1); else if (gImgs.length > 1) window.gMove(1); }
   if (e.key === 'Tab') {
     const focusable = [...$('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])')]
       .filter((element) => element.getClientRects().length);
