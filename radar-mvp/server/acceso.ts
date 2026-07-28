@@ -141,6 +141,54 @@ export function redactar<T extends Record<string, any>>(row: T, acceso: Acceso):
   } as T;
 }
 
+export interface ResumenBloqueo {
+  bloqueadas: number;
+  visibles: number;
+  /** Descuento medio de lo bloqueado, redondeado. `null` si no hay dato. */
+  descuentoMedioBloqueado: number | null;
+  /** Descuento medio de lo que sí puede abrir, para poder comparar. */
+  descuentoMedioVisible: number | null;
+  mejorDescuentoBloqueado: number | null;
+}
+
+/**
+ * Qué se está perdiendo quien no ha pagado, en números suyos.
+ *
+ * Se calcula sobre las filas que la persona tiene delante, no sobre un agregado
+ * global: así el aviso habla de SU búsqueda y puede comprobarlo mirando la
+ * pantalla. El muro cubre justo las categorías de mayor señal, de modo que la
+ * comparación de descuentos no es retórica — en Bancos lo bloqueado promedia
+ * ~52% de descuento y lo visible está por encima del precio de mercado.
+ */
+export function resumenBloqueo(filas: Array<Record<string, any>>): ResumenBloqueo {
+  const descuento = (r: Record<string, any>): number | null => {
+    // `Number(null)` es 0, no NaN: sin este filtro una ficha SIN descuento contaría
+    // como "0% de descuento" y hundiría la media que sostiene el aviso.
+    const crudo = r.discount_pct;
+    const directo = crudo === null || crudo === undefined || crudo === '' ? NaN : Number(crudo);
+    if (Number.isFinite(directo)) return directo;
+    const avaluo = Number(r.appraisal_value);
+    const postura = Number(r.minimum_bid);
+    if (avaluo > 0 && postura > 0) return (1 - postura / avaluo) * 100;
+    return null;
+  };
+  const media = (valores: number[]): number | null =>
+    valores.length ? Math.round(valores.reduce((a, b) => a + b, 0) / valores.length) : null;
+
+  const bloqueadas = filas.filter((r) => r._bloqueada);
+  const visibles = filas.filter((r) => !r._bloqueada);
+  const descBloqueadas = bloqueadas.map(descuento).filter((n): n is number => n !== null);
+  const descVisibles = visibles.map(descuento).filter((n): n is number => n !== null);
+
+  return {
+    bloqueadas: bloqueadas.length,
+    visibles: visibles.length,
+    descuentoMedioBloqueado: media(descBloqueadas),
+    descuentoMedioVisible: media(descVisibles),
+    mejorDescuentoBloqueado: descBloqueadas.length ? Math.round(Math.max(...descBloqueadas)) : null,
+  };
+}
+
 /**
  * Aplica el control a una lista completa de resultados.
  *

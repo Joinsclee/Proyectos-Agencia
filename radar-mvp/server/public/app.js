@@ -848,11 +848,70 @@ async function load(page) {
   if (loadSeq !== state.loadSeq) return;
   $('grid').innerHTML = '';
   renderCards(res.data);
+  renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
   setResultText(res.total.toLocaleString('es-CO') + ' resultado' + (res.total === 1 ? '' : 's'));
   clearLoadingSkeletons();
   $('empty').style.display = res.total === 0 ? 'block' : 'none';
   renderPager(res.total, res.page, res.pages);
   state.loading = false;
+}
+
+/**
+ * Franja que dice qué deja fuera el plan actual.
+ *
+ * Habla con los números de ESTA búsqueda —cuántas fichas quedan cerradas y con
+ * qué descuento— para que quien lo lea pueda comprobarlo mirando la pantalla. El
+ * muro cubre justo las categorías de mayor señal, así que la comparación no es un
+ * eslogan: en Bancos lo bloqueado promedia ~52% de descuento mientras lo visible
+ * está por encima del precio de mercado.
+ *
+ * No se pinta nada para un suscriptor ni cuando no hay nada bloqueado: un aviso
+ * que sale siempre deja de leerse.
+ */
+function renderAvisoBloqueo(plan, bloqueo, cupo) {
+  const caja = $('aviso-bloqueo');
+  if (!caja) return;
+  if (plan === 'suscrito' || !bloqueo || !bloqueo.bloqueadas) { caja.innerHTML = ''; return; }
+
+  const n = bloqueo.bloqueadas;
+  const fichas = `${n} ficha${n === 1 ? '' : 's'}`;
+  const medio = bloqueo.descuentoMedioBloqueado;
+  const mejor = bloqueo.mejorDescuentoBloqueado;
+  const visible = bloqueo.descuentoMedioVisible;
+
+  // Solo se compara cuando la comparación favorece de verdad: si lo visible
+  // tuviera mejor descuento, decirlo sería mentir al revés.
+  const comparativa = medio != null && visible != null && medio > visible
+    ? ` Su descuento medio es del <strong>${medio}%</strong>, frente al ${visible}% de las que sí puedes abrir.`
+    : medio != null ? ` Su descuento medio es del <strong>${medio}%</strong>.` : '';
+  const punta = mejor != null ? ` La mayor llega al <strong>${mejor}%</strong> bajo el mercado de su zona.` : '';
+
+  const anonimo = plan === 'anonimo';
+  const sinCupo = !anonimo && cupo && !cupo.ilimitado && cupo.restantes === 0;
+
+  // "que no estás viendo" sería inexacto: las tarjetas sí se ven, bloqueadas. Lo
+  // que no puede hacer es abrirlas, y decirlo así es igual de persuasivo y cierto.
+  const titulo = anonimo
+    ? `Hay ${fichas} que no puedes abrir todavía`
+    : sinCupo
+      ? `Se te acabó el cupo del mes con ${fichas} todavía cerradas`
+      : `Te quedan ${cupo?.restantes ?? 0} de ${cupo?.limite ?? CUPO_FREE_MENSUAL} fichas este mes`;
+
+  const cuerpo = anonimo
+    ? `Son las de mayor descuento de esta búsqueda.${comparativa}${punta} Crea tu cuenta gratis y abre ${CUPO_FREE_MENSUAL} al mes.`
+    : sinCupo
+      ? `Aquí siguen ${fichas} sin abrir.${comparativa}${punta} Con el plan completo no hay límite.`
+      : `Úsalas en las que más te interesen: ${fichas} de esta búsqueda están cerradas.${comparativa}`;
+
+  const cta = anonimo
+    ? '<a class="aviso-cta" href="/login">Crear cuenta gratis</a>'
+    : '<a class="aviso-cta" href="/planes">Ver el plan completo</a>';
+
+  caja.innerHTML = `<aside class="aviso-bloqueo${sinCupo ? ' is-agotado' : ''}">
+    <span class="aviso-icono">${ic('lock')}</span>
+    <div class="aviso-texto"><strong>${esc(titulo)}</strong><p>${cuerpo}</p></div>
+    ${cta}
+  </aside>`;
 }
 
 async function loadGuardados() {

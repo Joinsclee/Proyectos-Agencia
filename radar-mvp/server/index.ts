@@ -19,7 +19,7 @@ import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
 import { consumirCupo, estadoCupo, leerCupo } from './cupo.js';
 import { warmCityPools } from '../engine/zone-comps.js';
-import { planDe, redactarLista, redactar, accesoInmueble, accesoRemateFicha } from './acceso.js';
+import { planDe, redactarLista, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
   activarPlanDemo,
@@ -486,14 +486,19 @@ const server = createServer(async (req, res) => {
         // al volver al listado.
         const cupo = usuario?.cupo ?? leerCupo(null);
         const estado = estadoCupo(cupo, plan);
+        const filas = redactarLista(r.data as any[], plan, esRemate ? 'remate' : 'inmueble', {
+          desbloqueadas: cupo.desbloqueadas,
+          restantes: estado.restantes,
+        });
         return sendJSON(res, 200, {
           ...r,
           plan,
           cupo: estado,
-          data: redactarLista(r.data as any[], plan, esRemate ? 'remate' : 'inmueble', {
-            desbloqueadas: cupo.desbloqueadas,
-            restantes: estado.restantes,
-          }),
+          // Qué se está perdiendo quien no ha pagado, con los números de SU
+          // búsqueda: el aviso comercial tiene que ser comprobable mirando la
+          // pantalla, no un adjetivo.
+          bloqueo: resumenBloqueo(filas),
+          data: filas,
         });
       }
       if (path === '/api/facets') {
