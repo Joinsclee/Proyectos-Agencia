@@ -337,6 +337,65 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     }
   });
 
+  test('enseña un recorte de cada bloque y despliega el resto sin volver a la red', async () => {
+    const { context, page, assertClean } = await openIsolatedPage();
+    try {
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await esperarPortada(page);
+
+      // Se elige el primer bloque de UN SOLO grupo que tenga algo plegado. No se
+      // fija cuál —los tamaños son decisión de producto y van a seguir moviéndose—
+      // pero sí que sea de un grupo: en el bloque por ciudad las tarjetas de la
+      // sección son la suma de varias filas y la cuenta no diría lo que parece.
+      const respuesta = await (await page.request.get(`${baseUrl}/api/home`)).json();
+      let indice = -1;
+      let grupo: any = null;
+      respuesta.bloques.forEach((b: any, i: number) => {
+        if (indice >= 0 || b.grupos.length !== 1) return;
+        if (b.grupos[0].fichas.length > b.grupos[0].preview) { indice = i; grupo = b.grupos[0]; }
+      });
+      assert.ok(grupo, 'ningún bloque de la portada tiene fichas plegadas que desplegar');
+
+      const seccion = page.locator('#home .home-bloque').nth(indice);
+      const tarjetas = seccion.locator('article.card');
+      assert.equal(await tarjetas.count(), grupo.preview,
+        'la portada pintó de entrada algo distinto del recorte que mandó el servidor');
+
+      // Expandir no puede costar una petición: las fichas ya llegaron —y ya pasaron
+      // por el muro— en la respuesta de la portada. Una segunda ruta sería una
+      // segunda oportunidad de olvidarse de aplicar el plan del usuario.
+      const peticiones: string[] = [];
+      const espia = (peticion: any) => {
+        if (peticion.url().includes('/api/')) peticiones.push(peticion.url());
+      };
+      page.on('request', espia);
+
+      const boton = seccion.locator('.home-mas-btn').first();
+      assert.match((await boton.textContent()) ?? '', /Ver las \d+ restantes/);
+      await boton.click();
+      await tarjetas.nth(grupo.fichas.length - 1).waitFor();
+      assert.equal(await tarjetas.count(), grupo.fichas.length);
+      page.off('request', espia);
+      assert.deepEqual(peticiones, [], `desplegar pidió a la red: ${peticiones.join(', ')}`);
+
+      // Las que acaban de aparecer explican su porqué igual que las primeras: si el
+      // motivo se pintara por índice sobre el grupo entero, las nuevas saldrían con
+      // el texto de otra ficha o sin texto.
+      assert.equal(await seccion.locator('.card-motivo').count(), grupo.fichas.length);
+      assert.match((await seccion.locator('.card-motivo strong').last().textContent()) ?? '', /por debajo de/);
+
+      // Y se puede volver a plegar.
+      assert.match((await boton.textContent()) ?? '', /Ver solo las primeras/);
+      await boton.click();
+      await tarjetas.nth(grupo.preview).waitFor({ state: 'detached' });
+      assert.equal(await tarjetas.count(), grupo.preview);
+
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
   test('carga el dashboard y expone APIs/configuración sanas', async () => {
     const { context, page, assertClean } = await openIsolatedPage();
     try {

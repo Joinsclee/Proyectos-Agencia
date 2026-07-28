@@ -931,10 +931,10 @@ function homeSkeleton() {
  * servidor a partir de columnas de scraping (ciudad, barrio, banco demandante) y
  * este es el camino en el que no hay forma de equivocarse con el escapado.
  */
-function pintarMotivos(contenedor, fichas) {
+function pintarMotivos(contenedor, fichas, desde = 0) {
   const tarjetas = contenedor.querySelectorAll('article.card');
   fichas.forEach((ficha, i) => {
-    const cuerpo = tarjetas[i] && tarjetas[i].querySelector('.card-body');
+    const cuerpo = tarjetas[desde + i] && tarjetas[desde + i].querySelector('.card-body');
     const sello = ficha._destacado;
     if (!cuerpo || !sello) return;
     const caja = document.createElement('p');
@@ -949,6 +949,58 @@ function pintarMotivos(contenedor, fichas) {
     }
     cuerpo.appendChild(caja);
   });
+}
+
+/**
+ * Pinta un grupo de la portada recortado, con su botón para ver el resto.
+ *
+ * Expandir NO vuelve a la red: las fichas completas ya viajaron en la respuesta de
+ * `/api/home` —y ya pasaron por el muro de pago allí—, así que el clic se siente
+ * instantáneo y no existe una segunda ruta que pudiera olvidarse de aplicar el
+ * plan del usuario. Lo que decide cuántas se ven de entrada es `grupo.preview`,
+ * que manda el servidor: es una decisión de producto, no de maquetación.
+ */
+function montarGrupoHome(grid, pie, grupo) {
+  const fichas = grupo.fichas || [];
+  const preview = Math.min(Number(grupo.preview) || fichas.length, fichas.length);
+  const pintar = (desde, hasta) => {
+    const tanda = fichas.slice(desde, hasta);
+    renderCards(tanda, grid, true);
+    pintarMotivos(grid, tanda, desde);
+  };
+
+  pintar(0, preview);
+  const restantes = fichas.length - preview;
+  if (!pie || restantes <= 0) return;
+
+  const boton = document.createElement('button');
+  boton.type = 'button';
+  boton.className = 'home-mas-btn';
+  boton.setAttribute('aria-expanded', 'false');
+  const plegado = `Ver las ${restantes} restantes`;
+  boton.textContent = plegado;
+  let expandido = false;
+
+  boton.addEventListener('click', () => {
+    if (!expandido) {
+      pintar(preview, fichas.length);
+      expandido = true;
+      boton.setAttribute('aria-expanded', 'true');
+      boton.textContent = `Ver solo las primeras ${preview}`;
+      return;
+    }
+    // Al plegar se quitan SOLO las añadidas. Las primeras no se vuelven a pintar:
+    // recrearlas cambiaría el scroll bajo el dedo y perdería los favoritos ya
+    // marcados en pantalla.
+    [...grid.querySelectorAll('article.card')].slice(preview).forEach((t) => t.remove());
+    expandido = false;
+    boton.setAttribute('aria-expanded', 'false');
+    boton.textContent = plegado;
+    // El foco estaba en el botón, pero puede haber quedado en una tarjeta que
+    // acaba de desaparecer; devolverlo aquí evita que se caiga al <body>.
+    boton.focus();
+  });
+  pie.appendChild(boton);
 }
 
 function renderHome(payload) {
@@ -974,7 +1026,8 @@ function renderHome(payload) {
       const titulo = grupo.etiqueta
         ? `<h4 class="home-grupo-tit">${esc(cap(grupo.etiqueta))}${grupo.detalle ? `<span>${esc(grupo.detalle)}</span>` : ''}</h4>`
         : '';
-      return `<div class="home-grupo">${titulo}<div class="cards-grid" data-home-grid="${i}-${j}"></div></div>`;
+      return `<div class="home-grupo">${titulo}<div class="cards-grid" data-home-grid="${i}-${j}"></div>`
+        + `<div class="home-mas" data-home-mas="${i}-${j}"></div></div>`;
     }).join('');
     return `<section class="home-bloque" aria-labelledby="${idTitulo}">
       <div class="home-bloque-cab">
@@ -996,8 +1049,7 @@ function renderHome(payload) {
     (bloque.grupos || []).forEach((grupo, j) => {
       const grid = raiz.querySelector(`[data-home-grid="${i}-${j}"]`);
       if (!grid) return;
-      renderCards(grupo.fichas || [], grid, true);
-      pintarMotivos(grid, grupo.fichas || []);
+      montarGrupoHome(grid, raiz.querySelector(`[data-home-mas="${i}-${j}"]`), grupo);
     });
   });
 

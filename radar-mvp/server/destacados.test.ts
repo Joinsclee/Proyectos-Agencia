@@ -11,6 +11,7 @@ import test from 'node:test';
 import {
   DESCUENTO_MAX,
   DESCUENTO_MIN,
+  TAMANOS,
   armarDestacados,
   bloqueCiudades,
   bloqueFuentes,
@@ -215,8 +216,34 @@ test('ciudades: se ordenan por inventario marcado y no se anuncian ciudades a me
   ].map(sellarInmueble);
   const bloque = bloqueCiudades(fichas);
   assert.deepEqual(bloque.grupos.map((g) => g.etiqueta), ['bogota', 'medellin']);
-  assert.equal(bloque.grupos[0].fichas.length, 3);
+  // Se entregan TODAS las que tiene la ciudad hasta el tope del bloque: el recorte
+  // a la fila visible lo hace `preview`, no la selección.
+  assert.equal(bloque.grupos[0].fichas.length, 5);
+  assert.equal(bloque.grupos[0].preview, TAMANOS.previewCiudad);
   assert.match(bloque.grupos[0].detalle ?? '', /5 oportunidades marcadas/);
+});
+
+test('ciudades: el corte para entrar se mide contra la fila visible, no contra el tope', () => {
+  // Con `porCiudad` en 12, exigir doce fichas para poder enseñar tres dejaría la
+  // portada casi vacía: medido en producción, solo 27 ciudades pasan de diez.
+  const justas = Array.from({ length: TAMANOS.previewCiudad }, (_, i) =>
+    inmueble({ id: `pop-${i}`, city: 'popayan', price: 1 + i })).map(sellarInmueble);
+  const bloque = bloqueCiudades(justas);
+  assert.deepEqual(bloque.grupos.map((g) => g.etiqueta), ['popayan']);
+  assert.equal(bloque.grupos[0].preview, TAMANOS.previewCiudad);
+});
+
+test('preview: nunca promete más fichas de las que trae el grupo', () => {
+  // Si `preview` superara a `fichas.length`, la interfaz ofrecería un botón de
+  // "ver las N restantes" con N negativo y no habría nada que desplegar.
+  const flaco = pool(2).map(sellarInmueble);
+  for (const bloque of [bloqueSemana(flaco, 1), bloqueMes(flaco, '2026-07'), bloqueCiudades(flaco)]) {
+    for (const grupo of bloque.grupos) {
+      assert.ok(grupo.preview <= grupo.fichas.length,
+        `${bloque.id}: preview ${grupo.preview} > ${grupo.fichas.length} fichas`);
+      assert.ok(grupo.preview > 0, `${bloque.id}: un grupo sin nada visible no debería existir`);
+    }
+  }
 });
 
 test('fuentes: se intercalan las tres, no se ordenan todas juntas', () => {
@@ -225,8 +252,16 @@ test('fuentes: se intercalan las tres, no se ordenan todas juntas', () => {
   const portal = pool(5).map(sellarInmueble);
   const bancos = pool(5).map((f) => sellarInmueble({ ...f, id: `b-${f.id}`, source: 'bbva' }));
   const remates = Array.from({ length: 5 }, (_, i) => remate({ id: `r-${i}` })).map(sellarRemate);
-  const fuentes = fichasDe(bloqueFuentes(portal, bancos, remates)).map((f) => f._kind);
-  assert.deepEqual(fuentes, ['portal', 'banco', 'remate', 'portal', 'banco', 'remate', 'portal', 'banco', 'remate']);
+  const bloque = bloqueFuentes(portal, bancos, remates);
+  const fuentes = fichasDe(bloque).map((f) => f._kind);
+  // El patrón se comprueba por repetición y no con una lista literal: el tope por
+  // fuente es una decisión de producto que va a seguir moviéndose, y lo que la
+  // prueba defiende es el CRUCE, no el número.
+  assert.equal(fuentes.length, 15);
+  for (let i = 0; i < fuentes.length; i += 3) {
+    assert.deepEqual(fuentes.slice(i, i + 3), ['portal', 'banco', 'remate'], `ronda ${i / 3}`);
+  }
+  assert.equal(bloque.grupos[0].preview, TAMANOS.preview);
 });
 
 test('fuentes: los remates se ordenan por riesgo jurídico, no por descuento', () => {
