@@ -39,10 +39,19 @@ async function waitForResults(page: Page) {
   assert.ok(await page.locator('#grid article.card').count(), 'La grilla debe contener al menos un inmueble');
 }
 
-async function openIsolatedPage(options?: { mobile?: boolean }) {
+async function openIsolatedPage(options?: { mobile?: boolean; conOnboarding?: boolean }) {
   const context = await browser.newContext(options?.mobile
     ? { viewport: { width: 375, height: 812 }, deviceScaleFactor: 1 }
     : { viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  // El tutorial de bienvenida se abre sobre la portada en la primera visita y
+  // tapa todo lo demás, que es justo lo que debe hacer con una persona. Los
+  // recorridos que prueban OTRA cosa parten de una sesión que ya lo vio; el que
+  // lo prueba a él pide `conOnboarding`.
+  if (!options?.conOnboarding) {
+    await context.addInitScript(() => {
+      try { localStorage.setItem('radar_onboarding_v1', '1'); } catch { /* modo privado */ }
+    });
+  }
   const page = await context.newPage();
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
@@ -103,6 +112,69 @@ after(async () => {
 });
 
 describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, () => {
+  test('recibe al visitante nuevo con el tutorial y lo deja volver a él', async () => {
+    const { context, page, assertClean } = await openIsolatedPage({ conOnboarding: true });
+    try {
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+
+      const dialogo = page.locator('#modal');
+      await dialogo.waitFor({ state: 'visible' });
+      assert.equal(await dialogo.getAttribute('aria-label'), 'Cómo usar el Radar');
+      // El foco arranca dentro del diálogo: si se quedara en el fondo, quien
+      // navega con teclado seguiría tabulando por una página que no puede tocar.
+      assert.equal(await page.evaluate(() => document.activeElement?.id), 'modal-close');
+
+      // Recorrido por pasos: una tarjeta cada vez, con el avance a la vista.
+      const pasos = await page.locator('.ob-puntitos li').count();
+      assert.ok(pasos >= 3, `el tutorial debe tener varios pasos, tiene ${pasos}`);
+      const activo = () => page.evaluate(() =>
+        Array.from(document.querySelectorAll('.ob-puntitos li')).findIndex((l) => l.classList.contains('is-activo')));
+      assert.equal(await activo(), 0);
+
+      await page.locator('[data-onboarding-siguiente]').click();
+      assert.equal(await activo(), 1, 'Siguiente debe avanzar un paso');
+      assert.ok(await page.locator('[data-onboarding-atras]').isVisible(), 'a partir del segundo hay vuelta atrás');
+      await page.locator('[data-onboarding-atras]').click();
+      assert.equal(await activo(), 0, 'Atrás debe devolver al paso anterior');
+
+      // Hasta el final: el último paso ofrece cerrar, no seguir.
+      for (let i = 1; i < pasos; i += 1) await page.locator('[data-onboarding-siguiente]').click();
+      assert.equal(await activo(), pasos - 1);
+      assert.equal(await page.locator('[data-onboarding-siguiente]').count(), 0, 'en el último paso no hay "Siguiente"');
+
+      // Se espera a que la portada termine de cargar ANTES de recargar: si no, la
+      // recarga aborta los `fetch` en vuelo y el error de red aparecería como un
+      // error de consola que no tiene nada que ver con el tutorial.
+      await waitForResults(page);
+
+      await page.locator('[data-onboarding-cerrar]').click();
+      await dialogo.waitFor({ state: 'hidden' });
+      assert.equal(
+        await dialogo.getAttribute('aria-label'),
+        'Detalle del inmueble',
+        'el diálogo es compartido: al cerrar debe recuperar su etiqueta',
+      );
+
+      // No debe reaparecer al recargar: es una bienvenida, no un peaje.
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await waitForResults(page);
+      assert.equal(await dialogo.isVisible(), false, 'el tutorial no debe repetirse solo');
+
+      // Pero tiene que poder recuperarse sin buscarlo.
+      const botonTutorial = page.locator('#ver-tutorial');
+      assert.ok(await botonTutorial.isVisible(), 'el acceso al tutorial debe estar siempre a la vista');
+      await botonTutorial.click();
+      await dialogo.waitFor({ state: 'visible' });
+      assert.ok(await page.locator('.onboarding').isVisible());
+
+      await page.keyboard.press('Escape');
+      await dialogo.waitFor({ state: 'hidden' });
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
   test('muestra skeletons geométricos y los retira al completar la carga', async () => {
     const { context, page, assertClean } = await openIsolatedPage();
     try {

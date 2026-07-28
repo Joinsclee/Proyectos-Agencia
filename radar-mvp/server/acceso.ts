@@ -33,16 +33,49 @@ export interface Acceso {
   motivo: 'oportunidad' | 'remate' | null;
   /** Aviso de riesgo legal (remates particulares en el tramo gancho). */
   avisoRiesgo: boolean;
+  /**
+   * Qué le falta a ESTE usuario para abrirla. Es lo que decide el texto del sello:
+   * a un anónimo se le pide cuenta, a un registrado con cupo se le ofrece gastar
+   * una, y a uno sin cupo se le ofrece el plan. Antes los tres veían
+   * "Desbloquear con suscripción", que a un anónimo le pedía pagar cuando en
+   * realidad le bastaba registrarse.
+   */
+  requiere?: 'registro' | 'cupo' | 'suscripcion';
 }
 
 const LIBRE: Acceso = { completa: true, motivo: null, avisoRiesgo: false };
 
+/**
+ * Qué se le pide a este plan para abrir una ficha de pago.
+ *
+ * `desbloqueada` significa que la ficha ya se abrió con el cupo de este mes.
+ */
+function bloqueo(
+  plan: Plan,
+  motivo: 'oportunidad' | 'remate',
+  cupo?: { desbloqueada?: boolean; restantes?: number | null },
+): Acceso {
+  if (plan === 'anonimo') return { completa: false, motivo, avisoRiesgo: false, requiere: 'registro' };
+  if (cupo?.desbloqueada) return LIBRE;
+  const quedan = cupo?.restantes ?? 0;
+  return {
+    completa: false,
+    motivo,
+    avisoRiesgo: false,
+    requiere: quedan > 0 ? 'cupo' : 'suscripcion',
+  };
+}
+
 /** Acceso a un inmueble de portal o banco, según su categoría CRECE. */
-export function accesoInmueble(tier: string | null | undefined, plan: Plan): Acceso {
+export function accesoInmueble(
+  tier: string | null | undefined,
+  plan: Plan,
+  cupo?: { desbloqueada?: boolean; restantes?: number | null },
+): Acceso {
   if (plan === 'suscrito') return LIBRE;
   if (!tier) return LIBRE; // sin clasificar no es contenido de pago
   const c = clasificar(tierIndiceRef(tier as CreceTier));
-  return c.requiereSuscripcion ? { completa: false, motivo: 'oportunidad', avisoRiesgo: false } : LIBRE;
+  return c.requiereSuscripcion ? bloqueo(plan, 'oportunidad', cupo) : LIBRE;
 }
 
 /**
@@ -62,6 +95,7 @@ function tierIndiceRef(tier: CreceTier): number {
 export function accesoRemateFicha(
   row: { origen_demandante?: string | null; appraisal_value?: number | null; minimum_bid?: number | null },
   plan: Plan,
+  cupo?: { desbloqueada?: boolean; restantes?: number | null },
 ): Acceso {
   if (plan === 'suscrito') return LIBRE;
   const av = Number(row.appraisal_value ?? 0);
@@ -69,7 +103,7 @@ export function accesoRemateFicha(
   const descuento = av > 0 && bid > 0 ? (1 - bid / av) * 100 : 0;
   const origen = row.origen_demandante === 'bancario' ? 'bancario' : origenDemandante(false);
   const a = accesoRemate(origen, descuento);
-  if (requiereSuscripcionRemate(a)) return { completa: false, motivo: 'remate', avisoRiesgo: false };
+  if (requiereSuscripcionRemate(a)) return bloqueo(plan, 'remate', cupo);
   return { completa: true, motivo: null, avisoRiesgo: a === 'gratis_con_aviso' };
 }
 
@@ -107,12 +141,71 @@ export function redactar<T extends Record<string, any>>(row: T, acceso: Acceso):
   } as T;
 }
 
-/** Aplica el control a una lista completa de resultados. */
+export interface ResumenBloqueo {
+  bloqueadas: number;
+  visibles: number;
+  /** Descuento medio de lo bloqueado, redondeado. `null` si no hay dato. */
+  descuentoMedioBloqueado: number | null;
+  /** Descuento medio de lo que sí puede abrir, para poder comparar. */
+  descuentoMedioVisible: number | null;
+  mejorDescuentoBloqueado: number | null;
+}
+
+/**
+ * Qué se está perdiendo quien no ha pagado, en números suyos.
+ *
+ * Se calcula sobre las filas que la persona tiene delante, no sobre un agregado
+ * global: así el aviso habla de SU búsqueda y puede comprobarlo mirando la
+ * pantalla. El muro cubre justo las categorías de mayor señal, de modo que la
+ * comparación de descuentos no es retórica — en Bancos lo bloqueado promedia
+ * ~52% de descuento y lo visible está por encima del precio de mercado.
+ */
+export function resumenBloqueo(filas: Array<Record<string, any>>): ResumenBloqueo {
+  const descuento = (r: Record<string, any>): number | null => {
+    // `Number(null)` es 0, no NaN: sin este filtro una ficha SIN descuento contaría
+    // como "0% de descuento" y hundiría la media que sostiene el aviso.
+    const crudo = r.discount_pct;
+    const directo = crudo === null || crudo === undefined || crudo === '' ? NaN : Number(crudo);
+    if (Number.isFinite(directo)) return directo;
+    const avaluo = Number(r.appraisal_value);
+    const postura = Number(r.minimum_bid);
+    if (avaluo > 0 && postura > 0) return (1 - postura / avaluo) * 100;
+    return null;
+  };
+  const media = (valores: number[]): number | null =>
+    valores.length ? Math.round(valores.reduce((a, b) => a + b, 0) / valores.length) : null;
+
+  const bloqueadas = filas.filter((r) => r._bloqueada);
+  const visibles = filas.filter((r) => !r._bloqueada);
+  const descBloqueadas = bloqueadas.map(descuento).filter((n): n is number => n !== null);
+  const descVisibles = visibles.map(descuento).filter((n): n is number => n !== null);
+
+  return {
+    bloqueadas: bloqueadas.length,
+    visibles: visibles.length,
+    descuentoMedioBloqueado: media(descBloqueadas),
+    descuentoMedioVisible: media(descVisibles),
+    mejorDescuentoBloqueado: descBloqueadas.length ? Math.round(Math.max(...descBloqueadas)) : null,
+  };
+}
+
+/**
+ * Aplica el control a una lista completa de resultados.
+ *
+ * `desbloqueadas` son los ids que el usuario ya abrió con su cupo de este mes:
+ * esas fichas viajan completas también en el listado, o el usuario habría gastado
+ * cupo para que la tarjeta siguiera tapada al volver a la lista.
+ */
 export function redactarLista<T extends Record<string, any>>(
   rows: T[], plan: Plan, tipo: 'inmueble' | 'remate',
+  cupo?: { desbloqueadas?: string[]; restantes?: number | null },
 ): T[] {
-  return rows.map((r) => redactar(
-    r,
-    tipo === 'remate' ? accesoRemateFicha(r, plan) : accesoInmueble(r.crece_tier, plan),
-  ));
+  const abiertas = new Set(cupo?.desbloqueadas ?? []);
+  return rows.map((r) => {
+    const estado = { desbloqueada: abiertas.has(String(r.id)), restantes: cupo?.restantes ?? null };
+    return redactar(
+      r,
+      tipo === 'remate' ? accesoRemateFicha(r, plan, estado) : accesoInmueble(r.crece_tier, plan, estado),
+    );
+  });
 }

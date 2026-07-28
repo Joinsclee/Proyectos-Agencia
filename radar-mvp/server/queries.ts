@@ -7,6 +7,10 @@ import { supabase } from '../lib/supabase.js';
 import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT, BANK_SOURCES } from '../lib/types.js';
 import { rotarSemanal } from '../engine/rotacion.js';
 import { sanitizeRemateForDisplay } from './data-quality.js';
+import { evaluarFrescura, type Frescura, type TrabajoCron } from './frescura.js';
+import { createLogger } from '../lib/logger.js';
+
+const log = createLogger('queries');
 
 export interface ListQuery {
   city?: string;
@@ -297,5 +301,26 @@ async function computeStats() {
   const { cities } = await facets('portal');
   const perCity = cities.map((c) => ({ city: c }));
 
-  return { portal_total: total, portal_opps: opps, portal_high: high, bancos, remates, perCity };
+  return { portal_total: total, portal_opps: opps, portal_high: high, bancos, remates, perCity, frescura: await leerFrescura() };
+}
+
+/**
+ * Edad real de los datos, para que el dashboard no afirme «hoy» cuando el cron
+ * lleve semanas muerto. Cinco filas, y viaja dentro de la caché de estadísticas.
+ *
+ * A diferencia de los conteos, un fallo aquí NO tumba las estadísticas: se
+ * devuelve `null` y la interfaz dice que no pudo determinar la fecha, que es
+ * honesto. Lo que no puede hacer es dejar de mostrar oportunidades por esto.
+ */
+async function leerFrescura(): Promise<Frescura | null> {
+  try {
+    const { data, error } = await supabase
+      .from('radar_cron_jobs')
+      .select('nombre, cadencia_dias, habilitado, ultima_corrida, ultimo_estado');
+    if (error) throw new Error(error.message);
+    return evaluarFrescura((data ?? []) as unknown as TrabajoCron[]);
+  } catch (e) {
+    log.warn(`frescura: ${e instanceof Error ? e.message : String(e)}`);
+    return null;
+  }
 }

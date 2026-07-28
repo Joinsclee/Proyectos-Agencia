@@ -33,6 +33,8 @@ const RADAR_PREFS_KEY = 'radar_preferences_v1';
 const RADAR_SETUP_DISMISSED_KEY = 'radar_setup_dismissed_v1';
 const RADAR_SIMULATIONS_KEY = 'radar_simulations_v1';
 const RADAR_ALERT_KEY = 'radar_alert_v1';
+/** Debe coincidir con CUPO_MENSUAL_FREE de server/cupo.ts. El servidor manda; esto es solo el texto. */
+const CUPO_FREE_MENSUAL = 20;
 
 function readStoredJson(key, fallback) {
   try {
@@ -306,9 +308,9 @@ function showRegisterWall(count) {
     <div class="wall-body">
       <span class="wall-eyebrow">${ic('lock')} Límite gratuito</span>
       <h2>Ya viste ${count} oportunidades</h2>
-      <p>Crea tu cuenta <strong>gratis</strong> y sigue viendo las ${total} que el radar tiene marcadas hoy.</p>
+      <p>Crea tu cuenta <strong>gratis</strong> y abre ${CUPO_FREE_MENSUAL} fichas completas cada mes, de las ${total} que el radar tiene marcadas hoy.</p>
       <ul class="wall-list">
-        <li>${ic('check')} Fichas ilimitadas, con dirección y fotos</li>
+        <li>${ic('check')} ${CUPO_FREE_MENSUAL} fichas completas al mes, con dirección y fotos</li>
         <li>${ic('check')} Análisis con IA contra los comparables del barrio</li>
         <li>${ic('check')} Guarda tus favoritas y vuelve a ellas</li>
       </ul>
@@ -317,6 +319,129 @@ function showRegisterWall(count) {
     </div>
   </div>`;
   showModal();
+}
+
+// ---------- Onboarding ----------
+/**
+ * Tutorial de bienvenida.
+ *
+ * Reusa `#modal` con el mismo molde que `showRegisterWall`: vaciar `gImgs` para
+ * neutralizar la galería, inyectar el bloque y llamar a `showModal()`. Así hereda
+ * gratis el foco inicial, la trampa de Tab, el cierre con ESC y con el fondo, y la
+ * devolución del foco al elemento que lo abrió.
+ *
+ * Los videos todavía no existen: `src` vacío pinta un marcador. Para publicarlos
+ * basta dejar el archivo en `server/public/radar/` y poner su ruta aquí — no hay
+ * que tocar nada más.
+ */
+const ONBOARDING_KEY = 'radar_onboarding_v1';
+
+/**
+ * Pasos del tutorial, en orden.
+ *
+ * Cada uno es una tarjeta. Los que llevan `video` muestran el reproductor; los
+ * demás, una ilustración de texto. `src` vacío pinta un marcador: para publicar un
+ * video basta dejar el archivo en `server/public/radar/` y poner aquí su ruta.
+ */
+const ONBOARDING_PASOS = [
+  {
+    etiqueta: 'Bienvenido',
+    titulo: 'El Radar compara contra el barrio, no contra el país',
+    texto: 'Cada inmueble se mide contra el precio real de ofertas similares en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional.',
+    video: { src: '', poster: '', pie: 'Qué encuentra el Radar y de dónde salen los inmuebles.' },
+  },
+  {
+    etiqueta: 'Paso 1',
+    titulo: 'Filtra por lo tuyo',
+    texto: 'Ciudad, presupuesto y tipo de inmueble. Puedes dejarlo listo en tres pasos desde la portada y el Radar recuerda tus preferencias.',
+    puntos: ['Portal abierto, inmuebles de bancos y remates judiciales', 'Filtros por barrio, área, habitaciones y estrato'],
+  },
+  {
+    etiqueta: 'Paso 2',
+    titulo: 'Mira el descuento, no el precio',
+    texto: 'El porcentaje de cada tarjeta compara contra ofertas parecidas de la misma zona. Las categorías Oportunidad y Oportunidad Fuerte son las de mayor señal.',
+    video: { src: '', poster: '', pie: 'Cómo leer una ficha: comparables, descuento real y qué revisar.' },
+  },
+  {
+    etiqueta: 'Paso 3',
+    titulo: 'Abre la ficha y guarda las que te sirvan',
+    texto: 'Dentro están la dirección, las fotos, los comparables del barrio y el análisis. Guarda las que te interesen con el corazón y vuelve a ellas cuando quieras.',
+    puntos: ['Sin cuenta puedes explorar y comparar', 'Con cuenta gratis abres ' + CUPO_FREE_MENSUAL + ' fichas completas al mes'],
+  },
+];
+
+/** Paso que se está mostrando. Vive aquí y no en el DOM para poder volver atrás. */
+let onboardingPaso = 0;
+
+function onboardingMedia(paso) {
+  if (!paso.video) return '';
+  const cuerpo = paso.video.src
+    ? `<video class="ob-video-player" controls preload="metadata"${paso.video.poster ? ` poster="${esc(paso.video.poster)}"` : ''}>
+         <source src="${esc(paso.video.src)}" type="video/mp4">
+         Tu navegador no puede reproducir este video.
+       </video>`
+    : `<div class="ob-video-pendiente">${ic('clock')}<span>Video en preparación</span></div>`;
+  return `<figure class="ob-media">${cuerpo}<figcaption>${esc(paso.video.pie)}</figcaption></figure>`;
+}
+
+/**
+ * Pinta UN paso dentro del diálogo ya abierto.
+ *
+ * Se repinta solo el interior de la tarjeta, no el diálogo entero: así el modal no
+ * se cierra ni parpadea al avanzar, y el foco puede moverse al botón que
+ * corresponde sin que el navegador lo pierda entre repintados.
+ */
+function renderOnboardingPaso() {
+  const total = ONBOARDING_PASOS.length;
+  const i = Math.min(Math.max(onboardingPaso, 0), total - 1);
+  const paso = ONBOARDING_PASOS[i];
+  const ultimo = i === total - 1;
+
+  const puntos = paso.puntos
+    ? `<ul class="ob-puntos">${paso.puntos.map((x) => `<li>${ic('check')}${esc(x)}</li>`).join('')}</ul>`
+    : '';
+
+  $('modal-content').innerHTML = `<div class="onboarding">
+    <div class="ob-tarjeta">
+      <span class="ob-eyebrow">${ic('spark')} ${esc(paso.etiqueta)}</span>
+      <h2>${esc(paso.titulo)}</h2>
+      ${onboardingMedia(paso)}
+      <p class="ob-texto">${esc(paso.texto)}</p>
+      ${puntos}
+    </div>
+    <nav class="ob-nav" aria-label="Avance del tutorial">
+      <ol class="ob-puntitos">${ONBOARDING_PASOS.map((_, n) => `<li class="${n === i ? 'is-activo' : n < i ? 'is-visto' : ''}"><span class="sr-only">Paso ${n + 1} de ${total}</span></li>`).join('')}</ol>
+      <div class="ob-botones">
+        ${i > 0 ? '<button class="ob-atras" type="button" data-onboarding-atras>Atrás</button>' : '<button class="ob-atras" type="button" data-onboarding-cerrar>Saltar</button>'}
+        <button class="ob-cta" type="button" ${ultimo ? 'data-onboarding-cerrar' : 'data-onboarding-siguiente'}>${ultimo ? 'Empezar a explorar' : 'Siguiente'}</button>
+      </div>
+    </nav>
+    <p class="ob-nota">Puedes volver a ver esto cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
+  </div>`;
+}
+
+/** Mueve el foco al botón de avanzar, para poder recorrer el tutorial con Enter. */
+function enfocarAvanceOnboarding() {
+  requestAnimationFrame(() => document.querySelector('.ob-cta')?.focus({ preventScroll: true }));
+}
+
+function abrirOnboarding() {
+  gImgs = [];
+  onboardingPaso = 0;
+  $('modal').setAttribute('aria-label', 'Cómo usar el Radar');
+  renderOnboardingPaso();
+  showModal();
+}
+
+function avanzarOnboarding(delta) {
+  onboardingPaso = Math.min(Math.max(onboardingPaso + delta, 0), ONBOARDING_PASOS.length - 1);
+  renderOnboardingPaso();
+  enfocarAvanceOnboarding();
+}
+
+/** Marca el tutorial como visto para que no vuelva a salir solo. */
+function marcarOnboardingVisto() {
+  try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch { /* modo privado */ }
 }
 
 // ---------- Filtros ----------
@@ -754,7 +879,10 @@ async function load(page) {
 
   let res;
   try {
-    res = await fetch(`/api/${state.tab}?${qs}`, { signal: AbortSignal.timeout(25000) }).then((r) => {
+    // La cabecera NO es opcional: el servidor decide con `planDe(getUserFromToken(...))`
+    // qué campos entrega, así que sin ella un suscriptor se identifica como anónimo y
+    // recibe todas las fichas bloqueadas por más que haya pagado.
+    res = await fetch(`/api/${state.tab}?${qs}`, { headers: authHeaders(), signal: AbortSignal.timeout(25000) }).then((r) => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     });
@@ -773,11 +901,78 @@ async function load(page) {
   if (loadSeq !== state.loadSeq) return;
   $('grid').innerHTML = '';
   renderCards(res.data);
+  renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
   setResultText(res.total.toLocaleString('es-CO') + ' resultado' + (res.total === 1 ? '' : 's'));
   clearLoadingSkeletons();
   $('empty').style.display = res.total === 0 ? 'block' : 'none';
   renderPager(res.total, res.page, res.pages);
   state.loading = false;
+}
+
+/**
+ * Franja que dice qué deja fuera el plan actual.
+ *
+ * Habla con los números de ESTA búsqueda —cuántas fichas quedan cerradas y con
+ * qué descuento— para que quien lo lea pueda comprobarlo mirando la pantalla. El
+ * muro cubre justo las categorías de mayor señal, así que la comparación no es un
+ * eslogan: en Bancos lo bloqueado promedia ~52% de descuento mientras lo visible
+ * está por encima del precio de mercado.
+ *
+ * No se pinta nada para un suscriptor ni cuando no hay nada bloqueado: un aviso
+ * que sale siempre deja de leerse.
+ */
+function renderAvisoBloqueo(plan, bloqueo, cupo) {
+  const caja = $('aviso-bloqueo');
+  if (!caja) return;
+  if (plan === 'suscrito' || !bloqueo || !bloqueo.bloqueadas) { caja.innerHTML = ''; return; }
+
+  const n = bloqueo.bloqueadas;
+  const fichas = `${n} ficha${n === 1 ? '' : 's'}`;
+  const medio = bloqueo.descuentoMedioBloqueado;
+  const mejor = bloqueo.mejorDescuentoBloqueado;
+  const visible = bloqueo.descuentoMedioVisible;
+
+  const anonimo = plan === 'anonimo';
+  const sinCupo = !anonimo && cupo && !cupo.ilimitado && cupo.restantes === 0;
+
+  // "que no estás viendo" sería inexacto: las tarjetas sí se ven, bloqueadas. Lo
+  // que no puede hacer es abrirlas, y decirlo así es igual de persuasivo y cierto.
+  const titulo = anonimo
+    ? `Hay ${fichas} que no puedes abrir todavía`
+    : sinCupo
+      ? `Se te acabó el cupo del mes con ${fichas} todavía cerradas`
+      : `Te quedan ${cupo?.restantes ?? 0} de ${cupo?.limite ?? CUPO_FREE_MENSUAL} fichas este mes`;
+
+  const cuerpo = anonimo
+    ? `Son las de mayor descuento de esta búsqueda. Crea tu cuenta gratis y abre ${CUPO_FREE_MENSUAL} al mes.`
+    : sinCupo
+      ? 'Son las de mayor descuento de esta búsqueda. Con el plan completo no hay límite.'
+      : `${fichas} de esta búsqueda siguen cerradas. Úsalas en las que más te interesen.`;
+
+  // Las cifras van en su propia franja en vez de dentro de la frase: son el
+  // argumento y así se leen de un vistazo, sin partir el párrafo en pedazos.
+  const cifras = [];
+  if (medio != null) cifras.push([`${medio}%`, 'descuento medio']);
+  if (mejor != null && mejor !== medio) cifras.push([`${mejor}%`, 'la mayor']);
+  // Solo se compara cuando la comparación favorece de verdad: si lo visible
+  // tuviera mejor descuento, enseñarlo sería mentir al revés.
+  if (medio != null && visible != null && medio > visible) cifras.push([`${visible}%`, 'las que sí puedes abrir']);
+  const cifrasHtml = cifras.length
+    ? `<dl class="aviso-cifras">${cifras.map(([v, k], idx) => `<div${idx === cifras.length - 1 && cifras.length > 1 ? ' class="es-contraste"' : ''}><dt>${esc(v)}</dt><dd>${esc(k)}</dd></div>`).join('')}</dl>`
+    : '';
+
+  const cta = anonimo
+    ? '<a class="aviso-cta" href="/login">Crear cuenta gratis</a>'
+    : '<a class="aviso-cta" href="/planes">Ver el plan completo</a>';
+
+  caja.innerHTML = `<aside class="aviso-bloqueo${sinCupo ? ' is-agotado' : ''}">
+    <div class="aviso-cabecera">
+      <span class="aviso-icono">${ic('lock')}</span>
+      <div class="aviso-texto"><strong>${esc(titulo)}</strong><p>${esc(cuerpo)}</p></div>
+      ${cta}
+    </div>
+    ${cifrasHtml}
+  </aside>`;
 }
 
 async function loadGuardados() {
@@ -974,11 +1169,22 @@ function frescura(p) {
   return `<span class="frescura" title="Última vez que el motor confirmó que sigue publicado">${ic('check')}${verbo} ${cuando}</span>`;
 }
 
-/** Sello sobre la foto: la ficha existe y se ve el descuento, falta desbloquearla. */
+/**
+ * Sello sobre la foto: la ficha existe y se ve el descuento, falta desbloquearla.
+ *
+ * El texto depende de qué le falta a ESTE usuario, que es lo que el servidor
+ * manda en `_acceso.requiere`. Antes decía "Desbloquear con suscripción" a todo
+ * el mundo, incluido a quien solo tenía que registrarse: se le pedía pagar por
+ * algo que ya podía obtener gratis.
+ */
 function selloSuscripcion(p) {
   if (!esBloqueada(p)) return '';
   const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
-  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad detectada'}</span><em>Desbloquear con suscripción</em></div>`;
+  const requiere = p._acceso?.requiere;
+  const accion = requiere === 'registro' ? 'Crea tu cuenta gratis para verla'
+    : requiere === 'cupo' ? 'Ábrela con tu cupo del mes'
+    : 'Desbloquear con suscripción';
+  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad detectada'}</span><em>${accion}</em></div>`;
 }
 
 function avisoCuotaParte(p) {
@@ -1263,7 +1469,7 @@ function renderRecs(recs) {
 }
 window.__openRec = async function (kind, id) {
   try {
-    const res = await fetch(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`);
+    const res = await fetch(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, { headers: authHeaders() });
     const data = await res.json();
     if (!data.ok) return;
     if (kind === 'remate') openRemate(data.data);
@@ -1541,6 +1747,28 @@ window.__retryMarket = (kind, id, disc) => {
   gFichaSeq--; // fillMarketLazy vuelve a incrementarlo: este reintento sigue siendo la ficha vigente
   fillMarketLazy(kind, id, disc);
 }
+/** A partir de aquí un dato del proceso deja de ser un dato y es un párrafo. */
+const LARGO_MAXIMO_DATO = 220;
+
+/**
+ * Repliega un valor desmedido.
+ *
+ * Los remates traen campos que el portal rellenó a granel: el "Secuestre" de
+ * algunos incluye dirección, teléfono, correo y notas al comprador, y llega a
+ * pasar de cuatro mil caracteres. Mostrarlo entero convierte la ficha en un muro
+ * de texto. Se enseña el principio y el resto queda a un clic, sin recortar nada:
+ * el dato completo sigue estando.
+ *
+ * Recibe HTML YA ESCAPADO, así que aquí no se vuelve a escapar; el corte se hace
+ * en un espacio para no partir una entidad HTML por la mitad.
+ */
+function valorLargo(html) {
+  if (html.length <= LARGO_MAXIMO_DATO) return html;
+  const corte = html.lastIndexOf(' ', LARGO_MAXIMO_DATO);
+  const inicio = html.slice(0, corte > 80 ? corte : LARGO_MAXIMO_DATO);
+  return `<details class="kv-largo"><summary>${inicio}… <em>ver completo</em></summary><p>${html}</p></details>`;
+}
+
 function openRemate(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
@@ -1556,7 +1784,7 @@ function openRemate(p) {
   if (hasData(p.defendant)) datos.push(['Demandado', esc(p.defendant)]);
   if (hasData(p.court)) datos.push(['Juzgado', esc(p.court)]);
   if (hasData(p.case_number)) datos.push(['Radicado del proceso', esc(p.case_number)]);
-  if (hasData(p.trustee)) datos.push(['Secuestre', esc(p.trustee).replace(/^secuestre:?\s*/i, '')]);
+  if (hasData(p.trustee)) datos.push(['Secuestre', valorLargo(esc(p.trustee).replace(/^secuestre:?\s*/i, ''))]);
   if (hasData(p.matricula_inmobiliaria)) datos.push(['Matrícula inmobiliaria', esc(p.matricula_inmobiliaria)]);
   if (p.deposit_pct) datos.push(['Depósito para participar', p.deposit_pct + '%']);
   const datosHtml = datos.length
@@ -1710,6 +1938,9 @@ function showModal() {
 }
 function closeModal() {
   if (!$('modal').classList.contains('open')) return;
+  // El diálogo se comparte entre ficha, muro y tutorial: si no se restituye la
+  // etiqueta, el lector de pantalla anunciaría la anterior sobre el contenido nuevo.
+  $('modal').setAttribute('aria-label', 'Detalle del inmueble');
   $('modal').classList.remove('open');
   $('modal').setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
@@ -1741,14 +1972,36 @@ async function loadStats() {
   $('c-portal').textContent = STATS.portal_total.toLocaleString('es-CO');
   $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
   $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
-  const hoy = new Date().toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  const actualizado = renderActualizado(STATS.frescura);
   $('summary').innerHTML = `
     <div class="summary-stat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades</div></div>
     <div class="summary-stat"><div class="num">${STATS.portal_total.toLocaleString('es-CO')}</div><div class="lbl">Listados portal</div></div>
     <div class="summary-stat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">En bancos</div></div>
     <div class="summary-stat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates</div></div>
-    <div class="summary-stat muted"><div class="num">${hoy}</div><div class="lbl">Actualizado</div></div>`;
+    ${actualizado}`;
   renderVStats();
+}
+/**
+ * La casilla "Actualizado" del resumen.
+ *
+ * Antes era `new Date()` del navegador: decía "hoy" aunque el cron llevara un mes
+ * muerto. Ahora sale de `radar_cron_jobs` (server/frescura.ts) y tiene tres
+ * estados, porque "no lo sé" es una respuesta distinta de "está al día".
+ */
+function renderActualizado(frescura) {
+  if (!frescura || !frescura.actualizadoEn) {
+    return `<div class="summary-stat muted" title="No se pudo consultar el estado de las corridas">
+      <div class="num">—</div><div class="lbl">Actualizado</div></div>`;
+  }
+  const fecha = new Date(frescura.actualizadoEn);
+  const etiqueta = fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  if (!frescura.degradada) {
+    return `<div class="summary-stat muted" title="Última corrida: ${esc(fecha.toLocaleString('es-CO'))}">
+      <div class="num">${esc(etiqueta)}</div><div class="lbl">Actualizado</div></div>`;
+  }
+  return `<div class="summary-stat muted stat-degradada" title="${esc(frescura.motivo || '')}">
+    <div class="num">${esc(etiqueta)}</div>
+    <div class="lbl">Actualizado · datos atrasados</div></div>`;
 }
 function renderVStats() {
   if (!STATS) return;
@@ -1812,6 +2065,12 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   }
 }));
 $('modal-close').addEventListener('click', closeModal);
+$('ver-tutorial').addEventListener('click', abrirOnboarding);
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-onboarding-siguiente]')) { avanzarOnboarding(1); return; }
+  if (e.target.closest('[data-onboarding-atras]')) { avanzarOnboarding(-1); return; }
+  if (e.target.closest('[data-onboarding-cerrar]')) { marcarOnboardingVisto(); closeModal(); }
+});
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
@@ -1872,10 +2131,13 @@ document.addEventListener('error', (event) => {
 document.addEventListener('keydown', (e) => {
   if (!$('modal').classList.contains('open')) return;
   if (e.key === 'Escape') closeModal();
-  if (e.key === 'ArrowLeft' && gImgs.length > 1) window.gMove(-1);
-  if (e.key === 'ArrowRight' && gImgs.length > 1) window.gMove(1);
+  // Las flechas sirven a la galería de una ficha o al avance del tutorial, según
+  // qué haya abierto. Nunca a los dos: el tutorial vacía `gImgs` al abrirse.
+  const enTutorial = !!document.querySelector('.onboarding');
+  if (e.key === 'ArrowLeft') { if (enTutorial) avanzarOnboarding(-1); else if (gImgs.length > 1) window.gMove(-1); }
+  if (e.key === 'ArrowRight') { if (enTutorial) avanzarOnboarding(1); else if (gImgs.length > 1) window.gMove(1); }
   if (e.key === 'Tab') {
-    const focusable = [...$('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    const focusable = [...$('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])')]
       .filter((element) => element.getClientRects().length);
     if (!focusable.length) return;
     const first = focusable[0];
@@ -1889,6 +2151,17 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+// El tutorial se abre solo la primera vez. Va antes de cargar resultados porque
+// no depende de ellos, y el fondo bloqueado evita que el usuario empiece a tocar
+// filtros con el diálogo abierto. En modo privado `localStorage` puede lanzar: si
+// no se puede recordar la visita, es mejor no mostrarlo que mostrarlo siempre.
+try {
+  if (!localStorage.getItem(ONBOARDING_KEY)) {
+    marcarOnboardingVisto();
+    abrirOnboarding();
+  }
+} catch { /* sin almacenamiento no se insiste */ }
 
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.

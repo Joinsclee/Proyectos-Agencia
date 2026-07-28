@@ -17,10 +17,12 @@ import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getPr
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
+import { consumirCupo, estadoCupo, leerCupo } from './cupo.js';
 import { warmCityPools } from '../engine/zone-comps.js';
-import { planDe, redactarLista, redactar, accesoInmueble, accesoRemateFicha } from './acceso.js';
+import { planDe, redactarLista, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
+  activarPlanDemo,
   deleteAlert,
   exportAccount,
   exportAccountCsv,
@@ -29,6 +31,7 @@ import {
   listAdminPlanInterests,
   listPlans,
   registerPlanInterest,
+  registrarDesbloqueo,
   saveAlert,
   syncAccount,
   updateAdminSubscription,
@@ -129,6 +132,49 @@ async function readJsonBody(req: import('node:http').IncomingMessage): Promise<u
 /** Token Bearer de la petición, si viene. */
 const bearer = (req: import('node:http').IncomingMessage): string | null =>
   (req.headers.authorization ?? '').replace(/^Bearer\s+/i, '') || null;
+
+/**
+ * Gasta una ficha del cupo mensual si esta lo requiere y al usuario le queda.
+ *
+ * Solo se escribe cuando de verdad se consume una unidad nueva: reabrir algo ya
+ * abierto, ser suscriptor o ser anónimo no producen ninguna escritura. Devuelve
+ * el estado que necesita el control de acceso para decidir.
+ *
+ * Un fallo al guardar NO bloquea la respuesta: se registra y se sirve la ficha.
+ * Perder la cuenta de una unidad es mucho menos grave que negarle a un usuario
+ * legítimo algo que sí puede ver.
+ */
+async function gastarCupoSiHaceFalta(
+  usuario: Awaited<ReturnType<typeof getUserFromToken>>,
+  plan: ReturnType<typeof planDe>,
+  id: string,
+  kind: 'portal' | 'banco' | 'remate',
+  row: Record<string, any>,
+): Promise<{ desbloqueada: boolean; restantes: number | null }> {
+  const cupo = usuario?.cupo ?? leerCupo(null);
+  const estadoPrevio = estadoCupo(cupo, plan);
+  if (plan !== 'free' || !usuario) {
+    return { desbloqueada: false, restantes: estadoPrevio.restantes };
+  }
+
+  // Si la ficha no es de pago no se toca el cupo: cobrar por algo que ya era
+  // gratis vaciaría el cupo del usuario sin darle nada a cambio.
+  const requierePago = kind === 'remate'
+    ? accesoRemateFicha(row as any, 'anonimo').completa === false
+    : accesoInmueble(row.crece_tier, 'anonimo').completa === false;
+  if (!requierePago) return { desbloqueada: false, restantes: estadoPrevio.restantes };
+
+  const r = consumirCupo(cupo, id, 'free');
+  if (r.consumido) {
+    try {
+      await registrarDesbloqueo(usuario.id, r.cupo);
+      if (usuario.cupo) usuario.cupo = r.cupo;
+    } catch (e) {
+      log.error(`cupo ${usuario.id.slice(0, 8)}: no se pudo registrar el desbloqueo`, e);
+    }
+  }
+  return { desbloqueada: r.permitido, restantes: estadoCupo(r.cupo, 'free').restantes };
+}
 
 function parseListQuery(url: URL): ListQuery {
   const g = (k: string) => url.searchParams.get(k) ?? undefined;
@@ -275,6 +321,11 @@ const server = createServer(async (req, res) => {
           const result = await registerPlanInterest(user.id, await readJsonBody(req));
           return sendJSON(res, result.ok ? 200 : 400, result);
         }
+        if (path === '/api/account/activar-demo' && req.method === 'POST') {
+          if (rateLimited(res, `activar-demo:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 })) return;
+          const result = await activarPlanDemo(user.id);
+          return sendJSON(res, result.ok ? 200 : 403, result);
+        }
         if (path === '/api/account/checkout' && req.method === 'POST') {
           if (rateLimited(res, `checkout:${user.id}`, { limit: 5, windowMs: 60 * 60 * 1000 })) return;
           const result = await createWompiCheckout(user);
@@ -400,18 +451,55 @@ const server = createServer(async (req, res) => {
           return sendJSON(res, 400, { ok: false, error: 'kind (portal|banco|remate) e id requeridos' });
         }
         const row = await getProperty(kind, id);
-        return row ? sendJSON(res, 200, { ok: true, kind, data: row }) : sendJSON(res, 404, { ok: false, error: 'no encontrado' });
+        if (!row) return sendJSON(res, 404, { ok: false, error: 'no encontrado' });
+        // Esta ruta se saltaba el muro entero: devolvía la fila cruda a cualquiera,
+        // así que bastaba pedir por id una ficha que el listado sí bloqueaba para
+        // leer su dirección. Se aplica el mismo criterio que en los listados.
+        const usuarioFicha = await getUserFromToken(bearer(req));
+        const planFicha = planDe(usuarioFicha);
+        // Abrir una ficha de pago es lo que gasta cupo del plan gratuito: es el
+        // único punto del sistema donde el usuario pide contenido concreto.
+        const cupoFicha = await gastarCupoSiHaceFalta(usuarioFicha, planFicha, id, kind, row);
+        const acceso = kind === 'remate'
+          ? accesoRemateFicha(row as any, planFicha, cupoFicha)
+          : accesoInmueble((row as any).crece_tier, planFicha, cupoFicha);
+        return sendJSON(res, 200, {
+          ok: true,
+          kind,
+          plan: planFicha,
+          cupo: estadoCupo(usuarioFicha?.cupo ?? leerCupo(null), planFicha),
+          data: redactar(row as any, acceso),
+        });
       }
       // Los listados se filtran según el plan ANTES de salir del servidor: lo que
       // el usuario no ha pagado no debe viajar en la respuesta (antes el muro era
       // solo visual y los datos iban igual, visibles desde el navegador).
       if (path === '/api/portal' || path === '/api/bancos' || path === '/api/remates') {
-        const plan = planDe(await getUserFromToken(bearer(req)));
+        const usuario = await getUserFromToken(bearer(req));
+        const plan = planDe(usuario);
         const esRemate = path === '/api/remates';
         const q = parseListQuery(url);
         const r = esRemate ? await queryRemates(q)
           : path === '/api/portal' ? await queryPortal(q) : await queryBancos(q);
-        return sendJSON(res, 200, { ...r, plan, data: redactarLista(r.data as any[], plan, esRemate ? 'remate' : 'inmueble') });
+        // Las fichas que ya gastaron cupo este mes viajan completas también aquí:
+        // si no, el usuario habría pagado una para que la tarjeta siguiera tapada
+        // al volver al listado.
+        const cupo = usuario?.cupo ?? leerCupo(null);
+        const estado = estadoCupo(cupo, plan);
+        const filas = redactarLista(r.data as any[], plan, esRemate ? 'remate' : 'inmueble', {
+          desbloqueadas: cupo.desbloqueadas,
+          restantes: estado.restantes,
+        });
+        return sendJSON(res, 200, {
+          ...r,
+          plan,
+          cupo: estado,
+          // Qué se está perdiendo quien no ha pagado, con los números de SU
+          // búsqueda: el aviso comercial tiene que ser comprobable mirando la
+          // pantalla, no un adjetivo.
+          bloqueo: resumenBloqueo(filas),
+          data: filas,
+        });
       }
       if (path === '/api/facets') {
         const source = (url.searchParams.get('source') as 'portal' | 'bancos') ?? 'portal';
@@ -439,6 +527,9 @@ const server = createServer(async (req, res) => {
         // Proveedor configurado y despachador encendido son cosas distintas: sin
         // las dos no sale ningún correo, y la cuenta no debe prometer lo contrario.
         alertDispatchEnabled: await alertDispatchEnabled(),
+        // Se publica a propósito: una puerta que regala el acceso completo no
+        // debe poder estar abierta sin que se note desde fuera.
+        demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
         paymentDemoReady: wompiPaymentDemoReady(),
       });
       return sendJSON(res, 404, { error: 'ruta API no encontrada' });

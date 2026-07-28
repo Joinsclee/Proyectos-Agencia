@@ -53,6 +53,66 @@ Condiciones de salida:
 6. Nunca activar un trabajo deshabilitado como parte incidental de un
    despliegue.
 
+### Modos de uso y el interruptor de la puerta abierta
+
+| Modo | Quién | Qué ve |
+|---|---|---|
+| Anónimo | sin registrar | fichas de oportunidad bloqueadas; se le pide crear cuenta |
+| Explorador (free) | registrado | 20 fichas completas por mes calendario |
+| Radar Pro | de pago | sin límite |
+
+El cupo vive en `app_metadata.unlock_quota` y se reinicia solo al cambiar de mes,
+sin ningún proceso programado. Una ficha ya abierta no vuelve a consumir cupo.
+
+`RADAR_DEMO_PLAN=1` hace que el botón del plan de pago conceda el acceso completo
+**sin cobrar nada**, marcando la cuenta con `subscription_source: 'demo'` para
+poder separarla después de quien pagó de verdad. Es dinero regalado a propósito,
+para poder enseñar el producto entero mientras la pasarela no está lista.
+`/api/config` publica `demoPlanActivation` para que se note desde fuera si la
+puerta está abierta.
+
+**Antes de cobrar de verdad hay que ponerlo en `0`.** Es un cambio de variable de
+entorno, sin desplegar código. Para revisar quién entró por ahí:
+`subscription_source = 'demo'` en `app_metadata`.
+
+### Conceder o retirar el plan Pro a una cuenta
+
+El panel `/admin` es el camino previsto, pero hoy no hay ninguna cuenta
+administradora y crear una implicaría dar acceso al correo de todos los usuarios.
+Mientras tanto:
+
+```bash
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com                  # simulacro
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com --aplicar        # 365 días
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com --dias=30 --aplicar
+npx tsx scripts/otorgar-plan.ts correo@ejemplo.com --retirar --aplicar
+```
+
+Escribe en `app_metadata` **y** en `user_metadata` a propósito, para que el permiso
+valga tanto en la producción actual como tras desplegar el arreglo de privilegios.
+Queda registrado en el historial de suscripción de la cuenta, visible en `/cuenta`.
+
+`--admin` concede además el rol de administrador. Va aparte del plan porque no es
+«el plan más alto»: el panel expone el correo de todas las cuentas y permite
+cambiarle la suscripción a terceros.
+
+### Migración de privilegios a `app_metadata` (una sola vez)
+
+Desde el 2026-07-27 el plan, el rol y el ciclo de la suscripción se leen de
+`app_metadata`. Las cuentas creadas antes los tienen en `user_metadata` y, hasta
+que se migren, **aparecen como `free` aunque hubieran pagado**. No al revés: nadie
+gana permisos por no migrar.
+
+Justo después de desplegar:
+
+```bash
+npx tsx scripts/migrar-privilegios-app-metadata.ts            # simulacro
+npx tsx scripts/migrar-privilegios-app-metadata.ts --aplicar  # escribe
+```
+
+Es idempotente. Al terminar debe reportar `0 errores`, y una segunda corrida debe
+decir que todas las cuentas ya estaban migradas.
+
 Si el cambio incluye Wompi, antes de desplegar:
 
 1. Aplicar `supabase/migrations/20260725000002_wompi_demo_payments.sql`.

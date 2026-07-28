@@ -35,6 +35,14 @@ const EnvSchema = z.object({
 
   // Fase 3
   FINCARAIZ_API_KEY: z.string().optional(),
+
+  // Activación de demostración del plan de pago.
+  //
+  // Con esto en '1', pulsar el botón del plan de pago concede el acceso completo
+  // SIN COBRAR NADA. Existe para poder enseñar el producto entero antes de tener
+  // la pasarela de pagos operativa, y es literalmente dinero regalado: ponerlo en
+  // '0' es el único cambio necesario para cerrarlo, sin desplegar código nuevo.
+  RADAR_DEMO_PLAN: z.enum(['0', '1']).default('0'),
 });
 
 export const env = (() => {
