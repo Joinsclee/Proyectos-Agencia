@@ -40,6 +40,18 @@ after(async () => {
   if (server && !server.killed) server.kill('SIGTERM');
 });
 
+/**
+ * El buscador vive detrás de la pestaña Portal desde que la portada es la primera
+ * pantalla. Estas pruebas miden la disposición del BUSCADOR, así que van hasta él.
+ */
+async function abrirBuscador(page: import('playwright').Page) {
+  await page.locator('button[data-tab="portal"]').click();
+  await page.waitForFunction(
+    () => document.querySelector('button[data-tab="portal"]')?.getAttribute('aria-current') === 'page',
+  );
+  await page.waitForFunction(() => /\d[\d.,]*\s+resultados?/.test(document.getElementById('count')?.textContent || ''));
+}
+
 test('organiza los filtros en una columna lateral y los oculta en Guardados', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   // El tutorial de bienvenida tapa la portada en la primera visita; estas pruebas
@@ -49,7 +61,7 @@ test('organiza los filtros en una columna lateral y los oculta en Guardados', as
   });
   const page = await context.newPage();
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => /\d[\d.,]*\s+resultados?/.test(document.getElementById('count')?.textContent || ''));
+  await abrirBuscador(page);
 
   const filtersBox = await page.locator('.controls').boundingBox();
   const resultsBox = await page.locator('#results').boundingBox();
@@ -73,7 +85,7 @@ test('mantiene los filtros como panel desplegable en móvil', async () => {
   });
   const page = await context.newPage();
   await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => /\d[\d.,]*\s+resultados?/.test(document.getElementById('count')?.textContent || ''));
+  await abrirBuscador(page);
 
   const toggle = page.locator('#filters-toggle');
   assert.equal(await toggle.isVisible(), true);

@@ -27,7 +27,9 @@ const ORDERS = {
   remates: [['auction_asc', 'Audiencia próxima'], ['min_asc', 'Postura menor'], ['min_desc', 'Postura mayor']],
 };
 
-const state = { tab: 'portal', page: 1, loading: false, loadSeq: 0 };
+// La portada es la primera pantalla del producto: se entra por ella, no por el
+// listado del portal. Debe coincidir con la pestaña marcada `active` en index.html.
+const state = { tab: 'home', page: 1, loading: false, loadSeq: 0 };
 const GUEST_FAVS_KEY = 'radar_guest_favorites_v1';
 const RADAR_PREFS_KEY = 'radar_preferences_v1';
 const RADAR_SETUP_DISMISSED_KEY = 'radar_setup_dismissed_v1';
@@ -472,14 +474,36 @@ function setResultText(text) {
   if ($('mobile-count')) $('mobile-count').textContent = text;
 }
 
+/**
+ * Qué región de la página manda en cada pestaña.
+ *
+ * La portada y el buscador son dos espacios distintos y nunca conviven: dejar el
+ * buscador debajo obligaría a hacer scroll por una grilla de resultados vieja para
+ * llegar al pie de los destacados. El enlace de salto se mueve con ellos, o quien
+ * navega con teclado acabaría enfocando la región escondida.
+ */
+function aplicarVistaDePestana() {
+  const enHome = state.tab === 'home';
+  const home = $('home');
+  const workspace = $('search-workspace');
+  if (home) home.hidden = !enHome;
+  if (workspace) workspace.hidden = enHome;
+  const salto = $('skip-link');
+  if (salto) {
+    salto.setAttribute('href', enHome ? '#home' : '#results');
+    salto.textContent = enHome ? 'Saltar a los destacados' : 'Saltar a los resultados';
+  }
+}
+
 async function buildFilters() {
   const tab = state.tab;
   const controls = document.querySelector('.controls');
   const workspace = $('search-workspace');
-  const filtersAreRelevant = tab !== 'guardados';
+  const filtersAreRelevant = tab !== 'guardados' && tab !== 'home';
   if (controls) controls.hidden = !filtersAreRelevant;
   if (workspace) workspace.classList.toggle('is-results-only', !filtersAreRelevant);
-  if (tab === 'guardados') {
+  // La portada no filtra nada: es una selección, no una búsqueda.
+  if (tab === 'guardados' || tab === 'home') {
     $('filters').innerHTML = '';
     updateFilterCount();
     return;
@@ -868,7 +892,146 @@ function clearLoadingSkeletons() {
   $('loading').innerHTML = '<span class="sr-only">Cargando resultados…</span>';
 }
 
+// ---------- Portada (Home con destacados) ----------
+/**
+ * Esqueletos de la portada.
+ *
+ * Reusan `.skeleton-card` del listado a propósito: la portada pinta las mismas
+ * tarjetas, así que su carga tiene que sentirse igual. Se dibujan dos bloques
+ * porque es lo que cabe sin scroll: fingir los cuatro solo alargaría la página
+ * para luego encogerla.
+ */
+function homeSkeleton() {
+  const tarjetas = (n) => Array.from({ length: n }, (_, i) => `
+    <article class="card skeleton-card" aria-hidden="true" style="--skeleton-delay:${i * 55}ms">
+      <div class="card-img-wrap skeleton-media"></div>
+      <div class="card-body skeleton-body">
+        <div class="skeleton-line skeleton-price"></div>
+        <div class="skeleton-line skeleton-title"></div>
+        <div class="skeleton-line skeleton-location"></div>
+        <div class="skeleton-line skeleton-freshness"></div>
+      </div>
+    </article>`).join('');
+  const bloque = () => `<section class="home-bloque">
+      <div class="home-bloque-cab">
+        <div class="home-bloque-txt">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line skeleton-location"></div>
+        </div>
+      </div>
+      <div class="cards-grid">${tarjetas(3)}</div>
+    </section>`;
+  return `<div class="home-inner">${bloque()}${bloque()}</div>`;
+}
+
+/**
+ * El porqué de cada ficha, debajo de sus datos.
+ *
+ * Va con `textContent` y no dentro del HTML de la tarjeta: el motivo lo compone el
+ * servidor a partir de columnas de scraping (ciudad, barrio, banco demandante) y
+ * este es el camino en el que no hay forma de equivocarse con el escapado.
+ */
+function pintarMotivos(contenedor, fichas) {
+  const tarjetas = contenedor.querySelectorAll('article.card');
+  fichas.forEach((ficha, i) => {
+    const cuerpo = tarjetas[i] && tarjetas[i].querySelector('.card-body');
+    const sello = ficha._destacado;
+    if (!cuerpo || !sello) return;
+    const caja = document.createElement('p');
+    caja.className = 'card-motivo';
+    const titular = document.createElement('strong');
+    titular.textContent = sello.motivo;
+    caja.appendChild(titular);
+    if (sello.respaldo) {
+      const detalle = document.createElement('span');
+      detalle.textContent = sello.respaldo;
+      caja.appendChild(detalle);
+    }
+    cuerpo.appendChild(caja);
+  });
+}
+
+function renderHome(payload) {
+  const raiz = $('home');
+  const bloques = Array.isArray(payload.bloques) ? payload.bloques : [];
+  raiz.removeAttribute('aria-busy');
+  if (!bloques.length) {
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('magnifier', 'Todavía no hay destacados', 'El motor aún no ha marcado oportunidades suficientes para armar la portada. Explora el Portal mientras tanto.')}</div></div>`;
+    setResultText('Sin destacados');
+    return;
+  }
+
+  const cabecera = `<div class="home-intro">
+    <span class="home-kicker">${ic('radar')} Semana ${esc(payload.semana)} · ${esc(payload.total)} oportunidades seleccionadas</span>
+    <h2>Lo que el Radar destaca hoy</h2>
+    <p>Cada bloque dice con qué regla se eligió. Todo sale del Índice CRECE: el precio por m² de cada inmueble frente a la mediana de ofertas parecidas en su propia zona.</p>
+  </div>
+  <div id="home-aviso"></div>`;
+
+  const cuerpo = bloques.map((bloque, i) => {
+    const idTitulo = `home-bloque-${esc(bloque.id)}`;
+    const grupos = (bloque.grupos || []).map((grupo, j) => {
+      const titulo = grupo.etiqueta
+        ? `<h4 class="home-grupo-tit">${esc(cap(grupo.etiqueta))}${grupo.detalle ? `<span>${esc(grupo.detalle)}</span>` : ''}</h4>`
+        : '';
+      return `<div class="home-grupo">${titulo}<div class="cards-grid" data-home-grid="${i}-${j}"></div></div>`;
+    }).join('');
+    return `<section class="home-bloque" aria-labelledby="${idTitulo}">
+      <div class="home-bloque-cab">
+        <span class="home-bloque-ic">${ic(bloque.icono || 'spark')}</span>
+        <div class="home-bloque-txt">
+          <h3 id="${idTitulo}">${esc(bloque.titulo)}</h3>
+          <p class="home-criterio">${esc(bloque.criterio)}</p>
+        </div>
+      </div>
+      ${grupos}
+    </section>`;
+  }).join('');
+
+  raiz.innerHTML = `<div class="home-inner">${cabecera}${cuerpo}</div>`;
+
+  // Las tarjetas se insertan después del innerHTML para poder engancharles sus
+  // escuchadores: nada de `onclick` en la plantilla (CSP estricta).
+  bloques.forEach((bloque, i) => {
+    (bloque.grupos || []).forEach((grupo, j) => {
+      const grid = raiz.querySelector(`[data-home-grid="${i}-${j}"]`);
+      if (!grid) return;
+      renderCards(grupo.fichas || [], grid, true);
+      pintarMotivos(grid, grupo.fichas || []);
+    });
+  });
+
+  renderAvisoBloqueo(payload.plan, payload.bloqueo, payload.cupo, $('home-aviso'));
+  setResultText(`${payload.total} destacado${payload.total === 1 ? '' : 's'}`);
+}
+
+async function loadHome() {
+  const raiz = $('home');
+  const loadSeq = ++state.loadSeq;
+  state.loading = true;
+  setResultText('Preparando la portada…');
+  raiz.setAttribute('aria-busy', 'true');
+  raiz.innerHTML = homeSkeleton();
+  try {
+    // Misma regla que en los listados: la cabecera NO es opcional. Sin ella el
+    // servidor da por anónimo a quien ya pagó y le devuelve todo bloqueado.
+    const res = await fetch('/api/home', { headers: authHeaders(), signal: AbortSignal.timeout(25000) })
+      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    if (loadSeq !== state.loadSeq) return;
+    renderHome(res);
+  } catch (e) {
+    if (loadSeq !== state.loadSeq) return;
+    console.error('home:', e);
+    raiz.removeAttribute('aria-busy');
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('alert-triangle', 'No se pudo cargar la portada', 'Revisa la conexión y reintenta.', 'warning')}</div></div>`;
+    setResultText('No disponible');
+  } finally {
+    state.loading = false;
+  }
+}
+
 async function load(page) {
+  if (state.tab === 'home') return loadHome();
   if (state.tab === 'guardados') return loadGuardados();
   const loadSeq = ++state.loadSeq;
   state.loading = true;
@@ -928,8 +1091,7 @@ async function load(page) {
  * No se pinta nada para un suscriptor ni cuando no hay nada bloqueado: un aviso
  * que sale siempre deja de leerse.
  */
-function renderAvisoBloqueo(plan, bloqueo, cupo) {
-  const caja = $('aviso-bloqueo');
+function renderAvisoBloqueo(plan, bloqueo, cupo, caja = $('aviso-bloqueo')) {
   if (!caja) return;
   if (plan === 'suscrito' || !bloqueo || !bloqueo.bloqueadas) { caja.innerHTML = ''; return; }
 
@@ -1048,10 +1210,20 @@ function renderPager(total, page, pages) {
 }
 
 function cardKind(p) {
-  if (state.tab === 'guardados') return p._kind; // cada guardado trae su kind
+  // Guardados y portada mezclan las tres fuentes: cada ficha trae el suyo.
+  if (state.tab === 'guardados' || state.tab === 'home') return p._kind;
   return state.tab === 'remates' ? 'remate' : (state.tab === 'bancos' ? 'banco' : 'portal');
 }
-function renderCards(items) {
+/**
+ * Pinta tarjetas en un contenedor.
+ *
+ * `porApi` hace que la tarjeta abra la ficha pidiéndola a `/api/property` en vez de
+ * dibujar la fila que ya tiene. Lo usa la portada, cuyas fichas llegan recortadas a
+ * propósito (sin galería ni descripción, ver COLS_DESTACADOS en queries.ts): abrir
+ * desde ahí sin pasar por el servidor mostraría una ficha coja y, peor, no gastaría
+ * el cupo del mes, que es justo lo que convierte a un registrado en cliente.
+ */
+function renderCards(items, target = $('grid'), porApi = false) {
   const frag = document.createDocumentFragment();
   items.forEach((p) => {
     const kind = cardKind(p);
@@ -1061,11 +1233,13 @@ function renderCards(items) {
     const cardLabel = `Ver ${typeLbl(p.property_type || p.type)} en ${cap(p.city)}`;
     el.innerHTML = (kind === 'remate' ? remateCard(p, kind) : inmuebleCard(p, kind))
       + `<button class="card-open" type="button" aria-label="${esc(cardLabel)}"></button>`;
-    const openCard = () => (kind === 'remate' ? openRemate(p) : openInmueble(p));
+    const openCard = porApi
+      ? () => window.__openRec(kind, p.id)
+      : () => (kind === 'remate' ? openRemate(p) : openInmueble(p));
     el.querySelector('.card-open').addEventListener('click', openCard);
     frag.appendChild(el);
   });
-  $('grid').appendChild(frag);
+  target.appendChild(frag);
   paintFavs();
 }
 
@@ -1186,12 +1360,18 @@ function frescura(p) {
  */
 function selloSuscripcion(p) {
   if (!esBloqueada(p)) return '';
-  const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
+  // Los remates no traen `discount_pct`: el suyo sale de la postura contra el
+  // avalúo, igual que en `resumenBloqueo`. Sin esto un remate bloqueado decía
+  // "Oportunidad detectada" y se perdía el único número que lo justifica.
+  const bruto = p.discount_pct != null ? Number(p.discount_pct)
+    : (p.appraisal_value > 0 && p.minimum_bid > 0 ? (1 - p.minimum_bid / p.appraisal_value) * 100 : null);
+  const d = bruto != null && Number.isFinite(bruto) ? Math.round(bruto) : null;
+  const contra = p.appraisal_value > 0 && p.discount_pct == null ? 'bajo el avalúo' : 'bajo ofertas similares';
   const requiere = p._acceso?.requiere;
   const accion = requiere === 'registro' ? 'Crea tu cuenta gratis para verla'
     : requiere === 'cupo' ? 'Ábrela con tu cupo del mes'
     : 'Desbloquear con suscripción';
-  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad detectada'}</span><em>${accion}</em></div>`;
+  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% ${contra}` : 'Oportunidad detectada'}</span><em>${accion}</em></div>`;
 }
 
 function avisoCuotaParte(p) {
@@ -1204,7 +1384,7 @@ function remateCard(p, kind) {
     ? `<img src="${esc(safeMediaUrl(p.image_url))}" loading="lazy" alt="${esc(`${typeLbl(p.property_type)} en ${cap(p.city)}`)}">`
     : `<div class="card-ph">${ic('scale')}</div>`;
   return `
-    <div class="card-img-wrap">${cover}<span class="source-badge">Remate</span>${countdownBadge(p.auction_date)}${favBtn(kind || 'remate', p.id)}</div>
+    <div class="card-img-wrap">${cover}<span class="source-badge">Remate</span>${countdownBadge(p.auction_date)}${favBtn(kind || 'remate', p.id)}${selloSuscripcion(p)}</div>
     <div class="card-body">
       <div class="card-price-label">Postura mínima</div>
       <div class="card-price">${fmtCOP(p.minimum_bid)}</div>
@@ -2135,6 +2315,16 @@ function renderActualizado(frescura) {
 function renderVStats() {
   if (!STATS) return;
   const v = $('vstats');
+  if (state.tab === 'home') {
+    // En la portada la cifra que importa es de dónde sale lo destacado, no cuánto
+    // hay: las tres fuentes juntas son el argumento del producto.
+    v.innerHTML = `
+      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades altas</div></div>
+      <div class="vstat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">Inmuebles de banco</div></div>
+      <div class="vstat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates judiciales</div></div>`;
+    $('legend').innerHTML = '';
+    return;
+  }
   if (state.tab === 'portal') {
     const cities = STATS.perCity.length;
     // El hero ya muestra listados y oportunidades: repetirlos aquí solo resta confianza.
@@ -2169,15 +2359,16 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
     else x.removeAttribute('aria-current');
   });
   state.tab = b.dataset.tab;
+  aplicarVistaDePestana();
   renderRadarSetup();
   state.loadSeq++;
   state.loading = false;
   $('grid').innerHTML = '';
   $('pager').innerHTML = '';
   $('empty').style.display = 'none';
-  $('loading').style.display = 'block';
+  $('loading').style.display = state.tab === 'home' ? 'none' : 'block';
   $('filters').innerHTML = '';
-  setResultText(`Preparando ${state.tab === 'portal' ? 'el portal' : state.tab}…`);
+  setResultText(`Preparando ${state.tab === 'portal' ? 'el portal' : state.tab === 'home' ? 'la portada' : state.tab}…`);
   setFiltersOpen(false);
   renderVStats();
   try {
@@ -2299,6 +2490,7 @@ try {
 
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.
+aplicarVistaDePestana();
 initAuth();
 loadStats().catch(() => renderStatsUnavailable());
 buildFilters().then(async () => {

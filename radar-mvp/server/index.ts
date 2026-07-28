@@ -13,7 +13,12 @@ import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
-import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, warmTotalPortal, warmZonas, getProperty, remateBankFacets, type ListQuery } from './queries.js';
+import {
+  queryPortal, queryBancos, queryRemates, facets, stats, getProperty, remateBankFacets,
+  warmStats, warmTotalPortal, warmZonas, destacados, warmDestacados,
+  type ListQuery,
+} from './queries.js';
+import { fichasDe } from './destacados.js';
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
@@ -29,7 +34,7 @@ import {
   type ComparablesReporte,
 } from './reporte.js';
 import { warmCityPools } from '../engine/zone-comps.js';
-import { planDe, redactarLista, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
+import { planDe, redactarLista, redactarMixta, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
   activarPlanDemo,
@@ -671,6 +676,42 @@ const server = createServer(async (req, res) => {
           data: filas,
         });
       }
+      // ── Portada: destacados de la semana, del mes, por ciudad y cruce de fuentes ──
+      // Es la PRIMERA pantalla, así que la selección viene de la caché con TTL de
+      // `queries.ts`. Lo único que se calcula por petición es el muro: qué puede
+      // abrir ESTE usuario. Las fichas destacadas pasan por `redactarMixta` →
+      // `redactarLista`, la misma y única puerta que cualquier listado. Una portada
+      // que devolviera filas crudas sería exactamente el incidente de `/api/property`
+      // otra vez, y en la pantalla más visitada del producto.
+      if (path === '/api/home') {
+        const usuarioHome = await getUserFromToken(bearer(req));
+        const planHome = planDe(usuarioHome);
+        const cupoHome = usuarioHome?.cupo ?? leerCupo(null);
+        const estadoHome = estadoCupo(cupoHome, planHome);
+        const acceso = { desbloqueadas: cupoHome.desbloqueadas, restantes: estadoHome.restantes };
+        const seleccion = await destacados();
+        const bloques = seleccion.bloques.map((bloque) => ({
+          ...bloque,
+          grupos: bloque.grupos.map((grupo) => ({
+            ...grupo,
+            fichas: redactarMixta(grupo.fichas as any[], planHome, acceso),
+          })),
+        }));
+        // El mismo resumen comercial del listado, calculado sobre lo que la persona
+        // tiene delante en la portada: sirve para el aviso de "esto es lo que no
+        // puedes abrir todavía" sin inventar una segunda métrica.
+        const todas = bloques.flatMap((bloque) => fichasDe(bloque as any));
+        return sendJSON(res, 200, {
+          ok: true,
+          plan: planHome,
+          cupo: estadoHome,
+          semana: seleccion.semana,
+          periodo: seleccion.periodo,
+          total: todas.length,
+          bloqueo: resumenBloqueo(todas),
+          bloques,
+        });
+      }
       if (path === '/api/facets') {
         const source = (url.searchParams.get('source') as 'portal' | 'bancos') ?? 'portal';
         return sendJSON(res, 200, await facets(source, url.searchParams.get('city') ?? undefined));
@@ -726,11 +767,13 @@ const WARM_CITIES = ['bogota', 'medellin', 'cali'];
 server.listen(PORT, () => {
   serviceReady = true;
   log.info(`Radar local en http://localhost:${PORT}`);
-  log.info('API: /health · /ready · /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
-  // Primero las estadísticas (es lo primero que pide el dashboard), luego los
-  // comparables de las ciudades grandes.
+  log.info('API: /health · /ready · /api/home · /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
+  // Primero las estadísticas y la portada (es lo primero que se pide al entrar),
+  // luego los comparables de las ciudades grandes.
   void warmStats()
     .then(() => log.info('Estadísticas precargadas'))
+    .then(() => warmDestacados())
+    .then(() => log.info('Destacados de la portada precargados'))
     .then(() => warmCityPools(WARM_CITIES))
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
     // Al final y sin prisa: si compite con los dos precalentamientos anteriores

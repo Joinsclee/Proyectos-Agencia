@@ -241,6 +241,10 @@ h1 .gold { color: var(--gold); }
 
 /* ───── CONTROLS ───── */
 .search-workspace { min-width: 0; }
+/* `[hidden]` es solo una regla del navegador y cualquier `display:` explícito la
+   gana — y en pantallas anchas este contenedor es `display: grid`. Sin esto el
+   buscador seguía ocupando su hueco debajo de la portada, vacío. */
+.search-workspace[hidden] { display: none; }
 .results-column { min-width: 0; }
 .controls { max-width: 1280px; margin: 18px auto 0; padding: 0 24px; }
 .controls-mobilebar { display: none; }
@@ -809,7 +813,11 @@ h1 .gold { color: var(--gold); }
     padding-bottom: env(safe-area-inset-bottom);
     box-shadow: 0 -8px 24px rgba(43, 20, 56, 0.14);
   }
-  .tabs-inner { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0; padding: 0 4px; }
+  /* Columnas automáticas en vez de un número fijo: al entrar la pestaña de Inicio
+     el número de destinos cambió, y una rejilla con el conteo escrito a mano parte
+     la barra en dos filas la próxima vez que se toque. `minmax(0, 1fr)` es lo que
+     impide que un rótulo largo empuje la barra fuera de los 375px. */
+  .tabs-inner { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; padding: 0 2px; }
   .tabs-group, .nav-right, .authbar { display: contents; }
   .nav-sep, .authbar .auth-link:not(.primary), .authbar #auth-logout { display: none; }
   .tab-btn, .nav-right .tab-btn {
@@ -956,4 +964,80 @@ h1 .gold { color: var(--gold); }
     animation-iteration-count: 1 !important;
     transition-duration: .01ms !important;
   }
+}
+
+/* ───── PORTADA (Home con destacados) ─────
+   Misma paleta y las MISMAS tarjetas que el listado: la portada es otra forma de
+   entrar al mismo inventario, no una segunda estética. Lo único nuevo es el
+   encabezado que declara el criterio de cada bloque y la línea de motivo bajo cada
+   ficha, que es lo que convierte "destacado" en un argumento comprobable. */
+.home { width: min(1280px, 100%); margin: 0 auto; padding: 22px 24px 10px; }
+.home[hidden] { display: none; }
+.home-inner { display: flex; flex-direction: column; gap: 30px; }
+
+.home-intro { max-width: 780px; }
+.home-kicker {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.66rem; font-weight: 800; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--pp); background: #f4ebf8; padding: 6px 13px; border-radius: 7px;
+}
+.home-kicker .ic { width: 15px; height: 15px; }
+.home-intro h2 {
+  margin: 13px 0 8px; color: var(--pp-dark);
+  font-family: 'Tilt Warp', cursive; font-size: clamp(1.4rem, 3.4vw, 1.9rem);
+  font-weight: 400; line-height: 1.12; text-wrap: balance;
+}
+.home-intro p { margin: 0; color: #6b7280; font-size: 0.92rem; line-height: 1.5; }
+
+.home-bloque { display: flex; flex-direction: column; gap: 16px; }
+.home-bloque-cab {
+  display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 13px; align-items: start;
+  padding-bottom: 13px; border-bottom: 1px solid rgba(97,49,116,0.12);
+}
+.home-bloque-ic {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px;
+  background: linear-gradient(135deg, var(--pp-dark), var(--pp)); color: var(--gold);
+}
+.home-bloque-ic .ic { width: 20px; height: 20px; }
+.home-bloque-txt { min-width: 0; }
+.home-bloque-txt h3 {
+  margin: 0; color: var(--pp-dark);
+  font-family: 'Tilt Warp', cursive; font-size: 1.22rem; font-weight: 400; line-height: 1.15;
+}
+/* El criterio NO es letra pequeña decorativa: es la promesa que el bloque cumple,
+   así que se lee con un cuerpo comparable al del resto de la interfaz. */
+.home-criterio { margin: 6px 0 0; color: #5d4d68; font-size: 0.86rem; line-height: 1.5; max-width: 88ch; }
+
+.home-grupo { display: flex; flex-direction: column; gap: 11px; }
+.home-grupo-tit {
+  margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  color: var(--pp); font-size: 0.78rem; font-weight: 800;
+  letter-spacing: 0.09em; text-transform: uppercase;
+}
+.home-grupo-tit span {
+  color: #7c6a86; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; text-transform: none;
+}
+
+/* Motivo bajo cada tarjeta: el número que la puso ahí y lo que lo respalda. */
+.card-motivo {
+  margin: 11px 0 0; padding-top: 10px; border-top: 1px dashed rgba(97,49,116,0.16);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.card-motivo strong { color: var(--pp-dark); font-size: 0.79rem; font-weight: 800; line-height: 1.3; }
+.card-motivo span { color: #7c6a86; font-size: 0.72rem; line-height: 1.35; }
+
+@media (max-width: 760px) {
+  .home { padding: 14px 12px 8px; }
+  .home-inner { gap: 24px; }
+  .home-intro h2 { margin-top: 10px; }
+  .home-intro p { font-size: 0.88rem; }
+  .home-bloque-cab { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; }
+  .home-bloque-ic { width: 34px; height: 34px; border-radius: 9px; }
+  .home-bloque-ic .ic { width: 17px; height: 17px; }
+  .home-bloque-txt h3 { font-size: 1.08rem; }
+  .home-criterio { font-size: 0.82rem; }
+  /* En la tarjeta apaisada de móvil el motivo comparte columna con el resto del
+     cuerpo: sin el recorte, tres líneas de respaldo doblan el alto de la ficha. */
+  .card-motivo { margin-top: 9px; padding-top: 8px; }
+  .card-motivo span { display: -webkit-box; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 }
