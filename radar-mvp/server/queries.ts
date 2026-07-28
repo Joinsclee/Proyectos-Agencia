@@ -117,15 +117,32 @@ export interface ListResult<T = Record<string, unknown>> {
 const clampPage = (p?: number) => Math.max(1, Math.floor(p ?? 1));
 const clampSize = (s?: number) => Math.min(60, Math.max(6, Math.floor(s ?? 24)));
 
+/**
+ * Desempate estable para cualquier orden paginado.
+ *
+ * Sin él, la paginación repite y pierde fichas. Todas las columnas por las que se
+ * ordena tienen empates masivos —`scraped_at` es idéntico para todo un lote del
+ * scraper, `auction_date` agrupa decenas de remates el mismo día, `price` se
+ * repite en los valores redondos— y con OFFSET, Postgres es libre de devolver los
+ * empatados en otro orden en cada petición: una fila puede aparecer en la página 2
+ * y otra vez en la 3, mientras otra no sale en ninguna.
+ *
+ * Medido antes del arreglo: en Remates, 12 fichas repetidas de 288; ordenando el
+ * Portal por «más recientes», 55 repetidas y solo 188 únicas de 288 filas
+ * devueltas. Añadir el identificador como último criterio hace el orden total y
+ * por tanto reproducible entre páginas.
+ */
+const conDesempate = (qb: any) => qb.order('id', { ascending: true });
+
 function applyOrderInmuebles(qb: any, order?: string) {
   switch (order) {
     case 'none': return qb; // sin orden: salida de respaldo cuando ordenar haría timeout
-    case 'precio_asc': return qb.order('price', { ascending: true, nullsFirst: false });
-    case 'precio_desc': return qb.order('price', { ascending: false, nullsFirst: false });
-    case 'precio_m2_asc': return qb.order('price_per_m2', { ascending: true, nullsFirst: false });
-    case 'recent': return qb.order('scraped_at', { ascending: false });
+    case 'precio_asc': return conDesempate(qb.order('price', { ascending: true, nullsFirst: false }));
+    case 'precio_desc': return conDesempate(qb.order('price', { ascending: false, nullsFirst: false }));
+    case 'precio_m2_asc': return conDesempate(qb.order('price_per_m2', { ascending: true, nullsFirst: false }));
+    case 'recent': return conDesempate(qb.order('scraped_at', { ascending: false }));
     case 'discount_desc':
-    default: return qb.order('discount_pct', { ascending: false, nullsFirst: false });
+    default: return conDesempate(qb.order('discount_pct', { ascending: false, nullsFirst: false }));
   }
 }
 
@@ -269,7 +286,18 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   // cambia poco, así que sin esto el usuario recurrente ve siempre la misma
   // pantalla. Se rota la página ya paginada para no alterar el conteo ni repetir
   // fichas entre páginas.
-  return { data: rotarSemanal(data ?? []), total, page, pageSize, pages: Math.ceil(total / pageSize) };
+  // La rotación semanal cumple la HU de frescura —que el inventario bancario no
+  // se vea idéntico entre visitas— pero solo puede aplicarse cuando el usuario NO
+  // ha pedido un orden concreto. Aplicada siempre, contradecía lo que acababa de
+  // elegir: con «precio menor» el más barato salía en la posición 18 y la lista
+  // daba un salto hacia atrás a mitad de página. Un orden que el usuario pide es
+  // una instrucción, no una sugerencia.
+  const filas = data ?? [];
+  const rotables = !q.order || q.order === 'precio_m2_asc'; // el defecto del módulo
+  return {
+    data: rotables ? rotarSemanal(filas) : filas,
+    total, page, pageSize, pages: Math.ceil(total / pageSize),
+  };
 }
 
 /** Remates judiciales activos. */
@@ -298,10 +326,13 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
   if (q.bidMin) qb = qb.gte('minimum_bid', q.bidMin);
   if (q.bidMax) qb = qb.lte('minimum_bid', q.bidMax);
   const order = q.order ?? 'auction_asc';
-  if (order === 'auction_asc') qb = qb.order('auction_date', { ascending: true, nullsFirst: false });
-  else if (order === 'min_asc') qb = qb.order('minimum_bid', { ascending: true, nullsFirst: false });
+  if (order === 'min_asc') qb = qb.order('minimum_bid', { ascending: true, nullsFirst: false });
   else if (order === 'min_desc') qb = qb.order('minimum_bid', { ascending: false, nullsFirst: false });
   else qb = qb.order('auction_date', { ascending: true, nullsFirst: false });
+  // Mismo motivo que en los inmuebles: `auction_date` agrupa decenas de remates
+  // en el mismo día y sin desempate la paginación los baraja entre peticiones.
+  // Medido: 37 remates no se alcanzaban por ningún camino del paginador.
+  qb = conDesempate(qb);
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;

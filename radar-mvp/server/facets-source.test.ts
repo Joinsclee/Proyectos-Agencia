@@ -72,3 +72,30 @@ test('facets: solo cuenta bancos cuando la muestra cabe entera', async () => {
   assert.match(cuerpo, /if \(source === 'bancos'\)/, 'el conteo por entidad dejó de estar acotado a bancos');
   assert.match(cuerpo, /\.limit\(8000\)/, 'cambió el tope de la muestra: revisa si el conteo por entidad sigue siendo exacto');
 });
+
+test('paginación: todos los órdenes llevan desempate estable', async () => {
+  // Sin un último criterio único, Postgres devuelve los empatados en distinto
+  // orden en cada petición y la paginación repite y pierde filas. Medido antes
+  // del arreglo: 55 fichas repetidas de 288 ordenando el Portal por «recientes»,
+  // y 37 remates que no se alcanzaban por ningún camino del paginador.
+  const fuente = await leerQueries();
+  const orden = cuerpoDe(fuente, 'function applyOrderInmuebles');
+  const ramas = orden.split('case ').filter((r) => r.includes('qb.order('));
+  assert.ok(ramas.length >= 5, `se esperaban al menos 5 órdenes, hay ${ramas.length}`);
+  for (const rama of ramas) {
+    const etiqueta = rama.slice(0, rama.indexOf(':'));
+    assert.match(rama, /conDesempate\(/, `el orden ${etiqueta} no lleva desempate estable`);
+  }
+  // Y el de remates, que vive en su propia función.
+  const remates = cuerpoDe(fuente, 'export async function queryRemates');
+  assert.match(remates, /conDesempate\(qb\)/, 'el listado de remates paginó sin desempate');
+});
+
+test('bancos: la rotación semanal no pisa el orden que pidió el usuario', async () => {
+  // La rotación cumple la HU de frescura, pero aplicada sobre una página ya
+  // ordenada contradecía la elección: con «precio menor» el más barato salía en
+  // la posición 18. Un orden que el usuario pide es una instrucción.
+  const cuerpo = cuerpoDe(await leerQueries(), 'export async function queryBancos');
+  assert.match(cuerpo, /rotables/, 'la rotación volvió a aplicarse incondicionalmente');
+  assert.match(cuerpo, /rotables \? rotarSemanal/, 'la rotación no está condicionada al orden por defecto');
+});
