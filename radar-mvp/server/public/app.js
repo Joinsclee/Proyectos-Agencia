@@ -27,7 +27,9 @@ const ORDERS = {
   remates: [['auction_asc', 'Audiencia próxima'], ['min_asc', 'Postura menor'], ['min_desc', 'Postura mayor']],
 };
 
-const state = { tab: 'portal', page: 1, loading: false, loadSeq: 0 };
+// La portada es la primera pantalla del producto: se entra por ella, no por el
+// listado del portal. Debe coincidir con la pestaña marcada `active` en index.html.
+const state = { tab: 'home', page: 1, loading: false, loadSeq: 0 };
 const GUEST_FAVS_KEY = 'radar_guest_favorites_v1';
 const RADAR_PREFS_KEY = 'radar_preferences_v1';
 const RADAR_SETUP_DISMISSED_KEY = 'radar_setup_dismissed_v1';
@@ -35,6 +37,8 @@ const RADAR_SIMULATIONS_KEY = 'radar_simulations_v1';
 const RADAR_ALERT_KEY = 'radar_alert_v1';
 /** Debe coincidir con CUPO_MENSUAL_FREE de server/cupo.ts. El servidor manda; esto es solo el texto. */
 const CUPO_FREE_MENSUAL = 20;
+/** Ídem con CUPO_REPORTES_FREE de server/cupo-reportes.ts: es un cupo distinto del de fichas. */
+const CUPO_REPORTES_MENSUAL = 20;
 
 function readStoredJson(key, fallback) {
   try {
@@ -270,9 +274,14 @@ document.addEventListener('click', (event) => {
 
 // ---------- Freemium (captura de email) ----------
 // Anónimo: ve la grilla y datos básicos de la ficha, pero dirección exacta,
-// datos del proceso, descripción completa y análisis con IA quedan bloqueados;
-// tras ver FREE_VIEW_LIMIT fichas aparece el muro de registro. Registrado: todo.
-const FREE_VIEW_LIMIT = 5;
+// datos del proceso, descripción completa y análisis con IA quedan bloqueados.
+// Registrado: 20 fichas de oportunidad al mes (server/cupo.ts). Suscrito: todo.
+//
+// El muro NO se dispara por número de vistas. Se decide en el servidor por la
+// CATEGORÍA del Índice CRECE de cada ficha (server/acceso.ts) más el cupo mensual,
+// que es más difícil de burlar: contar vistas en el navegador se salta borrando
+// `localStorage`, y además hacía que los datos de pago viajaran igual al cliente.
+// El registro de vistas se conserva solo como señal de uso, no como puerta.
 function viewedIds() {
   try { return new Set(JSON.parse(localStorage.getItem('radar_viewed') || '[]')); } catch { return new Set(); }
 }
@@ -465,14 +474,36 @@ function setResultText(text) {
   if ($('mobile-count')) $('mobile-count').textContent = text;
 }
 
+/**
+ * Qué región de la página manda en cada pestaña.
+ *
+ * La portada y el buscador son dos espacios distintos y nunca conviven: dejar el
+ * buscador debajo obligaría a hacer scroll por una grilla de resultados vieja para
+ * llegar al pie de los destacados. El enlace de salto se mueve con ellos, o quien
+ * navega con teclado acabaría enfocando la región escondida.
+ */
+function aplicarVistaDePestana() {
+  const enHome = state.tab === 'home';
+  const home = $('home');
+  const workspace = $('search-workspace');
+  if (home) home.hidden = !enHome;
+  if (workspace) workspace.hidden = enHome;
+  const salto = $('skip-link');
+  if (salto) {
+    salto.setAttribute('href', enHome ? '#home' : '#results');
+    salto.textContent = enHome ? 'Saltar a los destacados' : 'Saltar a los resultados';
+  }
+}
+
 async function buildFilters() {
   const tab = state.tab;
   const controls = document.querySelector('.controls');
   const workspace = $('search-workspace');
-  const filtersAreRelevant = tab !== 'guardados';
+  const filtersAreRelevant = tab !== 'guardados' && tab !== 'home';
   if (controls) controls.hidden = !filtersAreRelevant;
   if (workspace) workspace.classList.toggle('is-results-only', !filtersAreRelevant);
-  if (tab === 'guardados') {
+  // La portada no filtra nada: es una selección, no una búsqueda.
+  if (tab === 'guardados' || tab === 'home') {
     $('filters').innerHTML = '';
     updateFilterCount();
     return;
@@ -861,7 +892,146 @@ function clearLoadingSkeletons() {
   $('loading').innerHTML = '<span class="sr-only">Cargando resultados…</span>';
 }
 
+// ---------- Portada (Home con destacados) ----------
+/**
+ * Esqueletos de la portada.
+ *
+ * Reusan `.skeleton-card` del listado a propósito: la portada pinta las mismas
+ * tarjetas, así que su carga tiene que sentirse igual. Se dibujan dos bloques
+ * porque es lo que cabe sin scroll: fingir los cuatro solo alargaría la página
+ * para luego encogerla.
+ */
+function homeSkeleton() {
+  const tarjetas = (n) => Array.from({ length: n }, (_, i) => `
+    <article class="card skeleton-card" aria-hidden="true" style="--skeleton-delay:${i * 55}ms">
+      <div class="card-img-wrap skeleton-media"></div>
+      <div class="card-body skeleton-body">
+        <div class="skeleton-line skeleton-price"></div>
+        <div class="skeleton-line skeleton-title"></div>
+        <div class="skeleton-line skeleton-location"></div>
+        <div class="skeleton-line skeleton-freshness"></div>
+      </div>
+    </article>`).join('');
+  const bloque = () => `<section class="home-bloque">
+      <div class="home-bloque-cab">
+        <div class="home-bloque-txt">
+          <div class="skeleton-line skeleton-title"></div>
+          <div class="skeleton-line skeleton-location"></div>
+        </div>
+      </div>
+      <div class="cards-grid">${tarjetas(3)}</div>
+    </section>`;
+  return `<div class="home-inner">${bloque()}${bloque()}</div>`;
+}
+
+/**
+ * El porqué de cada ficha, debajo de sus datos.
+ *
+ * Va con `textContent` y no dentro del HTML de la tarjeta: el motivo lo compone el
+ * servidor a partir de columnas de scraping (ciudad, barrio, banco demandante) y
+ * este es el camino en el que no hay forma de equivocarse con el escapado.
+ */
+function pintarMotivos(contenedor, fichas) {
+  const tarjetas = contenedor.querySelectorAll('article.card');
+  fichas.forEach((ficha, i) => {
+    const cuerpo = tarjetas[i] && tarjetas[i].querySelector('.card-body');
+    const sello = ficha._destacado;
+    if (!cuerpo || !sello) return;
+    const caja = document.createElement('p');
+    caja.className = 'card-motivo';
+    const titular = document.createElement('strong');
+    titular.textContent = sello.motivo;
+    caja.appendChild(titular);
+    if (sello.respaldo) {
+      const detalle = document.createElement('span');
+      detalle.textContent = sello.respaldo;
+      caja.appendChild(detalle);
+    }
+    cuerpo.appendChild(caja);
+  });
+}
+
+function renderHome(payload) {
+  const raiz = $('home');
+  const bloques = Array.isArray(payload.bloques) ? payload.bloques : [];
+  raiz.removeAttribute('aria-busy');
+  if (!bloques.length) {
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('magnifier', 'Todavía no hay destacados', 'El motor aún no ha marcado oportunidades suficientes para armar la portada. Explora el Portal mientras tanto.')}</div></div>`;
+    setResultText('Sin destacados');
+    return;
+  }
+
+  const cabecera = `<div class="home-intro">
+    <span class="home-kicker">${ic('radar')} Semana ${esc(payload.semana)} · ${esc(payload.total)} oportunidades seleccionadas</span>
+    <h2>Lo que el Radar destaca hoy</h2>
+    <p>Cada bloque dice con qué regla se eligió. Todo sale del Índice CRECE: el precio por m² de cada inmueble frente a la mediana de ofertas parecidas en su propia zona.</p>
+  </div>
+  <div id="home-aviso"></div>`;
+
+  const cuerpo = bloques.map((bloque, i) => {
+    const idTitulo = `home-bloque-${esc(bloque.id)}`;
+    const grupos = (bloque.grupos || []).map((grupo, j) => {
+      const titulo = grupo.etiqueta
+        ? `<h4 class="home-grupo-tit">${esc(cap(grupo.etiqueta))}${grupo.detalle ? `<span>${esc(grupo.detalle)}</span>` : ''}</h4>`
+        : '';
+      return `<div class="home-grupo">${titulo}<div class="cards-grid" data-home-grid="${i}-${j}"></div></div>`;
+    }).join('');
+    return `<section class="home-bloque" aria-labelledby="${idTitulo}">
+      <div class="home-bloque-cab">
+        <span class="home-bloque-ic">${ic(bloque.icono || 'spark')}</span>
+        <div class="home-bloque-txt">
+          <h3 id="${idTitulo}">${esc(bloque.titulo)}</h3>
+          <p class="home-criterio">${esc(bloque.criterio)}</p>
+        </div>
+      </div>
+      ${grupos}
+    </section>`;
+  }).join('');
+
+  raiz.innerHTML = `<div class="home-inner">${cabecera}${cuerpo}</div>`;
+
+  // Las tarjetas se insertan después del innerHTML para poder engancharles sus
+  // escuchadores: nada de `onclick` en la plantilla (CSP estricta).
+  bloques.forEach((bloque, i) => {
+    (bloque.grupos || []).forEach((grupo, j) => {
+      const grid = raiz.querySelector(`[data-home-grid="${i}-${j}"]`);
+      if (!grid) return;
+      renderCards(grupo.fichas || [], grid, true);
+      pintarMotivos(grid, grupo.fichas || []);
+    });
+  });
+
+  renderAvisoBloqueo(payload.plan, payload.bloqueo, payload.cupo, $('home-aviso'));
+  setResultText(`${payload.total} destacado${payload.total === 1 ? '' : 's'}`);
+}
+
+async function loadHome() {
+  const raiz = $('home');
+  const loadSeq = ++state.loadSeq;
+  state.loading = true;
+  setResultText('Preparando la portada…');
+  raiz.setAttribute('aria-busy', 'true');
+  raiz.innerHTML = homeSkeleton();
+  try {
+    // Misma regla que en los listados: la cabecera NO es opcional. Sin ella el
+    // servidor da por anónimo a quien ya pagó y le devuelve todo bloqueado.
+    const res = await fetch('/api/home', { headers: authHeaders(), signal: AbortSignal.timeout(25000) })
+      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    if (loadSeq !== state.loadSeq) return;
+    renderHome(res);
+  } catch (e) {
+    if (loadSeq !== state.loadSeq) return;
+    console.error('home:', e);
+    raiz.removeAttribute('aria-busy');
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('alert-triangle', 'No se pudo cargar la portada', 'Revisa la conexión y reintenta.', 'warning')}</div></div>`;
+    setResultText('No disponible');
+  } finally {
+    state.loading = false;
+  }
+}
+
 async function load(page) {
+  if (state.tab === 'home') return loadHome();
   if (state.tab === 'guardados') return loadGuardados();
   const loadSeq = ++state.loadSeq;
   state.loading = true;
@@ -921,8 +1091,7 @@ async function load(page) {
  * No se pinta nada para un suscriptor ni cuando no hay nada bloqueado: un aviso
  * que sale siempre deja de leerse.
  */
-function renderAvisoBloqueo(plan, bloqueo, cupo) {
-  const caja = $('aviso-bloqueo');
+function renderAvisoBloqueo(plan, bloqueo, cupo, caja = $('aviso-bloqueo')) {
   if (!caja) return;
   if (plan === 'suscrito' || !bloqueo || !bloqueo.bloqueadas) { caja.innerHTML = ''; return; }
 
@@ -1041,10 +1210,20 @@ function renderPager(total, page, pages) {
 }
 
 function cardKind(p) {
-  if (state.tab === 'guardados') return p._kind; // cada guardado trae su kind
+  // Guardados y portada mezclan las tres fuentes: cada ficha trae el suyo.
+  if (state.tab === 'guardados' || state.tab === 'home') return p._kind;
   return state.tab === 'remates' ? 'remate' : (state.tab === 'bancos' ? 'banco' : 'portal');
 }
-function renderCards(items) {
+/**
+ * Pinta tarjetas en un contenedor.
+ *
+ * `porApi` hace que la tarjeta abra la ficha pidiéndola a `/api/property` en vez de
+ * dibujar la fila que ya tiene. Lo usa la portada, cuyas fichas llegan recortadas a
+ * propósito (sin galería ni descripción, ver COLS_DESTACADOS en queries.ts): abrir
+ * desde ahí sin pasar por el servidor mostraría una ficha coja y, peor, no gastaría
+ * el cupo del mes, que es justo lo que convierte a un registrado en cliente.
+ */
+function renderCards(items, target = $('grid'), porApi = false) {
   const frag = document.createDocumentFragment();
   items.forEach((p) => {
     const kind = cardKind(p);
@@ -1054,11 +1233,13 @@ function renderCards(items) {
     const cardLabel = `Ver ${typeLbl(p.property_type || p.type)} en ${cap(p.city)}`;
     el.innerHTML = (kind === 'remate' ? remateCard(p, kind) : inmuebleCard(p, kind))
       + `<button class="card-open" type="button" aria-label="${esc(cardLabel)}"></button>`;
-    const openCard = () => (kind === 'remate' ? openRemate(p) : openInmueble(p));
+    const openCard = porApi
+      ? () => window.__openRec(kind, p.id)
+      : () => (kind === 'remate' ? openRemate(p) : openInmueble(p));
     el.querySelector('.card-open').addEventListener('click', openCard);
     frag.appendChild(el);
   });
-  $('grid').appendChild(frag);
+  target.appendChild(frag);
   paintFavs();
 }
 
@@ -1179,12 +1360,18 @@ function frescura(p) {
  */
 function selloSuscripcion(p) {
   if (!esBloqueada(p)) return '';
-  const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
+  // Los remates no traen `discount_pct`: el suyo sale de la postura contra el
+  // avalúo, igual que en `resumenBloqueo`. Sin esto un remate bloqueado decía
+  // "Oportunidad detectada" y se perdía el único número que lo justifica.
+  const bruto = p.discount_pct != null ? Number(p.discount_pct)
+    : (p.appraisal_value > 0 && p.minimum_bid > 0 ? (1 - p.minimum_bid / p.appraisal_value) * 100 : null);
+  const d = bruto != null && Number.isFinite(bruto) ? Math.round(bruto) : null;
+  const contra = p.appraisal_value > 0 && p.discount_pct == null ? 'bajo el avalúo' : 'bajo ofertas similares';
   const requiere = p._acceso?.requiere;
   const accion = requiere === 'registro' ? 'Crea tu cuenta gratis para verla'
     : requiere === 'cupo' ? 'Ábrela con tu cupo del mes'
     : 'Desbloquear con suscripción';
-  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad detectada'}</span><em>${accion}</em></div>`;
+  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% ${contra}` : 'Oportunidad detectada'}</span><em>${accion}</em></div>`;
 }
 
 function avisoCuotaParte(p) {
@@ -1197,7 +1384,7 @@ function remateCard(p, kind) {
     ? `<img src="${esc(safeMediaUrl(p.image_url))}" loading="lazy" alt="${esc(`${typeLbl(p.property_type)} en ${cap(p.city)}`)}">`
     : `<div class="card-ph">${ic('scale')}</div>`;
   return `
-    <div class="card-img-wrap">${cover}<span class="source-badge">Remate</span>${countdownBadge(p.auction_date)}${favBtn(kind || 'remate', p.id)}</div>
+    <div class="card-img-wrap">${cover}<span class="source-badge">Remate</span>${countdownBadge(p.auction_date)}${favBtn(kind || 'remate', p.id)}${selloSuscripcion(p)}</div>
     <div class="card-body">
       <div class="card-price-label">Postura mínima</div>
       <div class="card-price">${fmtCOP(p.minimum_bid)}</div>
@@ -1230,12 +1417,51 @@ function countdownBadge(iso) {
 // ── Calculadora de gastos de compra (pedido del cliente) ──
 // Tarifas Colombia (estimadas): notaría ~0.54% repartida 50/50 → comprador 0.27%;
 // impuesto de registro (beneficencia) ~1%; derechos de registro ~0.5%.
+//
+// Estos tres porcentajes ya NO son fijos: los edita el administrador desde
+// /admin y llegan por `/api/config`. Los de aquí son el valor de arranque y el
+// de respaldo — se usan tal cual mientras la respuesta viaja, y para siempre si
+// la tabla de parámetros todavía no está aplicada en la base. La calculadora
+// nunca se queda sin porcentajes ni muestra ceros.
 const GASTOS = { notaria: 0.0027, impuesto: 0.01, derechos: 0.005 };
+
+/** Porcentaje tal como se escribe en Colombia: 0,0027 → «0,27 %». */
+const pctGasto = (fraccion) => `${(fraccion * 100).toLocaleString('es-CO', {
+  minimumFractionDigits: 0, maximumFractionDigits: 2,
+})} %`;
+
+/**
+ * Trae los porcentajes vigentes. Cualquier fallo se traga a propósito: los
+ * valores de arranque ya son correctos y una ficha sin calculadora sería peor
+ * que una calculadora con las tarifas del mes pasado.
+ */
+async function cargarParametrosGastos() {
+  try {
+    const r = await fetch('/api/config');
+    const config = await r.json();
+    const g = config && config.gastos;
+    if (!g) return;
+    // Se comprueba uno por uno: si el servidor degradó a valores por defecto
+    // manda exactamente los mismos números, y si mandara basura no se pisa lo
+    // que ya funciona.
+    for (const [clave, valor] of [
+      ['notaria', g.notaria], ['impuesto', g.impuestoRegistro], ['derechos', g.derechosRegistro],
+    ]) {
+      if (typeof valor === 'number' && Number.isFinite(valor) && valor >= 0 && valor <= 0.05) {
+        GASTOS[clave] = valor;
+      }
+    }
+  } catch { /* se sigue con los valores de arranque */ }
+}
+
 function calcGastos(valor, mode) {
   const lines = [];
-  if (mode !== 'remate') lines.push(['Gastos de notaría (comprador ~0,27%)', valor * GASTOS.notaria]);
-  lines.push(['Impuesto de registro (1%)', valor * GASTOS.impuesto]);
-  lines.push(['Derechos de registro (0,5%)', valor * GASTOS.derechos]);
+  // La etiqueta lleva el porcentaje que se está aplicando de verdad. Antes era
+  // texto fijo («1%»): con las tarifas editables, un rótulo que no siguiera al
+  // número sería una mentira sobre la propia cuenta que muestra al lado.
+  if (mode !== 'remate') lines.push([`Gastos de notaría (comprador ~${pctGasto(GASTOS.notaria)})`, valor * GASTOS.notaria]);
+  lines.push([`Impuesto de registro (${pctGasto(GASTOS.impuesto)})`, valor * GASTOS.impuesto]);
+  lines.push([`Derechos de registro (${pctGasto(GASTOS.derechos)})`, valor * GASTOS.derechos]);
   const total = lines.reduce((a, [, v]) => a + v, 0);
   return { lines, total, pct: valor ? (total / valor) * 100 : 0 };
 }
@@ -1581,6 +1807,10 @@ function openInmueble(p) {
   const descBlock = bloq ? '' : desc;
   const muro = bloq ? panelSuscripcion(p) : '';
   const kind = p.source === 'fincaraiz' ? 'portal' : 'banco';
+  // El reporte solo se ofrece sobre una ficha que este usuario ya puede ver
+  // entera: el servidor lo rechazaría igual, y un botón que falla es peor que
+  // ninguno. En la ficha bloqueada el muro de al lado ya dice qué falta.
+  const reporte = bloq ? '' : reporteSection(kind, p);
   const fav = anon ? '' : modalFavBtn(kind, p.id);
   // Los avisos del portal cambian con frecuencia y pueden traer un análisis
   // persistido de semanas atrás. Siempre recalculamos sus comparables al abrir
@@ -1601,7 +1831,7 @@ function openInmueble(p) {
       <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${esc(cap(p.city))}</strong></div>
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
-      ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}
+      ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
       <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
     </div>`;
   showModal();
@@ -1634,6 +1864,117 @@ function panelSuscripcion(p) {
     </ul>
     <a class="wall-cta" href="/login">Desbloquear con suscripción</a>
   </div></div>`;
+}
+
+// ---------- Reporte descargable de la ficha ----------
+
+/** Texto del cupo de reportes. El servidor es la autoridad; esto solo lo explica. */
+function textoCupoReportes(estado) {
+  if (!estado) return `El plan gratuito incluye ${CUPO_REPORTES_MENSUAL} reportes al mes.`;
+  if (estado.ilimitado) return 'Tu plan incluye descargas ilimitadas.';
+  const quedan = Number(estado.restantes ?? 0);
+  if (quedan <= 0) return `Agotaste los ${CUPO_REPORTES_MENSUAL} reportes de este mes. El plan de pago los deja sin límite.`;
+  return `Te ${quedan === 1 ? 'queda 1 reporte' : `quedan ${quedan} reportes`} de ${CUPO_REPORTES_MENSUAL} este mes.`;
+}
+
+/**
+ * Bloque del reporte descargable.
+ *
+ * Enseña el cupo ANTES de que el usuario pulse, no después: descubrir un límite
+ * al chocarse con él es lo que hace que un plan gratuito se sienta una trampa. Al
+ * anónimo no se le ofrece un botón que va a fallar — se le ofrece la cuenta, que
+ * es lo que de verdad le falta.
+ *
+ * Solo se dibuja en fichas que el usuario ya puede ver completas: si la ficha
+ * está bloqueada, el servidor rechazaría el reporte y el botón sería una promesa
+ * falsa (el muro de al lado ya explica qué falta).
+ */
+function reporteSection(kind, p) {
+  if (!auth.token) {
+    return `<div class="section"><div class="reporte-box">
+      <h3>Reporte descargable</h3>
+      <p class="reporte-txt">Un documento con el precio, el descuento frente a su zona, los comparables que
+      lo sustentan y las características del inmueble. Se abre en cualquier navegador y se guarda como PDF
+      al imprimirlo.</p>
+      <a class="reporte-cta" href="/login">Crear cuenta gratis para descargarlo</a>
+      <p class="reporte-hint">El plan gratuito incluye ${CUPO_REPORTES_MENSUAL} reportes al mes.</p>
+    </div></div>`;
+  }
+  const estado = auth.account?.cupoReportes || null;
+  const agotado = !!estado && !estado.ilimitado && Number(estado.restantes ?? 0) <= 0;
+  const accion = agotado
+    ? `<a class="reporte-cta" href="/planes">Ver el plan sin límite</a>`
+    : `<button class="reporte-cta" type="button" data-reporte-kind="${esc(kind)}" data-reporte-id="${esc(p.id)}">
+        ${ic('down')}<span>Descargar reporte</span>
+      </button>`;
+  return `<div class="section"><div class="reporte-box">
+    <h3>Reporte descargable</h3>
+    <p class="reporte-txt">Precio, descuento frente a su zona, categoría del Índice CRECE, los comparables
+    que lo respaldan y las características${kind === 'remate' ? ', además de los datos de la audiencia' : ''}.
+    Se descarga como archivo y se guarda como PDF al imprimirlo.</p>
+    ${accion}
+    <p class="reporte-hint" data-reporte-cupo aria-live="polite">${esc(textoCupoReportes(estado))}</p>
+  </div></div>`;
+}
+
+/** Nombre que propuso el servidor en `Content-Disposition`, si es utilizable. */
+function nombreDeCabecera(cabecera) {
+  const m = /filename="([^"]+)"/.exec(cabecera || '');
+  return m && /^[\w.-]+$/.test(m[1]) ? m[1] : null;
+}
+
+/** Refresca el contador de reportes en la ficha abierta y en la cuenta en memoria. */
+function pintarCupoReportes(estado) {
+  if (estado && auth.account) auth.account.cupoReportes = estado;
+  const hint = document.querySelector('[data-reporte-cupo]');
+  if (hint) hint.textContent = textoCupoReportes(estado);
+}
+
+/**
+ * Descarga el reporte.
+ *
+ * Va por `fetch` y no por un enlace directo porque la ruta exige el token de la
+ * sesión en la cabecera `Authorization`, y un `<a href>` no la lleva. El archivo
+ * llega como blob y se entrega al navegador con un ancla temporal; el objeto se
+ * revoca después para no dejar el blob retenido en memoria toda la sesión.
+ */
+async function descargarReporte(boton) {
+  const kind = boton.dataset.reporteKind;
+  const id = boton.dataset.reporteId;
+  const etiqueta = boton.querySelector('span');
+  const textoOriginal = etiqueta ? etiqueta.textContent : '';
+  boton.disabled = true;
+  if (etiqueta) etiqueta.textContent = 'Generando reporte…';
+  try {
+    const respuesta = await fetch(`/api/reporte?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, {
+      headers: authHeaders(),
+    });
+    if (!respuesta.ok) {
+      const detalle = await respuesta.json().catch(() => ({}));
+      if (detalle.cupo) pintarCupoReportes(detalle.cupo);
+      showToast(detalle.error || 'No se pudo generar el reporte en este momento.');
+      return;
+    }
+    const archivo = await respuesta.blob();
+    const enlace = document.createElement('a');
+    enlace.href = URL.createObjectURL(archivo);
+    enlace.download = nombreDeCabecera(respuesta.headers.get('Content-Disposition'))
+      || `radar-reporte-${kind}.html`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(enlace.href), 30000);
+
+    const restantes = respuesta.headers.get('X-Reportes-Restantes');
+    if (restantes === 'ilimitado') pintarCupoReportes({ ilimitado: true, restantes: null });
+    else if (restantes != null) pintarCupoReportes({ ilimitado: false, restantes: Number(restantes) });
+    showToast('Reporte descargado. Ábrelo e imprímelo a PDF si lo necesitas en papel.');
+  } catch {
+    showToast('No se pudo descargar el reporte. Revisa tu conexión e inténtalo de nuevo.');
+  } finally {
+    boton.disabled = false;
+    if (etiqueta) etiqueta.textContent = textoOriginal;
+  }
 }
 
 function marketLazyBox() {
@@ -1807,6 +2148,8 @@ function openRemate(p) {
   const copiaBlock = anon ? (f.copia_publicacion ? lockBox('Copia exacta de la publicación') : '') : copiaHtml;
   const descBlock = anon ? (p.description ? lockBox('Descripción del bien') : '') : descHtml;
   const fav = anon ? '' : modalFavBtn('remate', p.id);
+  // Igual que en la ficha de inmueble: sin acceso completo no se ofrece el botón.
+  const reporte = esBloqueada(p) ? '' : reporteSection('remate', p);
 
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
@@ -1832,6 +2175,7 @@ function openRemate(p) {
       })}
       ${descBlock}
       ${copiaBlock}
+      ${reporte}
       ${mapSection({ address: null, city: p.city })}
       <p class="src-note">Fuente: Rama Judicial de Colombia · aviso de remate publicado por el juzgado.</p>
     </div>`;
@@ -1995,17 +2339,31 @@ function renderActualizado(frescura) {
   }
   const fecha = new Date(frescura.actualizadoEn);
   const etiqueta = fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
-  if (!frescura.degradada) {
-    return `<div class="summary-stat muted" title="Última corrida: ${esc(fecha.toLocaleString('es-CO'))}">
-      <div class="num">${esc(etiqueta)}</div><div class="lbl">Actualizado</div></div>`;
-  }
-  return `<div class="summary-stat muted stat-degradada" title="${esc(frescura.motivo || '')}">
-    <div class="num">${esc(etiqueta)}</div>
-    <div class="lbl">Actualizado · datos atrasados</div></div>`;
+  // La fecha mostrada es siempre la corrida real. El estado degradado NO se
+  // anuncia al visitante: un aviso de operación interna en la portada no le dice
+  // nada útil a quien viene a buscar inmuebles, y la fecha por sí sola ya es
+  // honesta —si el pipeline se detiene, deja de avanzar—. El diagnóstico completo
+  // queda en el tooltip y, sobre todo, en `/api/stats`, que es de donde lo toman
+  // el panel de administración y el monitor de producción.
+  const detalle = frescura.degradada && frescura.motivo
+    ? `Última corrida: ${fecha.toLocaleString('es-CO')} · ${frescura.motivo}`
+    : `Última corrida: ${fecha.toLocaleString('es-CO')}`;
+  return `<div class="summary-stat muted" title="${esc(detalle)}">
+    <div class="num">${esc(etiqueta)}</div><div class="lbl">Actualizado</div></div>`;
 }
 function renderVStats() {
   if (!STATS) return;
   const v = $('vstats');
+  if (state.tab === 'home') {
+    // En la portada la cifra que importa es de dónde sale lo destacado, no cuánto
+    // hay: las tres fuentes juntas son el argumento del producto.
+    v.innerHTML = `
+      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades altas</div></div>
+      <div class="vstat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">Inmuebles de banco</div></div>
+      <div class="vstat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates judiciales</div></div>`;
+    $('legend').innerHTML = '';
+    return;
+  }
   if (state.tab === 'portal') {
     const cities = STATS.perCity.length;
     // El hero ya muestra listados y oportunidades: repetirlos aquí solo resta confianza.
@@ -2040,15 +2398,16 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
     else x.removeAttribute('aria-current');
   });
   state.tab = b.dataset.tab;
+  aplicarVistaDePestana();
   renderRadarSetup();
   state.loadSeq++;
   state.loading = false;
   $('grid').innerHTML = '';
   $('pager').innerHTML = '';
   $('empty').style.display = 'none';
-  $('loading').style.display = 'block';
+  $('loading').style.display = state.tab === 'home' ? 'none' : 'block';
   $('filters').innerHTML = '';
-  setResultText(`Preparando ${state.tab === 'portal' ? 'el portal' : state.tab}…`);
+  setResultText(`Preparando ${state.tab === 'portal' ? 'el portal' : state.tab === 'home' ? 'la portada' : state.tab}…`);
   setFiltersOpen(false);
   renderVStats();
   try {
@@ -2088,6 +2447,11 @@ document.addEventListener('click', (event) => {
   if (retry) {
     const disc = retry.dataset.marketDisc === '' ? null : Number(retry.dataset.marketDisc);
     window.__retryMarket(retry.dataset.marketKind, retry.dataset.marketId, disc);
+    return;
+  }
+  const reporteButton = event.target.closest('button[data-reporte-id]');
+  if (reporteButton) {
+    descargarReporte(reporteButton);
     return;
   }
   const saveSimulationButton = event.target.closest('[data-save-simulation]');
@@ -2165,7 +2529,12 @@ try {
 
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.
+aplicarVistaDePestana();
 initAuth();
+// Sin `await` y sin bloquear nada: la calculadora solo aparece al abrir una
+// ficha, muchísimo después de que esto resuelva, y mientras tanto ya tiene los
+// valores de arranque.
+void cargarParametrosGastos();
 loadStats().catch(() => renderStatsUnavailable());
 buildFilters().then(async () => {
   await applyRadarPreferences(radarPreferences);

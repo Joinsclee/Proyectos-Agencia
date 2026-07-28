@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { supabase } from '../lib/supabase.js';
 import { metadatosDeCuenta, separarMetadatos } from './account-metadata.js';
 import { estadoCupo, leerCupo, type Cupo } from './cupo.js';
+import { metricasOperacion, oportunidadesPorZona } from './queries.js';
+import { guardarParametrosGastos } from './parametros-gastos.js';
+import { estadoCupoReportes, leerCupoReportes, type CupoReportes } from './cupo-reportes.js';
 import { env } from '../lib/env.js';
 import { createLogger } from '../lib/logger.js';
 import {
@@ -73,6 +76,9 @@ function publicAccount(user: CuentaCruda) {
     // Cuántas fichas de oportunidad le quedan este mes. Sin esto el usuario del
     // plan gratuito descubre su límite cuando se lo choca.
     cupo: estadoCupo(leerCupo(metadata), plan === 'pro' ? 'suscrito' : 'free'),
+    // Y cuántos reportes descargables, que es un cupo aparte: el botón de la
+    // ficha necesita poder decir "te quedan N" antes de que el usuario lo pulse.
+    cupoReportes: estadoCupoReportes(leerCupoReportes(metadata), plan === 'pro' ? 'suscrito' : 'free'),
   };
 }
 
@@ -110,6 +116,20 @@ async function updateMetadata(userId: string, updater: (metadata: Metadata) => M
 export async function registrarDesbloqueo(userId: string, cupo: Cupo): Promise<void> {
   await updateMetadata(userId, (metadata) => {
     metadata.unlock_quota = cupo;
+    return metadata;
+  });
+}
+
+/**
+ * Deja constancia de que el usuario gastó un reporte de su cupo mensual.
+ *
+ * Mismo camino que `registrarDesbloqueo` y por el mismo motivo: pasando por
+ * `updateMetadata`, el cupo cae en `app_metadata` por la frontera que ya existe
+ * y nadie tiene que acordarse de dónde va.
+ */
+export async function registrarReporte(userId: string, cupo: CupoReportes): Promise<void> {
+  await updateMetadata(userId, (metadata) => {
+    metadata.report_quota = cupo;
     return metadata;
   });
 }
@@ -307,6 +327,65 @@ export async function getAdminSummary(requesterId: string) {
       .sort()
       .at(-1) ?? null,
   };
+}
+
+/**
+ * Estadísticas de oportunidades por zona (la otra mitad del panel).
+ *
+ * El cálculo vive en `server/queries.ts` porque es puro inventario y no tiene
+ * nada que ver con las cuentas; lo que se hace aquí —y por eso está en este
+ * archivo y no en el enrutador— es pasar por el MISMO guardia que el resumen y
+ * la cola comercial. Un endpoint administrativo con su propia comprobación de
+ * rol es la forma habitual de que una de las cuatro se quede desactualizada.
+ *
+ * El rol se lee de la bolsa separada (`metadatosDeCuenta`), nunca de
+ * `user_metadata`: esa bolsa la reescribe el propio titular y hasta el
+ * 2026-07-27 cualquier registrado podía ascenderse a administrador.
+ */
+export async function getAdminZoneOpportunities(requesterId: string) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
+  return oportunidadesPorZona();
+}
+
+/**
+ * Métricas de operación para las gráficas del panel.
+ *
+ * Mismo guardia y por el mismo motivo que `getAdminZoneOpportunities`: `queries.ts`
+ * solo sabe traer datos, y un endpoint administrativo con su propia comprobación
+ * de rol es la forma habitual de que una de ellas se quede atrás. Aquí no se
+ * expone ningún dato personal —son conteos de corridas de scraping y el estado
+ * del planificador—, pero sí revela cómo y cuándo opera el sistema por dentro,
+ * que no es información de cliente.
+ */
+export async function getAdminOperationMetrics(requesterId: string) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
+  return metricasOperacion();
+}
+
+/**
+ * Guarda los porcentajes de la calculadora de gastos.
+ *
+ * Es la ÚNICA escritura del panel que le cambia un número a todos los usuarios a
+ * la vez —la calculadora se pinta en cada ficha—, así que pasa por el mismo
+ * guardia que las otras cuatro y devuelve `null` (→ 403) exactamente igual. La
+ * validación de rango no está aquí sino en `server/parametros-gastos.ts`, junto
+ * a los valores por defecto: quien cambie el rango tiene que ver al lado qué
+ * pasa si la tabla no existe.
+ */
+export async function updateAdminExpenseParameters(requesterId: string, input: unknown) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
+  const body = (input ?? {}) as Record<string, unknown>;
+  return guardarParametrosGastos(
+    {
+      notaria: Number(body.notaria),
+      impuestoRegistro: Number(body.impuestoRegistro),
+      derechosRegistro: Number(body.derechosRegistro),
+    },
+    { id: requesterId, nota: typeof body.nota === 'string' ? body.nota : undefined },
+  );
 }
 
 export async function listAdminPlanInterests(requesterId: string) {

@@ -38,18 +38,40 @@ test('autorización: ningún lector de permisos recibe user_metadata directament
   }
 });
 
-test('autorización: los tres guardias de administrador separan la bolsa', async () => {
-  // Son los que protegen el panel: resumen, cola comercial y cambio de
-  // suscripción de terceros. Cada uno recibe el `requester` recién leído de
-  // Supabase, así que es ahí donde importa de qué bolsa sale el rol.
+/**
+ * Guardias de administrador que hoy protegen el panel. Añadir un endpoint
+ * administrativo obliga a tocar esta lista: es el recordatorio de que el guardia
+ * se escribe SIEMPRE igual, y de que un endpoint nuevo sin él pasaría
+ * desapercibido en la revisión.
+ */
+const GUARDIAS_ADMIN = 6; // resumen · zonas · métricas · parámetros de gastos · cola comercial · suscripción de terceros
+
+test('autorización: todos los guardias de administrador separan la bolsa', async () => {
+  // Cada uno recibe el `requester` recién leído de Supabase, así que es ahí
+  // donde importa de qué bolsa sale el rol.
   const fuente = await leer('server/account.ts');
   const separados = fuente.match(/isAdminMetadata\(metadatosDeCuenta\(requester\)\)/g) ?? [];
-  assert.equal(separados.length, 3, 'deben ser tres y los tres con la bolsa separada');
+  assert.equal(
+    separados.length,
+    GUARDIAS_ADMIN,
+    `deben ser ${GUARDIAS_ADMIN} y todos con la bolsa separada`,
+  );
   assert.doesNotMatch(
     fuente,
     /isAdminMetadata\(\s*requester/,
     'un guardia lee el requester sin separar la bolsa',
   );
+  // Ninguna OTRA forma de llamarlo: además de los cuatro guardias solo se admite
+  // `isAdminMetadata(metadata)`, donde `metadata` ya es la vista separada que
+  // arma `publicAccount`. Cualquier argumento nuevo —empezando por
+  // `user.user_metadata`— hace fallar esto en la revisión, que es cuando sirve.
+  const ARGUMENTOS_PERMITIDOS = ['metadatosDeCuenta', 'metadata'];
+  for (const [, argumento] of fuente.matchAll(/isAdminMetadata\(\s*([\w.]+)/g)) {
+    assert.ok(
+      ARGUMENTOS_PERMITIDOS.includes(argumento),
+      `isAdminMetadata(${argumento}) no lee la bolsa separada`,
+    );
+  }
 });
 
 test('autorización: la sesión se construye desde la vista separada', async () => {

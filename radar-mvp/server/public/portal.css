@@ -259,6 +259,71 @@ a { color: inherit; }
   color: var(--ink);
   font: 500 .85rem 'Barlow Semi Condensed', sans-serif;
 }
+/* ── Oportunidades por zona (panel de administración) ─────────────────────
+   La tabla tiene nueve columnas de cifras y no cabe en 375 px sin volverse
+   ilegible. En vez de apilarla, se deja desplazar SOLO a ella dentro de su
+   contenedor (`.zone-table-wrap`) y se fija la columna de ciudad, para que al
+   arrastrar hacia la derecha nunca se pierda de vista a qué ciudad pertenece la
+   cifra que se está leyendo. La página, por fuera, no se desplaza. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.zone-summary { margin-top: 18px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.zone-summary div { padding: 12px; border-radius: 11px; background: #f8f4fa; }
+.zone-summary strong, .zone-summary span { display: block; }
+.zone-summary strong { font-size: 1.35rem; color: var(--purple); font-variant-numeric: tabular-nums; }
+.zone-summary span { margin-top: 3px; color: var(--muted); font-size: .75rem; }
+.zone-scope { margin: 12px 0 0; color: var(--muted); font-size: .82rem; font-weight: 700; }
+.zone-table-wrap {
+  margin-top: 14px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+}
+.zone-table {
+  width: 100%;
+  min-width: 880px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.zone-table th, .zone-table td {
+  padding: 11px 13px;
+  text-align: right;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.zone-table thead th {
+  background: var(--purple-dark);
+  color: #fff;
+  font-size: .72rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.zone-table tbody tr:last-child th, .zone-table tbody tr:last-child td { border-bottom: 0; }
+.zone-table tbody th { color: var(--purple-dark); font-weight: 800; background: #fff; }
+.zone-table tbody tr:nth-child(even) th, .zone-table tbody tr:nth-child(even) td { background: #faf7fb; }
+/* Columna fija: necesita fondo opaco propio o el resto de la tabla se le vería
+   por debajo al desplazar en horizontal. */
+.zone-table th:first-child, .zone-table td:first-child { position: sticky; left: 0; text-align: left; z-index: 1; }
+.zone-table thead th:first-child { z-index: 2; }
+.zone-table .zone-empty { color: var(--muted); font-weight: 400; }
+/* Sin comparables de arriendo: la ciudad se marca en el borde de la columna
+   fija (que viaja con la vista) además del distintivo en su celda. */
+.zone-row-sin-arriendos th:first-child { box-shadow: inset 4px 0 0 var(--gold); }
+.zone-flag {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 99px;
+  background: #fdf3d0;
+  color: #7a5b00;
+  font-size: .72rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.zone-legend { margin: 12px 0 0; color: var(--muted); font-size: .8rem; line-height: 1.5; }
+.zone-retry { min-height: 44px; margin-top: 6px; }
 .message { min-height: 24px; margin-top: 12px; color: var(--muted); font-weight: 700; }
 .message.ok { color: var(--success); }
 .message.error { color: #b42318; }
@@ -351,6 +416,8 @@ a { color: inherit; }
   .plans-grid, .account-layout { grid-template-columns: 1fr; }
   .metric-grid { grid-template-columns: repeat(2, 1fr); }
   .funnel-grid { grid-template-columns: repeat(2, 1fr); }
+  .zone-summary { grid-template-columns: repeat(2, 1fr); }
+  .zone-table th, .zone-table td { padding: 10px; }
   .commercial-item, .commercial-actions { grid-template-columns: 1fr; }
   .compare-picker { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
@@ -360,4 +427,160 @@ a { color: inherit; }
   .payment-main { padding-top: 36px; }
   .payment-details div { align-items: flex-start; flex-direction: column; gap: 5px; }
   .payment-details dd { text-align: left; }
+}
+
+/* ══════════════  Consola de administración: grupos y gráficas  ══════════════
+
+   El panel dejó de ser una lista de tarjetas sueltas y pasó a tener cuatro
+   grupos con encabezado (estado del sistema · inventario · comercial ·
+   configuración). El título del grupo es el `h2` de la página y el de cada
+   tarjeta baja a `h3`, para que la jerarquía que se ve sea la misma que oye un
+   lector de pantalla. */
+.account-card h3 { margin: 0 0 6px; color: var(--purple-dark); font-size: 1.3rem; }
+.account-card h4 { margin: 0 0 4px; color: var(--purple-dark); font-size: 1rem; }
+.admin-group + .admin-group { margin-top: 44px; }
+.admin-group-title {
+  margin: 0 0 4px;
+  font-family: 'Tilt Warp', cursive;
+  color: var(--purple-dark);
+  font-size: 1.5rem;
+}
+.admin-group-hint { margin: 0 0 16px; max-width: 68ch; color: var(--muted); line-height: 1.45; }
+.admin-group > .metric-grid { margin-bottom: 20px; }
+
+/* La tarjeta es el marco de referencia del globo de detalle, que se posiciona
+   en píxeles relativos a ella. */
+.viz-card, .account-card { position: relative; }
+
+/* Las gráficas anchas se desplazan DENTRO de su caja; la página nunca. Es la
+   diferencia entre poder leer un histórico de 30 días en un móvil de 375 px y
+   que se descuadre la pantalla entera. */
+.viz-scroll {
+  margin-top: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+}
+.viz-plot { min-width: min-content; color: var(--muted); }
+.viz-svg { display: block; overflow: visible; }
+.viz-svg-medidor { width: 100%; height: 16px; }
+
+/* Rejilla y ejes: línea de un píxel, sólida y un paso por encima del fondo.
+   Punteada leería como «umbral» o «proyección» sin serlo. */
+.viz-rejilla { stroke: var(--border); stroke-width: 1; }
+.viz-base { stroke: #c9bfd0; stroke-width: 1; }
+.viz-tick { fill: var(--muted); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
+/* El texto NUNCA lleva el color de la serie: un dorado o un verde claro sobre
+   blanco es ilegible como letra. La identidad la carga la marca de al lado. */
+.viz-valor { fill: var(--ink); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+/* Área sensible: cubre la banda entera, no solo los píxeles pintados. Sin esto
+   habría que acertarle a una columna de 4 px de alto, y los días sin corridas
+   —que son justamente el dato interesante— no tendrían nada que tocar. */
+.viz-hit { fill: transparent; cursor: pointer; }
+.viz-hit:hover { fill: rgba(97, 49, 116, .06); }
+.viz-hit:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+
+.viz-legend { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.viz-legend-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--muted); font-size: .82rem; font-weight: 700;
+}
+.viz-legend-item i { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+.viz-caption { margin: 10px 0 0; color: var(--muted); font-size: .82rem; font-weight: 600; line-height: 1.45; }
+
+.viz-tip {
+  position: absolute;
+  z-index: 5;
+  min-width: 150px;
+  max-width: 260px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  font-size: .78rem;
+  line-height: 1.4;
+  pointer-events: none;
+  box-shadow: 0 12px 30px -14px rgba(35, 19, 43, .9);
+}
+.viz-tip strong { display: block; margin-bottom: 5px; font-size: .82rem; }
+.viz-tip span { display: flex; align-items: baseline; gap: 6px; }
+.viz-tip i { width: 8px; height: 8px; border-radius: 2px; flex: none; transform: translateY(-1px); }
+/* El VALOR es lo que se viene a buscar con el puntero encima; la etiqueta
+   acompaña. Es la jerarquía de la leyenda al revés, a propósito. */
+.viz-tip em { flex: 1; font-style: normal; color: rgba(255, 255, 255, .72); }
+.viz-tip b { font-variant-numeric: tabular-nums; }
+
+/* Medidores: una razón contra un límite, uno por trabajo automático. */
+.viz-medidores { margin-top: 14px; display: grid; gap: 16px; }
+.viz-medidor-cabeza { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.viz-medidor-cabeza strong { color: var(--purple-dark); text-transform: capitalize; }
+.viz-medidor-barra { margin-top: 7px; }
+.viz-medidor-pie { display: block; margin-top: 5px; color: var(--muted); font-size: .78rem; font-weight: 700; }
+/* El estado va con NOMBRE, no solo con color: el amarillo de aviso no llega a
+   3:1 sobre blanco y hay quien no distingue verde de rojo. */
+.viz-chip {
+  padding: 3px 9px; border-radius: 99px;
+  font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+}
+.viz-chip-bien { background: #e4f6e4; color: #096b09; }
+.viz-chip-mal { background: #fbe9e9; color: #a02020; }
+.viz-chip-neutro { background: #f0eeed; color: #55534e; }
+
+/* Tabla equivalente de cada gráfica: ningún valor vive solo dentro del globo. */
+.viz-tabla { margin-top: 14px; }
+.viz-tabla summary {
+  min-height: 44px; display: inline-flex; align-items: center;
+  color: var(--purple); font-size: .84rem; font-weight: 800; cursor: pointer;
+}
+.viz-tabla summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.viz-tabla-wrap { margin-top: 8px; max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; }
+.viz-tabla-wrap .zone-table { min-width: 560px; }
+.viz-tabla-wrap .zone-table thead th { position: sticky; top: 0; }
+
+/* Las dos gráficas de inventario comparten fila en escritorio. */
+.viz-par { margin-top: 22px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.viz-sub { min-width: 0; }
+.viz-sub p { margin: 0; font-size: .84rem; }
+
+/* ── Parámetros de la calculadora de gastos ── */
+.param-origen {
+  margin: 14px 0 0; padding: 11px 13px; border-radius: 11px;
+  font-size: .82rem; font-weight: 700; line-height: 1.45;
+}
+.param-origen-base { background: #f0e6f7; color: var(--purple-dark); }
+/* Aviso, no error: el producto funciona igual con los valores por defecto. Lo
+   que no puede pasar es que el administrador guarde y no entienda por qué no
+   se refleja nada. */
+.param-origen-defecto { background: #fdf4dd; color: #6b4b00; }
+
+.param-form { margin-top: 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.param-campo { display: flex; flex-direction: column; gap: 6px; }
+.param-campo-ancho { grid-column: 1 / -1; }
+.param-campo label { color: var(--purple-dark); font-size: .86rem; font-weight: 800; }
+.param-campo label span { color: var(--muted); font-weight: 700; }
+.param-campo small { color: var(--muted); font-size: .76rem; line-height: 1.4; }
+.param-input { display: flex; align-items: center; gap: 8px; }
+.param-input input {
+  min-height: 44px; width: 100%; padding: 0 12px;
+  border: 1px solid var(--border); border-radius: 11px; background: #fff;
+  color: var(--ink); font-family: inherit; font-size: 1rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.param-input span { color: var(--muted); font-weight: 800; }
+.param-efecto {
+  grid-column: 1 / -1;
+  padding: 14px 16px; border-radius: 12px; background: #f8f4fa;
+  color: var(--ink); font-size: .88rem; line-height: 1.5;
+}
+.param-efecto strong, .param-efecto span, .param-efecto small { display: block; }
+.param-efecto span { margin-top: 5px; color: var(--muted); font-weight: 700; }
+.param-efecto small { margin-top: 7px; color: var(--muted); font-size: .76rem; }
+.param-efecto-aviso { background: #fdf4dd; color: #6b4b00; }
+.param-acciones { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; }
+
+@media (max-width: 900px) {
+  .viz-par { grid-template-columns: 1fr; }
+  .param-form { grid-template-columns: 1fr; }
 }

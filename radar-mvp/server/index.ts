@@ -13,13 +13,29 @@ import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
-import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
+import {
+  queryPortal, queryBancos, queryRemates, facets, stats, getProperty, remateBankFacets,
+  warmStats, warmTotalPortal, warmZonas, warmMetricas, destacados, warmDestacados,
+  type ListQuery,
+} from './queries.js';
+import { parametrosGastos, warmParametrosGastos } from './parametros-gastos.js';
+import { fichasDe } from './destacados.js';
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
-import { consumirCupo, estadoCupo, leerCupo } from './cupo.js';
+import { consumirCupo, estadoCupo, leerCupo, yaDesbloqueada } from './cupo.js';
+import { estadoCupoReportes, leerCupoReportes } from './cupo-reportes.js';
+import {
+  MENSAJE_RECHAZO,
+  construirReporte,
+  datosDeInmueble,
+  decidirReporte,
+  nombreArchivoReporte,
+  type ArriendoReporte,
+  type ComparablesReporte,
+} from './reporte.js';
 import { warmCityPools } from '../engine/zone-comps.js';
-import { planDe, redactarLista, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
+import { planDe, redactarLista, redactarMixta, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
   activarPlanDemo,
@@ -27,11 +43,15 @@ import {
   exportAccount,
   exportAccountCsv,
   getAccount,
+  getAdminOperationMetrics,
   getAdminSummary,
+  getAdminZoneOpportunities,
   listAdminPlanInterests,
+  updateAdminExpenseParameters,
   listPlans,
   registerPlanInterest,
   registrarDesbloqueo,
+  registrarReporte,
   saveAlert,
   syncAccount,
   updateAdminSubscription,
@@ -174,6 +194,73 @@ async function gastarCupoSiHaceFalta(
     }
   }
   return { desbloqueada: r.permitido, restantes: estadoCupo(r.cupo, 'free').restantes };
+}
+
+/**
+ * Evidencia de mercado que acompaña al reporte.
+ *
+ * Se pide al MISMO motor que produce el −X% de la tarjeta, no a un cálculo
+ * propio: el reporte es el documento que el usuario le enseña a un tercero, y una
+ * cifra que no cuadre con la que vio en pantalla destruye la credibilidad de las
+ * dos. Los comparables salen del veredicto cuando existe (es lo que sostiene el
+ * descuento) y del resumen de mercado cuando no.
+ *
+ * Es best-effort a propósito: si Supabase va lento o la ciudad no tiene baseline,
+ * el reporte sale igual diciendo que no hubo comparables suficientes. Negarle al
+ * usuario un reporte que ya pagó porque una consulta auxiliar falló sería peor
+ * que entregarlo con una sección menos.
+ */
+async function evidenciaParaReporte(
+  kind: 'portal' | 'banco' | 'remate',
+  id: string,
+): Promise<{ comparables: ComparablesReporte | null; arriendo: ArriendoReporte | null }> {
+  const [mercado, arriendo] = await Promise.all([
+    marketOnly(kind, id).catch(() => null),
+    // Los remates no tienen mercado de arriendo asociado en el motor.
+    kind === 'remate' ? Promise.resolve(null) : rentalOnly(kind, id).catch(() => null),
+  ]);
+
+  const m = mercado?.market ?? null;
+  const v = mercado?.verdict ?? null;
+  const alcance = v?.radius_used_km != null
+    ? `${v.radius_used_km} km a la redonda`
+    : m?.scope_label ?? null;
+
+  const comparables: ComparablesReporte | null = v && v.market_ppm2 != null
+    ? {
+      n: v.n_comparables,
+      medianaPpm2: v.market_ppm2,
+      medianaTotal: null, // el veredicto trabaja por m²; mezclar medianas de conjuntos distintos confundiría
+      confianza: v.confidence,
+      alcance,
+      criterios: v.criteria ?? [],
+    }
+    : m && m.n
+      ? {
+        n: m.n,
+        medianaPpm2: m.median_ppm2,
+        medianaTotal: m.median_total,
+        confianza: m.confidence,
+        alcance: m.scope_label,
+        criterios: m.criteria ?? [],
+      }
+      : null;
+
+  const r = arriendo?.rental_market ?? null;
+  return {
+    comparables,
+    arriendo: r && r.available && r.median_monthly_rent != null
+      ? {
+        canonMediano: r.median_monthly_rent,
+        rangoBajo: r.p25_monthly_rent,
+        rangoAlto: r.p75_monthly_rent,
+        canonPorM2: r.median_rent_per_m2,
+        n: r.n,
+        confianza: r.confidence,
+        alcance: r.scope_label,
+      }
+      : null,
+  };
 }
 
 function parseListQuery(url: URL): ListQuery {
@@ -358,6 +445,32 @@ const server = createServer(async (req, res) => {
           if (!summary) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
           return sendJSON(res, 200, { ok: true, summary });
         }
+        if (path === '/api/admin/oportunidades-por-zona') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          // Va con límite propio aunque sea de solo lectura: la primera llamada
+          // tras vencer la caché dispara ~60 consultas contra Supabase, y un
+          // refresco compulsivo del panel podría castigar la base que sirve al
+          // dashboard público.
+          if (rateLimited(res, `admin-zonas:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 })) return;
+          const zonas = await getAdminZoneOpportunities(user.id);
+          if (!zonas) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, ...zonas });
+        }
+        if (path === '/api/admin/metricas') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          const metricas = await getAdminOperationMetrics(user.id);
+          if (!metricas) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, ...metricas });
+        }
+        if (path === '/api/admin/parametros-gastos' && req.method === 'PUT') {
+          // Límite propio y estrecho: esto cambia el número que ve TODO el
+          // mundo en la calculadora, así que un script que lo machaque en bucle
+          // es un problema de producto, no solo de carga.
+          if (rateLimited(res, `admin-parametros:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
+          const result = await updateAdminExpenseParameters(user.id, await readJsonBody(req));
+          if (!result) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, result.ok ? 200 : 400, result);
+        }
         if (path === '/api/admin/plan-interests') {
           if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
           const interests = await listAdminPlanInterests(user.id);
@@ -443,6 +556,86 @@ const server = createServer(async (req, res) => {
         const result = await rentalOnly(kind, id);
         return sendJSON(res, result.ok ? 200 : 404, result);
       }
+      // Reporte descargable de UNA ficha (HTML autocontenido, imprimible a PDF).
+      if (path === '/api/reporte') {
+        if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        const kind = url.searchParams.get('kind');
+        const id = url.searchParams.get('id');
+        if ((kind !== 'portal' && kind !== 'banco' && kind !== 'remate') || !id) {
+          return sendJSON(res, 400, { ok: false, error: 'kind (portal|banco|remate) e id requeridos' });
+        }
+        const usuario = await getUserFromToken(bearer(req));
+        const plan = planDe(usuario);
+        // El anónimo se corta antes de tocar la base: no hay reporte que generarle
+        // y el mensaje que necesita es el mismo con o sin ficha existente.
+        if (plan === 'anonimo' || !usuario) {
+          return sendJSON(res, 401, {
+            ok: false, requiere: 'registro', error: MENSAJE_RECHAZO.registro,
+          });
+        }
+        // Un reporte cuesta dos consultas pesadas (baseline de la ciudad y
+        // arriendos). El tope es por usuario, no por IP: un hogar compartido no
+        // debe quedarse sin reportes porque otro los pidió.
+        if (rateLimited(res, `reporte:${usuario.id}`, { limit: 60, windowMs: 60 * 60 * 1000 })) return;
+
+        const fila = await getProperty(kind, id);
+        if (!fila) return sendJSON(res, 404, { ok: false, error: 'no encontrado' });
+
+        // El acceso se evalúa SIN gastar cupo de fichas: descargar un reporte no
+        // puede consumir en silencio el cupo del otro contador. Si la ficha no
+        // está abierta para este usuario, `decidirReporte` lo rechaza y le dice
+        // que la abra primero.
+        const cupoFichas = usuario.cupo ?? leerCupo(null);
+        const estadoFichas = {
+          desbloqueada: yaDesbloqueada(cupoFichas, id),
+          restantes: estadoCupo(cupoFichas, plan).restantes,
+        };
+        const acceso = kind === 'remate'
+          ? accesoRemateFicha(fila as any, plan, estadoFichas)
+          : accesoInmueble((fila as any).crece_tier, plan, estadoFichas);
+
+        const cupoReportes = usuario.cupoReportes ?? leerCupoReportes(null);
+        const decision = decidirReporte({ plan, acceso, cupo: cupoReportes, id });
+        if (!decision.ok) {
+          return sendJSON(res, 403, {
+            ok: false,
+            requiere: decision.requiere,
+            error: MENSAJE_RECHAZO[decision.requiere],
+            cupo: estadoCupoReportes(decision.cupo, plan),
+          });
+        }
+        if (decision.consume) {
+          try {
+            await registrarReporte(usuario.id, decision.cupo);
+            usuario.cupoReportes = decision.cupo;
+          } catch (e) {
+            // Igual que con el cupo de fichas: perder la cuenta de una unidad es
+            // menos grave que negarle a un usuario legítimo lo que sí puede pedir.
+            log.error(`reportes ${usuario.id.slice(0, 8)}: no se pudo registrar el consumo`, e);
+          }
+        }
+
+        const evidencia = await evidenciaParaReporte(kind, id);
+        // `redactar` sobre una ficha ya autorizada no quita nada; se aplica igual
+        // para que el reporte NUNCA lea la fila cruda. Ver `server/reporte.ts`.
+        const datos = datosDeInmueble({
+          kind,
+          fila: redactar(fila as any, acceso),
+          comparables: evidencia.comparables,
+          arriendo: evidencia.arriendo,
+          plan: plan === 'suscrito' ? 'suscrito' : 'free',
+        });
+        const restantes = estadoCupoReportes(decision.cupo, plan).restantes;
+        // Cabecera propia para que la ficha actualice el contador sin volver a
+        // preguntar por la cuenta entera después de cada descarga.
+        res.setHeader('X-Reportes-Restantes', restantes == null ? 'ilimitado' : String(restantes));
+        return sendTextDownload(
+          res,
+          nombreArchivoReporte(datos),
+          'text/html; charset=utf-8',
+          construirReporte(datos),
+        );
+      }
       // Una propiedad por id (para abrir una recomendación en su modal).
       if (path === '/api/property') {
         const kind = url.searchParams.get('kind');
@@ -501,6 +694,42 @@ const server = createServer(async (req, res) => {
           data: filas,
         });
       }
+      // ── Portada: destacados de la semana, del mes, por ciudad y cruce de fuentes ──
+      // Es la PRIMERA pantalla, así que la selección viene de la caché con TTL de
+      // `queries.ts`. Lo único que se calcula por petición es el muro: qué puede
+      // abrir ESTE usuario. Las fichas destacadas pasan por `redactarMixta` →
+      // `redactarLista`, la misma y única puerta que cualquier listado. Una portada
+      // que devolviera filas crudas sería exactamente el incidente de `/api/property`
+      // otra vez, y en la pantalla más visitada del producto.
+      if (path === '/api/home') {
+        const usuarioHome = await getUserFromToken(bearer(req));
+        const planHome = planDe(usuarioHome);
+        const cupoHome = usuarioHome?.cupo ?? leerCupo(null);
+        const estadoHome = estadoCupo(cupoHome, planHome);
+        const acceso = { desbloqueadas: cupoHome.desbloqueadas, restantes: estadoHome.restantes };
+        const seleccion = await destacados();
+        const bloques = seleccion.bloques.map((bloque) => ({
+          ...bloque,
+          grupos: bloque.grupos.map((grupo) => ({
+            ...grupo,
+            fichas: redactarMixta(grupo.fichas as any[], planHome, acceso),
+          })),
+        }));
+        // El mismo resumen comercial del listado, calculado sobre lo que la persona
+        // tiene delante en la portada: sirve para el aviso de "esto es lo que no
+        // puedes abrir todavía" sin inventar una segunda métrica.
+        const todas = bloques.flatMap((bloque) => fichasDe(bloque as any));
+        return sendJSON(res, 200, {
+          ok: true,
+          plan: planHome,
+          cupo: estadoHome,
+          semana: seleccion.semana,
+          periodo: seleccion.periodo,
+          total: todas.length,
+          bloqueo: resumenBloqueo(todas),
+          bloques,
+        });
+      }
       if (path === '/api/facets') {
         const source = (url.searchParams.get('source') as 'portal' | 'bancos') ?? 'portal';
         return sendJSON(res, 200, await facets(source, url.searchParams.get('city') ?? undefined));
@@ -531,6 +760,13 @@ const server = createServer(async (req, res) => {
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
         paymentDemoReady: wompiPaymentDemoReady(),
+        // Porcentajes de la calculadora de gastos. Van en la config PÚBLICA a
+        // propósito: son tarifas de ley que se le muestran a todo el que abre
+        // una ficha, y esconderlas detrás del token no protegería nada. Lo que
+        // sí está protegido es escribirlas (`PUT /api/admin/parametros-gastos`).
+        // Si la tabla no está aplicada, esto devuelve los valores por defecto y
+        // la ficha se comporta exactamente igual que antes.
+        gastos: await parametrosGastos(),
       });
       return sendJSON(res, 404, { error: 'ruta API no encontrada' });
     }
@@ -556,16 +792,32 @@ const WARM_CITIES = ['bogota', 'medellin', 'cali'];
 server.listen(PORT, () => {
   serviceReady = true;
   log.info(`Radar local en http://localhost:${PORT}`);
-  log.info('API: /health · /ready · /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
-  // Primero las estadísticas (es lo primero que pide el dashboard), luego los
-  // comparables de las ciudades grandes.
+  log.info('API: /health · /ready · /api/home · /api/portal · /api/bancos · /api/remates · /api/facets · /api/stats');
+  // Primero las estadísticas y la portada (es lo primero que se pide al entrar),
+  // luego los comparables de las ciudades grandes.
   void warmStats()
     .then(() => log.info('Estadísticas precargadas'))
+    .then(() => warmDestacados())
+    .then(() => log.info('Destacados de la portada precargados'))
     .then(() => warmCityPools(WARM_CITIES))
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
     // Al final y sin prisa: si compite con los dos precalentamientos anteriores
     // agota su propio timeout de 800 ms y solo deja un aviso inútil en el log.
+    .then(() => warmTotalPortal())
     .then(() => alertDispatchEnabled())
+    // Los porcentajes de gastos van con la config pública porque `/api/config`
+    // los espera: si llegaran fríos, la primera carga del frontend pagaría la
+    // consulta (o su timeout de 800 ms) antes de pintar nada.
+    .then(() => warmParametrosGastos())
+    // Lo último de todo: la tabla de zonas del panel de administración. Son ~60
+    // consultas que solo le sirven a un administrador, así que esperan a que el
+    // dashboard público tenga lo suyo listo.
+    .then(() => warmZonas())
+    .then(() => log.info('Oportunidades por zona precalculadas'))
+    // Detrás de las zonas: son dos consultas pequeñas, pero también le sirven
+    // solo al administrador y no tienen por qué adelantarse a nada.
+    .then(() => warmMetricas())
+    .then(() => log.info('Métricas de operación precalculadas'))
     .catch(() => { /* el precalentamiento es best-effort */ });
 });
 

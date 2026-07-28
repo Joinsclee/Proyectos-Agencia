@@ -143,6 +143,11 @@ export async function recommendInZone(opts: {
     if (!av || !bid || av <= 0) continue;
     const d = (1 - bid / av) * 100;
     if (d <= 0) continue;
+    // Mismo tope de plausibilidad que ya se aplica a los inmuebles. Sin él, los
+    // remates con la postura mal cargada —14 de los 454 vigentes tienen postura
+    // en cero— encabezaban la lista anunciando "100% bajo avalúo", que es
+    // justamente el tipo de dato imposible que el resto del sistema descarta.
+    if (d > REC_MAX_DISCOUNT) continue;
     // Remates no traen barrio ni geo → solo nivel ciudad (same_zone=false).
     recs.push({
       kind: 'remate', id: r.id, type: r.property_type, city: r.city, zone: r.department ?? null,

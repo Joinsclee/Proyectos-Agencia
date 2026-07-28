@@ -17,39 +17,225 @@
   <main class="portal-main">
     <header class="portal-hero">
       <span class="eyebrow">Acceso administrativo</span>
-      <h1>Estado comercial de la Fase 2</h1>
-      <p>Vista agregada de adopción. No expone contraseñas, tokens ni datos completos de los usuarios.</p>
+      <h1>Consola de operación</h1>
+      <p>Todo el estado del Radar en una pantalla: si la máquina corre, qué inventario hay, quién lo está usando y con qué parámetros se calcula. No expone contraseñas, tokens ni datos completos de los usuarios.</p>
     </header>
-    <section class="metric-grid" id="metrics" hidden>
-      <article class="metric-card"><strong id="m-users">—</strong><span>Usuarios</span></article>
-      <article class="metric-card"><strong id="m-pro">—</strong><span>Radar Pro</span></article>
-      <article class="metric-card"><strong id="m-interest">—</strong><span>Solicitudes Pro</span></article>
-      <article class="metric-card"><strong id="m-alerts">—</strong><span>Alertas activas</span></article>
-      <article class="metric-card"><strong id="m-profiles">—</strong><span>Perfiles completos</span></article>
-      <article class="metric-card"><strong id="m-sent">—</strong><span>Envíos · 30 días</span></article>
-      <article class="metric-card"><strong id="m-failed">—</strong><span>Fallos · 30 días</span></article>
-      <article class="metric-card"><strong id="m-success">—</strong><span>Éxito de entrega</span></article>
+
+    <!-- Va primero a propósito: es el estado de la propia consola (permisos,
+         corte de los datos) y también donde aterriza el error si no carga. Un
+         mensaje de acceso denegado al final de la página no lo lee nadie. -->
+    <section class="account-card" id="admin-message"><h3>Verificando permisos…</h3><p>Esta sección requiere una cuenta marcada con rol de administrador.</p></section>
+
+    <!-- ══ 1. ESTADO DEL SISTEMA ══ Lo primero: ¿la máquina que consigue el
+         inventario está viva? Si esto está rojo, el resto de la página está
+         mostrando datos viejos y hay que saberlo antes de leerlos. -->
+    <section class="admin-group" id="grupo-sistema" hidden>
+      <h2 class="admin-group-title">Estado del sistema</h2>
+      <p class="admin-group-hint">Corridas reales del scraping y del planificador. Es la única sección que responde «¿lo que veo abajo está actualizado?».</p>
+
+      <article class="account-card viz-card">
+        <span class="eyebrow">Scraping</span>
+        <h3>Corridas por día · últimos 30 días</h3>
+        <p>Cada columna es un día; su altura, las corridas de scraping que arrancaron ese día. Los días en blanco son días sin ninguna corrida.</p>
+        <div class="viz-legend" id="corridas-leyenda"></div>
+        <div class="viz-scroll">
+          <div class="viz-plot" id="corridas-grafica"></div>
+        </div>
+        <p class="viz-caption" id="corridas-resumen"></p>
+        <details class="viz-tabla">
+          <summary>Ver los datos en tabla</summary>
+          <div class="viz-tabla-wrap">
+            <table class="zone-table" id="corridas-tabla">
+              <caption class="sr-only">Corridas de scraping por día y estado</caption>
+              <thead><tr><th scope="col">Día</th><th scope="col">Éxito</th><th scope="col">Parcial</th><th scope="col">Error</th><th scope="col">En curso</th><th scope="col">Registros insertados</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+      </article>
+
+      <article class="account-card viz-card">
+        <span class="eyebrow">Planificador</span>
+        <h3>Trabajos automáticos frente a su cadencia</h3>
+        <p>Cada barra mide el retraso de un trabajo contra <em>su propio</em> plazo: el motor corre a diario y los bancos cada semana, así que «hace tres días» significa cosas opuestas en cada uno. Lleno = le toca ya.</p>
+        <div class="viz-legend" id="trabajos-leyenda"></div>
+        <div class="viz-medidores" id="trabajos-grafica"></div>
+        <details class="viz-tabla">
+          <summary>Ver los datos en tabla</summary>
+          <div class="viz-tabla-wrap">
+            <table class="zone-table" id="trabajos-tabla">
+              <caption class="sr-only">Trabajos automáticos, cadencia y última corrida</caption>
+              <thead><tr><th scope="col">Trabajo</th><th scope="col">Estado</th><th scope="col">Cadencia</th><th scope="col">Última corrida</th><th scope="col">Hace</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+      </article>
+
+      <p class="message" id="metricas-message" role="status" aria-live="polite"></p>
+      <button class="portal-button secondary zone-retry" type="button" id="metricas-retry" hidden>Reintentar métricas</button>
     </section>
-    <section class="account-card" id="funnel" hidden>
-      <span class="eyebrow">Embudo comercial</span>
-      <h2>Estado de suscripciones</h2>
-      <div class="funnel-grid">
-        <div><strong id="f-none">—</strong><span>Sin solicitud</span></div>
-        <div><strong id="f-interested">—</strong><span>Interesados</span></div>
-        <div><strong id="f-trialing">—</strong><span>En prueba</span></div>
-        <div><strong id="f-active">—</strong><span>Activos</span></div>
-        <div><strong id="f-past-due">—</strong><span>Pago pendiente</span></div>
-        <div><strong id="f-canceled">—</strong><span>Cancelados</span></div>
+
+    <!-- ══ 2. INVENTARIO ══ Qué producto hay para vender y de qué calidad. -->
+    <section class="admin-group" id="grupo-inventario" hidden>
+      <h2 class="admin-group-title">Inventario</h2>
+      <p class="admin-group-hint">Dónde está el producto que se vende y qué tan buena es la oferta. Se calcula sobre los inmuebles activos del portal abierto.</p>
+
+      <section class="account-card" id="zonas">
+        <span class="eyebrow">Oportunidades</span>
+        <h3>Oportunidades por zona</h3>
+        <p>Descuentos detectados por ciudad, cruzados con inventario bancario, remates y cobertura de arriendos.</p>
+        <div class="zone-summary" id="zonas-resumen">
+          <div><strong id="z-activos">—</strong><span>Inmuebles activos</span></div>
+          <div><strong id="z-opps">—</strong><span>Oportunidades</span></div>
+          <div><strong id="z-altas">—</strong><span>Oportunidad alta</span></div>
+          <div><strong id="z-ciudades">—</strong><span>Ciudades con oportunidad</span></div>
+          <div><strong id="z-medio">—</strong><span>Descuento medio</span></div>
+          <div><strong id="z-mejor">—</strong><span>Mejor descuento</span></div>
+          <div><strong id="z-banco">—</strong><span>Inmuebles de banco</span></div>
+          <div><strong id="z-remates">—</strong><span>Remates activos</span></div>
+        </div>
+
+        <!-- Las dos gráficas salen de las MISMAS filas que ya trajo la tabla de
+             abajo: no cuestan ni una consulta más. -->
+        <div class="viz-par">
+          <div class="viz-sub">
+            <h4>Dónde se concentran</h4>
+            <p>Las doce ciudades con más oportunidades activas.</p>
+            <div class="viz-scroll"><div class="viz-plot" id="ciudades-grafica"></div></div>
+          </div>
+          <div class="viz-sub">
+            <h4>De qué calidad son</h4>
+            <p>Reparto por tramo de descuento, separando las que el motor marcó como oportunidad alta.</p>
+            <div class="viz-legend" id="descuentos-leyenda"></div>
+            <div class="viz-scroll"><div class="viz-plot" id="descuentos-grafica"></div></div>
+            <p class="viz-caption" id="descuentos-resumen"></p>
+          </div>
+        </div>
+
+        <p class="zone-scope" id="zonas-alcance"></p>
+        <div class="zone-table-wrap">
+          <table class="zone-table">
+            <caption class="sr-only">Oportunidades por ciudad, ordenadas de mayor a menor volumen</caption>
+            <thead>
+              <tr>
+                <th scope="col">Ciudad</th>
+                <th scope="col">Activos</th>
+                <th scope="col">Oportunidades</th>
+                <th scope="col">Alta</th>
+                <th scope="col">Desc. medio</th>
+                <th scope="col">Mejor desc.</th>
+                <th scope="col">Banco</th>
+                <th scope="col">Remates</th>
+                <th scope="col">Arriendos</th>
+              </tr>
+            </thead>
+            <tbody id="zonas-tbody"></tbody>
+          </table>
+        </div>
+        <p class="zone-legend"><span class="zone-flag">Sin cobertura</span> marca las ciudades sin inventario de arriendos: ahí el Radar puede decir si el precio de compra está bajo, pero no puede calcular rentabilidad.</p>
+        <p class="message" id="zonas-message" role="status" aria-live="polite"></p>
+        <button class="portal-button secondary zone-retry" type="button" id="zonas-retry" hidden>Reintentar cálculo</button>
+      </section>
+    </section>
+
+    <!-- ══ 3. ADOPCIÓN Y OPERACIÓN COMERCIAL ══ Quién lo usa y qué hay que
+         atender. La cola va aquí porque es lo único de esta página que exige una
+         acción del administrador. -->
+    <section class="admin-group" id="grupo-comercial" hidden>
+      <h2 class="admin-group-title">Adopción y operación comercial</h2>
+      <p class="admin-group-hint">Estado de la base de usuarios y las solicitudes que esperan una decisión.</p>
+
+      <div class="metric-grid" id="metrics" hidden>
+        <article class="metric-card"><strong id="m-users">—</strong><span>Usuarios</span></article>
+        <article class="metric-card"><strong id="m-pro">—</strong><span>Radar Pro</span></article>
+        <article class="metric-card"><strong id="m-interest">—</strong><span>Solicitudes Pro</span></article>
+        <article class="metric-card"><strong id="m-alerts">—</strong><span>Alertas activas</span></article>
+        <article class="metric-card"><strong id="m-profiles">—</strong><span>Perfiles completos</span></article>
+        <article class="metric-card"><strong id="m-sent">—</strong><span>Envíos · 30 días</span></article>
+        <article class="metric-card"><strong id="m-failed">—</strong><span>Fallos · 30 días</span></article>
+        <article class="metric-card"><strong id="m-success">—</strong><span>Éxito de entrega</span></article>
       </div>
+      <section class="account-card" id="funnel" hidden>
+        <span class="eyebrow">Embudo comercial</span>
+        <h3>Estado de suscripciones</h3>
+        <div class="funnel-grid">
+          <div><strong id="f-none">—</strong><span>Sin solicitud</span></div>
+          <div><strong id="f-interested">—</strong><span>Interesados</span></div>
+          <div><strong id="f-trialing">—</strong><span>En prueba</span></div>
+          <div><strong id="f-active">—</strong><span>Activos</span></div>
+          <div><strong id="f-past-due">—</strong><span>Pago pendiente</span></div>
+          <div><strong id="f-canceled">—</strong><span>Cancelados</span></div>
+        </div>
+      </section>
+      <section class="account-card" id="commercial-queue" hidden>
+        <span class="eyebrow">Operación comercial</span>
+        <h3>Solicitudes y suscripciones</h3>
+        <p>Gestiona pruebas y acceso manual con historial auditable. Esta acción no procesa ni simula un cobro.</p>
+        <div class="commercial-queue" id="commercial-queue-list"></div>
+        <p class="message" id="commercial-message" role="status" aria-live="polite"></p>
+      </section>
     </section>
-    <section class="account-card" id="commercial-queue" hidden>
-      <span class="eyebrow">Operación comercial</span>
-      <h2>Solicitudes y suscripciones</h2>
-      <p>Gestiona pruebas y acceso manual con historial auditable. Esta acción no procesa ni simula un cobro.</p>
-      <div class="commercial-queue" id="commercial-queue-list"></div>
-      <p class="message" id="commercial-message" role="status" aria-live="polite"></p>
+
+    <!-- ══ 4. CONFIGURACIÓN ══ Al final porque se toca dos veces al año, pero
+         es lo que más lejos llega: cambia un número en la ficha de todos. -->
+    <section class="admin-group" id="grupo-configuracion" hidden>
+      <h2 class="admin-group-title">Configuración del producto</h2>
+      <p class="admin-group-hint">Parámetros que el Radar aplica al calcular. Se guardan en la base: el cambio se ve en la siguiente ficha que abra cualquier usuario, sin desplegar nada.</p>
+
+      <section class="account-card" id="parametros">
+        <span class="eyebrow">Calculadora de gastos</span>
+        <h3>Porcentajes de escrituración</h3>
+        <p>Los tres porcentajes con los que la ficha estima cuánto cuesta escriturar una compra. Son tarifas de ley: el impuesto de registro lo fija cada departamento y la tarifa notarial se actualiza cada año.</p>
+
+        <p class="param-origen" id="param-origen"></p>
+
+        <form class="param-form" id="param-form" novalidate>
+          <div class="param-campo">
+            <label for="param-notaria">Gastos de notaría <span>(parte del comprador)</span></label>
+            <div class="param-input">
+              <input id="param-notaria" name="notaria" type="text" inputmode="decimal" autocomplete="off" required>
+              <span aria-hidden="true">%</span>
+            </div>
+            <small>La tarifa notarial completa se reparte 50/50 entre las partes; aquí va solo la mitad del comprador. <strong>No se aplica en remates</strong>: ahí no hay escritura, se registra el auto de adjudicación.</small>
+          </div>
+          <div class="param-campo">
+            <label for="param-impuesto">Impuesto de registro <span>(beneficencia departamental)</span></label>
+            <div class="param-input">
+              <input id="param-impuesto" name="impuesto" type="text" inputmode="decimal" autocomplete="off" required>
+              <span aria-hidden="true">%</span>
+            </div>
+            <small>Lo fija cada departamento dentro de la banda que permite la Ley 223 de 1995. Se aplica en compra y en remate.</small>
+          </div>
+          <div class="param-campo">
+            <label for="param-derechos">Derechos de registro <span>(Oficina de Instrumentos Públicos)</span></label>
+            <div class="param-input">
+              <input id="param-derechos" name="derechos" type="text" inputmode="decimal" autocomplete="off" required>
+              <span aria-hidden="true">%</span>
+            </div>
+            <small>Tarifa nacional de registro. Se aplica en compra y en remate.</small>
+          </div>
+          <div class="param-campo param-campo-ancho">
+            <label for="param-nota">Motivo del cambio <span>(queda guardado)</span></label>
+            <div class="param-input">
+              <input id="param-nota" name="nota" type="text" maxlength="500" autocomplete="off" placeholder="Ej. Decreto departamental de 2027, impuesto al 0,9 %">
+            </div>
+            <small>Sirve para saber de dónde salió la cifra cuando alguien la revise dentro de un año.</small>
+          </div>
+
+          <!-- «Qué pasa si lo cambias», en pesos. Un porcentaje suelto no dice
+               nada; el mismo porcentaje sobre un inmueble de referencia sí, y es
+               lo que evita guardar un 10 % creyendo que era un 1 %. -->
+          <div class="param-efecto" id="param-efecto" role="status" aria-live="polite"></div>
+
+          <div class="param-acciones">
+            <button class="portal-button" type="submit" id="param-guardar">Guardar porcentajes</button>
+            <button class="portal-button secondary" type="button" id="param-restaurar">Descartar cambios</button>
+          </div>
+        </form>
+        <p class="message" id="param-message" role="status" aria-live="polite"></p>
+      </section>
     </section>
-    <section class="account-card" id="admin-message"><h2>Verificando permisos…</h2><p>Esta sección requiere una cuenta marcada con rol de administrador.</p></section>
   </main>
   <script src="/admin.js"></script>
 </body>
