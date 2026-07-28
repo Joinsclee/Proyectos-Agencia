@@ -176,9 +176,9 @@ Es la historia con más incumplimientos, y la causa es una sola.
 
 | # | Criterio | Estado | Evidencia |
 |---|---|---|---|
-| 1 | Campo `origen_demandante` (bancario / particular_otro), con particular por defecto ante la duda | **Cumple** | 688 de 949 remates activos poblados (232 bancarios, 456 particulares). El defecto conservador está implementado en `origenDemandante()` (`engine/remates-legal.ts:32`) |
-| 2 | Campo `tipo_proceso`, informativo, que no determina el acceso | **Cumple** | 688 de 949; `tipoProceso()` documentado como informativo |
-| 3 | Campo `cuota_parte`, 100 % por defecto | **Cumple** | **949 de 949.** 44 avisos con cuota-parte distinta de 100 % |
+| 1 | Campo `origen_demandante` (bancario / particular_otro), con particular por defecto ante la duda | **Cumple** | **949 de 949** poblados tras la corrida del 28-jul (318 bancarios, 631 particulares). El defecto conservador está implementado en `origenDemandante()` (`engine/remates-legal.ts:32`) |
+| 2 | Campo `tipo_proceso`, informativo, que no determina el acceso | **Cumple** | **949 de 949** (265 ejecutivos hipotecarios); `tipoProceso()` documentado como informativo |
+| 3 | Campo `cuota_parte`, 100 % por defecto | **Cumple** | **949 de 949.** 60 avisos con cuota-parte distinta de 100 % (6,3 %), con casos reales del 11,77 %, 40 % y 50 % |
 | 4 | Índice CRECE calculado también para los remates | **No cumple** | **0 de 949** remates tienen `crece_index` o `crece_tier`. El motor no los evalúa |
 
 **3 cumplen · 1 no cumple.**
@@ -192,7 +192,7 @@ Es la historia con más incumplimientos, y la causa es una sola.
 | 1 | Matriz gratis / suscripción por origen × descuento | **Cumple exacto** | `accesoRemate()` (`engine/remates-legal.ts:172`) reproduce la tabla de la HU celda por celda |
 | 2 | Remates con descuento < 20 % siempre gratis | **Cumple** | Primera línea de la función |
 | 3 | Gratis con origen particular (20–39 %) con rotación semanal | **Cumple** | Reutiliza el rotativo de bancos, como pedía la HU |
-| 4 | Alerta jurídica cuando `cuota_parte ≠ 100 %`, aplique o no la matriz de pago | **Cumple** | 44 remates la disparan; la comprobación es independiente del acceso |
+| 4 | Alerta jurídica cuando `cuota_parte ≠ 100 %`, aplique o no la matriz de pago | **Cumple** | 60 remates la disparan; la comprobación es independiente del acceso. Reparto de la matriz tras la última corrida: 528 gratis con aviso, 320 de suscripción, 101 gratis |
 | 5 | Texto exacto de la alerta | **Cumple literal** | `TEXTO_CUOTA_PARTE` (`server/public/app.js:1381`) coincide palabra por palabra con la HU |
 | 6 | Marca visible en el título de la ficha, antes de abrirla | **Cumple** | `cuota-badge` con «Solo el N % del bien» en la propia tarjeta |
 
