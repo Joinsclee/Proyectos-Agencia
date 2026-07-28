@@ -46,7 +46,7 @@ test('bancos: el filtro por entidad se valida contra la lista blanca', async () 
 test('facets y listado aplican los mismos filtros de saneamiento', async () => {
   const fuente = await leerQueries();
   const listado = cuerpoDe(fuente, 'function applyInmuebleFilters');
-  const desplegables = cuerpoDe(fuente, 'export async function facets');
+  const desplegables = cuerpoDe(fuente, 'export async function facets(');
 
   // Los topes del sistema, no los que el usuario elige: si el listado esconde una
   // ficha por precio absurdo, el desplegable tampoco puede contarla.
@@ -68,7 +68,7 @@ test('facets: solo cuenta bancos cuando la muestra cabe entera', async () => {
   // Eso es exacto para el inventario bancario (unos cientos) y sería un número
   // truncado en el portal (108.000 filas), así que la rama tiene que seguir
   // condicionada a la fuente.
-  const cuerpo = cuerpoDe(await leerQueries(), 'export async function facets');
+  const cuerpo = cuerpoDe(await leerQueries(), 'export async function facets(');
   assert.match(cuerpo, /if \(source === 'bancos'\)/, 'el conteo por entidad dejó de estar acotado a bancos');
   assert.match(cuerpo, /\.limit\(8000\)/, 'cambió el tope de la muestra: revisa si el conteo por entidad sigue siendo exacto');
 });

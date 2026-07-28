@@ -111,6 +111,42 @@ export function accesoRemateFicha(
 const FOTOS_BLOQUEADA = 3;
 
 /**
+ * Columnas del remate que NO pueden salir de una ficha bloqueada.
+ *
+ * El aviso judicial es texto libre copiado del juzgado, y ahí dentro va el nombre
+ * y la cédula del demandado, y el nombre, el correo y el celular del secuestre —
+ * datos personales de terceros que nadie ha pedido publicar. Anular solo
+ * `court_email` era decorativo: el mismo correo aparecía dentro de `trustee`, y
+ * medido sobre las fichas bloqueadas de un listado real, 8 de 8 filtraban correo
+ * y celular.
+ *
+ * Se conserva a propósito lo que sostiene la oferta comercial y la alerta
+ * jurídica: ciudad, tipo, postura, avalúo, fecha de audiencia, `cuota_parte` y
+ * `origen_demandante` —que es una categoría, no una persona—.
+ */
+const CAMPOS_REMATE_RESERVADOS = [
+  'defendant', 'plaintiff', 'trustee',
+  'court', 'court_address', 'court_email', 'case_number',
+  'matricula_inmobiliaria', 'property_type_raw',
+] as const;
+
+/**
+ * Claves de `features` que no salen en una ficha bloqueada.
+ *
+ * Es un patrón y no una lista cerrada porque la lista cerrada ya falló: los
+ * scrapers fueron añadiendo `address_raw`, `pdf_url`, `pdf_page` y
+ * `fincaraiz_url`, y como nadie actualizó el filtro, la dirección y el enlace a la
+ * fuente seguían viajando por dentro de `features` mientras las columnas
+ * `address` y `source_url` se anulaban por fuera. Un campo nuevo que se llame como
+ * lo que oculta queda cubierto desde el día uno.
+ */
+const CLAVE_FEATURE_RESERVADA =
+  /url|address|direccion|ubicacion|link|contacto|phone|telefono|tel$|email|correo|_raw$|^code$|matricula|catastral|owner|propietario/i;
+
+/** …salvo las fotos, que la ficha bloqueada sí enseña (recortadas). */
+const CLAVE_FEATURE_PERMITIDA = new Set(['image_url', 'images', 'photos', 'thumbnail']);
+
+/**
  * Quita de la fila lo que el plan no cubre.
  *
  * Se conserva a propósito lo que sostiene la oferta comercial: precio, área,
@@ -127,7 +163,17 @@ export function redactar<T extends Record<string, any>>(row: T, acceso: Acceso):
   delete f.description;
   delete f.lat; delete f.lng;          // sin ubicación exacta
   delete f.copia_publicacion;          // el aviso íntegro es contenido de pago
-  delete f.contacto; delete f.phone; delete f.email;
+  delete f.observaciones;              // texto libre del boletín del banco
+  delete f.ai_analysis;                // el análisis es justo lo que se vende
+  delete f.pdf_page;                   // la página del boletín señala la ficha original
+  for (const clave of Object.keys(f)) {
+    if (!CLAVE_FEATURE_PERMITIDA.has(clave) && CLAVE_FEATURE_RESERVADA.test(clave)) delete f[clave];
+  }
+
+  const reservados: Record<string, null> = {};
+  for (const campo of CAMPOS_REMATE_RESERVADOS) {
+    if (campo in row) reservados[campo] = null;
+  }
 
   return {
     ...row,
@@ -135,7 +181,12 @@ export function redactar<T extends Record<string, any>>(row: T, acceso: Acceso):
     address: null,
     description: null,
     source_url: null,                  // sin enlace a la fuente original
-    court_email: null,
+    // El identificador de la fuente reconstruye el enlace por sí solo: en los
+    // remates ES el slug de la URL ("inmueble-tipo-casa-en-urbanizacion-panorama-ii-pereira")
+    // y en los bancos el código del boletín. Anular `source_url` y dejar este
+    // sería cerrar la puerta y dejar la llave puesta. El cliente no lo usa.
+    source_id: null,
+    ...reservados,
     _acceso: acceso,
     _bloqueada: true,
   } as T;

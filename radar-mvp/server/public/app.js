@@ -530,10 +530,15 @@ async function buildFilters() {
     html += `<div class="f"><label for="f-bedroomsMin">Habitaciones</label><select id="f-bedroomsMin"><option value="">Todas</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></div>`;
     if (tab === 'portal') html += fStratum();
   } else {
-    const fc = await fetch('/api/facets?source=portal').then((r) => r.json());
+    // Las facetas de REMATES, no las del portal. Son dos universos distintos: un
+    // remate puede estar en un municipio donde FincaRaíz no publica nada, y así el
+    // desplegable dejaba fuera 19 ciudades con remates reales —Popayán, Yopal,
+    // Buenaventura— mientras ofrecía decenas que no tenían ninguno.
+    const fc = await fetch('/api/facets?source=remates').then((r) => r.json());
     html += fSelect('city', 'Ciudad', fc.cities);
-    const RTYPES = ['apartment', 'house', 'lot', 'office', 'commercial', 'farm', 'parking'];
-    html += `<div class="f"><label for="f-type">Tipo</label><select id="f-type"><option value="">Todos</option>${RTYPES.map((t) => `<option value="${t}">${typeLbl(t)}</option>`).join('')}</select></div>`;
+    // Los tipos también salen del inventario: la lista fija omitía `vehicle` y
+    // `rights`, que son 64 fichas reales que nadie podía acotar.
+    html += fSelect('type', 'Tipo', fc.types, typeLbl);
     // Demandante: dropdown con TODOS los bancos detectados (pedido del cliente).
     const bk = await fetch('/api/remate-banks').then((r) => r.json()).catch(() => ({ banks: [] }));
     const bankOpts = ['<option value="">Todos los demandantes</option>', '<option value="1">Solo bancos (todos)</option>']
@@ -1132,7 +1137,13 @@ async function load(page) {
 
   if (loadSeq !== state.loadSeq) return;
   $('grid').innerHTML = '';
-  renderCards(res.data);
+  // `true` = la ficha se PIDE a `/api/property` al abrirla, en vez de dibujarse
+  // con la fila que el listado ya tiene en el navegador. Es obligatorio: esa ruta
+  // es la única que aplica el plan del usuario y la única que gasta el cupo del
+  // mes. Sin esto la tarjeta prometía "ábrela con tu cupo", el clic no consumía
+  // nada y el modal enseñaba el muro — el plan gratuito era inalcanzable desde
+  // las tres pestañas, y solo funcionaba desde la portada, que sí lo pasaba.
+  renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
   setResultText(res.total.toLocaleString('es-CO') + ' resultado' + (res.total === 1 ? '' : 's'));
   clearLoadingSkeletons();
@@ -1240,7 +1251,10 @@ async function loadGuardados() {
     return;
   }
   $('grid').innerHTML = '';
-  renderCards(props);
+  // Guardados con sesión: también por la API. Una ficha que el usuario ya abrió
+  // con su cupo tiene que seguir abriéndose desde aquí, y una que nunca abrió
+  // tiene que seguir cobrando.
+  renderCards(props, $('grid'), true);
   setResultText(props.length + ' guardado' + (props.length === 1 ? '' : 's'));
   clearLoadingSkeletons();
   $('empty').style.display = props.length === 0 ? 'block' : 'none';
@@ -1915,16 +1929,45 @@ let gRentalSeq = 0;
  */
 function panelSuscripcion(p) {
   const d = p.discount_pct != null ? Math.round(p.discount_pct) : null;
+  // Qué le falta a ESTE usuario, que es lo que el servidor ya calculó en
+  // `_acceso.requiere`. El sello de la tarjeta lo respetaba y este muro no: a un
+  // anónimo —que solo tiene que registrarse— se le pedía pagar una suscripción, y
+  // a un registrado con cupo disponible también. Pedir dinero a quien no lo
+  // necesita es la peor forma posible de perder un registro.
+  const requiere = p?._acceso?.requiere ?? 'suscripcion';
+  const COPY = {
+    registro: {
+      cuerpo: 'Ya viste los comparables y el costo estimado. Crea tu cuenta gratis y abre esta ficha con tu cupo del mes.',
+      cta: 'Crear cuenta gratis',
+      href: '/login',
+    },
+    cupo: {
+      cuerpo: 'Ya viste los comparables y el costo estimado. Ábrela con una de las fichas de tu cupo de este mes.',
+      cta: 'Abrir con mi cupo',
+      href: null,
+    },
+    suscripcion: {
+      cuerpo: 'Ya viste los comparables y el costo estimado. La suscripción desbloquea los datos necesarios para profundizar la evaluación.',
+      cta: 'Desbloquear con suscripción',
+      href: '/planes',
+    },
+  };
+  const t = COPY[requiere] ?? COPY.suscripcion;
+  // Al que le queda cupo no se le manda a ninguna parte: el clic en la tarjeta ya
+  // gasta la ficha, así que un enlace aquí solo lo sacaría de donde está.
+  const cta = t.href
+    ? `<a class="wall-cta" href="${t.href}">${t.cta}</a>`
+    : `<span class="wall-cta wall-cta-inerte">${t.cta}</span>`;
   return `<div class="section"><div class="muro-sus">
     <div class="muro-cab">${ic('lock')}<strong>${d != null && d >= 20 ? `${d}% bajo ofertas similares` : 'Oportunidad destacada'}</strong></div>
-    <p>Ya viste los comparables y el costo estimado. La suscripción desbloquea los datos necesarios para profundizar la evaluación.</p>
+    <p>${t.cuerpo}</p>
     <ul class="muro-lista">
       <li>${ic('lock')} Dirección exacta y ubicación en el mapa</li>
       <li>${ic('lock')} Descripción completa y todas las fotos</li>
       <li>${ic('lock')} Fuente original y datos de contacto</li>
       <li>${ic('lock')} Análisis detallado de la oportunidad</li>
     </ul>
-    <a class="wall-cta" href="/login">Desbloquear con suscripción</a>
+    ${cta}
   </div></div>`;
 }
 
@@ -2175,6 +2218,12 @@ function valorLargo(html) {
 function openRemate(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
+  // Lo que se cobra se decide por el VEREDICTO DEL SERVIDOR, no por tener sesión.
+  // Con `anon` a secas, cualquiera con cuenta gratuita veía enteros los datos del
+  // proceso —nombre y cédula del demandado, correo y celular del secuestre— de un
+  // remate que la tarjeta marcaba como de pago, y además sin gastar cupo. Todos
+  // los remates de suscripción eran gratis para cualquiera registrado.
+  const bloq = esBloqueada(p);
   gImgs = p.image_url ? [p.image_url] : []; gIdx = 0;
   const pct = p.minimum_bid && p.appraisal_value ? Math.round((p.minimum_bid / p.appraisal_value) * 100) : (p.minimum_bid_pct || null);
   const f = p.features || {};
@@ -2205,13 +2254,18 @@ function openRemate(p) {
     : '';
   // Bloqueos para anónimo (freemium). El análisis preliminar (semáforo) y la
   // calculadora quedan visibles como gancho; lo sensible/valioso se bloquea.
-  const aiBlock = anon ? lockBox('Análisis con IA', 'Opinión de inversión + comparables del barrio. Regístrate gratis.') : aiSection('remate', p.id);
-  const datosBlock = anon ? lockBox('Datos del proceso', 'Demandante, juzgado, radicado, secuestre y más. Regístrate gratis.') : datosHtml;
-  const copiaBlock = anon ? (f.copia_publicacion ? lockBox('Copia exacta de la publicación') : '') : copiaHtml;
-  const descBlock = anon ? (p.description ? lockBox('Descripción del bien') : '') : descHtml;
+  // `bloq` gobierna todo lo que es contenido de pago. `anon` solo gobierna lo que
+  // necesita una cuenta para existir —los favoritos—, que es otra cosa.
+  const tapado = bloq || anon;
+  const aiBlock = tapado ? lockBox('Análisis con IA', 'Opinión de inversión + comparables del barrio.') : aiSection('remate', p.id);
+  const datosBlock = tapado ? lockBox('Datos del proceso', 'Demandante, juzgado, radicado, secuestre y más.') : datosHtml;
+  const copiaBlock = tapado ? (f.copia_publicacion ? lockBox('Copia exacta de la publicación') : '') : copiaHtml;
+  const descBlock = tapado ? (p.description ? lockBox('Descripción del bien') : '') : descHtml;
   const fav = anon ? '' : modalFavBtn('remate', p.id);
-  // Igual que en la ficha de inmueble: sin acceso completo no se ofrece el botón.
-  const reporte = esBloqueada(p) ? '' : reporteSection('remate', p);
+  // Igual que en la ficha de inmueble: sin acceso completo no se ofrece el botón,
+  // y se explica qué falta para abrirla en vez de dejar huecos sin motivo.
+  const reporte = bloq ? '' : reporteSection('remate', p);
+  const muro = bloq ? panelSuscripcion(p) : '';
 
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
@@ -2227,6 +2281,7 @@ function openRemate(p) {
         ${p.auction_date ? `<div class="pb-auction">${ic('calendar')} Audiencia: <strong>${fmtDate(p.auction_date)}</strong>${p.auction_time ? ' · ' + esc(p.auction_time) : ''} ${countdownBadge(p.auction_date)}</div>` : ''}
       </div>
       ${analisisSection(p)}
+      ${muro}
       ${aiBlock}
       ${datosBlock}
       ${gastosSection(p.minimum_bid, 'remate', {

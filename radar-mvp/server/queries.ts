@@ -93,10 +93,16 @@ function applyInmuebleFilters(qb: any, q: ListQuery) {
   if (q.priceMax) qb = qb.lte('price', Math.min(q.priceMax, MAX_DISPLAY_PRICE));
   if (q.areaMin) qb = qb.gte('area_m2', q.areaMin);
   if (q.areaMax) qb = qb.lte('area_m2', q.areaMax);
-  // Campos JSON (texto): comparación string segura para dígitos 1-9.
-  if (q.bedroomsMin) qb = qb.gte('features->>bedrooms', String(q.bedroomsMin));
-  if (q.stratumMin) qb = qb.gte('features->>stratum', String(q.stratumMin));
-  if (q.stratumMax) qb = qb.lte('features->>stratum', String(q.stratumMax));
+  // Campos JSON, comparados como NÚMERO (`->`) y no como texto (`->>`).
+  //
+  // Con `->>` la comparación es alfabética, y ahí '11' < '2': una casa de once
+  // habitaciones desaparecía al pedir «2 o más». Medido sobre Bogotá, el filtro
+  // perdía todas las de 10, 11, 13 y 16 — justo las fincas y casas grandes, que
+  // son de las fichas más caras del inventario. El estrato se salvaba de milagro
+  // porque solo llega hasta 6.
+  if (q.bedroomsMin) qb = qb.gte('features->bedrooms', q.bedroomsMin);
+  if (q.stratumMin) qb = qb.gte('features->stratum', q.stratumMin);
+  if (q.stratumMax) qb = qb.lte('features->stratum', q.stratumMax);
   return qb;
 }
 
@@ -249,6 +255,10 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   // se leería como "este banco no tiene inventario".
   if (q.bank && (BANK_SOURCES as readonly string[]).includes(q.bank)) qb = qb.eq('source', q.bank);
   if (q.opp === '1') qb = qb.eq('is_opportunity', true);
+  // «Solo altas» existía en el desplegable de Bancos —se pinta con el mismo código
+  // que el de Portal— pero aquí no tenía rama: el parámetro viajaba y la consulta
+  // lo ignoraba, así que elegirlo devolvía las 413 fichas, idéntico a no filtrar.
+  if (q.opp === 'high') qb = qb.eq('is_high', true);
   qb = applyOrderInmuebles(qb, q.order ?? 'precio_m2_asc');
   qb = qb.range(from, from + pageSize - 1);
 
@@ -337,6 +347,32 @@ export async function remateBankFacets(): Promise<{ banks: Array<{ name: string;
 }
 
 /** Valores únicos para poblar los filtros (ciudades, tipos, barrios por ciudad). */
+/**
+ * Ciudades y tipos que existen DE VERDAD en el inventario de remates.
+ *
+ * La pestaña de Remates ofrecía las facetas del portal, y son dos universos
+ * distintos: un remate puede estar en un municipio donde FincaRaíz no publica
+ * nada. Medido, 19 ciudades con remates reales —Popayán, Yopal, Buenaventura,
+ * Chaparral…— no aparecían en el desplegable y no había forma de llegar a ellas,
+ * mientras que decenas de ciudades ofrecidas no tenían ni un remate y solo servían
+ * para vaciar la pantalla.
+ *
+ * Los remates son unos cientos, así que se cuentan enteros sin tope.
+ */
+export async function facetsRemates() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from('remates')
+    .select('city, property_type')
+    .eq('is_active', true)
+    .gte('auction_date', hoy)
+    .limit(5000);
+  if (error) throw new Error(`facetsRemates: ${error.message}`);
+  const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
+  const types = [...new Set((data ?? []).map((r) => r.property_type).filter(Boolean))].sort();
+  return { cities, zones: [], types };
+}
+
 export async function facets(source: 'portal' | 'bancos' = 'portal', city?: string) {
   let qb = supabase.from('inmuebles').select('city, zone, type, source').eq('is_active', true).limit(8000);
   qb = source === 'portal' ? qb.eq('source', 'fincaraiz') : qb.in('source', BANK_SOURCES as unknown as string[]);
