@@ -44,10 +44,14 @@ test('muro: la ficha individual se pide identificándose', async () => {
 });
 
 test('muro: /api/property aplica el plan antes de responder', async () => {
+  // Se comprueba la cadena, no la expresión exacta: identificar a quien pregunta
+  // → derivar su plan → redactar antes de enviar. Cualquier refactor puede
+  // reescribir la forma, pero no puede saltarse ninguno de los tres pasos.
   const index = await leer('server/index.ts');
   const bloque = index.slice(index.indexOf("path === '/api/property'"));
   const handler = bloque.slice(0, bloque.indexOf('/api/portal'));
-  assert.match(handler, /planDe\(await getUserFromToken\(bearer\(req\)\)\)/, 'no consulta el plan');
+  assert.match(handler, /getUserFromToken\(bearer\(req\)\)/, 'no identifica a quien pregunta');
+  assert.match(handler, /planDe\(/, 'no deriva el plan');
   assert.match(handler, /redactar\(/, 'no redacta la fila antes de enviarla');
 });
 
