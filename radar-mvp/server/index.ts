@@ -13,7 +13,7 @@ import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
-import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, getProperty, remateBankFacets, type ListQuery } from './queries.js';
+import { queryPortal, queryBancos, queryRemates, facets, stats, warmStats, warmTotalPortal, warmZonas, getProperty, remateBankFacets, type ListQuery } from './queries.js';
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
@@ -28,6 +28,7 @@ import {
   exportAccountCsv,
   getAccount,
   getAdminSummary,
+  getAdminZoneOpportunities,
   listAdminPlanInterests,
   listPlans,
   registerPlanInterest,
@@ -358,6 +359,17 @@ const server = createServer(async (req, res) => {
           if (!summary) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
           return sendJSON(res, 200, { ok: true, summary });
         }
+        if (path === '/api/admin/oportunidades-por-zona') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          // Va con límite propio aunque sea de solo lectura: la primera llamada
+          // tras vencer la caché dispara ~60 consultas contra Supabase, y un
+          // refresco compulsivo del panel podría castigar la base que sirve al
+          // dashboard público.
+          if (rateLimited(res, `admin-zonas:${user.id}`, { limit: 60, windowMs: 10 * 60 * 1000 })) return;
+          const zonas = await getAdminZoneOpportunities(user.id);
+          if (!zonas) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, ...zonas });
+        }
         if (path === '/api/admin/plan-interests') {
           if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
           const interests = await listAdminPlanInterests(user.id);
@@ -565,7 +577,13 @@ server.listen(PORT, () => {
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
     // Al final y sin prisa: si compite con los dos precalentamientos anteriores
     // agota su propio timeout de 800 ms y solo deja un aviso inútil en el log.
+    .then(() => warmTotalPortal())
     .then(() => alertDispatchEnabled())
+    // Lo último de todo: la tabla de zonas del panel de administración. Son ~60
+    // consultas que solo le sirven a un administrador, así que esperan a que el
+    // dashboard público tenga lo suyo listo.
+    .then(() => warmZonas())
+    .then(() => log.info('Oportunidades por zona precalculadas'))
     .catch(() => { /* el precalentamiento es best-effort */ });
 });
 
