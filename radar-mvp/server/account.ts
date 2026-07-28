@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase.js';
 import { metadatosDeCuenta, separarMetadatos } from './account-metadata.js';
 import { estadoCupo, leerCupo, type Cupo } from './cupo.js';
 import { oportunidadesPorZona } from './queries.js';
+import { estadoCupoReportes, leerCupoReportes, type CupoReportes } from './cupo-reportes.js';
 import { env } from '../lib/env.js';
 import { createLogger } from '../lib/logger.js';
 import {
@@ -74,6 +75,9 @@ function publicAccount(user: CuentaCruda) {
     // Cuántas fichas de oportunidad le quedan este mes. Sin esto el usuario del
     // plan gratuito descubre su límite cuando se lo choca.
     cupo: estadoCupo(leerCupo(metadata), plan === 'pro' ? 'suscrito' : 'free'),
+    // Y cuántos reportes descargables, que es un cupo aparte: el botón de la
+    // ficha necesita poder decir "te quedan N" antes de que el usuario lo pulse.
+    cupoReportes: estadoCupoReportes(leerCupoReportes(metadata), plan === 'pro' ? 'suscrito' : 'free'),
   };
 }
 
@@ -111,6 +115,20 @@ async function updateMetadata(userId: string, updater: (metadata: Metadata) => M
 export async function registrarDesbloqueo(userId: string, cupo: Cupo): Promise<void> {
   await updateMetadata(userId, (metadata) => {
     metadata.unlock_quota = cupo;
+    return metadata;
+  });
+}
+
+/**
+ * Deja constancia de que el usuario gastó un reporte de su cupo mensual.
+ *
+ * Mismo camino que `registrarDesbloqueo` y por el mismo motivo: pasando por
+ * `updateMetadata`, el cupo cae en `app_metadata` por la frontera que ya existe
+ * y nadie tiene que acordarse de dónde va.
+ */
+export async function registrarReporte(userId: string, cupo: CupoReportes): Promise<void> {
+  await updateMetadata(userId, (metadata) => {
+    metadata.report_quota = cupo;
     return metadata;
   });
 }

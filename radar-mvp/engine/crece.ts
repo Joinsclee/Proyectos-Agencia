@@ -110,6 +110,20 @@ export function desviacionTexto(indice: number): string {
   return `${pct}% ${indice < 1 ? 'por debajo' : 'por encima'}`;
 }
 
+/**
+ * Categoría a partir del nombre guardado en `crece_tier`, para las filas que ya
+ * traen la clasificación resuelta de la base y no el índice.
+ *
+ * Sale de la MISMA tabla maestra que `clasificar()`: la alternativa era copiar
+ * los textos ("Oportunidad Fuerte", "Sobreprecio"…) donde hicieran falta, y ahí
+ * es donde empiezan a divergir de la tabla sin que nadie lo note. Devuelve `null`
+ * si el tier no existe (una fila vieja con un nombre que ya se retiró).
+ */
+export function clasePorTier(tier: string | null | undefined): Omit<CreceClass, 'desviacion'> | null {
+  if (!tier) return null;
+  return TABLA.find((f) => f.c.tier === tier)?.c ?? null;
+}
+
 /** Clasifica un índice contra la tabla maestra. */
 export function clasificar(indice: number): CreceClass {
   const i = redondearIndice(indice);

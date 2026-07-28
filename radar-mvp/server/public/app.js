@@ -35,6 +35,8 @@ const RADAR_SIMULATIONS_KEY = 'radar_simulations_v1';
 const RADAR_ALERT_KEY = 'radar_alert_v1';
 /** Debe coincidir con CUPO_MENSUAL_FREE de server/cupo.ts. El servidor manda; esto es solo el texto. */
 const CUPO_FREE_MENSUAL = 20;
+/** Ídem con CUPO_REPORTES_FREE de server/cupo-reportes.ts: es un cupo distinto del de fichas. */
+const CUPO_REPORTES_MENSUAL = 20;
 
 function readStoredJson(key, fallback) {
   try {
@@ -1586,6 +1588,10 @@ function openInmueble(p) {
   const descBlock = bloq ? '' : desc;
   const muro = bloq ? panelSuscripcion(p) : '';
   const kind = p.source === 'fincaraiz' ? 'portal' : 'banco';
+  // El reporte solo se ofrece sobre una ficha que este usuario ya puede ver
+  // entera: el servidor lo rechazaría igual, y un botón que falla es peor que
+  // ninguno. En la ficha bloqueada el muro de al lado ya dice qué falta.
+  const reporte = bloq ? '' : reporteSection(kind, p);
   const fav = anon ? '' : modalFavBtn(kind, p.id);
   // Los avisos del portal cambian con frecuencia y pueden traer un análisis
   // persistido de semanas atrás. Siempre recalculamos sus comparables al abrir
@@ -1606,7 +1612,7 @@ function openInmueble(p) {
       <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${esc(cap(p.city))}</strong></div>
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
-      ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}
+      ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
       <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
     </div>`;
   showModal();
@@ -1639,6 +1645,117 @@ function panelSuscripcion(p) {
     </ul>
     <a class="wall-cta" href="/login">Desbloquear con suscripción</a>
   </div></div>`;
+}
+
+// ---------- Reporte descargable de la ficha ----------
+
+/** Texto del cupo de reportes. El servidor es la autoridad; esto solo lo explica. */
+function textoCupoReportes(estado) {
+  if (!estado) return `El plan gratuito incluye ${CUPO_REPORTES_MENSUAL} reportes al mes.`;
+  if (estado.ilimitado) return 'Tu plan incluye descargas ilimitadas.';
+  const quedan = Number(estado.restantes ?? 0);
+  if (quedan <= 0) return `Agotaste los ${CUPO_REPORTES_MENSUAL} reportes de este mes. El plan de pago los deja sin límite.`;
+  return `Te ${quedan === 1 ? 'queda 1 reporte' : `quedan ${quedan} reportes`} de ${CUPO_REPORTES_MENSUAL} este mes.`;
+}
+
+/**
+ * Bloque del reporte descargable.
+ *
+ * Enseña el cupo ANTES de que el usuario pulse, no después: descubrir un límite
+ * al chocarse con él es lo que hace que un plan gratuito se sienta una trampa. Al
+ * anónimo no se le ofrece un botón que va a fallar — se le ofrece la cuenta, que
+ * es lo que de verdad le falta.
+ *
+ * Solo se dibuja en fichas que el usuario ya puede ver completas: si la ficha
+ * está bloqueada, el servidor rechazaría el reporte y el botón sería una promesa
+ * falsa (el muro de al lado ya explica qué falta).
+ */
+function reporteSection(kind, p) {
+  if (!auth.token) {
+    return `<div class="section"><div class="reporte-box">
+      <h3>Reporte descargable</h3>
+      <p class="reporte-txt">Un documento con el precio, el descuento frente a su zona, los comparables que
+      lo sustentan y las características del inmueble. Se abre en cualquier navegador y se guarda como PDF
+      al imprimirlo.</p>
+      <a class="reporte-cta" href="/login">Crear cuenta gratis para descargarlo</a>
+      <p class="reporte-hint">El plan gratuito incluye ${CUPO_REPORTES_MENSUAL} reportes al mes.</p>
+    </div></div>`;
+  }
+  const estado = auth.account?.cupoReportes || null;
+  const agotado = !!estado && !estado.ilimitado && Number(estado.restantes ?? 0) <= 0;
+  const accion = agotado
+    ? `<a class="reporte-cta" href="/planes">Ver el plan sin límite</a>`
+    : `<button class="reporte-cta" type="button" data-reporte-kind="${esc(kind)}" data-reporte-id="${esc(p.id)}">
+        ${ic('down')}<span>Descargar reporte</span>
+      </button>`;
+  return `<div class="section"><div class="reporte-box">
+    <h3>Reporte descargable</h3>
+    <p class="reporte-txt">Precio, descuento frente a su zona, categoría del Índice CRECE, los comparables
+    que lo respaldan y las características${kind === 'remate' ? ', además de los datos de la audiencia' : ''}.
+    Se descarga como archivo y se guarda como PDF al imprimirlo.</p>
+    ${accion}
+    <p class="reporte-hint" data-reporte-cupo aria-live="polite">${esc(textoCupoReportes(estado))}</p>
+  </div></div>`;
+}
+
+/** Nombre que propuso el servidor en `Content-Disposition`, si es utilizable. */
+function nombreDeCabecera(cabecera) {
+  const m = /filename="([^"]+)"/.exec(cabecera || '');
+  return m && /^[\w.-]+$/.test(m[1]) ? m[1] : null;
+}
+
+/** Refresca el contador de reportes en la ficha abierta y en la cuenta en memoria. */
+function pintarCupoReportes(estado) {
+  if (estado && auth.account) auth.account.cupoReportes = estado;
+  const hint = document.querySelector('[data-reporte-cupo]');
+  if (hint) hint.textContent = textoCupoReportes(estado);
+}
+
+/**
+ * Descarga el reporte.
+ *
+ * Va por `fetch` y no por un enlace directo porque la ruta exige el token de la
+ * sesión en la cabecera `Authorization`, y un `<a href>` no la lleva. El archivo
+ * llega como blob y se entrega al navegador con un ancla temporal; el objeto se
+ * revoca después para no dejar el blob retenido en memoria toda la sesión.
+ */
+async function descargarReporte(boton) {
+  const kind = boton.dataset.reporteKind;
+  const id = boton.dataset.reporteId;
+  const etiqueta = boton.querySelector('span');
+  const textoOriginal = etiqueta ? etiqueta.textContent : '';
+  boton.disabled = true;
+  if (etiqueta) etiqueta.textContent = 'Generando reporte…';
+  try {
+    const respuesta = await fetch(`/api/reporte?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, {
+      headers: authHeaders(),
+    });
+    if (!respuesta.ok) {
+      const detalle = await respuesta.json().catch(() => ({}));
+      if (detalle.cupo) pintarCupoReportes(detalle.cupo);
+      showToast(detalle.error || 'No se pudo generar el reporte en este momento.');
+      return;
+    }
+    const archivo = await respuesta.blob();
+    const enlace = document.createElement('a');
+    enlace.href = URL.createObjectURL(archivo);
+    enlace.download = nombreDeCabecera(respuesta.headers.get('Content-Disposition'))
+      || `radar-reporte-${kind}.html`;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    setTimeout(() => URL.revokeObjectURL(enlace.href), 30000);
+
+    const restantes = respuesta.headers.get('X-Reportes-Restantes');
+    if (restantes === 'ilimitado') pintarCupoReportes({ ilimitado: true, restantes: null });
+    else if (restantes != null) pintarCupoReportes({ ilimitado: false, restantes: Number(restantes) });
+    showToast('Reporte descargado. Ábrelo e imprímelo a PDF si lo necesitas en papel.');
+  } catch {
+    showToast('No se pudo descargar el reporte. Revisa tu conexión e inténtalo de nuevo.');
+  } finally {
+    boton.disabled = false;
+    if (etiqueta) etiqueta.textContent = textoOriginal;
+  }
 }
 
 function marketLazyBox() {
@@ -1812,6 +1929,8 @@ function openRemate(p) {
   const copiaBlock = anon ? (f.copia_publicacion ? lockBox('Copia exacta de la publicación') : '') : copiaHtml;
   const descBlock = anon ? (p.description ? lockBox('Descripción del bien') : '') : descHtml;
   const fav = anon ? '' : modalFavBtn('remate', p.id);
+  // Igual que en la ficha de inmueble: sin acceso completo no se ofrece el botón.
+  const reporte = esBloqueada(p) ? '' : reporteSection('remate', p);
 
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
@@ -1837,6 +1956,7 @@ function openRemate(p) {
       })}
       ${descBlock}
       ${copiaBlock}
+      ${reporte}
       ${mapSection({ address: null, city: p.city })}
       <p class="src-note">Fuente: Rama Judicial de Colombia · aviso de remate publicado por el juzgado.</p>
     </div>`;
@@ -2097,6 +2217,11 @@ document.addEventListener('click', (event) => {
   if (retry) {
     const disc = retry.dataset.marketDisc === '' ? null : Number(retry.dataset.marketDisc);
     window.__retryMarket(retry.dataset.marketKind, retry.dataset.marketId, disc);
+    return;
+  }
+  const reporteButton = event.target.closest('button[data-reporte-id]');
+  if (reporteButton) {
+    descargarReporte(reporteButton);
     return;
   }
   const saveSimulationButton = event.target.closest('[data-save-simulation]');
