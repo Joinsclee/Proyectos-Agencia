@@ -34,8 +34,20 @@ function render(plans) {
     const proAction = demoPlanActivation
       ? 'Obtener acceso completo'
       : paymentDemoReady ? 'Activar demo por 30 días' : requested ? 'Solicitud recibida' : 'Solicitar acceso demo';
-    const label = current ? 'Plan actual' : plan.code === 'free' ? (token ? 'Tu plan actual' : 'Empezar gratis') : proAction;
-    const href = !token && plan.code === 'pro' ? '/login' : plan.code === 'free' ? '/' : '#';
+    const esFree = plan.code === 'free';
+    // El plan gratuito no se "compra": se obtiene creando la cuenta. Sin sesión el
+    // botón lleva al registro, que es lo único que hace falta. Antes apuntaba a la
+    // portada para todo el mundo, así que quien pulsaba "Empezar gratis" volvía al
+    // buscador sin cuenta y sin entender qué había pasado.
+    const label = esFree
+      ? (current ? 'Tu plan actual' : token ? 'Incluido en tu plan' : 'Empezar gratis')
+      : current ? 'Plan actual' : proAction;
+    const href = esFree
+      ? (token ? '#' : '/login')
+      : (!token ? '/login' : '#');
+    // Ya con sesión, la tarjeta gratuita no tiene nada que hacer: o es su plan, o
+    // tiene uno mejor.
+    const inerte = esFree ? !!token : (current || (!paymentDemoReady && !demoPlanActivation && requested));
     const action = plan.code === 'pro' && token && !current
       ? demoPlanActivation ? 'data-activate-demo'
         : paymentDemoReady ? 'data-start-checkout' : !requested ? 'data-request-plan' : ''
@@ -51,7 +63,7 @@ function render(plans) {
         : 'Activación manual del piloto · sin cobros automáticos · vigencia de 30 días.'}</p>` : ''}
       <a class="portal-button ${plan.code === 'free' ? 'secondary' : ''}" href="${href}"
         ${action}
-        ${current || (!paymentDemoReady && requested) ? 'aria-disabled="true"' : ''}>${esc(label)}</a>
+        ${inerte ? 'aria-disabled="true"' : ''}>${esc(label)}</a>
     </article>`;
   }).join('');
 }
@@ -140,7 +152,12 @@ document.addEventListener('click', async (event) => {
   }
   account = data.account;
   message.className = 'message ok';
-  message.textContent = 'Solicitud registrada. Te avisaremos cuando el checkout demo esté habilitado.';
+  // Cada camino termina en algo distinto: uno concede el acceso ya, el otro solo
+  // deja constancia. Anunciar "solicitud registrada" a quien acaba de obtener el
+  // plan lo deja sin saber si tiene que esperar a alguien.
+  message.textContent = demoButton
+    ? 'Listo: tu acceso completo está activo. Ya puedes abrir cualquier ficha sin límite.'
+    : 'Solicitud registrada. Te avisaremos cuando el checkout demo esté habilitado.';
   const plansData = await fetch('/api/plans').then((result) => result.json());
   render(plansData.plans || []);
 });
