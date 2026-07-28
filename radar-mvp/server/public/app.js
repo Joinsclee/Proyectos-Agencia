@@ -270,9 +270,14 @@ document.addEventListener('click', (event) => {
 
 // ---------- Freemium (captura de email) ----------
 // Anónimo: ve la grilla y datos básicos de la ficha, pero dirección exacta,
-// datos del proceso, descripción completa y análisis con IA quedan bloqueados;
-// tras ver FREE_VIEW_LIMIT fichas aparece el muro de registro. Registrado: todo.
-const FREE_VIEW_LIMIT = 5;
+// datos del proceso, descripción completa y análisis con IA quedan bloqueados.
+// Registrado: 20 fichas de oportunidad al mes (server/cupo.ts). Suscrito: todo.
+//
+// El muro NO se dispara por número de vistas. Se decide en el servidor por la
+// CATEGORÍA del Índice CRECE de cada ficha (server/acceso.ts) más el cupo mensual,
+// que es más difícil de burlar: contar vistas en el navegador se salta borrando
+// `localStorage`, y además hacía que los datos de pago viajaran igual al cliente.
+// El registro de vistas se conserva solo como señal de uso, no como puerta.
 function viewedIds() {
   try { return new Set(JSON.parse(localStorage.getItem('radar_viewed') || '[]')); } catch { return new Set(); }
 }
