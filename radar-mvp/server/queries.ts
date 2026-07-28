@@ -112,10 +112,52 @@ export interface ListResult<T = Record<string, unknown>> {
   page: number;
   pageSize: number;
   pages: number;
+  /** `true` cuando `total` es la estimación del planificador y no un conteo real. */
+  totalAproximado?: boolean;
+  /** `true` cuando quedan resultados más allá de la última página navegable. */
+  paginasLimitadas?: boolean;
 }
 
 const clampPage = (p?: number) => Math.max(1, Math.floor(p ?? 1));
 const clampSize = (s?: number) => Math.min(60, Math.max(6, Math.floor(s ?? 24)));
+
+/**
+ * ¿El usuario pidió un rango que ningún inmueble puede cumplir?
+ *
+ * Un mínimo por encima de su máximo describe el conjunto vacío, y eso se sabe
+ * antes de preguntarle nada a la base. Mandarlo igual costaba caro: con estrato
+ * mínimo 6 y máximo 1, la consulta recorría las 108.000 filas buscando algo
+ * imposible y devolvía **HTTP 500 a los 25 segundos**. El usuario veía "no se
+ * pudo cargar" cuando lo correcto era el estado vacío.
+ */
+function rangoImposible(q: ListQuery): boolean {
+  const pares: Array<[number | undefined, number | undefined]> = [
+    [q.priceMin, q.priceMax],
+    [q.areaMin, q.areaMax],
+    [q.stratumMin, q.stratumMax],
+    [q.bidMin, q.bidMax],
+  ];
+  return pares.some(([min, max]) => min != null && max != null && min > max);
+}
+
+/** Respuesta vacía coherente, sin tocar la base. */
+const listaVacia = (page: number, pageSize: number): ListResult =>
+  ({ data: [], total: 0, page, pageSize, pages: 0 });
+
+/**
+ * Hasta qué página puede servirse un listado.
+ *
+ * Medido contra la base real: las páginas 1 a 30 responden en menos de un segundo
+ * y la 45 tarda **49 segundos y falla**. La causa es el desplazamiento profundo:
+ * para servir la página N, Postgres recorre y descarta N×24 filas ya ordenadas.
+ * No es algo que se arregle afinando la consulta, es cómo funciona `OFFSET`.
+ *
+ * Así que el paginador deja de ofrecer 4.503 páginas de las que solo puede servir
+ * unas cuarenta. Ofrecer un botón que siempre falla —y los dos botones de «ir al
+ * final» fallaban siempre— es peor que no ofrecerlo: la respuesta honesta es
+ * enseñar el tramo que existe y decir que para llegar más lejos hay que filtrar.
+ */
+export const MAX_PAGINAS_NAVEGABLES = 40;
 
 /**
  * Desempate estable para cualquier orden paginado.
@@ -152,6 +194,7 @@ const isTimeout = (msg?: string) => !!msg && /statement timeout|57014/i.test(msg
 export async function queryPortal(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
   const pageSize = clampSize(q.pageSize);
+  if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
 
   // Conteo: EXACTO cuando hay filtros (conjunto acotado → rápido y preciso, que
@@ -162,17 +205,28 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   // antes de aplicar el migration de índices → en ese caso se usa planned.
   const cheapFilter = !!(q.city || q.zone || q.type || q.priceMin || q.priceMax ||
     q.areaMin || q.areaMax || q.opp);
+  // Los filtros que viven dentro del JSON (`features->bedrooms`, `->stratum`) no
+  // tienen índice que los cubra, así que CONTARLOS de forma exacta sobre 108.000
+  // filas no cabe en el tiempo de una consulta. Da igual que vengan acompañados
+  // de un filtro barato: la combinación seguía agotando el tiempo.
+  //
+  // Se decide aquí y no en la escalera de reintentos porque un intento fallido
+  // cuesta sus 25 segundos completos: dejarlo probar y caer daba HTTP 500 antes,
+  // y después del primer arreglo devolvía la respuesta correcta pero a los 27-35
+  // segundos, con el navegador ya rendido. Renunciar de entrada a la cifra exacta
+  // deja la consulta en menos de dos segundos.
+  const hayFiltroJson = !!(q.bedroomsMin || q.stratumMin || q.stratumMax);
   // Sin filtros NO se usa el estimador del planificador de Postgres: se equivoca
   // por dos órdenes de magnitud. Medido el 2026-07-28 en producción — estimaba
   // 1.010 fichas cuando hay 108.016, así que el paginador ofrecía 43 páginas de
   // las ~4.500 reales y contradecía al contador de la pestaña en la primera
   // pantalla que ve cualquiera. El conteo exacto tarda 5,4 s, demasiado para una
   // carga, así que se hace UNA vez y se cachea, igual que las estadísticas.
-  const countMode = cheapFilter ? 'exact' : 'planned';
-  const build = (order?: string) => {
+  const countMode: 'exact' | 'planned' = cheapFilter && !hayFiltroJson ? 'exact' : 'planned';
+  const build = (order?: string, modo: 'exact' | 'planned' = countMode) => {
     let qb = supabase
       .from('inmuebles')
-      .select('*', { count: countMode })
+      .select('*', { count: modo })
       .eq('is_active', true)
       .eq('source', 'fincaraiz')
       // excluir proyectos preventa (is_project null o false)
@@ -194,17 +248,50 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   // Caso lento conocido: filtro JSON (hab/estrato) SIN filtro barato (ciudad/
   // precio/área) sobre 87K + orden → timeout. Ahí se omite el orden de entrada
   // (responde en ms); con ciudad/precio se ordena normal.
-  const jsonOnly = !!(q.bedroomsMin || q.stratumMin || q.stratumMax) && !cheapFilter;
-  let { data, count, error } = await build(jsonOnly ? 'none' : q.order);
+  const jsonOnly = hayFiltroJson && !cheapFilter;
+  let modoUsado: 'exact' | 'planned' = jsonOnly ? 'planned' : countMode;
+  let { data, count, error } = await build(jsonOnly ? 'none' : q.order, modoUsado);
   if (error && isTimeout(error.message) && q.order !== 'recent') {
-    ({ data, count, error } = await build('recent'));
+    ({ data, count, error } = await build('recent', modoUsado));
   }
   if (error && isTimeout(error.message)) {
-    ({ data, count, error } = await build('none'));
+    ({ data, count, error } = await build('none', modoUsado));
+  }
+  // Última salida, y la que faltaba: si después de renunciar al orden sigue
+  // agotándose el tiempo, lo caro NO es ordenar sino CONTAR. Un filtro de
+  // habitaciones o estrato junto a cualquier otro ponía el conteo en modo exacto
+  // sobre 108.000 filas y la escalera anterior —que solo probaba órdenes
+  // distintos— moría tres veces igual y devolvía HTTP 500 a los 25 segundos.
+  // Medido: `type=house&bedroomsMin=3`, `opp=1&bedroomsMin=3` y
+  // `priceMin=…&stratumMin=4` fallaban los tres. Un total aproximado es
+  // infinitamente mejor que una pantalla de error.
+  if (error && isTimeout(error.message) && modoUsado === 'exact') {
+    modoUsado = 'planned';
+    ({ data, count, error } = await build(q.order, 'planned'));
+    if (error && isTimeout(error.message)) {
+      ({ data, count, error } = await build('none', 'planned'));
+    }
   }
   if (error) throw new Error(`queryPortal: ${error.message}`);
-  const total = cheapFilter ? (count ?? 0) : await totalPortalSinFiltros(count ?? 0);
-  return { data: data ?? [], total, page, pageSize, pages: Math.ceil(total / pageSize) };
+
+  // El total tiene que reflejar los filtros SIEMPRE. Antes, con un filtro de
+  // habitaciones o estrato como único criterio, se devolvía el total del portal
+  // entero: la pantalla decía «108.060 resultados» con un filtro aplicado, y con
+  // un rango imposible (estrato mín 6, máx 1) seguía diciendo lo mismo en vez de
+  // mostrar el estado vacío.
+  const hayFiltros = cheapFilter || hayFiltroJson;
+  const total = hayFiltros ? (count ?? 0) : await totalPortalSinFiltros(count ?? 0);
+  const paginasReales = Math.ceil(total / pageSize);
+  const pages = Math.min(paginasReales, MAX_PAGINAS_NAVEGABLES);
+  return {
+    data: data ?? [],
+    total,
+    page,
+    pageSize,
+    pages,
+    totalAproximado: modoUsado === 'planned' && hayFiltros,
+    paginasLimitadas: paginasReales > pages,
+  };
 }
 
 /**
@@ -256,6 +343,7 @@ export async function warmTotalPortal(): Promise<void> {
 export async function queryBancos(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
   const pageSize = clampSize(q.pageSize);
+  if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
 
   let qb = supabase
@@ -304,6 +392,7 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
 export async function queryRemates(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
   const pageSize = clampSize(q.pageSize);
+  if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
 
   let qb = supabase

@@ -1156,10 +1156,15 @@ async function load(page) {
   // las tres pestañas, y solo funcionaba desde la portada, que sí lo pasaba.
   renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
-  setResultText(res.total.toLocaleString('es-CO') + ' resultado' + (res.total === 1 ? '' : 's'));
+  // El "≈" cuando el servidor avisa de que el número es una estimación. Sobre
+  // 108.000 filas hay filtros cuyo conteo exacto no cabe en el tiempo de una
+  // consulta; ahí se prefiere una cifra aproximada y honesta a una pantalla de
+  // error, pero no se puede presentar como si fuera exacta.
+  const cifra = (res.totalAproximado ? '≈ ' : '') + res.total.toLocaleString('es-CO');
+  setResultText(cifra + ' resultado' + (res.total === 1 ? '' : 's'));
   clearLoadingSkeletons();
   $('empty').style.display = res.total === 0 ? 'block' : 'none';
-  renderPager(res.total, res.page, res.pages);
+  renderPager(res.total, res.page, res.pages, res);
   state.loading = false;
 }
 
@@ -1275,10 +1280,19 @@ async function loadGuardados() {
   if (props.length === 0) $('empty').innerHTML = emptyState('heart', 'Sin guardados aún', 'Toca el corazón en cualquier inmueble para guardarlo aquí.', 'saved');
 }
 
-function renderPager(total, page, pages) {
+function renderPager(total, page, pages, meta = {}) {
   const el = $('pager');
   if (total === 0) { el.innerHTML = ''; return; }
-  let html = `<div class="pinfo">Página ${page} de ${pages} · ${total.toLocaleString('es-CO')} resultados</div>`;
+  const aprox = meta.totalAproximado ? '≈ ' : '';
+  // Cuando quedan resultados más allá de la última página servible se dice, y se
+  // dice qué hacer. Antes el paginador ofrecía 4.503 páginas y las de arriba de
+  // la 40 tardaban 49 segundos y fallaban: los dos botones de "ir al final"
+  // fallaban siempre. Enseñar el tramo que existe y explicar cómo llegar al resto
+  // es más honesto que prometer un botón roto.
+  const aviso = meta.paginasLimitadas
+    ? `<div class="pinfo-nota">Se pueden recorrer las primeras ${pages} páginas. Afina los filtros —ciudad, precio o tipo— para llegar al resto.</div>`
+    : '';
+  let html = `<div class="pinfo">Página ${page} de ${pages} · ${aprox}${total.toLocaleString('es-CO')} resultados</div>${aviso}`;
   const btn = (p, label, o = {}) => `<button data-page="${p}" class="${o.active ? 'active' : ''}" ${o.disabled ? 'disabled' : ''}>${label || p}</button>`;
   if (pages > 1) {
     const set = new Set([1, 2, pages - 1, pages, page - 1, page, page + 1]);
@@ -2444,13 +2458,22 @@ async function loadStats() {
   $('c-portal').textContent = STATS.portal_total.toLocaleString('es-CO');
   $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
   $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
-  const actualizado = renderActualizado(STATS.frescura);
+  // Tres cifras, y las tres del mismo tipo: oportunidades. Decisión de la reunión
+  // del 28-jul, y las dos razones que se dieron son buenas:
+  //
+  //  · «Listados portal» invitaba a competir en cantidad, y esa es una carrera
+  //    perdida —siempre habrá un portal con más inventario—. El producto no vende
+  //    volumen, vende criterio: por eso las tres cifras cuentan oportunidades.
+  //  · La fecha de actualización es un dato interno. A un visitante que lee
+  //    «actualizado hace dos días» le suena a desactualizado, cuando el Radar
+  //    nunca prometió tiempo real: promete un corte semanal bien hecho.
+  //
+  // Y quitarlas resuelve de paso lo que más molestó al verlo: había cifras en tres
+  // filas distintas —resumen, pestañas y franja— y varias eran la misma repetida.
   $('summary').innerHTML = `
-    <div class="summary-stat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades</div></div>
-    <div class="summary-stat"><div class="num">${STATS.portal_total.toLocaleString('es-CO')}</div><div class="lbl">Listados portal</div></div>
+    <div class="summary-stat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades en portal</div></div>
     <div class="summary-stat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">En bancos</div></div>
-    <div class="summary-stat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates</div></div>
-    ${actualizado}`;
+    <div class="summary-stat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates judiciales</div></div>`;
   renderVStats();
 }
 /**
@@ -2483,12 +2506,13 @@ function renderVStats() {
   if (!STATS) return;
   const v = $('vstats');
   if (state.tab === 'home') {
-    // En la portada la cifra que importa es de dónde sale lo destacado, no cuánto
-    // hay: las tres fuentes juntas son el argumento del producto.
+    // Solo lo que NO está ya en el resumen de arriba. Antes esta franja repetía
+    // bancos y remates, así que la misma cifra aparecía dos veces en la primera
+    // pantalla —y con «listados portal» eran cifras en tres filas distintas—.
+    // Lo único que aporta aquí es el subconjunto de mayor señal, que es además el
+    // dato que el cliente señaló como el más potente de todos.
     v.innerHTML = `
-      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades altas</div></div>
-      <div class="vstat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">Inmuebles de banco</div></div>
-      <div class="vstat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates judiciales</div></div>`;
+      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades de mayor señal</div></div>`;
     $('legend').innerHTML = '';
     return;
   }

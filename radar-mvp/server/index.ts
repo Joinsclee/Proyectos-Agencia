@@ -35,6 +35,7 @@ import {
   type ArriendoReporte,
   type ComparablesReporte,
 } from './reporte.js';
+import { construirResumenCuenta, nombreArchivoResumen } from './resumen-cuenta.js';
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactarMixta, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
@@ -471,6 +472,18 @@ const server = createServer(async (req, res) => {
             `radar-seguimiento-${user.id.slice(0, 8)}.csv`,
             'text/csv; charset=utf-8',
             `\uFEFF${await exportAccountCsv(user.id)}`,
+          );
+        }
+        // Resumen imprimible, el que sustituye al bot\u00F3n de JSON en la pantalla de
+        // cuenta. La ruta JSON de arriba sigue viva para portabilidad de datos;
+        // lo que cambia es qu\u00E9 se le ofrece al usuario por delante.
+        if (path === '/api/account/resumen' && req.method === 'GET') {
+          const cuenta = await getAccount(user.id);
+          return sendTextDownload(
+            res,
+            nombreArchivoResumen(user.id),
+            'text/html; charset=utf-8',
+            construirResumenCuenta(cuenta as any, new Date().toISOString()),
           );
         }
         return sendJSON(res, 405, { ok: false, error: 'Método o ruta de cuenta no permitido' });

@@ -634,7 +634,13 @@ export function armarDestacados(pools: PoolsDestacados, opciones: OpcionesDestac
   // anterior, y `filtroLibre()` copia el conjunto en el momento en que se crea.
   const construidos: BloqueDestacados[] = [];
   construidos.push(marcar(bloqueSemana(libres(inmuebles), semana, tamanos)));
-  construidos.push(marcar(bloqueMes(libres(inmuebles).filter(delMes), periodo, tamanos)));
+  // «Destacados del mes» se retiró de la portada por decisión del cliente
+  // (reunión del 28-jul: que se destaquen tres bloques, no cuatro). De los cuatro
+  // era el que menos discriminaba: el sistema lleva 46 días de datos, así que
+  // «lo que entró este mes» era prácticamente todo el inventario, y la novedad
+  // que ese bloque pretendía aportar ya la da la rotación semanal del primero.
+  // `bloqueMes` se conserva con sus pruebas por si vuelve a pedirse cuando haya
+  // histórico suficiente para que el corte signifique algo.
   construidos.push(marcar(bloqueCiudades(libres(inmuebles), tamanos)));
   const cruce = filtroLibre(); // las tres fuentes comparten memoria entre sí
   construidos.push(marcar(bloqueFuentes(cruce(portal), cruce(bancos), cruce(remates), tamanos)));
