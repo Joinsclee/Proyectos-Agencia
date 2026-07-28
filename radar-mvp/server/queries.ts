@@ -17,6 +17,14 @@ import {
   type TablaZonas,
 } from './zonas.js';
 import {
+  estadoTrabajos,
+  serieCorridasPorDia,
+  type FilaCorrida,
+  type FilaTrabajo,
+  type SerieCorridas,
+  type TrabajoAutomatico,
+} from './metricas.js';
+import {
   armarDestacados,
   inicioDeMes,
   DESCUENTO_MAX,
@@ -963,7 +971,107 @@ async function computarZonas(): Promise<TablaZonas> {
     remates,
     arriendos,
     totalActivosSistema,
+    // El MISMO tope con el que se filtró la consulta de arriba: si el histograma
+    // usara otro, tendría tramos que la consulta nunca iba a poder llenar.
+    maxDescuento: MAX_OPP_DISCOUNT,
   });
   log.info(`zonas: ${tabla.zonas.length} ciudades en ${Date.now() - inicio}ms`);
   return tabla;
+}
+
+/* ─────────────────  MÉTRICAS DE OPERACIÓN (gráficas del panel)  ───────────────── */
+
+/**
+ * Días de historia de scraping que se dibujan.
+ *
+ * Treinta cubre cuatro ciclos completos del cron semanal, que es lo que hace
+ * falta para distinguir «esta semana falló» de «lleva un mes fallando». Con más
+ * ventana las columnas se vuelven ilegibles sin aportar una decisión distinta.
+ */
+export const DIAS_METRICAS = 30;
+
+/**
+ * Tope defensivo de filas de `scraping_logs`.
+ *
+ * Hoy la tabla entera tiene menos de cien filas, pero crece una por corrida y
+ * para siempre: sin tope, dentro de un año esta consulta traería miles de filas
+ * en cada carga del panel. Se pide ordenado por fecha descendente para que, si
+ * algún día se llegara al tope, lo que se recorte sea lo VIEJO —que ya está
+ * fuera de la ventana de 30 días— y no lo reciente.
+ */
+const MAX_FILAS_CORRIDAS = 2_000;
+
+export interface MetricasOperacion {
+  generadoEn: string;
+  ventanaDias: number;
+  scraping: SerieCorridas;
+  trabajos: TrabajoAutomatico[];
+}
+
+/**
+ * Métricas de operación, CACHEADAS igual que `stats()` y la tabla de zonas.
+ *
+ * Son dos consultas pequeñas (unas decenas de filas de `scraping_logs` y las
+ * cinco de `radar_cron_jobs`), así que el motivo de la caché no es el costo:
+ * es que el panel entero se recarga tras cada cambio de suscripción y no tiene
+ * sentido volver a preguntar por unos datos que solo se mueven cuando corre un
+ * scraper. TTL corto —cinco minutos— porque aquí lo que se viene a mirar es
+ * justamente si algo acaba de fallar.
+ */
+const METRICAS_TTL_MS = 5 * 60_000;
+let metricasCache: { at: number; data: MetricasOperacion } | null = null;
+let metricasEnVuelo: Promise<MetricasOperacion> | null = null;
+
+export async function metricasOperacion(): Promise<MetricasOperacion> {
+  if (metricasCache) {
+    if (Date.now() - metricasCache.at >= METRICAS_TTL_MS && !metricasEnVuelo) {
+      void refrescarMetricas().catch(() => {});
+    }
+    return metricasCache.data; // fresco o rancio: se responde ya
+  }
+  return metricasEnVuelo ?? refrescarMetricas();
+}
+
+function refrescarMetricas() {
+  metricasEnVuelo = computarMetricas()
+    .then((data) => { metricasCache = { at: Date.now(), data }; return data; })
+    .finally(() => { metricasEnVuelo = null; });
+  return metricasEnVuelo;
+}
+
+/** Precalienta las métricas del panel al arrancar (van con las zonas, al final). */
+export async function warmMetricas(): Promise<void> {
+  try { await metricasOperacion(); } catch { /* best-effort */ }
+}
+
+async function computarMetricas(): Promise<MetricasOperacion> {
+  // Solo se piden las corridas que pueden caer dentro de la ventana. El margen
+  // de un día cubre el desfase horario de Bogotá: una corrida de las 20:00 del
+  // primer día de la ventana es del día siguiente en UTC.
+  const desde = new Date(Date.now() - (DIAS_METRICAS + 1) * 86_400_000).toISOString();
+
+  const [corridas, trabajos] = await Promise.all([
+    supabase
+      .from('scraping_logs')
+      .select('source, status, started_at, records_found, records_inserted')
+      .gte('started_at', desde)
+      .order('started_at', { ascending: false })
+      .limit(MAX_FILAS_CORRIDAS),
+    supabase
+      .from('radar_cron_jobs')
+      .select('nombre, cadencia_dias, habilitado, ultima_corrida, ultimo_estado, corriendo_desde'),
+  ]);
+
+  // Un fallo aquí NO tumba el panel: el resto de las secciones —que es lo que
+  // el administrador viene a operar— no depende de estas dos tablas. Se devuelve
+  // la serie vacía y la interfaz dice que no pudo leerlas, que es honesto.
+  if (corridas.error) log.warn(`metricas/scraping_logs: ${corridas.error.message}`);
+  if (trabajos.error) log.warn(`metricas/radar_cron_jobs: ${trabajos.error.message}`);
+
+  return {
+    generadoEn: new Date().toISOString(),
+    ventanaDias: DIAS_METRICAS,
+    scraping: serieCorridasPorDia((corridas.data ?? []) as FilaCorrida[], { dias: DIAS_METRICAS }),
+    trabajos: estadoTrabajos((trabajos.data ?? []) as FilaTrabajo[]),
+  };
 }

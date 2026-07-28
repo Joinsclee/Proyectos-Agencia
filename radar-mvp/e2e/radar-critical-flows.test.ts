@@ -566,6 +566,34 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       // sesión no se asoman, igual que el resto del panel.
       const zoneStats = await page.request.get(`${baseUrl}/api/admin/oportunidades-por-zona`);
       assert.equal(zoneStats.status(), 401);
+      // Las métricas de operación no traen datos personales, pero sí revelan
+      // cómo y cuándo corre el sistema por dentro: van con el resto del panel.
+      const operationMetrics = await page.request.get(`${baseUrl}/api/admin/metricas`);
+      assert.equal(operationMetrics.status(), 401);
+      // Los porcentajes de gastos se LEEN en público (`/api/config`), pero
+      // escribirlos le cambia el número a todos los usuarios a la vez.
+      const expenseWrite = await page.request.fetch(`${baseUrl}/api/admin/parametros-gastos`, {
+        method: 'PUT',
+        data: { notaria: 0.04, impuestoRegistro: 0.04, derechosRegistro: 0.02 },
+      });
+      assert.equal(expenseWrite.status(), 401);
+      // Leerlos, en cambio, es público y NUNCA puede quedarse sin respuesta: si
+      // la tabla no está aplicada el servidor degrada a los valores compilados,
+      // y la calculadora de la ficha tiene que seguir teniendo tres porcentajes
+      // utilizables. Un cero aquí sería una ficha que promete gastos gratis.
+      const publicConfig = await (await page.request.get(`${baseUrl}/api/config`)).json();
+      assert.ok(publicConfig.gastos, '/api/config debe publicar los porcentajes de gastos');
+      assert.ok(
+        ['base', 'valores-por-defecto'].includes(publicConfig.gastos.origen),
+        `origen inesperado: ${publicConfig.gastos.origen}`,
+      );
+      for (const campo of ['notaria', 'impuestoRegistro', 'derechosRegistro'] as const) {
+        const valor = publicConfig.gastos[campo];
+        assert.ok(
+          typeof valor === 'number' && valor > 0 && valor <= 0.05,
+          `${campo} fuera de rango utilizable: ${valor}`,
+        );
+      }
       const subscriptionMutation = await page.request.patch(
         `${baseUrl}/api/admin/subscriptions/00000000-0000-4000-8000-000000000000`,
         { data: { status: 'active', note: 'prueba no autorizada' } },

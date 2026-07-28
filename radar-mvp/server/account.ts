@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { supabase } from '../lib/supabase.js';
 import { metadatosDeCuenta, separarMetadatos } from './account-metadata.js';
 import { estadoCupo, leerCupo, type Cupo } from './cupo.js';
-import { oportunidadesPorZona } from './queries.js';
+import { metricasOperacion, oportunidadesPorZona } from './queries.js';
+import { guardarParametrosGastos } from './parametros-gastos.js';
 import { estadoCupoReportes, leerCupoReportes, type CupoReportes } from './cupo-reportes.js';
 import { env } from '../lib/env.js';
 import { createLogger } from '../lib/logger.js';
@@ -345,6 +346,46 @@ export async function getAdminZoneOpportunities(requesterId: string) {
   const requester = await adminUser(requesterId);
   if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
   return oportunidadesPorZona();
+}
+
+/**
+ * Métricas de operación para las gráficas del panel.
+ *
+ * Mismo guardia y por el mismo motivo que `getAdminZoneOpportunities`: `queries.ts`
+ * solo sabe traer datos, y un endpoint administrativo con su propia comprobación
+ * de rol es la forma habitual de que una de ellas se quede atrás. Aquí no se
+ * expone ningún dato personal —son conteos de corridas de scraping y el estado
+ * del planificador—, pero sí revela cómo y cuándo opera el sistema por dentro,
+ * que no es información de cliente.
+ */
+export async function getAdminOperationMetrics(requesterId: string) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
+  return metricasOperacion();
+}
+
+/**
+ * Guarda los porcentajes de la calculadora de gastos.
+ *
+ * Es la ÚNICA escritura del panel que le cambia un número a todos los usuarios a
+ * la vez —la calculadora se pinta en cada ficha—, así que pasa por el mismo
+ * guardia que las otras cuatro y devuelve `null` (→ 403) exactamente igual. La
+ * validación de rango no está aquí sino en `server/parametros-gastos.ts`, junto
+ * a los valores por defecto: quien cambie el rango tiene que ver al lado qué
+ * pasa si la tabla no existe.
+ */
+export async function updateAdminExpenseParameters(requesterId: string, input: unknown) {
+  const requester = await adminUser(requesterId);
+  if (!isAdminMetadata(metadatosDeCuenta(requester))) return null;
+  const body = (input ?? {}) as Record<string, unknown>;
+  return guardarParametrosGastos(
+    {
+      notaria: Number(body.notaria),
+      impuestoRegistro: Number(body.impuestoRegistro),
+      derechosRegistro: Number(body.derechosRegistro),
+    },
+    { id: requesterId, nota: typeof body.nota === 'string' ? body.nota : undefined },
+  );
 }
 
 export async function listAdminPlanInterests(requesterId: string) {

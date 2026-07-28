@@ -72,10 +72,39 @@ export interface ResumenZonas {
   mejorDescuento: number | null;
 }
 
+/** Un tramo del histograma de descuentos. */
+export interface TramoDescuento {
+  /** Límite inferior del tramo, en puntos porcentuales (incluido). */
+  desde: number;
+  /** Límite superior (excluido, salvo el último tramo, que cierra el máximo). */
+  hasta: number;
+  /** Oportunidades cuyo descuento cae en el tramo. */
+  total: number;
+  /** De ellas, cuántas marcó el motor como oportunidad ALTA. */
+  altas: number;
+}
+
+export interface HistogramaDescuentos {
+  tramos: TramoDescuento[];
+  /** Oportunidades con descuento conocido (las que entran al histograma). */
+  conDescuento: number;
+  /** Sin `discount_pct`: están detectadas pero el motor aún no las valoró. */
+  sinDescuento: number;
+}
+
 export interface TablaZonas {
   generadoEn: string;
   resumen: ResumenZonas;
   zonas: ZonaOportunidades[];
+  /**
+   * Distribución de descuentos de TODAS las oportunidades activas.
+   *
+   * Viaja con la tabla de zonas —y no en un endpoint propio— porque se calcula
+   * sobre las MISMAS filas que ya se trajeron para agregarla por ciudad. Pedirla
+   * aparte costaría un segundo recorrido de ~20.500 filas sobre una tabla de
+   * 116.000 para volver a leer la columna que ya estaba en memoria.
+   */
+  histogramaDescuentos: HistogramaDescuentos;
 }
 
 /**
@@ -178,6 +207,59 @@ export function ciudadesPrincipales(
     .map(([ciudad]) => ciudad);
 }
 
+/**
+ * Ancho de los tramos del histograma, en puntos porcentuales.
+ *
+ * Cinco puntos y no uno: con tramos de un punto salen 70 columnas, que en el
+ * ancho de una tarjeta del panel quedan a menos de 3 px y dejan de ser
+ * legibles; con tramos de diez, los descuentos del 10 % y del 19 % —que para
+ * un inversionista son ofertas distintas— caen en la misma barra.
+ */
+export const ANCHO_TRAMO_DESCUENTO = 5;
+
+/**
+ * Reparte las oportunidades por tramo de descuento.
+ *
+ * Responde la pregunta que la tabla por ciudad no responde: no «dónde hay»,
+ * sino «de qué calidad es lo que hay». Un inventario concentrado entre el 5 % y
+ * el 10 % es un producto distinto de uno con cola larga hasta el 40 %, y hoy el
+ * panel solo mostraba la media, que esconde exactamente esa diferencia.
+ *
+ * Los tramos se cuentan también en `altas` porque el descuento por sí solo no
+ * es la promesa del producto: el motor marca ALTA cuando además el inmueble
+ * está en el decil barato de su zona con comparables homogéneos. Ver los dos
+ * juntos es lo que dice si los descuentos grandes son gangas o ruido.
+ */
+export function histogramaDescuentos(
+  filas: readonly FilaOportunidad[],
+  maximo: number,
+  ancho: number = ANCHO_TRAMO_DESCUENTO,
+): HistogramaDescuentos {
+  const paso = Math.max(1, ancho);
+  const tope = Math.max(paso, maximo);
+  const tramos: TramoDescuento[] = [];
+  for (let desde = 0; desde < tope; desde += paso) {
+    tramos.push({ desde, hasta: Math.min(desde + paso, tope), total: 0, altas: 0 });
+  }
+
+  let conDescuento = 0;
+  let sinDescuento = 0;
+  for (const fila of filas) {
+    const descuento = descuentoDe(fila?.discount_pct);
+    if (descuento === null) { sinDescuento += 1; continue; }
+    conDescuento += 1;
+    // Un descuento negativo (el motor podría marcarlo por un dato sucio) cae en
+    // el primer tramo en vez de perderse: el total del histograma tiene que
+    // cuadrar con el total de oportunidades que el panel muestra arriba.
+    const indice = Math.min(tramos.length - 1, Math.max(0, Math.floor(descuento / paso)));
+    const tramo = tramos[indice];
+    tramo.total += 1;
+    if (fila.is_high === true) tramo.altas += 1;
+  }
+
+  return { tramos, conDescuento, sinDescuento };
+}
+
 export interface EntradaTablaZonas {
   /** Ciudades a mostrar, ya recortadas por `ciudadesPrincipales`. */
   ciudades: readonly string[];
@@ -190,6 +272,13 @@ export interface EntradaTablaZonas {
   arriendos: readonly FilaCiudad[];
   /** Total de inmuebles activos del portal en todo el sistema (`null` si falló). */
   totalActivosSistema: number | null;
+  /**
+   * Descuento máximo creíble (`MAX_OPP_DISCOUNT`). Lo pasa quien llama en vez de
+   * importarlo aquí para que este archivo siga sin depender de nada: es el mismo
+   * tope con el que se filtró la consulta, así que el histograma no puede tener
+   * un tramo que la consulta nunca iba a llenar.
+   */
+  maxDescuento: number;
   generadoEn?: string;
 }
 
@@ -260,5 +349,6 @@ export function construirTablaZonas(entrada: EntradaTablaZonas): TablaZonas {
       mejorDescuento: mejorDescuento === null ? null : redondear(mejorDescuento),
     },
     zonas,
+    histogramaDescuentos: histogramaDescuentos(entrada.oportunidades, entrada.maxDescuento),
   };
 }

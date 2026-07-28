@@ -38,14 +38,24 @@ test('autorización: ningún lector de permisos recibe user_metadata directament
   }
 });
 
-test('autorización: los cuatro guardias de administrador separan la bolsa', async () => {
-  // Son los que protegen el panel: resumen, oportunidades por zona, cola
-  // comercial y cambio de suscripción de terceros. Cada uno recibe el
-  // `requester` recién leído de Supabase, así que es ahí donde importa de qué
-  // bolsa sale el rol.
+/**
+ * Guardias de administrador que hoy protegen el panel. Añadir un endpoint
+ * administrativo obliga a tocar esta lista: es el recordatorio de que el guardia
+ * se escribe SIEMPRE igual, y de que un endpoint nuevo sin él pasaría
+ * desapercibido en la revisión.
+ */
+const GUARDIAS_ADMIN = 6; // resumen · zonas · métricas · parámetros de gastos · cola comercial · suscripción de terceros
+
+test('autorización: todos los guardias de administrador separan la bolsa', async () => {
+  // Cada uno recibe el `requester` recién leído de Supabase, así que es ahí
+  // donde importa de qué bolsa sale el rol.
   const fuente = await leer('server/account.ts');
   const separados = fuente.match(/isAdminMetadata\(metadatosDeCuenta\(requester\)\)/g) ?? [];
-  assert.equal(separados.length, 4, 'deben ser cuatro y los cuatro con la bolsa separada');
+  assert.equal(
+    separados.length,
+    GUARDIAS_ADMIN,
+    `deben ser ${GUARDIAS_ADMIN} y todos con la bolsa separada`,
+  );
   assert.doesNotMatch(
     fuente,
     /isAdminMetadata\(\s*requester/,

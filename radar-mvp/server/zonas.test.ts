@@ -12,6 +12,7 @@ import {
   ciudadesPrincipales,
   construirTablaZonas,
   contarPorCiudad,
+  histogramaDescuentos,
   normalizarCiudad,
   type FilaOportunidad,
 } from './zonas.js';
@@ -27,6 +28,7 @@ const tabla = (entrada: Partial<Parameters<typeof construirTablaZonas>[0]>) => c
   remates: [],
   arriendos: [],
   totalActivosSistema: 0,
+  maxDescuento: 70,
   generadoEn: '2026-07-28T00:00:00.000Z',
   ...entrada,
 });
@@ -189,4 +191,68 @@ test('zonas: los porcentajes se publican con un decimal', () => {
   assert.equal(zonas[0].descuentoMedio, 15.6);
   assert.equal(zonas[0].mejorDescuento, 21.7);
   assert.equal(resumen.descuentoMedio, 15.6);
+});
+
+/* ─────────────────────  Histograma de descuentos  ───────────────────── */
+
+test('histograma: cada oportunidad cae en su tramo de cinco puntos', () => {
+  const h = histogramaDescuentos([opp('bogota', 0), opp('bogota', 4.9), opp('bogota', 5), opp('bogota', 12)], 70);
+  assert.equal(h.tramos.length, 14, 'de 0 a 70 en tramos de 5');
+  assert.equal(h.tramos[0].total, 2, '0 y 4,9 caen en [0, 5)');
+  assert.equal(h.tramos[1].total, 1, '5 abre el tramo siguiente');
+  assert.equal(h.tramos[2].total, 1, '12 cae en [10, 15)');
+  assert.equal(h.conDescuento, 4);
+});
+
+test('histograma: las oportunidades ALTAS se cuentan dentro de su tramo', () => {
+  // El descuento por sí solo no es la promesa del producto: sin separar las
+  // altas, un pico en el 30 % podría ser ruido del motor y se leería como ganga.
+  const h = histogramaDescuentos([
+    opp('bogota', 31, true), opp('cali', 32, false), opp('cali', 33, true),
+  ], 70);
+  const tramo = h.tramos.find((t) => t.desde === 30)!;
+  assert.equal(tramo.total, 3);
+  assert.equal(tramo.altas, 2);
+});
+
+test('histograma: el descuento máximo entra en el último tramo, no se pierde', () => {
+  // Con el corte abierto por arriba, el 70 % —que la consulta sí trae, porque
+  // filtra con `lte`— caería fuera de todos los tramos y el total no cuadraría.
+  const h = histogramaDescuentos([opp('bogota', 70)], 70);
+  assert.equal(h.tramos.at(-1)?.total, 1);
+  assert.equal(h.tramos.reduce((a, t) => a + t.total, 0), h.conDescuento);
+});
+
+test('histograma: lo que no tiene descuento se cuenta aparte, no como 0 %', () => {
+  // Una oportunidad sin `discount_pct` está detectada pero sin valorar; meterla
+  // en el primer tramo inventaría un pico de «descuento cero» que no existe.
+  const h = histogramaDescuentos([opp('bogota', null), opp('bogota', ''), opp('bogota', 10)], 70);
+  assert.equal(h.sinDescuento, 2);
+  assert.equal(h.conDescuento, 1);
+  assert.equal(h.tramos[0].total, 0);
+});
+
+test('histograma: un descuento negativo no se pierde por el camino', () => {
+  // El total del histograma tiene que cuadrar con el total de oportunidades que
+  // el panel muestra arriba; un dato sucio se ubica, no se descarta en silencio.
+  const h = histogramaDescuentos([opp('bogota', -3)], 70);
+  assert.equal(h.tramos[0].total, 1);
+  assert.equal(h.conDescuento, 1);
+});
+
+test('histograma: el total de los tramos cuadra siempre con las filas valoradas', () => {
+  const filas = Array.from({ length: 200 }, (_, i) => opp('bogota', (i * 0.37) % 71, i % 3 === 0));
+  const h = histogramaDescuentos(filas, 70);
+  assert.equal(h.tramos.reduce((a, t) => a + t.total, 0), h.conDescuento);
+  assert.equal(h.tramos.reduce((a, t) => a + t.altas, 0), filas.filter((f) => f.is_high).length);
+});
+
+test('histograma: viaja dentro de la tabla de zonas sin costar una consulta más', () => {
+  // Se calcula sobre las MISMAS filas que ya se trajeron para agregar por
+  // ciudad: si dejara de venir en la tabla, alguien pagaría un segundo recorrido
+  // de ~20.500 filas sobre una tabla de 116.000 para releer una columna que ya
+  // estaba en memoria.
+  const t = tabla({ ciudades: ['bogota'], oportunidades: [opp('bogota', 22, true)] });
+  assert.equal(t.histogramaDescuentos.conDescuento, 1);
+  assert.equal(t.histogramaDescuentos.tramos.find((x) => x.desde === 20)?.altas, 1);
 });

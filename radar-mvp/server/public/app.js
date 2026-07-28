@@ -1417,12 +1417,51 @@ function countdownBadge(iso) {
 // ── Calculadora de gastos de compra (pedido del cliente) ──
 // Tarifas Colombia (estimadas): notaría ~0.54% repartida 50/50 → comprador 0.27%;
 // impuesto de registro (beneficencia) ~1%; derechos de registro ~0.5%.
+//
+// Estos tres porcentajes ya NO son fijos: los edita el administrador desde
+// /admin y llegan por `/api/config`. Los de aquí son el valor de arranque y el
+// de respaldo — se usan tal cual mientras la respuesta viaja, y para siempre si
+// la tabla de parámetros todavía no está aplicada en la base. La calculadora
+// nunca se queda sin porcentajes ni muestra ceros.
 const GASTOS = { notaria: 0.0027, impuesto: 0.01, derechos: 0.005 };
+
+/** Porcentaje tal como se escribe en Colombia: 0,0027 → «0,27 %». */
+const pctGasto = (fraccion) => `${(fraccion * 100).toLocaleString('es-CO', {
+  minimumFractionDigits: 0, maximumFractionDigits: 2,
+})} %`;
+
+/**
+ * Trae los porcentajes vigentes. Cualquier fallo se traga a propósito: los
+ * valores de arranque ya son correctos y una ficha sin calculadora sería peor
+ * que una calculadora con las tarifas del mes pasado.
+ */
+async function cargarParametrosGastos() {
+  try {
+    const r = await fetch('/api/config');
+    const config = await r.json();
+    const g = config && config.gastos;
+    if (!g) return;
+    // Se comprueba uno por uno: si el servidor degradó a valores por defecto
+    // manda exactamente los mismos números, y si mandara basura no se pisa lo
+    // que ya funciona.
+    for (const [clave, valor] of [
+      ['notaria', g.notaria], ['impuesto', g.impuestoRegistro], ['derechos', g.derechosRegistro],
+    ]) {
+      if (typeof valor === 'number' && Number.isFinite(valor) && valor >= 0 && valor <= 0.05) {
+        GASTOS[clave] = valor;
+      }
+    }
+  } catch { /* se sigue con los valores de arranque */ }
+}
+
 function calcGastos(valor, mode) {
   const lines = [];
-  if (mode !== 'remate') lines.push(['Gastos de notaría (comprador ~0,27%)', valor * GASTOS.notaria]);
-  lines.push(['Impuesto de registro (1%)', valor * GASTOS.impuesto]);
-  lines.push(['Derechos de registro (0,5%)', valor * GASTOS.derechos]);
+  // La etiqueta lleva el porcentaje que se está aplicando de verdad. Antes era
+  // texto fijo («1%»): con las tarifas editables, un rótulo que no siguiera al
+  // número sería una mentira sobre la propia cuenta que muestra al lado.
+  if (mode !== 'remate') lines.push([`Gastos de notaría (comprador ~${pctGasto(GASTOS.notaria)})`, valor * GASTOS.notaria]);
+  lines.push([`Impuesto de registro (${pctGasto(GASTOS.impuesto)})`, valor * GASTOS.impuesto]);
+  lines.push([`Derechos de registro (${pctGasto(GASTOS.derechos)})`, valor * GASTOS.derechos]);
   const total = lines.reduce((a, [, v]) => a + v, 0);
   return { lines, total, pct: valor ? (total / valor) * 100 : 0 };
 }
@@ -2492,6 +2531,10 @@ try {
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.
 aplicarVistaDePestana();
 initAuth();
+// Sin `await` y sin bloquear nada: la calculadora solo aparece al abrir una
+// ficha, muchísimo después de que esto resuelva, y mientras tanto ya tiene los
+// valores de arranque.
+void cargarParametrosGastos();
 loadStats().catch(() => renderStatsUnavailable());
 buildFilters().then(async () => {
   await applyRadarPreferences(radarPreferences);

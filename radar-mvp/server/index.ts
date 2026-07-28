@@ -15,9 +15,10 @@ import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
 import {
   queryPortal, queryBancos, queryRemates, facets, stats, getProperty, remateBankFacets,
-  warmStats, warmTotalPortal, warmZonas, destacados, warmDestacados,
+  warmStats, warmTotalPortal, warmZonas, warmMetricas, destacados, warmDestacados,
   type ListQuery,
 } from './queries.js';
+import { parametrosGastos, warmParametrosGastos } from './parametros-gastos.js';
 import { fichasDe } from './destacados.js';
 import { registerUser, loginUser } from './auth.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
@@ -42,9 +43,11 @@ import {
   exportAccount,
   exportAccountCsv,
   getAccount,
+  getAdminOperationMetrics,
   getAdminSummary,
   getAdminZoneOpportunities,
   listAdminPlanInterests,
+  updateAdminExpenseParameters,
   listPlans,
   registerPlanInterest,
   registrarDesbloqueo,
@@ -453,6 +456,21 @@ const server = createServer(async (req, res) => {
           if (!zonas) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
           return sendJSON(res, 200, { ok: true, ...zonas });
         }
+        if (path === '/api/admin/metricas') {
+          if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+          const metricas = await getAdminOperationMetrics(user.id);
+          if (!metricas) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, 200, { ok: true, ...metricas });
+        }
+        if (path === '/api/admin/parametros-gastos' && req.method === 'PUT') {
+          // Límite propio y estrecho: esto cambia el número que ve TODO el
+          // mundo en la calculadora, así que un script que lo machaque en bucle
+          // es un problema de producto, no solo de carga.
+          if (rateLimited(res, `admin-parametros:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
+          const result = await updateAdminExpenseParameters(user.id, await readJsonBody(req));
+          if (!result) return sendJSON(res, 403, { ok: false, error: 'Acceso reservado a administradores' });
+          return sendJSON(res, result.ok ? 200 : 400, result);
+        }
         if (path === '/api/admin/plan-interests') {
           if (req.method !== 'GET') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
           const interests = await listAdminPlanInterests(user.id);
@@ -742,6 +760,13 @@ const server = createServer(async (req, res) => {
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
         paymentDemoReady: wompiPaymentDemoReady(),
+        // Porcentajes de la calculadora de gastos. Van en la config PÚBLICA a
+        // propósito: son tarifas de ley que se le muestran a todo el que abre
+        // una ficha, y esconderlas detrás del token no protegería nada. Lo que
+        // sí está protegido es escribirlas (`PUT /api/admin/parametros-gastos`).
+        // Si la tabla no está aplicada, esto devuelve los valores por defecto y
+        // la ficha se comporta exactamente igual que antes.
+        gastos: await parametrosGastos(),
       });
       return sendJSON(res, 404, { error: 'ruta API no encontrada' });
     }
@@ -780,11 +805,19 @@ server.listen(PORT, () => {
     // agota su propio timeout de 800 ms y solo deja un aviso inútil en el log.
     .then(() => warmTotalPortal())
     .then(() => alertDispatchEnabled())
+    // Los porcentajes de gastos van con la config pública porque `/api/config`
+    // los espera: si llegaran fríos, la primera carga del frontend pagaría la
+    // consulta (o su timeout de 800 ms) antes de pintar nada.
+    .then(() => warmParametrosGastos())
     // Lo último de todo: la tabla de zonas del panel de administración. Son ~60
     // consultas que solo le sirven a un administrador, así que esperan a que el
     // dashboard público tenga lo suyo listo.
     .then(() => warmZonas())
     .then(() => log.info('Oportunidades por zona precalculadas'))
+    // Detrás de las zonas: son dos consultas pequeñas, pero también le sirven
+    // solo al administrador y no tienen por qué adelantarse a nada.
+    .then(() => warmMetricas())
+    .then(() => log.info('Métricas de operación precalculadas'))
     .catch(() => { /* el precalentamiento es best-effort */ });
 });
 
