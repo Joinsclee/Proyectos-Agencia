@@ -44,6 +44,10 @@ export const CAMPOS_AUTORIZACION = [
   // El cupo mensual del plan gratuito. Va aquí y no en `user_metadata` por la
   // razón obvia: un límite que el limitado puede reescribir no es un límite.
   'unlock_quota',
+  // El cupo mensual de reportes descargables (`server/cupo-reportes.ts`), en su
+  // propia bolsa porque es un límite distinto del de fichas. Mismo motivo para
+  // estar aquí: si viviera en `user_metadata`, el titular se pondría 999.
+  'report_quota',
 ] as const;
 
 export type CampoAutorizacion = (typeof CAMPOS_AUTORIZACION)[number];

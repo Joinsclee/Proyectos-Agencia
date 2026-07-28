@@ -13,6 +13,7 @@ import { supabase, authClient } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import { entitledPlanFromMetadata, subscriptionStatusFromMetadata, type SubscriptionStatus } from './commercial.js';
 import { leerCupo, type Cupo } from './cupo.js';
+import { leerCupoReportes, type CupoReportes } from './cupo-reportes.js';
 import {
   metadatosDeCuenta,
   pareceIntentoDeAscenso,
@@ -50,6 +51,8 @@ export interface AuthUser {
    * camino caliente de cada listado.
    */
   cupo?: Cupo;
+  /** Cupo mensual de reportes descargables, leído de la misma metadata. */
+  cupoReportes?: CupoReportes;
 }
 
 const MAX_FAVS = 500;
@@ -74,6 +77,7 @@ export async function getUserFromToken(token: string | null): Promise<AuthUser |
       ? 'admin'
       : 'user',
     cupo: leerCupo(metadata),
+    cupoReportes: leerCupoReportes(metadata),
   };
 }
 

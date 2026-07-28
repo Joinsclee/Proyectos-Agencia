@@ -71,6 +71,28 @@ async function openIsolatedPage(options?: { mobile?: boolean; conOnboarding?: bo
   };
 }
 
+/**
+ * Fija si el listado llega bloqueado o abierto, conservando el resto de la
+ * respuesta real. Qué fichas concretas bloquea el muro depende del inventario del
+ * día; una prueba que dependa de eso falla los días en que la portada trae otra
+ * mezcla, sin que nada se haya roto.
+ */
+async function forzarBloqueoDelListado(page: Page, bloqueadas: boolean) {
+  await page.unroute('**/api/portal?*').catch(() => {});
+  await page.route('**/api/portal?*', async (route) => {
+    const original = await route.fetch();
+    const cuerpo = await original.json();
+    cuerpo.data = (cuerpo.data ?? []).map((fila: Record<string, unknown>) => ({
+      ...fila,
+      _bloqueada: bloqueadas || undefined,
+      _acceso: bloqueadas
+        ? { completa: false, motivo: 'oportunidad', avisoRiesgo: false, requiere: 'registro' }
+        : { completa: true, motivo: null, avisoRiesgo: false },
+    }));
+    await route.fulfill({ response: original, json: cuerpo });
+  });
+}
+
 before(async () => {
   await mkdir(screenshotsDir, { recursive: true });
 
@@ -299,6 +321,47 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       assert.match(await rentalPanel.textContent() ?? '', /4[.\s]850[.\s]000\/mes/);
       assert.match(await page.locator('[data-rent]').inputValue(), /4[.\s]850[.\s]000/);
       assert.match(await page.locator('.rent-result').textContent() ?? '', /\d+[,.]\d+%/);
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('ofrece el reporte descargable y al anónimo le pide cuenta en vez del archivo', async () => {
+    // La lógica del cupo se prueba en `server/reporte.test.ts`; lo que no puede
+    // comprobar una prueba pura es el cableado: que el bloque aparezca en la
+    // ficha, que su objetivo táctil siga siendo de 44px y que al visitante se le
+    // ofrezca la cuenta —que es lo que le falta— y no un botón que va a fallar.
+    const { context, page, assertClean } = await openIsolatedPage();
+    try {
+      // Se fuerza el estado de acceso de las fichas del listado: cuáles están
+      // bloqueadas depende del inventario del día, y no es lo que se prueba aquí.
+      await forzarBloqueoDelListado(page, false);
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await waitForResults(page);
+      await page.locator('#grid article.card .card-open').first().click();
+
+      const cta = page.locator('.reporte-box .reporte-cta');
+      await cta.waitFor();
+      assert.equal(await cta.evaluate((el) => el.tagName), 'A', 'al anónimo se le ofrece un enlace, no un botón');
+      assert.match(new URL(await cta.getAttribute('href') ?? '', baseUrl).pathname, /^\/login$/);
+      const alto = await cta.evaluate((el) => el.getBoundingClientRect().height);
+      assert.ok(alto >= 44, `El objetivo táctil debe ser de al menos 44px (medido: ${alto}px)`);
+      assert.match(
+        await page.locator('.reporte-box').textContent() ?? '',
+        /20 reportes al mes/,
+        'debe decir cuántos reportes trae el plan gratuito antes de registrarse',
+      );
+
+      // Y en una ficha bloqueada no se ofrece: el servidor rechazaría el reporte
+      // y el muro de al lado ya explica qué falta.
+      await page.locator('#modal-close').click();
+      await forzarBloqueoDelListado(page, true);
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await waitForResults(page);
+      await page.locator('#grid article.card .card-open').first().click();
+      await page.locator('.muro-sus').waitFor();
+      assert.equal(await page.locator('.reporte-box').count(), 0);
       assertClean();
     } finally {
       await context.close();
