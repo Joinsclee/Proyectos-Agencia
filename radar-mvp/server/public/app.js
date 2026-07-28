@@ -2000,13 +2000,17 @@ function renderActualizado(frescura) {
   }
   const fecha = new Date(frescura.actualizadoEn);
   const etiqueta = fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
-  if (!frescura.degradada) {
-    return `<div class="summary-stat muted" title="Última corrida: ${esc(fecha.toLocaleString('es-CO'))}">
-      <div class="num">${esc(etiqueta)}</div><div class="lbl">Actualizado</div></div>`;
-  }
-  return `<div class="summary-stat muted stat-degradada" title="${esc(frescura.motivo || '')}">
-    <div class="num">${esc(etiqueta)}</div>
-    <div class="lbl">Actualizado · datos atrasados</div></div>`;
+  // La fecha mostrada es siempre la corrida real. El estado degradado NO se
+  // anuncia al visitante: un aviso de operación interna en la portada no le dice
+  // nada útil a quien viene a buscar inmuebles, y la fecha por sí sola ya es
+  // honesta —si el pipeline se detiene, deja de avanzar—. El diagnóstico completo
+  // queda en el tooltip y, sobre todo, en `/api/stats`, que es de donde lo toman
+  // el panel de administración y el monitor de producción.
+  const detalle = frescura.degradada && frescura.motivo
+    ? `Última corrida: ${fecha.toLocaleString('es-CO')} · ${frescura.motivo}`
+    : `Última corrida: ${fecha.toLocaleString('es-CO')}`;
+  return `<div class="summary-stat muted" title="${esc(detalle)}">
+    <div class="num">${esc(etiqueta)}</div><div class="lbl">Actualizado</div></div>`;
 }
 function renderVStats() {
   if (!STATS) return;
