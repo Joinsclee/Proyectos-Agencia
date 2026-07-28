@@ -242,6 +242,12 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
     .in('source', BANK_SOURCES as unknown as string[]);
 
   qb = applyInmuebleFilters(qb, q);
+  // Filtro por entidad. Se valida contra la lista blanca en vez de pasar el valor
+  // a la consulta: `bank` viene de la URL y en la pestaña de remates el MISMO
+  // parámetro lleva el nombre del demandante, así que aquí puede llegar cualquier
+  // cosa. Un valor desconocido se ignora en vez de devolver cero resultados, que
+  // se leería como "este banco no tiene inventario".
+  if (q.bank && (BANK_SOURCES as readonly string[]).includes(q.bank)) qb = qb.eq('source', q.bank);
   if (q.opp === '1') qb = qb.eq('is_opportunity', true);
   qb = applyOrderInmuebles(qb, q.order ?? 'precio_m2_asc');
   qb = qb.range(from, from + pageSize - 1);
@@ -332,15 +338,42 @@ export async function remateBankFacets(): Promise<{ banks: Array<{ name: string;
 
 /** Valores únicos para poblar los filtros (ciudades, tipos, barrios por ciudad). */
 export async function facets(source: 'portal' | 'bancos' = 'portal', city?: string) {
-  let qb = supabase.from('inmuebles').select('city, zone, type').eq('is_active', true).limit(8000);
+  let qb = supabase.from('inmuebles').select('city, zone, type, source').eq('is_active', true).limit(8000);
   qb = source === 'portal' ? qb.eq('source', 'fincaraiz') : qb.in('source', BANK_SOURCES as unknown as string[]);
+  // Los MISMOS dos filtros de saneamiento que aplica el listado (`applyInmuebleFilters`).
+  // Sin ellos las opciones prometen inventario que la pestaña no va a enseñar: el
+  // desplegable diría «Aval (219)» y al elegirlo saldrían 186. Ya pasó una vez
+  // entre el contador de la pestaña y el paginador, y se lee como un fallo.
+  qb = qb.lte('price', MAX_DISPLAY_PRICE);
+  qb = qb.or(`discount_pct.is.null,discount_pct.lte.${MAX_OPP_DISCOUNT}`);
   if (city) qb = qb.eq('city', city);
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
   const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
   const zones = [...new Set((data ?? []).map((r) => r.zone).filter(Boolean))].sort();
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
-  return { cities, zones, types };
+
+  // Entidades con inventario, para el desplegable de la pestaña de Bancos.
+  //
+  // El conteo se saca de las filas que esta consulta ya trajo, y eso es exacto
+  // AQUÍ porque el inventario bancario entero son unos cientos de fichas, muy por
+  // debajo del tope de 8.000. En el portal —108.000 filas— el mismo cálculo daría
+  // un número truncado, así que no se ofrece: solo se calcula para bancos.
+  //
+  // Se listan solo las entidades que hoy tienen algo. Ofrecer un banco con cero
+  // fichas es ofrecer un filtro que solo puede vaciar la pantalla.
+  let banks: Array<{ source: string; count: number }> | undefined;
+  if (source === 'bancos') {
+    const porFuente = new Map<string, number>();
+    for (const fila of data ?? []) {
+      if (!fila.source) continue;
+      porFuente.set(fila.source, (porFuente.get(fila.source) ?? 0) + 1);
+    }
+    banks = [...porFuente.entries()]
+      .map(([s, count]) => ({ source: s, count }))
+      .sort((a, b) => b.count - a.count || a.source.localeCompare(b.source));
+  }
+  return { cities, zones, types, banks };
 }
 
 /** Métricas de portada: totales y oportunidades por ciudad. */

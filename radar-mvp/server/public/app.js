@@ -514,6 +514,16 @@ async function buildFilters() {
     html += fSelect('city', 'Ciudad', fc.cities);
     if (tab === 'portal') html += fSelect('zone', 'Barrio', fc.zones);
     html += fSelect('type', 'Tipo', fc.types, typeLbl);
+    // En Bancos, la entidad es lo primero que la gente quiere acotar: cada banco
+    // publica su cartera con criterios distintos. Solo se listan las que hoy
+    // tienen inventario, con cuántas fichas trae cada una, para que se vea de
+    // antemano si acotar merece la pena.
+    if (tab === 'bancos' && (fc.banks || []).length > 1) {
+      const opts = ['<option value="">Todos los bancos</option>'].concat(
+        fc.banks.map((b) => `<option value="${esc(b.source)}">${esc(srcLbl(b.source))} (${b.count})</option>`),
+      );
+      html += `<div class="f"><label for="f-bank">Banco</label><select id="f-bank">${opts.join('')}</select></div>`;
+    }
     html += `<div class="f"><label for="f-opp">Oportunidad</label><select id="f-opp"><option value="">Todas</option><option value="1">Solo oportunidades</option><option value="high">Solo altas</option></select></div>`;
     html += fRange('price', 'Precio (millones)', 'mín', 'máx');
     html += fRange('area', 'Área (m²)', 'mín', 'máx');
