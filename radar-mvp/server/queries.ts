@@ -8,6 +8,15 @@ import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT, BANK_SOURCES } from '../lib/types.
 import { rotarSemanal } from '../engine/rotacion.js';
 import { sanitizeRemateForDisplay } from './data-quality.js';
 import { evaluarFrescura, type Frescura, type TrabajoCron } from './frescura.js';
+import {
+  armarDestacados,
+  inicioDeMes,
+  DESCUENTO_MAX,
+  DESCUENTO_MIN,
+  type Destacados,
+  type FilaInmueble,
+  type FilaRemate,
+} from './destacados.js';
 import { createLogger } from '../lib/logger.js';
 
 const log = createLogger('queries');
@@ -312,6 +321,166 @@ async function computeStats() {
  * devuelve `null` y la interfaz dice que no pudo determinar la fecha, que es
  * honesto. Lo que no puede hacer es dejar de mostrar oportunidades por esto.
  */
+/* ─────────────────────────  PORTADA (Home con destacados)  ───────────────────────── */
+
+/**
+ * Proyección de las columnas que una tarjeta de portada necesita, y NADA más.
+ *
+ * Traer `features` entero cuesta ~4 KB por fila (galerías completas + descripción)
+ * y la portada no pinta ninguna de esas dos cosas: medido, 600 filas con `select('*')`
+ * son 2,5 MB y 4 s. Con esta proyección son 135 KB y ~600 ms para 220.
+ *
+ * Efecto secundario deseado: la dirección, la descripción, la geolocalización y el
+ * enlace a la fuente NI SIQUIERA salen de la base en esta ruta. El muro de pago
+ * sigue aplicándose después con `redactarMixta` —es él quien manda—, pero una ruta
+ * que no pide el dato no puede filtrarlo por descuido. Ya pasó una vez con
+ * `/api/property`.
+ */
+const COLS_DESTACADOS =
+  'id, source, city, zone, type, price, area_m2, price_per_m2, discount_pct, '
+  + 'crece_index, crece_tier, cascada_nivel, is_opportunity, is_high, image_url, '
+  + 'last_seen_at, first_seen_at, '
+  + 'bedrooms:features->bedrooms, bathrooms:features->bathrooms, garages:features->garages, '
+  + 'stratum:features->stratum, market:features->market';
+
+const COLS_DESTACADOS_REMATE =
+  'id, city, department, property_type, minimum_bid, appraisal_value, minimum_bid_pct, '
+  + 'auction_date, auction_mode, cuota_parte, origen_demandante, source, image_url, updated_at';
+
+/** Tamaño de los pools que se piden. Holgados a propósito: los bloques descuentan
+ *  lo que ya usó el anterior, así que el último debe seguir teniendo de dónde elegir. */
+const POOL_PORTAL = 220;
+// Los bancos van holgados porque más de la mitad de sus fichas con buen descuento
+// tienen confianza baja y `esInmuebleDestacable` las descarta.
+const POOL_BANCOS = 140;
+// Los remates se filtran y ordenan en TS (su descuento no sale de una columna),
+// así que el pool es de las audiencias más próximas: lo lejano no es accionable.
+const POOL_REMATES = 160;
+
+/**
+ * Reconstruye el `features` que espera el resto del sistema.
+ *
+ * La proyección devuelve los escalares sueltos (`bedrooms`, `market`…); las
+ * tarjetas y `acceso.ts` esperan encontrarlos dentro de `features`. Se rearma aquí
+ * y no en el cliente para que la ficha que viaja tenga exactamente la misma forma
+ * que la de cualquier listado.
+ */
+function rearmarInmueble(fila: Record<string, any>): FilaInmueble {
+  const { bedrooms, bathrooms, garages, stratum, market, ...resto } = fila;
+  return {
+    ...(resto as { id: string }),
+    features: {
+      ...(bedrooms != null ? { bedrooms } : {}),
+      ...(bathrooms != null ? { bathrooms } : {}),
+      ...(garages != null ? { garages } : {}),
+      ...(stratum != null ? { stratum } : {}),
+      ...(market ? { market } : {}),
+      // La portada enseña una sola foto: la de portada. La galería vive en la ficha.
+      images: fila.image_url ? [fila.image_url] : [],
+    },
+  } as FilaInmueble;
+}
+
+async function traerPoolsDestacados() {
+  const hoy = new Date().toISOString().slice(0, 10);
+  const desdeMes = inicioDeMes().toISOString();
+
+  const inmueblesBase = (fuente: 'portal' | 'bancos') => {
+    let qb = supabase.from('inmuebles').select(COLS_DESTACADOS)
+      .eq('is_active', true)
+      .gte('discount_pct', DESCUENTO_MIN)
+      .lte('discount_pct', DESCUENTO_MAX)
+      .lte('price', MAX_DISPLAY_PRICE);
+    qb = fuente === 'portal'
+      // `is_high` es la garantía del portal: el motor solo la concede con confianza
+      // alta y comparables del propio barrio. Además excluye los proyectos de
+      // preventa sin necesidad de filtrar el JSON, que sobre 108K filas es caro.
+      ? qb.eq('source', 'fincaraiz').eq('is_high', true)
+      : qb.in('source', BANK_SOURCES as unknown as string[]);
+    return qb.order('discount_pct', { ascending: false, nullsFirst: false });
+  };
+
+  const [portal, mes, bancos, remates] = await Promise.all([
+    inmueblesBase('portal').limit(POOL_PORTAL),
+    // Consulta aparte para el bloque del mes: lo que entró este mes puede quedar
+    // por debajo del corte de los 220 mejores por descuento y aun así ser lo más
+    // interesante del periodo.
+    inmueblesBase('portal').gte('first_seen_at', desdeMes).limit(POOL_PORTAL / 2),
+    inmueblesBase('bancos').limit(POOL_BANCOS),
+    // OJO con `minimum_bid_pct`: viene nula en más de la mitad de los avisos y
+    // cuando trae número no es la relación postura/avalúo, así que NO se puede
+    // filtrar ni ordenar por ella. El descuento real se calcula en `destacados.ts`
+    // a partir de las dos cifras que sí están.
+    supabase.from('remates').select(COLS_DESTACADOS_REMATE)
+      .eq('is_active', true).gte('auction_date', hoy)
+      .not('appraisal_value', 'is', null).not('minimum_bid', 'is', null)
+      .order('auction_date', { ascending: true, nullsFirst: false }).limit(POOL_REMATES),
+  ]);
+
+  for (const r of [portal, mes, bancos, remates]) {
+    if (r.error) throw new Error(`destacados: ${r.error.message}`);
+  }
+
+  // El pool del mes se une al general y se deduplica: `armarDestacados` filtra por
+  // `first_seen_at`, así que da igual por qué consulta llegó cada ficha.
+  const porId = new Map<string, FilaInmueble>();
+  for (const fila of [...(portal.data ?? []), ...(mes.data ?? [])] as Record<string, any>[]) {
+    porId.set(String(fila.id), rearmarInmueble(fila));
+  }
+
+  return {
+    portal: [...porId.values()],
+    bancos: ((bancos.data ?? []) as Record<string, any>[]).map(rearmarInmueble),
+    remates: ((remates.data ?? []) as Record<string, any>[]).map(sanitizeRemateForDisplay) as FilaRemate[],
+  };
+}
+
+/**
+ * Destacados de la portada, CACHEADOS.
+ *
+ * Mismo trato que `stats()` y por el mismo motivo: es la PRIMERA pantalla del
+ * producto, se pide en cada visita y por debajo hay cuatro consultas sobre las
+ * 108.000 fichas del portal. En frío cuesta ~2,5 s; servido de memoria, milésimas.
+ * Se refresca por detrás cuando caduca, así que el visitante nunca espera por él —
+ * y una selección de diez minutos de antigüedad no engaña a nadie: el motor y los
+ * scrapers corren una o dos veces al día.
+ *
+ * La caché guarda las fichas SIN redactar, a propósito: el muro depende del plan de
+ * quien pregunta, así que no puede quedarse congelado dentro de una caché que
+ * comparten todos. Redactar es lo último que pasa, ya en la ruta.
+ */
+const DESTACADOS_TTL_MS = 10 * 60_000;
+let destacadosCache: { at: number; data: Destacados } | null = null;
+let destacadosInFlight: Promise<Destacados> | null = null;
+
+export async function destacados(): Promise<Destacados> {
+  if (destacadosCache) {
+    if (Date.now() - destacadosCache.at >= DESTACADOS_TTL_MS && !destacadosInFlight) {
+      void refreshDestacados().catch(() => {});
+    }
+    return destacadosCache.data; // fresco o rancio: se responde ya
+  }
+  return destacadosInFlight ?? refreshDestacados();
+}
+
+function refreshDestacados(): Promise<Destacados> {
+  destacadosInFlight = traerPoolsDestacados()
+    .then((pools) => {
+      const data = armarDestacados(pools);
+      destacadosCache = { at: Date.now(), data };
+      return data;
+    })
+    .finally(() => { destacadosInFlight = null; });
+  return destacadosInFlight;
+}
+
+/** Precalienta la portada al arrancar: es lo primero que verá el primer visitante. */
+export async function warmDestacados(): Promise<void> {
+  try { await refreshDestacados(); } catch (e) {
+    log.warn(`destacados: no se pudo precalentar (${e instanceof Error ? e.message : String(e)})`);
+  }
+}
+
 async function leerFrescura(): Promise<Frescura | null> {
   try {
     const { data, error } = await supabase

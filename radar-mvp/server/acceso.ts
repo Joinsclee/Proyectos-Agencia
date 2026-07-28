@@ -209,3 +209,33 @@ export function redactarLista<T extends Record<string, any>>(
     );
   });
 }
+
+/**
+ * El mismo control sobre una lista que MEZCLA inmuebles y remates.
+ *
+ * La portada cruza las tres fuentes en una sola fila, y las dos familias no se
+ * clasifican igual (categoría CRECE vs. matriz del remate). Se separan, cada una
+ * pasa por `redactarLista` —la única puerta— y se recompone el orden original.
+ *
+ * Se recompone por `tipo:id` y no por `id` a secas: son dos tablas distintas y
+ * casar por identificador suelto es justo la clase de descuido con el que una
+ * ficha de pago acabaría saliendo entera.
+ */
+export function redactarMixta<T extends Record<string, any> & { _kind?: string }>(
+  filas: T[], plan: Plan,
+  cupo?: { desbloqueadas?: string[]; restantes?: number | null },
+): T[] {
+  const esRemate = (fila: T) => fila._kind === 'remate';
+  const clave = (fila: T) => `${esRemate(fila) ? 'remate' : 'inmueble'}:${String(fila.id)}`;
+  const redactadas = new Map<string, T>();
+  for (const fila of redactarLista(filas.filter((f) => !esRemate(f)), plan, 'inmueble', cupo)) {
+    redactadas.set(clave(fila), fila);
+  }
+  for (const fila of redactarLista(filas.filter(esRemate), plan, 'remate', cupo)) {
+    redactadas.set(clave(fila), fila);
+  }
+  // Si algo no aparece en el mapa es un fallo de programación, no un caso de
+  // negocio: se devuelve la fila REDACTADA al máximo antes que la cruda.
+  return filas.map((fila) => redactadas.get(clave(fila))
+    ?? (redactar(fila, { completa: false, motivo: 'oportunidad', avisoRiesgo: false, requiere: 'suscripcion' })));
+}

@@ -39,6 +39,30 @@ async function waitForResults(page: Page) {
   assert.ok(await page.locator('#grid article.card').count(), 'La grilla debe contener al menos un inmueble');
 }
 
+/**
+ * La portada es ahora la primera pantalla: al entrar no hay listado que esperar.
+ * Los recorridos que prueban el BUSCADOR se van a su pestaña con `irAPestana`;
+ * los que solo necesitan que la página haya terminado de cargar esperan aquí.
+ */
+async function esperarPortada(page: Page) {
+  await page.locator('#home .home-bloque article.card').first().waitFor({ timeout: 30_000 });
+  await page.waitForFunction(
+    () => document.getElementById('home')?.getAttribute('aria-busy') !== 'true',
+    undefined,
+    { timeout: 30_000 },
+  );
+}
+
+/** Cambia de pestaña y espera a que quede seleccionada, sin adivinar tiempos. */
+async function irAPestana(page: Page, pestana: string) {
+  await page.locator(`button[data-tab="${pestana}"]`).click();
+  await page.waitForFunction(
+    (destino) => document.querySelector(`button[data-tab="${destino}"]`)?.getAttribute('aria-current') === 'page',
+    pestana,
+    { timeout: 30_000 },
+  );
+}
+
 async function openIsolatedPage(options?: { mobile?: boolean; conOnboarding?: boolean }) {
   const context = await browser.newContext(options?.mobile
     ? { viewport: { width: 375, height: 812 }, deviceScaleFactor: 1 }
@@ -145,7 +169,7 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       // Se espera a que la portada termine de cargar ANTES de recargar: si no, la
       // recarga aborta los `fetch` en vuelo y el error de red aparecería como un
       // error de consola que no tiene nada que ver con el tutorial.
-      await waitForResults(page);
+      await esperarPortada(page);
 
       await page.locator('[data-onboarding-cerrar]').click();
       await dialogo.waitFor({ state: 'hidden' });
@@ -157,7 +181,7 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
 
       // No debe reaparecer al recargar: es una bienvenida, no un peaje.
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await waitForResults(page);
+      await esperarPortada(page);
       assert.equal(await dialogo.isVisible(), false, 'el tutorial no debe repetirse solo');
 
       // Pero tiene que poder recuperarse sin buscarlo.
@@ -178,12 +202,23 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
   test('muestra skeletons geométricos y los retira al completar la carga', async () => {
     const { context, page, assertClean } = await openIsolatedPage();
     try {
-      await page.route('**/api/portal?*', async (route) => {
+      const demorar = async (route: import('playwright').Route) => {
         await new Promise((resolve) => setTimeout(resolve, 600));
         await route.continue();
-      });
+      };
+      await page.route('**/api/home', demorar);
+      await page.route('**/api/portal?*', demorar);
 
+      // La portada carga primero: sus esqueletos son los mismos del listado, para
+      // que la espera de la primera pantalla se sienta igual que la de una búsqueda.
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await page.locator('#home .skeleton-card').first().waitFor();
+      assert.equal(await page.locator('#home').getAttribute('aria-busy'), 'true');
+      await esperarPortada(page);
+      assert.equal(await page.locator('#home .skeleton-card').count(), 0);
+      assert.equal(await page.locator('#home').getAttribute('aria-busy'), null);
+
+      await irAPestana(page, 'portal');
       await page.locator('#grid .skeleton-card').first().waitFor();
       assert.equal(await page.locator('#grid .skeleton-card').count(), 9);
       assert.equal(await page.locator('#grid').getAttribute('aria-busy'), 'true');
@@ -193,6 +228,80 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       assert.equal(await page.locator('#grid .skeleton-card').count(), 0);
       assert.equal(await page.locator('#grid').getAttribute('aria-busy'), null);
       assert.equal(await page.locator('#loading').isVisible(), false);
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
+  test('abre en la portada con destacados explicados y detrás del muro', async () => {
+    const { context, page, assertClean } = await openIsolatedPage();
+    try {
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await esperarPortada(page);
+
+      // Es la primera pantalla: se entra por ella, no por el listado del portal.
+      assert.equal(await page.locator('#tabs .tab-btn[aria-current="page"]').getAttribute('data-tab'), 'home');
+      assert.equal(await page.locator('#search-workspace').isVisible(), false, 'el buscador no compite con la portada');
+
+      const bloques = page.locator('#home .home-bloque');
+      const cuantos = await bloques.count();
+      assert.ok(cuantos >= 3, `la portada debe traer sus bloques de destacados, trajo ${cuantos}`);
+
+      // Ningún bloque puede decir "destacados" a secas: cada uno publica su regla.
+      for (let i = 0; i < cuantos; i += 1) {
+        const criterio = (await bloques.nth(i).locator('.home-criterio').textContent()) ?? '';
+        assert.ok(criterio.trim().length > 60, `el bloque ${i} no explica con qué criterio eligió`);
+      }
+      // Y cada ficha dice por qué está ella, no solo el bloque.
+      const fichas = await page.locator('#home .home-bloque article.card').count();
+      assert.equal(await page.locator('#home .card-motivo').count(), fichas);
+      assert.match(
+        (await page.locator('#home .card-motivo strong').first().textContent()) ?? '',
+        /por debajo de/,
+      );
+      // El bloque agrupado por ciudad tiene que verse agrupado.
+      assert.ok(await page.locator('#home .home-grupo-tit').count() >= 2, 'faltan los grupos por ciudad');
+
+      // El muro NO se salta en la portada: un anónimo recibe las fichas recortadas
+      // desde el servidor, no tapadas con CSS. Ya hubo un incidente por esto.
+      const respuesta = await page.request.get(`${baseUrl}/api/home`);
+      assert.equal(respuesta.status(), 200);
+      const portada = await respuesta.json();
+      assert.equal(portada.plan, 'anonimo');
+      const todas = portada.bloques.flatMap((b: any) => b.grupos.flatMap((g: any) => g.fichas));
+      assert.ok(todas.length > 0, 'la portada llegó sin fichas');
+      for (const ficha of todas) {
+        assert.ok(ficha._acceso, `la ficha ${ficha.id} salió sin pasar por el control de acceso`);
+        if (!ficha._acceso.completa) {
+          assert.equal(ficha.address, null, `la ficha ${ficha.id} filtró su dirección`);
+          assert.equal(ficha.source_url, null, `la ficha ${ficha.id} filtró el enlace a la fuente`);
+        }
+      }
+      assert.ok(portada.bloqueo.bloqueadas > 0, 'un anónimo no debería poder abrirlo todo');
+      await page.locator('#home-aviso .aviso-bloqueo').waitFor();
+
+      // Una tarjeta de la portada abre la ficha PIDIÉNDOLA a `/api/property`: es la
+      // ruta que aplica el plan y gasta el cupo del mes. Dibujarla con la fila
+      // recortada que ya tiene el navegador saltaría las dos cosas.
+      const [fichaPedida] = await Promise.all([
+        page.waitForRequest((peticion) => peticion.url().includes('/api/property?kind=')),
+        page.locator('#home article.card .card-open').first().click(),
+      ]);
+      assert.ok(fichaPedida.url().includes('id='), 'la portada abrió la ficha sin pedirla por id');
+      await page.locator('#modal.open').waitFor();
+      await page.keyboard.press('Escape');
+      await page.locator('#modal').waitFor({ state: 'hidden' });
+
+      // Ir al buscador y volver no rompe nada.
+      await irAPestana(page, 'portal');
+      await waitForResults(page);
+      assert.equal(await page.locator('#home').isVisible(), false);
+      await irAPestana(page, 'home');
+      await esperarPortada(page);
+      assert.equal(await page.locator('#search-workspace').isVisible(), false);
+
+      await page.screenshot({ path: `${screenshotsDir}/00-portada-destacados.png`, fullPage: true });
       assertClean();
     } finally {
       await context.close();
@@ -217,6 +326,8 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       assert.equal(typeof readinessBody.uptime_s, 'number');
 
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await esperarPortada(page);
+      await irAPestana(page, 'portal');
       await waitForResults(page);
 
       await page.getByRole('heading', { name: /Radar de Oportunidades Inmobiliarias/i }).waitFor();
@@ -239,16 +350,14 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     const { context, page, assertClean } = await openIsolatedPage();
     try {
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
-      await waitForResults(page);
+      await esperarPortada(page);
 
-      await page.locator('button[data-tab="bancos"]').click();
-      await page.waitForFunction(() => document.querySelector('button[data-tab="bancos"]')?.getAttribute('aria-current') === 'page');
+      await irAPestana(page, 'bancos');
       await waitForResults(page);
       assert.equal(await page.locator('#filters').getByText('Estrato', { exact: true }).count(), 0);
       await page.screenshot({ path: `${screenshotsDir}/02-bancos-desktop.png`, fullPage: true });
 
-      await page.locator('button[data-tab="remates"]').click();
-      await page.waitForFunction(() => document.querySelector('button[data-tab="remates"]')?.getAttribute('aria-current') === 'page');
+      await irAPestana(page, 'remates');
       await waitForResults(page);
       assert.ok((await page.locator('#count').textContent())?.includes('resultado'));
       await page.screenshot({ path: `${screenshotsDir}/03-remates-desktop.png`, fullPage: true });
@@ -291,6 +400,8 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       });
 
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await esperarPortada(page);
+      await irAPestana(page, 'portal');
       await waitForResults(page);
       await page.locator('#grid article.card .card-open').first().click();
 
@@ -309,17 +420,19 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     const { context, page, assertClean } = await openIsolatedPage();
     try {
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
-      await waitForResults(page);
+      await esperarPortada(page);
 
-      const firstFavorite = page.locator('#grid article.card').first().getByRole('button', { name: 'Guardar inmueble' });
+      // Se guarda DESDE la portada: sus tarjetas son las mismas del listado, así
+      // que el corazón tiene que funcionar igual sin haber entrado a buscar nada.
+      const firstFavorite = page.locator('#home article.card').first().getByRole('button', { name: 'Guardar inmueble' });
       await firstFavorite.click();
       await page.waitForFunction(() => document.getElementById('c-guardados')?.textContent === '1');
 
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await waitForResults(page);
+      await esperarPortada(page);
       assert.equal(await page.locator('#c-guardados').textContent(), '1');
 
-      await page.locator('button[data-tab="guardados"]').click();
+      await irAPestana(page, 'guardados');
       await page.waitForFunction(() => document.getElementById('count')?.textContent?.includes('1 guardado'));
       assert.equal(await page.locator('#grid article.card').count(), 1);
       assertClean();
@@ -414,12 +527,27 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     const { context, page, assertClean } = await openIsolatedPage({ mobile: true });
     try {
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
-      await waitForResults(page);
+      await esperarPortada(page);
 
-      for (const tab of ['portal', 'bancos', 'remates', 'guardados']) {
+      for (const tab of ['home', 'portal', 'bancos', 'remates', 'guardados']) {
         await page.locator(`button[data-tab="${tab}"]`).waitFor({ state: 'visible' });
       }
+      // La barra inferior sigue siendo UNA fila con la pestaña nueva dentro: si se
+      // partiera en dos, el pulgar taparía media pantalla de resultados.
+      const filas = await page.evaluate(() => new Set(
+        Array.from(document.querySelectorAll('.tabs-inner button, .tabs-inner a'))
+          .filter((el) => el.getBoundingClientRect().width > 0)
+          .map((el) => Math.round(el.getBoundingClientRect().y)),
+      ).size);
+      assert.equal(filas, 1, 'la navegación móvil se partió en varias filas');
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth),
+        true,
+        'la portada desborda horizontalmente en 375px',
+      );
 
+      await irAPestana(page, 'portal');
+      await waitForResults(page);
       const filtersToggle = page.locator('#filters-toggle');
       await filtersToggle.click();
       assert.equal(await filtersToggle.getAttribute('aria-expanded'), 'true');
