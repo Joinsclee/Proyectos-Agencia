@@ -101,17 +101,40 @@ function hideMsg() {
 $('tab-register').addEventListener('click', () => setMode('register'));
 $('tab-login').addEventListener('click', () => setMode('login'));
 
-$('google-btn').addEventListener('click', async () => {
+/**
+ * Entrar con un proveedor externo.
+ *
+ * Mismo camino para Google y Microsoft: los dos son OAuth de Supabase y solo
+ * cambia el nombre del proveedor. Se comparte la función para que no haya dos
+ * sitios donde comprobar que la URL es https, que es lo único que impide que un
+ * `supabaseUrl` envenenado mande al usuario a un dominio ajeno con su sesión.
+ */
+async function entrarCon(proveedor, nombre) {
   try {
     const config = await fetch('/api/config').then((response) => response.json());
     const supabaseUrl = new URL(config.supabaseUrl);
     if (supabaseUrl.protocol !== 'https:') throw new Error('Proveedor OAuth no seguro');
     const redirect = encodeURIComponent(location.origin + '/auth/callback');
-    location.href = `${supabaseUrl.origin}/auth/v1/authorize?provider=google&redirect_to=${redirect}`;
+    location.href = `${supabaseUrl.origin}/auth/v1/authorize?provider=${proveedor}&redirect_to=${redirect}`;
   } catch {
-    showMsg('No se pudo iniciar Google. Intenta de nuevo.', false);
+    showMsg(`No se pudo iniciar ${nombre}. Intenta de nuevo.`, false);
   }
-});
+}
+
+$('google-btn').addEventListener('click', () => entrarCon('google', 'Google'));
+
+// Microsoft solo aparece cuando el proveedor está dado de alta en Supabase. Un
+// botón que devuelve un error de OAuth al pulsarlo es peor que no tenerlo.
+(async () => {
+  const boton = $('microsoft-btn');
+  if (!boton) return;
+  try {
+    const config = await fetch('/api/config').then((r) => r.json());
+    if (!config.microsoftLoginReady) return;
+    boton.hidden = false;
+    boton.addEventListener('click', () => entrarCon('azure', 'Microsoft'));
+  } catch { /* si la config no responde, el botón se queda oculto */ }
+})();
 
 renderPendingContext();
 setMode('register');
