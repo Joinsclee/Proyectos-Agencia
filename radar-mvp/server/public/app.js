@@ -2470,10 +2470,26 @@ async function loadStats() {
   //
   // Y quitarlas resuelve de paso lo que más molestó al verlo: había cifras en tres
   // filas distintas —resumen, pestañas y franja— y varias eran la misma repetida.
+  // Cada cifra lleva a su sección. Lo pidió el cliente al verlas: «la gente
+  // podría hacer clic aquí, sin problema — quiere ir a bancos, pum, le llega a
+  // bancos». Y tenía razón en el diagnóstico previo: puestas ahí, en grande y sin
+  // ser pulsables, invitaban a pulsarlas y no pasaba nada.
+  //
+  // Son <button> y no <div>: un destino que se activa con un clic tiene que
+  // activarse también con el teclado, y esto ya es navegación de la aplicación.
   $('summary').innerHTML = `
-    <div class="summary-stat"><div class="num">${STATS.portal_opps.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades en portal</div></div>
-    <div class="summary-stat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">En bancos</div></div>
-    <div class="summary-stat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates judiciales</div></div>`;
+    <button class="summary-stat" type="button" data-ir="portal"><span class="num">${STATS.portal_opps.toLocaleString('es-CO')}</span><span class="lbl">Oportunidades en portal</span></button>
+    <button class="summary-stat" type="button" data-ir="bancos"><span class="num">${STATS.bancos.toLocaleString('es-CO')}</span><span class="lbl">En bancos</span></button>
+    <button class="summary-stat" type="button" data-ir="remates"><span class="num">${STATS.remates.toLocaleString('es-CO')}</span><span class="lbl">Remates judiciales</span></button>`;
+  // Se delega en el botón real de la pestaña en vez de duplicar su manejador:
+  // cambiar de sección hace una docena de cosas —filtros, paginador, foco, el
+  // desplazamiento en móvil— y tener dos caminos que las hagan es tener dos
+  // caminos que se desincronicen.
+  $('summary').querySelectorAll('[data-ir]').forEach((boton) => {
+    boton.addEventListener('click', () => {
+      document.querySelector(`.tab-btn[data-tab="${boton.dataset.ir}"]`)?.click();
+    });
+  });
   renderVStats();
 }
 /**

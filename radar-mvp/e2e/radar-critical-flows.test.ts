@@ -687,7 +687,17 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       await page.goto(`${baseUrl}/planes`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: 'Elige cuánto quieres profundizar' }).waitFor();
       await page.getByText('$49.900', { exact: false }).waitFor();
-      await page.getByText('Piloto Pro', { exact: true }).waitFor();
+      // La insignia depende de qué puerta está abierta, y son tres estados
+      // distintos que el cliente ve de forma distinta: «Wompi Sandbox» con la
+      // pasarela de prueba conectada, «Piloto Pro» cuando el modo demostración
+      // regala el acceso, y «Próximamente» cuando no hay ninguna de las dos —que
+      // es el estado con el que se sale, por decisión de la reunión del 28-jul:
+      // generar expectativa y quedarse con los datos de quien la pide.
+      const insignia = (await page.locator('.plan-badge').first().textContent())?.trim();
+      assert.ok(
+        ['Wompi Sandbox', 'Piloto Pro', 'Próximamente'].includes(insignia ?? ''),
+        `insignia inesperada en el plan de pago: ${insignia}`,
+      );
       assert.equal(await page.getByText('sin cobros automáticos', { exact: false }).count() >= 1, true);
       await page.screenshot({ path: `${screenshotsDir}/06-planes-wompi-demo.png`, fullPage: true });
 

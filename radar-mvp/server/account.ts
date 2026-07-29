@@ -174,7 +174,38 @@ export async function activarPlanDemo(userId: string, dias = 30) {
   return { ok: true as const, account, event: evento };
 }
 
-async function listAllUsers() {
+/**
+ * Cuentas creadas por las pruebas automáticas, que no son personas.
+ *
+ * `@test.com` y `@example.com` son dominios reservados por norma (RFC 2606 y
+ * 6761): nadie puede recibir correo ahí, así que ninguna cuenta con esa dirección
+ * es un usuario real. Los prefijos cubren lo que generan las suites y los agentes
+ * de QA: `e2e_`, `fav_`, `nav_`, `diag_`, `qa…`, `verif_`.
+ *
+ * POR QUÉ SE FILTRAN EN VEZ DE BORRARLAS: el panel decía «32 usuarios» cuando hay
+ * tres personas, y eso contamina justo lo que el panel existe para medir — cuántos
+ * se registran y cuántos piden el plan. Borrarlas de la base es irreversible y el
+ * propietario prefirió no hacerlo por ahora, así que se excluyen del conteo. Las
+ * cuentas siguen ahí y siguen funcionando para las pruebas.
+ */
+// Todos los prefijos exigen el guion bajo. Sin él, `^qa` se llevaba por delante a
+// `qatar.inversiones@outlook.com` y `^fav` a `favio.restrepo@gmail.com`: personas
+// reales que habrían desaparecido del panel sin que nadie lo notara. Contar de
+// más es un contador feo; excluir a alguien que sí se registró es perder un dato
+// del negocio.
+const CUENTA_DE_PRUEBA =
+  /(@(test|example)\.(com|test|org)$|@radarqa\.test$|^(e2e|fav|favf|favm|favui|fav_test|nav|diag|sus|free|qaplan|qaadm|verif|panelver|zadm|modos|muro|ataque|alta|secc)_)/i;
+
+export const esCuentaDePrueba = (correo: string | null | undefined): boolean =>
+  CUENTA_DE_PRUEBA.test(String(correo ?? ''));
+
+/**
+ * Usuarios reales, que son los que el panel debe contar.
+ *
+ * `incluirPruebas` existe para el día en que haga falta auditarlas: el filtro
+ * cambia lo que se ENSEÑA, no lo que hay.
+ */
+async function listAllUsers({ incluirPruebas = false } = {}) {
   const users: any[] = [];
   for (let page = 1; page <= 10; page += 1) {
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 1000 });
@@ -182,7 +213,7 @@ async function listAllUsers() {
     users.push(...data.users);
     if (data.users.length < 1000) break;
   }
-  return users;
+  return incluirPruebas ? users : users.filter((u) => !esCuentaDePrueba(u?.email));
 }
 
 export function listPlans() {

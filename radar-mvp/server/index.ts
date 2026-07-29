@@ -840,6 +840,12 @@ const server = createServer(async (req, res) => {
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
         paymentDemoReady: wompiPaymentDemoReady(),
+        // Entrar con Microsoft, pedido en la reunión del 28-jul. Va tras una
+        // bandera y apagado por defecto porque el botón depende de que el
+        // proveedor esté dado de alta en Supabase: enseñarlo antes sería ofrecer
+        // una puerta que devuelve un error de OAuth al pulsarla. Se enciende con
+        // RADAR_OAUTH_MICROSOFT=1 el mismo día que se configure allí.
+        microsoftLoginReady: process.env.RADAR_OAUTH_MICROSOFT === '1',
         // Porcentajes de la calculadora de gastos. Van en la config PÚBLICA a
         // propósito: son tarifas de ley que se le muestran a todo el que abre
         // una ficha, y esconderlas detrás del token no protegería nada. Lo que

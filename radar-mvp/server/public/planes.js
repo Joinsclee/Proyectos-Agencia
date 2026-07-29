@@ -31,9 +31,14 @@ function render(plans) {
     // Tres caminos posibles para el plan de pago, en este orden: activación de
     // demostración (regala el acceso, se controla con RADAR_DEMO_PLAN), checkout
     // Sandbox de Wompi, o dejar constancia del interés.
+    // El tercer camino es el que el cliente quiere para salir: «¿hay plan de
+    // pago? Próximamente. Va a salir. Genera expectativa» — y de paso deja los
+    // datos de quien lo pide. Se dice así, sin rodeos: «avísame» promete algo
+    // concreto que el sistema cumple, «solicitar acceso demo» sonaba a trámite.
     const proAction = demoPlanActivation
       ? 'Obtener acceso completo'
-      : paymentDemoReady ? 'Activar demo por 30 días' : requested ? 'Solicitud recibida' : 'Solicitar acceso demo';
+      : paymentDemoReady ? 'Activar demo por 30 días'
+        : requested ? 'Te avisaremos' : 'Avísame cuando salga';
     const esFree = plan.code === 'free';
     // El plan gratuito no se "compra": se obtiene creando la cuenta. Sin sesión el
     // botón lleva al registro, que es lo único que hace falta. Antes apuntaba a la
@@ -53,7 +58,9 @@ function render(plans) {
         : paymentDemoReady ? 'data-start-checkout' : !requested ? 'data-request-plan' : ''
       : '';
     return `<article class="plan-card ${plan.code === 'pro' ? 'featured' : ''}">
-      ${plan.code === 'pro' ? `<span class="plan-badge">${paymentDemoReady ? 'Wompi Sandbox' : 'Piloto Pro'}</span>` : ''}
+      ${plan.code === 'pro' ? `<span class="plan-badge">${
+        paymentDemoReady ? 'Wompi Sandbox' : demoPlanActivation ? 'Piloto Pro' : 'Próximamente'
+      }</span>` : ''}
       <h2>${esc(plan.name)}</h2>
       <div class="plan-price">${price(plan)}</div>
       <p class="plan-description">${esc(plan.description)}</p>
