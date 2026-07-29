@@ -6,6 +6,7 @@ import { estadoCupo, leerCupo, type Cupo } from './cupo.js';
 import { metricasOperacion, oportunidadesPorZona } from './queries.js';
 import { guardarParametrosGastos } from './parametros-gastos.js';
 import { estadoCupoReportes, leerCupoReportes, type CupoReportes } from './cupo-reportes.js';
+import { type Consultas } from './asistente.js';
 import { env } from '../lib/env.js';
 import { createLogger } from '../lib/logger.js';
 import {
@@ -116,6 +117,22 @@ async function updateMetadata(userId: string, updater: (metadata: Metadata) => M
 export async function registrarDesbloqueo(userId: string, cupo: Cupo): Promise<void> {
   await updateMetadata(userId, (metadata) => {
     metadata.unlock_quota = cupo;
+    return metadata;
+  });
+}
+
+/**
+ * Deja constancia de que el usuario gastó una consulta del asistente.
+ *
+ * Mismo camino y mismo sitio que el cupo de fichas, pero en su propia clave: son
+ * dos límites distintos que se agotan por separado. Quien gastó sus 20 fichas
+ * sigue pudiendo preguntar, y quien agotó las preguntas sigue pudiendo abrir
+ * fichas; un solo contador para las dos cosas convertiría cada pregunta en una
+ * ficha menos, que no es lo que se prometió en ninguno de los dos sitios.
+ */
+export async function registrarConsultaAsistente(userId: string, consultas: Consultas): Promise<void> {
+  await updateMetadata(userId, (metadata) => {
+    metadata.assistant_quota = consultas;
     return metadata;
   });
 }

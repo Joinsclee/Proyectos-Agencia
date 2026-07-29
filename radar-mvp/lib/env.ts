@@ -43,6 +43,19 @@ const EnvSchema = z.object({
   // la pasarela de pagos operativa, y es literalmente dinero regalado: ponerlo en
   // '0' es el único cambio necesario para cerrarlo, sin desplegar código nuevo.
   RADAR_DEMO_PLAN: z.enum(['0', '1']).default('0'),
+
+  // ── Asistente (workflow «Asistente Radar CRECE» en n8n) ──
+  //
+  // Sin webhook configurado el asistente no existe: el botón no se pinta y la
+  // ruta responde que no está disponible. Es opcional a propósito, para que el
+  // Radar siga arrancando en local y en cualquier despliegue donde n8n no esté.
+  RADAR_ASISTENTE_WEBHOOK: z.string().url().optional(),
+  // Secreto compartido con el workflow. Va en los dos sentidos: el Radar lo manda
+  // al llamar a n8n, y n8n lo devuelve al pedirnos una búsqueda de propiedades.
+  // Sin él, `/api/asistente/buscar` quedaría abierta a cualquiera que adivinara
+  // la ruta, y esa ruta consulta el inventario en nombre de un usuario concreto.
+  // Mínimo 24 caracteres porque es lo único que separa esa ruta de internet.
+  RADAR_ASISTENTE_SECRETO: z.string().min(24).optional(),
 });
 
 export const env = (() => {
