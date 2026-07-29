@@ -950,32 +950,6 @@ function homeSkeleton() {
   return `<div class="home-inner">${bloque()}${bloque()}</div>`;
 }
 
-/**
- * El porqué de cada ficha, debajo de sus datos.
- *
- * Va con `textContent` y no dentro del HTML de la tarjeta: el motivo lo compone el
- * servidor a partir de columnas de scraping (ciudad, barrio, banco demandante) y
- * este es el camino en el que no hay forma de equivocarse con el escapado.
- */
-function pintarMotivos(contenedor, fichas, desde = 0) {
-  const tarjetas = contenedor.querySelectorAll('article.card');
-  fichas.forEach((ficha, i) => {
-    const cuerpo = tarjetas[desde + i] && tarjetas[desde + i].querySelector('.card-body');
-    const sello = ficha._destacado;
-    if (!cuerpo || !sello) return;
-    const caja = document.createElement('p');
-    caja.className = 'card-motivo';
-    const titular = document.createElement('strong');
-    titular.textContent = sello.motivo;
-    caja.appendChild(titular);
-    if (sello.respaldo) {
-      const detalle = document.createElement('span');
-      detalle.textContent = sello.respaldo;
-      caja.appendChild(detalle);
-    }
-    cuerpo.appendChild(caja);
-  });
-}
 
 /**
  * Pinta un grupo de la portada recortado, con su botón para ver el resto.
@@ -986,14 +960,96 @@ function pintarMotivos(contenedor, fichas, desde = 0) {
  * plan del usuario. Lo que decide cuántas se ven de entrada es `grupo.preview`,
  * que manda el servidor: es una decisión de producto, no de maquetación.
  */
+/**
+ * Una fila del top.
+ *
+ * La portada dejó de usar tarjetas con foto y pasó a lista por decisión del
+ * cliente: quería que se leyera como un ranking. Y funciona mejor de lo que
+ * parece — en una tarjeta la foto ocupa dos tercios del alto y empuja fuera de la
+ * pantalla justo lo que sostiene la recomendación: el descuento, la categoría y
+ * los comparables que la respaldan. En lista caben diez en el mismo espacio en
+ * que antes cabían tres, y las diez se comparan de un vistazo porque las cifras
+ * quedan alineadas en columna.
+ *
+ * Los remates enseñan su propia métrica: postura mínima contra avalúo y fecha de
+ * audiencia. Un remate y un aviso de portal no se miden con la misma vara y la
+ * fila lo dice, en vez de dejar que el usuario lo suponga.
+ */
+function filaTop(ficha, posicion) {
+  const kind = cardKind(ficha);
+  const esRemate = kind === 'remate';
+  const sello = ficha._destacado || {};
+  const bloqueada = esBloqueada(ficha);
+
+  const titulo = `${typeLbl(esRemate ? ficha.property_type : ficha.type)} en ${cap(ficha.city) || '—'}`;
+  const zona = ficha.zone || ficha.features?.neighborhood || null;
+  const area = Number(ficha.area_m2) > 0 ? `${Number(ficha.area_m2).toLocaleString('es-CO')} m²` : null;
+  const subtitulo = [zona ? cap(zona) : null, area].filter(Boolean).join(' · ');
+
+  const importe = esRemate ? ficha.minimum_bid : ficha.price;
+  const secundaria = esRemate
+    ? (ficha.appraisal_value ? `avalúo ${fmtCOP(ficha.appraisal_value)}` : null)
+    // Redondeado, como en la tarjeta y en la ficha: `price_per_m2` sale de una
+    // división y arrastra decimales, así que sin esto se lee «$2.214.285,714/m²»
+    // —una cifra con tres decimales de peso en una columna que se compara de un
+    // vistazo—.
+    : (Number(ficha.price_per_m2) > 0 ? `${fmtCOP(Math.round(ficha.price_per_m2))}/m²` : null);
+  const audiencia = esRemate && ficha.auction_date ? `Audiencia ${fmtDate(ficha.auction_date)}` : null;
+
+  return `<li class="top-item${bloqueada ? ' is-bloqueada' : ''}">
+    <button class="top-open" type="button" aria-label="${esc(`Ver ${titulo}`)}">
+      <span class="top-pos" aria-hidden="true">${posicion}</span>
+      <span class="top-main">
+        <span class="top-titulo">${esc(titulo)}</span>
+        ${subtitulo ? `<span class="top-sub">${esc(subtitulo)}</span>` : ''}
+        ${sello.motivo ? `<span class="top-motivo">${esc(sello.motivo)}</span>` : ''}
+        ${sello.respaldo ? `<span class="top-respaldo">${esc(sello.respaldo)}</span>` : ''}
+        ${tieneCuotaParte(ficha) ? `<span class="top-alerta">${ic('alert')}Solo el ${Number(ficha.cuota_parte)}% del bien</span>` : ''}
+      </span>
+      <span class="top-cifras">
+        <span class="top-precio">${fmtCOP(importe)}</span>
+        ${secundaria ? `<span class="top-secundaria">${esc(secundaria)}</span>` : ''}
+        ${audiencia ? `<span class="top-audiencia">${esc(audiencia)}</span>` : ''}
+        ${bloqueada ? `<span class="top-lock">${ic('lock')}${esc(textoDesbloqueo(ficha))}</span>` : ''}
+      </span>
+    </button>
+    ${/* El corazón va FUERA del botón que abre la ficha: un <button> dentro de
+          otro es HTML inválido y el navegador lo desanida por su cuenta,
+          dejando el marcado en algo que ningún manejador reconoce. Su clic lo
+          recoge la delegación global de `.fav-btn[data-fav-kind]`. */ ''}
+    ${favBtn(kind, ficha.id)}
+  </li>`;
+}
+
+/** Qué le falta a ESTE usuario para abrirla. Mismo criterio que el sello de la tarjeta. */
+function textoDesbloqueo(ficha) {
+  const requiere = ficha?._acceso?.requiere;
+  if (requiere === 'registro') return 'Crea tu cuenta';
+  if (requiere === 'cupo') return 'Ábrela con tu cupo';
+  return 'Con suscripción';
+}
+
+/** Pinta un tramo del top y engancha la apertura de cada ficha. */
+function pintarTop(lista, fichas, desde, hasta) {
+  const tanda = fichas.slice(desde, hasta);
+  if (!tanda.length) return;
+  const frag = document.createElement('tbody'); // contenedor neutro para parsear
+  frag.innerHTML = tanda.map((f, i) => filaTop(f, desde + i + 1)).join('');
+  [...frag.children].forEach((li, i) => {
+    const ficha = tanda[i];
+    propertyCache.set(favKey(cardKind(ficha), ficha.id), ficha);
+    // Igual que en los listados: la ficha se PIDE a `/api/property`, que es la
+    // única ruta que aplica el plan y gasta el cupo del mes.
+    li.querySelector('.top-open').addEventListener('click', () => window.__openRec(cardKind(ficha), ficha.id));
+    lista.appendChild(li);
+  });
+  paintFavs();
+}
+
 function montarGrupoHome(grid, pie, grupo) {
   const fichas = grupo.fichas || [];
   const preview = Math.min(Number(grupo.preview) || fichas.length, fichas.length);
-  const pintar = (desde, hasta) => {
-    const tanda = fichas.slice(desde, hasta);
-    renderCards(tanda, grid, true);
-    pintarMotivos(grid, tanda, desde);
-  };
+  const pintar = (desde, hasta) => pintarTop(grid, fichas, desde, hasta);
 
   pintar(0, preview);
   const restantes = fichas.length - preview;
@@ -1018,7 +1074,7 @@ function montarGrupoHome(grid, pie, grupo) {
     // Al plegar se quitan SOLO las añadidas. Las primeras no se vuelven a pintar:
     // recrearlas cambiaría el scroll bajo el dedo y perdería los favoritos ya
     // marcados en pantalla.
-    [...grid.querySelectorAll('article.card')].slice(preview).forEach((t) => t.remove());
+    [...grid.querySelectorAll('.top-item')].slice(preview).forEach((t) => t.remove());
     expandido = false;
     boton.setAttribute('aria-expanded', 'false');
     boton.textContent = plegado;
@@ -1052,7 +1108,7 @@ function renderHome(payload) {
       const titulo = grupo.etiqueta
         ? `<h4 class="home-grupo-tit">${esc(cap(grupo.etiqueta))}${grupo.detalle ? `<span>${esc(grupo.detalle)}</span>` : ''}</h4>`
         : '';
-      return `<div class="home-grupo">${titulo}<div class="cards-grid" data-home-grid="${i}-${j}"></div>`
+      return `<div class="home-grupo">${titulo}<ol class="top-lista" data-home-grid="${i}-${j}"></ol>`
         + `<div class="home-mas" data-home-mas="${i}-${j}"></div></div>`;
     }).join('');
     return `<section class="home-bloque" aria-labelledby="${idTitulo}">
