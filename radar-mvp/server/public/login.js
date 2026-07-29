@@ -142,6 +142,16 @@ $('tab-register').addEventListener('click', () => setMode('register'));
 $('tab-login').addEventListener('click', () => setMode('login'));
 
 /**
+ * Los permisos que hay que pedirle a cada proveedor.
+ *
+ * Azure NO devuelve el correo si no se le pide expresamente, y Supabase Auth
+ * exige un correo válido para crear la cuenta: sin esto, el usuario completa todo
+ * el recorrido de Microsoft, acepta los permisos y vuelve con un error. Google sí
+ * lo entrega por defecto, de ahí que uno lleve permisos y el otro no.
+ */
+const PERMISOS_OAUTH = { azure: 'email' };
+
+/**
  * Entrar con un proveedor externo.
  *
  * Mismo camino para Google y Microsoft: los dos son OAuth de Supabase y solo
@@ -155,7 +165,9 @@ async function entrarCon(proveedor, nombre) {
     const supabaseUrl = new URL(config.supabaseUrl);
     if (supabaseUrl.protocol !== 'https:') throw new Error('Proveedor OAuth no seguro');
     const redirect = encodeURIComponent(location.origin + '/auth/callback');
-    location.href = `${supabaseUrl.origin}/auth/v1/authorize?provider=${proveedor}&redirect_to=${redirect}`;
+    const permisos = PERMISOS_OAUTH[proveedor];
+    location.href = `${supabaseUrl.origin}/auth/v1/authorize?provider=${proveedor}`
+      + `&redirect_to=${redirect}${permisos ? `&scopes=${encodeURIComponent(permisos)}` : ''}`;
   } catch {
     showMsg(`No se pudo iniciar ${nombre}. Intenta de nuevo.`, false);
   }
