@@ -44,6 +44,7 @@ import {
 } from './asistente.js';
 import { asistenteDisponible, preguntarAlAsistente } from './asistente-n8n.js';
 import { buscarParaAsistente } from './asistente-busqueda.js';
+import { parseHito } from './bienvenida.js';
 import { esWord, textoDeWord } from './asistente-word.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
@@ -61,6 +62,7 @@ import {
   registerPlanInterest,
   registrarConsultaAsistente,
   registrarDesbloqueo,
+  registrarHito,
   registrarReporte,
   saveAlert,
   syncAccount,
@@ -485,6 +487,15 @@ const server = createServer(async (req, res) => {
           if (rateLimited(res, `account-write:${user.id}`, { limit: 120, windowMs: 60 * 60 * 1000 })) return;
           const result = await syncAccount(user.id, await readJsonBody(req));
           return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        // Un primer paso cumplido. Lo marca el navegador cuando el usuario cierra
+        // la bienvenida, termina el recorrido o guarda sus preferencias.
+        if (path === '/api/account/hito' && req.method === 'POST') {
+          if (rateLimited(res, `hito:${user.id}`, { limit: 60, windowMs: 60 * 60 * 1000 })) return;
+          const cuerpo = (await readJsonBody(req)) as { hito?: unknown };
+          const hito = parseHito(cuerpo.hito);
+          if (!hito) return sendJSON(res, 400, { ok: false, error: 'Paso desconocido' });
+          return sendJSON(res, 200, { ok: true, hitos: await registrarHito(user.id, hito) });
         }
         if (path === '/api/account/alerts' && req.method === 'POST') {
           if (rateLimited(res, `alert-write:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
