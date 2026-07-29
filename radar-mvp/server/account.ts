@@ -7,6 +7,7 @@ import { metricasOperacion, oportunidadesPorZona } from './queries.js';
 import { guardarParametrosGastos } from './parametros-gastos.js';
 import { estadoCupoReportes, leerCupoReportes, type CupoReportes } from './cupo-reportes.js';
 import { type Consultas } from './asistente.js';
+import { conHito, leerHitos, type Hito } from './bienvenida.js';
 import { env } from '../lib/env.js';
 import { createLogger } from '../lib/logger.js';
 import {
@@ -62,6 +63,10 @@ function publicAccount(user: CuentaCruda) {
     preferences: RadarPreferencesSchema.safeParse(metadata.radar_preferences).success
       ? metadata.radar_preferences
       : null,
+    // Los primeros pasos ya cumplidos. Van con la cuenta y no con el navegador:
+    // quien miró el Radar como visitante y luego se registró tenía el recorrido
+    // marcado como visto y se quedaba sin bienvenida. Ver `server/bienvenida.ts`.
+    hitos: leerHitos(metadata),
     simulations: Array.isArray(metadata.radar_simulations) ? metadata.radar_simulations.slice(0, 50) : [],
     alerts: readAlerts(metadata),
     deliveryHistory: readDeliveryHistory(metadata).slice(0, 20),
@@ -135,6 +140,25 @@ export async function registrarConsultaAsistente(userId: string, consultas: Cons
     metadata.assistant_quota = consultas;
     return metadata;
   });
+}
+
+/**
+ * Deja constancia de que el usuario completó uno de los primeros pasos.
+ *
+ * Se acumulan en vez de guardar solo el último: hay que poder saber cuáles se
+ * saltó para poder ofrecérselos otra vez, y un único «paso actual» no lo dice.
+ *
+ * A diferencia de los cupos, esto cae en `user_metadata`: no limita nada, así que
+ * si alguien lo borrara solo conseguiría volver a ver la bienvenida.
+ */
+export async function registrarHito(userId: string, hito: Hito): Promise<Hito[]> {
+  let resultado: Hito[] = [];
+  await updateMetadata(userId, (metadata) => {
+    resultado = conHito(leerHitos(metadata), hito);
+    metadata.onboarding_hitos = resultado;
+    return metadata;
+  });
+  return resultado;
 }
 
 /**

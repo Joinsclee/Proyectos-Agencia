@@ -48,6 +48,13 @@ export const CAMPOS_AUTORIZACION = [
   // propia bolsa porque es un límite distinto del de fichas. Mismo motivo para
   // estar aquí: si viviera en `user_metadata`, el titular se pondría 999.
   'report_quota',
+  // Las consultas al asistente gastadas este mes (`server/asistente.ts`).
+  //
+  // Se olvidó al añadir el asistente, y eso lo mandaba a `user_metadata` —donde
+  // acaba todo lo que no esté en esta lista—: cualquiera podía ponerlo en cero con
+  // un `PUT /auth/v1/user` y tener consultas ilimitadas. Cada una cuesta tokens que
+  // pagamos nosotros, así que este es el límite más caro de los tres.
+  'assistant_quota',
 ] as const;
 
 export type CampoAutorizacion = (typeof CAMPOS_AUTORIZACION)[number];

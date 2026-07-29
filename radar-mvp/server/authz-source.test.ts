@@ -89,3 +89,40 @@ test('autorización: se escriben las dos bolsas al actualizar la cuenta', async 
   assert.match(fuente, /user_metadata: userMetadata/);
   assert.match(fuente, /app_metadata: appMetadata/);
 });
+
+/**
+ * Todo límite mensual tiene que vivir en `app_metadata`.
+ *
+ * `separarMetadatos` manda a `user_metadata` cualquier clave que no esté en
+ * `CAMPOS_AUTORIZACION`, y esa bolsa la reescribe el titular con un
+ * `PUT /auth/v1/user`. Así que olvidar un cupo en esa lista no da ningún error: el
+ * contador simplemente pasa a ser editable por quien está limitado.
+ *
+ * Ya pasó con `assistant_quota` al añadir el asistente —el límite más caro de los
+ * tres, porque cada consulta cuesta tokens—. Esta prueba busca las claves de cupo
+ * en el código que las escribe y comprueba que estén declaradas.
+ */
+test('autorización: ningún cupo mensual se escribe fuera de app_metadata', async () => {
+  const { CAMPOS_AUTORIZACION } = await import('./account-metadata.js');
+  const declarados = new Set<string>(CAMPOS_AUTORIZACION);
+
+  const account = await leer('server/account.ts');
+  // Las asignaciones del tipo `metadata.<clave> = …` dentro de `updateMetadata`:
+  // es el único camino por el que se escribe en la metadata de una cuenta.
+  const escritas = [...account.matchAll(/metadata\.([a-z_]+)\s*=/g)].map((m) => m[1]);
+  assert.ok(escritas.length >= 3, 'no se encontraron las escrituras de metadata; ¿cambió el patrón?');
+
+  // Solo los límites. `name` o `preferences` se escriben igual y ahí SÍ deben ir a
+  // `user_metadata`: son datos del usuario y cambiarlos es su derecho. Lo que no
+  // puede tocar es cuánto le queda.
+  const limites = escritas.filter((c) => /quota|limite|cupo|consultas/.test(c));
+  assert.ok(limites.length >= 3, `se esperaban al menos tres cupos, se vieron: ${limites.join(', ') || 'ninguno'}`);
+
+  for (const clave of limites) {
+    assert.ok(
+      declarados.has(clave),
+      `«${clave}» se escribe en la metadata pero no está en CAMPOS_AUTORIZACION: `
+      + 'acabaría en user_metadata, donde el usuario puede reescribirlo',
+    );
+  }
+});
