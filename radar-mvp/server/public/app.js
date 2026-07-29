@@ -2910,7 +2910,12 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   }
 }));
 $('modal-close').addEventListener('click', closeModal);
-$('ver-tutorial').addEventListener('click', abrirOnboarding);
+// «Ver tutorial» reabre el RECORRIDO, que es la bienvenida real. El diálogo
+// por pasos queda como respaldo para cuando el recorrido no esté disponible.
+$('ver-tutorial').addEventListener('click', () => {
+  if (window.__radarTour) window.__radarTour.abrir();
+  else abrirOnboarding();
+});
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-onboarding-siguiente]')) { avanzarOnboarding(1); return; }
   if (e.target.closest('[data-onboarding-atras]')) { avanzarOnboarding(-1); return; }
@@ -3020,7 +3025,13 @@ document.addEventListener('keydown', (e) => {
 try {
   if (!localStorage.getItem(ONBOARDING_KEY)) {
     marcarOnboardingVisto();
-    abrirOnboarding();
+    // El recorrido guiado necesita que la página ya tenga contenido que iluminar,
+    // así que espera a que las pestañas estén pintadas. Si `tour.js` no cargó por
+    // lo que sea, se abre el tutorial en diálogo: nadie se queda sin bienvenida.
+    setTimeout(() => {
+      if (window.__radarTour) window.__radarTour.abrir();
+      else abrirOnboarding();
+    }, 900);
   }
 } catch { /* sin almacenamiento no se insiste */ }
 

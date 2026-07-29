@@ -182,63 +182,73 @@ after(async () => {
 });
 
 describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, () => {
-  test('recibe al visitante nuevo con el tutorial y lo deja volver a él', async () => {
+  test('recibe al visitante nuevo con un recorrido guiado por la herramienta', async () => {
+    // El recorrido ilumina elementos REALES y navega solo entre secciones: quien
+    // lo sigue termina habiendo visitado el producto, no habiendo leído sobre él.
+    // Lo que se prueba aquí es justo eso —que el foco se pega a algo que existe y
+    // que el paseo cambia de pestaña— porque es lo que lo distingue de un modal.
     const { context, page, assertClean } = await openIsolatedPage({ conOnboarding: true });
     try {
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
 
-      const dialogo = page.locator('#modal');
-      await dialogo.waitFor({ state: 'visible' });
-      assert.equal(await dialogo.getAttribute('aria-label'), 'Cómo usar el Radar');
-      // El foco arranca dentro del diálogo: si se quedara en el fondo, quien
-      // navega con teclado seguiría tabulando por una página que no puede tocar.
-      assert.equal(await page.evaluate(() => document.activeElement?.id), 'modal-close');
+      const globo = page.locator('#tour-globo');
+      const foco = page.locator('#tour-foco');
+      await globo.waitFor({ state: 'visible', timeout: 30_000 });
+      await page.waitForTimeout(1_200);
 
-      // Recorrido por pasos: una tarjeta cada vez, con el avance a la vista.
-      const pasos = await page.locator('.ob-puntitos li').count();
-      assert.ok(pasos >= 3, `el tutorial debe tener varios pasos, tiene ${pasos}`);
-      const activo = () => page.evaluate(() =>
-        Array.from(document.querySelectorAll('.ob-puntitos li')).findIndex((l) => l.classList.contains('is-activo')));
-      assert.equal(await activo(), 0);
+      const pasos = await page.locator('.tour-puntos li').count();
+      assert.ok(pasos >= 3 && pasos <= 5, `el recorrido debe tener entre 3 y 5 pasos, tiene ${pasos}`);
 
-      await page.locator('[data-onboarding-siguiente]').click();
-      assert.equal(await activo(), 1, 'Siguiente debe avanzar un paso');
-      assert.ok(await page.locator('[data-onboarding-atras]').isVisible(), 'a partir del segundo hay vuelta atrás');
-      await page.locator('[data-onboarding-atras]').click();
-      assert.equal(await activo(), 0, 'Atrás debe devolver al paso anterior');
+      // El primero es la bienvenida: no ilumina nada y el globo va centrado.
+      assert.equal(await globo.evaluate((el) => el.classList.contains('es-centrado') || el.classList.contains('es-movil')), true);
 
-      // Hasta el final: el último paso ofrece cerrar, no seguir.
-      for (let i = 1; i < pasos; i += 1) await page.locator('[data-onboarding-siguiente]').click();
-      assert.equal(await activo(), pasos - 1);
-      assert.equal(await page.locator('[data-onboarding-siguiente]').count(), 0, 'en el último paso no hay "Siguiente"');
-
-      // Se espera a que la portada termine de cargar ANTES de recargar: si no, la
-      // recarga aborta los `fetch` en vuelo y el error de red aparecería como un
-      // error de consola que no tiene nada que ver con el tutorial.
-      await esperarPortada(page);
-
-      await page.locator('[data-onboarding-cerrar]').click();
-      await dialogo.waitFor({ state: 'hidden' });
-      assert.equal(
-        await dialogo.getAttribute('aria-label'),
-        'Detalle del inmueble',
-        'el diálogo es compartido: al cerrar debe recuperar su etiqueta',
+      // A partir del segundo, el foco tiene que estar pegado a algo con tamaño.
+      await page.locator('.tour-cta').click();
+      await page.waitForFunction(
+        () => (document.getElementById('tour-foco')?.getBoundingClientRect().width ?? 0) > 40,
+        undefined,
+        { timeout: 15_000 },
       );
+      const caja = await foco.evaluate((el) => { const r = el.getBoundingClientRect(); return { w: r.width, h: r.height }; });
+      assert.ok(caja.w > 40 && caja.h > 20, `el resalte debe cubrir un elemento real, mide ${caja.w}×${caja.h}`);
 
-      // No debe reaparecer al recargar: es una bienvenida, no un peaje.
+      // Atrás vuelve, y en el primer paso no se ofrece.
+      await page.locator('.tour-atras').click();
+      await page.waitForTimeout(600);
+      assert.equal(await page.locator('.tour-atras').count(), 0, 'en el primer paso no hay vuelta atrás');
+
+      // El paseo cambia de sección por su cuenta: se avanza hasta el final y en
+      // algún momento la pestaña activa deja de ser la portada.
+      const visitadas = new Set<string>();
+      for (let i = 1; i < pasos; i += 1) {
+        await page.locator('.tour-cta').click();
+        await page.waitForTimeout(4_000);
+        const tab = await page.locator('#tabs .tab-btn[aria-current="page"]').getAttribute('data-tab');
+        if (tab) visitadas.add(tab);
+      }
+      assert.ok(visitadas.size >= 2, `el recorrido debe pasear por varias secciones, visitó: ${[...visitadas].join(', ')}`);
+
+      // Al terminar se retira entero: ni resalte ni globo ni scroll bloqueado.
+      await page.locator('.tour-cta').click();
+      await page.waitForTimeout(900);
+      assert.equal(await globo.count(), 0, 'el globo debe retirarse al terminar');
+      assert.equal(await foco.count(), 0, 'el resalte debe retirarse al terminar');
+      assert.equal(await page.evaluate(() => document.body.classList.contains('tour-abierto')), false,
+        'la página debe volver a poder desplazarse');
+
+      // No reaparece: es una bienvenida, no un peaje.
       await page.reload({ waitUntil: 'domcontentloaded' });
       await esperarPortada(page);
-      assert.equal(await dialogo.isVisible(), false, 'el tutorial no debe repetirse solo');
+      await page.waitForTimeout(1_500);
+      assert.equal(await globo.count(), 0, 'el recorrido no debe repetirse solo');
 
       // Pero tiene que poder recuperarse sin buscarlo.
-      const botonTutorial = page.locator('#ver-tutorial');
-      assert.ok(await botonTutorial.isVisible(), 'el acceso al tutorial debe estar siempre a la vista');
-      await botonTutorial.click();
-      await dialogo.waitFor({ state: 'visible' });
-      assert.ok(await page.locator('.onboarding').isVisible());
+      await page.locator('#ver-tutorial').click();
+      await globo.waitFor({ state: 'visible', timeout: 20_000 });
+      await page.locator('.tour-cerrar').click();
+      await page.waitForTimeout(600);
+      assert.equal(await globo.count(), 0);
 
-      await page.keyboard.press('Escape');
-      await dialogo.waitFor({ state: 'hidden' });
       assertClean();
     } finally {
       await context.close();
