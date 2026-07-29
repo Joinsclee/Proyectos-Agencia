@@ -44,6 +44,7 @@ import {
 } from './asistente.js';
 import { asistenteDisponible, preguntarAlAsistente } from './asistente-n8n.js';
 import { buscarParaAsistente } from './asistente-busqueda.js';
+import { esWord, textoDeWord } from './asistente-word.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
   activarPlanDemo,
@@ -513,6 +514,21 @@ const server = createServer(async (req, res) => {
             const v = validarAdjunto(nombre, bytes);
             if (!v.ok) return sendJSON(res, 400, { ok: false, error: v.error });
             adjunto = { nombre, mime: String(a.mime ?? ''), base64 };
+
+            // Word se convierte a texto aquí, porque n8n no sabe abrirlo. Sale
+            // como texto plano, así que el workflow lo trata igual que un .txt y
+            // no necesita saber que los Word existen. Esto ocurre ANTES de gastar
+            // cupo: un documento que no se puede leer no puede costarle al usuario
+            // una de sus consultas del mes.
+            if (esWord(nombre)) {
+              const w = await textoDeWord(base64, nombre);
+              if (!w.ok) return sendJSON(res, 400, { ok: false, error: w.error });
+              adjunto = {
+                nombre,
+                mime: 'text/plain',
+                base64: Buffer.from(w.texto, 'utf8').toString('base64'),
+              };
+            }
           }
 
           const planAsistente = planDe(user);
