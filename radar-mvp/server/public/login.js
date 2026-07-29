@@ -165,6 +165,10 @@ async function entrarCon(proveedor, nombre) {
     const supabaseUrl = new URL(config.supabaseUrl);
     if (supabaseUrl.protocol !== 'https:') throw new Error('Proveedor OAuth no seguro');
     const redirect = encodeURIComponent(location.origin + '/auth/callback');
+    // Se deja constancia de con quién se va, para que la página de vuelta pueda
+    // nombrarlo si algo falla. Sin esto decía «no se pudo iniciar sesión con
+    // Google» a quien lo había intentado con Microsoft.
+    try { sessionStorage.setItem('radar_oauth', proveedor); } catch { /* modo privado */ }
     const permisos = PERMISOS_OAUTH[proveedor];
     location.href = `${supabaseUrl.origin}/auth/v1/authorize?provider=${proveedor}`
       + `&redirect_to=${redirect}${permisos ? `&scopes=${encodeURIComponent(permisos)}` : ''}`;
