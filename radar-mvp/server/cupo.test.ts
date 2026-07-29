@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   CUPO_MENSUAL_FREE,
+  diasParaReinicio,
   consumirCupo,
   estadoCupo,
   leerCupo,
@@ -94,15 +95,39 @@ test('cupo: un guardado corrupto no concede acceso ni rompe la petición', () =>
 });
 
 test('cupo: el estado que ve el usuario cuadra con lo que puede abrir', () => {
-  assert.deepEqual(estadoCupo(cupo(), 'anonimo'), {
-    limite: 0, usadas: 0, restantes: 0, periodo: '2026-07', ilimitado: false,
-  });
-  assert.deepEqual(estadoCupo(cupo({ desbloqueadas: ['a', 'b'] }), 'free'), {
-    limite: CUPO_MENSUAL_FREE, usadas: 2, restantes: CUPO_MENSUAL_FREE - 2, periodo: '2026-07', ilimitado: false,
-  });
+  // Se comparan los campos uno a uno y no el objeto entero: `diasParaReinicio`
+  // depende de la fecha real y cambiaría el resultado cada día del mes.
+  const anonimo = estadoCupo(cupo(), 'anonimo');
+  assert.equal(anonimo.limite, 0);
+  assert.equal(anonimo.usadas, 0);
+  assert.equal(anonimo.restantes, 0);
+  assert.equal(anonimo.ilimitado, false);
+
+  const free = estadoCupo(cupo({ desbloqueadas: ['a', 'b'] }), 'free');
+  assert.equal(free.limite, CUPO_MENSUAL_FREE);
+  assert.equal(free.usadas, 2);
+  assert.equal(free.restantes, CUPO_MENSUAL_FREE - 2);
+  assert.equal(free.periodo, '2026-07');
+  assert.equal(free.ilimitado, false);
+
   const suscrito = estadoCupo(lleno(), 'suscrito');
   assert.equal(suscrito.ilimitado, true);
   assert.equal(suscrito.restantes, null);
+});
+
+test('cupo: los días para el reinicio se cuentan en hora de Colombia', () => {
+  // Es el número que ve alguien a quien acaban de decirle que se quedó sin
+  // fichas. Contarlo en UTC daría un día de más durante cinco horas cada noche.
+  // 15 de julio a mediodía en Bogotá → quedan 17 días para el 1 de agosto.
+  assert.equal(diasParaReinicio(new Date('2026-07-15T17:00:00Z')), 17);
+  // Último día del mes: quedan horas, no cero días. Anunciar «en 0 días» no
+  // significa nada para nadie.
+  assert.equal(diasParaReinicio(new Date('2026-07-31T20:00:00Z')), 1);
+  // Y la frontera: 31 de julio a las 23:00 de Bogotá (04:00 UTC del 1 de agosto)
+  // sigue siendo julio allí, así que aún falta un día.
+  assert.equal(diasParaReinicio(new Date('2026-08-01T04:00:00Z')), 1);
+  // Un mes de 28 días también cuadra.
+  assert.equal(diasParaReinicio(new Date('2026-02-01T17:00:00Z')), 28);
 });
 
 test('cupo: nunca se anuncian restantes negativas', () => {

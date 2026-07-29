@@ -43,6 +43,8 @@ export interface EstadoCupo {
   restantes: number | null;
   periodo: string;
   ilimitado: boolean;
+  /** Días hasta que el cupo vuelva a empezar. Lo necesita el aviso de cupo agotado. */
+  diasParaReinicio?: number;
 }
 
 /** Mes calendario en hora de Colombia, que es donde vive el usuario. */
@@ -78,7 +80,32 @@ export function estadoCupo(
   }
   const limite = plan === 'free' ? CUPO_MENSUAL_FREE : 0;
   const usadas = Math.min(cupo.desbloqueadas.length, limite);
-  return { limite, usadas, restantes: Math.max(0, limite - usadas), periodo: cupo.periodo, ilimitado: false };
+  return {
+    limite,
+    usadas,
+    restantes: Math.max(0, limite - usadas),
+    periodo: cupo.periodo,
+    ilimitado: false,
+    diasParaReinicio: diasParaReinicio(),
+  };
+}
+
+/**
+ * Cuántos días faltan para que el cupo vuelva a empezar.
+ *
+ * Se cuenta en hora de Colombia, igual que `periodoDe`: el cupo se reinicia el
+ * día 1 a medianoche de Bogotá, y contar en UTC daría un día de más durante cinco
+ * horas cada noche. Es el número que ve alguien a quien acaban de decirle que se
+ * quedó sin fichas, así que tiene que ser el correcto — «vuelve en 3 días» y que
+ * vuelva en 4 es de las cosas que hacen desconfiar de todo lo demás.
+ *
+ * Siempre devuelve al menos 1: el último día del mes faltan horas, no cero días,
+ * y «se reinicia en 0 días» no significa nada para nadie.
+ */
+export function diasParaReinicio(ahora: Date = new Date()): number {
+  const bogota = new Date(ahora.getTime() - 5 * 60 * 60_000);
+  const finDeMes = new Date(Date.UTC(bogota.getUTCFullYear(), bogota.getUTCMonth() + 1, 1));
+  return Math.max(1, Math.ceil((finDeMes.getTime() - bogota.getTime()) / 86_400_000));
 }
 
 export type ResultadoConsumo =
