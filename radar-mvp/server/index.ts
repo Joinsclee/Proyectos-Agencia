@@ -22,7 +22,7 @@ import {
 } from './queries.js';
 import { parametrosGastos, warmParametrosGastos } from './parametros-gastos.js';
 import { fichasDe } from './destacados.js';
-import { registerUser, loginUser } from './auth.js';
+import { registerUser, loginUser, refreshSession } from './auth.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
 import { consumirCupo, estadoCupo, leerCupo, yaDesbloqueada } from './cupo.js';
@@ -455,6 +455,16 @@ const server = createServer(async (req, res) => {
         const body = await readJsonBody(req);
         const result = path.endsWith('register') ? await registerUser(body) : await loginUser(body);
         return sendJSON(res, result.ok ? 200 : 400, result);
+      }
+      // Renovar la sesión. Su propio límite, más holgado que el del inicio de
+      // sesión: renovar es una operación legítima y frecuente —una vez por hora
+      // por pestaña abierta— y compartir cubo con el login dejaría a alguien con
+      // varias pestañas sin poder entrar.
+      if (path === '/api/auth/refresh') {
+        if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (rateLimited(res, `refresh:${clientAddress(req)}`, { limit: 60, windowMs: 60 * 60 * 1000 })) return;
+        const r = await refreshSession(await readJsonBody(req));
+        return sendJSON(res, r.ok ? 200 : 401, r);
       }
       // ── Cuenta, planes, alertas persistentes y asistente ──
       //

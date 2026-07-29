@@ -24,6 +24,8 @@ export interface AuthResult {
   error?: string;
   user?: { id: string; email: string; name?: string };
   token?: string;
+  /** Token de refresco: lo guarda el navegador para renovar cuando el otro caduque. */
+  refreshToken?: string;
 }
 
 export async function registerUser(input: unknown): Promise<AuthResult> {
@@ -64,10 +66,37 @@ export async function loginUser(input: unknown): Promise<AuthResult> {
   return {
     ok: true,
     token: data.session.access_token,
+    // El de refresco viaja también, y esto NO es un extra: el token de acceso
+    // caduca a la hora, y sin forma de renovarlo la sesión se apagaba sola sin
+    // avisar. La pestaña seguía diciendo «Mi cuenta» —el token seguía en el
+    // almacenamiento— pero cada petición nueva llegaba sin sesión válida, así que
+    // el servidor respondía como a un anónimo: al cambiar un filtro, a alguien
+    // registrado le aparecía «crea tu cuenta gratis». El acceso por Google ya lo
+    // guardaba; el de correo y contraseña, no.
+    refreshToken: data.session.refresh_token,
     user: {
       id: data.user!.id,
       email,
       name: (data.user!.user_metadata?.name as string | undefined) ?? undefined,
     },
   };
+}
+
+/**
+ * Cambia un token de refresco por una sesión nueva.
+ *
+ * Lo pide el navegador cuando descubre que su token ya no vale. Va contra
+ * `authClient` por la misma razón que el inicio de sesión: fijar la sesión en el
+ * cliente de datos compartido rompería RLS para todo el mundo.
+ */
+export async function refreshSession(body: unknown): Promise<
+  { ok: true; token: string; refreshToken: string } | { ok: false; error: string }
+> {
+  const refreshToken = (body as { refreshToken?: unknown } | null)?.refreshToken;
+  if (typeof refreshToken !== 'string' || refreshToken.length < 10) {
+    return { ok: false, error: 'Sesión no renovable' };
+  }
+  const { data, error } = await authClient.auth.refreshSession({ refresh_token: refreshToken });
+  if (error || !data.session) return { ok: false, error: 'Tu sesión expiró. Vuelve a entrar.' };
+  return { ok: true, token: data.session.access_token, refreshToken: data.session.refresh_token };
 }
