@@ -114,6 +114,19 @@ function setMode(nextMode) {
   hideMsg();
 }
 
+/**
+ * Guarda la sesión completa, no solo el token de acceso.
+ *
+ * El de acceso caduca a la hora. Sin el de refresco la sesión se apagaba sola sin
+ * avisar: la pestaña seguía diciendo «Mi cuenta» y las peticiones nuevas llegaban
+ * como anónimas, así que a alguien registrado le aparecía «crea tu cuenta gratis»
+ * al cambiar un filtro. El acceso con Google ya lo guardaba.
+ */
+function guardarSesion(data) {
+  localStorage.setItem('radar_token', data.token);
+  if (data.refreshToken) localStorage.setItem('radar_refresh', data.refreshToken);
+}
+
 function showMsg(text, ok) {
   const message = $('msg');
   message.textContent = text;
@@ -196,7 +209,7 @@ $('form').addEventListener('submit', async (event) => {
       });
       const loginData = await loginResponse.json();
       if (loginData.ok) {
-        localStorage.setItem('radar_token', loginData.token);
+        guardarSesion(loginData);
         location.href = '/';
       } else {
         setMode('login');
@@ -205,7 +218,7 @@ $('form').addEventListener('submit', async (event) => {
       }
     } else {
       showMsg('¡Bienvenido! Entrando…', true);
-      localStorage.setItem('radar_token', data.token);
+      guardarSesion(data);
       window.setTimeout(() => (location.href = '/'), 500);
     }
   } catch {

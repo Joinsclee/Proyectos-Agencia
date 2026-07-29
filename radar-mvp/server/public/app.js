@@ -73,12 +73,94 @@ const favSet = new Set(guestFavorites.keys()); // claves "kind:id"
 const propertyCache = new Map();
 const authHeaders = () => (auth.token ? { Authorization: `Bearer ${auth.token}` } : {});
 
+/**
+ * Renueva la sesión cuando el token de acceso ha caducado.
+ *
+ * El de acceso dura una hora. Antes no se renovaba nunca, así que a partir de la
+ * hora la sesión se apagaba SIN AVISAR: el token seguía en el almacenamiento —la
+ * barra superior seguía diciendo «Mi cuenta»— pero cada petición nueva llegaba
+ * sin sesión válida y el servidor respondía como a un anónimo. El síntoma que se
+ * veía era desconcertante: cambiabas el filtro de ciudad y el aviso pasaba de
+ * «te quedan 18 de 20 fichas» a «crea tu cuenta gratis», estando registrado.
+ *
+ * Devuelve `true` si hay sesión utilizable después de intentarlo.
+ */
+let renovando = null;
+async function renovarSesion() {
+  const refresh = localStorage.getItem('radar_refresh');
+  if (!refresh) return false;
+  // Una sola renovación en vuelo: al caducar, TODAS las peticiones de la página
+  // fallan a la vez —listado, favoritos, cuenta— y cada una pediría la suya.
+  // Además el token de refresco es de un solo uso: la segunda petición llegaría
+  // con uno ya gastado y cerraría la sesión de verdad.
+  if (renovando) return renovando;
+  renovando = (async () => {
+    try {
+      const r = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken: refresh }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) return false;
+      auth.token = d.token;
+      localStorage.setItem('radar_token', d.token);
+      if (d.refreshToken) localStorage.setItem('radar_refresh', d.refreshToken);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      renovando = null;
+    }
+  })();
+  return renovando;
+}
+
+/**
+ * Cierra la sesión que ya no se puede renovar, DICIÉNDOLO.
+ *
+ * Dejarla morir en silencio es lo que producía el desconcierto: la interfaz
+ * seguía tratando al usuario como registrado y el servidor no. Mejor decir qué
+ * pasó y qué hacer.
+ */
+function sesionCaducada() {
+  auth.token = null;
+  auth.user = null;
+  localStorage.removeItem('radar_token');
+  localStorage.removeItem('radar_refresh');
+  renderAuthBar();
+  showToast('Tu sesión expiró. Vuelve a entrar para seguir con tu cuenta.');
+}
+
+/**
+ * `fetch` que renueva la sesión y reintenta UNA vez si el token había caducado.
+ *
+ * Se detecta por dos vías, no solo por el 401: hay rutas —los listados— que a un
+ * token caducado no le responden con error sino con los datos del plan anónimo,
+ * y ese es justo el caso que se veía en pantalla.
+ */
+async function fetchConSesion(url, opciones = {}) {
+  const pedir = () => fetch(url, { ...opciones, headers: { ...(opciones.headers || {}), ...authHeaders() } });
+  let res = await pedir();
+  if (res.status !== 401 || !auth.token) return res;
+  if (await renovarSesion()) {
+    res = await pedir();
+    if (res.status !== 401) return res;
+  }
+  sesionCaducada();
+  return res;
+}
+
 async function initAuth() {
   renderAuthBar();
   if (!auth.token) { paintFavs(); return; }
   try {
-    const res = await fetch('/api/favorites', { headers: authHeaders() });
-    if (res.status === 401) { auth.token = null; localStorage.removeItem('radar_token'); renderAuthBar(); return; }
+    // `fetchConSesion` y no `fetch` a secas: esta es la PRIMERA petición de la
+    // página, así que es aquí donde se descubre que el token caducó mientras la
+    // pestaña estaba cerrada. Antes se borraba la sesión al primer 401 sin
+    // intentar renovarla, y entonces todo lo demás cargaba ya como anónimo.
+    const res = await fetchConSesion('/api/favorites');
+    if (res.status === 401) { sesionCaducada(); return; }
     const d = await res.json();
     auth.user = d.user || null;
     favSet.clear();
@@ -1512,10 +1594,21 @@ async function load(page) {
     // La cabecera NO es opcional: el servidor decide con `planDe(getUserFromToken(...))`
     // qué campos entrega, así que sin ella un suscriptor se identifica como anónimo y
     // recibe todas las fichas bloqueadas por más que haya pagado.
-    res = await fetch(`/api/${state.tab}?${qs}`, { headers: authHeaders(), signal: AbortSignal.timeout(25000) }).then((r) => {
+    res = await fetchConSesion(`/api/${state.tab}?${qs}`, { signal: AbortSignal.timeout(25000) }).then((r) => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     });
+    // El caso silencioso: llevamos token y aun así el servidor nos trata como
+    // anónimos. Eso solo pasa si caducó, y no da 401 porque el listado es una
+    // ruta pública que sencillamente entrega menos. Se renueva y se repite.
+    if (res.plan === 'anonimo' && auth.token) {
+      if (await renovarSesion()) {
+        res = await fetchConSesion(`/api/${state.tab}?${qs}`, { signal: AbortSignal.timeout(25000) })
+          .then((r) => (r.ok ? r.json() : res));
+      } else {
+        sesionCaducada();
+      }
+    }
   } catch (e) {
     if (loadSeq !== state.loadSeq) return;
     console.error('load:', e);
@@ -1583,7 +1676,7 @@ function renderAvisoBloqueo(plan, bloqueo, cupo, caja = $('aviso-bloqueo')) {
   const n = bloqueo.bloqueadas;
   // «fichas de inmuebles» y no «fichas» a secas: el cliente preguntó fichas de
   // qué, y tenía razón —«ficha» es vocabulario nuestro, no suyo—.
-  const fichas = `${n} ficha${n === 1 ? '' : 's'} de inmuebles`;
+  const fichas = n === 1 ? '1 ficha de inmueble' : `${n} fichas de inmuebles`;
 
   const anonimo = plan === 'anonimo';
   const sinCupo = !anonimo && cupo && !cupo.ilimitado && cupo.restantes === 0;
@@ -1610,7 +1703,13 @@ function renderAvisoBloqueo(plan, bloqueo, cupo, caja = $('aviso-bloqueo')) {
     ? 'Crea tu cuenta gratis y ábrelas en cualquier categoría: portales, bancos o remates.'
     : sinCupo
       ? 'Son las de mayor descuento de esta búsqueda. Con el plan completo no hay límite.'
-      : `${fichas} de esta búsqueda siguen cerradas. Úsalas en las que más te interesen.`;
+      // El verbo y el pronombre concuerdan con el número. Al pasar «fichas» a
+      // «fichas de inmuebles» quedó «1 ficha de inmuebles ... siguen cerradas»,
+      // que se lee como un error de la herramienta justo donde se le pide
+      // confianza al usuario.
+      : n === 1
+        ? `${fichas} de esta búsqueda sigue cerrada. Úsala en la que más te interese.`
+        : `${fichas} de esta búsqueda siguen cerradas. Úsalas en las que más te interesen.`;
 
   // Los porcentajes del recuadro —«66% descuento medio», «70% la mayor», «-13%
   // las que sí puedes abrir»— se retiran por decisión del cliente: «estarían
@@ -1774,7 +1873,15 @@ function inmuebleCard(p, kind) {
   const comparisonLabel = discount != null
     ? `${discount}% bajo ofertas similares de la zona`
     : 'Oportunidad frente a ofertas similares de la zona';
-  const opp = p.is_opportunity
+  // La etiqueta del descuento se pinta también en las fichas BLOQUEADAS.
+  //
+  // No salía porque la redacción devuelve `is_opportunity: false` a quien no la
+  // ha abierto —aunque el descuento sí viaja—, así que la única tarjeta donde el
+  // dato importa de verdad era la única sin él: el porcentaje quedaba dentro del
+  // velo y encima tapado. Ahora la ficha cerrada se ve como cualquier otra, con
+  // su fuente y su descuento arriba, más una invitación a pulsarla.
+  const mostrarOpp = p.is_opportunity || (esBloqueada(p) && discount != null);
+  const opp = mostrarOpp
     ? `<span class="opp-badge ${isHighOpp(p) ? 'high' : ''}" title="${esc(comparisonLabel)}" aria-label="${esc(comparisonLabel)}">${ic(isHighOpp(p) ? 'star' : 'down')}${discount != null ? discount + '%' : 'Oportunidad'}</span>`
     : '';
   const ppm2 = p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + '/m²' : '';
@@ -1886,7 +1993,21 @@ function selloSuscripcion(p) {
   const accion = requiere === 'registro' ? 'Crea tu cuenta gratis para verla'
     : requiere === 'cupo' ? 'Ábrela con tu cupo del mes'
     : 'Desbloquear con suscripción';
-  return `<div class="lock-overlay">${ic('lock')}<span>${d != null && d >= 20 ? `${d}% ${contra}` : 'Oportunidad detectada'}</span><em>${accion}</em></div>`;
+  // El icono va según lo que el usuario PUEDE hacer, no según lo que le falta.
+  //
+  // Antes era un candado siempre, y el cliente lo dijo claro: en el plan gratuito,
+  // donde estas fichas se abren con el cupo del mes, el candado transmite «esto
+  // está cerrado» a alguien que justo puede abrirlo. Quita las ganas en vez de
+  // darlas. Cuando hay cómo abrirla —registrarse o gastar cupo— se pone una mano
+  // pulsando, que invita; el candado se reserva para lo que de verdad exige pagar.
+  const invita = requiere === 'registro' || requiere === 'cupo';
+  // El mensaje se conserva tal cual —«dejar el mensaje pero cambiar o quitar el
+  // candado», dijo el cliente—. El porcentaje aparece ahora dos veces, aquí y en
+  // su etiqueta de arriba, y es a propósito: la etiqueta es el dato, en el sitio
+  // donde está en todas las tarjetas, y esto es el gancho.
+  const titular = d != null && d >= 20 ? `${d}% ${contra}` : 'Oportunidad detectada';
+  return `<div class="lock-overlay${invita ? ' es-invitacion' : ''}">${ic(invita ? 'tap' : 'lock')}`
+    + `<span>${titular}</span><em>${accion}</em></div>`;
 }
 
 function avisoCuotaParte(p) {

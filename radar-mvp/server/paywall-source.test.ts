@@ -31,11 +31,25 @@ async function lineaDePeticion(fragmento: string): Promise<string> {
 
 test('muro: los listados se piden identificándose', async () => {
   const linea = await lineaDePeticion('`/api/${state.tab}?${qs}`');
+  // Dos formas válidas de identificarse: poner la cabecera a mano, o usar
+  // `fetchConSesion`, que además renueva el token si caducó. Lo que no vale es
+  // ninguna de las dos: sin cabecera, un suscriptor se identifica como anónimo y
+  // recibe todo bloqueado por más que haya pagado.
   assert.match(
     linea,
-    /headers:\s*authHeaders\(\)/,
+    /headers:\s*authHeaders\(\)|fetchConSesion\(/,
     'el listado se pide sin cabecera: un suscriptor se identificaría como anónimo',
   );
+});
+
+test('muro: `fetchConSesion` sí pone la cabecera', async () => {
+  // La prueba de arriba acepta `fetchConSesion` como forma de identificarse, así
+  // que hay que comprobar que de verdad la pone: si alguien la vaciara, aquella
+  // seguiría pasando y el muro se caería en silencio.
+  const app = await leer('server/public/app.js');
+  const cuerpo = app.slice(app.indexOf('async function fetchConSesion'));
+  const hasta = cuerpo.slice(0, cuerpo.indexOf('\n}'));
+  assert.match(hasta, /\.\.\.authHeaders\(\)/, '`fetchConSesion` dejó de mandar la cabecera de sesión');
 });
 
 test('muro: la ficha individual se pide identificándose', async () => {
