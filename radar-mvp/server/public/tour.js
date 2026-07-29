@@ -18,9 +18,13 @@
  * se puede animar entre pasos moviendo el rectángulo. Es la técnica estándar y
  * la única que no necesita recortar el fondo con SVG ni `clip-path`.
  *
- * CUÁNTOS PASOS: cinco. La evidencia de producto sitúa el óptimo entre tres y
- * cinco, con caída fuerte de finalización a partir de ahí. La primera versión de
- * este recorrido tenía diez y se cortó a la mitad por eso.
+ * CUÁNTOS PASOS: ocho, por decisión del propietario —«se debe explicar lo mayor
+ * posible»—. Conviene saber que la evidencia de producto sitúa el óptimo entre
+ * tres y cinco, con caída de finalización a partir de ahí, así que estos ocho van
+ * con dos concesiones: cerrar es un clic desde cualquier paso, y el recorrido
+ * SALTA los pasos cuyo elemento no esté disponible en vez de alargarse en vacío.
+ * Si algún día se mide que la gente lo abandona, los tres últimos son los que
+ * sobran primero.
  */
 
 /*
@@ -34,7 +38,7 @@
 const CLAVE_VISTO = 'radar_onboarding_v1';
 
 /**
- * Los cinco pasos.
+ * Los pasos del recorrido.
  *
  * `tab` hace que el recorrido cambie de sección solo antes de anclar: es lo que
  * lo convierte en un paseo por el producto y no en una sucesión de cuadros.
@@ -89,11 +93,58 @@ const PASOS = [
     texto: 'La ley fija la base de toda subasta en el 70% del avalúo, así que casi todos dan lo mismo. '
       + 'Lo que separa un remate de otro es el riesgo del título, y si solo se remata una parte del bien, la ficha lo avisa.',
   },
+  {
+    id: 'guardar',
+    conCuenta: true,
+    tab: 'remates',
+    selector: '#grid article.card .fav-btn',
+    lado: 'derecha',
+    etiqueta: 'Guardados',
+    titulo: 'Aparta las que te interesen',
+    texto: 'El corazón guarda la ficha en tu lista. Están en la pestaña Guardados, se conservan aunque '
+      + 'cierres el navegador y puedes compararlas entre sí cuando tengas varias.',
+  },
+  {
+    id: 'preferencias',
+    conCuenta: true,
+    tab: 'portal',
+    selector: '#radar-setup',
+    lado: 'abajo',
+    etiqueta: 'Tu Radar',
+    titulo: 'Dile qué buscas y deja de filtrar cada vez',
+    texto: 'Ciudad, presupuesto y tipo de inmueble en tres elecciones. El Radar los recuerda, los aplica '
+      + 'al entrar y los usa para avisarte por correo cuando aparezca algo en tu zona.',
+  },
+  {
+    id: 'cuenta',
+    selector: '#authbar',
+    lado: 'abajo',
+    etiqueta: 'Tu cuenta',
+    titulo: 'Explorar es libre; abrir fichas necesita cuenta',
+    texto: 'Puedes mirarlo todo sin registrarte. Con una cuenta gratuita abres 20 fichas completas al mes '
+      + '—dirección, fotos, comparables y análisis—, las que abres quedan abiertas, y desbloqueas guardados '
+      + 'y alertas por correo.',
+  },
 ];
+
+/**
+ * Los pasos que corresponden a ESTE visitante.
+ *
+ * Guardados y la personalización se retiraron de la interfaz para quien no tiene
+ * cuenta, así que enseñárselos sería iluminar algo que no está. Y al revés: a
+ * quien ya entró no hay que venderle el registro. Un recorrido que habla de
+ * botones que el usuario no ve es peor que no tener recorrido.
+ */
+function pasosVisibles() {
+  const conCuenta = !!localStorage.getItem('radar_token');
+  return PASOS.filter((p) => (p.conCuenta ? conCuenta : true));
+}
 
 let paso = 0;
 let activo = false;
 let elementoActual = null;
+/** Pasos de ESTA sesión del recorrido. Se fija al abrir para que no cambie a mitad. */
+let pasos = [];
 
 const porId = (id) => document.getElementById(id);
 const esMovil = () => window.matchMedia('(max-width: 760px)').matches;
@@ -171,7 +222,7 @@ function colocarGlobo(el, lado) {
 
 function pintarGlobo(p, indice) {
   const globo = porId('tour-globo');
-  const ultimo = indice === PASOS.length - 1;
+  const ultimo = indice === pasos.length - 1;
   globo.innerHTML = `
     <div class="tour-cab">
       <span class="tour-etiqueta">${p.etiqueta}</span>
@@ -180,7 +231,7 @@ function pintarGlobo(p, indice) {
     <h2>${p.titulo}</h2>
     <p>${p.texto}</p>
     <div class="tour-pie">
-      <ol class="tour-puntos" aria-hidden="true">${PASOS.map((_, n) =>
+      <ol class="tour-puntos" aria-hidden="true">${pasos.map((_, n) =>
         `<li class="${n === indice ? 'is-activo' : n < indice ? 'is-visto' : ''}"></li>`).join('')}</ol>
       <div class="tour-botones">
         ${indice > 0 ? '<button class="tour-atras" type="button" data-tour="atras">Atrás</button>' : ''}
@@ -189,18 +240,32 @@ function pintarGlobo(p, indice) {
         </button>
       </div>
     </div>
-    <p class="tour-progreso">Paso ${indice + 1} de ${PASOS.length}</p>`;
+    <p class="tour-progreso">Paso ${indice + 1} de ${pasos.length}</p>`;
 }
 
-/** Espera a que un selector aparezca. Devuelve el elemento o `null` si no llega. */
+/**
+ * ¿Este elemento se puede iluminar?
+ *
+ * Existir no basta. `#radar-setup` está siempre en el marcado pero se queda vacío
+ * cuando el usuario ya tiene sus preferencias puestas, y un contenedor vacío mide
+ * 0×0: el resalte sería un punto sobre la nada. Se exige tamaño real.
+ */
+const sePuedeIluminar = (el) => {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  return r.width > 8 && r.height > 8;
+};
+
+/** Espera a que un selector aparezca CON tamaño. Devuelve el elemento o `null`. */
 function esperarElemento(selector, msMax = 12000) {
   return new Promise((resolve) => {
     const encontrado = document.querySelector(selector);
-    if (encontrado) { resolve(encontrado); return; }
+    if (sePuedeIluminar(encontrado)) { resolve(encontrado); return; }
     const limite = Date.now() + msMax;
     const tic = setInterval(() => {
       const el = document.querySelector(selector);
-      if (el || Date.now() > limite) { clearInterval(tic); resolve(el); }
+      if (sePuedeIluminar(el)) { clearInterval(tic); resolve(el); return; }
+      if (Date.now() > limite) { clearInterval(tic); resolve(null); }
     }, 180);
   });
 }
@@ -218,7 +283,7 @@ async function irASeccion(tab) {
 
 async function mostrarPaso(indice) {
   if (!activo) return;
-  const p = PASOS[indice];
+  const p = pasos[indice];
   if (!p) { cerrar(); return; }
   paso = indice;
 
@@ -234,8 +299,13 @@ async function mostrarPaso(indice) {
     // adelante —nunca hacia atrás— para que dos pasos sin elemento no se pasen el
     // turno el uno al otro indefinidamente.
     if (!el) { await mostrarPaso(indice + 1); return; }
-    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    await new Promise((r) => setTimeout(r, 420));
+    // Desplazamiento INSTANTÁNEO, no suave. Con `smooth` había que adivinar
+    // cuánto tarda, y al medir antes de tiempo el resalte quedaba desfasado: en
+    // la pestaña de remates abarcaba media tarjeta de abajo. Instantáneo se puede
+    // medir en el fotograma siguiente y siempre cae donde debe; el movimiento
+    // suave lo aporta la transición del propio resalte, que es lo que se ve.
+    el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
   }
   if (!activo) return;
 
@@ -252,7 +322,7 @@ async function mostrarPaso(indice) {
 function recolocar() {
   if (!activo) return;
   colocarFoco(elementoActual);
-  colocarGlobo(elementoActual, PASOS[paso]?.lado);
+  colocarGlobo(elementoActual, pasos[paso]?.lado);
 }
 
 function cerrar() {
@@ -278,6 +348,7 @@ function abrir() {
   if (activo) return;
   activo = true;
   paso = 0;
+  pasos = pasosVisibles();
   crearCapas();
   document.body.classList.add('tour-abierto');
   window.addEventListener('resize', recolocar);
