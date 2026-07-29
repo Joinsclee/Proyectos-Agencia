@@ -144,6 +144,39 @@ async function syncAccountContext() {
     radarAlertDraft = { ...data.account.alerts[0], status: 'active' };
     persistRadarAlert();
   }
+  invitarAPersonalizar();
+}
+
+/** Marca de que ya se le ofreció personalizar. Se pregunta una vez, no en cada visita. */
+const PERSONALIZACION_OFRECIDA = 'radar_personalizar_ofrecido_v1';
+
+/**
+ * Lleva al recién registrado a configurar su Radar.
+ *
+ * Es el momento correcto y no antes: la personalización se le ocultaba al
+ * visitante anónimo —sus preferencias no sobrevivirían al navegador ni servirían
+ * para las alertas— así que el registro es la primera vez que pedirle tres
+ * decisiones tiene sentido. Y es cuando ya vio para qué sirven.
+ *
+ * Se ofrece UNA vez. Alguien que decidió no configurarlo no necesita que se lo
+ * recuerden en cada visita; lo tiene siempre disponible en la pestaña de Portal.
+ */
+function invitarAPersonalizar() {
+  if (!auth.token || radarPreferences.complete) return;
+  try {
+    if (localStorage.getItem(PERSONALIZACION_OFRECIDA)) return;
+    localStorage.setItem(PERSONALIZACION_OFRECIDA, '1');
+  } catch { return; /* sin almacenamiento no se insiste */ }
+  // Se lleva al Portal, que es donde vive el panel, y se abre solo.
+  setTimeout(() => {
+    document.querySelector('.tab-btn[data-tab="portal"]')?.click();
+    setTimeout(() => {
+      radarSetupState.open = true;
+      radarSetupState.step = 0;
+      renderRadarSetup();
+      $('radar-setup')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }, 1400);
+  }, 700);
 }
 function renderAuthBar() {
   const el = $('authbar'); if (!el) return;
@@ -157,7 +190,33 @@ function renderAuthBar() {
   } else {
     el.innerHTML = `<a class="auth-link" href="/planes">Planes</a><a class="auth-link primary" href="/login">${ic('user')}<span>Ingresar</span></a>`;
   }
+  aplicarVisibilidadDeCuenta();
   updateFavCount();
+}
+
+/**
+ * Esconde de la interfaz lo que solo tiene sentido con cuenta.
+ *
+ * Guardados y la personalización del Radar quedan fuera para un visitante sin
+ * registrar. No es una restricción comercial —explorar sigue siendo libre— sino
+ * de coherencia: unos favoritos que viven en el navegador se pierden al cambiar
+ * de dispositivo, y unas preferencias sin cuenta no pueden alimentar las alertas
+ * por correo porque no hay a quién escribirle. Ofrecerlos antes de tiempo es
+ * prometer una continuidad que el producto no puede cumplir.
+ *
+ * La pestaña de Guardados se oculta junto con el corazón de las tarjetas: dejar
+ * uno sin el otro sería dar un botón de guardar que no lleva a ninguna parte.
+ */
+function aplicarVisibilidadDeCuenta() {
+  const conCuenta = !!auth.token;
+  document.body.classList.toggle('sin-cuenta', !conCuenta);
+  const guardados = document.querySelector('.tab-btn[data-tab="guardados"]');
+  if (guardados) guardados.hidden = !conCuenta;
+  // Si estaba mirando Guardados y cierra sesión, se le devuelve a la portada en
+  // vez de dejarlo en una pestaña que ya no existe.
+  if (!conCuenta && state.tab === 'guardados') {
+    document.querySelector('.tab-btn[data-tab="home"]')?.click();
+  }
 }
 function updateFavCount() { const c = $('c-guardados'); if (c) c.textContent = favSet.size; }
 function persistGuestFavorites() {
@@ -780,7 +839,12 @@ function setupProgress(step) {
 function renderRadarSetup() {
   const root = $('radar-setup');
   if (!root) return;
-  if (state.tab !== 'portal') { root.innerHTML = ''; return; }
+  // La personalización es de quien tiene cuenta. A un visitante sin registrar no
+  // se le pide que configure nada: sus preferencias no sobrevivirían al
+  // navegador, no sirven para las alertas por correo —no hay a quién
+  // escribirle— y le piden tres decisiones antes de haber visto para qué. La
+  // secuencia correcta es registrarse, elegir plan y entonces afinar el Radar.
+  if (!auth.token || state.tab !== 'portal') { root.innerHTML = ''; return; }
 
   if (radarSetupState.open) {
     const step = radarSetupState.step;
@@ -2035,7 +2099,7 @@ window.__openRec = async function (kind, id) {
     const sinCupo = data.data?._bloqueada
       && data.plan === 'free'
       && data.cupo && !data.cupo.ilimitado && data.cupo.restantes === 0;
-    if (sinCupo) { mostrarCupoAgotado(data.cupo); return; }
+    if (sinCupo) { mostrarCupoAgotado(data.cupo, kind, id, data.data); return; }
     if (kind === 'remate') openRemate(data.data);
     else openInmueble(data.data);
     document.querySelector('.modal-body')?.scrollTo({ top: 0, behavior: 'instant' });
@@ -2102,7 +2166,7 @@ function actualizarContadorCupo(cupo) {
  * cosas y en este orden: que puede seguir usando el Radar, cuándo vuelve su cupo,
  * y qué le costaría no esperar.
  */
-function mostrarCupoAgotado(cupo) {
+function mostrarCupoAgotado(cupo, kind, id, ficha) {
   const dias = Number(cupo?.diasParaReinicio) || null;
   const cuando = dias === 1 ? 'mañana' : dias ? `en ${dias} días` : 'el día 1 del próximo mes';
   const cuerpo = `
@@ -2119,6 +2183,10 @@ function mostrarCupoAgotado(cupo) {
       </div>
     </div>`;
   $('modal-content').innerHTML = cuerpo;
+  // La ficha no llegó a abrirse, pero es exactamente la que el usuario quería:
+  // si desde aquí se va a suscribirse, volver al listado sería hacerle repetir la
+  // búsqueda que acaba de pagar.
+  if (kind && id) recordarFichaEnPantalla(kind, id, tituloFicha(ficha));
   showModal();
   $('cupo-seguir')?.addEventListener('click', closeModal);
 }
@@ -2194,6 +2262,24 @@ window.__cardFallback = function (el, source, type) {
 
 // ---------- Modal ----------
 let gImgs = [], gIdx = 0;
+
+/**
+ * Qué ficha hay ahora mismo en el diálogo, para poder guardarla si el usuario se
+ * va desde ella a registrarse o a ver los planes. Es `null` con el diálogo
+ * cerrado: sin eso, un enlace pulsado media hora después guardaría una ficha que
+ * el usuario ya había abandonado.
+ */
+let fichaEnPantalla = null;
+
+/** Cómo se llama una ficha para una persona. Solo para texto, nunca para decidir. */
+function tituloFicha(p) {
+  return `${typeLbl(p?.type || p?.property_type)} en ${cap(p?.city)}`;
+}
+
+function recordarFichaEnPantalla(kind, id, titulo) {
+  fichaEnPantalla = { kind, id: String(id), titulo };
+}
+
 function openModal(p) {
   if (state.tab === 'remates') return openRemate(p);
   return openInmueble(p);
@@ -2253,6 +2339,7 @@ function openInmueble(p) {
       ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
       <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
     </div>`;
+  recordarFichaEnPantalla(kind, p.id, tituloFicha(p));
   showModal();
   // El motor sólo persiste el mercado en fichas de banco; en las del portal se
   // calcula bajo demanda (gratis, sin IA) para justificar el −X% de la tarjeta.
@@ -2639,6 +2726,7 @@ function openRemate(p) {
       ${mapSection({ address: null, city: p.city })}
       <p class="src-note">Fuente: Rama Judicial de Colombia · aviso de remate publicado por el juzgado.</p>
     </div>`;
+  recordarFichaEnPantalla('remate', p.id, tituloFicha(p));
   showModal();
 }
 function gallery() {

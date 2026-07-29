@@ -52,7 +52,7 @@ async function abrirBuscador(page: import('playwright').Page) {
   await page.waitForFunction(() => /\d[\d.,]*\s+resultados?/.test(document.getElementById('count')?.textContent || ''));
 }
 
-test('organiza los filtros en una columna lateral y los oculta en Guardados', async () => {
+test('organiza los filtros en una columna lateral y los oculta donde no aplican', async () => {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   // El tutorial de bienvenida tapa la portada en la primera visita; estas pruebas
   // miden la disposición de filtros y resultados, no el tutorial.
@@ -69,7 +69,11 @@ test('organiza los filtros en una columna lateral y los oculta en Guardados', as
   assert.ok(filtersBox.x < resultsBox.x, 'Los filtros deben quedar a la izquierda de los resultados');
   assert.ok(filtersBox.width < resultsBox.width, 'El panel lateral no debe competir con la grilla');
 
-  await page.locator('button[data-tab="guardados"]').click();
+  // Se comprueba con la PORTADA y no con Guardados: esa pestaña solo existe con
+  // cuenta desde que la personalización y los favoritos pasaron a exigirla, y lo
+  // que esta prueba defiende —que los filtros desaparecen donde no aplican— vale
+  // igual en Inicio, que tampoco es una búsqueda sino una selección.
+  await page.locator('button[data-tab="home"]').click();
   await page.waitForFunction(() => document.querySelector('.controls')?.hasAttribute('hidden'));
   assert.equal(await page.locator('.controls').isVisible(), false);
 

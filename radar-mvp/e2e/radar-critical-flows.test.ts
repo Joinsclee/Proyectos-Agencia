@@ -197,15 +197,27 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       await page.waitForTimeout(1_200);
 
       const pasos = await page.locator('.tour-puntos li').count();
-      assert.ok(pasos >= 3 && pasos <= 5, `el recorrido debe tener entre 3 y 5 pasos, tiene ${pasos}`);
+      // Un visitante sin cuenta no ve los pasos de guardados ni personalización,
+      // porque esas partes de la interfaz tampoco están para él.
+      assert.ok(pasos >= 3 && pasos <= 8, `el recorrido debe tener entre 3 y 8 pasos, tiene ${pasos}`);
 
       // El primero es la bienvenida: no ilumina nada y el globo va centrado.
       assert.equal(await globo.evaluate((el) => el.classList.contains('es-centrado') || el.classList.contains('es-movil')), true);
 
       // A partir del segundo, el foco tiene que estar pegado a algo con tamaño.
       await page.locator('.tour-cta').click();
+      // El resalte ANIMA su tamaño entre pasos, así que hay que esperar a que se
+      // estabilice antes de medirlo: a mitad de la transición devuelve un valor
+      // intermedio —se midió 84×10 en un fotograma— que no es el del elemento.
       await page.waitForFunction(
-        () => (document.getElementById('tour-foco')?.getBoundingClientRect().width ?? 0) > 40,
+        () => {
+          const el = document.getElementById('tour-foco');
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          const previo = Number(el.dataset.medidoW || 0);
+          el.dataset.medidoW = String(r.width);
+          return r.width > 40 && r.height > 20 && Math.abs(r.width - previo) < 1;
+        },
         undefined,
         { timeout: 15_000 },
       );
@@ -627,25 +639,38 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     }
   });
 
-  test('guarda un inmueble anónimo, persiste y lo muestra en Guardados', async () => {
+  test('a quien no tiene cuenta no se le ofrece guardar ni personalizar', async () => {
+    // Decisión de producto: explorar es libre, pero guardados y personalización
+    // necesitan cuenta para significar algo. Unos favoritos que viven en el
+    // navegador se pierden al cambiar de dispositivo, y unas preferencias sin
+    // cuenta no pueden alimentar las alertas por correo —no hay a quién
+    // escribirle—. Ofrecerlos antes de tiempo promete una continuidad que el
+    // producto no puede cumplir.
     const { context, page, assertClean } = await openIsolatedPage();
     try {
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
       await esperarPortada(page);
 
-      // Se guarda DESDE la portada: el top es una lista, no tarjetas, pero el
-      // corazón tiene que seguir funcionando igual sin haber entrado a buscar nada.
-      const firstFavorite = page.locator('#home .top-item').first().getByRole('button', { name: 'Guardar inmueble' });
-      await firstFavorite.click();
-      await page.waitForFunction(() => document.getElementById('c-guardados')?.textContent === '1');
+      assert.equal(
+        await page.locator('button[data-tab="guardados"]').isVisible(),
+        false,
+        'la pestaña de Guardados no debe ofrecerse sin cuenta',
+      );
+      // El corazón se retira junto con la pestaña: dejar uno sin la otra sería
+      // dar un botón de guardar que no lleva a ninguna parte.
+      assert.equal(await page.locator('#home .fav-btn:visible').count(), 0);
 
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      await esperarPortada(page);
-      assert.equal(await page.locator('#c-guardados').textContent(), '1');
+      await irAPestana(page, 'portal');
+      await waitForResults(page);
+      assert.equal(await page.locator('#grid .fav-btn:visible').count(), 0);
+      assert.equal(
+        ((await page.locator('#radar-setup').textContent()) ?? '').trim(),
+        '',
+        'la personalización del Radar tampoco se ofrece sin cuenta',
+      );
 
-      await irAPestana(page, 'guardados');
-      await page.waitForFunction(() => document.getElementById('count')?.textContent?.includes('1 guardado'));
-      assert.equal(await page.locator('#grid article.card').count(), 1);
+      // Y lo que SÍ puede hacer sigue intacto: explorar y filtrar.
+      assert.ok(await page.locator('#grid article.card').count() > 0, 'debe poder explorar el listado');
       assertClean();
     } finally {
       await context.close();
@@ -782,7 +807,9 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
       await esperarPortada(page);
 
-      for (const tab of ['home', 'portal', 'bancos', 'remates', 'guardados']) {
+      // Sin 'guardados': esa pestaña solo existe con cuenta, y este recorrido es
+      // el de un visitante anónimo en móvil.
+      for (const tab of ['home', 'portal', 'bancos', 'remates']) {
         await page.locator(`button[data-tab="${tab}"]`).waitFor({ state: 'visible' });
       }
       // La barra inferior sigue siendo UNA fila con la pestaña nueva dentro: si se
