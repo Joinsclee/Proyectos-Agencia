@@ -104,6 +104,11 @@ h1 .gold { color: var(--gold); }
    de dos columnas con un mínimo de 420px en la segunda: sin este override la
    tarjeta saldría estirada contra una columna vacía. Mismo remedio que `.wall`. */
 .modal-box:has(.onboarding) { grid-template-columns: 1fr; max-width: 620px; padding: 0; }
+/* El diálogo es de dos columnas porque lo diseñó la ficha de un inmueble —galería
+   y detalle—. La bienvenida trae las suyas, así que aquí se colapsa a una: sin
+   esto el contenido caía en la primera columna del diálogo y la segunda se quedaba
+   en blanco, con la ilustración a media pantalla. */
+.modal-box:has(.bienvenida-marco) { grid-template-columns: 1fr; max-width: 880px; }
 .onboarding { display: flex; flex-direction: column; overflow-y: auto; max-height: 94vh; padding: 40px 36px 26px; }
 /* Cada paso entra con un desplazamiento corto: hace que el tutorial se sienta
    como un recorrido y no como una página que se reescribe sola. */
@@ -1520,4 +1525,65 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
   display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px;
   background: #f0ebf6; color: var(--pp-dark); font-size: 0.66rem; font-weight: 700;
   vertical-align: middle; letter-spacing: .02em;
+}
+
+/* Las estrellas de la leyenda, con el mismo dorado que en la tarjeta para que se
+   reconozcan como la misma cosa. `tabular-nums` no aplica aquí, pero el ancho fijo
+   sí: alinea las cuatro filas por el texto y no por donde acabe cada estrella. */
+.legend-estrellas {
+  display: inline-block; min-width: 3.1em; color: #b8860b; font-size: 0.86rem;
+  letter-spacing: 0.06em;
+}
+
+/* ───── Bienvenida de una cuenta nueva ─────
+   Un solo mensaje, un solo botón principal. La lista dice cifras concretas porque
+   «20 fichas al mes» compromete y «acceso a oportunidades seleccionadas» no. */
+/* Dos columnas: el texto a la izquierda, la ilustración a la derecha. El diálogo
+   se comparte con la ficha de un inmueble, que es ancha, así que sin esto la
+   bienvenida quedaba pegada a un lado con medio diálogo vacío. */
+.bienvenida-marco { display: grid; grid-template-columns: minmax(0, 1fr) 320px; align-items: stretch; }
+.bv-lamina { position: relative; overflow: hidden; background: var(--pp-dark); }
+.bv-lamina img { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; display: block; }
+/* El degradado por el borde izquierdo funde la lámina con el panel blanco: un
+   corte a cuchillo entre los dos se ve como dos imágenes pegadas. */
+.bv-lamina::before {
+  content: ''; position: absolute; inset: 0 auto 0 0; width: 64px;
+  background: linear-gradient(90deg, #fff, rgba(255,255,255,0));
+}
+.bienvenida { padding: 34px 30px 28px; text-align: left; }
+.bv-sello {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px;
+  padding: 5px 12px; border-radius: 999px; background: #e7f6ec; color: #15803d;
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.bv-sello .ic { width: 15px; height: 15px; }
+.bienvenida h2 { margin: 0 0 8px; font-size: 1.6rem; line-height: 1.15; text-wrap: balance; color: var(--pp-dark); }
+.bv-sub { margin: 0 0 18px; color: #5d5568; font-size: 0.92rem; }
+.bv-lista { list-style: none; margin: 0 0 14px; padding: 0; text-align: left; display: grid; gap: 9px; }
+.bv-lista li {
+  padding: 11px 14px; border-radius: 11px; background: #faf8fc; border: 1px solid #ece6f2;
+  font-size: 0.86rem; line-height: 1.45; color: #453d52;
+}
+.bv-lista strong { color: var(--pp-dark); }
+.bv-nota { margin: 0 0 20px; font-size: 0.78rem; color: #7b7288; }
+.bv-acciones { display: grid; gap: 9px; }
+.bv-cta {
+  border: 0; cursor: pointer; padding: 13px 20px; border-radius: 11px;
+  background: var(--pp); color: #fff; font-weight: 800; font-size: 0.95rem; font-family: inherit;
+}
+.bv-cta:hover { background: var(--pp-dark); }
+.bv-secundaria {
+  border: 0; background: none; cursor: pointer; color: #6b6478; font-weight: 700;
+  font-size: 0.85rem; padding: 6px; font-family: inherit;
+}
+.bv-secundaria:hover { color: var(--pp-dark); text-decoration: underline; }
+/* Por debajo de esto la lámina se retira en vez de encogerse: una tira de 80px de
+   alto no aporta nada y le roba el sitio a lo que sí hay que leer. */
+@media (max-width: 760px) {
+  .bienvenida-marco { grid-template-columns: 1fr; }
+  .bv-lamina { display: none; }
+}
+@media (max-width: 620px) {
+  .bienvenida { padding: 24px 18px 20px; }
+  .bienvenida h2 { font-size: 1.28rem; }
 }

@@ -226,8 +226,130 @@ async function syncAccountContext() {
     radarAlertDraft = { ...data.account.alerts[0], status: 'active' };
     persistRadarAlert();
   }
-  invitarAPersonalizar();
+  darLaBienvenidaSiHaceFalta();
 }
+
+/**
+ * La bienvenida de una cuenta nueva.
+ *
+ * SE DECIDE CON LA CUENTA, no con el navegador. Antes el recorrido guiado solo
+ * salía si `localStorage` estaba limpio, así que quien miraba el Radar como
+ * visitante y después se registraba ya lo tenía marcado como visto: se registraba
+ * y no pasaba nada. Ni recorrido, ni preferencias, ni aviso de qué acababa de
+ * conseguir. Y es al revés de lo que hace falta: al registrarse aparecen cosas que
+ * como anónimo no existían —los guardados, las preferencias, el cupo del mes, el
+ * asistente—, así que es cuando hay MÁS que explicar.
+ *
+ * La secuencia es una sola cosa a la vez, con un solo botón principal en cada
+ * paso: primero qué acaba de conseguir, luego cómo funciona, luego que lo ajuste a
+ * lo suyo. Encadenar los tres a la vez es lo que hace que la gente cierre todo.
+ */
+async function darLaBienvenidaSiHaceFalta() {
+  const hitos = auth.account?.hitos;
+  if (!Array.isArray(hitos) || hitos.includes('bienvenida')) return;
+  // Se marca ANTES de mostrarla. Si se marcara al cerrarla, quien recarga la
+  // página a media bienvenida la volvería a ver cada vez.
+  await marcarHito('bienvenida');
+  mostrarBienvenida();
+}
+
+/**
+ * Deja constancia en la cuenta, no en el navegador.
+ *
+ * Las llamadas se encadenan, y no es un detalle: el servidor lee los hitos, añade
+ * el nuevo y los reescribe. Dos peticiones a la vez —cerrar el recorrido marca uno
+ * y abrir las preferencias marca otro, casi en el mismo instante— hacen que la
+ * segunda lea antes de que la primera haya escrito, y el primer hito se pierde. Lo
+ * detectó la prueba: quedaban «bienvenida» y «preferencias», sin «recorrido».
+ */
+let colaDeHitos = Promise.resolve();
+function marcarHito(hito) {
+  if (!auth.token) return Promise.resolve();
+  colaDeHitos = colaDeHitos.then(async () => {
+    try {
+      const r = await fetchConSesion('/api/account/hito', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hito }),
+      });
+      const d = await r.json();
+      if (d.ok && auth.account) auth.account.hitos = d.hitos;
+    } catch { /* si no se pudo guardar, lo peor que pasa es que se ofrezca otra vez */ }
+  });
+  return colaDeHitos;
+}
+
+/**
+ * Qué acaba de conseguir al registrarse.
+ *
+ * Concreto y con cifras: «20 fichas al mes» dice más que «acceso a oportunidades
+ * seleccionadas». Y dice lo que NO incluye, porque enterarse del límite al chocarse
+ * con él es lo que hace que la gente se sienta engañada.
+ */
+function mostrarBienvenida() {
+  const nombre = (auth.user?.name || '').split(' ')[0];
+  const esPro = planActual() === 'suscrito';
+  $('modal').setAttribute('aria-label', 'Tu cuenta está lista');
+  $('modal-content').innerHTML = `
+    <div class="bienvenida-marco">
+    <div class="bienvenida">
+      <span class="bv-sello">${ic('check-circle')} Cuenta creada</span>
+      <h2>${nombre ? `${esc(nombre)}, tu` : 'Tu'} cuenta ya está lista</h2>
+      <p class="bv-sub">${esPro
+        ? 'Tienes acceso completo: todas las fichas, sin límite.'
+        : 'Esto es lo que incluye tu plan gratuito, cada mes:'}</p>
+      ${esPro ? '' : `<ul class="bv-lista">
+        <li><strong>${CUPO_FREE_MENSUAL} fichas</strong> de oportunidad para abrir, las que tú elijas · en portales, bancos o remates</li>
+        <li><strong>30 preguntas</strong> al asistente, que también revisa documentos y fotos</li>
+        <li><strong>Guardados y alertas</strong> por correo, sin límite</li>
+      </ul>
+      <p class="bv-nota">Las fichas que abras quedan abiertas todo el mes: volver a mirarlas no gasta otra.</p>`}
+      <div class="bv-acciones">
+        <button type="button" class="bv-cta" data-bv="recorrido">Ver cómo funciona en 1 minuto</button>
+        <button type="button" class="bv-secundaria" data-bv="cerrar">Explorar por mi cuenta</button>
+      </div>
+    </div>
+    <!-- La misma ilustración del muro de registro, y a propósito: quien llega aquí
+         acaba de venir de ahí, así que reconocerla cierra el recorrido en vez de
+         presentarle una imagen nueva. Decorativa —lo que cuenta ya está escrito al
+         lado—, de ahí el alt vacío: leerle a alguien con lector de pantalla la
+         descripción de un adorno solo le hace perder el tiempo. -->
+    <div class="bv-lamina" aria-hidden="true">
+      <img src="/img/wall-radar.jpg" alt="" width="800" height="1200" loading="eager">
+    </div>
+    </div>`;
+  showModal();
+}
+
+/**
+ * Al cerrar la bienvenida se ofrece personalizar, no antes.
+ *
+ * Pedirle tres decisiones a alguien que todavía no sabe qué es el Radar es pedirle
+ * que adivine. Después del recorrido ya sabe para qué sirven.
+ */
+/**
+ * Lo llama `tour.js` al cerrarse el recorrido, venga de donde venga.
+ *
+ * Se marca el hito en la cuenta y se ofrece personalizar. Está aquí y no dentro del
+ * recorrido porque el recorrido no sabe nada de cuentas ni de preferencias, y es
+ * mejor que siga sin saberlo: es una capa de presentación sobre elementos que ya
+ * existen.
+ */
+window.__alTerminarRecorrido = () => {
+  void marcarHito('recorrido');
+  invitarAPersonalizar();
+};
+
+document.addEventListener('click', (e) => {
+  const boton = e.target.closest?.('[data-bv]');
+  if (!boton) return;
+  closeModal();
+  if (boton.dataset.bv === 'recorrido' && window.__radarTour) {
+    setTimeout(() => window.__radarTour.abrir(), 250);
+    return;
+  }
+  invitarAPersonalizar();
+});
 
 /** Marca de que ya se le ofreció personalizar. Se pregunta una vez, no en cada visita. */
 const PERSONALIZACION_OFRECIDA = 'radar_personalizar_ofrecido_v1';
@@ -245,10 +367,16 @@ const PERSONALIZACION_OFRECIDA = 'radar_personalizar_ofrecido_v1';
  */
 function invitarAPersonalizar() {
   if (!auth.token || radarPreferences.complete) return;
+  // El hito vive en la cuenta; `localStorage` solo evita repetirlo dos veces en la
+  // misma visita. Antes era al contrario y por eso quien había mirado el Radar como
+  // visitante no recibía la invitación al registrarse: la marca del navegador ya
+  // estaba puesta de aquella vez.
+  if (auth.account?.hitos?.includes('preferencias')) return;
   try {
-    if (localStorage.getItem(PERSONALIZACION_OFRECIDA)) return;
-    localStorage.setItem(PERSONALIZACION_OFRECIDA, '1');
-  } catch { return; /* sin almacenamiento no se insiste */ }
+    if (sessionStorage.getItem(PERSONALIZACION_OFRECIDA)) return;
+    sessionStorage.setItem(PERSONALIZACION_OFRECIDA, '1');
+  } catch { /* sin almacenamiento se ofrece igual: es mejor que no ofrecerlo */ }
+  void marcarHito('preferencias');
   // Se lleva al Portal, que es donde vive el panel, y se abre solo.
   setTimeout(() => {
     document.querySelector('.tab-btn[data-tab="portal"]')?.click();
@@ -3168,6 +3296,36 @@ function renderActualizado(frescura) {
   return `<div class="summary-stat muted" title="${esc(detalle)}">
     <div class="num">${esc(etiqueta)}</div><div class="lbl">Actualizado</div></div>`;
 }
+/**
+ * Qué significan las estrellas.
+ *
+ * Antes esta caja explicaba las etiquetas «Alta» y «Oportunidad», que eran el
+ * sistema de clasificación de una versión anterior. Desde que el filtro habla en
+ * categorías del Índice CRECE y las tarjetas llevan estrellas, la única
+ * explicación que hacía falta no estaba en ninguna parte: alguien veía ★★★ en una
+ * tarjeta y ☆ en otra sin nada que le dijera qué separa a una de la otra.
+ *
+ * Se genera desde `TABLA_CRECE`, la misma copia de la tabla maestra que alimenta
+ * el filtro y las tarjetas. Escribirla a mano habría creado un tercer sitio donde
+ * repetir los nombres de las categorías, y sería el primero en quedarse viejo.
+ *
+ * Solo se listan las que llevan estrella: las dos de «Precio de Mercado» no
+ * marcan nada en la tarjeta, así que explicarlas aquí sería explicar la ausencia
+ * de un símbolo que el usuario no ha visto.
+ */
+function leyendaCrece() {
+  const filas = TABLA_CRECE.filter((t) => t.estrellasTexto).map((t) => (
+    `<span class="legend-item"><span class="legend-estrellas">${t.estrellasTexto}</span> ${esc(t.lectura)}</span>`
+  )).join('');
+  return `<details class="legend-card"${mobileQuery.matches ? '' : ' open'}>
+    <summary class="legend-title">${ic('chart')} Qué significan las estrellas</summary>
+    <div class="legend-body">
+      ${filas}
+      <span class="legend-item note">Cada inmueble se compara con los precios publicados de otros parecidos en su propia zona. Más estrellas, más por debajo de ese mercado.</span>
+    </div>
+  </details>`;
+}
+
 function renderVStats() {
   if (!STATS) return;
   const v = $('vstats');
@@ -3188,14 +3346,7 @@ function renderVStats() {
     v.innerHTML = `
       <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades altas</div></div>
       <div class="vstat"><div class="num">${cities}</div><div class="lbl">Ciudades cubiertas</div></div>`;
-    $('legend').innerHTML = `<details class="legend-card"${mobileQuery.matches ? '' : ' open'}>
-      <summary class="legend-title">${ic('chart')} Cómo leer el portal abierto</summary>
-      <div class="legend-body">
-        <span class="legend-item"><span class="badge-mini high">${ic('star')}Alta</span> precio por metro cuadrado entre los más bajos de su zona, descuento grande y comparables homogéneos</span>
-        <span class="legend-item"><span class="badge-mini opp">${ic('down')}Oportunidad</span> precio por metro cuadrado bajo frente a inmuebles similares de la zona</span>
-        <span class="legend-item note">Comparado contra precios de oferta publicados.</span>
-      </div>
-    </details>`;
+    $('legend').innerHTML = leyendaCrece();
   } else if (state.tab === 'guardados') {
     v.innerHTML = `<div class="vstat"><div class="num">${favSet.size}</div><div class="lbl">Inmuebles guardados</div></div>`;
     $('legend').innerHTML = '';
@@ -3393,12 +3544,19 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// El tutorial se abre solo la primera vez. Va antes de cargar resultados porque
-// no depende de ellos, y el fondo bloqueado evita que el usuario empiece a tocar
-// filtros con el diálogo abierto. En modo privado `localStorage` puede lanzar: si
-// no se puede recordar la visita, es mejor no mostrarlo que mostrarlo siempre.
+// El tutorial se abre solo la primera vez de un VISITANTE. Va antes de cargar
+// resultados porque no depende de ellos, y el fondo bloqueado evita que el usuario
+// empiece a tocar filtros con el diálogo abierto. En modo privado `localStorage`
+// puede lanzar: si no se puede recordar la visita, es mejor no mostrarlo que
+// mostrarlo siempre.
+//
+// Con sesión NO se abre por su cuenta, y esto es lo que evita que dos cosas se
+// peleen por la pantalla: quien acaba de registrarse recibe la bienvenida, y el
+// recorrido lo lanza ella cuando el usuario lo pide. Sin esta condición se abrían
+// las dos a la vez —el recorrido encima de la bienvenida— porque una la decide el
+// navegador y la otra la cuenta.
 try {
-  if (!localStorage.getItem(ONBOARDING_KEY)) {
+  if (!localStorage.getItem(ONBOARDING_KEY) && !localStorage.getItem('radar_token')) {
     marcarOnboardingVisto();
     // El recorrido guiado necesita que la página ya tenga contenido que iluminar,
     // así que espera a que las pestañas estén pintadas. Si `tour.js` no cargó por

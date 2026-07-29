@@ -326,9 +326,15 @@ function recolocar() {
 }
 
 function cerrar() {
+  const estaba = activo;
   activo = false;
   elementoActual = null;
   marcarVisto();
+  // El recorrido es un paso de la bienvenida, así que al terminarlo se avisa a la
+  // aplicación: ella marca el hito en la CUENTA —no en este navegador— y ofrece lo
+  // siguiente, que es ajustar el Radar a lo que la persona busca. Ahora ya sabe
+  // para qué sirve eso; antes de verlo, no.
+  if (estaba) { try { window.__alTerminarRecorrido?.(); } catch { /* no bloquea el cierre */ } }
   document.body.classList.remove('tour-abierto');
   porId('tour-foco')?.remove();
   porId('tour-globo')?.remove();
