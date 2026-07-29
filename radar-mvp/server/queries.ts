@@ -56,6 +56,16 @@ export interface ListQuery {
   bank?: string; // '1' = solo remates con demandante banco/financiera
   bidMin?: number; // remates: postura mínima (COP)
   bidMax?: number; // remates: postura máxima (COP)
+  /**
+   * Solo las fichas que ESTE usuario ya abrió con su cupo del mes.
+   *
+   * Los identificadores los pone el servidor a partir de `app_metadata`, nunca el
+   * cliente: si viniera de la URL, cualquiera podría pedir la lista de fichas
+   * abiertas de otro. El filtro solo tiene sentido para el plan gratuito —un
+   * suscriptor las tiene todas abiertas— y por eso la interfaz solo se lo ofrece
+   * a él.
+   */
+  soloDesbloqueadas?: string[];
 }
 
 /**
@@ -80,6 +90,16 @@ function soloPortalPublicable(qb: any) {
 }
 
 /** Filtros compartidos de inmuebles (portal + bancos): precio/área/hab/estrato. */
+/** Acota a las fichas que el usuario ya abrió con su cupo. */
+function aplicarSoloDesbloqueadas(qb: any, q: ListQuery) {
+  if (!q.soloDesbloqueadas) return qb;
+  // Sin ninguna abierta el conjunto es vacío, y hay que decirlo con una condición
+  // imposible: `.in('id', [])` lo ignora PostgREST y devolvería el listado entero,
+  // que es justo lo contrario de lo que el usuario pidió.
+  if (!q.soloDesbloqueadas.length) return qb.eq('id', '00000000-0000-0000-0000-000000000000');
+  return qb.in('id', q.soloDesbloqueadas);
+}
+
 function applyInmuebleFilters(qb: any, q: ListQuery) {
   // Tope del sistema: nunca mostrar valores super-elevados (fuera de segmento /
   // errores de carga) que ensucian la percepción y las estadísticas.
@@ -203,8 +223,13 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   // Conteo exacto solo con filtros "baratos" (columnas indexadas / ciudad). Con
   // habitaciones/estrato (JSON) SOLOS y sin ciudad, el exacto puede hacer timeout
   // antes de aplicar el migration de índices → en ese caso se usa planned.
+  // `soloDesbloqueadas` entra aquí como filtro "barato" y es el más barato de
+  // todos: acota a un puñado de identificadores, así que el conteo exacto es
+  // inmediato. Dejarlo fuera repetía el fallo que ya tuvimos —el contador decía
+  // «108.060 resultados» con tres tarjetas en pantalla— porque sin ningún filtro
+  // reconocido se devuelve el total cacheado del portal entero.
   const cheapFilter = !!(q.city || q.zone || q.type || q.priceMin || q.priceMax ||
-    q.areaMin || q.areaMax || q.opp);
+    q.areaMin || q.areaMax || q.opp || q.soloDesbloqueadas);
   // Los filtros que viven dentro del JSON (`features->bedrooms`, `->stratum`) no
   // tienen índice que los cubra, así que CONTARLOS de forma exacta sobre 108.000
   // filas no cabe en el tiempo de una consulta. Da igual que vengan acompañados
@@ -232,6 +257,7 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
       // excluir proyectos preventa (is_project null o false)
       .or('features->>is_project.is.null,features->>is_project.eq.false');
     qb = applyInmuebleFilters(qb, q);
+    qb = aplicarSoloDesbloqueadas(qb, q);
     if (q.zone) qb = qb.eq('zone', q.zone);
     if (q.opp === '1') qb = qb.eq('is_opportunity', true);
     if (q.opp === 'high') {
@@ -353,6 +379,7 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
     .in('source', BANK_SOURCES as unknown as string[]);
 
   qb = applyInmuebleFilters(qb, q);
+  qb = aplicarSoloDesbloqueadas(qb, q);
   // Filtro por entidad. Se valida contra la lista blanca en vez de pasar el valor
   // a la consulta: `bank` viene de la URL y en la pestaña de remates el MISMO
   // parámetro lleva el nombre del demandante, así que aquí puede llegar cualquier
@@ -412,6 +439,7 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
   if (q.bank === '1') qb = qb.eq('features->>is_bank_plaintiff', 'true');
   else if (q.bank) qb = qb.eq('features->>bank_name', q.bank);
   // Postura mínima/máxima (presupuesto del usuario).
+  qb = aplicarSoloDesbloqueadas(qb, q);
   if (q.bidMin) qb = qb.gte('minimum_bid', q.bidMin);
   if (q.bidMax) qb = qb.lte('minimum_bid', q.bidMax);
   const order = q.order ?? 'auction_asc';

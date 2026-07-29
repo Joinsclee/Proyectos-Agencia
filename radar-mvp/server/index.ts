@@ -750,6 +750,13 @@ const server = createServer(async (req, res) => {
         const plan = planDe(usuario);
         const esRemate = path === '/api/remates';
         const q = parseListQuery(url);
+        // «Solo las que ya abrí». Los identificadores los pone el SERVIDOR desde
+        // `app_metadata`; el cliente solo puede pedir el filtro, no decir cuáles.
+        // Para un suscriptor no significa nada —las tiene todas abiertas— así que
+        // se ignora en vez de vaciarle la pantalla.
+        if (url.searchParams.get('desbloqueadas') === '1' && plan === 'free') {
+          q.soloDesbloqueadas = (usuario?.cupo ?? leerCupo(null)).desbloqueadas ?? [];
+        }
         const r = esRemate ? await queryRemates(q)
           : path === '/api/portal' ? await queryPortal(q) : await queryBancos(q);
         // Las fichas que ya gastaron cupo este mes viajan completas también aquí:
@@ -761,6 +768,10 @@ const server = createServer(async (req, res) => {
           desbloqueadas: cupo.desbloqueadas,
           restantes: estado.restantes,
         });
+        // Nota: `soloDesbloqueadas` se resolvió ANTES de consultar, en
+        // `parseListQuery` + la línea de abajo. Los identificadores salen de
+        // `app_metadata` y nunca del cliente: si vinieran de la URL, cualquiera
+        // podría pedir la lista de fichas abiertas de otra persona.
         return sendJSON(res, 200, {
           ...r,
           plan,

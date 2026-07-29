@@ -352,30 +352,79 @@ const ONBOARDING_KEY = 'radar_onboarding_v1';
  * demás, una ilustración de texto. `src` vacío pinta un marcador: para publicar un
  * video basta dejar el archivo en `server/public/radar/` y poner aquí su ruta.
  */
+/**
+ * El tutorial es un RECORRIDO por la herramienta, no una explicación de ella.
+ *
+ * Cada paso corresponde a un apartado real y termina con un botón que lleva allí,
+ * así que quien lo sigue acaba habiendo visitado el producto entero. La versión
+ * anterior explicaba conceptos —«mira el descuento, no el precio»— sin enseñar
+ * dónde estaba nada, y el cliente lo describió bien en la reunión: quien llega es
+ * alguien que «tal vez nunca haya comprado nada, viene y necesita ubicarse».
+ *
+ * Las cifras salen de `STATS`, es decir del inventario de hoy. Un tutorial que
+ * dice «buscamos en varios portales» es un folleto; uno que dice «108.060 avisos
+ * del mercado abierto» está enseñando el producto.
+ */
 const ONBOARDING_PASOS = [
   {
     etiqueta: 'Bienvenido',
+    icono: 'radar',
     titulo: 'El Radar compara contra el barrio, no contra el país',
-    texto: 'Cada inmueble se mide contra el precio real de ofertas similares en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional.',
+    texto: 'Cada inmueble se mide contra el precio real de ofertas parecidas en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional que no le sirve a nadie.',
+    puntos: [
+      'Tres fuentes distintas, comparadas con la misma vara',
+      'El Índice CRECE dice cuánto está por debajo de su mercado',
+    ],
     video: { src: '', poster: '', pie: 'Qué encuentra el Radar y de dónde salen los inmuebles.' },
   },
   {
-    etiqueta: 'Paso 1',
-    titulo: 'Filtra por lo tuyo',
-    texto: 'Ciudad, presupuesto y tipo de inmueble. Puedes dejarlo listo en tres pasos desde la portada y el Radar recuerda tus preferencias.',
-    puntos: ['Portal abierto, inmuebles de bancos y remates judiciales', 'Filtros por barrio, área, habitaciones y estrato'],
+    etiqueta: 'Inicio',
+    icono: 'radar',
+    titulo: 'Lo mejor de la semana, ya seleccionado',
+    texto: 'La portada trae tres listas —portal, bancos y remates— con lo más destacado de cada fuente. Cada ficha dice por qué está ahí, para que puedas discutir el criterio en vez de creértelo.',
+    puntos: ['Se renueva cada semana', 'El orden de los remates es por riesgo jurídico, no por descuento'],
+    ir: 'home',
   },
   {
-    etiqueta: 'Paso 2',
-    titulo: 'Mira el descuento, no el precio',
-    texto: 'El porcentaje de cada tarjeta compara contra ofertas parecidas de la misma zona. Las categorías Oportunidad y Oportunidad Fuerte son las de mayor señal.',
-    video: { src: '', poster: '', pie: 'Cómo leer una ficha: comparables, descuento real y qué revisar.' },
+    etiqueta: 'Portal',
+    icono: 'home',
+    titulo: 'El mercado abierto, filtrado con criterio',
+    cifra: (s) => (s?.portal_total ? `${s.portal_total.toLocaleString('es-CO')} avisos` : null),
+    texto: 'Todo lo que se publica en el portal inmobiliario, con el descuento calculado contra su propia zona. Aquí es donde filtras por ciudad, barrio, precio, área, habitaciones o estrato.',
+    puntos: ['Se puede llamar y visitar hoy mismo', 'Es la referencia con la que se miden las otras dos fuentes'],
+    ir: 'portal',
   },
   {
-    etiqueta: 'Paso 3',
-    titulo: 'Abre la ficha y guarda las que te sirvan',
-    texto: 'Dentro están la dirección, las fotos, los comparables del barrio y el análisis. Guarda las que te interesen con el corazón y vuelve a ellas cuando quieras.',
-    puntos: ['Sin cuenta puedes explorar y comparar', 'Con cuenta gratis abres ' + CUPO_FREE_MENSUAL + ' fichas completas al mes'],
+    etiqueta: 'Bancos',
+    icono: 'bank',
+    titulo: 'Inmuebles que los bancos quieren soltar',
+    cifra: (s) => (s?.bancos ? `${s.bancos.toLocaleString('es-CO')} activos` : null),
+    texto: 'Propiedades que los bancos recibieron en dación en pago y necesitan sacar de balance. En Colombia el descuento es más moderado que en otros mercados, así que lo que manda es la diferencia contra su zona.',
+    puntos: ['Puedes filtrar por entidad', 'El estrato no excluye: si el banco no lo reporta, la ficha se muestra igual'],
+    ir: 'bancos',
+  },
+  {
+    etiqueta: 'Remates',
+    icono: 'scale',
+    titulo: 'Subastas judiciales, con su riesgo a la vista',
+    cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
+    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. Aquí el descuento no distingue: la ley fija la base en el 70% del avalúo, así que casi todos dan lo mismo. Lo que de verdad separa un remate de otro es el riesgo del título.',
+    puntos: [
+      'Se ordenan por demandante bancario primero: título más limpio',
+      'Si solo se remata una parte del bien, la ficha lo avisa en amarillo',
+    ],
+    ir: 'remates',
+  },
+  {
+    etiqueta: 'Tu cuenta',
+    icono: 'user',
+    titulo: 'Guarda, compara y vuelve',
+    texto: `Explorar es libre y sin cuenta. Con una cuenta gratuita abres ${CUPO_FREE_MENSUAL} fichas completas al mes —dirección, fotos, comparables y análisis— y las que abres quedan abiertas.`,
+    puntos: [
+      'Guarda con el corazón y vuelve desde Guardados',
+      'Alertas semanales por correo de lo que aparezca en tu zona',
+    ],
+    video: { src: '', poster: '', pie: 'Cómo leer una ficha completa y qué revisar antes de decidir.' },
   },
 ];
 
@@ -410,22 +459,33 @@ function renderOnboardingPaso() {
     ? `<ul class="ob-puntos">${paso.puntos.map((x) => `<li>${ic('check')}${esc(x)}</li>`).join('')}</ul>`
     : '';
 
+  // La cifra sale del inventario de hoy. Si las estadísticas aún no han llegado
+  // se omite la línea entera: mejor un paso sin número que un número inventado.
+  const cifra = typeof paso.cifra === 'function' ? paso.cifra(STATS) : null;
+
   $('modal-content').innerHTML = `<div class="onboarding">
     <div class="ob-tarjeta">
-      <span class="ob-eyebrow">${ic('spark')} ${esc(paso.etiqueta)}</span>
+      <div class="ob-cab">
+        <span class="ob-icono">${ic(paso.icono || 'spark')}</span>
+        <div class="ob-cab-txt">
+          <span class="ob-eyebrow">${esc(paso.etiqueta)}</span>
+          ${cifra ? `<span class="ob-cifra">${esc(cifra)} en el Radar hoy</span>` : ''}
+        </div>
+      </div>
       <h2>${esc(paso.titulo)}</h2>
       ${onboardingMedia(paso)}
       <p class="ob-texto">${esc(paso.texto)}</p>
       ${puntos}
+      ${paso.ir ? `<button class="ob-ir" type="button" data-onboarding-ir="${esc(paso.ir)}">${ic('arrow')}Ver esta sección</button>` : ''}
     </div>
     <nav class="ob-nav" aria-label="Avance del tutorial">
-      <ol class="ob-puntitos">${ONBOARDING_PASOS.map((_, n) => `<li class="${n === i ? 'is-activo' : n < i ? 'is-visto' : ''}"><span class="sr-only">Paso ${n + 1} de ${total}</span></li>`).join('')}</ol>
+      <ol class="ob-puntitos">${ONBOARDING_PASOS.map((p, n) => `<li class="${n === i ? 'is-activo' : n < i ? 'is-visto' : ''}"><span class="sr-only">${esc(p.etiqueta)}: paso ${n + 1} de ${total}</span></li>`).join('')}</ol>
       <div class="ob-botones">
         ${i > 0 ? '<button class="ob-atras" type="button" data-onboarding-atras>Atrás</button>' : '<button class="ob-atras" type="button" data-onboarding-cerrar>Saltar</button>'}
         <button class="ob-cta" type="button" ${ultimo ? 'data-onboarding-cerrar' : 'data-onboarding-siguiente'}>${ultimo ? 'Empezar a explorar' : 'Siguiente'}</button>
       </div>
     </nav>
-    <p class="ob-nota">Puedes volver a ver esto cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
+    <p class="ob-nota">Paso ${i + 1} de ${total} · puedes volver cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
   </div>`;
 }
 
@@ -525,6 +585,15 @@ async function buildFilters() {
       html += `<div class="f"><label for="f-bank">Banco</label><select id="f-bank">${opts.join('')}</select></div>`;
     }
     html += `<div class="f"><label for="f-opp">Oportunidad</label><select id="f-opp"><option value="">Todas</option><option value="1">Solo oportunidades</option><option value="high">Solo altas</option></select></div>`;
+    // Solo para el plan gratuito: es el único que tiene fichas «suyas» que
+    // encontrar. Para un suscriptor no significa nada —las tiene todas abiertas—
+    // y para un anónimo no hay ninguna. Un filtro que a dos de los tres planes no
+    // les dice nada es un filtro que estorba.
+    if (planActual() === 'free') {
+      html += `<div class="f"><label for="f-desbloqueadas">Mis fichas</label>`
+        + `<select id="f-desbloqueadas"><option value="">Todas</option>`
+        + `<option value="1">Solo las que ya desbloqueé</option></select></div>`;
+    }
     html += fRange('price', 'Precio (millones)', 'mín', 'máx');
     html += fRange('area', 'Área (m²)', 'mín', 'máx');
     html += `<div class="f"><label for="f-bedroomsMin">Habitaciones</label><select id="f-bedroomsMin"><option value="">Todas</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></div>`;
@@ -595,6 +664,16 @@ async function repopZones(city) {
   const fc = await fetch(`/api/facets?source=portal${city ? '&city=' + encodeURIComponent(city) : ''}`).then((r) => r.json());
   sel.innerHTML = '<option value="">Todas</option>' + (fc.zones || []).map((z) => `<option value="${esc(z)}">${esc(cap(z))}</option>`).join('');
 }
+/**
+ * Plan que el servidor declaró en la última respuesta.
+ *
+ * No se deduce de tener sesión: eso ya nos costó que una cuenta gratuita viera
+ * los remates de pago enteros. El servidor es la autoridad y aquí solo se lee lo
+ * que dijo. `null` mientras no haya hablado.
+ */
+let planDelServidor = null;
+const planActual = () => planDelServidor;
+
 function readFilters() {
   const g = (id) => { const e = $(id); return e && e.value ? e.value : undefined; };
   const M = (id) => { const v = g(id); return v ? String(Math.round(Number(v) * 1e6)) : undefined; }; // millones → COP
@@ -605,6 +684,8 @@ function readFilters() {
     bedroomsMin: g('f-bedroomsMin'), stratumMin: g('f-stratumMin'), stratumMax: g('f-stratumMax'),
     opp: g('f-opp'), order: g('f-order'), bank: g('f-bank'),
     bidMin: M('f-bidMin'), bidMax: M('f-bidMax'),
+    // El servidor resuelve CUÁLES son: aquí solo se pide el filtro.
+    desbloqueadas: g('f-desbloqueadas'),
   };
 }
 $('filters-toggle').addEventListener('click', () => {
@@ -1278,6 +1359,16 @@ async function load(page) {
   // mes. Sin esto la tarjeta prometía "ábrela con tu cupo", el clic no consumía
   // nada y el modal enseñaba el muro — el plan gratuito era inalcanzable desde
   // las tres pestañas, y solo funcionaba desde la portada, que sí lo pasaba.
+  // El plan lo declara el servidor, y su primera respuesta llega DESPUÉS de que
+  // los filtros ya se hayan pintado. Cuando eso deja fuera un filtro que sí
+  // corresponde a este plan —«solo las que ya desbloqueé», que únicamente tiene
+  // sentido para el gratuito— se reconstruyen. Sin esto, el filtro no aparecía
+  // hasta que el usuario cambiaba de pestaña y volvía.
+  const planNuevo = res.plan ?? planDelServidor;
+  const faltaFiltroPropio = planNuevo === 'free' && state.tab !== 'remates' && !$('f-desbloqueadas');
+  planDelServidor = planNuevo;
+  if (faltaFiltroPropio) void buildFilters();
+
   renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
   // El "≈" cuando el servidor avisa de que el número es una estimación. Sobre
@@ -1307,6 +1398,9 @@ async function load(page) {
  */
 function renderAvisoBloqueo(plan, bloqueo, cupo, caja = $('aviso-bloqueo')) {
   if (!caja) return;
+  // Se recuerda para poder repintarlo tras gastar una ficha, sin volver a pedir
+  // el listado entero solo para actualizar un número.
+  ultimoAviso = { plan, bloqueo, cupo, caja };
   if (plan === 'suscrito' || !bloqueo || !bloqueo.bloqueadas) { caja.innerHTML = ''; return; }
 
   const n = bloqueo.bloqueadas;
@@ -1584,7 +1678,16 @@ function frescura(p) {
  * el mundo, incluido a quien solo tenía que registrarse: se le pedía pagar por
  * algo que ya podía obtener gratis.
  */
+/** ¿Esta ficha la abrió el usuario gastando una de sus fichas del mes? */
+const estaDesbloqueada = (p) => p?._acceso?.desbloqueada === true;
+
 function selloSuscripcion(p) {
+  // Ganada con el cupo: se dice. Sin este distintivo, una ficha que costó una de
+  // las veinte del mes se pierde entre las mil que son gratis para cualquiera, y
+  // el usuario no tiene forma de saber en cuáles gastó.
+  if (estaDesbloqueada(p)) {
+    return `<span class="badge-abierta">${ic('check')}Desbloqueada</span>`;
+  }
   if (!esBloqueada(p)) return '';
   // Los remates no traen `discount_pct`: el suyo sale de la postura contra el
   // avalúo, igual que en `resumenBloqueo`. Sin esto un remate bloqueado decía
@@ -1924,11 +2027,101 @@ window.__openRec = async function (kind, id) {
     const res = await fetch(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, { headers: authHeaders() });
     const data = await res.json();
     if (!data.ok) return;
+    // Cupo agotado. El servidor no rechaza la petición —devuelve la ficha
+    // recortada, que es lo correcto— así que el caso se reconoce por sus tres
+    // señales: llega bloqueada, el plan es gratuito y no quedan fichas. Es el
+    // momento exacto en que la suscripción significa algo para esta persona, y
+    // por eso el aviso va aquí y no en un banner permanente.
+    const sinCupo = data.data?._bloqueada
+      && data.plan === 'free'
+      && data.cupo && !data.cupo.ilimitado && data.cupo.restantes === 0;
+    if (sinCupo) { mostrarCupoAgotado(data.cupo); return; }
     if (kind === 'remate') openRemate(data.data);
     else openInmueble(data.data);
     document.querySelector('.modal-body')?.scrollTo({ top: 0, behavior: 'instant' });
+    // La tarjeta del listado tiene que enterarse AHORA, no al recargar. Antes el
+    // candado seguía puesto hasta que el usuario refrescaba la página: acababa de
+    // gastar una de sus veinte fichas y la pantalla seguía diciéndole que estaba
+    // cerrada, que es la peor forma posible de cobrar algo.
+    refrescarTarjeta(kind, id, data.data);
+    if (data.cupo) actualizarContadorCupo(data.cupo);
   } catch (e) { /* noop */ }
 };
+
+/**
+ * Repinta una tarjeta del listado con la ficha que acaba de devolver el servidor.
+ *
+ * Se reconstruye entera en vez de quitarle la clase del candado: la ficha abierta
+ * trae dirección, fotos y datos que la versión recortada no tenía, y dejar media
+ * tarjeta actualizada es peor que no tocarla.
+ */
+function refrescarTarjeta(kind, id, ficha) {
+  propertyCache.set(favKey(kind, id), ficha);
+  const enGrid = document.querySelector(`#grid article.card:has([data-fav-id="${CSS.escape(id)}"])`);
+  if (enGrid) {
+    const sustituto = document.createElement('div');
+    renderCards([ficha], sustituto, true);
+    const nueva = sustituto.querySelector('article.card');
+    if (nueva) { enGrid.replaceWith(nueva); paintFavs(); }
+    return;
+  }
+  // En la portada las fichas son filas de un top, no tarjetas: ahí basta con
+  // quitar el candado y poner el distintivo.
+  const fila = document.querySelector(`#home .top-item:has([data-fav-id="${CSS.escape(id)}"])`);
+  if (!fila) return;
+  fila.classList.remove('is-bloqueada');
+  const lock = fila.querySelector('.top-lock');
+  if (lock) {
+    lock.className = 'top-abierta';
+    lock.innerHTML = `${ic('check')}Desbloqueada`;
+  }
+}
+
+/**
+ * Estado del último aviso pintado, para poder repintarlo tras gastar una ficha.
+ *
+ * Sin esto habría que volver a pedir el listado entero solo para actualizar un
+ * número, y el usuario vería la pantalla recargarse por haber abierto una ficha.
+ */
+let ultimoAviso = null;
+
+/** Repinta el aviso con el cupo nuevo y una ficha bloqueada menos. */
+function actualizarContadorCupo(cupo) {
+  if (!ultimoAviso || !cupo || cupo.ilimitado) return;
+  const bloqueo = ultimoAviso.bloqueo
+    ? { ...ultimoAviso.bloqueo, bloqueadas: Math.max(0, ultimoAviso.bloqueo.bloqueadas - 1) }
+    : ultimoAviso.bloqueo;
+  renderAvisoBloqueo(ultimoAviso.plan, bloqueo, cupo, ultimoAviso.caja);
+}
+
+/**
+ * Aviso de cupo agotado.
+ *
+ * Aparece en el momento exacto en que el usuario intenta abrir la ficha veintiuna
+ * — que es cuando la suscripción significa algo para él, y no antes. Dice tres
+ * cosas y en este orden: que puede seguir usando el Radar, cuándo vuelve su cupo,
+ * y qué le costaría no esperar.
+ */
+function mostrarCupoAgotado(cupo) {
+  const dias = Number(cupo?.diasParaReinicio) || null;
+  const cuando = dias === 1 ? 'mañana' : dias ? `en ${dias} días` : 'el día 1 del próximo mes';
+  const cuerpo = `
+    <div class="cupo-agotado">
+      <span class="cupo-ic">${ic('lock')}</span>
+      <h2>Se te acabaron las ${CUPO_FREE_MENSUAL} fichas de este mes</h2>
+      <p>Puedes seguir explorando el Radar con normalidad: los listados, los filtros
+      y las fichas abiertas siguen ahí. Lo que no podrás hasta que vuelva tu cupo es
+      abrir nuevas oportunidades de descuento alto.</p>
+      <p class="cupo-reinicio">${ic('calendar')}<span>Tu cupo se reinicia <strong>${esc(cuando)}</strong></span></p>
+      <div class="cupo-acciones">
+        <a class="wall-cta" href="/planes">Desbloquear todo</a>
+        <button class="cupo-seguir" id="cupo-seguir" type="button">Seguir explorando</button>
+      </div>
+    </div>`;
+  $('modal-content').innerHTML = cuerpo;
+  showModal();
+  $('cupo-seguir')?.addEventListener('click', closeModal);
+}
 window.__analyzeAI = async function (btn, kind, id) {
   const wrap = btn.closest('.ai-wrap');
   if (!wrap) return;
@@ -2721,6 +2914,17 @@ $('ver-tutorial').addEventListener('click', abrirOnboarding);
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-onboarding-siguiente]')) { avanzarOnboarding(1); return; }
   if (e.target.closest('[data-onboarding-atras]')) { avanzarOnboarding(-1); return; }
+  // «Ver esta sección»: cierra el tutorial y lleva al apartado del que acaba de
+  // hablar. Es lo que lo convierte en un recorrido y no en una explicación —quien
+  // lo sigue termina habiendo visitado el producto, no habiendo leído sobre él—.
+  // Se marca como visto: quien llegó hasta aquí ya sabe dónde encontrarlo.
+  const ir = e.target.closest('[data-onboarding-ir]');
+  if (ir) {
+    marcarOnboardingVisto();
+    closeModal();
+    document.querySelector(`.tab-btn[data-tab="${ir.dataset.onboardingIr}"]`)?.click();
+    return;
+  }
   if (e.target.closest('[data-onboarding-cerrar]')) { marcarOnboardingVisto(); closeModal(); }
 });
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });

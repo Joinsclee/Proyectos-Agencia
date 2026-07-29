@@ -41,6 +41,16 @@ export interface Acceso {
    * realidad le bastaba registrarse.
    */
   requiere?: 'registro' | 'cupo' | 'suscripcion';
+  /**
+   * La ficha está abierta porque ESTE usuario gastó una de sus fichas del mes.
+   *
+   * Es distinto de «abierta para todos»: las dos entregan la ficha entera, pero
+   * solo esta se la ganó el usuario. Sin distinguirlas, la interfaz no podía
+   * ponerle el distintivo de «Desbloqueada» ni ofrecer el filtro para volver a
+   * encontrarla, y una ficha que costó una unidad del cupo se perdía entre las
+   * mil que son gratis para cualquiera.
+   */
+  desbloqueada?: boolean;
 }
 
 const LIBRE: Acceso = { completa: true, motivo: null, avisoRiesgo: false };
@@ -56,7 +66,9 @@ function bloqueo(
   cupo?: { desbloqueada?: boolean; restantes?: number | null },
 ): Acceso {
   if (plan === 'anonimo') return { completa: false, motivo, avisoRiesgo: false, requiere: 'registro' };
-  if (cupo?.desbloqueada) return LIBRE;
+  // Abierta, y además CON SU CUPO: se marca para que la tarjeta lo diga y para
+  // que el filtro «solo desbloqueadas» pueda encontrarla.
+  if (cupo?.desbloqueada) return { ...LIBRE, desbloqueada: true };
   const quedan = cupo?.restantes ?? 0;
   return {
     completa: false,
