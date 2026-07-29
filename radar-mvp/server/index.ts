@@ -324,6 +324,7 @@ function parseListQuery(url: URL): ListQuery {
     pageSize: n('pageSize'),
     past: g('past'),
     bank: g('bank'),
+    tier: g('tier'),
     bidMin: n('bidMin'),
     bidMax: n('bidMax'),
   };
