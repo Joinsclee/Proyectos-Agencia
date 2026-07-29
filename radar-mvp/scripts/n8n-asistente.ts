@@ -112,19 +112,83 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
         options: { fileName: '={{ $json.body.adjunto_nombre }}', mimeType: '={{ $json.body.adjunto_mime }}' },
       },
     },
-    // Solo para documentos. Las imágenes NO pasan por aquí: al modelo se le
-    // enseñan tal cual con `passthroughBinaryImages`, y extraerles texto las
-    // convertiría en una cadena vacía justo antes de que pudiera mirarlas.
+    // Cada tipo de adjunto va por su camino, y esto es lo que arregla el fallo de
+    // las imágenes: antes TODO adjunto pasaba por el extractor de PDF, así que una
+    // foto entraba en un nodo que no sabe leerla y llegaba al agente sin nada que
+    // mirar. El síntoma era el peor posible —«por favor, adjunta la imagen»— con
+    // el usuario viendo que sí la había adjuntado.
+    //
+    // El tipo se lee del Webhook y no del item actual: `Base64 a archivo` mueve el
+    // contenido al espacio binario y deja el JSON sin los campos originales.
     {
-      id: 'extraer',
-      name: 'Extraer texto del documento',
+      id: 'tipo-adjunto',
+      name: '¿Qué tipo de adjunto?',
+      type: 'n8n-nodes-base.switch',
+      typeVersion: 3.2,
+      position: [200, -120],
+      parameters: {
+        rules: {
+          values: [
+            {
+              conditions: {
+                options: { caseSensitive: false, leftValue: '', typeValidation: 'loose', version: 2 },
+                conditions: [{
+                  id: 'r-img',
+                  leftValue: '={{ $(\'Webhook\').item.json.body.adjunto_mime }}',
+                  rightValue: 'image/',
+                  operator: { type: 'string', operation: 'startsWith' },
+                }],
+                combinator: 'and',
+              },
+              renameOutput: true,
+              outputKey: 'imagen',
+            },
+            {
+              conditions: {
+                options: { caseSensitive: false, leftValue: '', typeValidation: 'loose', version: 2 },
+                conditions: [{
+                  id: 'r-pdf',
+                  leftValue: '={{ $(\'Webhook\').item.json.body.adjunto_mime }}',
+                  rightValue: 'pdf',
+                  operator: { type: 'string', operation: 'contains' },
+                }],
+                combinator: 'and',
+              },
+              renameOutput: true,
+              outputKey: 'pdf',
+            },
+          ],
+        },
+        // Todo lo demás —texto plano, Word— cae aquí en vez de perderse.
+        options: { fallbackOutput: 'extra', renameFallbackOutput: 'otro' },
+      },
+    },
+    // La imagen NO pasa por ningún extractor: llega al agente con sus bytes
+    // intactos y el modelo la mira con `passthroughBinaryImages`. Extraerle texto
+    // la convertiría en una cadena vacía justo antes de que pudiera verla.
+    {
+      id: 'extraer-pdf',
+      name: 'Extraer texto del PDF',
       type: 'n8n-nodes-base.extractFromFile',
       typeVersion: 1,
-      position: [200, -120],
+      position: [430, -230],
       parameters: { operation: 'pdf', binaryPropertyName: 'data', options: {} },
       // Un PDF escaneado sin capa de texto devuelve vacío y hace fallar el nodo.
       // Eso no puede tumbar la conversación: se sigue sin el texto y el modelo
       // dirá que no pudo leerlo, que es información útil para el usuario.
+      onError: 'continueRegularOutput',
+    },
+    {
+      id: 'extraer-texto',
+      name: 'Extraer texto plano',
+      type: 'n8n-nodes-base.extractFromFile',
+      typeVersion: 1,
+      position: [430, -120],
+      // `destinationKey: 'text'` para que los dos extractores dejen el contenido en
+      // el MISMO sitio. El de PDF ya usa `text`; el de texto plano lo pondría en
+      // `data`, y entonces el prompt tendría que preguntar por dos nombres
+      // distintos según por dónde vino — o, más probable, olvidarse de uno.
+      parameters: { operation: 'text', binaryPropertyName: 'data', destinationKey: 'text', options: {} },
       onError: 'continueRegularOutput',
     },
     {
@@ -135,7 +199,16 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
       position: [460, 0],
       parameters: {
         promptType: 'define',
-        text: '={{ $(\'Webhook\').item.json.body.pregunta }}',
+        // La pregunta SIEMPRE, y el texto del documento cuando lo haya.
+        //
+        // Faltaba lo segundo y por eso un PDF adjunto no servía de nada: el
+        // extractor sacaba el texto correctamente pero nadie se lo pasaba al
+        // modelo, que respondía «por favor, adjunta el documento» a alguien que
+        // acababa de adjuntarlo. Las imágenes no aparecen aquí porque no son
+        // texto: el modelo las ve por `passthroughBinaryImages`.
+        text: '=Pregunta: {{ $(\'Webhook\').item.json.body.pregunta }}\n'
+          + '{{ $json.text ? "\\n--- Contenido del documento adjunto ("'
+          + ' + $(\'Webhook\').item.json.body.adjunto_nombre + ") ---\\n" + $json.text : "" }}',
         options: {
           systemMessage: prompt,
           // El modelo puede VER las imágenes que suba el usuario: la foto de un
@@ -303,8 +376,19 @@ function conexiones(): Record<string, unknown> {
         [{ node: 'AI Agent', type: 'main', index: 0 }],           // no
       ],
     },
-    'Base64 a archivo': { main: [[{ node: 'Extraer texto del documento', type: 'main', index: 0 }]] },
-    'Extraer texto del documento': { main: [[{ node: 'AI Agent', type: 'main', index: 0 }]] },
+    'Base64 a archivo': { main: [[{ node: '¿Qué tipo de adjunto?', type: 'main', index: 0 }]] },
+    // Tres salidas, en el mismo orden en que se declararon las reglas: imagen,
+    // pdf y todo lo demás. La imagen va DIRECTA al agente —ese es el arreglo—;
+    // las otras dos pasan por su extractor correspondiente.
+    '¿Qué tipo de adjunto?': {
+      main: [
+        [{ node: 'AI Agent', type: 'main', index: 0 }],
+        [{ node: 'Extraer texto del PDF', type: 'main', index: 0 }],
+        [{ node: 'Extraer texto plano', type: 'main', index: 0 }],
+      ],
+    },
+    'Extraer texto del PDF': { main: [[{ node: 'AI Agent', type: 'main', index: 0 }]] },
+    'Extraer texto plano': { main: [[{ node: 'AI Agent', type: 'main', index: 0 }]] },
     'OpenAI Chat Model': alAgente('ai_languageModel'),
     'Memoria por usuario': alAgente('ai_memory'),
     buscar_propiedades: alAgente('ai_tool'),
