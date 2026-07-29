@@ -798,6 +798,74 @@ function renderRadarSetup() {
     </div>
   </div>`;
 }
+/**
+ * Municipios que forman un mismo mercado inmobiliario.
+ *
+ * Pedido en la reunión: «tener otras ciudades de referencia, pueden ser ciudades
+ * que están alrededor de la ciudad que se ha configurado». Y es más que una
+ * comodidad — en Colombia el área metropolitana ES el mercado: quien busca en
+ * Medellín compra en Envigado o Sabaneta sin pestañear, y quien busca en Bogotá
+ * mira Chía y Mosquera. Un filtro por ciudad exacta le esconde justo la mitad de
+ * su mercado, y es la mitad donde suele estar el precio.
+ *
+ * Los nombres van como los guarda el scraping: en minúscula y sin tildes.
+ * Las relaciones son simétricas — desde Envigado también se ofrece Medellín—
+ * porque `vecinasDisponibles` recorre el grupo entero, no una lista por ciudad.
+ */
+const AREAS_METROPOLITANAS = [
+  // Valle de Aburrá
+  ['medellin', 'bello', 'envigado', 'itagui', 'sabaneta', 'la estrella', 'copacabana', 'girardota', 'caldas', 'barbosa'],
+  // Sabana de Bogotá
+  ['bogota', 'soacha', 'chia', 'cajica', 'cota', 'funza', 'madrid', 'mosquera', 'la calera', 'sopo', 'tocancipa', 'zipaquira', 'facatativa', 'tenjo', 'tabio'],
+  ['cali', 'palmira', 'yumbo', 'jamundi', 'candelaria'],
+  ['barranquilla', 'soledad', 'malambo', 'puerto colombia', 'galapa'],
+  ['bucaramanga', 'floridablanca', 'giron', 'piedecuesta'],
+  ['pereira', 'dosquebradas', 'la virginia', 'santa rosa de cabal'],
+  ['manizales', 'villamaria', 'chinchina', 'neira'],
+  ['cucuta', 'villa del rosario', 'los patios', 'el zulia'],
+  ['cartagena', 'turbaco', 'arjona', 'turbana'],
+  ['armenia', 'calarca', 'circasia', 'la tebaida', 'montenegro', 'salento'],
+  ['villavicencio', 'acacias', 'restrepo', 'cumaral'],
+  ['santa marta', 'cienaga'],
+];
+
+/** Vecinas de una ciudad que HOY tienen inventario. Sin inventario no se ofrecen. */
+function vecinasDisponibles(ciudad) {
+  if (!ciudad) return [];
+  const grupo = AREAS_METROPOLITANAS.find((g) => g.includes(ciudad));
+  if (!grupo) return [];
+  const conInventario = new Set((STATS?.perCity ?? []).map((c) => c.city));
+  return grupo.filter((c) => c !== ciudad && conInventario.has(c));
+}
+
+/**
+ * Ofrece las ciudades vecinas bajo los resultados.
+ *
+ * Solo aparece con un filtro de ciudad puesto y solo lista municipios que hoy
+ * tienen inventario: ofrecer una ciudad vacía es ofrecer un clic que deja la
+ * pantalla en blanco.
+ */
+function renderVecinas() {
+  const caja = $('vecinas');
+  if (!caja) return;
+  const ciudad = $('f-city')?.value;
+  const vecinas = state.tab === 'portal' ? vecinasDisponibles(ciudad) : [];
+  if (!vecinas.length) { caja.innerHTML = ''; caja.hidden = true; return; }
+  caja.hidden = false;
+  caja.innerHTML = `<span class="vecinas-lbl">Mismo mercado que ${esc(cap(ciudad))}:</span>`
+    + vecinas.map((c) => `<button class="vecina" type="button" data-vecina="${esc(c)}">${esc(cap(c))}</button>`).join('');
+  caja.querySelectorAll('[data-vecina]').forEach((b) => {
+    b.addEventListener('click', async () => {
+      const sel = $('f-city');
+      if (!sel) return;
+      sel.value = b.dataset.vecina;
+      await repopZones(sel.value);
+      updateFilterCount();
+      load(1);
+    });
+  });
+}
+
 async function applyRadarPreferences(preferences, reload = false) {
   if (state.tab !== 'portal' || !preferences.complete) return;
   const city = $('f-city');
@@ -1221,6 +1289,7 @@ async function load(page) {
   clearLoadingSkeletons();
   $('empty').style.display = res.total === 0 ? 'block' : 'none';
   renderPager(res.total, res.page, res.pages, res);
+  renderVecinas();
   state.loading = false;
 }
 

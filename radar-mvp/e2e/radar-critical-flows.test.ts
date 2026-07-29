@@ -421,6 +421,46 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
     }
   });
 
+  test('ofrece los municipios del mismo mercado que la ciudad filtrada', async () => {
+    // En Colombia el área metropolitana ES el mercado: quien busca en Medellín
+    // compra en Envigado o Sabaneta sin pestañear. Un filtro por ciudad exacta le
+    // esconde justo la mitad de su mercado, que suele ser donde está el precio.
+    const { context, page, assertClean } = await openIsolatedPage();
+    try {
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await esperarPortada(page);
+      await irAPestana(page, 'portal');
+      await waitForResults(page);
+
+      // Sin ciudad no se ofrece nada: no hay mercado del que hablar.
+      assert.equal(await page.locator('#vecinas .vecina').count(), 0);
+
+      const ciudad = page.locator('#f-city');
+      if (!(await ciudad.locator('option[value="medellin"]').count())) return; // sin inventario hoy
+      await ciudad.selectOption('medellin');
+      await waitForResults(page);
+
+      const vecinas = (await page.locator('#vecinas .vecina').allTextContents()).map((t) => t.trim().toLowerCase());
+      assert.ok(vecinas.length > 0, 'Medellín debería ofrecer municipios del Valle de Aburrá');
+      assert.ok(
+        vecinas.some((v) => ['envigado', 'sabaneta', 'bello', 'itagui', 'la estrella'].includes(v)),
+        `las vecinas ofrecidas no son del Valle de Aburrá: ${vecinas.join(', ')}`,
+      );
+      // Y nunca se ofrece a sí misma: sería un clic que no lleva a ninguna parte.
+      assert.ok(!vecinas.includes('medellin'), 'se ofreció la propia ciudad filtrada');
+
+      // Pulsar una vecina cambia el filtro de verdad y trae SUS resultados.
+      const destino = vecinas[0];
+      await page.locator('#vecinas .vecina').first().click();
+      await waitForResults(page);
+      assert.equal(await ciudad.inputValue(), destino, 'el clic no movió el filtro de ciudad');
+
+      assertClean();
+    } finally {
+      await context.close();
+    }
+  });
+
   test('carga el dashboard y expone APIs/configuración sanas', async () => {
     const { context, page, assertClean } = await openIsolatedPage();
     try {
