@@ -5,6 +5,7 @@
  */
 import { supabase } from '../lib/supabase.js';
 import { MAX_DISPLAY_PRICE, MAX_OPP_DISCOUNT, BANK_SOURCES } from '../lib/types.js';
+import { colapsarRepetidos } from './repetidos.js';
 import { rotarSemanal } from '../engine/rotacion.js';
 import { sanitizeRemateForDisplay } from './data-quality.js';
 import { evaluarFrescura, type Frescura, type TrabajoCron } from './frescura.js';
@@ -234,8 +235,16 @@ function applyOrderInmuebles(qb: any, order?: string) {
     case 'precio_desc': return conDesempate(qb.order('price', { ascending: false, nullsFirst: false }));
     case 'precio_m2_asc': return conDesempate(qb.order('price_per_m2', { ascending: true, nullsFirst: false }));
     case 'recent': return conDesempate(qb.order('scraped_at', { ascending: false }));
-    case 'discount_desc':
-    default: return conDesempate(qb.order('discount_pct', { ascending: false, nullsFirst: false }));
+    case 'discount_desc': return conDesempate(qb.order('discount_pct', { ascending: false, nullsFirst: false }));
+    // Por defecto, el más barato primero. Lo pidió el cliente viendo el listado:
+    // «que saliera siempre con los inmuebles de menor valor».
+    //
+    // El defecto del SERVIDOR tiene que ser el mismo que el que el desplegable
+    // muestra seleccionado. Si aquí siguiera mandando el descuento, la primera
+    // carga —que llega sin parámetro de orden— pintaría un listado ordenado por
+    // descuento mientras el control dice «Precio menor», y no hay forma de que el
+    // usuario entienda eso.
+    default: return conDesempate(qb.order('price', { ascending: true, nullsFirst: false }));
   }
 }
 
@@ -341,8 +350,12 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   const total = hayFiltros ? (count ?? 0) : await totalPortalSinFiltros(count ?? 0);
   const paginasReales = Math.ceil(total / pageSize);
   const pages = Math.min(paginasReales, MAX_PAGINAS_NAVEGABLES);
+  // Diez avisos del mismo loteo se ven como diez tarjetas idénticas. No son un
+  // fallo del scraper —cada una es un anuncio distinto, con su URL— pero en
+  // pantalla dan una opción y nueve estorbos. Ver `server/repetidos.ts`.
+  const { filas } = colapsarRepetidos(data ?? []);
   return {
-    data: data ?? [],
+    data: filas,
     total,
     page,
     pageSize,
@@ -440,10 +453,13 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   // elegir: con «precio menor» el más barato salía en la posición 18 y la lista
   // daba un salto hacia atrás a mitad de página. Un orden que el usuario pide es
   // una instrucción, no una sugerencia.
-  const filas = data ?? [];
+  // Mismo criterio que en el portal: las copias del mismo loteo se colapsan en
+  // una tarjeta con su cuenta. Se hace ANTES de rotar para que la rotación
+  // reparta fichas distintas y no copias de la misma.
+  const { filas: sinRepetir } = colapsarRepetidos(data ?? []);
   const rotables = !q.order || q.order === 'precio_m2_asc'; // el defecto del módulo
   return {
-    data: rotables ? rotarSemanal(filas) : filas,
+    data: rotables ? rotarSemanal(sinRepetir) : sinRepetir,
     total, page, pageSize, pages: Math.ceil(total / pageSize),
   };
 }
