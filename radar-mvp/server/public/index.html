@@ -147,6 +147,44 @@
     </div>
   </div>
 
+  <!-- Asistente. Empieza oculto y solo aparece si hay sesión y el workflow está
+       configurado: para un visitante anónimo no existe. -->
+  <button class="asis-btn" id="asistente-btn" hidden aria-expanded="false"
+          aria-controls="asistente-panel" aria-label="Abrir el asistente del Radar">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 3c4.97 0 9 3.36 9 7.5 0 4.14-4.03 7.5-9 7.5-1.02 0-2-.14-2.91-.4L5 20l.9-3.15C4.11 15.5 3 13.13 3 10.5 3 6.36 7.03 3 12 3z"/>
+      <circle cx="8.5" cy="10.5" r="1.15"/><circle cx="12" cy="10.5" r="1.15"/><circle cx="15.5" cy="10.5" r="1.15"/>
+    </svg>
+    <span class="asis-btn-punto" aria-hidden="true"></span>
+  </button>
+
+  <section class="asis-panel" id="asistente-panel" role="dialog" aria-modal="false"
+           aria-label="Asistente del Radar" aria-hidden="true">
+    <header class="asis-cab">
+      <div>
+        <h2>Asistente del Radar</h2>
+        <p>Te ayudo con la herramienta, con los números y con lo legal</p>
+      </div>
+      <button type="button" id="asistente-cerrar" class="asis-cerrar" aria-label="Cerrar el asistente">×</button>
+    </header>
+    <div class="asis-hilo" id="asistente-hilo" role="log" aria-live="polite"></div>
+    <p class="asis-cupo" id="asistente-cupo" hidden></p>
+    <p class="asis-error" id="asistente-error" role="alert" hidden></p>
+    <div class="asis-archivo" id="asistente-archivo" hidden>
+      <span class="asis-archivo-nombre"></span>
+      <button type="button" id="asistente-quitar-archivo" aria-label="Quitar el archivo">×</button>
+    </div>
+    <div class="asis-entrada">
+      <button type="button" id="asistente-adjuntar" class="asis-adjuntar"
+              aria-label="Adjuntar documento o imagen (máximo 10 MB)" title="Adjuntar · máximo 10 MB">📎</button>
+      <input type="file" id="asistente-file" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp" hidden>
+      <textarea id="asistente-texto" rows="1" placeholder="Escribe tu pregunta…"
+                aria-label="Tu pregunta para el asistente"></textarea>
+      <button type="button" id="asistente-enviar" class="asis-enviar" aria-label="Enviar la pregunta">↑</button>
+    </div>
+    <p class="asis-pie">Documentos e imágenes hasta 10 MB · PDF, Word, texto, JPG, PNG</p>
+  </section>
+
   <!-- Memoria de la ficha que el usuario dejó a medias al irse a registrarse o a
        pagar. Va antes de app.js, que la guarda y la consume. -->
   <script src="/ficha-pendiente.js"></script>
@@ -154,5 +192,6 @@
   <!-- Recorrido guiado de bienvenida. Va después de app.js: necesita que las
        pestañas y los listados ya tengan sus manejadores para poder navegarlos. -->
   <script src="/tour.js"></script>
+  <script src="/asistente.js"></script>
 </body>
 </html>

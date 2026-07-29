@@ -9,6 +9,7 @@
  */
 import 'dotenv/config';
 import { createServer } from 'node:http';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -38,6 +39,11 @@ import {
 import { construirResumenCuenta, nombreArchivoResumen } from './resumen-cuenta.js';
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactarMixta, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
+import {
+  consumirConsulta, estadoConsultas, leerConsultas, validarAdjunto, LIMITE_CONSULTAS_FREE,
+} from './asistente.js';
+import { asistenteDisponible, preguntarAlAsistente } from './asistente-n8n.js';
+import { buscarParaAsistente } from './asistente-busqueda.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
   activarPlanDemo,
@@ -52,6 +58,7 @@ import {
   updateAdminExpenseParameters,
   listPlans,
   registerPlanInterest,
+  registrarConsultaAsistente,
   registrarDesbloqueo,
   registrarReporte,
   saveAlert,
@@ -176,18 +183,45 @@ function rateLimited(
   return true;
 }
 
-async function readJsonBody(req: import('node:http').IncomingMessage): Promise<unknown> {
+async function readJsonBody(
+  req: import('node:http').IncomingMessage,
+  maxBytes = 1_000_000,
+): Promise<unknown> {
   return new Promise((resolve) => {
     let raw = '';
     let size = 0;
     req.on('data', (c) => {
       size += c.length;
-      if (size > 1_000_000) { req.destroy(); resolve({}); return; } // límite anti-abuso
+      if (size > maxBytes) { req.destroy(); resolve({}); return; } // límite anti-abuso
       raw += c;
     });
     req.on('end', () => { try { resolve(raw ? JSON.parse(raw) : {}); } catch { resolve({}); } });
     req.on('error', () => resolve({}));
   });
+}
+
+/**
+ * Tope de cuerpo para la ruta del asistente.
+ *
+ * Un adjunto de 10 MB pesa cerca de 13,4 MB una vez codificado en base64 —crece un
+ * tercio— y encima viaja la pregunta. 16 MB deja margen para eso sin abrir la
+ * puerta a cualquier cosa: el resto del servidor sigue con su millón de bytes,
+ * que es de sobra para lo que mandan las demás rutas.
+ */
+const MAX_CUERPO_ASISTENTE = 16 * 1024 * 1024;
+
+/**
+ * Compara dos secretos sin filtrar cuál era por el tiempo que tarda en fallar.
+ *
+ * Con `!==` la comparación se corta en el primer carácter distinto, así que medir
+ * muchas peticiones deja adivinarlo letra a letra. `timingSafeEqual` exige que las
+ * dos entradas midan lo mismo, de ahí el hash previo: iguala la longitud sin
+ * revelar la del secreto.
+ */
+function igualEnTiempoFijo(a: string, b: string): boolean {
+  const ha = createHash('sha256').update(a).digest();
+  const hb = createHash('sha256').update(b).digest();
+  return timingSafeEqual(ha, hb);
 }
 
 /** Token Bearer de la petición, si viene. */
@@ -421,8 +455,15 @@ const server = createServer(async (req, res) => {
         const result = path.endsWith('register') ? await registerUser(body) : await loginUser(body);
         return sendJSON(res, result.ok ? 200 : 400, result);
       }
-      // ── Cuenta, planes y alertas persistentes ──
-      if (path.startsWith('/api/account')) {
+      // ── Cuenta, planes, alertas persistentes y asistente ──
+      //
+      // Todo lo que hay aquí dentro exige sesión, y por eso comparten bloque: la
+      // comprobación se hace UNA vez, arriba. El asistente entra por el mismo
+      // camino aunque su ruta no empiece por `/api/account` —lo pidió el cliente:
+      // el anónimo ni siquiera ve el botón—; añadirlo aquí evita repetir la
+      // validación en otro sitio, que es como se acaba teniendo una ruta que se
+      // olvidó de hacerla.
+      if (path.startsWith('/api/account') || path === '/api/asistente') {
         const user = await getUserFromToken(bearer(req));
         if (!user) return sendJSON(res, 401, { ok: false, error: 'Inicia sesión para administrar tu Radar' });
 
@@ -438,6 +479,74 @@ const server = createServer(async (req, res) => {
           if (rateLimited(res, `alert-write:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
           const result = await saveAlert(user.id, await readJsonBody(req));
           return sendJSON(res, result.ok ? 200 : 400, result);
+        }
+        // Una pregunta al asistente. Requiere sesión —está dentro del bloque que ya
+        // exigió `user`—, que es justamente lo que pidió el cliente: el anónimo ni
+        // siquiera ve el botón.
+        if (path === '/api/asistente' && req.method === 'POST') {
+          if (!asistenteDisponible()) {
+            return sendJSON(res, 503, { ok: false, error: 'El asistente no está disponible en este momento.' });
+          }
+          // Un tope por hora además del cupo mensual. El cupo protege la factura;
+          // esto protege del bucle: una pestaña con un script disparando preguntas
+          // se comería las 30 del mes en un minuto y el usuario ni se enteraría.
+          if (rateLimited(res, `asistente:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
+
+          const cuerpo = (await readJsonBody(req, MAX_CUERPO_ASISTENTE)) as Record<string, unknown>;
+          const pregunta = String(cuerpo.pregunta ?? '').trim();
+          if (!pregunta) return sendJSON(res, 400, { ok: false, error: 'Escribe una pregunta.' });
+          if (pregunta.length > 4_000) {
+            return sendJSON(res, 400, { ok: false, error: 'La pregunta es demasiado larga. Resúmela un poco.' });
+          }
+
+          // El adjunto se valida ANTES de gastar cupo: rechazar un archivo por
+          // pesado no puede costarle al usuario una de sus consultas del mes.
+          let adjunto: { nombre: string; mime: string; base64: string } | undefined;
+          if (cuerpo.adjunto && typeof cuerpo.adjunto === 'object') {
+            const a = cuerpo.adjunto as Record<string, unknown>;
+            const nombre = String(a.nombre ?? '');
+            const base64 = String(a.base64 ?? '');
+            // El tamaño real es el de los bytes, no el de la cadena: base64 abulta
+            // un tercio, y medir la cadena rechazaría archivos de 7,5 MB diciendo
+            // que pasan de 10.
+            const bytes = Math.floor((base64.length * 3) / 4);
+            const v = validarAdjunto(nombre, bytes);
+            if (!v.ok) return sendJSON(res, 400, { ok: false, error: v.error });
+            adjunto = { nombre, mime: String(a.mime ?? ''), base64 };
+          }
+
+          const planAsistente = planDe(user);
+          const consultas = user.consultas ?? leerConsultas(null);
+          const decision = consumirConsulta(consultas, planAsistente);
+          if (!decision.permitido) {
+            return sendJSON(res, 429, {
+              ok: false,
+              motivo: decision.motivo,
+              error: decision.motivo === 'agotado'
+                ? `Se te acabaron las ${LIMITE_CONSULTAS_FREE} consultas de este mes.`
+                : 'Crea tu cuenta para hablar con el asistente.',
+              consultas: estadoConsultas(consultas, planAsistente),
+            });
+          }
+
+          const r = await preguntarAlAsistente({ pregunta, sessionId: user.id, adjunto });
+          // El cupo se descuenta SOLO si el asistente respondió. Cobrar una
+          // consulta que falló por nuestro lado es cobrar por nada, y es
+          // justamente cuando el usuario va a reintentar.
+          if (r.ok && planAsistente === 'free') {
+            try {
+              await registrarConsultaAsistente(user.id, decision.consultas);
+              user.consultas = decision.consultas;
+            } catch (e) {
+              // Si no se pudo escribir, la conversación sigue: perder una consulta
+              // sin cobrar es mejor que negarle la respuesta a quien sí tenía cupo.
+              log.error(`no se pudo registrar la consulta de ${user.id.slice(0, 8)}: ${String(e)}`);
+            }
+          }
+          return sendJSON(res, r.ok ? 200 : 502, {
+            ...r,
+            consultas: estadoConsultas(r.ok ? decision.consultas : consultas, planAsistente),
+          });
         }
         if (path.startsWith('/api/account/alerts/') && req.method === 'DELETE') {
           if (rateLimited(res, `alert-write:${user.id}`, { limit: 30, windowMs: 60 * 60 * 1000 })) return;
@@ -716,6 +825,40 @@ const server = createServer(async (req, res) => {
         );
       }
       // Una propiedad por id (para abrir una recomendación en su modal).
+      // ── Asistente ──
+      //
+      // La búsqueda que hace el agente EN NOMBRE de alguien. La llama n8n, no el
+      // navegador, y por eso se autentica con el secreto compartido y no con un
+      // token: n8n no tiene el token de nadie. Quién pregunta lo dice la cabecera
+      // `x-radar-usuario`, que puso el propio Radar al arrancar la consulta.
+      if (path === '/api/asistente/buscar') {
+        const secreto = String(req.headers['x-radar-asistente'] ?? '');
+        // Comparación de longitud fija para no filtrar el secreto por el tiempo
+        // que tarda en fallar. Con `!==` a secas, medir muchas peticiones permite
+        // adivinarlo carácter a carácter.
+        if (!env.RADAR_ASISTENTE_SECRETO || !igualEnTiempoFijo(secreto, env.RADAR_ASISTENTE_SECRETO)) {
+          return sendJSON(res, 401, { ok: false, error: 'no autorizado' });
+        }
+        const usuarioId = String(req.headers['x-radar-usuario'] ?? '');
+        if (!usuarioId) return sendJSON(res, 400, { ok: false, error: 'falta el usuario' });
+        const num = (k: string) => {
+          const v = Number(url.searchParams.get(k));
+          return Number.isFinite(v) && v > 0 ? v : undefined;
+        };
+        const fuenteCruda = url.searchParams.get('fuente');
+        const r = await buscarParaAsistente(usuarioId, {
+          ciudad: url.searchParams.get('ciudad') ?? undefined,
+          tipo: url.searchParams.get('tipo') ?? undefined,
+          fuente: fuenteCruda === 'banco' || fuenteCruda === 'remate' || fuenteCruda === 'portal'
+            ? fuenteCruda
+            : undefined,
+          precioMin: num('precioMin'),
+          precioMax: num('precioMax'),
+          tier: url.searchParams.get('tier') ?? undefined,
+        });
+        return sendJSON(res, r.ok ? 200 : 400, r);
+      }
+
       if (path === '/api/property') {
         const kind = url.searchParams.get('kind');
         const id = url.searchParams.get('id');
@@ -858,6 +1001,10 @@ const server = createServer(async (req, res) => {
         // una puerta que devuelve un error de OAuth al pulsarla. Se enciende con
         // RADAR_OAUTH_MICROSOFT=1 el mismo día que se configure allí.
         microsoftLoginReady: process.env.RADAR_OAUTH_MICROSOFT === '1',
+        // Si el workflow no está configurado, el botón flotante no se pinta. Se
+        // dice aquí y no se deduce en el navegador porque el webhook y su secreto
+        // no pueden viajar al cliente.
+        asistenteReady: asistenteDisponible(),
         // Porcentajes de la calculadora de gastos. Van en la config PÚBLICA a
         // propósito: son tarifas de ley que se le muestran a todo el que abre
         // una ficha, y esconderlas detrás del token no protegería nada. Lo que
