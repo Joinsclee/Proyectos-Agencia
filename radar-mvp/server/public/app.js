@@ -402,6 +402,56 @@ function showRegisterWall(count) {
  * basta dejar el archivo en `server/public/radar/` y poner su ruta aquí — no hay
  * que tocar nada más.
  */
+/**
+ * La tabla maestra del Índice CRECE, tal como está en la especificación.
+ *
+ * Es la misma de `engine/crece.ts` recortada a lo que se puede FILTRAR: llega
+ * hasta «Precio de Mercado» y ni una más. Las categorías por encima del mercado
+ * —Sobreprecio, Fuera de Mercado— se siguen calculando y se ven en la ficha,
+ * porque son parte del veredicto, pero ofrecerlas como destino de búsqueda sería
+ * invitar a buscar justo lo que el Radar existe para evitar.
+ *
+ * Las estrellas son las de la tabla del cliente: tres para Oportunidad Fuerte,
+ * dos para Oportunidad, una para Interesante y una hueca para Abajo del Mercado
+ * —que es «una estrella blanca» en el documento—. De «Precio de Mercado» hacia
+ * abajo no hay estrellas porque no hay nada que destacar.
+ *
+ * Vive aquí duplicada a propósito: el cliente no importa del motor (no hay
+ * empaquetador) y `server/crece-tabla.test.ts` comprueba que las dos copias
+ * digan lo mismo, que es lo que evita que se separen en silencio.
+ */
+const TABLA_CRECE = [
+  { tier: 'oportunidad_fuerte', lectura: 'Oportunidad Fuerte', estrellas: 3, huecas: 0, estrellasTexto: '★★★' },
+  { tier: 'oportunidad', lectura: 'Oportunidad', estrellas: 2, huecas: 0, estrellasTexto: '★★' },
+  { tier: 'interesante', lectura: 'Interesante', estrellas: 1, huecas: 0, estrellasTexto: '★' },
+  { tier: 'abajo_mercado', lectura: 'Abajo del Mercado', estrellas: 0, huecas: 1, estrellasTexto: '☆' },
+  { tier: 'mercado_borde_bajo', lectura: 'Precio de Mercado (borde bajo)', estrellas: 0, huecas: 0, estrellasTexto: '' },
+  { tier: 'mercado', lectura: 'Precio de Mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
+];
+const CRECE_POR_TIER = new Map(TABLA_CRECE.map((t) => [t.tier, t]));
+
+/**
+ * Las estrellas de la tabla maestra, en la tarjeta.
+ *
+ * Es el mismo lenguaje que el cliente tiene en su documento de especificación, y
+ * el que la ficha ya usa por dentro: llevarlo a la tarjeta hace que se pueda
+ * comparar una lista entera de un vistazo sin abrir nada. El porcentaje de
+ * descuento dice CUÁNTO; las estrellas dicen QUÉ TAN BUENO es ese cuánto contra
+ * el mercado de su zona, que no es lo mismo.
+ *
+ * De «Precio de Mercado» hacia abajo no se pinta nada: cero estrellas es la
+ * ausencia de la etiqueta, no una etiqueta vacía.
+ */
+function selloCrece(p) {
+  const t = CRECE_POR_TIER.get(p?.crece_tier);
+  if (!t || (!t.estrellas && !t.huecas)) return '';
+  const llenas = '★'.repeat(t.estrellas);
+  const huecas = '☆'.repeat(t.huecas);
+  return `<span class="crece-sello nivel-${esc(t.tier)}" title="${esc(t.lectura)}">`
+    + `<span class="crece-estrellas" aria-hidden="true">${llenas}${huecas}</span>`
+    + `<span class="crece-lectura">${esc(t.lectura)}</span></span>`;
+}
+
 const ONBOARDING_KEY = 'radar_onboarding_v1';
 
 /**
@@ -643,7 +693,19 @@ async function buildFilters() {
       );
       html += `<div class="f"><label for="f-bank">Banco</label><select id="f-bank">${opts.join('')}</select></div>`;
     }
-    html += `<div class="f"><label for="f-opp">Oportunidad</label><select id="f-opp"><option value="">Todas</option><option value="1">Solo oportunidades</option><option value="high">Solo altas</option></select></div>`;
+    // Filtro por CATEGORÍA del Índice CRECE, con la tabla maestra de la
+    // especificación. Antes eran tres opciones vagas —«solo oportunidades», «solo
+    // altas»— que no se correspondían con ninguna de las once categorías que el
+    // motor calcula y que la ficha muestra. Ahora el filtro habla el mismo idioma
+    // que el veredicto.
+    const opcionesTier = TABLA_CRECE.map((t) =>
+      `<option value="tier:${t.tier}">${t.estrellasTexto} ${esc(t.lectura)}</option>`).join('');
+    html += `<div class="f"><label for="f-opp">Valoración CRECE</label><select id="f-opp">`
+      + `<option value="">Todas</option>`
+      + `<option value="1">Cualquier oportunidad</option>`
+      + `<option value="high">Solo las de mayor señal</option>`
+      + opcionesTier
+      + `</select></div>`;
     // Solo para el plan gratuito: es el único que tiene fichas «suyas» que
     // encontrar. Para un suscriptor no significa nada —las tiene todas abiertas—
     // y para un anónimo no hay ninguna. Un filtro que a dos de los tres planes no
@@ -741,7 +803,12 @@ function readFilters() {
     priceMin: M('f-priceMin'), priceMax: M('f-priceMax'),
     areaMin: g('f-areaMin'), areaMax: g('f-areaMax'),
     bedroomsMin: g('f-bedroomsMin'), stratumMin: g('f-stratumMin'), stratumMax: g('f-stratumMax'),
-    opp: g('f-opp'), order: g('f-order'), bank: g('f-bank'),
+    // El mismo desplegable sirve dos cosas: los atajos («cualquier oportunidad»)
+    // y la categoría exacta. Se distinguen por el prefijo para no añadir un
+    // segundo control que pregunte casi lo mismo.
+    opp: (g('f-opp') || '').startsWith('tier:') ? undefined : g('f-opp'),
+    tier: (g('f-opp') || '').startsWith('tier:') ? g('f-opp').slice(5) : undefined,
+    order: g('f-order'), bank: g('f-bank'),
     bidMin: M('f-bidMin'), bidMax: M('f-bidMax'),
     // El servidor resuelve CUÁLES son: aquí solo se pide el filtro.
     desbloqueadas: g('f-desbloqueadas'),
@@ -1613,7 +1680,10 @@ function renderCards(items, target = $('grid'), porApi = false) {
     const kind = cardKind(p);
     propertyCache.set(favKey(kind, p.id), p);
     const el = document.createElement('article');
-    el.className = 'card';
+    // El aura dorada de «Oportunidad Fuerte» rodea la tarjeta entera, así que la
+    // clase va en el <article> y no dentro. Solo esa categoría la lleva: si la
+    // llevaran también las de dos estrellas dejaría de destacar nada.
+    el.className = 'card' + (p.crece_tier === 'oportunidad_fuerte' ? ' es-fuerte' : '');
     const cardLabel = `Ver ${typeLbl(p.property_type || p.type)} en ${cap(p.city)}`;
     el.innerHTML = (kind === 'remate' ? remateCard(p, kind) : inmuebleCard(p, kind))
       + `<button class="card-open" type="button" aria-label="${esc(cardLabel)}"></button>`;
@@ -1660,6 +1730,7 @@ function inmuebleCard(p, kind) {
   return `
     <div class="card-img-wrap">${cover}<span class="source-badge">${esc(srcLbl(p.source))}</span>${opp}${favBtn(kind, p.id)}${selloSuscripcion(p)}</div>
     <div class="card-body">
+      ${selloCrece(p)}
       <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
       <div class="card-titulo">${esc(typeLbl(p.type))}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}</div>
       <div class="card-ubic">${ic('pin')}<span>${p.zone ? esc(p.zone) + ' · ' : ''}<strong>${esc(cap(p.city))}</strong></span></div>

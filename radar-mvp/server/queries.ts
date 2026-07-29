@@ -66,6 +66,8 @@ export interface ListQuery {
    * a él.
    */
   soloDesbloqueadas?: string[];
+  /** Categoría exacta del Índice CRECE (`crece_tier`). Ver `TIERS_FILTRABLES`. */
+  tier?: string;
 }
 
 /**
@@ -90,6 +92,35 @@ function soloPortalPublicable(qb: any) {
 }
 
 /** Filtros compartidos de inmuebles (portal + bancos): precio/área/hab/estrato. */
+/**
+ * Categorías del Índice CRECE que el usuario puede pedir en el filtro.
+ *
+ * Llegan hasta «Precio de Mercado» y ni una más, por decisión de producto: el
+ * Radar es una herramienta para encontrar oportunidades, y ofrecer «Sobreprecio»
+ * o «Fuera de Mercado» como opción de búsqueda sería invitar a buscar lo que el
+ * producto existe para evitar. Las categorías por encima del mercado se siguen
+ * calculando y se siguen viendo en la ficha —son parte del veredicto— pero no
+ * son un destino.
+ *
+ * El orden es el de la tabla maestra de la especificación, de mejor a peor, y la
+ * interfaz lo respeta: es la misma tabla que el cliente tiene en su documento.
+ */
+export const TIERS_FILTRABLES = [
+  'oportunidad_fuerte',
+  'oportunidad',
+  'interesante',
+  'abajo_mercado',
+  'mercado_borde_bajo',
+  'mercado',
+] as const;
+
+/** Acota por categoría del Índice CRECE, validando contra la lista blanca. */
+function aplicarTier(qb: any, q: ListQuery) {
+  if (!q.tier) return qb;
+  if (!(TIERS_FILTRABLES as readonly string[]).includes(q.tier)) return qb;
+  return qb.eq('crece_tier', q.tier);
+}
+
 /** Acota a las fichas que el usuario ya abrió con su cupo. */
 function aplicarSoloDesbloqueadas(qb: any, q: ListQuery) {
   if (!q.soloDesbloqueadas) return qb;
@@ -229,7 +260,7 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   // «108.060 resultados» con tres tarjetas en pantalla— porque sin ningún filtro
   // reconocido se devuelve el total cacheado del portal entero.
   const cheapFilter = !!(q.city || q.zone || q.type || q.priceMin || q.priceMax ||
-    q.areaMin || q.areaMax || q.opp || q.soloDesbloqueadas);
+    q.areaMin || q.areaMax || q.opp || q.soloDesbloqueadas || q.tier);
   // Los filtros que viven dentro del JSON (`features->bedrooms`, `->stratum`) no
   // tienen índice que los cubra, así que CONTARLOS de forma exacta sobre 108.000
   // filas no cabe en el tiempo de una consulta. Da igual que vengan acompañados
@@ -258,6 +289,7 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
       .or('features->>is_project.is.null,features->>is_project.eq.false');
     qb = applyInmuebleFilters(qb, q);
     qb = aplicarSoloDesbloqueadas(qb, q);
+    qb = aplicarTier(qb, q);
     if (q.zone) qb = qb.eq('zone', q.zone);
     if (q.opp === '1') qb = qb.eq('is_opportunity', true);
     if (q.opp === 'high') {
@@ -380,6 +412,7 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
 
   qb = applyInmuebleFilters(qb, q);
   qb = aplicarSoloDesbloqueadas(qb, q);
+  qb = aplicarTier(qb, q);
   // Filtro por entidad. Se valida contra la lista blanca en vez de pasar el valor
   // a la consulta: `bank` viene de la URL y en la pestaña de remates el MISMO
   // parámetro lleva el nombre del demandante, así que aquí puede llegar cualquier
