@@ -1039,6 +1039,74 @@ h1 .gold { color: var(--gold); }
   color: #7c6a86; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.02em; text-transform: none;
 }
 
+/* ───── TOP DE LA PORTADA (lista, no tarjetas) ─────
+   Sin foto a propósito: en una tarjeta la imagen ocupa dos tercios del alto y
+   empuja fuera de la pantalla justo lo que sostiene la recomendación. En lista
+   caben diez en el espacio de tres, y las cifras quedan alineadas en columna,
+   que es lo que permite compararlas de un vistazo. */
+.top-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+/* El corazón vive en su propia columna, fuera del botón que abre la ficha: dos
+   acciones distintas necesitan dos objetivos distintos, y un <button> dentro de
+   otro es marcado inválido. */
+.top-item { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: 6px; }
+.top-item .fav-btn {
+  position: static; align-self: center;
+  width: 42px; height: 42px; flex-shrink: 0;
+  background: #fff; border: 1px solid #ece5f1;
+}
+.top-open {
+  width: 100%; display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center; gap: 14px;
+  padding: 13px 16px; text-align: left;
+  background: #fff; border: 1px solid #ece5f1; border-radius: 12px;
+  font-family: inherit; cursor: pointer;
+  transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+}
+.top-open:hover { border-color: var(--pp); box-shadow: 0 6px 18px rgba(97,49,116,0.10); transform: translateY(-1px); }
+.top-open:focus-visible { outline: 2px solid var(--pp); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .top-open { transition: none; } .top-open:hover { transform: none; } }
+
+.top-pos {
+  font-family: 'Tilt Warp', cursive; font-size: 1.35rem; line-height: 1;
+  color: var(--pp); opacity: 0.42; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+/* Los tres primeros del top se marcan: es un ranking, y el podio es el dato. */
+.top-item:nth-child(-n+3) .top-pos { opacity: 1; color: var(--gold-dark, #8a6a00); }
+
+.top-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.top-titulo { font-weight: 800; font-size: 0.98rem; color: var(--pp-dark); line-height: 1.25; }
+.top-sub { font-size: 0.79rem; color: #7c6a86; }
+.top-motivo { margin-top: 3px; font-size: 0.82rem; font-weight: 700; color: var(--pp); line-height: 1.3; }
+.top-respaldo { font-size: 0.73rem; color: #8a7b93; line-height: 1.3; }
+.top-alerta {
+  margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+  background: #fdf3d4; color: #7a5c00; border-radius: 6px; padding: 2px 8px;
+  font-size: 0.71rem; font-weight: 800;
+}
+.top-alerta .ic { width: 13px; height: 13px; }
+
+.top-cifras { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.top-precio { font-weight: 800; font-size: 1.02rem; color: var(--pp-dark); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.top-secundaria, .top-audiencia { font-size: 0.74rem; color: #7c6a86; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.top-lock {
+  margin-top: 4px; display: inline-flex; align-items: center; gap: 5px;
+  background: #f3ebf8; color: var(--pp); border-radius: 999px; padding: 3px 10px;
+  font-size: 0.7rem; font-weight: 800; white-space: nowrap;
+}
+.top-lock .ic { width: 12px; height: 12px; }
+.top-item.is-bloqueada .top-open { border-style: dashed; }
+
+@media (max-width: 620px) {
+  /* En móvil las cifras bajan a su propia línea: forzadas a la derecha dejaban al
+     título tres palabras de ancho. */
+  .top-open { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 12px 13px; }
+  .top-cifras { grid-column: 2; align-items: flex-start; text-align: left; margin-top: 6px; }
+  .top-pos { font-size: 1.1rem; }
+  .top-titulo { font-size: 0.92rem; }
+}
+
 /* Botón para desplegar el resto del grupo.
    Vacío no ocupa: el contenedor existe siempre, pero cuando el grupo cabe entero
    no se le añade botón y `:empty` evita que deje un hueco bajo las tarjetas. */

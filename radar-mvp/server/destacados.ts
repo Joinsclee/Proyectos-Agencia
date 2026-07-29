@@ -64,6 +64,8 @@ export const TAMANOS = {
   /** En las filas por ciudad el recorte es más corto: una fila limpia por ciudad. */
   previewCiudad: 3,
   porFuente: 12,
+  /** Cuántas trae el top de cada fuente en la portada. */
+  porFuenteTop: 40,
 } as const;
 
 export interface FilaInmueble {
@@ -134,7 +136,18 @@ export interface GrupoDestacados {
 }
 
 export interface BloqueDestacados {
-  id: 'semana' | 'mes' | 'ciudades' | 'fuentes';
+  /**
+   * Un bloque por FUENTE, que es como el cliente describió el producto:
+   * «el top de las oportunidades más económicas en activos de banco, este es el
+   * top de lo que hemos visto en finca raíz, y este el de remates».
+   *
+   * Los identificadores anteriores —semana, mes, ciudades, fuentes— cortaban el
+   * mismo inventario por criterios temporales y geográficos. Se conservan en el
+   * tipo porque `bloqueSemana`, `bloqueMes` y `bloqueCiudades` siguen existiendo
+   * con sus pruebas: son cortes válidos que pueden volver a la portada el día que
+   * haya histórico suficiente para que signifiquen algo.
+   */
+  id: 'portal' | 'bancos' | 'remates' | 'semana' | 'mes' | 'ciudades' | 'fuentes';
   titulo: string;
   /** La regla, escrita para que se pueda discutir. Va SIEMPRE visible en pantalla. */
   criterio: string;
@@ -353,6 +366,15 @@ export function sellarRemate(fila: FilaRemate): FichaDestacada {
 /** Mayor descuento primero; el índice CRECE desempata para que el orden sea estable. */
 const porDescuento = (a: FichaDestacada, b: FichaDestacada): number =>
   (b._destacado.descuento ?? 0) - (a._destacado.descuento ?? 0)
+  // Entre fichas con el MISMO descuento manda la calidad de la comparación, no el
+  // identificador. En la portada hay decenas empatadas —el inventario real tiene
+  // muchísimas en el mismo 54%— y desempatar por `id` es desempatar al azar: la
+  // primera del ranking salía por su UUID, no por ser mejor recomendación. Con
+  // esto, entre dos iguales sube la que el motor respalda con confianza alta y
+  // más comparables, que es la que alguien puede defender delante de un cliente.
+  || Number(b.is_high === true) - Number(a.is_high === true)
+  || (num((b as FilaInmueble).features?.market?.n_comparables) ?? 0)
+     - (num((a as FilaInmueble).features?.market?.n_comparables) ?? 0)
   || String(a.id).localeCompare(String(b.id));
 
 /** Menor índice CRECE primero: es "lo más barato frente a su zona", no "lo más rebajado". */
@@ -535,6 +557,71 @@ export function bloqueFuentes(
   };
 }
 
+/**
+ * El top de la semana de UNA fuente.
+ *
+ * Es la forma de la portada que pidió el cliente, y la razón es de negocio: las
+ * tres fuentes no son tres versiones de lo mismo. Un activo bancario es una
+ * dación en pago que el banco quiere sacar de balance; un remate es una subasta
+ * ante un juez con una fecha de audiencia y un riesgo jurídico propio; un aviso
+ * de portal es mercancía en el mercado abierto. Quien entra buscando remates no
+ * quiere que se los mezclen con los otros dos, y al revés.
+ *
+ * Cada bloque ordena por lo que de verdad discrimina dentro de SU fuente:
+ *
+ *  · Portal y bancos, por descuento contra el mercado de su propia zona.
+ *  · Remates, por RIESGO JURÍDICO. La base legal de toda subasta en Colombia es
+ *    el 70% del avalúo, así que casi todos los avisos sanos dan el mismo 30% y
+ *    ordenarlos por descuento sería ordenar por ruido. Lo que los separa es si el
+ *    demandante es un banco —proceso hipotecario estándar, título más limpio— y
+ *    cuán próxima está la audiencia, que es lo único accionable.
+ *
+ * El punto de entrada rota cada semana ISO: estable de lunes a domingo, así que
+ * quien comparte un enlace no queda como un mentiroso, y desplazado la semana
+ * siguiente para que quien vuelve encuentre caras nuevas.
+ */
+export function bloqueDeFuente(
+  fuente: FuenteDestacado,
+  pool: FichaDestacada[],
+  semana: number = semanaISO(),
+  tamanos = TAMANOS,
+): BloqueDestacados {
+  const esRemate = fuente === 'remate';
+  const orden = esRemate ? porRemate : porDescuento;
+  const ventana = [...pool].sort(orden).slice(0, tamanos.poolSemana);
+  const elegidas = rotarSemanal(ventana, semana).slice(0, tamanos.porFuenteTop).sort(orden);
+
+  const META: Record<FuenteDestacado, { id: BloqueDestacados['id']; titulo: string; icono: string; criterio: string }> = {
+    portal: {
+      id: 'portal',
+      titulo: 'Lo mejor de la semana en el portal abierto',
+      icono: 'home',
+      criterio: 'Avisos de FincaRaíz con el mayor descuento frente a la mediana de ofertas parecidas '
+        + 'en su propio barrio, entre los que el motor clasificó como oportunidad con comparables '
+        + 'suficientes. Es mercancía en el mercado abierto: se puede llamar y visitar hoy.',
+    },
+    banco: {
+      id: 'bancos',
+      titulo: 'Lo mejor de la semana en cartera de bancos',
+      icono: 'bank',
+      criterio: 'Inmuebles que los bancos recibieron en dación en pago y quieren sacar de balance, '
+        + 'ordenados por descuento contra el mercado de su zona. En Colombia el descuento es más '
+        + 'moderado que en otros mercados, así que aquí manda la diferencia relativa, no la rebaja bruta.',
+    },
+    remate: {
+      id: 'remates',
+      titulo: 'Lo mejor de la semana en remates judiciales',
+      icono: 'scale',
+      criterio: 'Subastas ante un juez con audiencia futura. NO se ordenan por descuento: la base legal '
+        + 'de todo remate es el 70% del avalúo, así que casi todos dan el mismo 30% y ordenar por ahí '
+        + 'sería ordenar por ruido. Se ordenan por riesgo jurídico —primero los de demandante bancario, '
+        + 'donde el título suele venir más limpio— y luego por audiencia más próxima.',
+    },
+  };
+  const meta = META[fuente];
+  return { ...meta, grupos: grupoUnico(elegidas, tamanos.preview) };
+}
+
 export interface PoolsDestacados {
   /** Inmuebles del portal abierto con veredicto de oportunidad. */
   portal: FilaInmueble[];
@@ -632,18 +719,23 @@ export function armarDestacados(pools: PoolsDestacados, opciones: OpcionesDestac
 
   // Secuencial y no en un literal: cada bloque tiene que ver lo que marcó el
   // anterior, y `filtroLibre()` copia el conjunto en el momento en que se crea.
+  // TRES BLOQUES, UNO POR FUENTE. Es como el cliente describió el producto y como
+  // la gente busca: quien viene por remates no quiere que se los mezclen con
+  // avisos de portal, y al revés.
+  //
+  // Los cortes anteriores —semana, mes, ciudades, cruce de fuentes— cortaban el
+  // mismo inventario por criterios temporales y geográficos. Sus funciones siguen
+  // aquí con sus pruebas: son cortes válidos que pueden volver cuando haya
+  // histórico suficiente para que signifiquen algo.
+  //
+  // Aquí NO hace falta descontar lo que usó el bloque anterior —cada fuente tiene
+  // su propio pool y una ficha no puede estar en dos—, pero sí se pasa por
+  // `libres` para que la deduplicación por huella siga quitando el mismo activo
+  // cargado dos veces con ids distintos, que la base sí tiene.
   const construidos: BloqueDestacados[] = [];
-  construidos.push(marcar(bloqueSemana(libres(inmuebles), semana, tamanos)));
-  // «Destacados del mes» se retiró de la portada por decisión del cliente
-  // (reunión del 28-jul: que se destaquen tres bloques, no cuatro). De los cuatro
-  // era el que menos discriminaba: el sistema lleva 46 días de datos, así que
-  // «lo que entró este mes» era prácticamente todo el inventario, y la novedad
-  // que ese bloque pretendía aportar ya la da la rotación semanal del primero.
-  // `bloqueMes` se conserva con sus pruebas por si vuelve a pedirse cuando haya
-  // histórico suficiente para que el corte signifique algo.
-  construidos.push(marcar(bloqueCiudades(libres(inmuebles), tamanos)));
-  const cruce = filtroLibre(); // las tres fuentes comparten memoria entre sí
-  construidos.push(marcar(bloqueFuentes(cruce(portal), cruce(bancos), cruce(remates), tamanos)));
+  construidos.push(marcar(bloqueDeFuente('portal', libres(portal), semana, tamanos)));
+  construidos.push(marcar(bloqueDeFuente('banco', libres(bancos), semana, tamanos)));
+  construidos.push(marcar(bloqueDeFuente('remate', libres(remates), semana, tamanos)));
 
   // Un bloque sin fichas no se anuncia: prometer "destacados del mes" y no enseñar
   // ninguno es peor que no tener la fila.

@@ -45,7 +45,7 @@ async function waitForResults(page: Page) {
  * los que solo necesitan que la página haya terminado de cargar esperan aquí.
  */
 async function esperarPortada(page: Page) {
-  await page.locator('#home .home-bloque article.card').first().waitFor({ timeout: 30_000 });
+  await page.locator('#home .home-bloque .top-item').first().waitFor({ timeout: 30_000 });
   await page.waitForFunction(
     () => document.getElementById('home')?.getAttribute('aria-busy') !== 'true',
     undefined,
@@ -299,15 +299,23 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
         const criterio = (await bloques.nth(i).locator('.home-criterio').textContent()) ?? '';
         assert.ok(criterio.trim().length > 60, `el bloque ${i} no explica con qué criterio eligió`);
       }
-      // Y cada ficha dice por qué está ella, no solo el bloque.
-      const fichas = await page.locator('#home .home-bloque article.card').count();
-      assert.equal(await page.locator('#home .card-motivo').count(), fichas);
+      // Y cada fila dice por qué está ella, no solo el bloque.
+      const fichas = await page.locator('#home .home-bloque .top-item').count();
+      assert.equal(await page.locator('#home .top-motivo').count(), fichas);
       assert.match(
-        (await page.locator('#home .card-motivo strong').first().textContent()) ?? '',
+        (await page.locator('#home .top-motivo').first().textContent()) ?? '',
         /por debajo de/,
       );
-      // El bloque agrupado por ciudad tiene que verse agrupado.
-      assert.ok(await page.locator('#home .home-grupo-tit').count() >= 2, 'faltan los grupos por ciudad');
+      // Es un ranking: la posición tiene que estar numerada y empezar en 1.
+      assert.equal((await page.locator('#home .top-pos').first().textContent())?.trim(), '1');
+      // Un bloque por fuente, que es como el cliente describió el producto.
+      const titulos = await page.locator('#home .home-bloque h3').allTextContents();
+      for (const esperado of ['portal', 'banco', 'remate']) {
+        assert.ok(
+          titulos.some((t) => t.toLowerCase().includes(esperado)),
+          `falta el bloque de ${esperado}; hay: ${titulos.join(' | ')}`,
+        );
+      }
 
       // El muro NO se salta en la portada: un anónimo recibe las fichas recortadas
       // desde el servidor, no tapadas con CSS. Ya hubo un incidente por esto.
@@ -332,7 +340,7 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       // recortada que ya tiene el navegador saltaría las dos cosas.
       const [fichaPedida] = await Promise.all([
         page.waitForRequest((peticion) => peticion.url().includes('/api/property?kind=')),
-        page.locator('#home article.card .card-open').first().click(),
+        page.locator('#home .top-item .top-open').first().click(),
       ]);
       assert.ok(fichaPedida.url().includes('id='), 'la portada abrió la ficha sin pedirla por id');
       await page.locator('#modal.open').waitFor();
@@ -374,7 +382,7 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       assert.ok(grupo, 'ningún bloque de la portada tiene fichas plegadas que desplegar');
 
       const seccion = page.locator('#home .home-bloque').nth(indice);
-      const tarjetas = seccion.locator('article.card');
+      const tarjetas = seccion.locator('.top-item');
       assert.equal(await tarjetas.count(), grupo.preview,
         'la portada pintó de entrada algo distinto del recorte que mandó el servidor');
 
@@ -398,8 +406,8 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       // Las que acaban de aparecer explican su porqué igual que las primeras: si el
       // motivo se pintara por índice sobre el grupo entero, las nuevas saldrían con
       // el texto de otra ficha o sin texto.
-      assert.equal(await seccion.locator('.card-motivo').count(), grupo.fichas.length);
-      assert.match((await seccion.locator('.card-motivo strong').last().textContent()) ?? '', /por debajo de/);
+      assert.equal(await seccion.locator('.top-motivo').count(), grupo.fichas.length);
+      assert.match((await seccion.locator('.top-motivo').last().textContent()) ?? '', /por debajo de/);
 
       // Y se puede volver a plegar.
       assert.match((await boton.textContent()) ?? '', /Ver solo las primeras/);
@@ -575,9 +583,9 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
       await esperarPortada(page);
 
-      // Se guarda DESDE la portada: sus tarjetas son las mismas del listado, así
-      // que el corazón tiene que funcionar igual sin haber entrado a buscar nada.
-      const firstFavorite = page.locator('#home article.card').first().getByRole('button', { name: 'Guardar inmueble' });
+      // Se guarda DESDE la portada: el top es una lista, no tarjetas, pero el
+      // corazón tiene que seguir funcionando igual sin haber entrado a buscar nada.
+      const firstFavorite = page.locator('#home .top-item').first().getByRole('button', { name: 'Guardar inmueble' });
       await firstFavorite.click();
       await page.waitForFunction(() => document.getElementById('c-guardados')?.textContent === '1');
 
