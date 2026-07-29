@@ -331,10 +331,15 @@ h1 .gold { color: var(--gold); }
 .card-ph .ic { width: 2.6rem; height: 2.6rem; stroke-width: 1.2; }
 /* z-index 4: por encima del `.lock-overlay` (3). En una ficha bloqueada, saber
    de qué fuente viene y cuánto descuenta es lo que decide si merece la pena
-   gastar una del cupo; taparlo obligaba a abrirla para averiguarlo. */
-.source-badge { position: absolute; top: 10px; right: 10px; z-index: 4; font-size: 0.58rem; padding: 4px 9px; border-radius: 7px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.92); backdrop-filter: blur(6px); color: #4a2560; }
+   gastar una del cupo; taparlo obligaba a abrirla para averiguarlo.
+
+   Flotan SOBRE el velo, con su propio fondo y desenfoque. El primer intento fue
+   recortar el velo por arriba para dejarlas asomar, y partía la imagen en dos: una
+   banda nítida arriba y el resto oscurecido. La sombra es necesaria aquí: sobre una
+   foto velada, un fondo casi blanco sin sombra se confunde con un reflejo. */
+.source-badge { position: absolute; top: 10px; right: 10px; z-index: 4; font-size: 0.58rem; padding: 4px 9px; border-radius: 7px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.92); backdrop-filter: blur(6px); color: #4a2560; box-shadow: 0 2px 10px rgba(0,0,0,0.28); }
 .photo-count { position: absolute; bottom: 10px; right: 10px; font-size: 0.7rem; padding: 4px 10px; border-radius: 99px; font-weight: 700; background: rgba(0,0,0,0.65); color: #fff; z-index: 2; }
-.opp-badge { position: absolute; top: 10px; left: 10px; z-index: 4; display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; padding: 5px 10px; border-radius: 7px; font-weight: 800; letter-spacing: 0.02em; background: #15803d; color: #fff; }
+.opp-badge { position: absolute; top: 10px; left: 10px; z-index: 4; display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; padding: 5px 10px; border-radius: 7px; font-weight: 800; letter-spacing: 0.02em; background: #15803d; color: #fff; backdrop-filter: blur(6px); box-shadow: 0 2px 10px rgba(0,0,0,0.28); }
 .opp-badge .ic { width: 0.92em; height: 0.92em; stroke-width: 2.2; }
 .opp-badge.high { background: var(--gold); color: #4a2560; }
 .opp-badge.high .ic { fill: #4a2560; stroke: none; }
@@ -727,9 +732,11 @@ h1 .gold { color: var(--gold); }
 /* ───── FICHAS DE SUSCRIPCIÓN (Sección 6 de la spec) ─────
    La ficha de pago no se esconde: se muestra el gancho (precio y descuento) y se
    nombra lo que falta. Un hueco sin explicación se lee como error, no como oferta. */
-/* `inset` con 44px arriba en vez de 0: el velo empieza por debajo de las dos
-   etiquetas, así no compite con ellas ni las oscurece. */
-.lock-overlay { position: absolute; inset: 44px 0 0; z-index: 3; display: flex; flex-direction: column;
+/* El velo cubre la tarjeta ENTERA. Las etiquetas de fuente y descuento se ven
+   porque van por encima (z-index 4) con su propio fondo y desenfoque, no porque
+   se le haya recortado un trozo: recortarlo partía la imagen en una banda nítida
+   arriba y el resto oscurecido, y se veía como un error de maquetación. */
+.lock-overlay { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 4px; text-align: center;
   background: linear-gradient(180deg, rgba(30,10,46,0.55), rgba(30,10,46,0.86));
   backdrop-filter: blur(3px); color: #fff; }
