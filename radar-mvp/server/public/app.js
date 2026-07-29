@@ -694,16 +694,17 @@ async function buildFilters() {
       html += `<div class="f"><label for="f-bank">Banco</label><select id="f-bank">${opts.join('')}</select></div>`;
     }
     // Filtro por CATEGORÍA del Índice CRECE, con la tabla maestra de la
-    // especificación. Antes eran tres opciones vagas —«solo oportunidades», «solo
-    // altas»— que no se correspondían con ninguna de las once categorías que el
-    // motor calcula y que la ficha muestra. Ahora el filtro habla el mismo idioma
-    // que el veredicto.
+    // especificación y nada más. Convivieron un tiempo con dos atajos heredados
+    // —«cualquier oportunidad», «solo las de mayor señal»— que describían
+    // recortes propios, sin nombre en la tabla: quien elegía «cualquier
+    // oportunidad» no sabía si eso incluía «Abajo del Mercado», y las tres
+    // primeras categorías ya cubren esa intención diciendo exactamente qué
+    // traen. Un desplegable en el que dos opciones se solapan con las otras seis
+    // obliga a adivinar; este habla un solo idioma, el del veredicto.
     const opcionesTier = TABLA_CRECE.map((t) =>
-      `<option value="tier:${t.tier}">${t.estrellasTexto} ${esc(t.lectura)}</option>`).join('');
+      `<option value="${t.tier}">${t.estrellasTexto} ${esc(t.lectura)}</option>`).join('');
     html += `<div class="f"><label for="f-opp">Valoración CRECE</label><select id="f-opp">`
       + `<option value="">Todas</option>`
-      + `<option value="1">Cualquier oportunidad</option>`
-      + `<option value="high">Solo las de mayor señal</option>`
       + opcionesTier
       + `</select></div>`;
     // Solo para el plan gratuito: es el único que tiene fichas «suyas» que
@@ -803,11 +804,10 @@ function readFilters() {
     priceMin: M('f-priceMin'), priceMax: M('f-priceMax'),
     areaMin: g('f-areaMin'), areaMax: g('f-areaMax'),
     bedroomsMin: g('f-bedroomsMin'), stratumMin: g('f-stratumMin'), stratumMax: g('f-stratumMax'),
-    // El mismo desplegable sirve dos cosas: los atajos («cualquier oportunidad»)
-    // y la categoría exacta. Se distinguen por el prefijo para no añadir un
-    // segundo control que pregunte casi lo mismo.
-    opp: (g('f-opp') || '').startsWith('tier:') ? undefined : g('f-opp'),
-    tier: (g('f-opp') || '').startsWith('tier:') ? g('f-opp').slice(5) : undefined,
+    // El desplegable ya solo dice categorías del Índice CRECE, así que su valor
+    // ES la categoría. El servidor sigue aceptando el viejo `opp` para no romper
+    // enlaces ya compartidos, pero desde aquí no se envía nunca.
+    tier: g('f-opp'),
     order: g('f-order'), bank: g('f-bank'),
     bidMin: M('f-bidMin'), bidMax: M('f-bidMax'),
     // El servidor resuelve CUÁLES son: aquí solo se pide el filtro.
@@ -2907,6 +2907,7 @@ function closeModal() {
   $('modal').classList.remove('open');
   $('modal').setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
+  fichaEnPantalla = null;
   if (lastModalFocus?.isConnected) lastModalFocus.focus({ preventScroll: true });
 }
 
@@ -3092,6 +3093,49 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('[data-onboarding-cerrar]')) { marcarOnboardingVisto(); closeModal(); }
 });
 $('modal').addEventListener('click', (e) => { if (e.target === $('modal')) closeModal(); });
+
+/**
+ * Anota la ficha antes de que el usuario salga de ella hacia /login o /planes.
+ *
+ * Se hace por delegación y mirando el destino del enlace —no marcando cada CTA—
+ * porque los muros son cuatro y crecen: el de suscripción, el de cupo agotado, el
+ * del reporte descargable y los candados de los remates. Cualquier enlace nuevo
+ * dentro de una ficha que lleve a registrarse o a pagar queda cubierto sin que
+ * nadie tenga que acordarse de esto.
+ *
+ * Solo cuenta dentro del diálogo: los enlaces de la barra superior son la vía por
+ * la que alguien entra a /login por su cuenta, y a ese no hay que devolverlo a
+ * ninguna parte.
+ */
+document.addEventListener('click', (event) => {
+  if (!fichaEnPantalla || !(event.target instanceof Element)) return;
+  const enlace = event.target.closest('#modal a[href]');
+  if (!enlace) return;
+  let destino;
+  try { destino = new URL(enlace.getAttribute('href'), location.origin); } catch { return; }
+  if (destino.origin !== location.origin) return;
+  if (destino.pathname !== '/login' && destino.pathname !== '/planes') return;
+  window.__fichaPendiente?.guardar(fichaEnPantalla.kind, fichaEnPantalla.id, fichaEnPantalla.titulo);
+});
+
+/**
+ * Reabre la ficha que quedó a medias al irse a registrarse, a entrar o a activar plan.
+ *
+ * La nota se consume SIEMPRE, se reabra o no: es un billete de un solo viaje. Si
+ * el usuario volvió sin sesión —se arrepintió del registro— la nota ya no
+ * significa nada, y dejarla ahí haría que la ficha le saltara en la cara la
+ * próxima vez que entrara por cualquier otro camino.
+ */
+function reabrirFichaPendiente() {
+  const pendiente = window.__fichaPendiente?.leer();
+  if (!pendiente) return;
+  window.__fichaPendiente.olvidar();
+  if (!auth.token) return;
+  // El recorrido de bienvenida usa este mismo diálogo: abrir la ficha encima lo
+  // borraría a media frase.
+  if (window.__radarTour?.activo || document.querySelector('.onboarding')) return;
+  window.__openRec(pendiente.kind, pendiente.id);
+}
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
   const aiButton = event.target.closest('.ai-btn[data-ai-kind]');
@@ -3197,7 +3241,10 @@ try {
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.
 aplicarVistaDePestana();
-initAuth();
+// La ficha pendiente se reabre DESPUÉS de `initAuth`, no antes: hasta que no
+// vuelve /api/favorites no se sabe si el token sigue siendo válido, y reabrirla
+// con una sesión caducada la mostraría bloqueada justo a quien acaba de entrar.
+initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(reabrirFichaPendiente);
 // Sin `await` y sin bloquear nada: la calculadora solo aparece al abrir una
 // ficha, muchísimo después de que esto resuelva, y mientras tanto ya tiene los
 // valores de arranque.
