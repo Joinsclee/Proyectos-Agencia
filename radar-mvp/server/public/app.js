@@ -7,7 +7,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
 }[c]));
 const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
-const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos' }[t] || (t ? cap(t) : 'Inmueble'));
+const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos', other: 'Otros', others: 'Otros' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Rama Judicial' }[s] || s);
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
@@ -22,8 +22,8 @@ const isHighOpp = (d) => d.is_high === true;
 const PAGE_SIZE = 24;
 
 const ORDERS = {
-  portal: [['discount_desc', 'Mayor descuento'], ['precio_m2_asc', 'Precio/m² menor'], ['precio_asc', 'Precio menor'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
-  bancos: [['precio_m2_asc', 'Precio/m² menor'], ['precio_asc', 'Precio menor'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
+  portal: [['precio_asc', 'Precio menor'], ['discount_desc', 'Mayor descuento'], ['precio_m2_asc', 'Precio/m² menor'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
+  bancos: [['precio_asc', 'Precio menor'], ['precio_m2_asc', 'Precio/m² menor'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
   remates: [['auction_asc', 'Audiencia próxima'], ['min_asc', 'Postura menor'], ['min_desc', 'Postura mayor']],
 };
 
@@ -442,6 +442,20 @@ const CRECE_POR_TIER = new Map(TABLA_CRECE.map((t) => [t.tier, t]));
  * De «Precio de Mercado» hacia abajo no se pinta nada: cero estrellas es la
  * ausencia de la etiqueta, no una etiqueta vacía.
  */
+/**
+ * «×10 iguales»: hay más avisos idénticos a este.
+ *
+ * Se dice en vez de callarlo porque el servidor colapsó las copias y el usuario
+ * no debería tener que adivinar por qué el listado tiene menos tarjetas que
+ * resultados dice el contador. Además es información útil: diez lotes iguales en
+ * el mismo proyecto significa que hay stock, y eso cambia cómo se negocia.
+ */
+function selloIguales(p) {
+  const n = Number(p._iguales);
+  if (!Number.isFinite(n) || n < 2) return '';
+  return ` <span class="card-iguales" title="Hay ${n} avisos iguales a este, del mismo proyecto">×${n} iguales</span>`;
+}
+
 function selloCrece(p) {
   const t = CRECE_POR_TIER.get(p?.crece_tier);
   if (!t || (!t.estrellas && !t.huecas)) return '';
@@ -677,11 +691,20 @@ async function buildFilters() {
     updateFilterCount();
     return;
   }
-  let html = '';
+  // El orden va PRIMERO, antes que cualquier filtro. Estaba al final de la
+  // columna, debajo de precio, área, habitaciones y estrato, así que había que
+  // bajar hasta el fondo para cambiar lo primero que uno quiere cambiar. Vale
+  // para las tres secciones, así que se pinta aquí y no en cada rama.
+  let html = `<div class="f"><label for="f-order">Orden</label><select id="f-order">`
+    + `${ORDERS[tab].map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>`;
   if (tab !== 'remates') {
     const fc = await fetch(`/api/facets?source=${tab === 'portal' ? 'portal' : 'bancos'}`).then((r) => r.json());
     html += fSelect('city', 'Ciudad', fc.cities);
-    if (tab === 'portal') html += fSelect('zone', 'Barrio', fc.zones);
+    // El barrio nace APAGADO y sin opciones. Ofrecerlos todos —los de las 77
+    // ciudades juntos— no acota nada: en la misma lista salían barrios de Pereira
+    // y de Bogotá, y elegir uno sin haber dicho la ciudad no significa nada. Se
+    // llena solo cuando hay ciudad, en `repopZones`.
+    if (tab === 'portal') html += fSelectDependiente('zone', 'Barrio', 'Elige una ciudad primero');
     html += fSelect('type', 'Tipo', fc.types, typeLbl);
     // En Bancos, la entidad es lo primero que la gente quiere acotar: cada banco
     // publica su cartera con criterios distintos. Solo se listan las que hoy
@@ -703,7 +726,7 @@ async function buildFilters() {
     // obliga a adivinar; este habla un solo idioma, el del veredicto.
     const opcionesTier = TABLA_CRECE.map((t) =>
       `<option value="${t.tier}">${t.estrellasTexto} ${esc(t.lectura)}</option>`).join('');
-    html += `<div class="f"><label for="f-opp">Valoración CRECE</label><select id="f-opp">`
+    html += `<div class="f"><label for="f-opp">Valoración de la oportunidad</label><select id="f-opp">`
       + `<option value="">Todas</option>`
       + opcionesTier
       + `</select></div>`;
@@ -737,7 +760,6 @@ async function buildFilters() {
     html += `<div class="f"><label for="f-bank">Demandante (banco)</label><select id="f-bank">${bankOpts.join('')}</select></div>`;
     html += fRange('bid', 'Postura (millones)', 'mín', 'máx');
   }
-  html += `<div class="f"><label for="f-order">Orden</label><select id="f-order">${ORDERS[tab].map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></div>`;
   // Entre el `await` de las facetas y esta línea el usuario puede haber cambiado
   // de pestaña. Sin esta comprobación, la respuesta lenta pisa a la rápida: el
   // caso medido era Remates → Portal en menos de dos segundos, y Portal acababa
@@ -781,10 +803,34 @@ function fStratum() {
     <select id="f-stratumMin" aria-label="Estrato mínimo"><option value="">mín</option>${opts}</select>
     <select id="f-stratumMax" aria-label="Estrato máximo"><option value="">máx</option>${opts}</select></div></div>`;
 }
+/**
+ * Un desplegable que no sirve de nada hasta que otro tenga valor.
+ *
+ * Sale deshabilitado y diciendo qué falta, en vez de vacío: un control apagado y
+ * mudo se lee como algo roto, y uno lleno de opciones inservibles es peor todavía.
+ */
+function fSelectDependiente(key, label, aviso) {
+  return `<div class="f"><label for="f-${esc(key)}">${esc(label)}</label>`
+    + `<select id="f-${esc(key)}" disabled><option value="">${esc(aviso)}</option></select></div>`;
+}
+
 async function repopZones(city) {
   const sel = $('f-zone'); if (!sel) return;
-  const fc = await fetch(`/api/facets?source=portal${city ? '&city=' + encodeURIComponent(city) : ''}`).then((r) => r.json());
-  sel.innerHTML = '<option value="">Todas</option>' + (fc.zones || []).map((z) => `<option value="${esc(z)}">${esc(cap(z))}</option>`).join('');
+  // Sin ciudad no hay barrios que ofrecer. Volver a apagarlo importa tanto como
+  // encenderlo: quien acota a Pereira, elige un barrio y luego vuelve a «Todas
+  // las ciudades» se quedaría con un barrio de Pereira aplicado y sin forma de
+  // entender por qué el listado sigue acotado.
+  if (!city) {
+    sel.innerHTML = '<option value="">Elige una ciudad primero</option>';
+    sel.disabled = true;
+    return;
+  }
+  const fc = await fetch(`/api/facets?source=portal&city=${encodeURIComponent(city)}`).then((r) => r.json());
+  const zonas = fc.zones || [];
+  sel.disabled = zonas.length === 0;
+  sel.innerHTML = zonas.length
+    ? '<option value="">Todos los barrios</option>' + zonas.map((z) => `<option value="${esc(z)}">${esc(cap(z))}</option>`).join('')
+    : '<option value="">Sin barrios en esta ciudad</option>';
 }
 /**
  * Plan que el servidor declaró en la última respuesta.
@@ -1535,39 +1581,44 @@ function renderAvisoBloqueo(plan, bloqueo, cupo, caja = $('aviso-bloqueo')) {
   if (plan === 'suscrito' || !bloqueo || !bloqueo.bloqueadas) { caja.innerHTML = ''; return; }
 
   const n = bloqueo.bloqueadas;
-  const fichas = `${n} ficha${n === 1 ? '' : 's'}`;
-  const medio = bloqueo.descuentoMedioBloqueado;
-  const mejor = bloqueo.mejorDescuentoBloqueado;
-  const visible = bloqueo.descuentoMedioVisible;
+  // «fichas de inmuebles» y no «fichas» a secas: el cliente preguntó fichas de
+  // qué, y tenía razón —«ficha» es vocabulario nuestro, no suyo—.
+  const fichas = `${n} ficha${n === 1 ? '' : 's'} de inmuebles`;
 
   const anonimo = plan === 'anonimo';
   const sinCupo = !anonimo && cupo && !cupo.ilimitado && cupo.restantes === 0;
 
   // "que no estás viendo" sería inexacto: las tarjetas sí se ven, bloqueadas. Lo
   // que no puede hacer es abrirlas, y decirlo así es igual de persuasivo y cierto.
+  // El anónimo NO ve el recuento de esta sección.
+  //
+  // Decía «hay 24 fichas que no puedes abrir» en Portales, «7» en Bancos y «9» en
+  // Remates, y el cliente preguntó qué relación tenían esos tres números entre sí
+  // y con las 20 del cupo. No tienen ninguna: son cuántas hay bloqueadas en la
+  // búsqueda que está mirando, y cambian al mover cualquier filtro. Tres cifras
+  // que se contradicen aparentemente y ninguna es la que importa.
+  //
+  // Lo que sí importa es una sola y es siempre la misma: 20 al mes, en cualquiera
+  // de las tres secciones. Es lo que se le promete y es lo que se le dice.
   const titulo = anonimo
-    ? `Hay ${fichas} que no puedes abrir todavía`
+    ? `Descubre ${CUPO_FREE_MENSUAL} oportunidades de inmuebles al mes`
     : sinCupo
       ? `Se te acabó el cupo del mes con ${fichas} todavía cerradas`
       : `Te quedan ${cupo?.restantes ?? 0} de ${cupo?.limite ?? CUPO_FREE_MENSUAL} fichas este mes`;
 
   const cuerpo = anonimo
-    ? `Son las de mayor descuento de esta búsqueda. Crea tu cuenta gratis y abre ${CUPO_FREE_MENSUAL} al mes.`
+    ? 'Crea tu cuenta gratis y ábrelas en cualquier categoría: portales, bancos o remates.'
     : sinCupo
       ? 'Son las de mayor descuento de esta búsqueda. Con el plan completo no hay límite.'
       : `${fichas} de esta búsqueda siguen cerradas. Úsalas en las que más te interesen.`;
 
-  // Las cifras van en su propia franja en vez de dentro de la frase: son el
-  // argumento y así se leen de un vistazo, sin partir el párrafo en pedazos.
-  const cifras = [];
-  if (medio != null) cifras.push([`${medio}%`, 'descuento medio']);
-  if (mejor != null && mejor !== medio) cifras.push([`${mejor}%`, 'la mayor']);
-  // Solo se compara cuando la comparación favorece de verdad: si lo visible
-  // tuviera mejor descuento, enseñarlo sería mentir al revés.
-  if (medio != null && visible != null && medio > visible) cifras.push([`${visible}%`, 'las que sí puedes abrir']);
-  const cifrasHtml = cifras.length
-    ? `<dl class="aviso-cifras">${cifras.map(([v, k], idx) => `<div${idx === cifras.length - 1 && cifras.length > 1 ? ' class="es-contraste"' : ''}><dt>${esc(v)}</dt><dd>${esc(k)}</dd></div>`).join('')}</dl>`
-    : '';
+  // Los porcentajes del recuadro —«66% descuento medio», «70% la mayor», «-13%
+  // las que sí puedes abrir»— se retiran por decisión del cliente: «estarían
+  // sujetos a una explicación» que en esa pantalla no existe. Un dato que hay que
+  // explicar antes de que signifique algo no ayuda a quien acaba de llegar; el
+  // descuento concreto de cada inmueble sigue estando en su tarjeta, que es donde
+  // se entiende sin contexto.
+  const cifrasHtml = '';
 
   const cta = anonimo
     ? '<a class="aviso-cta" href="/login">Crear cuenta gratis</a>'
@@ -1732,7 +1783,7 @@ function inmuebleCard(p, kind) {
     <div class="card-body">
       ${selloCrece(p)}
       <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
-      <div class="card-titulo">${esc(typeLbl(p.type))}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}</div>
+      <div class="card-titulo">${esc(typeLbl(p.type))}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}${selloIguales(p)}</div>
       <div class="card-ubic">${ic('pin')}<span>${p.zone ? esc(p.zone) + ' · ' : ''}<strong>${esc(cap(p.city))}</strong></span></div>
       <div class="card-meta">
         ${f.bedrooms ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : ''}
@@ -2956,7 +3007,7 @@ async function loadStats() {
   // Son <button> y no <div>: un destino que se activa con un clic tiene que
   // activarse también con el teclado, y esto ya es navegación de la aplicación.
   $('summary').innerHTML = `
-    <button class="summary-stat" type="button" data-ir="portal"><span class="num">${STATS.portal_opps.toLocaleString('es-CO')}</span><span class="lbl">Oportunidades en portal</span></button>
+    <button class="summary-stat" type="button" data-ir="portal"><span class="num">${STATS.portal_opps.toLocaleString('es-CO')}</span><span class="lbl">Oportunidades en portales</span></button>
     <button class="summary-stat" type="button" data-ir="bancos"><span class="num">${STATS.bancos.toLocaleString('es-CO')}</span><span class="lbl">En bancos</span></button>
     <button class="summary-stat" type="button" data-ir="remates"><span class="num">${STATS.remates.toLocaleString('es-CO')}</span><span class="lbl">Remates judiciales</span></button>`;
   // Se delega en el botón real de la pestaña en vez de duplicar su manejador:
@@ -3019,8 +3070,8 @@ function renderVStats() {
     $('legend').innerHTML = `<details class="legend-card"${mobileQuery.matches ? '' : ' open'}>
       <summary class="legend-title">${ic('chart')} Cómo leer el portal abierto</summary>
       <div class="legend-body">
-        <span class="legend-item"><span class="badge-mini high">${ic('star')}Alta</span> precio/m² en el decil más bajo, descuento grande y comparables homogéneos</span>
-        <span class="legend-item"><span class="badge-mini opp">${ic('down')}Oportunidad</span> precio/m² en el cuartil más bajo frente a similares de la zona</span>
+        <span class="legend-item"><span class="badge-mini high">${ic('star')}Alta</span> precio por metro cuadrado entre los más bajos de su zona, descuento grande y comparables homogéneos</span>
+        <span class="legend-item"><span class="badge-mini opp">${ic('down')}Oportunidad</span> precio por metro cuadrado bajo frente a inmuebles similares de la zona</span>
         <span class="legend-item note">Comparado contra precios de oferta publicados.</span>
       </div>
     </details>`;
