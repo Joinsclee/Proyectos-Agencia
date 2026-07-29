@@ -104,3 +104,48 @@ test('asistente: se entiende la respuesta de n8n venga como venga', () => {
   assert.equal(extraerTexto(null), null);
   assert.equal(extraerTexto('texto suelto'), null);
 });
+
+test('asistente: el Word moderno se convierte a texto', async () => {
+  // n8n no sabe abrir un .docx —su extractor de texto plano devuelve los bytes
+  // del zip— así que la conversión ocurre en el servidor. Esta prueba usa un
+  // .docx COMPRIMIDO, como los que guarda Word de verdad: uno sin comprimir se
+  // lee por casualidad y daría un falso positivo, que es exactamente lo que pasó
+  // la primera vez que se probó esto a mano.
+  const { textoDeWord, esWord } = await import('./asistente-word.js');
+  assert.equal(esWord('contrato.docx'), true);
+  assert.equal(esWord('contrato.DOC'), true);
+  assert.equal(esWord('contrato.pdf'), false);
+
+  const docx = await construirDocx('Canon mensual: 3.750.000 pesos.');
+  const r = await textoDeWord(docx, 'contrato.docx');
+  assert.equal(r.ok, true);
+  assert.match(r.ok ? r.texto : '', /3\.750\.000/);
+});
+
+test('asistente: lo que no es un Word válido se explica, no se traga', async () => {
+  const { textoDeWord } = await import('./asistente-word.js');
+
+  // Un .doc de Word 97-2003 no es un zip. El mensaje tiene que decir qué hacer,
+  // porque «no se pudo leer» deja al usuario sin salida y ya le costó la espera.
+  const viejo = await textoDeWord(Buffer.from('\xD0\xCF\x11\xE0basura').toString('base64'), 'viejo.doc');
+  assert.equal(viejo.ok, false);
+  assert.match(viejo.ok === false ? viejo.error : '', /\.docx/);
+
+  const vacio = await textoDeWord('', 'vacio.docx');
+  assert.equal(vacio.ok, false);
+});
+
+/** Un .docx mínimo pero real: zip DEFLATE con las tres piezas que exige el formato. */
+async function construirDocx(texto: string): Promise<string> {
+  const { default: JSZip } = await import('jszip');
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', '<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" '
+    + 'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>');
+  zip.file('_rels/.rels', '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" '
+    + 'Target="word/document.xml"/></Relationships>');
+  zip.file('word/document.xml', '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+    + `<w:body><w:p><w:r><w:t>${texto}</w:t></w:r></w:p></w:body></w:document>`);
+  return zip.generateAsync({ type: 'base64', compression: 'DEFLATE' });
+}
