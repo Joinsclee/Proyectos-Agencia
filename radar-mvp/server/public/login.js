@@ -35,7 +35,22 @@ const radarAlertDraft = (() => {
   }
 })();
 
+// La ficha que el usuario estaba mirando cuando vino aquí, si vino desde una.
+// Se lee, no se borra: quien la consume es el Radar al reabrirla, que es el único
+// que sabe si el viaje terminó de verdad.
+const fichaPendiente = (() => {
+  try { return window.__fichaPendiente?.leer() || null; } catch { return null; }
+})();
+
 function pendingSubtitle(register) {
+  // Quien llega desde una ficha no viene a "crear una cuenta": viene a ver ESA
+  // ficha. Prometerle la vuelta es lo que convierte el formulario en un trámite
+  // que vale la pena, y por eso este mensaje gana a cualquier otro.
+  if (fichaPendiente) {
+    return register
+      ? 'Crea tu cuenta y te devolvemos a la ficha que estabas viendo.'
+      : 'Ingresa y te devolvemos a la ficha que estabas viendo.';
+  }
   if (!guestFavorites.length && !radarPreferences && !savedSimulations.length && !radarAlertDraft) {
     return register ? 'Empieza a ver las oportunidades antes que nadie.' : 'Ingresa para ver tus oportunidades.';
   }
@@ -46,6 +61,15 @@ function pendingSubtitle(register) {
 
 function renderPendingContext() {
   const box = $('pending-context');
+  const frases = [];
+  // El subtítulo ya prometió la vuelta; aquí se NOMBRA la ficha, que es lo que
+  // convierte la promesa en comprobable: el usuario ve que el sistema sabe cuál
+  // es antes de darle un solo dato suyo. Repetir la promesa sería ruido.
+  if (fichaPendiente) {
+    frases.push(fichaPendiente.titulo
+      ? `Ficha guardada: ${fichaPendiente.titulo}.`
+      : 'Ficha guardada en este dispositivo.');
+  }
   const parts = [];
   if (radarPreferences) {
     const type = ({ apartment: 'apartamentos', house: 'casas', lot: 'lotes', commercial: 'locales' }[radarPreferences.type] || 'inmuebles');
@@ -57,14 +81,17 @@ function renderPendingContext() {
   if (guestFavorites.length) parts.push(`${guestFavorites.length} guardado${guestFavorites.length === 1 ? '' : 's'}`);
   if (savedSimulations.length) parts.push(`${savedSimulations.length === 1 ? '1 simulación' : `${savedSimulations.length} simulaciones`}`);
   if (radarAlertDraft) parts.push('alerta semanal');
-  if (!parts.length) {
+  if (parts.length) {
+    const subject = parts.length > 2
+      ? `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}`
+      : parts.join(' y ');
+    frases.push(`Plan listo en este dispositivo: ${subject}.`);
+  }
+  if (!frases.length) {
     box.hidden = true;
     return;
   }
-  const subject = parts.length > 2
-    ? `${parts.slice(0, -1).join(', ')} y ${parts.at(-1)}`
-    : parts.join(' y ');
-  box.textContent = `Plan listo en este dispositivo: ${subject}.`;
+  box.textContent = frases.join(' ');
   box.hidden = false;
 }
 

@@ -159,12 +159,24 @@ document.addEventListener('click', async (event) => {
   }
   account = data.account;
   message.className = 'message ok';
+  // Quien llegó aquí desde una ficha bloqueada acaba de comprar el derecho a ver
+  // ESA ficha. Dejarlo en la página de planes lo obliga a repetir la búsqueda que
+  // acaba de pagar, así que se le devuelve solo. La nota no se borra aquí: la
+  // consume el Radar al reabrirla, que es el único que sabe si llegó a abrirse.
+  const pendiente = demoButton ? window.__fichaPendiente?.leer() : null;
   // Cada camino termina en algo distinto: uno concede el acceso ya, el otro solo
   // deja constancia. Anunciar "solicitud registrada" a quien acaba de obtener el
   // plan lo deja sin saber si tiene que esperar a alguien.
   message.textContent = demoButton
-    ? 'Listo: tu acceso completo está activo. Ya puedes abrir cualquier ficha sin límite.'
+    ? (pendiente
+      ? 'Listo: tu acceso completo está activo. Te devolvemos a la ficha que estabas viendo…'
+      : 'Listo: tu acceso completo está activo. Ya puedes abrir cualquier ficha sin límite.')
     : 'Solicitud registrada. Te avisaremos cuando el checkout demo esté habilitado.';
+  if (pendiente) {
+    // La espera es para que el mensaje se lea; sin ella el salto parece un fallo.
+    setTimeout(() => { location.href = '/'; }, 1_200);
+    return;
+  }
   const plansData = await fetch('/api/plans').then((result) => result.json());
   render(plansData.plans || []);
 });
