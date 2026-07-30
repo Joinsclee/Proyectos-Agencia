@@ -160,3 +160,18 @@ test('asistente: adjuntar es del plan de pago', async () => {
   assert.equal(puedeAdjuntar('free'), false);
   assert.equal(puedeAdjuntar('anonimo'), false);
 });
+
+test('asistente: la ciudad se busca sin tildes', async () => {
+  // La base guarda «bogota»; el modelo escribe «Bogotá» aunque el prompt le pida lo
+  // contrario. Con comparación exacta la búsqueda devolvía cero y el asistente
+  // contestaba «no encontré propiedades en Bogotá» sobre una ciudad con 1.786. Una
+  // respuesta falsa es peor que un error visible.
+  const { normalizarCiudadParaPruebas } = await import('./asistente-busqueda.js');
+  for (const entrada of ['Bogotá', 'BOGOTÁ', ' bogota ', 'Bogota', 'Medellín', 'MEDELLIN']) {
+    const salida = normalizarCiudadParaPruebas(entrada);
+    assert.equal(salida, salida.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim());
+    assert.doesNotMatch(salida, /[áéíóúÁÉÍÓÚ]/, `«${entrada}» salió con tilde: «${salida}»`);
+  }
+  assert.equal(normalizarCiudadParaPruebas('Bogotá'), 'bogota');
+  assert.equal(normalizarCiudadParaPruebas('  MEDELLÍN '), 'medellin');
+});
