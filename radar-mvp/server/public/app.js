@@ -3625,7 +3625,11 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   renderRadarSetup();
   load(1);
   if (mobileQuery.matches) {
-    document.querySelector('.vstats').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    // Al cambiar de sección en móvil se sube a donde empiezan los resultados. Antes
+    // apuntaba a `.vstats`, la franja morada de cifras, que dejó de existir como
+    // barra propia al bajar la navegación: sus cifras viven ahora dentro de la barra
+    // de secciones. Sin el `?.` esto lanzaba y dejaba la carga a medias.
+    (document.querySelector('.tabs-bar') || $('results'))?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 }));
 $('modal-close').addEventListener('click', closeModal);

@@ -15,9 +15,23 @@
  * el navegador pudiera llamar al webhook por su cuenta.
  */
 (function () {
-  const CLAVE_HISTORIAL = 'radar_asistente_historial_v1';
-  /** Cuántos turnos se recuerdan en el navegador. La memoria de verdad vive en n8n. */
+  /** Cuántos turnos se ven a la vez en el panel. */
   const MAX_TURNOS = 40;
+
+  /**
+   * La conversación EN PANTALLA vive en memoria, no en `localStorage`.
+   *
+   * Antes se guardaba, así que al reabrir el panel aparecía la conversación de ayer y
+   * había que desplazarse hasta el fondo para escribir. Y peor: sin las sugerencias de
+   * inicio, que son lo que le dice a alguien qué puede preguntar.
+   *
+   * Perder lo que se ve NO es perder el contexto. La memoria del agente vive en n8n,
+   * indexada por la cuenta —no por la pestaña—, así que Mateo sigue recordando de qué
+   * se habló y puede seguir personalizando; lo único que se reinicia es el lienzo.
+   * Que es lo que se pidió: «esto debería guardarse como contexto, pero no mostrar el
+   * mismo chat siempre».
+   */
+  let turnos = [];
 
   let abierto = false;
   let enviando = false;
@@ -32,25 +46,24 @@
 
   // ───────────────────────── historial local ─────────────────────────
 
-  /**
-   * El historial se guarda para que al recargar no parezca que la conversación
-   * se borró. No es la memoria del agente —esa la lleva n8n, indexada por la
-   * cuenta— sino solo lo que se ve en pantalla.
-   */
-  function leerHistorial() {
-    try {
-      const v = JSON.parse(localStorage.getItem(CLAVE_HISTORIAL) || '[]');
-      return Array.isArray(v) ? v.slice(-MAX_TURNOS) : [];
-    } catch {
-      return [];
-    }
+  const leerHistorial = () => turnos;
+
+  function guardarHistorial(nuevos) {
+    turnos = nuevos.slice(-MAX_TURNOS);
   }
 
-  function guardarHistorial(turnos) {
-    try {
-      localStorage.setItem(CLAVE_HISTORIAL, JSON.stringify(turnos.slice(-MAX_TURNOS)));
-    } catch { /* modo privado: la conversación vive solo mientras dure la pestaña */ }
+  /** Al cerrar se olvida lo que se veía. Lo que Mateo recuerda no está aquí. */
+  function limpiarConversacion() {
+    turnos = [];
+    adjunto = null;
+    limpiarError();
+    const caja = $('asistente-archivo');
+    if (caja) caja.hidden = true;
   }
+
+  // Restos de cuando la conversación se guardaba en el navegador. Se borra una vez
+  // para que nadie arrastre la de la semana pasada al actualizar.
+  try { localStorage.removeItem('radar_asistente_historial_v1'); } catch { /* da igual */ }
 
   // ───────────────────────── texto seguro ─────────────────────────
 
@@ -326,6 +339,7 @@
 
   function cerrar() {
     abierto = false;
+    limpiarConversacion();
     $('asistente-panel').classList.remove('abierto');
     $('asistente-panel').setAttribute('aria-hidden', 'true');
     $('asistente-btn').setAttribute('aria-expanded', 'false');
