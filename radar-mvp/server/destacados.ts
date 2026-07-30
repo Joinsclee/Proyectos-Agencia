@@ -618,9 +618,11 @@ export function bloqueDeFuente(
       id: 'bancos',
       titulo: 'Lo mejor de la semana en cartera de bancos',
       icono: 'bank',
-      criterio: 'Inmuebles que los bancos recibieron en dación en pago y quieren sacar de balance, '
-        + 'ordenados por descuento contra el mercado de su zona. En Colombia el descuento es más '
-        + 'moderado que en otros mercados, así que aquí manda la diferencia relativa, no la rebaja bruta.',
+      // Fuera «aquí manda la diferencia relativa, no la rebaja bruta»: explicaba
+      // cómo ordenamos por dentro, no qué está mirando quien lee. Y de paso
+      // pedía perdón por un descuento pequeño antes de que nadie se quejara.
+      criterio: 'Inmuebles que los bancos recibieron de clientes que no pudieron pagar su crédito y '
+        + 'ahora quieren vender, ordenados por descuento contra ofertas similares de su zona.',
     },
     remate: {
       id: 'remates',

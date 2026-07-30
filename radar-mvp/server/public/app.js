@@ -781,7 +781,7 @@ const ONBOARDING_PASOS = [
     // Antes seguía «en Colombia el descuento es más moderado…». Se retiró: adelanta
     // un juicio sobre el descuento que le toca al índice inmueble por inmueble, y
     // puede desmentirlo la propia lista que hay debajo.
-    texto: 'Propiedades que los bancos recibieron en dación en pago y necesitan sacar de balance.',
+    texto: 'Propiedades que los bancos recibieron de clientes que no pudieron pagar su crédito y ahora quieren vender.',
     puntos: ['Puedes filtrar por entidad', 'El estrato no excluye: si el banco no lo reporta, la ficha se muestra igual'],
     ir: 'bancos',
   },
