@@ -40,7 +40,7 @@ import { construirResumenCuenta, nombreArchivoResumen } from './resumen-cuenta.j
 import { warmCityPools } from '../engine/zone-comps.js';
 import { planDe, redactarLista, redactarMixta, redactar, resumenBloqueo, accesoInmueble, accesoRemateFicha } from './acceso.js';
 import {
-  consumirConsulta, estadoConsultas, leerConsultas, validarAdjunto, LIMITE_CONSULTAS_FREE,
+  consumirConsulta, estadoConsultas, leerConsultas, puedeAdjuntar, validarAdjunto, LIMITE_CONSULTAS_FREE,
 } from './asistente.js';
 import { asistenteDisponible, preguntarAlAsistente } from './asistente-n8n.js';
 import { buscarParaAsistente } from './asistente-busqueda.js';
@@ -526,6 +526,18 @@ const server = createServer(async (req, res) => {
           // pesado no puede costarle al usuario una de sus consultas del mes.
           let adjunto: { nombre: string; mime: string; base64: string } | undefined;
           if (cuerpo.adjunto && typeof cuerpo.adjunto === 'object') {
+            // Adjuntar es del plan de pago. Un documento entra completo en la
+            // ventana de contexto de cada turno siguiente, así que cuesta varias
+            // veces lo que una pregunta suelta. Se comprueba aquí y no solo en la
+            // interfaz: quien quiera saltárselo solo tiene que llamar a la ruta.
+            if (!puedeAdjuntar(planDe(user))) {
+              return sendJSON(res, 403, {
+                ok: false,
+                motivo: 'adjunto_requiere_plan',
+                error: 'Adjuntar documentos e imágenes es parte del plan completo. '
+                  + 'Puedes preguntarme lo que necesites escribiéndolo.',
+              });
+            }
             const a = cuerpo.adjunto as Record<string, unknown>;
             const nombre = String(a.nombre ?? '');
             const base64 = String(a.base64 ?? '');
