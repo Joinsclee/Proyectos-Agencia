@@ -172,10 +172,20 @@ function moneyLabel(value: number | null): string {
     : 'Precio por confirmar';
 }
 
+/** Los tipos de una alerta, venga como lista o como el valor único de antes. */
+function tiposDeAlerta(alert: { type?: unknown }): string[] {
+  if (Array.isArray(alert.type)) return alert.type.filter((t): t is string => typeof t === 'string' && t !== '');
+  return typeof alert.type === 'string' && alert.type !== '' ? [alert.type] : [];
+}
+
 function alertSearchUrl(alert: RadarAlert): string {
   const searchUrl = new URL('/', env.APP_BASE_URL);
   searchUrl.searchParams.set('city', alert.city);
-  if (alert.type) searchUrl.searchParams.set('type', alert.type);
+  // Un solo tipo en el enlace: el buscador filtra por uno. Con varios se manda sin
+  // filtro de tipo —mejor mostrar de más que llevarle a un listado que no contiene
+  // dos de las tres cosas que pidió— y el correo ya dice qué buscaba.
+  const tiposUrl = tiposDeAlerta(alert);
+  if (tiposUrl.length === 1) searchUrl.searchParams.set('type', tiposUrl[0]);
   if (alert.budget) searchUrl.searchParams.set('priceMax', alert.budget);
   return searchUrl.toString();
 }
@@ -362,7 +372,10 @@ async function alertMatches(alert: RadarAlert, includeExistingMatches = false): 
     .lte('discount_pct', ALERT_MAX_CREDIBLE_DISCOUNT)
     .order('discount_pct', { ascending: false })
     .limit(12);
-  if (alert.type) query = query.eq('type', alert.type);
+  // `.in` y no `.eq`: el tipo es una lista desde que se pueden elegir varios. Lista
+  // vacía significa «cualquier tipo», así que no se filtra.
+  const tipos = tiposDeAlerta(alert);
+  if (tipos.length) query = query.in('type', tipos);
   if (alert.budget) query = query.lte('price', Number(alert.budget) * 1_000_000);
   const since = alertMatchSince(alert, includeExistingMatches);
   if (since) query = query.gte('first_seen_at', since);

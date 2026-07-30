@@ -9,7 +9,8 @@ const alert = {
   id: 'preview-alert',
   city: 'bogota',
   budget: '500',
-  type: 'apartment' as const,
+  // Lista desde que se pueden elegir varios tipos por alerta.
+  type: ['apartment'] as ('apartment')[],
   frequency: 'weekly' as const,
   active: true,
   createdAt: '2026-07-25T00:00:00.000Z',
