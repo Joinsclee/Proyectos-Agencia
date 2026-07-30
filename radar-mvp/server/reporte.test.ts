@@ -174,14 +174,14 @@ test('reporte: la estimación de arriendo va con su nivel de confianza', () => {
       canonPorM2: 31_250, n: 11, confianza: 'medium', alcance: 'barrio Laureles',
     },
   }));
-  assert.match(html, /Estimación de canon de arriendo/);
+  assert.match(html, /Estimación del valor de arrendamiento/);
   assert.match(html, /\$2\.500\.000/);
   assert.match(html, /Media/, 'confianza de la estimación');
   assert.match(html, /no con contratos firmados/);
 });
 
 test('reporte: sin estimación de arriendo la sección no se dibuja vacía', () => {
-  assert.doesNotMatch(construirReporte(datos({ arriendo: null })), /Estimación de canon de arriendo/);
+  assert.doesNotMatch(construirReporte(datos({ arriendo: null })), /Estimación del valor de arrendamiento/);
 });
 
 test('reporte de remate: avalúo, postura, audiencia, juzgado y aviso jurídico', () => {
