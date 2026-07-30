@@ -23,6 +23,8 @@
   let enviando = false;
   let adjunto = null;
   let disponible = false;
+  /** ¿Este plan puede adjuntar? Lo dice el servidor con la cuenta en mano. */
+  let puedeAdjuntar = false;
   let limites = null;
 
   const $ = (id) => document.getElementById(id);
@@ -339,6 +341,23 @@
    * indexa por la cuenta, así que sin cuenta no hay dónde guardarla, y el límite
    * mensual necesita a alguien a quien contárselo.
    */
+  /**
+   * ¿Esta cuenta es de pago?
+   *
+   * Se pregunta al servidor en vez de deducirlo de tener sesión: eso ya nos costó
+   * una vez que una cuenta gratuita viera contenido de pago. `/api/account` es la
+   * autoridad.
+   */
+  async function esSuscrito() {
+    try {
+      const r = await fetch('/api/account', { headers: { Authorization: `Bearer ${localStorage.getItem('radar_token')}` } });
+      const d = await r.json();
+      return d.account?.plan === 'pro';
+    } catch {
+      return false;
+    }
+  }
+
   async function iniciar() {
     if (!conCuenta()) { ocultarTodo(); return; }
     try {
@@ -349,6 +368,15 @@
     }
     if (!disponible) { ocultarTodo(); return; }
     $('asistente-btn').hidden = false;
+    // Adjuntar es del plan de pago: el clip se retira en vez de dejarlo y
+    // contestar «esto es de pago» cuando lo pulsen. Y el pie deja de prometerlo.
+    puedeAdjuntar = await esSuscrito();
+    if (!puedeAdjuntar) {
+      const clip = $('asistente-adjuntar');
+      if (clip) clip.hidden = true;
+      const pie = document.querySelector('.asis-pie');
+      if (pie) pie.textContent = 'Escríbeme tu pregunta. Adjuntar documentos e imágenes es parte del plan completo.';
+    }
     if (Array.isArray(window.__asistenteLimites)) limites = null;
   }
 

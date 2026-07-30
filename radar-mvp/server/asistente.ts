@@ -113,6 +113,22 @@ export function consumirConsulta(
 // ──────────────────────────── Adjuntos ────────────────────────────
 
 /**
+ * ¿Puede este plan adjuntar documentos e imágenes?
+ *
+ * Solo el de pago. Un adjunto se convierte en texto y ese texto entra completo en
+ * la ventana de contexto de cada turno siguiente, así que una consulta con un
+ * contrato de veinte páginas cuesta varias veces lo que una pregunta suelta. Con 30
+ * consultas gratuitas al mes por persona, eso se acumula rápido.
+ *
+ * Lo decidió el cliente al preguntar justamente por el coste: «tal vez podríamos
+ * dejar que en la versión free no hubiese carga de documentos, ni imágenes, sino
+ * dejarlos para la versión de pago».
+ */
+export function puedeAdjuntar(plan: 'anonimo' | 'free' | 'suscrito'): boolean {
+  return plan === 'suscrito';
+}
+
+/**
  * 10 MB, el mismo tope que los tutores legal y tributario.
  *
  * No es un número elegido aquí: quien ya usó esos asistentes aprendió ese límite,
