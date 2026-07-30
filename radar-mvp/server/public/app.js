@@ -20,6 +20,18 @@ const emptyState = (icon, title, description, tone = '') => `
 // comparables homogéneos) y viaja en la columna is_high.
 const isHighOpp = (d) => d.is_high === true;
 const PAGE_SIZE = 24;
+/**
+ * Cuántos resultados devuelve una búsqueda hecha desde el buscador de arriba.
+ *
+ * Menos que los 24 de las pestañas, y a propósito: el cliente pidió que buscar
+ * «ayude a encontrar» y no que vuelque el inventario. Veinte caben en una pantalla
+ * que se lee, y el contador dice cuántos hay en total para que quede claro que la
+ * vía de acercarse es afinar la búsqueda, no pasar páginas.
+ *
+ * No se cambió el 24 de las pestañas: quien entra por ellas no ha pedido nada y
+ * está hojeando, que es otra intención.
+ */
+const PAGE_SIZE_BUSCADOR = 20;
 
 const ORDERS = {
   portal: [['precio_asc', 'Precio menor'], ['discount_desc', 'Mayor descuento'], ['precio_m2_asc', 'Precio/m² menor'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
@@ -29,7 +41,10 @@ const ORDERS = {
 
 // La portada es la primera pantalla del producto: se entra por ella, no por el
 // listado del portal. Debe coincidir con la pestaña marcada `active` en index.html.
-const state = { tab: 'home', page: 1, loading: false, loadSeq: 0 };
+// `total` y `mostrados` son el resultado de la última carga. Los pone `load()` y
+// los lee `RadarBuscador.aplicar` para poder contestar «hay 84» a quien encargó la
+// búsqueda desde fuera. Nulos mientras no se haya cargado nada.
+const state = { tab: 'home', page: 1, loading: false, loadSeq: 0, pageSize: PAGE_SIZE, total: null, mostrados: 0 };
 const GUEST_FAVS_KEY = 'radar_guest_favorites_v1';
 const RADAR_PREFS_KEY = 'radar_preferences_v1';
 const RADAR_SETUP_DISMISSED_KEY = 'radar_setup_dismissed_v1';
@@ -899,17 +914,25 @@ function setResultText(text) {
 /**
  * Qué región de la página manda en cada pestaña.
  *
- * La portada y el buscador son dos espacios distintos y nunca conviven: dejar el
- * buscador debajo obligaría a hacer scroll por una grilla de resultados vieja para
+ * La portada y el listado son dos espacios distintos y nunca conviven: dejar el
+ * listado debajo obligaría a hacer scroll por una grilla de resultados vieja para
  * llegar al pie de los destacados. El enlace de salto se mueve con ellos, o quien
  * navega con teclado acabaría enfocando la región escondida.
+ *
+ * El buscador de arriba vive con la portada y solo con ella. En Portal, Bancos o
+ * Remates la persona ya está dentro de una fuente y tiene su panel de filtros a la
+ * vista: repetir arriba tres de esos mismos filtros no añade nada y quita sitio a
+ * las tarjetas, que son el producto. Se apaga por el mismo camino que todo lo
+ * demás —esta función— para no tener dos maneras distintas de decidir qué se ve.
  */
 function aplicarVistaDePestana() {
   const enHome = state.tab === 'home';
   const home = $('home');
   const workspace = $('search-workspace');
+  const buscador = $('buscador');
   if (home) home.hidden = !enHome;
   if (workspace) workspace.hidden = enHome;
+  if (buscador) buscador.hidden = !enHome;
   const salto = $('skip-link');
   if (salto) {
     salto.setAttribute('href', enHome ? '#home' : '#results');
@@ -1821,11 +1844,17 @@ async function load(page) {
   $('empty').style.display = 'none';
   $('pager').innerHTML = '';
 
+  // El buscador de arriba enseña lo que ESTA búsqueda tiene puesto, y lo lee del
+  // panel —la única fuente— justo antes de pedirla. Así da igual por dónde se haya
+  // cambiado el filtro (buscador, panel, ciudades vecinas o preferencias): los dos
+  // sitios dicen lo mismo.
+  window.RadarBuscador?.sincronizar();
+
   const f = readFilters();
   const qs = new URLSearchParams();
   Object.entries(f).forEach(([k, v]) => { if (v) qs.set(k, v); });
   qs.set('page', String(page));
-  qs.set('pageSize', String(PAGE_SIZE));
+  qs.set('pageSize', String(state.pageSize));
 
   let res;
   try {
@@ -1853,6 +1882,12 @@ async function load(page) {
     $('grid').innerHTML = '';
     clearLoadingSkeletons();
     state.loading = false;
+    // Nulo, no cero: quien lea esto —`RadarBuscador.aplicar`, y a través de él el
+    // asistente— tiene que poder distinguir «no hay resultados» de «no se pudo
+    // buscar». Decirle a alguien que no hay nada en Bogotá porque se cayó la red
+    // es peor que decirle que falló.
+    state.total = null;
+    state.mostrados = 0;
     $('empty').style.display = 'block';
     $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Revisa la conexión y reintenta.', 'warning');
     setResultText('No disponible');
@@ -1884,7 +1919,17 @@ async function load(page) {
   // consulta; ahí se prefiere una cifra aproximada y honesta a una pantalla de
   // error, pero no se puede presentar como si fuera exacta.
   const cifra = (res.totalAproximado ? '≈ ' : '') + res.total.toLocaleString('es-CO');
-  setResultText(cifra + ' resultado' + (res.total === 1 ? '' : 's'));
+  // «20 de 1.786», no «1.786». Enseñar solo el total al lado de veinte tarjetas
+  // deja al usuario sin saber si eso es todo lo que hay o el principio de algo, y
+  // el cliente quiere que se vea que hay más y que la vía es acotar. Se cuentan
+  // las fichas realmente pintadas —los repetidos se colapsan— para que el número
+  // de la izquierda sea el que se puede contar en la pantalla.
+  const mostrados = res.data.length;
+  state.total = res.total;
+  state.mostrados = mostrados;
+  setResultText(res.total === 0
+    ? 'Sin resultados'
+    : `${mostrados.toLocaleString('es-CO')} de ${cifra} resultado${res.total === 1 ? '' : 's'}`);
   clearLoadingSkeletons();
   $('empty').style.display = res.total === 0 ? 'block' : 'none';
   renderPager(res.total, res.page, res.pages, res);
@@ -3579,14 +3624,25 @@ function renderLeyenda() {
   $('legend').innerHTML = state.tab === 'portal' ? leyendaCrece() : '';
 }
 
-document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListener('click', async () => {
+/**
+ * Cambia de sección: marca la pestaña, reconstruye sus filtros y carga.
+ *
+ * `antesDeCargar` corre con los filtros YA pintados y antes de pedir resultados.
+ * Es lo que necesita el buscador de arriba para volcar en el panel lo que la
+ * persona escribió: sin ese hueco habría que cargar una vez sin filtrar y otra
+ * filtrada, y el usuario vería medio segundo de resultados que no pidió.
+ */
+async function activarPestana(tab, antesDeCargar) {
   document.querySelectorAll('.tab-btn[data-tab]').forEach((x) => {
-    const active = x === b;
+    const active = x.dataset.tab === tab;
     x.classList.toggle('active', active);
     if (active) x.setAttribute('aria-current', 'page');
     else x.removeAttribute('aria-current');
   });
-  state.tab = b.dataset.tab;
+  state.tab = tab;
+  // Cada sección arranca con el tamaño de página de las pestañas. Si la búsqueda
+  // viene del buscador, su `antesDeCargar` lo baja a 20 justo después.
+  state.pageSize = PAGE_SIZE;
   aplicarVistaDePestana();
   renderRadarSetup();
   state.loadSeq++;
@@ -3607,7 +3663,8 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
     $('filters').innerHTML = '<div class="f-note">Los filtros no están disponibles por el momento.</div>';
   }
   renderRadarSetup();
-  load(1);
+  if (antesDeCargar) await antesDeCargar();
+  await load(1);
   if (mobileQuery.matches) {
     // Al cambiar de sección en móvil se sube a donde empiezan los resultados. Antes
     // apuntaba a `.vstats`, la franja morada de cifras, que dejó de existir como
@@ -3615,6 +3672,9 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
     // de secciones. Sin el `?.` esto lanzaba y dejaba la carga a medias.
     (document.querySelector('.tabs-bar') || $('results'))?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
+}
+document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListener('click', () => {
+  void activarPestana(b.dataset.tab);
 }));
 $('modal-close').addEventListener('click', closeModal);
 // «Ver tutorial» reabre el RECORRIDO, que es la bienvenida real. El diálogo
@@ -3791,6 +3851,275 @@ try {
     }, 900);
   }
 } catch { /* sin almacenamiento no se insiste */ }
+
+/* ───── EL BUSCADOR DE ARRIBA ─────
+ *
+ * Va envuelto porque estos archivos son scripts clásicos que comparten un mismo
+ * ámbito global con `tour.js` y `asistente.js`: cualquier nombre suelto aquí es un
+ * nombre que otro archivo ya no puede usar.
+ *
+ * La regla que lo gobierna: el buscador NO es un segundo cliente de la API. No
+ * conoce `/api/portal`, no arma consultas y no sabe nada del muro de pago. Lo
+ * único que hace es escribir en el panel de filtros —la única fuente— y pedir que
+ * se cargue. Todo lo demás (identificación, plan, redacción de las fichas
+ * bloqueadas) sigue pasando exactamente por donde pasaba.
+ */
+(function buscadorPrincipal() {
+  const form = $('buscador-form');
+  if (!form) return;
+  const FUENTES = ['portal', 'bancos', 'remates'];
+  const selCiudad = $('b-city');
+  const selTipo = $('b-type');
+  const campoPrecio = $('b-price');
+  const etiquetaPrecio = $('b-price-label');
+  const radios = [...form.querySelectorAll('input[name="buscador-fuente"]')];
+  const fuenteElegida = () => radios.find((r) => r.checked)?.value || 'portal';
+  const tieneOpcion = (select, valor) => !valor || [...select.options].some((o) => o.value === valor);
+
+  // Las facetas de cada fuente se piden una vez. Son tres listas que no cambian
+  // durante la visita, y volver a pedirlas en cada pulsación de las píldoras
+  // dejaría el desplegable en blanco mientras responde la red.
+  const facetasPorFuente = new Map();
+  function facetasDe(fuente) {
+    if (!facetasPorFuente.has(fuente)) {
+      facetasPorFuente.set(fuente, fetch(`/api/facets?source=${encodeURIComponent(fuente)}`)
+        .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+        .catch((e) => {
+          // El fallo NO se queda cacheado: si no, un corte de red de un segundo
+          // dejaría el buscador sin ciudades hasta que alguien recargue.
+          facetasPorFuente.delete(fuente);
+          throw e;
+        }));
+    }
+    return facetasPorFuente.get(fuente);
+  }
+
+  function rellenar(select, valores, etiqueta, textoTodas) {
+    const elegido = select.value;
+    select.innerHTML = `<option value="">${esc(textoTodas)}</option>`
+      + valores.map((v) => `<option value="${esc(v)}">${esc(etiqueta(v))}</option>`).join('');
+    // Lo elegido se conserva solo si la fuente nueva lo tiene: un remate puede
+    // estar en un municipio donde el portal no publica nada, y al revés.
+    if (elegido && tieneOpcion(select, elegido)) select.value = elegido;
+  }
+
+  let pintadoSeq = 0;
+  async function pintarOpciones(fuente) {
+    const seq = ++pintadoSeq;
+    let facetas;
+    try { facetas = await facetasDe(fuente); } catch { return; }
+    // Entre la petición y la respuesta la persona pudo cambiar de píldora: el que
+    // llega tarde se descarta, igual que hacen los listados con `state.loadSeq`.
+    if (seq !== pintadoSeq) return;
+    rellenar(selCiudad, facetas.cities || [], cap, 'Todas las ciudades');
+    rellenar(selTipo, facetas.types || [], typeLbl, 'Todos los tipos');
+  }
+
+  function ajustarEtiquetaPrecio(fuente) {
+    // En un remate no hay precio de venta: hay una POSTURA con la que arranca la
+    // subasta. Llamarla «precio» sería prometer otra cosa, y es el número por el
+    // que el servidor filtra (`bidMax`), no el mismo campo.
+    etiquetaPrecio.textContent = fuente === 'remates' ? 'Postura máxima (millones)' : 'Precio máximo (millones)';
+  }
+
+  /**
+   * Vuelca el buscador en el panel de filtros.
+   *
+   * Esta es la única dirección en la que el buscador escribe, y escribe en los
+   * MISMOS controles que ya existían: así la petición la sigue armando `load()`
+   * con `readFilters()`, y no hay una segunda forma de decir «filtrado por Bogotá»
+   * que pueda contradecir a la primera.
+   *
+   * `extras` son los filtros que el buscador no ofrece en su caja pero el panel sí
+   * —precio mínimo y valoración del Índice CRECE—. Los usa `aplicar()`, que recibe
+   * búsquedas de fuera; lo que no venga no se toca.
+   */
+  async function volcarEnPanel(fuente, extras = {}) {
+    const ciudad = $('f-city');
+    if (ciudad && tieneOpcion(ciudad, selCiudad.value)) {
+      const cambia = ciudad.value !== selCiudad.value;
+      ciudad.value = selCiudad.value;
+      // El barrio pertenece a UNA ciudad. Sin repoblarlo, quien busca en Pereira
+      // después de haber elegido un barrio de Bogotá se queda filtrando por un
+      // barrio que no existe en su ciudad, y la pantalla sale vacía sin explicación.
+      if (cambia && fuente === 'portal') await repopZones(ciudad.value);
+    }
+    const tipo = $('f-type');
+    if (tipo && tieneOpcion(tipo, selTipo.value)) tipo.value = selTipo.value;
+    const precio = $(fuente === 'remates' ? 'f-bidMax' : 'f-priceMax');
+    if (precio) precio.value = campoPrecio.value;
+    if (extras.precioMin != null) {
+      const minimo = $(fuente === 'remates' ? 'f-bidMin' : 'f-priceMin');
+      if (minimo) minimo.value = extras.precioMin;
+    }
+    // La valoración no existe en remates: ahí el veredicto del Índice CRECE no se
+    // calcula, y el desplegable ni se pinta. Se ignora en vez de fallar.
+    // `!= null` y no a secas: la cadena vacía es una orden —quita la valoración—,
+    // no la ausencia de orden. Ver el mismo criterio en `aplicar()`.
+    if (extras.tier != null) {
+      const valoracion = $('f-opp');
+      if (valoracion && tieneOpcion(valoracion, extras.tier)) valoracion.value = extras.tier;
+    }
+    updateFilterCount();
+    state.pageSize = PAGE_SIZE_BUSCADOR;
+  }
+
+  /** Trae al buscador lo que el panel tiene puesto ahora mismo. */
+  async function sincronizar() {
+    if (!FUENTES.includes(state.tab)) return;
+    const radio = radios.find((r) => r.value === state.tab);
+    if (radio) radio.checked = true;
+    ajustarEtiquetaPrecio(state.tab);
+    // Primero las opciones: asignarle a un desplegable un valor que todavía no
+    // existe entre sus opciones lo deja vacío, y el buscador diría «todas las
+    // ciudades» sobre un listado acotado a Bogotá.
+    await pintarOpciones(state.tab);
+    const ciudad = $('f-city');
+    if (ciudad) selCiudad.value = tieneOpcion(selCiudad, ciudad.value) ? ciudad.value : '';
+    const tipo = $('f-type');
+    if (tipo) selTipo.value = tieneOpcion(selTipo, tipo.value) ? tipo.value : '';
+    const precio = $(state.tab === 'remates' ? 'f-bidMax' : 'f-priceMax');
+    if (precio) campoPrecio.value = precio.value;
+  }
+
+  /**
+   * Ejecuta la búsqueda. ÚNICO camino: lo usan igual el botón y `aplicar()`.
+   *
+   * Que haya una sola forma de buscar no es limpieza, es lo que impide que el día
+   * de mañana la búsqueda del chat y la del botón se comporten distinto sin que
+   * nadie lo note hasta que un usuario lo cuenta.
+   */
+  async function ejecutar(fuente, extras) {
+    if (state.tab === fuente) {
+      // Ya estamos en la sección. Se escribe sobre el panel que ya está pintado en
+      // vez de reconstruirlo, y así sobreviven los filtros de abajo que el buscador
+      // no ofrece —estrato, habitaciones, banco—: buscar otra vez no es motivo para
+      // borrar lo que la persona afinó a mano.
+      await volcarEnPanel(fuente, extras);
+      await load(1);
+    } else {
+      await activarPestana(fuente, () => volcarEnPanel(fuente, extras));
+    }
+    $('results')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  }
+
+  form.addEventListener('submit', (evento) => {
+    // Sin esto el formulario navegaría y la página se recargaría entera. Es además
+    // lo que hace que la tecla Enter dentro de cualquier campo busque.
+    evento.preventDefault();
+    void ejecutar(fuenteElegida(), {});
+  });
+  // Cambiar de modalidad reconfigura el formulario, no busca: son otras ciudades y
+  // otro campo de precio, pero la persona todavía no ha dicho que quiera irse.
+  radios.forEach((radio) => radio.addEventListener('change', () => {
+    ajustarEtiquetaPrecio(radio.value);
+    void pintarOpciones(radio.value);
+  }));
+
+  /** Lo que el asistente llama «banco» o «remate» son aquí pestañas en plural. */
+  function fuenteDesde(valor) {
+    const dicho = String(valor || '').trim().toLowerCase();
+    const equivalencias = { portal: 'portal', banco: 'bancos', bancos: 'bancos', remate: 'remates', remates: 'remates' };
+    return equivalencias[dicho] || null;
+  }
+
+  /**
+   * Millones, que es la unidad de los campos de precio de toda la interfaz.
+   *
+   * Se acepta la cifra en pesos porque es como habla el servidor —`ParametrosBusqueda`
+   * del asistente lleva COP— y como la escribiría cualquiera que copie un precio de
+   * una ficha. Nadie busca un inmueble de 300 pesos ni uno de 300 billones, así que
+   * el corte en un millón separa las dos unidades sin ambigüedad posible.
+   */
+  function aMillones(valor) {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero) || numero <= 0) return null;
+    return numero >= 1e6 ? Math.round(numero / 1e6) : Math.round(numero);
+  }
+
+  /** Como lo guarda la base: minúsculas y sin tildes. El modelo escribe «Bogotá». */
+  const normalizarCiudad = (valor) => String(valor)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+
+  /** Lo que quedó puesto de verdad, leído del panel, no de lo que se pidió. */
+  function filtrosAplicados(fuente) {
+    const valor = (id) => $(id)?.value || '';
+    return {
+      ciudad: valor('f-city'),
+      tipo: valor('f-type'),
+      precioMinMillones: valor(fuente === 'remates' ? 'f-bidMin' : 'f-priceMin'),
+      precioMaxMillones: valor(fuente === 'remates' ? 'f-bidMax' : 'f-priceMax'),
+      tier: valor('f-opp'),
+    };
+  }
+
+  /**
+   * Aplica una búsqueda desde código. Es el enganche del asistente del chat.
+   *
+   * Hace lo mismo que pulsar «Buscar» y por el mismo camino: lleva a la sección
+   * donde se ven propiedades, deja los filtros PUESTOS Y A LA VISTA en los
+   * controles, y devuelve qué salió. Que se vean es la mitad del asunto: si el
+   * listado cambiara sin que los controles lo cuenten, la persona vería otra
+   * pantalla sin saber por qué ni cómo deshacerlo.
+   *
+   * Lo que no venga en la petición no se toca —una llamada parcial no borra en
+   * silencio lo que el usuario ya tenía puesto—, con una sola excepción obligada:
+   * al cambiar de fuente, el panel se reconstruye desde cero (son otros filtros) y
+   * solo sobreviven los campos que la caja de búsqueda sabe repetir.
+   */
+  async function aplicar(peticion = {}) {
+    const fuente = fuenteDesde(peticion.fuente) || (FUENTES.includes(state.tab) ? state.tab : fuenteElegida());
+    const radio = radios.find((r) => r.value === fuente);
+    if (radio) radio.checked = true;
+    ajustarEtiquetaPrecio(fuente);
+    // Antes de escribir hay que tener las opciones de ESTA fuente: asignarle a un
+    // desplegable un valor que todavía no está entre sus opciones lo deja vacío.
+    await pintarOpciones(fuente);
+
+    if (peticion.ciudad != null) {
+      const ciudad = normalizarCiudad(peticion.ciudad);
+      if (tieneOpcion(selCiudad, ciudad)) selCiudad.value = ciudad;
+    }
+    if (peticion.tipo != null && tieneOpcion(selTipo, String(peticion.tipo))) selTipo.value = String(peticion.tipo);
+    // Vacío EXPLÍCITO significa quitar el filtro, no «no lo toques». La diferencia
+    // importa porque el asistente manda siempre todos los campos: si al pedir
+    // «remates en Medellín» sobreviviera el tope de precio de la búsqueda
+    // anterior, la pantalla mostraría un filtro que nadie pidió y el número que
+    // el chat acaba de decir —«hay 84»— no cuadraría con lo que hay debajo.
+    // «No viene» sigue siendo no tocar: eso es `null`/`undefined`, no cadena vacía.
+    if (peticion.precioMax != null) {
+      const tope = aMillones(peticion.precioMax);
+      campoPrecio.value = tope ? String(tope) : '';
+    }
+
+    const extras = {};
+    if (peticion.precioMin != null) {
+      const piso = aMillones(peticion.precioMin);
+      extras.precioMin = piso ? String(piso) : '';
+    }
+    if (peticion.tier != null) extras.tier = String(peticion.tier);
+
+    await ejecutar(fuente, extras);
+    return {
+      // `state.total` es nulo cuando la carga falló: quien pregunte tiene que poder
+      // distinguir «no hay resultados» de «no se pudo buscar».
+      ok: state.total != null,
+      fuente,
+      total: state.total,
+      mostrados: state.mostrados,
+      filtros: filtrosAplicados(fuente),
+    };
+  }
+
+  ajustarEtiquetaPrecio(fuenteElegida());
+  void pintarOpciones(fuenteElegida());
+  /**
+   * Contrato público, con nombre propio y sin guiones bajos a propósito: esto lo
+   * llama código de fuera (el asistente), no es plomería interna como
+   * `window.__radarTour`. `sincronizar` viaja al lado porque `load()` la necesita.
+   */
+  window.RadarBuscador = { aplicar, sincronizar };
+})();
 
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.

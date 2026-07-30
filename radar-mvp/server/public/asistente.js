@@ -144,12 +144,28 @@
         </div>`;
       return;
     }
-    hilo.innerHTML = turnos.map((t) => (
-      t.de === 'usuario'
-        ? `<div class="asis-msg asis-yo"><p>${esc(t.texto)}</p>${
-          t.archivo ? `<span class="asis-adj">📎 ${esc(t.archivo)}</span>` : ''}</div>`
-        : `<div class="asis-msg asis-bot">${formatear(t.texto)}</div>`
-    )).join('');
+    hilo.innerHTML = turnos.map((t) => {
+      if (t.de === 'usuario') {
+        return `<div class="asis-msg asis-yo"><p>${esc(t.texto)}</p>${
+          t.archivo ? `<span class="asis-adj">📎 ${esc(t.archivo)}</span>` : ''}</div>`;
+      }
+      if (t.de === 'accion') {
+        // El número puede faltar si la carga del listado falló: se dice lo que se
+        // sabe y no se inventa un cero, que se leería como «no hay nada».
+        // El asistente ya dice en su mensaje qué búsqueda dejó puesta. Aquí no se
+        // repite: se da el dato que él no tiene —cuántas hay ya cargadas en la
+        // pantalla de detrás— y el paso para ir a verlas.
+        const donde = esc(NOMBRE_FUENTE[t.fuente] || 'el Radar');
+        const cuantas = typeof t.total === 'number'
+          ? `<strong>${t.total}</strong> en ${donde}, ya en tu pantalla.`
+          : `Listo en ${donde}.`;
+        return `<div class="asis-accion">
+          <p>${cuantas}</p>
+          <button type="button" class="asis-ver">Ver las propiedades</button>
+        </div>`;
+      }
+      return `<div class="asis-msg asis-bot">${formatear(t.texto)}</div>`;
+    }).join('');
     hilo.scrollTop = hilo.scrollHeight;
   }
 
@@ -279,6 +295,9 @@
       guardarHistorial(conRespuesta);
       pintarTurnos();
       quitarArchivo();
+      // Si el agente buscó, la aplicación se configura sola. El servidor apunta
+      // qué buscó de verdad y lo manda aquí; no se lee de su respuesta escrita.
+      if (data.accion && data.accion.tipo === 'buscar') aplicarBusqueda(data.accion);
     } catch {
       mostrarError('Se cortó la conexión. Vuelve a intentarlo.');
     } finally {
@@ -286,6 +305,53 @@
       $('asistente-enviar').disabled = false;
       mostrarEscribiendo(false);
     }
+  }
+
+  /** Cómo se llama cada fuente cuando hay que decirla en voz alta. */
+  const NOMBRE_FUENTE = {
+    portal: 'anuncios de portales',
+    banco: 'activos de bancos',
+    remate: 'remates judiciales',
+  };
+
+  /**
+   * Deja la búsqueda del agente puesta en la aplicación.
+   *
+   * El chat no lista propiedades: eso ya lo hace la pantalla, con fotos, orden y
+   * filtros. Lo que hace es configurarla —los filtros a la vista, la pestaña de la
+   * fuente correcta, el listado cargado— y ofrecer el paso de ir a verla.
+   *
+   * SE MANDAN TODOS LOS CAMPOS, TAMBIÉN LOS VACÍOS. `aplicar` respeta lo que no
+   * llega, que es lo correcto cuando lo toca una persona, pero aquí sería un
+   * error: si alguien buscó apartamentos y luego pide «remates en Medellín», el
+   * tipo anterior seguiría puesto y la pantalla mostraría una búsqueda que nadie
+   * pidió y que además no cuadra con el número que el asistente acaba de decir.
+   * El servidor manda lo que de verdad buscó; lo que no está, no estaba.
+   */
+  async function aplicarBusqueda(accion) {
+    const buscador = window.RadarBuscador;
+    // Si el buscador no está —una versión vieja en caché, otra página—, el chat
+    // sigue funcionando: se queda en la respuesta escrita, que se basta sola.
+    if (!buscador || typeof buscador.aplicar !== 'function') return;
+    const f = accion.filtros || {};
+    let r;
+    try {
+      r = await buscador.aplicar({
+        fuente: accion.fuente,
+        ciudad: f.ciudad || '',
+        tipo: f.tipo || '',
+        precioMin: f.precioMin == null ? '' : f.precioMin,
+        precioMax: f.precioMax == null ? '' : f.precioMax,
+        tier: f.tier || '',
+      });
+    } catch { return; }
+    if (!r || r.ok === false) return;
+    const conAccion = leerHistorial();
+    // `r.total` y no el del servidor: es el que se ve de verdad en pantalla, y
+    // decir un número distinto del que hay debajo es peor que no decir ninguno.
+    conAccion.push({ de: 'accion', total: r.total, fuente: r.fuente });
+    guardarHistorial(conAccion);
+    pintarTurnos();
   }
 
   function mostrarEscribiendo(visible) {
@@ -418,6 +484,9 @@
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); }
     });
     $('asistente-hilo').addEventListener('click', (e) => {
+      // Cerrar es el punto: la búsqueda ya está aplicada detrás del panel, y en
+      // móvil el panel la tapa entera.
+      if (e.target.closest('.asis-ver')) { cerrar(); return; }
       const chip = e.target.closest('.asis-chip');
       if (chip) enviar(chip.textContent);
     });
