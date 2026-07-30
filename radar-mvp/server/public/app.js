@@ -1129,6 +1129,9 @@ const radarSetupState = {
   },
 };
 const RADAR_BUDGETS = [
+  // El tramo de 200 lo pidió el cliente pensando en quien busca lo más barato:
+  // «un parqueadero o algo así no necesita un parqueadero de 300 millones».
+  ['200', 'Hasta $200 millones'],
   ['300', 'Hasta $300 millones'],
   ['500', 'Hasta $500 millones'],
   ['800', 'Hasta $800 millones'],
@@ -1138,6 +1141,11 @@ const RADAR_BUDGETS = [
 const RADAR_TYPES = [
   ['apartment', 'Apartamento'],
   ['house', 'Casa'],
+  // Parqueadero y oficina los pidió el cliente al ver la lista: «aquí nos haría
+  // falta casa, apartamento… parqueadero, lote. Y oficina». Son tipos con
+  // inventario real en la base, no hipotéticos.
+  ['parking', 'Parqueadero'],
+  ['office', 'Oficina'],
   ['lot', 'Lote'],
   ['commercial', 'Local'],
   ['', 'Cualquier tipo'],
