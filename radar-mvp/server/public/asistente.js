@@ -30,6 +30,12 @@
    * se habló y puede seguir personalizando; lo único que se reinicia es el lienzo.
    * Que es lo que se pidió: «esto debería guardarse como contexto, pero no mostrar el
    * mismo chat siempre».
+   *
+   * Estar en memoria es justo lo que da el comportamiento que se quiere: la
+   * conversación dura lo que dura la página. Recargar la borra —ahí la persona sí
+   * espera empezar de cero— y cerrar el panel no, porque cerrarlo por error no
+   * puede costar lo que llevabas escrito. Guardarla en `localStorage` haría lo
+   * primero imposible; borrarla al cerrar hacía lo segundo inevitable.
    */
   let turnos = [];
 
@@ -40,6 +46,8 @@
   /** ¿Este plan puede adjuntar? Lo dice el servidor con la cuenta en mano. */
   let puedeAdjuntar = false;
   let limites = null;
+  /** Con qué sesión se abrió lo que se ve. Si cambia, la conversación no es de quien está ahora. */
+  let tokenDeLaConversacion = localStorage.getItem('radar_token');
 
   const $ = (id) => document.getElementById(id);
   const conCuenta = () => !!localStorage.getItem('radar_token');
@@ -52,13 +60,28 @@
     turnos = nuevos.slice(-MAX_TURNOS);
   }
 
-  /** Al cerrar se olvida lo que se veía. Lo que Mateo recuerda no está aquí. */
+  /**
+   * Vacía lo que se ve en el panel. Lo que Mateo recuerda no está aquí: su memoria
+   * vive en n8n, indexada por cuenta, y esto no la toca.
+   *
+   * NO se llama al cerrar el panel. Cerrarlo sin querer —la X, un Escape— no puede
+   * costarle a nadie la conversación que estaba teniendo; el panel es una ventana
+   * sobre la conversación, no la conversación. Lo que sí la borra es recargar la
+   * página, y eso ya pasa solo: los turnos viven en memoria.
+   *
+   * Se llama cuando cambia quién está delante, que ahí sí hay que olvidar.
+   */
   function limpiarConversacion() {
     turnos = [];
     adjunto = null;
     limpiarError();
     const caja = $('asistente-archivo');
     if (caja) caja.hidden = true;
+    // Repintar aquí, y no dejarlo para la próxima apertura: si el panel está
+    // ABIERTO cuando cambia la cuenta —alguien cierra sesión desde otra pestaña—,
+    // vaciar solo la variable dejaría en pantalla la conversación de la persona
+    // anterior, que es justo lo que había que evitar.
+    pintarTurnos();
   }
 
   // Restos de cuando la conversación se guardaba en el navegador. Se borra una vez
@@ -405,7 +428,9 @@
 
   function cerrar() {
     abierto = false;
-    limpiarConversacion();
+    // La conversación se queda. Solo se retira el error, que era de la petición
+    // anterior y al reabrir sería ruido viejo.
+    limpiarError();
     $('asistente-panel').classList.remove('abierto');
     $('asistente-panel').setAttribute('aria-hidden', 'true');
     $('asistente-btn').setAttribute('aria-expanded', 'false');
@@ -439,6 +464,15 @@
   }
 
   async function iniciar() {
+    // Si cambió quién está delante —cerró sesión, o entró otra cuenta en esta
+    // misma pestaña— lo que se veía era de otra persona y se va. Es el único caso
+    // en que el panel se vacía solo, y aquí sí es obligatorio: la conversación
+    // puede llevar dentro qué está buscando y cuánto puede pagar.
+    const token = localStorage.getItem('radar_token');
+    if (token !== tokenDeLaConversacion) {
+      limpiarConversacion();
+      tokenDeLaConversacion = token;
+    }
     if (!conCuenta()) { ocultarTodo(); return; }
     try {
       const config = await fetch('/api/config').then((r) => r.json());
