@@ -61,11 +61,37 @@ const PropertyTypeSchema = z.enum([
   'warehouse', 'parking', 'building', 'vehicle', 'rights',
 ]);
 
+/**
+ * Los tipos que le interesan a alguien: una lista, no uno solo.
+ *
+ * Lo pidió el cliente al ver el paso: «acá deberíamos poder seleccionar varias,
+ * porque una persona puede decir: me interesan apartamentos y casas». Y en el mismo
+ * momento señaló por qué «Cualquier tipo» no lo resolvía: «cualquier tipo no dice
+ * nada y eso mandará de todos».
+ *
+ * ACEPTA TAMBIÉN UN SOLO VALOR, y no por comodidad: las preferencias ya guardadas
+ * de los usuarios que existen tienen `type: 'apartment'` en su metadata. Si el
+ * esquema exigiera lista, todas fallarían la validación a la vez y esas cuentas
+ * perderían su Radar configurado sin haber hecho nada. Se normaliza a lista aquí,
+ * en el borde, así que el resto del código ve siempre lo mismo.
+ *
+ * La lista vacía significa «cualquier tipo», igual que la cadena vacía significaba
+ * eso antes.
+ */
+export const PropertyTypesSchema = z.union([PropertyTypeSchema, z.array(PropertyTypeSchema).max(12)])
+  .transform((valor) => {
+    const lista = Array.isArray(valor) ? valor : [valor];
+    // Sin vacíos ni repetidos: `['', 'house']` es «cualquier tipo» mezclado con un
+    // tipo concreto, y eso no significa nada. Gana lo concreto.
+    const limpia = [...new Set(lista.filter((t) => t !== ''))];
+    return limpia;
+  });
+
 export const RadarPreferencesSchema = z.object({
   city: CitySchema,
   budget: z.union([z.string(), z.number()]).transform(String)
     .refine((value) => value === '' || (/^\d{1,6}$/.test(value) && Number(value) >= 50), 'Presupuesto inválido'),
-  type: PropertyTypeSchema,
+  type: PropertyTypesSchema,
   complete: z.literal(true),
 }).strict();
 
@@ -76,7 +102,9 @@ export const RadarAlertInputSchema = z.object({
   city: CitySchema,
   budget: z.union([z.string(), z.number()]).transform(String)
     .refine((value) => value === '' || (/^\d{1,6}$/.test(value) && Number(value) >= 50), 'Presupuesto inválido'),
-  type: PropertyTypeSchema,
+  // Varios tipos, como en las preferencias, y con la misma tolerancia al valor
+  // único: las alertas ya guardadas llevan una cadena.
+  type: PropertyTypesSchema,
   frequency: z.literal('weekly').default('weekly'),
   active: z.boolean().default(true),
 }).strict();
