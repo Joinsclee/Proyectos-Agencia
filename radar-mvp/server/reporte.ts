@@ -192,10 +192,6 @@ export interface DatosReporte {
   plan: 'free' | 'suscrito';
 }
 
-const CONFIANZA: Record<string, string> = {
-  high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Insuficiente',
-};
-
 const cop = (valor: number | null | undefined): string =>
   valor == null || !Number.isFinite(Number(valor))
     ? '—'
@@ -403,7 +399,9 @@ function bloqueArriendo(a: ArriendoReporte | null): string {
       ${a.rangoBajo != null && a.rangoAlto != null ? fila('Rango central', `${cop(a.rangoBajo)} – ${cop(a.rangoAlto)}`) : ''}
       ${a.canonPorM2 != null ? fila('Arrendamiento por m²', cop(a.canonPorM2)) : ''}
       ${fila('Avisos de arriendo comparados', String(a.n))}
-      ${fila('Nivel de confianza', escaparHtml(CONFIANZA[String(a.confianza)] ?? a.confianza ?? '—'))}
+      ${/* También aquí fuera: se retiró del respaldo de la conclusión por decisión del
+            cliente y dejarlo solo en el arriendo sería incoherente. Lo que sostiene la
+            estimación —cuántos avisos y en qué ámbito— sigue arriba. */ ''}
       ${a.alcance ? fila('Ámbito de comparación', escaparHtml(capitalizar(a.alcance))) : ''}
     </dl>
     <p class="nota">Estimación construida con ofertas de arriendo activas, no con contratos firmados.
@@ -562,11 +560,11 @@ export function construirReporte(datos: DatosReporte): string {
 
   return `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Reporte · ${escaparHtml(datos.titulo)}</title>
+<title>${esRemate ? 'Reporte de la subasta' : 'Reporte'} · ${escaparHtml(datos.titulo)}</title>
 <style>${ESTILOS}</style>
 <main>
   <header>
-    <p class="marca">Radar de Oportunidades · Sistema CRECE</p>
+    <p class="marca">Radar de Oportunidades · Sistema CRECE${esRemate ? ' · Reporte de la subasta' : ''}</p>
     <h1>${escaparHtml(datos.titulo)}</h1>
     <p class="ubic">${ubicacion || '—'}</p>
   </header>
@@ -574,10 +572,19 @@ export function construirReporte(datos: DatosReporte): string {
   <div class="destacados">${destacados}</div>
   ${conclusion}
 
+  ${/* En un REMATE, los datos del proceso van PRIMERO. Andrés fue explícito viendo
+        este reporte: «lo que me interesa son los datos de la subasta. Esto sí me
+        interesa. Más que la parte de arriba», y «este reporte descargable debería
+        ser de esto». Tiene sentido: quien descarga el reporte de un remate lo lleva
+        al juzgado o a su abogado, y lo que necesita ahí es el radicado, el juzgado y
+        las fechas, no la mediana del barrio.
+
+        En un inmueble de portal o de banco el orden se queda como estaba: ahí lo que
+        se lleva es la comparación de precio. */ ''}
+  ${esRemate ? seccion('Datos de la subasta', bloqueRemate(datos.remate)) : ''}
   ${seccion('Características', caracteristicas)}
   ${seccion('Respaldo de la conclusión', bloqueComparables(datos.comparables))}
-  ${seccion('Estimación de canon de arriendo', bloqueArriendo(datos.arriendo))}
-  ${esRemate ? seccion('Datos de la subasta', bloqueRemate(datos.remate)) : ''}
+  ${seccion('Estimación del valor de arrendamiento', bloqueArriendo(datos.arriendo))}
   ${seccion('Identificación del inmueble', identificacion)}
 
   <footer>
