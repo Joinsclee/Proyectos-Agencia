@@ -437,7 +437,14 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   // que el de Portal— pero aquí no tenía rama: el parámetro viajaba y la consulta
   // lo ignoraba, así que elegirlo devolvía las 413 fichas, idéntico a no filtrar.
   if (q.opp === 'high') qb = qb.eq('is_high', true);
-  qb = applyOrderInmuebles(qb, q.order ?? 'precio_m2_asc');
+  // El defecto es «precio menor», el mismo que el desplegable enseña seleccionado.
+  // Era `precio_m2_asc`, y esa discrepancia hacía dos cosas malas a la vez: el
+  // control mentía sobre el orden aplicado hasta que alguien lo tocaba, y como
+  // BBVA y Aval son los más baratos por m², la primera página salía copada por
+  // esas dos entidades —que además se pintan con imagen de marca en vez de foto—.
+  // De ahí la impresión de que el filtro «Todos los bancos» forzaba BBVA: el
+  // filtro estaba bien, lo que sesgaba era el orden.
+  qb = applyOrderInmuebles(qb, q.order ?? 'precio_asc');
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;
@@ -583,7 +590,7 @@ export async function facets(source: 'portal' | 'bancos' = 'portal', city?: stri
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
   const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
-  const zones = [...new Set((data ?? []).map((r) => r.zone).filter(Boolean))].sort();
+  const zones = barriosPresentables((data ?? []).map((r) => r.zone), cities);
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
 
   // Entidades con inventario, para el desplegable de la pestaña de Bancos.
@@ -623,7 +630,18 @@ let statsInFlight: Promise<Awaited<ReturnType<typeof computeStats>>> | null = nu
 
 export async function stats() {
   if (statsCache) {
-    if (Date.now() - statsCache.at >= STATS_TTL_MS && !statsInFlight) void refreshStats().catch(() => {});
+    if (Date.now() - statsCache.at >= STATS_TTL_MS && !statsInFlight) {
+      // Servir el dato rancio está bien —mejor una cifra de hace un rato que una
+      // portada rota—, pero callarse el fallo no. Estos son conteos sobre 108.000
+      // filas y son propensos al timeout: si el refresco falla siempre, las cifras
+      // de portada se congelan para siempre y nadie se entera hasta que un usuario
+      // nota que el titular no cuadra con el listado. Que quede en el registro es
+      // lo que convierte «congelado en silencio» en «congelado y avisado».
+      void refreshStats().catch((e) => {
+        const minutos = Math.round((Date.now() - (statsCache?.at ?? 0)) / 60_000);
+        log.error(`no se pudieron recalcular las cifras de portada; se sigue sirviendo la copia de hace ${minutos} min: ${String(e)}`);
+      });
+    }
     return statsCache.data; // fresco o rancio: se responde ya
   }
   return statsInFlight ?? refreshStats();
@@ -658,8 +676,27 @@ async function computeStats() {
     head(base()),
     head(base().eq('is_opportunity', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
     head(base().eq('is_high', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
-    head(supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).in('source', BANK_SOURCES as unknown as string[])),
-    head(supabase.from('remates').select('id', { count: 'exact', head: true }).eq('is_active', true)),
+    // Bancos y remates contaban `is_active` a secas, sin el saneamiento que SÍ
+    // aplica el listado, así que el titular prometía más de lo que la pestaña
+    // entregaba: 458 bancos que eran 413, y 949 remates que eran 578 —un 64% de
+    // más—. La cifra grande de la portada es lo primero que alguien comprueba, y
+    // cuando no cuadra con lo que ve al entrar, lo que pierde credibilidad no es
+    // el contador: es el resto de los números del producto, que es justo lo que
+    // este producto vende.
+    head(
+      supabase.from('inmuebles').select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .in('source', BANK_SOURCES as unknown as string[])
+        .lte('price', MAX_DISPLAY_PRICE)
+        .or(`discount_pct.is.null,discount_pct.lte.${MAX_OPP_DISCOUNT}`),
+    ),
+    // Las audiencias pasadas no se pueden rematar y el listado no las enseña; el
+    // contador tampoco debe sumarlas.
+    head(
+      supabase.from('remates').select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .gte('auction_date', new Date().toISOString().slice(0, 10)),
+    ),
   ]);
 
   // Lista de ciudades del portal (solo nombres). Antes se hacían 2 counts por
@@ -1348,4 +1385,67 @@ async function computarMetricas(): Promise<MetricasOperacion> {
     scraping: serieCorridasPorDia((corridas.data ?? []) as FilaCorrida[], { dias: DIAS_METRICAS }),
     trabajos: estadoTrabajos((trabajos.data ?? []) as FilaTrabajo[]),
   };
+}
+
+/*
+ * ─── Qué merece salir en el desplegable de barrio ───
+ *
+ * La columna `zone` es lo que el aviso trae escrito, y ahí cabe de todo: barrios
+ * de verdad, pero también veredas («Vereda Vanguardia»), corregimientos y
+ * conjuntos residenciales concretos («Torres del Marfil»). Mezclados en la misma
+ * lista, el desplegable deja de ser un mapa de la ciudad y pasa a ser un vertedero
+ * donde el barrio que buscas está perdido entre nombres de edificios.
+ *
+ * SE FILTRA AL PRESENTAR, NO SE TOCA EL DATO. `zone` no es solo una etiqueta: el
+ * motor de comparables agrupa por ella para decidir contra qué se mide un
+ * inmueble, así que reescribirla en la base cambiaría el veredicto de miles de
+ * fichas de golpe y sin vuelta atrás. Además el scraper la vuelve a escribir en
+ * cada pasada, con lo que habría que repetir la limpieza para siempre. Aquí solo
+ * se decide qué se ofrece como filtro; el inmueble sigue teniendo su zona y
+ * comparándose igual que antes.
+ */
+
+/**
+ * Nombres que describen un tipo de asentamiento o de vía, no un barrio.
+ *
+ * Va sin anclar al principio a propósito: la palabra delatora casi nunca abre el
+ * nombre. «Arboretto Conjunto Residencial», «Ruitoque Condominio» y «Agrupación
+ * Macadamia» se colaban enteros cuando la comprobación solo miraba la primera
+ * palabra, que es como estaba escrita al principio.
+ */
+const NO_ES_BARRIO = /(^|\s)(vereda|corregimiento|parcelaci[oó]n|condominio|conjunto|urbanizaci[oó]n|agrupaci[oó]n|edificio|torres?|manzana|etapa|lote|hacienda|senderos?|quintas?|km\.?\s*\d|kil[oó]metro|v[ií]a|avenida|carrera|calle|diagonal|transversal|autopista|anillo vial)(\s|$)/i;
+
+/** Cuántas fichas debe tener una zona para considerarla un barrio y no un edificio suelto. */
+const MINIMO_FICHAS_POR_BARRIO = 3;
+
+/** Minúsculas y sin tildes, para comparar nombres de sitio escritos de cualquier forma. */
+const claveDeLugar = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+
+export function barriosPresentables(
+  zonas: Array<string | null | undefined>,
+  ciudades: Array<string | null | undefined> = [],
+): string[] {
+  // Un municipio no es un barrio de sí mismo ni de su vecino. En las facetas
+  // aparecían «Bogotá» como barrio de Bogotá —y de Chía— porque muchos avisos
+  // repiten la ciudad en el campo de zona cuando no traen el barrio. Ofrecerlo
+  // como filtro promete una precisión que no existe: elegirlo no acota nada.
+  const municipios = new Set(ciudades.filter(Boolean).map((c) => claveDeLugar(String(c))));
+
+  const cuenta = new Map<string, number>();
+  for (const z of zonas) {
+    if (!z) continue;
+    const nombre = String(z).trim();
+    if (!nombre || NO_ES_BARRIO.test(nombre)) continue;
+    // «Bogotá, d.c.» y «Bogota» son el mismo sitio escrito de dos maneras.
+    if (municipios.has(claveDeLugar(nombre.replace(/,\s*d\.?\s*c\.?$/i, '')))) continue;
+    cuenta.set(nombre, (cuenta.get(nombre) ?? 0) + 1);
+  }
+  // El umbral de frecuencia es lo que separa «Laureles» de «Torres del Marfil»
+  // cuando el nombre no delata al segundo: un conjunto cerrado aporta una o dos
+  // fichas, un barrio aporta decenas. Si la ciudad entera tiene poco inventario y
+  // el filtro dejaría la lista vacía, se devuelve lo que haya: un desplegable con
+  // ruido sigue siendo mejor que uno vacío en una ciudad pequeña.
+  const frecuentes = [...cuenta.entries()].filter(([, n]) => n >= MINIMO_FICHAS_POR_BARRIO);
+  const elegidas = frecuentes.length ? frecuentes : [...cuenta.entries()];
+  return elegidas.map(([nombre]) => nombre).sort();
 }

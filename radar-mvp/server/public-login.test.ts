@@ -51,6 +51,17 @@ test('login permite contraseñas antiguas de menos de 8 caracteres', async () =>
     'form',
     'email',
     'name',
+    // Los del formulario de recuperación. Van aquí porque `login.js` les engancha
+    // sus manejadores al cargarse: si faltan, el guion revienta antes de llegar a
+    // lo que esta prueba quiere comprobar.
+    'olvide-fila',
+    'olvide',
+    'olvide-volver',
+    'form-olvide',
+    'olvide-email',
+    'olvide-enviar',
+    'olvide-msg',
+    'legal',
   ];
   const elements = Object.fromEntries(ids.map((id) => [id, fakeElement()]));
   const storage = new Map<string, string>();
@@ -60,6 +71,10 @@ test('login permite contraseñas antiguas de menos de 8 caracteres', async () =>
     document: {
       getElementById(id: string) {
         return elements[id];
+      },
+      // La recuperación esconde las pestañas mientras está a la vista.
+      querySelector() {
+        return fakeElement();
       },
     },
     fetch: async () => {

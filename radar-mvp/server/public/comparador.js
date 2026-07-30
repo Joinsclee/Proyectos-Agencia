@@ -9,6 +9,26 @@ function esc(value) {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[character]));
 }
+/**
+ * La foto de la ficha, o el marcador de posición.
+ *
+ * Duplica `safeMediaUrl` de `app.js` a propósito: el comparador es una página
+ * aparte que no carga `app.js`, e importarlo entero por una función traería toda
+ * la aplicación a una pantalla que solo pinta una tabla. Lo que no se puede es
+ * saltarse el saneado —una `image_url` viene de un scraper, y sin comprobar el
+ * protocolo un `javascript:` acabaría dentro de un atributo `src`—.
+ *
+ * Devuelve el marcador también cuando la ficha está bloqueada y llega sin imagen:
+ * la tabla debe verse igual de completa aunque falte el dato.
+ */
+function safeMediaUrl(url) {
+  try {
+    const parsed = new URL(String(url ?? ''), location.origin);
+    return ['http:', 'https:'].includes(parsed.protocol) ? parsed.href : '/img/ph/unknown.jpg';
+  } catch {
+    return '/img/ph/unknown.jpg';
+  }
+}
 function money(value) {
   return Number(value) > 0 ? `$${Number(value).toLocaleString('es-CO')}` : 'Sin dato';
 }
@@ -54,8 +74,11 @@ function renderComparison() {
     ['Fuente', 'source'], ['Precio o postura', 'price'], ['Referencia de mercado / avalúo', 'market'],
     ['Descuento', 'discount'], ['Área', 'area'], ['Habitaciones', 'rooms'], ['Ciudad', 'city'], ['Ubicación', 'address'],
   ];
+  // La miniatura en la cabecera de cada columna. Sin ella, comparar tres fichas es
+  // leer tres columnas de texto y tener que recordar cuál era cuál: la foto es lo
+  // que permite reconocer «el del patio» de un vistazo.
   root.innerHTML = `<table class="compare-table"><thead><tr><th>Criterio</th>${chosen.map((property) =>
-    `<th>${esc(property.type || property.property_type || 'Inmueble')}<small>${esc(property.city || '')}</small></th>`).join('')}</tr></thead>
+    `<th><img class="compare-thumb" src="${esc(safeMediaUrl(property.image_url))}" alt="" loading="lazy" width="60" height="60">${esc(property.type || property.property_type || 'Inmueble')}<small>${esc(property.city || '')}</small></th>`).join('')}</tr></thead>
     <tbody>${fields.map(([label, field]) => `<tr><th>${label}</th>${chosen.map((property) =>
       `<td>${esc(valueOf(property, field))}</td>`).join('')}</tr>`).join('')}</tbody></table>
     <p class="compare-disclaimer">Comparación orientativa. Verifica documentos, estado jurídico, costos y disponibilidad antes de tomar una decisión.</p>`;

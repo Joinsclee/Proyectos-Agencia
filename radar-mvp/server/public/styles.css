@@ -243,10 +243,18 @@ h1 .gold { color: var(--gold); }
   .b-campo-ancho, .buscador-cta { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
-  .buscador { margin-top: 16px; padding: 0 14px; }
-  .buscador-caja { padding: 13px 14px 12px; }
-  .buscador-titulo { font-size: 1rem; }
-  .buscador-nota { font-size: 0.7rem; }
+  /* Compacto a propósito. La barra de secciones es fija abajo y tapa los últimos
+     ~60px de la pantalla: con las medidas de escritorio, el botón «Buscar» caía
+     justo ahí y solo respondían sus 12px superiores — tocarlo cambiaba de sección
+     en vez de buscar. Cada píxel que se recorta aquí es un píxel que el botón sube
+     por encima de la barra. */
+  .buscador { margin-top: 10px; padding: 0 14px; }
+  .buscador-caja { padding: 11px 13px 11px; }
+  .buscador-titulo { font-size: 0.98rem; }
+  /* La nota se va en móvil: explica que mostramos 20 por búsqueda, y eso lo dice
+     mejor el propio contador de resultados en cuanto se busca. Ocupaba dos líneas
+     justo por encima del botón. */
+  .buscador-nota { display: none; }
   /* Una sola columna, dicho explícitamente. Dos campos de 153px obligan a partir
      «Precio máximo (millones)» en dos líneas y dejan los controles desalineados.
      Además el panel de filtros declara `.f:nth-child(2) { grid-column: 1/-1 }`
@@ -383,6 +391,12 @@ h1 .gold { color: var(--gold); }
 .filters-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .f { display: flex; flex-direction: column; gap: 4px; }
 .f label { font-size: 0.66rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+/* Los campos de dinero llevan la unidad en el label, y ahí sí importa leerla: en
+   10px y gris claro, «(millones)» pasa desapercibido y alguien escribe 5.000
+   pensando que pide 5.000 millones cuando está pidiendo cinco billones. Solo
+   estos, no todos los filtros: subir el tamaño en bloque estira la columna
+   entera y el buscador del Inicio reusa la misma clase `.f`. */
+.f.f-dinero label { font-size: 0.78rem; color: #0f172a; letter-spacing: 0.02em; }
 /* Los <select> nativos de cada navegador rompen la línea del formulario: se
    normaliza la altura y se dibuja la flecha, para que todos los controles se
    lean como uno solo. */
@@ -423,8 +437,17 @@ h1 .gold { color: var(--gold); }
 .photo-count { position: absolute; bottom: 10px; right: 10px; font-size: 0.7rem; padding: 4px 10px; border-radius: 99px; font-weight: 700; background: rgba(0,0,0,0.65); color: #fff; z-index: 2; }
 .opp-badge { position: absolute; top: 10px; left: 10px; z-index: 4; display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; padding: 5px 10px; border-radius: 7px; font-weight: 800; letter-spacing: 0.02em; background: #15803d; color: #fff; backdrop-filter: blur(6px); box-shadow: 0 2px 10px rgba(0,0,0,0.28); }
 .opp-badge .ic { width: 0.92em; height: 0.92em; stroke-width: 2.2; }
-.opp-badge.high { background: var(--gold); color: #4a2560; }
-.opp-badge.high .ic { fill: #4a2560; stroke: none; }
+/* El color dice si está barato o caro —que es lo que la gente cree estar
+   leyendo—, no cuánta confianza tiene el motor. Un sobreprecio salía en verde
+   igual que una ganga. La confianza sigue estando: es la estrella de `.high`. */
+.opp-badge.fuerte { background: #15803d; }
+.opp-badge.media { background: #ca8a04; }
+.opp-badge.caro { background: #b91c1c; }
+/* `.high` ya NO cambia el fondo. Cuando lo hacía, dos inmuebles con el mismo
+   descuento salían de colores distintos —uno verde y otro dorado— y el color
+   dejaba de significar nada. La confianza alta se dice con la estrella, que es
+   un añadido sobre el color, no un sustituto. */
+.opp-badge.high .ic { fill: var(--gold); stroke: none; }
 /* El precio es el dato que se compara de un vistazo: va en tinta y grande. El
    dorado se reserva para la señal (insignia de oportunidad alta), no para todo. */
 .card-body { padding: 14px 15px 15px; flex: 1; display: flex; flex-direction: column; }
@@ -434,10 +457,15 @@ h1 .gold { color: var(--gold); }
 .card-ubic { font-size: 0.76rem; color: #6b7280; display: flex; align-items: center; gap: 5px; }
 .card-ubic .ic { color: var(--pp); opacity: 0.55; }
 .card-ubic strong { color: var(--pp); font-weight: 700; }
-.card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(97,49,116,0.09); font-size: 0.74rem; color: #55495e; }
-.card-meta span { display: inline-flex; align-items: center; gap: 5px; }
-.card-meta .ic { color: var(--pp); opacity: 0.5; }
-.card-meta .e { color: var(--pp); font-weight: 700; margin-left: auto; }
+/* Habitaciones, baños y parqueaderos son de lo primero que se mira en un
+   inmueble. Estaban a media opacidad y en 12px, mientras el estrato —un dato
+   secundario— iba a opacidad plena y en negrita: el orden de importancia salía
+   invertido. Los iconos suben a 16px y pierden la transparencia; el estrato deja
+   de gritar. */
+.card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(97,49,116,0.09); font-size: 0.76rem; color: #443a4d; }
+.card-meta span { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.card-meta .ic { width: 16px; height: 16px; color: var(--pp); }
+.card-meta .e { color: #6b6274; font-weight: 600; margin-left: auto; }
 /* Contador de días sobre la foto del remate (pedido del cliente) */
 .countdown { position: absolute; top: 10px; left: 10px; z-index: 3; display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.02em; padding: 5px 10px; border-radius: 7px; background: rgba(20,12,26,0.82); backdrop-filter: blur(6px); color: #fff; }
 .countdown .ic { width: 0.92em; height: 0.92em; stroke-width: 2.2; }
@@ -531,7 +559,18 @@ h1 .gold { color: var(--gold); }
 .modal { position: fixed; inset: 0; background: rgba(15,10,20,0.85); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
 .modal.open { display: flex; }
 .modal-box { background: #fff; border-radius: 20px; max-width: 1180px; width: 100%; max-height: 94vh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(420px, 1fr); box-shadow: 0 30px 80px rgba(0,0,0,0.5); position: relative; }
-@media (max-width: 1024px) { .modal-box { grid-template-columns: 1fr; max-height: 96vh; } }
+/* `minmax(0, 1fr)` y no `1fr`: `1fr` es en realidad `minmax(auto, 1fr)`, y ese
+   `auto` es el min-content de lo que haya dentro. La tira de miniaturas de la
+   galería lleva `overflow-x: auto`, así que su min-content es la suma de TODAS
+   las fotos —804px medidos en una ficha de cinco— y la columna se ensanchaba
+   hasta ahí dentro de un `.modal-box` con `overflow: hidden`. Resultado: más de
+   la mitad de la ficha quedaba fuera de la pantalla en móvil y en tablet, sin
+   ninguna barra de scroll que permitiera llegar. El `min-width: 0` de los hijos
+   es la otra mitad de la regla: sin él, cada uno vuelve a imponer su min-content. */
+@media (max-width: 1024px) {
+  .modal-box { grid-template-columns: minmax(0, 1fr); max-height: 96vh; }
+  .modal-box > * { min-width: 0; }
+}
 .modal-close { position: absolute; top: 16px; right: 18px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.96); border: none; cursor: pointer; color: var(--pp); font-size: 1.3rem; font-weight: 700; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .gallery { position: relative; background: #0f0a14; display: flex; flex-direction: column; min-height: 0; max-height: 94vh; }
 .gallery-main { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; min-height: 320px; overflow: hidden; background: radial-gradient(circle at 50% 45%, #241233 0%, #12081a 100%); }
@@ -583,6 +622,10 @@ h1 .gold { color: var(--gold); }
 .pb-side { text-align: right; }
 .pb-aval { font-size: 1.3rem; font-weight: 800; color: #fff; line-height: 1; }
 .pb-pct { font-size: 0.78rem; color: rgba(255,255,255,0.7); margin-top: 5px; }
+/* Por qué la postura es la que es. Va dentro del bloque de precio, discreto: es
+   contexto que evita malinterpretar la cifra de arriba, no un aviso. */
+.pb-base { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.16); font-size: 0.76rem; line-height: 1.45; color: rgba(255,255,255,0.82); }
+.pb-base .ic { flex: none; width: 15px; height: 15px; margin-top: 2px; opacity: 0.8; }
 .pb-auction { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.15); font-size: 0.95rem; color: rgba(255,255,255,0.92); display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .pb-auction .countdown { position: static; box-shadow: none; }
 /* Datos del proceso (kv) */
@@ -943,11 +986,16 @@ h1 .gold { color: var(--gold); }
 @media (max-width: 760px) {
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 
-  .hero { padding: 24px 18px 18px; }
-  .pill { margin-bottom: 10px; padding: 5px 12px; }
-  h1 { font-size: clamp(1.9rem, 9vw, 2.3rem); margin-bottom: 10px; }
-  .sub { font-size: 1rem; line-height: 1.35; }
-  .summary-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; padding: 12px 0 8px; }
+  /* El hero cede espacio en móvil, y no por estética: con sus medidas anteriores
+     el buscador terminaba 36px por debajo de la barra fija de secciones, así que
+     su botón «Buscar» quedaba en la franja donde los toques se los queda la barra.
+     En una pantalla de 812px, 353 de hero son demasiados para un producto cuya
+     primera acción es buscar. */
+  .hero { padding: 18px 18px 14px; }
+  .pill { margin-bottom: 8px; padding: 5px 12px; }
+  h1 { font-size: clamp(1.75rem, 8.4vw, 2.1rem); margin-bottom: 8px; }
+  .sub { font-size: 0.94rem; line-height: 1.3; }
+  .summary-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; padding: 10px 0 6px; }
   .summary-stat { min-width: 0; padding: 2px 6px; }
   .summary-stat.muted { display: none; }
   .summary-stat:last-child { border-right: 0; }
@@ -1175,12 +1223,6 @@ h1 .gold { color: var(--gold); }
 }
 .badge-abierta .ic { width: 12px; height: 12px; stroke-width: 3; }
 /* En el top de la portada, donde no hay imagen sobre la que superponerse. */
-.top-abierta {
-  margin-top: 4px; display: inline-flex; align-items: center; gap: 5px;
-  background: #e4f2ea; color: #15803d; border-radius: 999px; padding: 3px 10px;
-  font-size: 0.7rem; font-weight: 800; white-space: nowrap;
-}
-.top-abierta .ic { width: 12px; height: 12px; stroke-width: 3; }
 
 /* ───── CUPO AGOTADO ─────
    Aparece al intentar abrir la ficha veintiuna, que es cuando la suscripción
@@ -1233,67 +1275,17 @@ h1 .gold { color: var(--gold); }
    empuja fuera de la pantalla justo lo que sostiene la recomendación. En lista
    caben diez en el espacio de tres, y las cifras quedan alineadas en columna,
    que es lo que permite compararlas de un vistazo. */
-.top-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 /* El corazón vive en su propia columna, fuera del botón que abre la ficha: dos
    acciones distintas necesitan dos objetivos distintos, y un <button> dentro de
    otro es marcado inválido. */
-.top-item { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: stretch; gap: 6px; }
-.top-item .fav-btn {
-  position: static; align-self: center;
-  width: 42px; height: 42px; flex-shrink: 0;
-  background: #fff; border: 1px solid #ece5f1;
-}
-.top-open {
-  width: 100%; display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  align-items: center; gap: 14px;
-  padding: 13px 16px; text-align: left;
-  background: #fff; border: 1px solid #ece5f1; border-radius: 12px;
-  font-family: inherit; cursor: pointer;
-  transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
-}
-.top-open:hover { border-color: var(--pp); box-shadow: 0 6px 18px rgba(97,49,116,0.10); transform: translateY(-1px); }
-.top-open:focus-visible { outline: 2px solid var(--pp); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .top-open { transition: none; } .top-open:hover { transform: none; } }
 
-.top-pos {
-  font-family: 'Tilt Warp', cursive; font-size: 1.35rem; line-height: 1;
-  color: var(--pp); opacity: 0.42; text-align: center;
-  font-variant-numeric: tabular-nums;
-}
 /* Los tres primeros del top se marcan: es un ranking, y el podio es el dato. */
-.top-item:nth-child(-n+3) .top-pos { opacity: 1; color: var(--gold-dark, #8a6a00); }
 
-.top-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.top-titulo { font-weight: 800; font-size: 0.98rem; color: var(--pp-dark); line-height: 1.25; }
-.top-sub { font-size: 0.79rem; color: #7c6a86; }
-.top-motivo { margin-top: 3px; font-size: 0.82rem; font-weight: 700; color: var(--pp); line-height: 1.3; }
-.top-respaldo { font-size: 0.73rem; color: #8a7b93; line-height: 1.3; }
-.top-alerta {
-  margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
-  background: #fdf3d4; color: #7a5c00; border-radius: 6px; padding: 2px 8px;
-  font-size: 0.71rem; font-weight: 800;
-}
-.top-alerta .ic { width: 13px; height: 13px; }
 
-.top-cifras { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
-.top-precio { font-weight: 800; font-size: 1.02rem; color: var(--pp-dark); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.top-secundaria, .top-audiencia { font-size: 0.74rem; color: #7c6a86; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.top-lock {
-  margin-top: 4px; display: inline-flex; align-items: center; gap: 5px;
-  background: #f3ebf8; color: var(--pp); border-radius: 999px; padding: 3px 10px;
-  font-size: 0.7rem; font-weight: 800; white-space: nowrap;
-}
-.top-lock .ic { width: 12px; height: 12px; }
-.top-item.is-bloqueada .top-open { border-style: dashed; }
 
 @media (max-width: 620px) {
   /* En móvil las cifras bajan a su propia línea: forzadas a la derecha dejaban al
      título tres palabras de ancho. */
-  .top-open { grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 12px 13px; }
-  .top-cifras { grid-column: 2; align-items: flex-start; text-align: left; margin-top: 6px; }
-  .top-pos { font-size: 1.1rem; }
-  .top-titulo { font-size: 0.92rem; }
 }
 
 /* Botón para desplegar el resto del grupo.
@@ -1737,7 +1729,6 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 /* Las estrellas en la fila de la portada, junto al título. Mismo dorado que en la
    tarjeta y en la leyenda: es la misma cosa en tres sitios y tiene que reconocerse
    como tal. */
-.top-estrellas { color: #b8860b; font-size: 0.86rem; letter-spacing: 0.04em; white-space: nowrap; }
 
 /* Aviso sobre el origen de los datos, al pie. Discreto a propósito: es una
    condición de cómo funciona el producto, no una advertencia. Deja hueco abajo por
@@ -1795,3 +1786,8 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
   .cuenta-marca { display: none; }
   .cuenta-inner { padding: 6px 12px; justify-content: flex-end; }
 }
+
+/* El aviso del piloto: va donde la persona duda —al pulsar desbloquear—, no solo
+   en la página de planes. Discreto y en verde, porque quita un miedo; si gritara
+   parecería justo lo contrario, una promoción con letra pequeña. */
+.aviso-piloto { margin: 10px 0 0; padding: 9px 12px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 0.82rem; line-height: 1.45; }

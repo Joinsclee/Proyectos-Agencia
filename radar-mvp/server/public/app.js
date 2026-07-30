@@ -52,6 +52,11 @@ const RADAR_SIMULATIONS_KEY = 'radar_simulations_v1';
 const RADAR_ALERT_KEY = 'radar_alert_v1';
 /** Debe coincidir con CUPO_MENSUAL_FREE de server/cupo.ts. El servidor manda; esto es solo el texto. */
 const CUPO_FREE_MENSUAL = 20;
+// Expuesto para el recorrido guiado, que se carga después y lo necesita para no
+// repetir la cifra a mano. Tenía escrito «20» y habría seguido diciéndolo el día
+// que cambie el cupo, que es exactamente donde una cifra vieja se lee como una
+// promesa incumplida.
+window.CUPO_FREE_MENSUAL = CUPO_FREE_MENSUAL;
 /** Ídem con CUPO_REPORTES_FREE de server/cupo-reportes.ts: es un cupo distinto del de fichas. */
 const CUPO_REPORTES_MENSUAL = 20;
 
@@ -650,7 +655,7 @@ const TABLA_CRECE = [
   { tier: 'oportunidad', lectura: 'Oportunidad', estrellas: 2, huecas: 0, estrellasTexto: '★★' },
   { tier: 'interesante', lectura: 'Interesante', estrellas: 1, huecas: 0, estrellasTexto: '★' },
   { tier: 'abajo_mercado', lectura: 'Abajo del Mercado', estrellas: 0, huecas: 1, estrellasTexto: '☆' },
-  { tier: 'mercado_borde_bajo', lectura: 'Precio de Mercado (borde bajo)', estrellas: 0, huecas: 0, estrellasTexto: '' },
+  { tier: 'mercado_borde_bajo', lectura: 'Ligeramente por debajo del mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
   { tier: 'mercado', lectura: 'Precio de Mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
 ];
 const CRECE_POR_TIER = new Map(TABLA_CRECE.map((t) => [t.tier, t]));
@@ -746,7 +751,7 @@ const ONBOARDING_PASOS = [
     titulo: 'El Radar compara contra el barrio, no contra el país',
     texto: 'Cada inmueble se mide contra el precio real de ofertas parecidas en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional que no le sirve a nadie.',
     puntos: [
-      'Tres fuentes distintas, comparadas con la misma vara',
+      'Tres mercados distintos en un mismo lugar: Portal, Bancos y Remates',
       'El Índice CRECE dice cuánto está por debajo de su mercado',
     ],
     video: { src: '', poster: '', pie: 'Qué encuentra el Radar y de dónde salen los inmuebles.' },
@@ -776,7 +781,7 @@ const ONBOARDING_PASOS = [
     // Antes seguía «en Colombia el descuento es más moderado…». Se retiró: adelanta
     // un juicio sobre el descuento que le toca al índice inmueble por inmueble, y
     // puede desmentirlo la propia lista que hay debajo.
-    texto: 'Propiedades que los bancos recibieron en dación en pago y necesitan sacar de balance.',
+    texto: 'Propiedades que los bancos recibieron de clientes que no pudieron pagar su crédito y ahora quieren vender.',
     puntos: ['Puedes filtrar por entidad', 'El estrato no excluye: si el banco no lo reporta, la ficha se muestra igual'],
     ir: 'bancos',
   },
@@ -785,7 +790,7 @@ const ONBOARDING_PASOS = [
     icono: 'scale',
     titulo: 'Subastas judiciales, con su riesgo a la vista',
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
-    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. Aquí el descuento no distingue: la ley fija la base en el 70% del avalúo, así que casi todos dan lo mismo. Lo que de verdad separa un remate de otro es el riesgo del título.',
+    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La ley fija la base de todas las subastas en el 70% del avalúo, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
     puntos: [
       'Se ordenan por demandante bancario primero: título más limpio',
       'Si solo se remata una parte del bien, la ficha lo avisa en amarillo',
@@ -1001,7 +1006,11 @@ async function buildFilters() {
         + `<select id="f-desbloqueadas"><option value="">Todas</option>`
         + `<option value="1">Solo las que ya desbloqueé</option></select></div>`;
     }
-    html += fRange('price', 'Precio (millones)', 'mín', 'máx');
+    // «f-dinero» sube el tamaño del «(millones)». En 10 px y gris claro pasaba
+    // desapercibido, y quien no lo lee escribe 5.000 creyendo que pide 5.000
+    // millones cuando está pidiendo cinco billones. Los ejemplos del placeholder
+    // dicen la escala sin que haya que leer el label.
+    html += fRange('price', 'Precio (millones)', 'Ej. 200', 'Ej. 500', 'f-dinero');
     html += fRange('area', 'Área (m²)', 'mín', 'máx');
     html += `<div class="f"><label for="f-bedroomsMin">Habitaciones</label><select id="f-bedroomsMin"><option value="">Todas</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></div>`;
     if (tab === 'portal') html += fStratum();
@@ -1020,7 +1029,7 @@ async function buildFilters() {
     const bankOpts = ['<option value="">Todos los demandantes</option>', '<option value="1">Solo bancos (todos)</option>']
       .concat((bk.banks || []).map((b) => `<option value="${esc(b.name)}">${esc(b.name)} (${b.count})</option>`));
     html += `<div class="f"><label for="f-bank">Demandante (banco)</label><select id="f-bank">${bankOpts.join('')}</select></div>`;
-    html += fRange('bid', 'Postura (millones)', 'mín', 'máx');
+    html += fRange('bid', 'Postura (millones)', 'Ej. 80', 'Ej. 300', 'f-dinero');
   }
   // Entre el `await` de las facetas y esta línea el usuario puede haber cambiado
   // de pestaña. Sin esta comprobación, la respuesta lenta pisa a la rápida: el
@@ -1054,8 +1063,8 @@ function fSelect(key, label, values, fmt) {
   const opts = ['<option value="">Todas</option>'].concat((values || []).map((v) => `<option value="${esc(v)}">${esc(fmt ? fmt(v) : cap(v))}</option>`));
   return `<div class="f"><label for="f-${esc(key)}">${esc(label)}</label><select id="f-${esc(key)}">${opts.join('')}</select></div>`;
 }
-function fRange(key, label, ph1, ph2) {
-  return `<div class="f"><label>${label}</label><div class="f-range">
+function fRange(key, label, ph1, ph2, clase = '') {
+  return `<div class="f${clase ? ` ${clase}` : ''}"><label>${label}</label><div class="f-range">
     <input type="number" id="f-${key}Min" min="0" placeholder="${ph1}" aria-label="${esc(label)} mínimo">
     <input type="number" id="f-${key}Max" min="0" placeholder="${ph2}" aria-label="${esc(label)} máximo"></div></div>`;
 }
@@ -1106,7 +1115,14 @@ const planActual = () => planDelServidor;
 
 function readFilters() {
   const g = (id) => { const e = $(id); return e && e.value ? e.value : undefined; };
-  const M = (id) => { const v = g(id); return v ? String(Math.round(Number(v) * 1e6)) : undefined; }; // millones → COP
+  // millones → COP. Un cero NO es un filtro: el servidor lo descarta por falso,
+  // pero el contador lo sumaba igual, así que la interfaz decía «1 filtro activo»
+  // sobre las 108.060 fichas sin filtrar. Un contador que no cuadra con lo que se
+  // ve deja al usuario buscando un filtro invisible que no puede quitar.
+  const M = (id) => {
+    const n = Number(g(id));
+    return Number.isFinite(n) && n > 0 ? String(Math.round(n * 1e6)) : undefined;
+  };
   return {
     city: g('f-city'), zone: g('f-zone'), type: g('f-type'),
     priceMin: M('f-priceMin'), priceMax: M('f-priceMax'),
@@ -1138,10 +1154,32 @@ function normalizeRadarPreferences(value) {
     complete: true,
     city: typeof value.city === 'string' ? value.city : '',
     budget: Number.isFinite(Number(value.budget)) ? String(value.budget) : '',
-    type: typeof value.type === 'string' ? value.type : '',
+    // Lista O cadena. Desde que se pueden elegir varios tipos, el asistente de
+    // preferencias guarda un array —y esta función lo tiraba a la basura por no
+    // ser `string`, así que elegir «Casa» y pulsar guardar dejaba «Cualquier
+    // tipo» sin decir nada—. Se arrastraba también a las alertas por correo, que
+    // leen de aquí: la selección múltiple no llegaba a guardarse nunca.
+    // Se acepta la cadena porque es lo que hay en los navegadores de quienes
+    // guardaron sus preferencias antes del cambio.
+    type: Array.isArray(value.type)
+      ? value.type.filter((t) => typeof t === 'string' && t)
+      : typeof value.type === 'string' ? value.type : '',
   };
 }
 let radarPreferences = normalizeRadarPreferences(readStoredJson(RADAR_PREFS_KEY, null));
+/**
+ * ¿Ya se aplicó solo el Radar guardado en esta sesión?
+ *
+ * Se aplicaba en CADA entrada a Portal, y eso convertía una preferencia en una
+ * jaula: quien tenía guardada Armenia buscaba en Medellín, se iba a Bancos a
+ * mirar algo, volvía a Portal y se encontraba Armenia otra vez, sin haber tocado
+ * nada. La preferencia debe proponer el punto de partida, no imponerlo en cada
+ * vuelta.
+ *
+ * Pulsar «aplicar mi Radar» sigue funcionando siempre: eso es una orden, no una
+ * suposición, y por eso la excepción va atada a `reload`.
+ */
+let radarPrefsYaAplicadas = false;
 const radarSetupState = {
   open: false,
   step: 1,
@@ -1423,8 +1461,55 @@ function renderVecinas() {
   });
 }
 
+/**
+ * Reconstruye el panel de filtros SIN perder lo que el usuario tenía puesto.
+ *
+ * `buildFilters()` lo repinta desde cero, y eso está bien al cambiar de pestaña
+ * —son otros filtros— pero era destructivo aquí: cuando la primera respuesta del
+ * servidor confirma el plan gratuito hay que añadir el filtro «solo las que ya
+ * desbloqueé», y ese repintado borraba la búsqueda recién hecha. El listado
+ * quedaba filtrado por Cali mientras el panel decía «Todas» y el contador «0»:
+ * el usuario no tenía forma de saber por qué veía lo que veía, ni cómo quitarlo.
+ *
+ * El barrio se restaura aparte porque sus opciones dependen de la ciudad: hay que
+ * repoblarlas antes, o se restauraría un valor que todavía no existe en la lista.
+ */
+async function reconstruirFiltrosConservandoValores() {
+  const previos = new Map();
+  document.querySelectorAll('#filters [id^="f-"]').forEach((el) => {
+    if (el.value) previos.set(el.id, el.value);
+  });
+  await buildFilters();
+
+  const zona = previos.get('f-zone');
+  previos.delete('f-zone');
+  for (const [id, valor] of previos) restaurarValorDeFiltro(id, valor);
+
+  const ciudad = $('f-city');
+  if (zona && ciudad?.value) {
+    await repopZones(ciudad.value);
+    restaurarValorDeFiltro('f-zone', zona);
+  }
+  updateFilterCount();
+}
+
+/** Devuelve un valor a su control, salvo que el desplegable ya no lo ofrezca. */
+function restaurarValorDeFiltro(id, valor) {
+  const el = $(id);
+  if (!el) return;
+  // Un `<select>` al que se le asigna un valor inexistente se queda vacío en
+  // silencio, y eso es peor que no restaurar: el filtro parecería limpio.
+  if (el.tagName === 'SELECT' && ![...el.options].some((o) => o.value === valor)) return;
+  el.value = valor;
+}
+
 async function applyRadarPreferences(preferences, reload = false) {
   if (state.tab !== 'portal' || !preferences.complete) return;
+  // `reload` distingue las dos formas de llegar aquí: con él, el usuario pulsó su
+  // Radar guardado y quiere que se aplique; sin él, es automático al entrar en
+  // Portal, y eso solo puede pasar una vez por sesión. Ver `radarPrefsYaAplicadas`.
+  if (!reload && radarPrefsYaAplicadas) return;
+  radarPrefsYaAplicadas = true;
   const city = $('f-city');
   const type = $('f-type');
   const budget = $('f-priceMax');
@@ -1627,92 +1712,52 @@ function homeSkeleton() {
  * fila lo dice, en vez de dejar que el usuario lo suponga.
  */
 /**
- * Las estrellas en la fila de la portada.
+ * El porqué de cada ficha, debajo de sus datos.
  *
- * El cliente lo pidió viendo esta lista: «acá dice oportunidad fuerte, me gusta,
- * pero me harían falta las estrellas». Es coherente con el resto —tarjeta, ficha y
- * leyenda ya las llevan— y sin ellas la portada era el único sitio donde la
- * valoración se nombraba sin mostrarse.
- *
- * Solo las estrellas, sin repetir el nombre de la categoría: el motivo que va dos
- * líneas más abajo ya dice el porcentaje y contra qué, así que escribir «Oportunidad
- * Fuerte» aquí sería la tercera vez que la misma fila afirma lo mismo.
+ * Va con `textContent` y no dentro del HTML de la tarjeta: el motivo lo compone el
+ * servidor a partir de columnas de scraping (ciudad, barrio, banco demandante) y
+ * este es el camino en el que no hay forma de equivocarse con el escapado.
  */
-function selloTop(ficha) {
-  const c = CRECE_POR_TIER.get(ficha.crece_tier);
-  if (!c || !c.estrellasTexto) return '';
-  return ` <span class="top-estrellas" title="${esc(c.lectura)}" aria-label="${esc(c.lectura)}">${c.estrellasTexto}</span>`;
+function pintarMotivos(contenedor, fichas, desde = 0) {
+  const tarjetas = contenedor.querySelectorAll('article.card');
+  fichas.forEach((ficha, i) => {
+    const cuerpo = tarjetas[desde + i] && tarjetas[desde + i].querySelector('.card-body');
+    const sello = ficha._destacado;
+    if (!cuerpo || !sello) return;
+    const caja = document.createElement('p');
+    caja.className = 'card-motivo';
+    const titular = document.createElement('strong');
+    titular.textContent = sello.motivo;
+    caja.appendChild(titular);
+    if (sello.respaldo) {
+      const detalle = document.createElement('span');
+      detalle.textContent = sello.respaldo;
+      caja.appendChild(detalle);
+    }
+    cuerpo.appendChild(caja);
+  });
 }
 
-function filaTop(ficha, posicion) {
-  const kind = cardKind(ficha);
-  const esRemate = kind === 'remate';
-  const sello = ficha._destacado || {};
-  const bloqueada = esBloqueada(ficha);
-
-  const titulo = `${typeLbl(esRemate ? ficha.property_type : ficha.type)} en ${cap(ficha.city) || '—'}`;
-  const zona = ficha.zone || ficha.features?.neighborhood || null;
-  const area = Number(ficha.area_m2) > 0 ? `${Number(ficha.area_m2).toLocaleString('es-CO')} m²` : null;
-  const subtitulo = [zona ? cap(zona) : null, area].filter(Boolean).join(' · ');
-
-  const importe = esRemate ? ficha.minimum_bid : ficha.price;
-  const secundaria = esRemate
-    ? (ficha.appraisal_value ? `avalúo ${fmtCOP(ficha.appraisal_value)}` : null)
-    // Redondeado, como en la tarjeta y en la ficha: `price_per_m2` sale de una
-    // división y arrastra decimales, así que sin esto se lee «$2.214.285,714/m²»
-    // —una cifra con tres decimales de peso en una columna que se compara de un
-    // vistazo—.
-    : (Number(ficha.price_per_m2) > 0 ? `${fmtCOP(Math.round(ficha.price_per_m2))}/m²` : null);
-  const audiencia = esRemate && ficha.auction_date ? `Audiencia ${fmtDate(ficha.auction_date)}` : null;
-
-  return `<li class="top-item${bloqueada ? ' is-bloqueada' : ''}">
-    <button class="top-open" type="button" aria-label="${esc(`Ver ${titulo}`)}">
-      <span class="top-pos" aria-hidden="true">${posicion}</span>
-      <span class="top-main">
-        <span class="top-titulo">${esc(titulo)}${selloTop(ficha)}</span>
-        ${subtitulo ? `<span class="top-sub">${esc(subtitulo)}</span>` : ''}
-        ${sello.motivo ? `<span class="top-motivo">${esc(sello.motivo)}</span>` : ''}
-        ${sello.respaldo ? `<span class="top-respaldo">${esc(sello.respaldo)}</span>` : ''}
-        ${tieneCuotaParte(ficha) ? `<span class="top-alerta">${ic('alert')}Solo el ${Number(ficha.cuota_parte)}% del bien</span>` : ''}
-      </span>
-      <span class="top-cifras">
-        <span class="top-precio">${fmtCOP(importe)}</span>
-        ${secundaria ? `<span class="top-secundaria">${esc(secundaria)}</span>` : ''}
-        ${audiencia ? `<span class="top-audiencia">${esc(audiencia)}</span>` : ''}
-        ${bloqueada ? `<span class="top-lock">${ic('lock')}${esc(textoDesbloqueo(ficha))}</span>` : ''}
-      </span>
-    </button>
-    ${/* El corazón va FUERA del botón que abre la ficha: un <button> dentro de
-          otro es HTML inválido y el navegador lo desanida por su cuenta,
-          dejando el marcado en algo que ningún manejador reconoce. Su clic lo
-          recoge la delegación global de `.fav-btn[data-fav-kind]`. */ ''}
-    ${favBtn(kind, ficha.id)}
-  </li>`;
-}
-
-/** Qué le falta a ESTE usuario para abrirla. Mismo criterio que el sello de la tarjeta. */
-function textoDesbloqueo(ficha) {
-  const requiere = ficha?._acceso?.requiere;
-  if (requiere === 'registro') return 'Crea tu cuenta';
-  if (requiere === 'cupo') return 'Ábrela con tu cupo';
-  return 'Con suscripción';
-}
-
-/** Pinta un tramo del top y engancha la apertura de cada ficha. */
-function pintarTop(lista, fichas, desde, hasta) {
+/**
+ * Pinta un tramo del top con las MISMAS tarjetas del listado.
+ *
+ * La portada estuvo un tiempo en filas de texto, y el cliente pidió volver a las
+ * tarjetas con foto. Tiene sentido para lo que es esta pantalla: un top es una
+ * recomendación, y en inmuebles la foto es lo primero que decide si algo merece
+ * un clic. Una fila de texto obliga a abrir la ficha para saber si te interesa.
+ *
+ * Se reutiliza `renderCards` en vez de escribir otra tarjeta: así la portada
+ * hereda sin trabajo lo que ya tienen los listados —el badge de descuento con su
+ * color, el velo de la ficha bloqueada, el corazón, la imagen de marca de los
+ * bancos que publican en PDF— y no hay dos sitios donde arreglar lo mismo.
+ */
+function pintarTop(grid, fichas, desde, hasta) {
   const tanda = fichas.slice(desde, hasta);
   if (!tanda.length) return;
-  const frag = document.createElement('tbody'); // contenedor neutro para parsear
-  frag.innerHTML = tanda.map((f, i) => filaTop(f, desde + i + 1)).join('');
-  [...frag.children].forEach((li, i) => {
-    const ficha = tanda[i];
-    propertyCache.set(favKey(cardKind(ficha), ficha.id), ficha);
-    // Igual que en los listados: la ficha se PIDE a `/api/property`, que es la
-    // única ruta que aplica el plan y gasta el cupo del mes.
-    li.querySelector('.top-open').addEventListener('click', () => window.__openRec(cardKind(ficha), ficha.id));
-    lista.appendChild(li);
-  });
-  paintFavs();
+  // `true` = la ficha se PIDE a `/api/property` al abrirla, que es la única ruta
+  // que aplica el plan del usuario y gasta el cupo del mes.
+  renderCards(tanda, grid, true);
+  pintarMotivos(grid, tanda, desde);
 }
 
 function montarGrupoHome(grid, pie, grupo) {
@@ -1743,7 +1788,7 @@ function montarGrupoHome(grid, pie, grupo) {
     // Al plegar se quitan SOLO las añadidas. Las primeras no se vuelven a pintar:
     // recrearlas cambiaría el scroll bajo el dedo y perdería los favoritos ya
     // marcados en pantalla.
-    [...grid.querySelectorAll('.top-item')].slice(preview).forEach((t) => t.remove());
+    [...grid.querySelectorAll('article.card')].slice(preview).forEach((t) => t.remove());
     expandido = false;
     boton.setAttribute('aria-expanded', 'false');
     boton.textContent = plegado;
@@ -1764,10 +1809,13 @@ function renderHome(payload) {
     return;
   }
 
+  // Fuera el «Semana 31 · 120 oportunidades seleccionadas». El número de semana es
+  // un detalle de cómo rota el pool por dentro, no algo que le diga nada a quien
+  // llega: nadie sabe en qué semana del año está ni por qué debería importarle.
+  // `payload.semana` sigue llegando y el servidor la sigue usando para la rotación.
   const cabecera = `<div class="home-intro">
-    <span class="home-kicker">${ic('radar')} Semana ${esc(payload.semana)} · ${esc(payload.total)} oportunidades seleccionadas</span>
-    <h2>Lo que el Radar destaca hoy</h2>
-    <p>Cada bloque dice con qué regla se eligió. Todo sale del Índice CRECE: el precio por m² de cada inmueble frente a la mediana de ofertas parecidas en su propia zona.</p>
+    <h2>Destacados de hoy</h2>
+    <p>Cada bloque dice con qué regla se eligió.</p>
   </div>
   <div id="home-aviso"></div>`;
 
@@ -1777,7 +1825,7 @@ function renderHome(payload) {
       const titulo = grupo.etiqueta
         ? `<h4 class="home-grupo-tit">${esc(cap(grupo.etiqueta))}${grupo.detalle ? `<span>${esc(grupo.detalle)}</span>` : ''}</h4>`
         : '';
-      return `<div class="home-grupo">${titulo}<ol class="top-lista" data-home-grid="${i}-${j}"></ol>`
+      return `<div class="home-grupo">${titulo}<div class="cards-grid" data-home-grid="${i}-${j}"></div>`
         + `<div class="home-mas" data-home-mas="${i}-${j}"></div></div>`;
     }).join('');
     return `<section class="home-bloque" aria-labelledby="${idTitulo}">
@@ -1910,7 +1958,7 @@ async function load(page) {
   const planNuevo = res.plan ?? planDelServidor;
   const faltaFiltroPropio = planNuevo === 'free' && state.tab !== 'remates' && !$('f-desbloqueadas');
   planDelServidor = planNuevo;
-  if (faltaFiltroPropio) void buildFilters();
+  if (faltaFiltroPropio) void reconstruirFiltrosConservandoValores();
 
   renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
@@ -2163,9 +2211,20 @@ function inmuebleCard(p, kind) {
   // dato importa de verdad era la única sin él: el porcentaje quedaba dentro del
   // velo y encima tapado. Ahora la ficha cerrada se ve como cualquier otra, con
   // su fuente y su descuento arriba, más una invitación a pulsarla.
+  // Un descuento negativo es SOBREPRECIO, y salía en verde. La ficha bloqueada
+  // entraba por la segunda condición sin mirar el signo, así que un inmueble un
+  // 169% por encima de su mercado —los hay: 55.000 filas tienen descuento
+  // negativo— lucía el mismo distintivo verde que una ganga. Un color que miente
+  // sobre si algo es caro o barato es peor que no poner color.
+  const sobreprecio = discount != null && discount < 0;
   const mostrarOpp = p.is_opportunity || (esBloqueada(p) && discount != null);
+  // El color va por el signo y la magnitud del descuento, que es lo que la gente
+  // cree estar leyendo. `is_high` —la confianza del motor: decil más barato y
+  // comparables homogéneos— no desaparece: se queda en el icono de estrella, que
+  // ya existía pero quedaba tapado por el cambio de fondo.
+  const claseOpp = sobreprecio ? 'caro' : discount != null && discount > 30 ? 'fuerte' : 'media';
   const opp = mostrarOpp
-    ? `<span class="opp-badge ${isHighOpp(p) ? 'high' : ''}" title="${esc(comparisonLabel)}" aria-label="${esc(comparisonLabel)}">${ic(isHighOpp(p) ? 'star' : 'down')}${discount != null ? discount + '%' : 'Oportunidad'}</span>`
+    ? `<span class="opp-badge ${claseOpp}${isHighOpp(p) && !sobreprecio ? ' high' : ''}" title="${esc(comparisonLabel)}" aria-label="${esc(comparisonLabel)}">${ic(sobreprecio ? 'alert-triangle' : isHighOpp(p) ? 'star' : 'down')}${discount != null ? (sobreprecio ? `+${Math.abs(discount)}%` : `${discount}%`) : 'Oportunidad'}</span>`
     : '';
   const ppm2 = p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + '/m²' : '';
   return `
@@ -2416,7 +2475,9 @@ function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
   return `<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
     <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
-    <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento y administración.</small>`;
+    <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento${
+      monthlyAdmin > 0 ? ` y ${fmtCOP(Math.round(monthlyAdmin))}/mes de administración` : ''
+    }.${monthlyAdmin > 0 ? '' : ' No incluye administración ni predial: si los hay, escríbelos arriba.'}</small>`;
 }
 window.__recalcGastos = function (input) {
   const calc = input.closest('.calc');
@@ -2486,7 +2547,19 @@ function analisisRemate(p) {
   const flags = [];
   const pct = p.minimum_bid && p.appraisal_value ? Math.round((p.minimum_bid / p.appraisal_value) * 100) : (p.minimum_bid_pct || null);
   // Positivos (+)
-  if (pct && pct <= 70) flags.push(['pos', `Postura al ${pct}% del avalúo → margen estimado de ${100 - pct}% bajo el valor comercial.`]);
+  //
+  // La base del 70% NO es un punto a favor de este remate: es la ley, y sale
+  // igual en todos. Presentarla como «margen estimado bajo el valor comercial»,
+  // con el visto verde de los aciertos, le vendía al aficionado un 30% que nadie
+  // le garantiza —el avalúo del juzgado puede estar por encima o por debajo del
+  // precio real—. La propia portada llama «ruido» a ordenar por ese número. Es el
+  // error más caro que alguien puede cometer con esta pantalla, así que pasa a
+  // ser un dato neutro y explicado, no un premio.
+  if (pct && pct < 70) {
+    flags.push(['pos', `Postura al ${pct}% del avalúo: por debajo del 70% habitual, porque esta subasta ya va en segunda o tercera licitación.`]);
+  } else if (pct) {
+    flags.push(['info', `La postura mínima es el ${pct}% del avalúo fijado por el juzgado. Es la base legal de todas las subastas, no un descuento de este bien: el avalúo puede estar por encima o por debajo del precio de mercado.`]);
+  }
   if (f.is_bank_plaintiff) flags.push(['pos', 'Demandante es banco: los procesos hipotecarios suelen tener título limpio y bien documentado.']);
   if (/(remate|venta).{0,20}(del|sobre el)\s*100\s*%/.test(text) && !/proindiviso|cuota parte/.test(text)) flags.push(['pos', 'Se remata el 100% del inmueble (no una cuota parte).']);
   // Riesgo alto (!)
@@ -2517,6 +2590,10 @@ function analisisSection(p) {
     pos: ic('check-circle', 'ic-reicon analysis-icon is-positive'),
     warn: ic('alert-triangle', 'ic-reicon analysis-icon is-warning'),
     neg: ic('magnifier', 'analysis-icon is-review'),
+    // Ni acierto ni riesgo: contexto. La balanza —la misma de la pestaña de
+    // remates— dice «esto lo fija la ley», que es justo lo que hay que entender
+    // para no leer la base del 70% como un descuento conseguido.
+    info: ic('scale', 'analysis-icon is-review'),
   };
   return `<div class="section"><h3>Análisis preliminar automático</h3>
     <div class="analisis analisis-${nivel}">
@@ -2549,7 +2626,10 @@ function marketCtxHtml(m) {
   ${crit}
   <div class="ai-mkt">
     <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
-    <div><span class="l">Cuartil bajo (P25)</span><strong>${COPn(m.p25_total)}</strong></div>
+    <!-- «Cuartil bajo (P25)» decía lo mismo en estadístico. Quien compra un
+         apartamento no tiene por qué saber qué es un percentil, y aquí sobra:
+         el dato es «el 25% más barato de la zona empieza en esta cifra». -->
+    <div><span class="l">El 25% más barato</span><strong>${COPn(m.p25_total)}</strong></div>
     <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${tipo}</span></div>
   </div>`;
 }
@@ -2664,15 +2744,21 @@ function refrescarTarjeta(kind, id, ficha) {
     if (nueva) { enGrid.replaceWith(nueva); paintFavs(); }
     return;
   }
-  // En la portada las fichas son filas de un top, no tarjetas: ahí basta con
-  // quitar el candado y poner el distintivo.
-  const fila = document.querySelector(`#home .top-item:has([data-fav-id="${CSS.escape(id)}"])`);
-  if (!fila) return;
-  fila.classList.remove('is-bloqueada');
-  const lock = fila.querySelector('.top-lock');
-  if (lock) {
-    lock.className = 'top-abierta';
-    lock.innerHTML = `${ic('check')}Desbloqueada`;
+  // La portada usa las mismas tarjetas que el listado, así que se repinta igual.
+  // Cuando eran filas de texto hacía falta un camino aparte que quitaba el
+  // candado a mano; volver a las tarjetas se llevó por delante esa duplicación.
+  const enHome = document.querySelector(`#home article.card:has([data-fav-id="${CSS.escape(id)}"])`);
+  if (!enHome) return;
+  const sustituto = document.createElement('div');
+  renderCards([ficha], sustituto, true);
+  const nueva = sustituto.querySelector('article.card');
+  if (nueva) {
+    enHome.replaceWith(nueva);
+    // El motivo del destacado lo añade la portada por fuera de `renderCards`: sin
+    // esto, la tarjeta recién abierta perdería la línea que explica por qué está
+    // en el top.
+    pintarMotivos(nueva.parentElement, [ficha], [...nueva.parentElement.children].indexOf(nueva));
+    paintFavs();
   }
 }
 
@@ -2712,6 +2798,7 @@ function mostrarCupoAgotado(cupo, kind, id, ficha) {
       y las fichas abiertas siguen ahí. Lo que no podrás hasta que vuelva tu cupo es
       abrir nuevas oportunidades de descuento alto.</p>
       <p class="cupo-reinicio">${ic('calendar')}<span>Tu cupo se reinicia <strong>${esc(cuando)}</strong></span></p>
+      ${avisoPiloto()}
       <div class="cupo-acciones">
         <a class="wall-cta" href="/planes">Desbloquear todo</a>
         <button class="cupo-seguir" id="cupo-seguir" type="button">Seguir explorando</button>
@@ -2771,7 +2858,7 @@ function gastosSection(valor, mode, context) {
                 tiene administración y dejar el campo vacío hacía que la rentabilidad
                 se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
                 «para que la fórmula no le vaya a generar un error». */ ''}
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="0"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0}"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
@@ -2866,6 +2953,12 @@ function openInmueble(p) {
     id: p.id,
     title: `${typeLbl(p.type)} en ${cap(p.city)}`,
     city: p.city,
+    // La administración que el propio aviso declara. La ficha ya la enseña unas
+    // líneas más abajo, así que empezar la calculadora en 0 no era «no saberlo»:
+    // era ignorar un dato que teníamos, y encima diciendo debajo que se había
+    // descontado. Sobre un canon de 1,3 millones, olvidar 150.000 de
+    // administración infla la rentabilidad neta dos puntos largos.
+    admin: Number((p.features || {}).administracion) || 0,
   });
 
   $('modal-content').innerHTML = `${gallery()}
@@ -3272,6 +3365,11 @@ function openRemate(p) {
           ${p.appraisal_value ? `<div class="pb-side"><div class="pb-label">Avalúo</div><div class="pb-aval">${fmtCOP(p.appraisal_value)}</div>${pct ? `<div class="pb-pct">postura al ${pct}%</div>` : ''}</div>` : ''}
         </div>
         ${p.auction_date ? `<div class="pb-auction">${ic('calendar')} Audiencia: <strong>${fmtDate(p.auction_date)}</strong>${p.auction_time ? ' · ' + esc(p.auction_time) : ''} ${countdownBadge(p.auction_date)}</div>` : ''}
+        <!-- La postura mínima no la fija quien publica: la fija la ley. Sin decirlo,
+             el porcentaje se lee como un descuento negociado, y no lo es. Se dice el
+             caso general y el de ESTA ficha, porque el 70% no es universal: en
+             segunda o tercera licitación la base baja. -->
+        <div class="pb-base">${ic('scale')} <span>Base de licitación: el <strong>70% del avalúo</strong> oficial fijado por el juzgado${pct && Math.abs(Number(pct) - 70) >= 1 ? ` · en esta subasta, el <strong>${pct}%</strong>` : ''}.</span></div>
       </div>
       ${analisisSection(p)}
       ${muro}
@@ -3349,6 +3447,8 @@ function criteriosComparacion(method, radiusKm) {
  * el interruptor está apagado la ruta ni existe, así que el botón tampoco.
  */
 let auditoriaComparables = false;
+/** ¿El plan completo se activa gratis por ser piloto? Lo dice el servidor, no el navegador. */
+let planDemoActivo = false;
 
 /**
  * «Ver los N comparables»: contra qué se calculó este veredicto.
@@ -3502,7 +3602,25 @@ async function cargarConfig() {
   try {
     const c = await fetch('/api/config').then((r) => r.json());
     auditoriaComparables = c.auditoriaComparables === true;
+    planDemoActivo = c.demoPlanActivation === true;
   } catch { /* sin config, la verificación queda apagada */ }
+}
+
+/**
+ * El texto que quita el miedo a un cobro, cuando toca decirlo.
+ *
+ * Durante el piloto el plan completo se activa sin pasar por caja, pero eso solo
+ * se cuenta en la página de planes: en el momento de pulsar «desbloquear» —que es
+ * cuando la persona duda— la palabra «suscripción» es justo la que la frena.
+ *
+ * Va atado a la variable del servidor y no escrito a mano: el día que se apague
+ * el piloto, este texto tiene que desaparecer solo. Un «sin tarjeta de crédito»
+ * que sobreviva al cobro real sería una promesa falsa, y de las caras.
+ */
+function avisoPiloto() {
+  if (!planDemoActivo) return '';
+  return '<p class="aviso-piloto">Durante el piloto se activa gratis y al instante: '
+    + 'sin cobros ni datos de pago.</p>';
 }
 
 async function loadStats() {
@@ -3810,8 +3928,15 @@ document.addEventListener('keydown', (e) => {
   // Las flechas sirven a la galería de una ficha o al avance del tutorial, según
   // qué haya abierto. Nunca a los dos: el tutorial vacía `gImgs` al abrirse.
   const enTutorial = !!document.querySelector('.onboarding');
-  if (e.key === 'ArrowLeft') { if (enTutorial) avanzarOnboarding(-1); else if (gImgs.length > 1) window.gMove(-1); }
-  if (e.key === 'ArrowRight') { if (enTutorial) avanzarOnboarding(1); else if (gImgs.length > 1) window.gMove(1); }
+  // Las flechas NO son de la galería cuando el foco está en un campo: ahí mueven
+  // el cursor dentro de lo que se está escribiendo. Sin esta salida, corregir una
+  // cifra en la calculadora de gastos cambiaba la foto a cada pulsación —que es el
+  // «al mover el valor numérico se disparan las fotos» que reportó la auditoría—.
+  const enCampo = e.target instanceof Element
+    && (e.target.matches('input, textarea, select') || e.target.isContentEditable);
+  const flechasParaGaleria = !enCampo;
+  if (e.key === 'ArrowLeft' && flechasParaGaleria) { if (enTutorial) avanzarOnboarding(-1); else if (gImgs.length > 1) window.gMove(-1); }
+  if (e.key === 'ArrowRight' && flechasParaGaleria) { if (enTutorial) avanzarOnboarding(1); else if (gImgs.length > 1) window.gMove(1); }
   if (e.key === 'Tab') {
     const focusable = [...$('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])')]
       .filter((element) => element.getClientRects().length);
