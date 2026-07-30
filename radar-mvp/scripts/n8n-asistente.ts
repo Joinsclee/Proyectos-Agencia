@@ -134,7 +134,7 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
                 options: { caseSensitive: false, leftValue: '', typeValidation: 'loose', version: 2 },
                 conditions: [{
                   id: 'r-img',
-                  leftValue: '={{ $(\'Webhook\').item.json.body.adjunto_mime }}',
+                  leftValue: '={{ $(\'Webhook\').first().json.body.adjunto_mime }}',
                   rightValue: 'image/',
                   operator: { type: 'string', operation: 'startsWith' },
                 }],
@@ -148,7 +148,7 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
                 options: { caseSensitive: false, leftValue: '', typeValidation: 'loose', version: 2 },
                 conditions: [{
                   id: 'r-pdf',
-                  leftValue: '={{ $(\'Webhook\').item.json.body.adjunto_mime }}',
+                  leftValue: '={{ $(\'Webhook\').first().json.body.adjunto_mime }}',
                   rightValue: 'pdf',
                   operator: { type: 'string', operation: 'contains' },
                 }],
@@ -206,9 +206,9 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
         // modelo, que respondía «por favor, adjunta el documento» a alguien que
         // acababa de adjuntarlo. Las imágenes no aparecen aquí porque no son
         // texto: el modelo las ve por `passthroughBinaryImages`.
-        text: '=Pregunta: {{ $(\'Webhook\').item.json.body.pregunta }}\n'
+        text: '=Pregunta: {{ $(\'Webhook\').first().json.body.pregunta }}\n'
           + '{{ $json.text ? "\\n--- Contenido del documento adjunto ("'
-          + ' + $(\'Webhook\').item.json.body.adjunto_nombre + ") ---\\n" + $json.text : "" }}',
+          + ' + $(\'Webhook\').first().json.body.adjunto_nombre + ") ---\\n" + $json.text : "" }}',
         options: {
           systemMessage: prompt,
           // El modelo puede VER las imágenes que suba el usuario: la foto de un
@@ -243,7 +243,7 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
       position: [440, 220],
       parameters: {
         sessionIdType: 'customKey',
-        sessionKey: '={{ $(\'Webhook\').item.json.body.sessionId }}',
+        sessionKey: '={{ $(\'Webhook\').first().json.body.sessionId }}',
         contextWindowLength: 20,
       },
     },
@@ -278,8 +278,21 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
             // ver esta búsqueda. Los pone n8n, nunca el modelo: si fueran
             // `modelOptional`, bastaría con pedirle al agente que buscara «como el
             // usuario tal» para leer el inventario con el plan de otro.
-            { name: 'x-radar-asistente', value: '={{ $(\'Webhook\').item.json.body.secreto }}' },
-            { name: 'x-radar-usuario', value: '={{ $(\'Webhook\').item.json.body.sessionId }}' },
+            // `valueProvider: 'fieldValue'` NO es opcional. Sin él, n8n da por hecho
+            // que la cabecera la rellena el MODELO y descarta el valor declarado: el
+            // nodo se guarda solo con el nombre, la cabecera viaja vacía y el Radar
+            // responde 401. El síntoma que veía el usuario era «hubo un problema al
+            // buscar propiedades», sin más pista.
+            {
+              name: 'x-radar-asistente',
+              valueProvider: 'fieldValue',
+              value: '={{ $(\'Webhook\').first().json.body.secreto }}',
+            },
+            {
+              name: 'x-radar-usuario',
+              valueProvider: 'fieldValue',
+              value: '={{ $(\'Webhook\').first().json.body.sessionId }}',
+            },
           ],
         },
       },
@@ -304,7 +317,7 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
         jsonBody:
           '={{ JSON.stringify({ pregunta: $fromAI(\'pregunta\', \'La consulta legal completa, con todo el contexto\', \'string\'), '
           + 'documentos_adicionales: $fromAI(\'documento\', \'Texto del documento adjunto, vacío si no hay\', \'string\'), '
-          + 'sessionId: \'radar-\' + $(\'Webhook\').item.json.body.sessionId }) }}',
+          + 'sessionId: \'radar-\' + $(\'Webhook\').first().json.body.sessionId }) }}',
         options: {},
       },
     },
@@ -327,7 +340,7 @@ function nodos(prompt: string, urlRadar: string): Nodo[] {
         jsonBody:
           '={{ JSON.stringify({ pregunta: $fromAI(\'pregunta\', \'La consulta tributaria o financiera completa\', \'string\'), '
           + 'documentos_adicionales: $fromAI(\'documento\', \'Texto del documento adjunto, vacío si no hay\', \'string\'), '
-          + 'sessionId: \'radar-\' + $(\'Webhook\').item.json.body.sessionId }) }}',
+          + 'sessionId: \'radar-\' + $(\'Webhook\').first().json.body.sessionId }) }}',
         options: {},
       },
     },

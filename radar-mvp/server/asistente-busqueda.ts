@@ -115,11 +115,87 @@ export async function buscarParaAsistente(
   });
 
   const fuente: FuenteBusqueda = esRemate ? 'remate' : p.fuente === 'banco' ? 'banco' : 'portal';
+  const total = r.total ?? filas.length;
+  registrarBusqueda(userId, { ...p, ciudad: q.city, fuente }, total);
   return {
     ok: true,
-    total: r.total ?? filas.length,
+    total,
     resultados: filas.slice(0, MAX_RESULTADOS).map((f) => aFicha(f, fuente)),
   };
+}
+
+/*
+ * ─── Lo que el agente buscó, para que la app lo aplique ───
+ *
+ * El asistente no debe ser un buscador: cuando alguien le describe lo que busca,
+ * lo suyo es que la aplicación se configure sola —los filtros puestos, el listado
+ * cargado, la pestaña correcta— y el chat solo lo anuncie. Para eso la respuesta
+ * del asistente lleva una «acción», y esto es donde se apunta.
+ *
+ * SE GUARDA AQUÍ Y NO LO DICE EL MODELO a propósito. La alternativa era pedirle
+ * que escribiera los filtros en su respuesta con algún formato, y entonces la
+ * función más delicada de la pantalla dependería de que un modelo de lenguaje
+ * acierte con la puntuación. Aquí no hay nada que acertar: quien ejecutó la
+ * búsqueda es este servidor, y anota lo que de verdad ejecutó.
+ *
+ * Es memoria del proceso, no base de datos, porque el dato vive segundos: entre
+ * que n8n llama a buscar y que el Radar contesta al navegador de esa misma
+ * pregunta. Si el proceso se reinicia justo en medio, se pierde la acción y el
+ * chat responde en texto como hasta ahora —que es exactamente la degradación que
+ * queremos: peor, pero correcto—. Ojo con esto si algún día el Radar corre con
+ * más de una réplica: las dos peticiones tienen que caer en la misma instancia.
+ */
+
+/** Cuánto vale una búsqueda apuntada. Cubre la espera de una respuesta lenta y poco más. */
+const VIGENCIA_ACCION_MS = 2 * 60 * 1000;
+
+/** Tope de usuarios apuntados a la vez, para que un mapa en memoria no crezca sin fin. */
+const MAX_BUSQUEDAS_APUNTADAS = 500;
+
+export interface BusquedaApuntada {
+  parametros: ParametrosBusqueda & { fuente: FuenteBusqueda };
+  total: number;
+  cuando: number;
+}
+
+const busquedas = new Map<string, BusquedaApuntada>();
+
+export function registrarBusqueda(
+  userId: string,
+  parametros: ParametrosBusqueda & { fuente: FuenteBusqueda },
+  total: number,
+): void {
+  if (busquedas.size >= MAX_BUSQUEDAS_APUNTADAS) {
+    const limite = Date.now() - VIGENCIA_ACCION_MS;
+    for (const [id, b] of busquedas) if (b.cuando < limite) busquedas.delete(id);
+    // Si tras limpiar lo caducado sigue lleno, cae la más antigua. Preferimos
+    // perder una acción a que la memoria crezca sin techo.
+    if (busquedas.size >= MAX_BUSQUEDAS_APUNTADAS) {
+      const masVieja = [...busquedas.entries()].sort((a, b) => a[1].cuando - b[1].cuando)[0];
+      if (masVieja) busquedas.delete(masVieja[0]);
+    }
+  }
+  busquedas.set(userId, { parametros, total, cuando: Date.now() });
+}
+
+/**
+ * Recoge la búsqueda de este usuario y la borra.
+ *
+ * Se borra al leerla porque es de un solo uso: pertenece a la pregunta que la
+ * provocó. Si se quedara, la siguiente respuesta del asistente —«gracias», «¿y
+ * los impuestos?»— arrastraría los filtros de la anterior y la pantalla se
+ * movería sola sin que nadie lo hubiera pedido.
+ */
+export function tomarBusqueda(userId: string): BusquedaApuntada | undefined {
+  const b = busquedas.get(userId);
+  busquedas.delete(userId);
+  if (!b) return undefined;
+  return Date.now() - b.cuando <= VIGENCIA_ACCION_MS ? b : undefined;
+}
+
+/** Descarta lo apuntado de este usuario. Se llama antes de cada pregunta nueva. */
+export function olvidarBusqueda(userId: string): void {
+  busquedas.delete(userId);
 }
 
 /**

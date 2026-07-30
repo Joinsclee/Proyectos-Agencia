@@ -43,7 +43,7 @@ import {
   consumirConsulta, estadoConsultas, leerConsultas, puedeAdjuntar, validarAdjunto, LIMITE_CONSULTAS_FREE,
 } from './asistente.js';
 import { asistenteDisponible, preguntarAlAsistente } from './asistente-n8n.js';
-import { buscarParaAsistente } from './asistente-busqueda.js';
+import { buscarParaAsistente, olvidarBusqueda, tomarBusqueda } from './asistente-busqueda.js';
 import { parseHito } from './bienvenida.js';
 import { auditoriaHabilitada, detalleDeComparables } from './comparables-detalle.js';
 import { esWord, textoDeWord } from './asistente-word.js';
@@ -579,7 +579,30 @@ const server = createServer(async (req, res) => {
             });
           }
 
+          // Se borra lo apuntado de la pregunta anterior ANTES de lanzar esta. Si
+          // no, una pregunta que no busca nada («¿y los impuestos?») heredaría los
+          // filtros de la anterior y la pantalla se movería sola.
+          olvidarBusqueda(user.id);
           const r = await preguntarAlAsistente({ pregunta, sessionId: user.id, adjunto });
+          // Si durante esta pregunta el agente buscó, la app aplica esa búsqueda:
+          // filtros puestos, pestaña correcta y listado cargado. El chat lo cuenta,
+          // no lo lista. Ver el bloque de acciones en `asistente-busqueda.ts`.
+          const apuntada = r.ok ? tomarBusqueda(user.id) : undefined;
+          if (!r.ok) olvidarBusqueda(user.id);
+          const accion = apuntada
+            ? {
+              tipo: 'buscar' as const,
+              fuente: apuntada.parametros.fuente,
+              total: apuntada.total,
+              filtros: {
+                ciudad: apuntada.parametros.ciudad,
+                tipo: apuntada.parametros.tipo,
+                precioMin: apuntada.parametros.precioMin,
+                precioMax: apuntada.parametros.precioMax,
+                tier: apuntada.parametros.tier,
+              },
+            }
+            : undefined;
           // El cupo se descuenta SOLO si el asistente respondió. Cobrar una
           // consulta que falló por nuestro lado es cobrar por nada, y es
           // justamente cuando el usuario va a reintentar.
@@ -595,6 +618,7 @@ const server = createServer(async (req, res) => {
           }
           return sendJSON(res, r.ok ? 200 : 502, {
             ...r,
+            accion,
             consultas: estadoConsultas(r.ok ? decision.consultas : consultas, planAsistente),
           });
         }
