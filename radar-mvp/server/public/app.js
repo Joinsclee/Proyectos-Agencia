@@ -2912,11 +2912,15 @@ async function fillMarketLazy(kind, id, disc) {
     // evidencia sostiene el porcentaje en vez de contradecirlo.
     const v = r.verdict;
     if (v && v.market_ppm2 != null && v.candidate_ppm2 != null) {
-      el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody(v, v.criteria)}`;
+      el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody({ ...v, __id: fichaEnPantalla?.id }, v.criteria)}`;
     } else {
+      // El botón va también aquí. La pregunta «contra qué compara» es más urgente
+      // cuando NO hay veredicto, no menos: es el caso en que el usuario ve una
+      // referencia de zona sin saber de dónde sale.
       el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">${marketCtxHtml(r.market)}
         <p class="market-note">Referencia de precios de OFERTA de ${r.market.n} inmuebles de la zona.
-        No se pudo calcular un precio por m² para este inmueble (falta el área), así que no se estima descuento.</p></div>`;
+        No se pudo calcular un precio por m² para este inmueble (falta el área), así que no se estima descuento.</p>
+        ${auditoriaComparables && fichaEnPantalla?.id ? botonComparables(fichaEnPantalla.id, r.market.n) : ''}</div>`;
     }
     if (r.recommendations && r.recommendations.length) {
       el.insertAdjacentHTML('afterend', `<div id="rec-lazy">${renderRecs(r.recommendations)}</div>`);
@@ -3150,6 +3154,87 @@ function criteriosComparacion(method, radiusKm) {
  * no puedan mostrar cifras distintas de lo mismo.
  * `m` = { candidate_ppm2, market_ppm2, discount_pct, n_comparables, confidence }.
  */
+/**
+ * ¿Está encendida la verificación de comparables? Lo dice el servidor.
+ *
+ * Es una herramienta para comprobar el motor, no una función del producto: cuando
+ * el interruptor está apagado la ruta ni existe, así que el botón tampoco.
+ */
+let auditoriaComparables = false;
+
+/**
+ * «Ver los N comparables»: contra qué se calculó este veredicto.
+ *
+ * Se carga al pulsar y no antes. Cada apertura recalcula la cascada con el pool de
+ * la ciudad entera, y el cliente puso el dedo en el coste: cien personas mirando
+ * comparables a la vez es un problema de procesamiento, no de interfaz.
+ */
+function botonComparables(id, n) {
+  return `<button type="button" class="comp-ver" data-comparables="${esc(id)}">`
+    + `${ic('chart')}Ver los ${Number(n) || 0} comparables usados</button>`
+    + `<div class="comp-lista" id="comp-lista-${esc(id)}" hidden></div>`;
+}
+
+/** Pinta la lista, marcando lo que no cuadra. */
+function pintarComparables(caja, d) {
+  // Que no haya comparables NO es un error: es el veredicto «no se pudo comparar»,
+  // y explicarlo vale más que una tabla vacía. Pasa con inmuebles atípicos para su
+  // zona —un parqueadero de 11 m², un lote suelto— donde el motor no reúne el
+  // mínimo de similares y por eso la ficha no lleva porcentaje.
+  if (!d.comparables.length) {
+    caja.innerHTML = `
+      <p class="comp-aviso">El motor no encontró suficientes inmuebles similares para comparar este.</p>
+      <p class="comp-nota">Por eso esta ficha no lleva un porcentaje frente al mercado. Se buscaron del
+      mismo tipo, en la misma zona y de área parecida, ampliando el radio por pasos, y en ningún paso se
+      alcanzó el mínimo que hace fiable una mediana.
+      ${d.candidato.ppm2 ? ` Su precio es de $${Number(d.candidato.ppm2).toLocaleString('es-CO')}/m².` : ''}</p>`;
+    return;
+  }
+  const fila = (c) => `<tr${c.esDeOtroTipo ? ' class="es-ajeno"' : ''}>
+    <td>${esc(typeLbl(c.type))}${c.esDeOtroTipo ? ' <span class="comp-alerta" title="No es del mismo tipo que el inmueble">≠</span>' : ''}</td>
+    <td>${fmtArea(c.area_m2)}</td>
+    <td>${fmtCOP(c.price)}</td>
+    <td><strong>$${Number(c.ppm2).toLocaleString('es-CO')}</strong></td>
+    <td>${esc(cap(c.zone || '—'))}</td>
+    <td>${c.url ? `<a href="${esc(safeMediaUrl(c.url))}" target="_blank" rel="noopener">ver</a>` : '—'}</td>
+  </tr>`;
+  const ajenos = d.comparables.filter((c) => c.esDeOtroTipo).length;
+  caja.innerHTML = `
+    <div class="comp-cab">
+      <span>Este inmueble: <strong>$${Number(d.candidato.ppm2 || 0).toLocaleString('es-CO')}/m²</strong></span>
+      <span>Mediana de los ${d.veredicto.n_comparables}: <strong>$${Number(d.veredicto.ppm2_mercado || 0).toLocaleString('es-CO')}/m²</strong></span>
+      <span>Ámbito: <strong>${esc(d.veredicto.nivel || '—')}</strong></span>
+    </div>
+    ${ajenos ? `<p class="comp-aviso">${ajenos} de ${d.comparables.length} no son del mismo tipo de inmueble.</p>` : ''}
+    <div class="comp-scroll"><table class="comp-tabla">
+      <thead><tr><th>Tipo</th><th>Área</th><th>Precio</th><th>Por m²</th><th>Zona</th><th></th></tr></thead>
+      <tbody>${d.comparables.map(fila).join('')}</tbody>
+    </table></div>
+    ${d.omitidos ? `<p class="comp-aviso">Se muestran ${d.comparables.length}; hay ${d.omitidos} más que no caben en la lista.</p>` : ''}
+    <p class="comp-nota">Ordenados del más barato al más caro por metro cuadrado. La mediana de esta lista es contra lo que se mide el inmueble.</p>`;
+}
+
+document.addEventListener('click', async (e) => {
+  const boton = e.target.closest?.('[data-comparables]');
+  if (!boton) return;
+  const id = boton.dataset.comparables;
+  const caja = $(`comp-lista-${id}`);
+  if (!caja) return;
+  if (!caja.hidden) { caja.hidden = true; boton.classList.remove('abierto'); return; }
+  caja.hidden = false;
+  boton.classList.add('abierto');
+  if (caja.dataset.cargado) return;
+  caja.innerHTML = '<p class="comp-nota">Recalculando la comparación…</p>';
+  try {
+    const d = await fetch(`/api/comparables?id=${encodeURIComponent(id)}`).then((r) => r.json());
+    if (!d.ok) { caja.innerHTML = `<p class="comp-aviso">${esc(d.error || 'No se pudo cargar')}</p>`; return; }
+    pintarComparables(caja, d);
+    caja.dataset.cargado = '1';
+  } catch {
+    caja.innerHTML = '<p class="comp-aviso">No se pudo cargar la comparación.</p>';
+  }
+});
+
 function marketBody(m, criteria) {
   const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Sin datos' }[m.confidence] || m.confidence;
   const d = m.discount_pct;
@@ -3166,7 +3251,7 @@ function marketBody(m, criteria) {
     <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Posición</span>${pos}</div>
     <div><span class="l">Comparables</span><strong>${Number(m.n_comparables) || 0}</strong></div>
-  </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${Number(m.n_comparables) || 0} inmuebles similares de la zona (precios de OFERTA).</p></div>`;
+  </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${Number(m.n_comparables) || 0} inmuebles similares de la zona (precios de OFERTA).</p>${auditoriaComparables && m.__id ? botonComparables(m.__id, m.n_comparables) : ''}</div>`;
 }
 
 function marketSection(p) {
@@ -3176,7 +3261,7 @@ function marketSection(p) {
   // antes de que el motor los guardara) se deducen del nombre del método.
   const crit = Array.isArray(m.criteria) && m.criteria.length ? m.criteria : criteriosComparacion(m.method, m.radius_km);
   // discount_pct de la fila y market.* salen del mismo evaluate() del motor.
-  return `<div class="section"><h3>Análisis de mercado</h3>${marketBody({ ...m, discount_pct: p.discount_pct }, crit)}</div>`;
+  return `<div class="section"><h3>Análisis de mercado</h3>${marketBody({ ...m, discount_pct: p.discount_pct, __id: p.id }, crit)}</div>`;
 }
 function mapSection(p) {
   const f = p.features || {};
@@ -3224,6 +3309,14 @@ function renderStatsUnavailable() {
       <div class="lbl">Las estadísticas volverán automáticamente; los resultados siguen disponibles.</div>
     </div>`;
 }
+/** Un solo viaje por la configuración: la usan el asistente y la verificación. */
+async function cargarConfig() {
+  try {
+    const c = await fetch('/api/config').then((r) => r.json());
+    auditoriaComparables = c.auditoriaComparables === true;
+  } catch { /* sin config, la verificación queda apagada */ }
+}
+
 async function loadStats() {
   const response = await fetch('/api/stats');
   if (!response.ok) throw new Error(`stats HTTP ${response.status}`);
@@ -3579,6 +3672,7 @@ initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(reabrirFic
 // ficha, muchísimo después de que esto resuelva, y mientras tanto ya tiene los
 // valores de arranque.
 void cargarParametrosGastos();
+void cargarConfig();
 loadStats().catch(() => renderStatsUnavailable());
 buildFilters().then(async () => {
   await applyRadarPreferences(radarPreferences);
