@@ -630,7 +630,18 @@ let statsInFlight: Promise<Awaited<ReturnType<typeof computeStats>>> | null = nu
 
 export async function stats() {
   if (statsCache) {
-    if (Date.now() - statsCache.at >= STATS_TTL_MS && !statsInFlight) void refreshStats().catch(() => {});
+    if (Date.now() - statsCache.at >= STATS_TTL_MS && !statsInFlight) {
+      // Servir el dato rancio está bien —mejor una cifra de hace un rato que una
+      // portada rota—, pero callarse el fallo no. Estos son conteos sobre 108.000
+      // filas y son propensos al timeout: si el refresco falla siempre, las cifras
+      // de portada se congelan para siempre y nadie se entera hasta que un usuario
+      // nota que el titular no cuadra con el listado. Que quede en el registro es
+      // lo que convierte «congelado en silencio» en «congelado y avisado».
+      void refreshStats().catch((e) => {
+        const minutos = Math.round((Date.now() - (statsCache?.at ?? 0)) / 60_000);
+        log.error(`no se pudieron recalcular las cifras de portada; se sigue sirviendo la copia de hace ${minutos} min: ${String(e)}`);
+      });
+    }
     return statsCache.data; // fresco o rancio: se responde ya
   }
   return statsInFlight ?? refreshStats();
