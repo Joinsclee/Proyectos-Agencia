@@ -1151,6 +1151,19 @@ function normalizeRadarPreferences(value) {
   };
 }
 let radarPreferences = normalizeRadarPreferences(readStoredJson(RADAR_PREFS_KEY, null));
+/**
+ * ¿Ya se aplicó solo el Radar guardado en esta sesión?
+ *
+ * Se aplicaba en CADA entrada a Portal, y eso convertía una preferencia en una
+ * jaula: quien tenía guardada Armenia buscaba en Medellín, se iba a Bancos a
+ * mirar algo, volvía a Portal y se encontraba Armenia otra vez, sin haber tocado
+ * nada. La preferencia debe proponer el punto de partida, no imponerlo en cada
+ * vuelta.
+ *
+ * Pulsar «aplicar mi Radar» sigue funcionando siempre: eso es una orden, no una
+ * suposición, y por eso la excepción va atada a `reload`.
+ */
+let radarPrefsYaAplicadas = false;
 const radarSetupState = {
   open: false,
   step: 1,
@@ -1434,6 +1447,11 @@ function renderVecinas() {
 
 async function applyRadarPreferences(preferences, reload = false) {
   if (state.tab !== 'portal' || !preferences.complete) return;
+  // `reload` distingue las dos formas de llegar aquí: con él, el usuario pulsó su
+  // Radar guardado y quiere que se aplique; sin él, es automático al entrar en
+  // Portal, y eso solo puede pasar una vez por sesión. Ver `radarPrefsYaAplicadas`.
+  if (!reload && radarPrefsYaAplicadas) return;
+  radarPrefsYaAplicadas = true;
   const city = $('f-city');
   const type = $('f-type');
   const budget = $('f-priceMax');
@@ -2175,9 +2193,20 @@ function inmuebleCard(p, kind) {
   // dato importa de verdad era la única sin él: el porcentaje quedaba dentro del
   // velo y encima tapado. Ahora la ficha cerrada se ve como cualquier otra, con
   // su fuente y su descuento arriba, más una invitación a pulsarla.
+  // Un descuento negativo es SOBREPRECIO, y salía en verde. La ficha bloqueada
+  // entraba por la segunda condición sin mirar el signo, así que un inmueble un
+  // 169% por encima de su mercado —los hay: 55.000 filas tienen descuento
+  // negativo— lucía el mismo distintivo verde que una ganga. Un color que miente
+  // sobre si algo es caro o barato es peor que no poner color.
+  const sobreprecio = discount != null && discount < 0;
   const mostrarOpp = p.is_opportunity || (esBloqueada(p) && discount != null);
+  // El color va por el signo y la magnitud del descuento, que es lo que la gente
+  // cree estar leyendo. `is_high` —la confianza del motor: decil más barato y
+  // comparables homogéneos— no desaparece: se queda en el icono de estrella, que
+  // ya existía pero quedaba tapado por el cambio de fondo.
+  const claseOpp = sobreprecio ? 'caro' : discount != null && discount > 30 ? 'fuerte' : 'media';
   const opp = mostrarOpp
-    ? `<span class="opp-badge ${isHighOpp(p) ? 'high' : ''}" title="${esc(comparisonLabel)}" aria-label="${esc(comparisonLabel)}">${ic(isHighOpp(p) ? 'star' : 'down')}${discount != null ? discount + '%' : 'Oportunidad'}</span>`
+    ? `<span class="opp-badge ${claseOpp}${isHighOpp(p) && !sobreprecio ? ' high' : ''}" title="${esc(comparisonLabel)}" aria-label="${esc(comparisonLabel)}">${ic(sobreprecio ? 'alert-triangle' : isHighOpp(p) ? 'star' : 'down')}${discount != null ? (sobreprecio ? `+${Math.abs(discount)}%` : `${discount}%`) : 'Oportunidad'}</span>`
     : '';
   const ppm2 = p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + '/m²' : '';
   return `
@@ -3822,8 +3851,15 @@ document.addEventListener('keydown', (e) => {
   // Las flechas sirven a la galería de una ficha o al avance del tutorial, según
   // qué haya abierto. Nunca a los dos: el tutorial vacía `gImgs` al abrirse.
   const enTutorial = !!document.querySelector('.onboarding');
-  if (e.key === 'ArrowLeft') { if (enTutorial) avanzarOnboarding(-1); else if (gImgs.length > 1) window.gMove(-1); }
-  if (e.key === 'ArrowRight') { if (enTutorial) avanzarOnboarding(1); else if (gImgs.length > 1) window.gMove(1); }
+  // Las flechas NO son de la galería cuando el foco está en un campo: ahí mueven
+  // el cursor dentro de lo que se está escribiendo. Sin esta salida, corregir una
+  // cifra en la calculadora de gastos cambiaba la foto a cada pulsación —que es el
+  // «al mover el valor numérico se disparan las fotos» que reportó la auditoría—.
+  const enCampo = e.target instanceof Element
+    && (e.target.matches('input, textarea, select') || e.target.isContentEditable);
+  const flechasParaGaleria = !enCampo;
+  if (e.key === 'ArrowLeft' && flechasParaGaleria) { if (enTutorial) avanzarOnboarding(-1); else if (gImgs.length > 1) window.gMove(-1); }
+  if (e.key === 'ArrowRight' && flechasParaGaleria) { if (enTutorial) avanzarOnboarding(1); else if (gImgs.length > 1) window.gMove(1); }
   if (e.key === 'Tab') {
     const focusable = [...$('modal').querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), video[controls], [tabindex]:not([tabindex="-1"])')]
       .filter((element) => element.getClientRects().length);

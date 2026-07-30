@@ -437,7 +437,14 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   // que el de Portal— pero aquí no tenía rama: el parámetro viajaba y la consulta
   // lo ignoraba, así que elegirlo devolvía las 413 fichas, idéntico a no filtrar.
   if (q.opp === 'high') qb = qb.eq('is_high', true);
-  qb = applyOrderInmuebles(qb, q.order ?? 'precio_m2_asc');
+  // El defecto es «precio menor», el mismo que el desplegable enseña seleccionado.
+  // Era `precio_m2_asc`, y esa discrepancia hacía dos cosas malas a la vez: el
+  // control mentía sobre el orden aplicado hasta que alguien lo tocaba, y como
+  // BBVA y Aval son los más baratos por m², la primera página salía copada por
+  // esas dos entidades —que además se pintan con imagen de marca en vez de foto—.
+  // De ahí la impresión de que el filtro «Todos los bancos» forzaba BBVA: el
+  // filtro estaba bien, lo que sesgaba era el orden.
+  qb = applyOrderInmuebles(qb, q.order ?? 'precio_asc');
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;
