@@ -147,8 +147,8 @@ export async function analyzeWithAI(
   return {
     veredicto,
     puntaje: Math.max(0, Math.min(100, Number(parsed.puntaje) || 0)),
-    estimado_mercado_cop: parsed.estimado_mercado_cop != null ? Number(parsed.estimado_mercado_cop) : null,
-    descuento_estimado_pct: parsed.descuento_estimado_pct != null ? Math.round(Number(parsed.descuento_estimado_pct) * 10) / 10 : null,
+    estimado_mercado_cop: valorDeMercadoCreible(parsed.estimado_mercado_cop),
+    descuento_estimado_pct: descuentoCreible(parsed.descuento_estimado_pct),
     resumen: String(parsed.resumen ?? '').slice(0, 600),
     a_favor: arr(parsed.a_favor),
     en_contra: arr(parsed.en_contra),
@@ -156,4 +156,43 @@ export async function analyzeWithAI(
     recomendacion: String(parsed.recomendacion ?? '').slice(0, 400),
     _meta: { model: MODEL, generated_at: new Date().toISOString(), comparables_n: market.n, confidence: market.confidence },
   };
+}
+
+/*
+ * ─── Lo que el modelo dice, comprobado antes de enseñarlo ───
+ *
+ * `puntaje` se acotaba a 0-100 y el veredicto se validaba contra una lista, pero
+ * las dos cifras en pesos pasaban tal cual, así que una oficina podía salir con
+ * un «valor de mercado estimado: $2» y nadie lo impedía.
+ *
+ * Un número absurdo aquí no es un detalle estético. La ficha lo pinta al lado del
+ * veredicto del motor, así que el usuario ve dos cifras que se contradicen y no
+ * tiene cómo saber cuál creer. Ante la duda, mejor no enseñar nada: un hueco se
+ * entiende, un disparate tira por tierra la confianza en todo lo demás de la
+ * pantalla, incluido lo que sí está bien calculado.
+ */
+
+/** Un inmueble en Colombia no vale dos pesos ni medio billón. Fuera de eso, no se enseña. */
+const VALOR_MINIMO_CREIBLE = 1_000_000;
+const VALOR_MAXIMO_CREIBLE = 500_000_000_000;
+
+export function valorDeMercadoCreible(valor: unknown): number | null {
+  if (valor == null) return null;
+  const n = Number(valor);
+  if (!Number.isFinite(n) || n < VALOR_MINIMO_CREIBLE || n > VALOR_MAXIMO_CREIBLE) return null;
+  return n;
+}
+
+/**
+ * El descuento del modelo, acotado a lo que puede significar algo.
+ *
+ * Por debajo de -100% habría que pagar por llevárselo; por encima de 95% sería
+ * regalado. En ambos extremos es mucho más probable un error del modelo o un dato
+ * de partida roto que una oportunidad histórica.
+ */
+export function descuentoCreible(valor: unknown): number | null {
+  if (valor == null) return null;
+  const n = Number(valor);
+  if (!Number.isFinite(n) || n < -100 || n > 95) return null;
+  return Math.round(n * 10) / 10;
 }

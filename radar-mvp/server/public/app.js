@@ -2590,7 +2590,10 @@ function marketCtxHtml(m) {
   ${crit}
   <div class="ai-mkt">
     <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
-    <div><span class="l">Cuartil bajo (P25)</span><strong>${COPn(m.p25_total)}</strong></div>
+    <!-- «Cuartil bajo (P25)» decía lo mismo en estadístico. Quien compra un
+         apartamento no tiene por qué saber qué es un percentil, y aquí sobra:
+         el dato es «el 25% más barato de la zona empieza en esta cifra». -->
+    <div><span class="l">El 25% más barato</span><strong>${COPn(m.p25_total)}</strong></div>
     <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${tipo}</span></div>
   </div>`;
 }
@@ -3313,6 +3316,11 @@ function openRemate(p) {
           ${p.appraisal_value ? `<div class="pb-side"><div class="pb-label">Avalúo</div><div class="pb-aval">${fmtCOP(p.appraisal_value)}</div>${pct ? `<div class="pb-pct">postura al ${pct}%</div>` : ''}</div>` : ''}
         </div>
         ${p.auction_date ? `<div class="pb-auction">${ic('calendar')} Audiencia: <strong>${fmtDate(p.auction_date)}</strong>${p.auction_time ? ' · ' + esc(p.auction_time) : ''} ${countdownBadge(p.auction_date)}</div>` : ''}
+        <!-- La postura mínima no la fija quien publica: la fija la ley. Sin decirlo,
+             el porcentaje se lee como un descuento negociado, y no lo es. Se dice el
+             caso general y el de ESTA ficha, porque el 70% no es universal: en
+             segunda o tercera licitación la base baja. -->
+        <div class="pb-base">${ic('scale')} <span>Base de licitación: el <strong>70% del avalúo</strong> oficial fijado por el juzgado${pct && Math.abs(Number(pct) - 70) >= 1 ? ` · en esta subasta, el <strong>${pct}%</strong>` : ''}.</span></div>
       </div>
       ${analisisSection(p)}
       ${muro}
