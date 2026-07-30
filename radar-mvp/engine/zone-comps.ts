@@ -332,7 +332,11 @@ export function summarizeMarket(
 }
 
 /** Veredicto ppm² del motor para un banco (geo/área), usando el pool de ciudad. */
-export function evaluateBank(candidate: Candidate, pool: PoolRow[]): Verdict {
+export function evaluateBank(
+  candidate: Candidate,
+  pool: PoolRow[],
+  opciones: { incluirComparables?: boolean } = {},
+): Verdict {
   const comps: Comp[] = pool
     .filter((r) => r.ppm2 != null && r.area != null)
     .map((r) => ({
@@ -340,5 +344,5 @@ export function evaluateBank(candidate: Candidate, pool: PoolRow[]): Verdict {
       lat: r.lat, lng: r.lng, stratum: r.stratum, city: candidate.city, zone: r.zone,
       bedrooms: r.bedrooms, garages: r.garages,
     }));
-  return evaluate(candidate, comps, DEFAULT_CONFIG);
+  return evaluate(candidate, comps, DEFAULT_CONFIG, opciones);
 }
