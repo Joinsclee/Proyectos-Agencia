@@ -2529,7 +2529,19 @@ function analisisRemate(p) {
   const flags = [];
   const pct = p.minimum_bid && p.appraisal_value ? Math.round((p.minimum_bid / p.appraisal_value) * 100) : (p.minimum_bid_pct || null);
   // Positivos (+)
-  if (pct && pct <= 70) flags.push(['pos', `Postura al ${pct}% del avalúo → margen estimado de ${100 - pct}% bajo el valor comercial.`]);
+  //
+  // La base del 70% NO es un punto a favor de este remate: es la ley, y sale
+  // igual en todos. Presentarla como «margen estimado bajo el valor comercial»,
+  // con el visto verde de los aciertos, le vendía al aficionado un 30% que nadie
+  // le garantiza —el avalúo del juzgado puede estar por encima o por debajo del
+  // precio real—. La propia portada llama «ruido» a ordenar por ese número. Es el
+  // error más caro que alguien puede cometer con esta pantalla, así que pasa a
+  // ser un dato neutro y explicado, no un premio.
+  if (pct && pct < 70) {
+    flags.push(['pos', `Postura al ${pct}% del avalúo: por debajo del 70% habitual, porque esta subasta ya va en segunda o tercera licitación.`]);
+  } else if (pct) {
+    flags.push(['info', `La postura mínima es el ${pct}% del avalúo fijado por el juzgado. Es la base legal de todas las subastas, no un descuento de este bien: el avalúo puede estar por encima o por debajo del precio de mercado.`]);
+  }
   if (f.is_bank_plaintiff) flags.push(['pos', 'Demandante es banco: los procesos hipotecarios suelen tener título limpio y bien documentado.']);
   if (/(remate|venta).{0,20}(del|sobre el)\s*100\s*%/.test(text) && !/proindiviso|cuota parte/.test(text)) flags.push(['pos', 'Se remata el 100% del inmueble (no una cuota parte).']);
   // Riesgo alto (!)
@@ -2560,6 +2572,10 @@ function analisisSection(p) {
     pos: ic('check-circle', 'ic-reicon analysis-icon is-positive'),
     warn: ic('alert-triangle', 'ic-reicon analysis-icon is-warning'),
     neg: ic('magnifier', 'analysis-icon is-review'),
+    // Ni acierto ni riesgo: contexto. La balanza —la misma de la pestaña de
+    // remates— dice «esto lo fija la ley», que es justo lo que hay que entender
+    // para no leer la base del 70% como un descuento conseguido.
+    info: ic('scale', 'analysis-icon is-review'),
   };
   return `<div class="section"><h3>Análisis preliminar automático</h3>
     <div class="analisis analisis-${nivel}">
