@@ -590,7 +590,7 @@ export async function facets(source: 'portal' | 'bancos' = 'portal', city?: stri
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
   const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
-  const zones = barriosPresentables((data ?? []).map((r) => r.zone));
+  const zones = barriosPresentables((data ?? []).map((r) => r.zone), cities);
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
 
   // Entidades con inventario, para el desplegable de la pestaña de Bancos.
@@ -1394,18 +1394,39 @@ async function computarMetricas(): Promise<MetricasOperacion> {
  * comparándose igual que antes.
  */
 
-/** Nombres que describen un tipo de asentamiento, no un barrio de ciudad. */
-const NO_ES_BARRIO = /^(vereda|corregimiento|parcelaci[oó]n|condominio|conjunto|urbanizaci[oó]n|edificio|torres?|manzana|etapa|lote|km\.?\s*\d|kil[oó]metro)\b/i;
+/**
+ * Nombres que describen un tipo de asentamiento o de vía, no un barrio.
+ *
+ * Va sin anclar al principio a propósito: la palabra delatora casi nunca abre el
+ * nombre. «Arboretto Conjunto Residencial», «Ruitoque Condominio» y «Agrupación
+ * Macadamia» se colaban enteros cuando la comprobación solo miraba la primera
+ * palabra, que es como estaba escrita al principio.
+ */
+const NO_ES_BARRIO = /(^|\s)(vereda|corregimiento|parcelaci[oó]n|condominio|conjunto|urbanizaci[oó]n|agrupaci[oó]n|edificio|torres?|manzana|etapa|lote|hacienda|senderos?|quintas?|km\.?\s*\d|kil[oó]metro|v[ií]a|avenida|carrera|calle|diagonal|transversal|autopista|anillo vial)(\s|$)/i;
 
 /** Cuántas fichas debe tener una zona para considerarla un barrio y no un edificio suelto. */
 const MINIMO_FICHAS_POR_BARRIO = 3;
 
-export function barriosPresentables(zonas: Array<string | null | undefined>): string[] {
+/** Minúsculas y sin tildes, para comparar nombres de sitio escritos de cualquier forma. */
+const claveDeLugar = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+
+export function barriosPresentables(
+  zonas: Array<string | null | undefined>,
+  ciudades: Array<string | null | undefined> = [],
+): string[] {
+  // Un municipio no es un barrio de sí mismo ni de su vecino. En las facetas
+  // aparecían «Bogotá» como barrio de Bogotá —y de Chía— porque muchos avisos
+  // repiten la ciudad en el campo de zona cuando no traen el barrio. Ofrecerlo
+  // como filtro promete una precisión que no existe: elegirlo no acota nada.
+  const municipios = new Set(ciudades.filter(Boolean).map((c) => claveDeLugar(String(c))));
+
   const cuenta = new Map<string, number>();
   for (const z of zonas) {
     if (!z) continue;
     const nombre = String(z).trim();
     if (!nombre || NO_ES_BARRIO.test(nombre)) continue;
+    // «Bogotá, d.c.» y «Bogota» son el mismo sitio escrito de dos maneras.
+    if (municipios.has(claveDeLugar(nombre.replace(/,\s*d\.?\s*c\.?$/i, '')))) continue;
     cuenta.set(nombre, (cuenta.get(nombre) ?? 0) + 1);
   }
   // El umbral de frecuencia es lo que separa «Laureles» de «Torres del Marfil»

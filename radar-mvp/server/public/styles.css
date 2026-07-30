@@ -243,10 +243,18 @@ h1 .gold { color: var(--gold); }
   .b-campo-ancho, .buscador-cta { grid-column: 1 / -1; }
 }
 @media (max-width: 760px) {
-  .buscador { margin-top: 16px; padding: 0 14px; }
-  .buscador-caja { padding: 13px 14px 12px; }
-  .buscador-titulo { font-size: 1rem; }
-  .buscador-nota { font-size: 0.7rem; }
+  /* Compacto a propósito. La barra de secciones es fija abajo y tapa los últimos
+     ~60px de la pantalla: con las medidas de escritorio, el botón «Buscar» caía
+     justo ahí y solo respondían sus 12px superiores — tocarlo cambiaba de sección
+     en vez de buscar. Cada píxel que se recorta aquí es un píxel que el botón sube
+     por encima de la barra. */
+  .buscador { margin-top: 10px; padding: 0 14px; }
+  .buscador-caja { padding: 11px 13px 11px; }
+  .buscador-titulo { font-size: 0.98rem; }
+  /* La nota se va en móvil: explica que mostramos 20 por búsqueda, y eso lo dice
+     mejor el propio contador de resultados en cuanto se busca. Ocupaba dos líneas
+     justo por encima del botón. */
+  .buscador-nota { display: none; }
   /* Una sola columna, dicho explícitamente. Dos campos de 153px obligan a partir
      «Precio máximo (millones)» en dos líneas y dejan los controles desalineados.
      Además el panel de filtros declara `.f:nth-child(2) { grid-column: 1/-1 }`
@@ -551,7 +559,18 @@ h1 .gold { color: var(--gold); }
 .modal { position: fixed; inset: 0; background: rgba(15,10,20,0.85); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
 .modal.open { display: flex; }
 .modal-box { background: #fff; border-radius: 20px; max-width: 1180px; width: 100%; max-height: 94vh; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(420px, 1fr); box-shadow: 0 30px 80px rgba(0,0,0,0.5); position: relative; }
-@media (max-width: 1024px) { .modal-box { grid-template-columns: 1fr; max-height: 96vh; } }
+/* `minmax(0, 1fr)` y no `1fr`: `1fr` es en realidad `minmax(auto, 1fr)`, y ese
+   `auto` es el min-content de lo que haya dentro. La tira de miniaturas de la
+   galería lleva `overflow-x: auto`, así que su min-content es la suma de TODAS
+   las fotos —804px medidos en una ficha de cinco— y la columna se ensanchaba
+   hasta ahí dentro de un `.modal-box` con `overflow: hidden`. Resultado: más de
+   la mitad de la ficha quedaba fuera de la pantalla en móvil y en tablet, sin
+   ninguna barra de scroll que permitiera llegar. El `min-width: 0` de los hijos
+   es la otra mitad de la regla: sin él, cada uno vuelve a imponer su min-content. */
+@media (max-width: 1024px) {
+  .modal-box { grid-template-columns: minmax(0, 1fr); max-height: 96vh; }
+  .modal-box > * { min-width: 0; }
+}
 .modal-close { position: absolute; top: 16px; right: 18px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.96); border: none; cursor: pointer; color: var(--pp); font-size: 1.3rem; font-weight: 700; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
 .gallery { position: relative; background: #0f0a14; display: flex; flex-direction: column; min-height: 0; max-height: 94vh; }
 .gallery-main { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; min-height: 320px; overflow: hidden; background: radial-gradient(circle at 50% 45%, #241233 0%, #12081a 100%); }
@@ -967,11 +986,16 @@ h1 .gold { color: var(--gold); }
 @media (max-width: 760px) {
   body { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 
-  .hero { padding: 24px 18px 18px; }
-  .pill { margin-bottom: 10px; padding: 5px 12px; }
-  h1 { font-size: clamp(1.9rem, 9vw, 2.3rem); margin-bottom: 10px; }
-  .sub { font-size: 1rem; line-height: 1.35; }
-  .summary-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; padding: 12px 0 8px; }
+  /* El hero cede espacio en móvil, y no por estética: con sus medidas anteriores
+     el buscador terminaba 36px por debajo de la barra fija de secciones, así que
+     su botón «Buscar» quedaba en la franja donde los toques se los queda la barra.
+     En una pantalla de 812px, 353 de hero son demasiados para un producto cuya
+     primera acción es buscar. */
+  .hero { padding: 18px 18px 14px; }
+  .pill { margin-bottom: 8px; padding: 5px 12px; }
+  h1 { font-size: clamp(1.75rem, 8.4vw, 2.1rem); margin-bottom: 8px; }
+  .sub { font-size: 0.94rem; line-height: 1.3; }
+  .summary-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; padding: 10px 0 6px; }
   .summary-stat { min-width: 0; padding: 2px 6px; }
   .summary-stat.muted { display: none; }
   .summary-stat:last-child { border-right: 0; }

@@ -1115,7 +1115,14 @@ const planActual = () => planDelServidor;
 
 function readFilters() {
   const g = (id) => { const e = $(id); return e && e.value ? e.value : undefined; };
-  const M = (id) => { const v = g(id); return v ? String(Math.round(Number(v) * 1e6)) : undefined; }; // millones → COP
+  // millones → COP. Un cero NO es un filtro: el servidor lo descarta por falso,
+  // pero el contador lo sumaba igual, así que la interfaz decía «1 filtro activo»
+  // sobre las 108.060 fichas sin filtrar. Un contador que no cuadra con lo que se
+  // ve deja al usuario buscando un filtro invisible que no puede quitar.
+  const M = (id) => {
+    const n = Number(g(id));
+    return Number.isFinite(n) && n > 0 ? String(Math.round(n * 1e6)) : undefined;
+  };
   return {
     city: g('f-city'), zone: g('f-zone'), type: g('f-type'),
     priceMin: M('f-priceMin'), priceMax: M('f-priceMax'),
@@ -1147,7 +1154,16 @@ function normalizeRadarPreferences(value) {
     complete: true,
     city: typeof value.city === 'string' ? value.city : '',
     budget: Number.isFinite(Number(value.budget)) ? String(value.budget) : '',
-    type: typeof value.type === 'string' ? value.type : '',
+    // Lista O cadena. Desde que se pueden elegir varios tipos, el asistente de
+    // preferencias guarda un array —y esta función lo tiraba a la basura por no
+    // ser `string`, así que elegir «Casa» y pulsar guardar dejaba «Cualquier
+    // tipo» sin decir nada—. Se arrastraba también a las alertas por correo, que
+    // leen de aquí: la selección múltiple no llegaba a guardarse nunca.
+    // Se acepta la cadena porque es lo que hay en los navegadores de quienes
+    // guardaron sus preferencias antes del cambio.
+    type: Array.isArray(value.type)
+      ? value.type.filter((t) => typeof t === 'string' && t)
+      : typeof value.type === 'string' ? value.type : '',
   };
 }
 let radarPreferences = normalizeRadarPreferences(readStoredJson(RADAR_PREFS_KEY, null));
@@ -1443,6 +1459,48 @@ function renderVecinas() {
       load(1);
     });
   });
+}
+
+/**
+ * Reconstruye el panel de filtros SIN perder lo que el usuario tenía puesto.
+ *
+ * `buildFilters()` lo repinta desde cero, y eso está bien al cambiar de pestaña
+ * —son otros filtros— pero era destructivo aquí: cuando la primera respuesta del
+ * servidor confirma el plan gratuito hay que añadir el filtro «solo las que ya
+ * desbloqueé», y ese repintado borraba la búsqueda recién hecha. El listado
+ * quedaba filtrado por Cali mientras el panel decía «Todas» y el contador «0»:
+ * el usuario no tenía forma de saber por qué veía lo que veía, ni cómo quitarlo.
+ *
+ * El barrio se restaura aparte porque sus opciones dependen de la ciudad: hay que
+ * repoblarlas antes, o se restauraría un valor que todavía no existe en la lista.
+ */
+async function reconstruirFiltrosConservandoValores() {
+  const previos = new Map();
+  document.querySelectorAll('#filters [id^="f-"]').forEach((el) => {
+    if (el.value) previos.set(el.id, el.value);
+  });
+  await buildFilters();
+
+  const zona = previos.get('f-zone');
+  previos.delete('f-zone');
+  for (const [id, valor] of previos) restaurarValorDeFiltro(id, valor);
+
+  const ciudad = $('f-city');
+  if (zona && ciudad?.value) {
+    await repopZones(ciudad.value);
+    restaurarValorDeFiltro('f-zone', zona);
+  }
+  updateFilterCount();
+}
+
+/** Devuelve un valor a su control, salvo que el desplegable ya no lo ofrezca. */
+function restaurarValorDeFiltro(id, valor) {
+  const el = $(id);
+  if (!el) return;
+  // Un `<select>` al que se le asigna un valor inexistente se queda vacío en
+  // silencio, y eso es peor que no restaurar: el filtro parecería limpio.
+  if (el.tagName === 'SELECT' && ![...el.options].some((o) => o.value === valor)) return;
+  el.value = valor;
 }
 
 async function applyRadarPreferences(preferences, reload = false) {
@@ -1940,7 +1998,7 @@ async function load(page) {
   const planNuevo = res.plan ?? planDelServidor;
   const faltaFiltroPropio = planNuevo === 'free' && state.tab !== 'remates' && !$('f-desbloqueadas');
   planDelServidor = planNuevo;
-  if (faltaFiltroPropio) void buildFilters();
+  if (faltaFiltroPropio) void reconstruirFiltrosConservandoValores();
 
   renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
