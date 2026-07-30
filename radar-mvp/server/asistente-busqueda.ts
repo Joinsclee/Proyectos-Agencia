@@ -75,7 +75,16 @@ async function contextoDelUsuario(userId: string) {
 /** Convierte lo que pidió el modelo en una consulta del Radar, descartando lo que no entienda. */
 function aConsulta(p: ParametrosBusqueda): ListQuery {
   const q: ListQuery = { page: 1, pageSize: MAX_RESULTADOS };
-  if (p.ciudad) q.city = p.ciudad.trim().toLowerCase();
+  // La ciudad se normaliza QUITANDO TILDES, y esto no es cosmética: la base guarda
+  // «bogota» sin tilde, el modelo escribe «Bogotá» con ella por más que el prompt le
+  // pida lo contrario, y la comparación exacta devolvía cero resultados. El síntoma
+  // era peor que un error: el asistente decía «no encontré propiedades en Bogotá»
+  // sobre una ciudad con 1.786, así que el usuario se llevaba una respuesta falsa en
+  // lugar de un fallo visible.
+  //
+  // Se arregla aquí y no en el prompt porque un prompt es una petición y esto tiene
+  // que ser una garantía.
+  if (p.ciudad) q.city = normalizarCiudad(p.ciudad);
   if (p.tipo && ['apartment', 'house', 'lot', 'commercial'].includes(p.tipo)) q.type = p.tipo;
   if (Number.isFinite(p.precioMin)) q.priceMin = Number(p.precioMin);
   if (Number.isFinite(p.precioMax)) q.priceMax = Number(p.precioMax);
@@ -144,3 +153,15 @@ function numeroONulo(v: unknown): number | null {
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 }
+
+/** Minúsculas y sin tildes, como lo guarda la base. */
+export function normalizarCiudad(valor: string): string {
+  return valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
+
+/** Alias para las pruebas, que no deben depender del nombre interno. */
+export const normalizarCiudadParaPruebas = normalizarCiudad;
