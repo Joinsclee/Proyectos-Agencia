@@ -36,7 +36,9 @@ test('CRECE: las 11 categorías de la tabla maestra', () => {
     [0.78, 'Oportunidad', 2, 0],
     [0.85, 'Interesante', 1, 0],
     [0.92, 'Abajo del Mercado', 1, 0],
-    [0.95, 'Precio de Mercado (borde bajo)', 0, 0],
+    // «(borde bajo)» era jerga de la tabla interna: describe el tramo 0,93-0,96,
+    // o sea entre un 4% y un 7% por debajo. Se dice eso mismo en castellano.
+    [0.95, 'Ligeramente por debajo del mercado', 0, 0],
     [1.00, 'Precio de Mercado', 0, 0],
     [1.05, 'Límite Superior', 0, 0],
     [1.08, 'Arriba del Mercado', 0, 1],

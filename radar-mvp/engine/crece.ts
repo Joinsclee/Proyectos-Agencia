@@ -79,7 +79,7 @@ const TABLA: Array<{ hasta: number; c: Omit<CreceClass, 'desviacion'> }> = [
   { hasta: 0.93,
     c: { tier: 'abajo_mercado', estrellas: 1, alertas: 0, lectura: 'Abajo del Mercado', requiereSuscripcion: false } },
   { hasta: 0.96,
-    c: { tier: 'mercado_borde_bajo', estrellas: 0, alertas: 0, lectura: 'Precio de Mercado (borde bajo)', requiereSuscripcion: false } },
+    c: { tier: 'mercado_borde_bajo', estrellas: 0, alertas: 0, lectura: 'Ligeramente por debajo del mercado', requiereSuscripcion: false } },
   { hasta: 1.03,
     c: { tier: 'mercado', estrellas: 0, alertas: 0, lectura: 'Precio de Mercado', requiereSuscripcion: false } },
   { hasta: 1.06,

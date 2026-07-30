@@ -59,9 +59,12 @@ const PASOS = [
     selector: '#tabs',
     lado: 'abajo',
     etiqueta: 'Las tres fuentes',
-    titulo: 'Portal, bancos y remates',
-    texto: 'Tres mercados distintos con la misma vara: lo que se publica abierto, lo que los bancos '
-      + 'quieren soltar y lo que un juez va a rematar. Cada uno tiene su pestaña.',
+    titulo: 'Tres mercados distintos en un mismo lugar',
+    // Los nombres son los de las pestañas que la persona tiene delante. Si aquí se
+    // llamaran «Portal Abierto» o «Activos de Bancos», el recorrido dejaría de
+    // señalar la pantalla para describir otra.
+    texto: 'Portal, Bancos y Remates: cada mercado tiene su pestaña, y los tres se miden con la '
+      + 'misma vara.',
   },
   {
     id: 'filtros',
@@ -90,8 +93,13 @@ const PASOS = [
     lado: 'derecha',
     etiqueta: 'Remates',
     titulo: 'Aquí lo que importa no es el descuento',
-    texto: 'La ley fija la base de toda subasta en el 70% del avalúo, así que casi todos dan lo mismo. '
-      + 'Lo que separa un remate de otro es el riesgo del título, y si solo se remata una parte del bien, la ficha lo avisa.',
+    // Se mantiene la cuota parte —«solo se remata una parte del bien»— porque es una
+    // señal real que el Radar sí muestra en la ficha. La versión que proponía la
+    // auditoría hablaba en cambio del «estado del bien», que no es ningún campo que
+    // tengamos: prometer en el tutorial un dato que la ficha no da es peor que un
+    // copy largo.
+    texto: 'La ley fija la base de todas las subastas en el 70% del avalúo. Lo que cambia entre una '
+      + 'y otra es el riesgo del título, y si solo se remata una parte del bien.',
   },
   {
     id: 'guardar',
@@ -120,10 +128,14 @@ const PASOS = [
     selector: '#authbar',
     lado: 'abajo',
     etiqueta: 'Tu cuenta',
-    titulo: 'Explorar es libre; abrir fichas necesita cuenta',
-    texto: 'Puedes mirarlo todo sin registrarte. Con una cuenta gratuita abres 20 fichas completas al mes '
-      + '—dirección, fotos, comparables y análisis—, las que abres quedan abiertas, y desbloqueas guardados '
-      + 'y alertas por correo.',
+    titulo: 'Lo que abres, queda abierto',
+    // El número sale de `app.js`, que a su vez lo tiene de `server/cupo.ts`. Escrito a
+    // mano decía 20 y habría seguido diciendo 20 el día que el cupo cambie: el
+    // tutorial es justo donde una cifra vieja se lee como una promesa incumplida.
+    texto: `Con una cuenta gratuita abres ${window.CUPO_FREE_MENSUAL ?? 20} fichas completas al mes `
+      + '—dirección, fotos, comparables y análisis— y se quedan abiertas para siempre. Además guardas '
+      + 'las que te interesan y recibes alertas por correo cuando aparezca algo en tu zona. Con el plan '
+      + 'completo no hay límite de fichas ni de informes.',
   },
 ];
 

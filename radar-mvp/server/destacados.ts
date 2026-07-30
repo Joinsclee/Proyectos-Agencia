@@ -272,18 +272,23 @@ function referenciaDeNivel(nivel: string | null | undefined): string {
   // únicamente con mi barrio? No, 1,5 kilómetros. Hay 5 barrios, facilito».
   // Todas empiezan por sustantivo sin artículo porque se insertan tras «por debajo
   // de»: con artículo saldría «por debajo de el valor…».
-  if (nivel === 'barrio') return 'los precios de su propio sector';
-  if (nivel === 'zona_ampliada') return 'los precios de su zona';
-  return 'los precios de su ciudad';
+  // «ofertas similares» y no «los precios»: lo que hay al otro lado de la
+  // comparación son avisos parecidos —mismo tipo, área parecida—, no el precio
+  // medio de todo lo que se vende en la zona.
+  if (nivel === 'barrio') return 'ofertas similares de su sector';
+  if (nivel === 'zona_ampliada') return 'ofertas similares de su zona';
+  return 'ofertas similares de su ciudad';
 }
 
 /** Etiqueta del Índice CRECE ya resuelta por la tabla maestra (engine/crece.ts). */
 function etiquetaCrece(fila: FilaInmueble): string | null {
   const indice = num(fila.crece_index);
   if (indice === null) return null;
-  const c = clasificar(indice);
-  // La coma decimal es la de Colombia; el índice se lee "0,40 = 60% por debajo".
-  return `${c.lectura} · índice CRECE ${redondearIndice(indice).toFixed(2).replace('.', ',')}`;
+  // Solo la lectura, sin el número. El Índice CRECE es interno: «índice CRECE 0,45»
+  // no le dice nada a nadie que no conozca la escala, y el listado ya cumplía esta
+  // regla —era la portada la que se la saltaba—. La lectura («Oportunidad Fuerte»)
+  // es la misma información en el idioma de quien la lee.
+  return clasificar(indice).lectura;
 }
 
 /**
@@ -302,8 +307,11 @@ function etiquetaConfianza(fila: FilaInmueble): string | null {
   const legible: Record<string, string> = { high: 'confianza alta', medium: 'confianza media', low: 'confianza baja' };
   if (n !== null && conf && legible[conf]) return `${n} comparables, ${legible[conf]}`;
   if (n !== null) return `${n} comparables`;
-  if (fila.is_high === true) return 'confianza alta del motor';
-  if (fila.cascada_nivel === 'barrio') return 'comparables del propio barrio';
+  // Antes decía «confianza alta del motor» y «comparables del propio barrio».
+  // Ninguna de las dos dice nada útil en un vistazo: la primera habla de un motor
+  // que el usuario no sabe que existe, y la segunda promete un barrio cuando la
+  // comparación cubre 1,5 km. Cuando no hay un número de comparables que enseñar,
+  // es mejor no decir nada que llenar el hueco con jerga.
   return null;
 }
 
@@ -602,9 +610,9 @@ export function bloqueDeFuente(
       id: 'portal',
       titulo: 'Lo mejor de la semana en el portal abierto',
       icono: 'home',
-      criterio: 'Avisos de FincaRaíz con el mayor descuento frente a la mediana de ofertas parecidas '
-        + 'en su propio barrio, entre los que el motor clasificó como oportunidad con comparables '
-        + 'suficientes. Es mercancía en el mercado abierto: se puede llamar y visitar hoy.',
+      criterio: 'Avisos de FincaRaíz con el mayor descuento frente a ofertas similares de su zona, '
+        + 'entre los que tienen comparables suficientes. Es mercancía en el mercado abierto: se '
+        + 'puede llamar y visitar hoy.',
     },
     banco: {
       id: 'bancos',

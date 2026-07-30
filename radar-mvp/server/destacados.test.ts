@@ -125,10 +125,22 @@ test('sello: el motivo dice contra qué se comparó, no "destacado"', () => {
   const { _destacado } = sellarInmueble(inmueble({ discount_pct: 37.4 }));
   assert.equal(_destacado.fuente, 'portal');
   // «sector» y no «barrio»: la comparación cubre 1,5 km, que son varios barrios.
-  assert.equal(_destacado.motivo, '37% por debajo de los precios de su propio sector');
+  // «ofertas similares» y no «los precios»: al otro lado hay avisos parecidos, no
+  // el precio medio de todo lo que se vende alrededor.
+  assert.equal(_destacado.motivo, '37% por debajo de ofertas similares de su sector');
   assert.match(_destacado.respaldo ?? '', /Oportunidad Fuerte/);
-  assert.match(_destacado.respaldo ?? '', /índice CRECE 0,60/);
-  assert.match(_destacado.respaldo ?? '', /confianza alta del motor/);
+});
+
+test('sello: el respaldo no enseña jerga interna', () => {
+  // El Índice CRECE es interno y el listado ya lo ocultaba; la portada se saltaba
+  // esa regla y enseñaba «índice CRECE 0,60», que no significa nada para quien no
+  // conoce la escala. Y «confianza alta del motor» habla de un motor que el
+  // usuario no sabe que existe. Cuando no hay un número de comparables real que
+  // enseñar, callar es mejor que rellenar con jerga.
+  const { _destacado } = sellarInmueble(inmueble({ discount_pct: 37.4 }));
+  assert.doesNotMatch(_destacado.respaldo ?? '', /índice CRECE/i);
+  assert.doesNotMatch(_destacado.respaldo ?? '', /confianza alta del motor/i);
+  assert.doesNotMatch(_destacado.respaldo ?? '', /propio barrio/i);
 });
 
 test('sello: la referencia cambia con el nivel de la cascada', () => {

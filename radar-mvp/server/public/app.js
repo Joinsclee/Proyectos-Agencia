@@ -52,6 +52,11 @@ const RADAR_SIMULATIONS_KEY = 'radar_simulations_v1';
 const RADAR_ALERT_KEY = 'radar_alert_v1';
 /** Debe coincidir con CUPO_MENSUAL_FREE de server/cupo.ts. El servidor manda; esto es solo el texto. */
 const CUPO_FREE_MENSUAL = 20;
+// Expuesto para el recorrido guiado, que se carga después y lo necesita para no
+// repetir la cifra a mano. Tenía escrito «20» y habría seguido diciéndolo el día
+// que cambie el cupo, que es exactamente donde una cifra vieja se lee como una
+// promesa incumplida.
+window.CUPO_FREE_MENSUAL = CUPO_FREE_MENSUAL;
 /** Ídem con CUPO_REPORTES_FREE de server/cupo-reportes.ts: es un cupo distinto del de fichas. */
 const CUPO_REPORTES_MENSUAL = 20;
 
@@ -650,7 +655,7 @@ const TABLA_CRECE = [
   { tier: 'oportunidad', lectura: 'Oportunidad', estrellas: 2, huecas: 0, estrellasTexto: '★★' },
   { tier: 'interesante', lectura: 'Interesante', estrellas: 1, huecas: 0, estrellasTexto: '★' },
   { tier: 'abajo_mercado', lectura: 'Abajo del Mercado', estrellas: 0, huecas: 1, estrellasTexto: '☆' },
-  { tier: 'mercado_borde_bajo', lectura: 'Precio de Mercado (borde bajo)', estrellas: 0, huecas: 0, estrellasTexto: '' },
+  { tier: 'mercado_borde_bajo', lectura: 'Ligeramente por debajo del mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
   { tier: 'mercado', lectura: 'Precio de Mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
 ];
 const CRECE_POR_TIER = new Map(TABLA_CRECE.map((t) => [t.tier, t]));
@@ -746,7 +751,7 @@ const ONBOARDING_PASOS = [
     titulo: 'El Radar compara contra el barrio, no contra el país',
     texto: 'Cada inmueble se mide contra el precio real de ofertas parecidas en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional que no le sirve a nadie.',
     puntos: [
-      'Tres fuentes distintas, comparadas con la misma vara',
+      'Tres mercados distintos en un mismo lugar: Portal, Bancos y Remates',
       'El Índice CRECE dice cuánto está por debajo de su mercado',
     ],
     video: { src: '', poster: '', pie: 'Qué encuentra el Radar y de dónde salen los inmuebles.' },
@@ -785,7 +790,7 @@ const ONBOARDING_PASOS = [
     icono: 'scale',
     titulo: 'Subastas judiciales, con su riesgo a la vista',
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
-    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. Aquí el descuento no distingue: la ley fija la base en el 70% del avalúo, así que casi todos dan lo mismo. Lo que de verdad separa un remate de otro es el riesgo del título.',
+    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La ley fija la base de todas las subastas en el 70% del avalúo, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
     puntos: [
       'Se ordenan por demandante bancario primero: título más limpio',
       'Si solo se remata una parte del bien, la ficha lo avisa en amarillo',
@@ -1001,7 +1006,11 @@ async function buildFilters() {
         + `<select id="f-desbloqueadas"><option value="">Todas</option>`
         + `<option value="1">Solo las que ya desbloqueé</option></select></div>`;
     }
-    html += fRange('price', 'Precio (millones)', 'mín', 'máx');
+    // «f-dinero» sube el tamaño del «(millones)». En 10 px y gris claro pasaba
+    // desapercibido, y quien no lo lee escribe 5.000 creyendo que pide 5.000
+    // millones cuando está pidiendo cinco billones. Los ejemplos del placeholder
+    // dicen la escala sin que haya que leer el label.
+    html += fRange('price', 'Precio (millones)', 'Ej. 200', 'Ej. 500', 'f-dinero');
     html += fRange('area', 'Área (m²)', 'mín', 'máx');
     html += `<div class="f"><label for="f-bedroomsMin">Habitaciones</label><select id="f-bedroomsMin"><option value="">Todas</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></div>`;
     if (tab === 'portal') html += fStratum();
@@ -1020,7 +1029,7 @@ async function buildFilters() {
     const bankOpts = ['<option value="">Todos los demandantes</option>', '<option value="1">Solo bancos (todos)</option>']
       .concat((bk.banks || []).map((b) => `<option value="${esc(b.name)}">${esc(b.name)} (${b.count})</option>`));
     html += `<div class="f"><label for="f-bank">Demandante (banco)</label><select id="f-bank">${bankOpts.join('')}</select></div>`;
-    html += fRange('bid', 'Postura (millones)', 'mín', 'máx');
+    html += fRange('bid', 'Postura (millones)', 'Ej. 80', 'Ej. 300', 'f-dinero');
   }
   // Entre el `await` de las facetas y esta línea el usuario puede haber cambiado
   // de pestaña. Sin esta comprobación, la respuesta lenta pisa a la rápida: el
@@ -1054,8 +1063,8 @@ function fSelect(key, label, values, fmt) {
   const opts = ['<option value="">Todas</option>'].concat((values || []).map((v) => `<option value="${esc(v)}">${esc(fmt ? fmt(v) : cap(v))}</option>`));
   return `<div class="f"><label for="f-${esc(key)}">${esc(label)}</label><select id="f-${esc(key)}">${opts.join('')}</select></div>`;
 }
-function fRange(key, label, ph1, ph2) {
-  return `<div class="f"><label>${label}</label><div class="f-range">
+function fRange(key, label, ph1, ph2, clase = '') {
+  return `<div class="f${clase ? ` ${clase}` : ''}"><label>${label}</label><div class="f-range">
     <input type="number" id="f-${key}Min" min="0" placeholder="${ph1}" aria-label="${esc(label)} mínimo">
     <input type="number" id="f-${key}Max" min="0" placeholder="${ph2}" aria-label="${esc(label)} máximo"></div></div>`;
 }
@@ -1764,10 +1773,13 @@ function renderHome(payload) {
     return;
   }
 
+  // Fuera el «Semana 31 · 120 oportunidades seleccionadas». El número de semana es
+  // un detalle de cómo rota el pool por dentro, no algo que le diga nada a quien
+  // llega: nadie sabe en qué semana del año está ni por qué debería importarle.
+  // `payload.semana` sigue llegando y el servidor la sigue usando para la rotación.
   const cabecera = `<div class="home-intro">
-    <span class="home-kicker">${ic('radar')} Semana ${esc(payload.semana)} · ${esc(payload.total)} oportunidades seleccionadas</span>
-    <h2>Lo que el Radar destaca hoy</h2>
-    <p>Cada bloque dice con qué regla se eligió. Todo sale del Índice CRECE: el precio por m² de cada inmueble frente a la mediana de ofertas parecidas en su propia zona.</p>
+    <h2>Destacados de hoy</h2>
+    <p>Cada bloque dice con qué regla se eligió.</p>
   </div>
   <div id="home-aviso"></div>`;
 

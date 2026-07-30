@@ -383,6 +383,12 @@ h1 .gold { color: var(--gold); }
 .filters-row { display: flex; gap: 12px; flex-wrap: wrap; }
 .f { display: flex; flex-direction: column; gap: 4px; }
 .f label { font-size: 0.66rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+/* Los campos de dinero llevan la unidad en el label, y ahí sí importa leerla: en
+   10px y gris claro, «(millones)» pasa desapercibido y alguien escribe 5.000
+   pensando que pide 5.000 millones cuando está pidiendo cinco billones. Solo
+   estos, no todos los filtros: subir el tamaño en bloque estira la columna
+   entera y el buscador del Inicio reusa la misma clase `.f`. */
+.f.f-dinero label { font-size: 0.78rem; color: #0f172a; letter-spacing: 0.02em; }
 /* Los <select> nativos de cada navegador rompen la línea del formulario: se
    normaliza la altura y se dibuja la flecha, para que todos los controles se
    lean como uno solo. */
@@ -434,10 +440,15 @@ h1 .gold { color: var(--gold); }
 .card-ubic { font-size: 0.76rem; color: #6b7280; display: flex; align-items: center; gap: 5px; }
 .card-ubic .ic { color: var(--pp); opacity: 0.55; }
 .card-ubic strong { color: var(--pp); font-weight: 700; }
-.card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(97,49,116,0.09); font-size: 0.74rem; color: #55495e; }
-.card-meta span { display: inline-flex; align-items: center; gap: 5px; }
-.card-meta .ic { color: var(--pp); opacity: 0.5; }
-.card-meta .e { color: var(--pp); font-weight: 700; margin-left: auto; }
+/* Habitaciones, baños y parqueaderos son de lo primero que se mira en un
+   inmueble. Estaban a media opacidad y en 12px, mientras el estrato —un dato
+   secundario— iba a opacidad plena y en negrita: el orden de importancia salía
+   invertido. Los iconos suben a 16px y pierden la transparencia; el estrato deja
+   de gritar. */
+.card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(97,49,116,0.09); font-size: 0.76rem; color: #443a4d; }
+.card-meta span { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
+.card-meta .ic { width: 16px; height: 16px; color: var(--pp); }
+.card-meta .e { color: #6b6274; font-weight: 600; margin-left: auto; }
 /* Contador de días sobre la foto del remate (pedido del cliente) */
 .countdown { position: absolute; top: 10px; left: 10px; z-index: 3; display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.02em; padding: 5px 10px; border-radius: 7px; background: rgba(20,12,26,0.82); backdrop-filter: blur(6px); color: #fff; }
 .countdown .ic { width: 0.92em; height: 0.92em; stroke-width: 2.2; }
