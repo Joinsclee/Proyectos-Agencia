@@ -45,6 +45,7 @@ import {
 import { asistenteDisponible, preguntarAlAsistente } from './asistente-n8n.js';
 import { buscarParaAsistente } from './asistente-busqueda.js';
 import { parseHito } from './bienvenida.js';
+import { auditoriaHabilitada, detalleDeComparables } from './comparables-detalle.js';
 import { esWord, textoDeWord } from './asistente-word.js';
 import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
 import {
@@ -896,6 +897,19 @@ const server = createServer(async (req, res) => {
         return sendJSON(res, r.ok ? 200 : 400, r);
       }
 
+      // Contra qué inmuebles se calculó el veredicto de esta ficha. Detrás de un
+      // interruptor: ver `server/comparables-detalle.ts`.
+      if (path === '/api/comparables') {
+        if (!auditoriaHabilitada()) return sendJSON(res, 404, { ok: false, error: 'no disponible' });
+        const idc = url.searchParams.get('id');
+        if (!idc) return sendJSON(res, 400, { ok: false, error: 'id requerido' });
+        // Su propio límite, y estrecho: cada llamada recalcula la cascada con el
+        // pool de la ciudad entera.
+        if (rateLimited(res, `comparables:${clientAddress(req)}`, { limit: 40, windowMs: 60 * 60 * 1000 })) return;
+        const detalle = await detalleDeComparables(idc);
+        return sendJSON(res, detalle.ok ? 200 : 404, detalle);
+      }
+
       if (path === '/api/property') {
         const kind = url.searchParams.get('kind');
         const id = url.searchParams.get('id');
@@ -1042,6 +1056,7 @@ const server = createServer(async (req, res) => {
         // dice aquí y no se deduce en el navegador porque el webhook y su secreto
         // no pueden viajar al cliente.
         asistenteReady: asistenteDisponible(),
+        auditoriaComparables: auditoriaHabilitada(),
         // Porcentajes de la calculadora de gastos. Van en la config PÚBLICA a
         // propósito: son tarifas de ley que se le muestran a todo el que abre
         // una ficha, y esconderlas detrás del token no protegería nada. Lo que

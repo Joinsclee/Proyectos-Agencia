@@ -56,6 +56,16 @@ const EnvSchema = z.object({
   // la ruta, y esa ruta consulta el inventario en nombre de un usuario concreto.
   // Mínimo 24 caracteres porque es lo único que separa esa ruta de internet.
   RADAR_ASISTENTE_SECRETO: z.string().min(24).optional(),
+
+  // Auditoría de comparables: enseña, por ficha, contra qué inmuebles se calculó
+  // el veredicto. Es una herramienta de VERIFICACIÓN mientras se comprueba el
+  // motor, no una función del producto — apagada, la ruta no existe.
+  //
+  // Cuesta lo que cuesta: recalcular la cascada de un inmueble exige el pool de su
+  // ciudad. El cliente lo señaló («si hay 100 personas al tiempo y todas
+  // consultando comparables, va a tener impacto de procesamiento») y por eso está
+  // detrás de un interruptor en vez de siempre disponible.
+  RADAR_AUDITORIA_COMPARABLES: z.enum(['0', '1']).default('0'),
 });
 
 export const env = (() => {

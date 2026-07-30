@@ -105,6 +105,30 @@ export interface Verdict {
   crece_tier: CreceTier | null;
   /** Nivel de la cascada con el que se logró la muestra: barrio | zona_ampliada | ciudad. */
   cascada_nivel: string | null;
+  /**
+   * Los comparables que de verdad se usaron, cuando se piden expresamente.
+   *
+   * Existe para poder AUDITAR el veredicto. El cliente vio un inmueble marcado a
+   * «416% sobre el valor del mercado» y la pregunta fue inmediata y correcta:
+   * ¿contra qué lo está comparando? Sin esta lista la única respuesta posible es
+   * «confía en el motor», que no es una respuesta.
+   *
+   * No viaja por defecto: son decenas de filas por ficha y el listado las pide de
+   * cien en cien. Solo cuando alguien abre el detalle.
+   */
+  comparables?: ComparableUsado[];
+}
+
+/** Un comparable, con lo justo para poder juzgar si tenía algo que ver. */
+export interface ComparableUsado {
+  source_id: string;
+  type: string | null;
+  zone: string | null;
+  area_m2: number;
+  price: number;
+  ppm2: number;
+  stratum: number | null;
+  url: string | null;
 }
 
 const INSUFFICIENT: Verdict = {
@@ -269,6 +293,7 @@ export function evaluate(
   candidate: Candidate,
   pool: Comp[],
   cfg: ComparablesConfig = DEFAULT_CONFIG,
+  opciones: { incluirComparables?: boolean } = {},
 ): Verdict {
   // Requisitos mínimos para estimar precio/m²: precio, área y alguna localidad
   // (geo o ciudad). Sin esto no hay con qué comparar.
@@ -328,6 +353,11 @@ export function evaluate(
       crece_index: crece,
       crece_tier: crece != null ? clasificar(crece).tier : null,
       cascada_nivel: cascadaNivel(level),
+      // Del más barato al más caro por m²: así se ve de un golpe dónde cae el
+      // candidato dentro de su grupo, que es lo que el veredicto afirma.
+      ...(opciones.incluirComparables
+        ? { comparables: [...comps].sort((a, b) => a.ppm2 - b.ppm2).map(aComparableUsado) }
+        : {}),
     };
   }
 
@@ -349,4 +379,23 @@ function cascadaNivel(lvl: Level): string {
   if (lvl.name === 'solo-localidad') return 'ciudad';
   if (lvl.radiusMult > 1 || !lvl.useZone) return 'zona_ampliada';
   return 'barrio';
+}
+
+/** Un comparable del pool, reducido a lo que hace falta para juzgarlo. */
+function aComparableUsado(comp: Comp): ComparableUsado {
+  return {
+    source_id: String(comp.source_id ?? ''),
+    type: comp.type ?? null,
+    zone: comp.zone ?? null,
+    area_m2: Math.round(comp.area_m2),
+    // El precio total se reconstruye: `Comp` solo lleva el precio por m², que es de
+    // donde salió. Es exacto salvo redondeo, y ahorra arrastrar una columna más por
+    // todo el motor solo para poder enseñarla.
+    price: Math.round(comp.ppm2 * comp.area_m2),
+    ppm2: Math.round(comp.ppm2),
+    stratum: comp.stratum ?? null,
+    // La URL no está en `Comp` y no se añade: el listado la resuelve con el
+    // `source_id`, que es la clave con la que el aviso vive en la base.
+    url: null,
+  };
 }
