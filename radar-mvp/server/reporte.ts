@@ -384,22 +384,24 @@ function bloqueComparables(c: ComparablesReporte | null): string {
     : '';
   return `<dl class="datos">
       ${fila('Comparables usados', String(c.n))}
-      ${fila('Nivel de confianza', escaparHtml(CONFIANZA[String(c.confianza)] ?? c.confianza ?? '—'))}
+      ${/* «Nivel de confianza» se retiró por decisión del cliente: en un reporte se
+            lee como una advertencia sobre el propio dato que lo acompaña. Lo que
+            sostiene la conclusión son los comparables y el ámbito, que sí están. */ ''}
       ${c.alcance ? fila('Ámbito de comparación', escaparHtml(capitalizar(c.alcance))) : ''}
       ${c.medianaPpm2 != null ? fila('Mediana del mercado por m²', cop(c.medianaPpm2)) : ''}
       ${c.medianaTotal != null ? fila('Mediana del mercado', cop(c.medianaTotal)) : ''}
     </dl>
     ${chips}
     <p class="nota">Los comparables son precios de OFERTA publicados en FincaRaíz, no ventas cerradas.
-    La mediana resiste avisos mal digitados mejor que el promedio.</p>`;
+</p>`;
 }
 
 function bloqueArriendo(a: ArriendoReporte | null): string {
   if (!a || a.canonMediano == null) return '';
   return `<dl class="datos">
-      ${fila('Canon mensual estimado', cop(a.canonMediano))}
+      ${fila('Arrendamiento mensual estimado', cop(a.canonMediano))}
       ${a.rangoBajo != null && a.rangoAlto != null ? fila('Rango central', `${cop(a.rangoBajo)} – ${cop(a.rangoAlto)}`) : ''}
-      ${a.canonPorM2 != null ? fila('Canon por m²', cop(a.canonPorM2)) : ''}
+      ${a.canonPorM2 != null ? fila('Arrendamiento por m²', cop(a.canonPorM2)) : ''}
       ${fila('Avisos de arriendo comparados', String(a.n))}
       ${fila('Nivel de confianza', escaparHtml(CONFIANZA[String(a.confianza)] ?? a.confianza ?? '—'))}
       ${a.alcance ? fila('Ámbito de comparación', escaparHtml(capitalizar(a.alcance))) : ''}

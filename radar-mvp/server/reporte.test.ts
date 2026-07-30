@@ -145,7 +145,11 @@ test('reporte: trae precio, precio/m², descuento, categoría CRECE y comparable
   assert.match(html, /Oportunidad Fuerte/, 'categoría del Índice CRECE');
   assert.match(html, /27% por debajo/, 'desviación vs. la mediana');
   assert.match(html, />14</, 'número de comparables');
-  assert.match(html, /Alta/, 'nivel de confianza de los comparables');
+  // El nivel de confianza se retiró del reporte por decisión del cliente: en un
+  // documento se lee como una advertencia sobre el dato que lo acompaña. Lo que
+  // sostiene la conclusión —comparables y ámbito— sí sigue, y es lo que se
+  // comprueba en las dos líneas de alrededor.
+  assert.doesNotMatch(html, /Nivel de confianza/, 'el nivel de confianza ya no va en el reporte');
   assert.match(html, /1\.5 km a la redonda/, 'contra qué se comparó');
 });
 

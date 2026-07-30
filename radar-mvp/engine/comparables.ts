@@ -21,6 +21,7 @@
 import { robustMedian, robustSpread, haversineKm, trimOutliers, quantile } from './stats.js';
 import { MAX_OPP_DISCOUNT } from '../lib/types.js';
 import { creceIndex, clasificar, type CreceTier } from './crece.js';
+import { esPlausible, motivoImplausible, type MotivoImplausible } from './plausibilidad.js';
 
 export interface Candidate {
   id: string;
@@ -105,6 +106,14 @@ export interface Verdict {
   crece_tier: CreceTier | null;
   /** Nivel de la cascada con el que se logró la muestra: barrio | zona_ampliada | ciudad. */
   cascada_nivel: string | null;
+  /**
+   * Por qué no se juzgó este inmueble, cuando la causa son sus propios datos.
+   *
+   * Se distingue de «no había suficientes comparables» a propósito: son dos cosas
+   * distintas y el usuario merece saber cuál le tocó. Una dice «no pudimos
+   * comparar», la otra «el aviso tiene un dato raro».
+   */
+  datos_implausibles?: MotivoImplausible;
   /**
    * Los comparables que de verdad se usaron, cuando se piden expresamente.
    *
@@ -195,6 +204,12 @@ function sameLocality(c: Candidate, comp: Comp, lvl: Level, cfg: ComparablesConf
 }
 
 function matches(c: Candidate, comp: Comp, lvl: Level, cfg: ComparablesConfig): boolean {
+  // Un aviso con el área mal publicada no puede opinar sobre el precio de nadie.
+  // Es lo que más daño hace de todo esto: un solo comparable con precio por metro
+  // disparatado corre la mediana de la zona entera, y entonces el error no afecta a
+  // una ficha sino a todas las de alrededor. Ver `engine/plausibilidad.ts`.
+  if (!esPlausible({ type: comp.type, area_m2: comp.area_m2, price_per_m2: comp.ppm2 })) return false;
+
   // Mismo tipo (apartamento con apartamento)
   if (c.type && comp.type && c.type !== comp.type) return false;
 
@@ -298,6 +313,15 @@ export function evaluate(
   // Requisitos mínimos para estimar precio/m²: precio, área y alguna localidad
   // (geo o ciudad). Sin esto no hay con qué comparar.
   if (!candidate.price || !candidate.area_m2 || candidate.area_m2 <= 0) return INSUFFICIENT;
+
+  // Datos que no pueden ser ciertos: no se emite veredicto. Una ficha sin
+  // porcentaje es honesta; una que dice «+416% sobre el mercado» porque el aviso
+  // publicó 90 m² donde hay 9.000 no lo es, y es la que destruye la confianza en
+  // todas las demás cifras del producto.
+  const implausible = motivoImplausible({
+    type: candidate.type, area_m2: candidate.area_m2, price: candidate.price,
+  });
+  if (implausible) return { ...INSUFFICIENT, evaluable: true, datos_implausibles: implausible };
   const hasGeo = candidate.lat != null && candidate.lng != null;
   if (!hasGeo && !candidate.city) return INSUFFICIENT;
 
