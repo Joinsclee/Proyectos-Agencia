@@ -160,3 +160,50 @@ test('asistente: adjuntar es del plan de pago', async () => {
   assert.equal(puedeAdjuntar('free'), false);
   assert.equal(puedeAdjuntar('anonimo'), false);
 });
+
+test('asistente: la ciudad se busca sin tildes', async () => {
+  // La base guarda «bogota»; el modelo escribe «Bogotá» aunque el prompt le pida lo
+  // contrario. Con comparación exacta la búsqueda devolvía cero y el asistente
+  // contestaba «no encontré propiedades en Bogotá» sobre una ciudad con 1.786. Una
+  // respuesta falsa es peor que un error visible.
+  const { normalizarCiudadParaPruebas } = await import('./asistente-busqueda.js');
+  for (const entrada of ['Bogotá', 'BOGOTÁ', ' bogota ', 'Bogota', 'Medellín', 'MEDELLIN']) {
+    const salida = normalizarCiudadParaPruebas(entrada);
+    assert.equal(salida, salida.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim());
+    assert.doesNotMatch(salida, /[áéíóúÁÉÍÓÚ]/, `«${entrada}» salió con tilde: «${salida}»`);
+  }
+  assert.equal(normalizarCiudadParaPruebas('Bogotá'), 'bogota');
+  assert.equal(normalizarCiudadParaPruebas('  MEDELLÍN '), 'medellin');
+});
+
+test('asistente: la búsqueda apuntada es de un solo uso', async () => {
+  // Es la garantía de que la pantalla no se mueve sola. La acción pertenece a la
+  // pregunta que la provocó: si se quedara guardada, la siguiente respuesta del
+  // asistente —«gracias», «¿y los impuestos?»— volvería a aplicar los filtros de
+  // la anterior y el listado cambiaría sin que nadie lo hubiera pedido.
+  const { registrarBusqueda, tomarBusqueda, olvidarBusqueda } = await import('./asistente-busqueda.js');
+  const uid = 'usuario-de-prueba-uso-unico';
+
+  registrarBusqueda(uid, { fuente: 'portal', ciudad: 'bogota', precioMax: 300_000_000 }, 84);
+  const primera = tomarBusqueda(uid);
+  assert.equal(primera?.parametros.ciudad, 'bogota');
+  assert.equal(primera?.total, 84);
+  assert.equal(tomarBusqueda(uid), undefined, 'la segunda lectura debe venir vacía');
+
+  registrarBusqueda(uid, { fuente: 'remate', ciudad: 'cali' }, 3);
+  olvidarBusqueda(uid);
+  assert.equal(tomarBusqueda(uid), undefined, 'olvidar debe descartar lo apuntado');
+});
+
+test('asistente: una búsqueda vieja no mueve la pantalla', async (t) => {
+  // Sin caducidad, un usuario que preguntó por Cali hace media hora y vuelve a
+  // escribir vería el listado saltar a Cali por una búsqueda que ya no recuerda
+  // haber pedido. El dato solo vale entre que el agente busca y el Radar contesta.
+  t.mock.timers.enable({ apis: ['Date'] });
+  const { registrarBusqueda, tomarBusqueda } = await import('./asistente-busqueda.js');
+  const uid = 'usuario-de-prueba-caducidad';
+
+  registrarBusqueda(uid, { fuente: 'portal', ciudad: 'cali' }, 12);
+  t.mock.timers.tick(3 * 60 * 1000);
+  assert.equal(tomarBusqueda(uid), undefined, 'a los 3 minutos ya no debe aplicarse');
+});

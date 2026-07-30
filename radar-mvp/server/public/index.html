@@ -109,6 +109,79 @@
     </div>
   </nav>
 
+  <!--
+    EL BUSCADOR. Va DEBAJO de la barra de navegación y encima de los listados:
+    barra de cuenta → navegación → buscador → listados. El cliente lo pidió en ese
+    orden y tiene sentido leído de arriba abajo: primero dónde estoy, después qué
+    busco, después lo que hay.
+
+    Solo vive en la pestaña Inicio; lo apaga `aplicarVistaDePestana` en app.js.
+    En Portal, Bancos o Remates la persona ya está dentro de una fuente y tiene el
+    panel de filtros delante: repetir arriba tres de esos filtros no añade nada.
+
+    Pedido en la reunión: el cliente quiere entrar como se entra a un portal
+    inmobiliario —una caja destacada arriba— en vez de bajar hasta la columna de
+    filtros para empezar. Los listados no se mueven: siguen debajo.
+
+    Ofrece SOLO lo que el servidor sabe filtrar de verdad: dónde buscar, ciudad,
+    tipo de inmueble y un tope de precio. Un campo bonito que el backend ignora
+    devuelve resultados que contradicen lo que la persona acaba de pedir, y eso
+    se lee como que el buscador está roto.
+
+    No es una segunda búsqueda: escribe en el MISMO panel de filtros de abajo y
+    pide el mismo listado por la misma ruta, así que el muro de pago sigue siendo
+    el de siempre. Por eso lo elegido aquí aparece allí, y lo que se toque allí
+    vuelve aquí: una sola verdad de qué está filtrado.
+  -->
+  <section class="buscador" id="buscador" aria-labelledby="buscador-titulo">
+    <form class="buscador-caja" id="buscador-form" role="search">
+      <!-- Título y modalidades comparten renglón. Cada fila que se ahorra aquí es
+           una fila que ganan las tarjetas: el producto son los inmuebles, y el
+           buscador tiene que caber en la misma pantalla que ellos. -->
+      <div class="buscador-sup">
+        <h2 class="buscador-titulo" id="buscador-titulo">Encuentra tu próxima oportunidad</h2>
+        <!-- Radios de verdad, no botones con `aria-selected`: el grupo se recorre
+             con las flechas y el lector de pantalla anuncia «1 de 3» sin que
+             tengamos que reimplementar nada de eso. -->
+        <fieldset class="buscador-modos">
+          <legend class="sr-only">¿Dónde quieres buscar?</legend>
+          <label class="buscador-modo">
+            <input type="radio" name="buscador-fuente" value="portal" checked>
+            <span><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg> Portal abierto</span>
+          </label>
+          <label class="buscador-modo">
+            <input type="radio" name="buscador-fuente" value="bancos">
+            <span><svg class="ic" aria-hidden="true"><use href="#i-bank"/></svg> Bancos</span>
+          </label>
+          <label class="buscador-modo">
+            <input type="radio" name="buscador-fuente" value="remates">
+            <span><svg class="ic" aria-hidden="true"><use href="#i-scale"/></svg> Remates</span>
+          </label>
+        </fieldset>
+      </div>
+      <!-- Reusan la clase `.f` del panel de filtros a propósito: mismo alto, misma
+           flecha del desplegable y mismo anillo de foco. Son el mismo control. -->
+      <div class="buscador-campos">
+        <div class="f b-campo b-campo-ancho">
+          <label for="b-city">Ciudad</label>
+          <select id="b-city"><option value="">Todas las ciudades</option></select>
+        </div>
+        <div class="f b-campo">
+          <label for="b-type">Tipo de inmueble</label>
+          <select id="b-type"><option value="">Todos los tipos</option></select>
+        </div>
+        <div class="f b-campo">
+          <label for="b-price" id="b-price-label">Precio máximo (millones)</label>
+          <input type="number" id="b-price" min="0" step="10" inputmode="numeric" placeholder="Ej. 300">
+        </div>
+        <button class="buscador-cta" type="submit">
+          <svg class="ic" aria-hidden="true"><use href="#i-magnifier"/></svg> Buscar
+        </button>
+      </div>
+      <p class="buscador-nota">Mostramos 20 por búsqueda. Si hay más, el contador te lo dice y la vía es afinar, no pasar páginas.</p>
+    </form>
+  </section>
+
   <div class="legend" id="legend"></div>
 
   <section class="radar-setup" id="radar-setup" aria-label="Personaliza tu Radar" aria-live="polite"></section>
