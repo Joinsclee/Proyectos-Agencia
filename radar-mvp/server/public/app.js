@@ -3504,7 +3504,7 @@ async function loadStats() {
       document.querySelector(`.tab-btn[data-tab="${boton.dataset.ir}"]`)?.click();
     });
   });
-  renderVStats();
+  renderLeyenda();
 }
 /**
  * La casilla "Actualizado" del resumen.
@@ -3562,37 +3562,21 @@ function leyendaCrece() {
   </details>`;
 }
 
-function renderVStats() {
+/**
+ * La leyenda de las estrellas, según la sección.
+ *
+ * Antes esta función pintaba además una franja de cifras por sección
+ * —«oportunidades altas», «ciudades cubiertas»—, que se retiró: repetía datos que el
+ * hero ya da y, al bajar la navegación, compartía barra con las pestañas y competía
+ * con ellas por la atención en el mismo renglón.
+ *
+ * La leyenda solo aparece en el portal abierto: es donde las estrellas se ven y donde
+ * hace falta explicarlas. En bancos y remates el criterio es otro —dación en pago,
+ * base legal del 70 %— y una leyenda de estrellas ahí sobra.
+ */
+function renderLeyenda() {
   if (!STATS) return;
-  const v = $('vstats');
-  if (state.tab === 'home') {
-    // Solo lo que NO está ya en el resumen de arriba. Antes esta franja repetía
-    // bancos y remates, así que la misma cifra aparecía dos veces en la primera
-    // pantalla —y con «listados portal» eran cifras en tres filas distintas—.
-    // Lo único que aporta aquí es el subconjunto de mayor señal, que es además el
-    // dato que el cliente señaló como el más potente de todos.
-    v.innerHTML = `
-      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades de mayor señal</div></div>`;
-    $('legend').innerHTML = '';
-    return;
-  }
-  if (state.tab === 'portal') {
-    const cities = STATS.perCity.length;
-    // El hero ya muestra listados y oportunidades: repetirlos aquí solo resta confianza.
-    v.innerHTML = `
-      <div class="vstat"><div class="num">${STATS.portal_high.toLocaleString('es-CO')}</div><div class="lbl">Oportunidades altas</div></div>
-      <div class="vstat"><div class="num">${cities}</div><div class="lbl">Ciudades cubiertas</div></div>`;
-    $('legend').innerHTML = leyendaCrece();
-  } else if (state.tab === 'guardados') {
-    v.innerHTML = `<div class="vstat"><div class="num">${favSet.size}</div><div class="lbl">Inmuebles guardados</div></div>`;
-    $('legend').innerHTML = '';
-  } else if (state.tab === 'bancos') {
-    v.innerHTML = `<div class="vstat"><div class="num">${STATS.bancos.toLocaleString('es-CO')}</div><div class="lbl">Inmuebles bancarios</div></div>`;
-    $('legend').innerHTML = '';
-  } else {
-    v.innerHTML = `<div class="vstat"><div class="num">${STATS.remates.toLocaleString('es-CO')}</div><div class="lbl">Remates activos</div></div>`;
-    $('legend').innerHTML = '';
-  }
+  $('legend').innerHTML = state.tab === 'portal' ? leyendaCrece() : '';
 }
 
 document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListener('click', async () => {
@@ -3614,7 +3598,7 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   $('filters').innerHTML = '';
   setResultText(`Preparando ${state.tab === 'portal' ? 'el portal' : state.tab === 'home' ? 'la portada' : state.tab}…`);
   setFiltersOpen(false);
-  renderVStats();
+  renderLeyenda();
   try {
     await buildFilters();
     if (state.tab === 'portal') await applyRadarPreferences(radarPreferences);
