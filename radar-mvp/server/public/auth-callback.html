@@ -19,6 +19,20 @@
     p { opacity: 0.8; font-size: 1rem; margin: 0; }
     a { color: var(--gold); font-weight: 700; text-decoration: none; }
     .err { display: none; }
+    /* El formulario de contraseña nueva vive sobre el mismo fondo oscuro de esta
+       pantalla, así que sus colores son los del panel del vídeo, no los del
+       formulario de acceso. */
+    #form-nueva { margin-top: 24px; text-align: left; }
+    #form-nueva[hidden] { display: none; }
+    .campo { margin-bottom: 16px; }
+    .campo label { display: block; font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.72); margin-bottom: 7px; }
+    .campo input { width: 100%; box-sizing: border-box; padding: 13px 14px; border: 1px solid rgba(255,255,255,0.24); border-radius: 10px; background: rgba(255,255,255,0.06); color: #fff; font-family: inherit; font-size: 1rem; }
+    .campo input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(242,202,4,0.22); }
+    .submit { width: 100%; min-height: 48px; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--gold), #d4b000); color: #2a1438; font-family: inherit; font-weight: 800; font-size: 1.02rem; cursor: pointer; }
+    .submit:disabled { opacity: 0.6; cursor: default; }
+    .aviso { margin: 14px 0 0; font-size: 0.9rem; line-height: 1.5; min-height: 1.2em; }
+    .aviso.err { color: #ffb4b4; }
+    .aviso.ok { color: #9ff0c4; }
   </style>
 </head>
 <body>
@@ -29,6 +43,19 @@
     <div class="err" id="err">
       <p style="margin-top:14px">No pudimos completar el ingreso.<br /><a href="/login">Volver a intentar</a></p>
     </div>
+
+    <!-- La vuelta de un enlace de recuperación acaba aquí igual que un acceso con
+         Google, pero NO puede entrar directamente: quien llega tiene que elegir su
+         contraseña nueva antes de nada. Lo enseña `auth-callback.js` cuando el
+         enlace viene marcado como recuperación. -->
+    <form id="form-nueva" hidden>
+      <div class="campo">
+        <label for="nueva">Contraseña nueva</label>
+        <input id="nueva" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" required />
+      </div>
+      <button class="submit" id="guardar-nueva" type="submit">Guardar y entrar</button>
+      <p class="aviso" id="aviso-nueva" role="status" aria-live="polite"></p>
+    </form>
   </div>
   <script src="/auth-callback.js"></script>
 </body>

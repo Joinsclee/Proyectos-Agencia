@@ -23,6 +23,7 @@ import {
 import { parametrosGastos, warmParametrosGastos } from './parametros-gastos.js';
 import { fichasDe } from './destacados.js';
 import { registerUser, loginUser, refreshSession } from './auth.js';
+import { solicitarRecuperacion, restablecerPassword } from './recuperar-password.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
 import { consumirCupo, estadoCupo, leerCupo, yaDesbloqueada } from './cupo.js';
@@ -458,6 +459,28 @@ const server = createServer(async (req, res) => {
         const body = await readJsonBody(req);
         const result = path.endsWith('register') ? await registerUser(body) : await loginUser(body);
         return sendJSON(res, result.ok ? 200 : 400, result);
+      }
+      // Pedir el enlace para recuperar la contraseña. Límite estrecho y por
+      // dirección IP: cada petición legítima manda un correo a otra persona, así
+      // que sin tope este formulario sería una herramienta para inundar buzones
+      // ajenos a nuestra costa y con nuestro remitente. Cinco por hora cubre de
+      // sobra a quien se equivoca de correo un par de veces.
+      if (path === '/api/auth/recover') {
+        if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (rateLimited(res, `recover:${clientAddress(req)}`, { limit: 5, windowMs: 60 * 60 * 1000 })) return;
+        const r = await solicitarRecuperacion(await readJsonBody(req));
+        // 200 siempre que la petición esté bien formada, incluso si el correo no
+        // tiene cuenta: el código de estado no puede delatar lo que el mensaje
+        // calla.
+        return sendJSON(res, r.ok ? 200 : 400, r);
+      }
+      // Poner la contraseña nueva con el token del correo. El límite protege de
+      // probar tokens a lo bruto; el token en sí ya caduca y es de un solo uso.
+      if (path === '/api/auth/password') {
+        if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
+        if (rateLimited(res, `password:${clientAddress(req)}`, { limit: 10, windowMs: 60 * 60 * 1000 })) return;
+        const r = await restablecerPassword(await readJsonBody(req));
+        return sendJSON(res, r.ok ? 200 : 400, r);
       }
       // Renovar la sesión. Su propio límite, más holgado que el del inicio de
       // sesión: renovar es una operación legítima y frecuente —una vez por hora

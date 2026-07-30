@@ -111,7 +111,38 @@ function setMode(nextMode) {
   password.setAttribute('placeholder', register ? 'Mínimo 8 caracteres' : 'Tu contraseña');
   if (register) password.setAttribute('minlength', '8');
   else password.removeAttribute('minlength');
+  // Solo se ofrece recuperar al iniciar sesión: al crear la cuenta todavía no hay
+  // contraseña que olvidar.
+  $('olvide-fila').hidden = register;
+  mostrarRecuperacion(false);
   hideMsg();
+}
+
+/**
+ * Intercambia el formulario de acceso por el de recuperación, en el mismo sitio.
+ *
+ * No es una página aparte a propósito: quien acaba de fallar la contraseña está
+ * a mitad de una tarea, y mandarlo a otra pantalla le hace perder de vista dónde
+ * estaba y qué venía a hacer. Las pestañas de arriba también se ocultan mientras
+ * tanto, porque ahí no está eligiendo entre entrar y registrarse.
+ */
+function mostrarRecuperacion(visible) {
+  $('form').hidden = visible;
+  $('form-olvide').hidden = !visible;
+  const tabs = document.querySelector('.tabs');
+  if (tabs) tabs.style.display = visible ? 'none' : '';
+  // El aviso de registro no aplica aquí: nadie está creando una cuenta.
+  const legal = $('legal');
+  if (legal) legal.hidden = visible;
+  if (visible) {
+    $('title').textContent = 'Recupera tu acceso';
+    $('subtitle').textContent = 'Te mandamos un enlace para elegir una contraseña nueva.';
+    // Se arrastra lo que ya escribió en el formulario de acceso: volver a teclear
+    // el mismo correo es trabajo que ya hizo.
+    const escrito = $('email').value.trim();
+    if (escrito) $('olvide-email').value = escrito;
+    $('olvide-email').focus();
+  }
 }
 
 /**
@@ -137,6 +168,36 @@ function hideMsg() {
   $('msg').className = 'msg';
   $('msg').textContent = '';
 }
+
+$('olvide').addEventListener('click', () => { hideMsg(); mostrarRecuperacion(true); });
+$('olvide-volver').addEventListener('click', () => { mostrarRecuperacion(false); setMode('login'); });
+
+$('form-olvide').addEventListener('submit', async (evento) => {
+  evento.preventDefault();
+  const boton = $('olvide-enviar');
+  const aviso = $('olvide-msg');
+  boton.disabled = true;
+  boton.textContent = 'Enviando…';
+  try {
+    const res = await fetch('/api/auth/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: $('olvide-email').value.trim() }),
+    });
+    const data = await res.json();
+    aviso.textContent = data.ok ? data.mensaje : (data.error || 'No se pudo enviar. Inténtalo de nuevo.');
+    aviso.className = 'msg ' + (data.ok ? 'ok' : 'err');
+    // El botón NO vuelve a habilitarse tras un envío correcto: reenviar en bucle
+    // no acelera nada y el correo puede tardar un par de minutos en llegar.
+    if (!data.ok) { boton.disabled = false; boton.textContent = 'Enviarme el enlace'; }
+    else boton.textContent = 'Enlace enviado';
+  } catch {
+    aviso.textContent = 'Se cortó la conexión. Inténtalo de nuevo.';
+    aviso.className = 'msg err';
+    boton.disabled = false;
+    boton.textContent = 'Enviarme el enlace';
+  }
+});
 
 $('tab-register').addEventListener('click', () => setMode('register'));
 $('tab-login').addEventListener('click', () => setMode('login'));

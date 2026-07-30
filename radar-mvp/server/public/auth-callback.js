@@ -103,7 +103,70 @@ function fail(mensajeCrudo) {
   if (mensajeCrudo) console.error('auth/callback:', limpiar(mensajeCrudo));
 }
 
-if (token) {
+/**
+ * Pide la contraseña nueva antes de dejar entrar.
+ *
+ * Un enlace de recuperación trae un token de sesión válido, así que la tentación
+ * es entrar directamente. No se hace: quien llega aquí es porque no puede entrar,
+ * y meterlo en el Radar sin cambiar nada lo dejaría igual de fuera la próxima vez.
+ * Peor aún, el enlace del correo se quedaría siendo la única llave de la cuenta.
+ *
+ * El token NO se guarda como sesión hasta que la contraseña esté cambiada.
+ */
+function pedirContrasenaNueva(tokenRecuperacion) {
+  document.getElementById('spinner').style.display = 'none';
+  document.getElementById('title').textContent = 'Elige tu contraseña nueva';
+  document.getElementById('msg').textContent = 'Con esta contraseña entrarás a partir de ahora.';
+  const form = document.getElementById('form-nueva');
+  const aviso = document.getElementById('aviso-nueva');
+  const boton = document.getElementById('guardar-nueva');
+  form.hidden = false;
+  document.getElementById('nueva').focus();
+
+  form.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    boton.disabled = true;
+    boton.textContent = 'Guardando…';
+    aviso.textContent = '';
+    aviso.className = 'aviso';
+    try {
+      const res = await fetch('/api/auth/password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: tokenRecuperacion, password: document.getElementById('nueva').value }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        aviso.textContent = data.error || 'No se pudo cambiar la contraseña.';
+        aviso.className = 'aviso err';
+        boton.disabled = false;
+        boton.textContent = 'Guardar y entrar';
+        return;
+      }
+      // Cambiada: ahora sí se guarda la sesión y entra, sin obligarle a escribir
+      // otra vez la contraseña que acaba de elegir.
+      aviso.textContent = 'Listo. Entrando…';
+      aviso.className = 'aviso ok';
+      localStorage.setItem('radar_token', tokenRecuperacion);
+      const refresh = params.get('refresh_token');
+      if (refresh) localStorage.setItem('radar_refresh', refresh);
+      history.replaceState(null, '', '/auth/callback');
+      location.replace('/');
+    } catch {
+      aviso.textContent = 'Se cortó la conexión. Inténtalo de nuevo.';
+      aviso.className = 'aviso err';
+      boton.disabled = false;
+      boton.textContent = 'Guardar y entrar';
+    }
+  });
+}
+
+// `type=recovery` lo pone Supabase en el enlace del correo. Se comprueba ANTES
+// que el camino normal: los dos traen token, y la diferencia es justo que este no
+// debe entrar todavía.
+if (token && params.get('type') === 'recovery') {
+  pedirContrasenaNueva(token);
+} else if (token) {
   localStorage.setItem('radar_token', token);
   const refresh = params.get('refresh_token');
   if (refresh) localStorage.setItem('radar_refresh', refresh);
