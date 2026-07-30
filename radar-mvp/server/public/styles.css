@@ -175,6 +175,85 @@ h1 .gold { color: var(--gold); }
   .ob-cta { flex: 1; justify-content: center; }
   .ob-puntitos { justify-content: center; }
 }
+
+/* ───── BUSCADOR PRINCIPAL ─────
+   Una tarjeta clara entre la navegación y los listados. Ni pegada a la barra ni
+   pegada a las tarjetas: son tres cosas distintas y se tienen que leer como tres.
+
+   El aire sale de la escala que ya usa la hoja —no hay variables de espaciado,
+   la escala son los márgenes repetidos de los bloques de ancho completo—: 22px
+   arriba, los mismos 22px que `.home` ya pone de `padding-top` abajo, y el mismo
+   `max-width: 1280px` con `padding: 0 24px` de `.legend`, `.radar-setup` y
+   `.controls`, para que todos los bloques compartan el borde izquierdo.
+
+   MEDIDA CONTENIDA, a petición del cliente: el producto son las tarjetas, y un
+   buscador alto las empuja fuera de la primera pantalla. De ahí que el título
+   comparta renglón con las modalidades, que no haya subtítulo y que los controles
+   usen la MISMA altura de fila que los filtros de abajo (44px) en vez de una
+   escala propia más grande. */
+.buscador { max-width: 1280px; margin: 22px auto 0; padding: 0 24px; }
+.buscador-caja {
+  background: #fff; border: 1px solid rgba(97,49,116,0.12); border-radius: 14px;
+  padding: 14px 16px 12px; box-shadow: 0 16px 34px -24px rgba(43,20,56,0.6);
+  border-top: 2px solid var(--gold);
+}
+.buscador-sup { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin-bottom: 10px; }
+.buscador-titulo {
+  margin: 0; color: #2d1837; font-family: 'Tilt Warp', cursive;
+  font-size: 1.05rem; font-weight: 400; line-height: 1.2;
+}
+
+.buscador-modos { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; border: 0; }
+.buscador-modo { position: relative; display: inline-flex; }
+/* El radio sigue ahí y sigue recibiendo el foco; lo que se ve es la píldora.
+   `opacity: 0` en vez de `display: none` para que el teclado pueda alcanzarlo. */
+.buscador-modo input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.buscador-modo span {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px;
+  border-radius: 99px; background: #f4eef8; color: var(--pp-dark);
+  font-size: 0.78rem; font-weight: 800; white-space: nowrap;
+  transition: background .14s ease, color .14s ease;
+}
+.buscador-modo .ic { width: 15px; height: 15px; }
+.buscador-modo:hover span { background: #ece0f3; }
+.buscador-modo:has(input:checked) span { background: var(--pp); color: #fff; }
+.buscador-modo:has(input:focus-visible) span { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* Ciudad manda —es lo primero que se pregunta en un portal— y por eso se lleva
+   la fracción ancha. El botón se dimensiona por su contenido y nunca se encoge. */
+.buscador-campos { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+.b-campo { min-width: 0; gap: 3px; }
+.b-campo select, .b-campo input { width: 100%; min-width: 0; height: 44px; }
+.buscador-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 44px; padding: 0 22px; border: 0; border-radius: 9px;
+  background: var(--pp); color: #fff; font-family: inherit; font-size: 0.88rem; font-weight: 800;
+  cursor: pointer; transition: background .14s ease, transform .12s ease;
+}
+.buscador-cta:hover { background: var(--pp-dark); transform: translateY(-1px); }
+.buscador-cta .ic { width: 17px; height: 17px; }
+@media (prefers-reduced-motion: reduce) { .buscador-cta:hover { transform: none; } }
+
+.buscador-nota { margin: 9px 0 0; font-size: 0.74rem; line-height: 1.3; color: #8a7a95; }
+
+@media (max-width: 900px) {
+  .buscador-campos { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* La ciudad y el botón ocupan la fila entera: el botón de una acción principal
+     no se pone a competir por el ancho con un campo de precio. */
+  .b-campo-ancho, .buscador-cta { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  .buscador { margin-top: 16px; padding: 0 14px; }
+  .buscador-caja { padding: 13px 14px 12px; }
+  .buscador-titulo { font-size: 1rem; }
+  .buscador-nota { font-size: 0.7rem; }
+  /* Una sola columna, dicho explícitamente. Dos campos de 153px obligan a partir
+     «Precio máximo (millones)» en dos líneas y dejan los controles desalineados.
+     Además el panel de filtros declara `.f:nth-child(2) { grid-column: 1/-1 }`
+     sin acotarlo a su contenedor, y esa regla alcanza a estos campos porque
+     reusan la clase `.f`: sin esta línea, «Tipo» salía a lo ancho y «Precio» a la
+     mitad, que es un reparto que nadie eligió. */
+  .buscador-campos { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ───── TABS ───── */
@@ -1460,6 +1539,23 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 }
 .asis-chip:hover { background: #f3edf8; border-color: var(--pp); }
 
+/* La búsqueda que el asistente acaba de dejar puesta. No es un mensaje suyo: es
+   algo que ya pasó en la pantalla de detrás, y por eso se ve distinto de una
+   burbuja de chat —ocupa el ancho y lleva el paso siguiente dentro—. */
+.asis-accion {
+  align-self: stretch; background: #f3edf8; border: 1px solid #ddd2e8; border-radius: 12px;
+  padding: 12px 13px; font-size: 0.83rem; line-height: 1.5; color: var(--pp-dark);
+}
+.asis-accion p { margin: 0 0 10px; }
+.asis-accion strong { font-weight: 800; }
+/* 44px: el mismo objetivo táctil mínimo que el resto de la interfaz. */
+.asis-ver {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
+  padding: 0 18px; border: 0; border-radius: 999px; background: var(--pp); color: #fff;
+  font-size: 0.82rem; font-weight: 700; cursor: pointer;
+}
+.asis-ver:hover { filter: brightness(1.08); }
+
 .asis-agotado {
   align-self: stretch; background: #fff8e1; border: 1px solid #f0d98a; border-radius: 12px;
   padding: 12px 13px; font-size: 0.83rem; line-height: 1.5;
@@ -1653,6 +1749,19 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 .pie-legal p { margin: 0 0 9px; max-width: 68ch; }
 .pie-legal p:last-child { margin-bottom: 0; }
 .pie-legal strong { color: #5d5568; font-weight: 700; }
+/* En pantalla ancha, los tres párrafos van en tres columnas.
+   No es decoración: la medida de línea buena para leer son esos 68ch (~420px), y
+   dentro de un pie de 1280px eso deja dos tercios de la pantalla vacíos y el
+   bloque encajonado a la izquierda, que se lee como un fallo de maquetación.
+   Ensanchar el párrafo hasta llenar el ancho sería peor —renglones de 200
+   caracteres—, así que se reparte: se aprovecha el ancho SIN tocar la medida.
+   A partir de 981px, que es el mismo corte donde el buscador y los resultados
+   pasan a dos columnas; por debajo, tres columnas dejarían renglones de 30
+   caracteres, que es el problema contrario. */
+@media (min-width: 981px) {
+  .pie-legal { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 22px; }
+  .pie-legal p { margin: 0; }
+}
 @media (max-width: 760px) {
   .pie-legal { padding: 20px 16px calc(150px + env(safe-area-inset-bottom)); }
 }
