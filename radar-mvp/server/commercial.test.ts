@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   AccountSyncSchema,
   RadarAlertInputSchema,
+  RadarPreferencesSchema,
   commercialPlanFromMetadata,
   entitledPlanFromMetadata,
   isAlertDue,
@@ -81,7 +82,7 @@ test('detecta alertas semanales vencidas sin enviar duplicados', () => {
     id: 'a1',
     city: 'bogota',
     budget: '500',
-    type: 'apartment' as const,
+    type: ['apartment'] as ('apartment')[],
     frequency: 'weekly' as const,
     active: true,
     createdAt: '2026-07-01T00:00:00.000Z',
@@ -106,7 +107,11 @@ test('recupera alertas persistidas con sus campos operativos', () => {
     lastDeliveryStatus: 'no_matches',
     lastMatchCount: 0,
   };
-  assert.deepEqual(readAlerts({ radar_alerts: [stored] }), [stored]);
+  // El tipo guardado como TEXTO se recupera como lista de un elemento. Es la
+  // compatibilidad que hace que las alertas ya creadas sigan funcionando después de
+  // permitir varios tipos: sin ella, todas fallarían la validación a la vez y esas
+  // cuentas perderían sus alertas sin haber tocado nada.
+  assert.deepEqual(readAlerts({ radar_alerts: [stored] }), [{ ...stored, type: ['apartment'] }]);
 });
 
 test('un reintento pendiente prevalece sobre la cadencia semanal', () => {
@@ -185,4 +190,29 @@ test('valida y limita la auditoría de suscripciones', () => {
     providerTransactionId: 'wompi-transaction-1',
   };
   assert.deepEqual(readSubscriptionAudit({ subscription_audit: [wompiEvent] }), [wompiEvent]);
+});
+
+test('preferencias: varios tipos, y lo guardado como texto sigue valiendo', () => {
+  // El cliente lo pidió así: «una persona puede decir, me interesan apartamentos y
+  // casas». Y el motivo por el que «Cualquier tipo» no lo resolvía: «cualquier tipo
+  // no dice nada y eso mandará de todos».
+  const base = { city: 'bogota', budget: '500', complete: true as const };
+
+  const varios = RadarPreferencesSchema.parse({ ...base, type: ['apartment', 'house'] });
+  assert.deepEqual(varios.type, ['apartment', 'house']);
+
+  // COMPATIBILIDAD: las preferencias que ya existen guardan una cadena. Si el
+  // esquema exigiera lista, todas fallarían a la vez y esas cuentas perderían su
+  // Radar configurado sin haber hecho nada.
+  const antigua = RadarPreferencesSchema.parse({ ...base, type: 'apartment' });
+  assert.deepEqual(antigua.type, ['apartment']);
+
+  // «Cualquier tipo» es la lista vacía, como antes era la cadena vacía.
+  assert.deepEqual(RadarPreferencesSchema.parse({ ...base, type: '' }).type, []);
+  assert.deepEqual(RadarPreferencesSchema.parse({ ...base, type: [] }).type, []);
+
+  // Mezclar «cualquiera» con un tipo concreto no significa nada: gana lo concreto.
+  assert.deepEqual(RadarPreferencesSchema.parse({ ...base, type: ['', 'house'] }).type, ['house']);
+  // Y sin repetidos.
+  assert.deepEqual(RadarPreferencesSchema.parse({ ...base, type: ['house', 'house'] }).type, ['house']);
 });

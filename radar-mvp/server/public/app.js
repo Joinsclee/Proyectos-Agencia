@@ -1125,9 +1125,33 @@ const radarSetupState = {
   draft: {
     city: radarPreferences.complete ? radarPreferences.city : 'bogota',
     budget: radarPreferences.complete ? radarPreferences.budget : '500',
-    type: radarPreferences.complete ? radarPreferences.type : 'apartment',
+    // LISTA de tipos, no uno solo: «una persona puede decir, me interesan
+    // apartamentos y casas». `tiposDePreferencia` tolera lo guardado antes, que era
+    // una cadena.
+    type: radarPreferences.complete ? tiposDePreferencia(radarPreferences.type) : ['apartment'],
   },
 };
+
+/** Los tipos elegidos, venga como lista o como el valor único que se guardaba antes. */
+function tiposDePreferencia(valor) {
+  if (Array.isArray(valor)) return valor.filter((t) => t);
+  return valor ? [valor] : [];
+}
+
+/**
+ * Cómo se lee una selección de varios tipos.
+ *
+ * Con dos o tres se enumeran; con más, se cuentan. Escribir seis nombres separados
+ * por comas en el resumen de una tarjeta ocupa dos líneas y no se lee.
+ */
+function etiquetaDeTipos(valor) {
+  const tipos = tiposDePreferencia(valor);
+  if (!tipos.length) return 'Cualquier tipo';
+  const nombres = tipos.map((t) => RADAR_TYPES.find(([k]) => k === t)?.[1] || t);
+  if (nombres.length === 1) return nombres[0];
+  if (nombres.length <= 3) return `${nombres.slice(0, -1).join(', ')} y ${nombres.at(-1)}`;
+  return `${nombres.length} tipos de inmueble`;
+}
 const RADAR_BUDGETS = [
   // El tramo de 200 lo pidió el cliente pensando en quien busca lo más barato:
   // «un parqueadero o algo así no necesita un parqueadero de 300 millones».
@@ -1235,7 +1259,12 @@ function renderRadarSetup() {
         <h2>¿Qué quieres encontrar primero?</h2>
         <p>Esta preferencia ordena tu primera búsqueda, sin ocultarte las demás opciones.</p>
         <div class="setup-choices" role="group" aria-label="Tipo de inmueble">
-          ${RADAR_TYPES.map(([value, label]) => `<button class="setup-choice ${value === radarSetupState.draft.type ? 'is-selected' : ''}" type="button" data-setup-field="type" data-setup-value="${esc(value)}" aria-pressed="${value === radarSetupState.draft.type}">${esc(label)}</button>`).join('')}
+          ${RADAR_TYPES.map(([value, label]) => {
+            const elegidos = tiposDePreferencia(radarSetupState.draft.type);
+            // «Cualquier tipo» es la lista vacía: se marca cuando no hay ninguno.
+            const marcado = value === '' ? elegidos.length === 0 : elegidos.includes(value);
+            return `<button class="setup-choice ${marcado ? 'is-selected' : ''}" type="button" data-setup-multi="type" data-setup-value="${esc(value)}" aria-pressed="${marcado}">${esc(label)}</button>`;
+          }).join('')}
         </div>
       </div>`;
     }
@@ -1261,11 +1290,11 @@ function renderRadarSetup() {
     root.innerHTML = `<div class="radar-setup-card is-complete">
       <div class="setup-copy">
         <span class="setup-kicker">${ic('check')} Tu Radar está personalizado · 100%</span>
-        <h2>${esc(radarTypeLabel(radarPreferences.type))} en ${esc(cap(radarPreferences.city))}</h2>
+        <h2>${esc(etiquetaDeTipos(radarPreferences.type))} en ${esc(cap(radarPreferences.city))}</h2>
         <div class="setup-profile">
           <span class="setup-chip">${esc(cap(radarPreferences.city))}</span>
           <span class="setup-chip">${esc(radarBudgetLabel(radarPreferences.budget))}</span>
-          <span class="setup-chip">${esc(radarTypeLabel(radarPreferences.type))}</span>
+          <span class="setup-chip">${esc(etiquetaDeTipos(radarPreferences.type))}</span>
           ${savedChip}
           ${simulationChip}
           ${alertChip}
@@ -1380,7 +1409,14 @@ async function applyRadarPreferences(preferences, reload = false) {
     city.value = preferences.city;
     await repopZones(preferences.city);
   }
-  if (type && [...type.options].some((option) => option.value === preferences.type)) type.value = preferences.type;
+  // El filtro de la pantalla acepta UN tipo, y las preferencias ahora pueden traer
+  // varios. Se aplica solo si eligió uno: con dos o tres, forzar el primero
+  // acotaría la búsqueda a algo que el usuario no pidió y sin decírselo. Los demás
+  // sí llegan a las alertas por correo, que es donde se filtra por lista.
+  const tiposPref = tiposDePreferencia(preferences.type);
+  if (type && tiposPref.length === 1 && [...type.options].some((o) => o.value === tiposPref[0])) {
+    type.value = tiposPref[0];
+  }
   if (budget) budget.value = preferences.budget || '';
   updateFilterCount();
   if (reload) {
@@ -1396,6 +1432,25 @@ $('radar-setup').addEventListener('change', (event) => {
 });
 $('radar-setup').addEventListener('click', async (event) => {
   if (!(event.target instanceof Element)) return;
+  // Selección MÚLTIPLE: alterna en vez de reemplazar. «Cualquier tipo» vacía la
+  // lista, y elegir un tipo concreto quita «cualquiera»: tenerlos a la vez no
+  // significa nada, y era lo que el cliente señaló —«cualquier tipo no dice nada y
+  // eso mandará de todos»—.
+  const multi = event.target.closest('[data-setup-multi]');
+  if (multi) {
+    const campo = multi.dataset.setupMulti;
+    const valor = multi.dataset.setupValue;
+    const actuales = tiposDePreferencia(radarSetupState.draft[campo]);
+    if (valor === '') {
+      radarSetupState.draft[campo] = [];
+    } else {
+      radarSetupState.draft[campo] = actuales.includes(valor)
+        ? actuales.filter((t) => t !== valor)
+        : [...actuales, valor];
+    }
+    renderRadarSetup();
+    return;
+  }
   const choice = event.target.closest('[data-setup-field]');
   if (choice) {
     radarSetupState.draft[choice.dataset.setupField] = choice.dataset.setupValue;
@@ -1406,7 +1461,7 @@ $('radar-setup').addEventListener('click', async (event) => {
     radarSetupState.draft = {
       city: radarPreferences.complete ? radarPreferences.city : 'bogota',
       budget: radarPreferences.complete ? radarPreferences.budget : '500',
-      type: radarPreferences.complete ? radarPreferences.type : 'apartment',
+      type: radarPreferences.complete ? tiposDePreferencia(radarPreferences.type) : ['apartment'],
     };
     radarSetupState.step = 1;
     radarSetupState.open = true;
@@ -2667,7 +2722,11 @@ function gastosSection(valor, mode, context) {
         </div>
         <div class="rent-inputs">
           <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0"></label>
+          ${/* Con 0 escrito, no solo como sugerencia: la mayoría de los inmuebles no
+                tiene administración y dejar el campo vacío hacía que la rentabilidad
+                se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
+                «para que la fórmula no le vaya a generar un error». */ ''}
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="0"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
@@ -3025,15 +3084,21 @@ function applyRentalMarket(market) {
   const rentInput = calc.querySelector('[data-rent]');
 
   if (!market?.available || !market.median_monthly_rent) {
-    const n = Number(market?.n) || 0;
+    // Sin aviso. Antes se explicaba que no había suficientes arriendos comparables,
+    // y el cliente lo pidió quitar: «no se preocupe, que el usuario lo ponga, porque
+    // se supone que si yo estoy buscando en Buga, en el barrio tal, yo más o menos sé
+    // cuánto vale un arriendo ahí». Un cartel disculpándose por un dato que el
+    // usuario puede poner él mismo solo llama la atención sobre lo que falta.
+    //
+    // El campo sigue ahí y editable, que es lo que resuelve el caso.
     status.classList.add('is-empty');
-    status.innerHTML = market?.reason === 'source_unavailable'
-      ? 'El mercado de arriendos se está preparando. Puedes ingresar tu propio canon para simular.'
-      : `Aún no hay suficientes arriendos similares en esta zona (${n} encontrado${n === 1 ? '' : 's'}). Puedes ingresar tu propio canon.`;
+    status.innerHTML = '';
+    status.hidden = true;
     if (origin) origin.textContent = 'Valor de arrendamiento ajustable por el usuario';
     return;
   }
 
+  status.hidden = false;
   const median = Number(market.median_monthly_rent);
   const low = Number(market.p25_monthly_rent) || median;
   const high = Number(market.p75_monthly_rent) || median;
