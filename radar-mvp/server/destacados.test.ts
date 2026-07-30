@@ -124,7 +124,8 @@ test('remates: sin avalúo o sin postura no hay métrica que enseñar', () => {
 test('sello: el motivo dice contra qué se comparó, no "destacado"', () => {
   const { _destacado } = sellarInmueble(inmueble({ discount_pct: 37.4 }));
   assert.equal(_destacado.fuente, 'portal');
-  assert.equal(_destacado.motivo, '37% por debajo de ofertas similares de su propio barrio');
+  // «sector» y no «barrio»: la comparación cubre 1,5 km, que son varios barrios.
+  assert.equal(_destacado.motivo, '37% por debajo de los precios de su propio sector');
   assert.match(_destacado.respaldo ?? '', /Oportunidad Fuerte/);
   assert.match(_destacado.respaldo ?? '', /índice CRECE 0,60/);
   assert.match(_destacado.respaldo ?? '', /confianza alta del motor/);

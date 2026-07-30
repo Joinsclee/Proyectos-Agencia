@@ -391,7 +391,7 @@ function bloqueComparables(c: ComparablesReporte | null): string {
     </dl>
     ${chips}
     <p class="nota">Los comparables son precios de OFERTA publicados en FincaRaíz, no ventas cerradas.
-    La mediana resiste avisos mal digitados mejor que el promedio.</p>`;
+</p>`;
 }
 
 function bloqueArriendo(a: ArriendoReporte | null): string {

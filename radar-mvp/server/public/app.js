@@ -732,7 +732,10 @@ const ONBOARDING_PASOS = [
     icono: 'bank',
     titulo: 'Inmuebles que los bancos quieren soltar',
     cifra: (s) => (s?.bancos ? `${s.bancos.toLocaleString('es-CO')} activos` : null),
-    texto: 'Propiedades que los bancos recibieron en dación en pago y necesitan sacar de balance. En Colombia el descuento es más moderado que en otros mercados, así que lo que manda es la diferencia contra su zona.',
+    // Antes seguía «en Colombia el descuento es más moderado…». Se retiró: adelanta
+    // un juicio sobre el descuento que le toca al índice inmueble por inmueble, y
+    // puede desmentirlo la propia lista que hay debajo.
+    texto: 'Propiedades que los bancos recibieron en dación en pago y necesitan sacar de balance.',
     puntos: ['Puedes filtrar por entidad', 'El estrato no excluye: si el banco no lo reporta, la ficha se muestra igual'],
     ir: 'bancos',
   },
@@ -2329,7 +2332,7 @@ function analisisRemate(p) {
   if (/proindiviso|cuota parte|derechos?\s+(de\s+cuota|herenciales|y\s+acciones)|cuota\s+proindiviso|porcentaje\s+del\s+derecho/.test(text) || p.property_type === 'rights') flags.push(['warn', 'Podría rematarse solo una CUOTA/derechos (no el 100%): confirma qué porcentaje se adjudica.']);
   if (/ocupad|arrendad|poseedor|habitad|inquilino|en posesi/.test(text)) flags.push(['warn', 'El inmueble podría estar ocupado/arrendado: la entrega material puede demorar.']);
   const dias = daysToAuction(p.auction_date);
-  if (dias != null && dias >= 0 && dias <= 3) flags.push(['warn', `Audiencia ${dias === 0 ? 'HOY' : 'en ' + dias + ' día(s)'}: poco margen para due diligence y depósito.`]);
+  if (dias != null && dias >= 0 && dias <= 3) flags.push(['warn', `Audiencia ${dias === 0 ? 'HOY' : 'en ' + dias + ' día(s)'}: poco margen para revisar los documentos del inmueble y hacer el depósito bancario.`]);
   // Cautela (-)
   if (p.property_type === 'lot' || p.property_type === 'farm' || /\bbald[ií]o|predio rural|vereda\b/.test(text)) flags.push(['neg', 'Bien rural/lote: menor liquidez y avalúo más variable.']);
   if (/servidumbre/.test(text)) flags.push(['neg', 'Menciona servidumbre: revisar afectaciones al predio.']);
@@ -2416,7 +2419,7 @@ function renderAI(result) {
         <div><h4>${ic('check-circle', 'ic-reicon analysis-icon is-positive')} A favor</h4>${li(ai.a_favor)}</div>
         <div><h4>${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')} En contra</h4>${li(ai.en_contra)}</div>
       </div>
-      <h4>${ic('magnifier', 'analysis-icon is-review')} Verificar (due diligence)</h4>${li(ai.riesgos_due_diligence)}
+      <h4>${ic('magnifier', 'analysis-icon is-review')} Verificar antes de pujar</h4>${li(ai.riesgos_due_diligence)}
       <p class="ai-reco"><strong>Recomendación:</strong> ${esc(ai.recomendacion)}</p>
       <p class="ai-meta">Generado por IA (${esc(ai._meta?.model || 'modelo')}) · ${ai._meta?.comparables_n ?? m?.n ?? 0} comparables${result.cached ? ' · cacheado' : ''}. Opinión orientativa; no sustituye estudio de títulos ni asesoría profesional.</p>
     </div>`;
@@ -2602,7 +2605,7 @@ function gastosSection(valor, mode, context) {
           <span class="spinner"></span> Estimando el canon con avisos similares de la zona…
         </div>
         <div class="rent-inputs">
-          <label>Canon mensual esperado<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
+          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
           <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
@@ -2911,7 +2914,21 @@ async function fillMarketLazy(kind, id, disc) {
     // posición entre ambos. Los tres números salen del mismo conjunto, así que la
     // evidencia sostiene el porcentaje en vez de contradecirlo.
     const v = r.verdict;
-    if (v && v.market_ppm2 != null && v.candidate_ppm2 != null) {
+    // Datos que no pueden ser ciertos: se dice, en vez de dar un porcentaje. El
+    // motor lo detecta (`engine/plausibilidad.ts`) y aquí se nombra el dato que
+    // falla, que además es el que el usuario puede verificar mirando el aviso.
+    if (v?.datos_implausibles) {
+      const porQue = {
+        area_minima: 'El área publicada en el aviso no parece correcta para este tipo de inmueble',
+        area_maxima: 'El área publicada en el aviso no parece correcta para este tipo de inmueble',
+        ppm2_alto: 'El precio por metro cuadrado que resulta del aviso está fuera de lo razonable',
+        ppm2_bajo: 'El precio por metro cuadrado que resulta del aviso está fuera de lo razonable',
+      }[v.datos_implausibles] || 'Los datos del aviso no permiten comparar este inmueble';
+      el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">
+        <p class="market-aviso">${ic('alert')} ${esc(porQue)}, así que no calculamos su posición frente al mercado.</p>
+        <p class="market-note">Puede ser un error de publicación del portal. Verifícalo en el aviso original antes de sacar conclusiones.</p>
+        ${auditoriaComparables && fichaEnPantalla?.id ? botonComparables(fichaEnPantalla.id, 0) : ''}</div>`;
+    } else if (v && v.market_ppm2 != null && v.candidate_ppm2 != null) {
       el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody({ ...v, __id: fichaEnPantalla?.id }, v.criteria)}`;
     } else {
       // El botón va también aquí. La pregunta «contra qué compara» es más urgente
@@ -2951,7 +2968,7 @@ function applyRentalMarket(market) {
     status.innerHTML = market?.reason === 'source_unavailable'
       ? 'El mercado de arriendos se está preparando. Puedes ingresar tu propio canon para simular.'
       : `Aún no hay suficientes arriendos similares en esta zona (${n} encontrado${n === 1 ? '' : 's'}). Puedes ingresar tu propio canon.`;
-    if (origin) origin.textContent = 'Canon ajustable por el usuario';
+    if (origin) origin.textContent = 'Valor de arrendamiento ajustable por el usuario';
     return;
   }
 
@@ -2962,7 +2979,7 @@ function applyRentalMarket(market) {
   const criteria = Array.isArray(market.criteria) ? market.criteria : [];
   status.classList.remove('is-empty');
   status.innerHTML = `<div class="rent-market-title">
-      <span>Canon estimado de mercado</span>
+      <span>Valor de arrendamiento estimado</span>
       <strong>${fmtCOP(median)}/mes</strong>
     </div>
     <div class="rent-market-grid">
@@ -3249,7 +3266,7 @@ function marketBody(m, criteria) {
   return `<div class="market"><div class="market-grid">
     <div><span class="l">Este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
-    <div><span class="l">Posición</span>${pos}</div>
+    <div><span class="l">Oportunidad</span>${pos}</div>
     <div><span class="l">Comparables</span><strong>${Number(m.n_comparables) || 0}</strong></div>
   </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${Number(m.n_comparables) || 0} inmuebles similares de la zona (precios de OFERTA).</p>${auditoriaComparables && m.__id ? botonComparables(m.__id, m.n_comparables) : ''}</div>`;
 }
