@@ -149,3 +149,14 @@ async function construirDocx(texto: string): Promise<string> {
     + `<w:body><w:p><w:r><w:t>${texto}</w:t></w:r></w:p></w:body></w:document>`);
   return zip.generateAsync({ type: 'base64', compression: 'DEFLATE' });
 }
+
+test('asistente: adjuntar es del plan de pago', async () => {
+  // Un adjunto se convierte en texto y ese texto entra en la ventana de contexto de
+  // cada turno siguiente, así que cuesta varias veces lo que una pregunta suelta.
+  // Con 30 consultas gratuitas al mes por persona eso se acumula, y por eso el
+  // cliente lo movió al plan de pago.
+  const { puedeAdjuntar } = await import('./asistente.js');
+  assert.equal(puedeAdjuntar('suscrito'), true);
+  assert.equal(puedeAdjuntar('free'), false);
+  assert.equal(puedeAdjuntar('anonimo'), false);
+});

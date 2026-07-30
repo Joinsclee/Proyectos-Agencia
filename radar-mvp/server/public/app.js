@@ -1540,6 +1540,24 @@ function homeSkeleton() {
  * audiencia. Un remate y un aviso de portal no se miden con la misma vara y la
  * fila lo dice, en vez de dejar que el usuario lo suponga.
  */
+/**
+ * Las estrellas en la fila de la portada.
+ *
+ * El cliente lo pidió viendo esta lista: «acá dice oportunidad fuerte, me gusta,
+ * pero me harían falta las estrellas». Es coherente con el resto —tarjeta, ficha y
+ * leyenda ya las llevan— y sin ellas la portada era el único sitio donde la
+ * valoración se nombraba sin mostrarse.
+ *
+ * Solo las estrellas, sin repetir el nombre de la categoría: el motivo que va dos
+ * líneas más abajo ya dice el porcentaje y contra qué, así que escribir «Oportunidad
+ * Fuerte» aquí sería la tercera vez que la misma fila afirma lo mismo.
+ */
+function selloTop(ficha) {
+  const c = CRECE_POR_TIER.get(ficha.crece_tier);
+  if (!c || !c.estrellasTexto) return '';
+  return ` <span class="top-estrellas" title="${esc(c.lectura)}" aria-label="${esc(c.lectura)}">${c.estrellasTexto}</span>`;
+}
+
 function filaTop(ficha, posicion) {
   const kind = cardKind(ficha);
   const esRemate = kind === 'remate';
@@ -1565,7 +1583,7 @@ function filaTop(ficha, posicion) {
     <button class="top-open" type="button" aria-label="${esc(`Ver ${titulo}`)}">
       <span class="top-pos" aria-hidden="true">${posicion}</span>
       <span class="top-main">
-        <span class="top-titulo">${esc(titulo)}</span>
+        <span class="top-titulo">${esc(titulo)}${selloTop(ficha)}</span>
         ${subtitulo ? `<span class="top-sub">${esc(subtitulo)}</span>` : ''}
         ${sello.motivo ? `<span class="top-motivo">${esc(sello.motivo)}</span>` : ''}
         ${sello.respaldo ? `<span class="top-respaldo">${esc(sello.respaldo)}</span>` : ''}
