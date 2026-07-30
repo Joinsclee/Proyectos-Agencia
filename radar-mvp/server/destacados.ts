@@ -266,9 +266,15 @@ const TIPOS_NO_INMOBILIARIOS = new Set(['vehicle', 'rights']);
 
 /** Contra qué mercado se comparó, según hasta dónde tuvo que abrirse la cascada. */
 function referenciaDeNivel(nivel: string | null | undefined): string {
-  if (nivel === 'barrio') return 'ofertas similares de su propio barrio';
-  if (nivel === 'zona_ampliada') return 'ofertas similares de su zona';
-  return 'ofertas similares de su ciudad';
+  // «sector» y no «barrio»: la comparación cubre 1,5 km a la redonda, que en una
+  // ciudad colombiana son cinco o seis barrios. Decir «su barrio» promete una
+  // precisión que el dato no tiene, y el cliente lo señaló: «¿me está comparando
+  // únicamente con mi barrio? No, 1,5 kilómetros. Hay 5 barrios, facilito».
+  // Todas empiezan por sustantivo sin artículo porque se insertan tras «por debajo
+  // de»: con artículo saldría «por debajo de el valor…».
+  if (nivel === 'barrio') return 'los precios de su propio sector';
+  if (nivel === 'zona_ampliada') return 'los precios de su zona';
+  return 'los precios de su ciudad';
 }
 
 /** Etiqueta del Índice CRECE ya resuelta por la tabla maestra (engine/crece.ts). */
