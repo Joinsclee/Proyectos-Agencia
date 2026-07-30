@@ -2756,6 +2756,7 @@ function mostrarCupoAgotado(cupo, kind, id, ficha) {
       y las fichas abiertas siguen ahí. Lo que no podrás hasta que vuelva tu cupo es
       abrir nuevas oportunidades de descuento alto.</p>
       <p class="cupo-reinicio">${ic('calendar')}<span>Tu cupo se reinicia <strong>${esc(cuando)}</strong></span></p>
+      ${avisoPiloto()}
       <div class="cupo-acciones">
         <a class="wall-cta" href="/planes">Desbloquear todo</a>
         <button class="cupo-seguir" id="cupo-seguir" type="button">Seguir explorando</button>
@@ -3398,6 +3399,8 @@ function criteriosComparacion(method, radiusKm) {
  * el interruptor está apagado la ruta ni existe, así que el botón tampoco.
  */
 let auditoriaComparables = false;
+/** ¿El plan completo se activa gratis por ser piloto? Lo dice el servidor, no el navegador. */
+let planDemoActivo = false;
 
 /**
  * «Ver los N comparables»: contra qué se calculó este veredicto.
@@ -3551,7 +3554,25 @@ async function cargarConfig() {
   try {
     const c = await fetch('/api/config').then((r) => r.json());
     auditoriaComparables = c.auditoriaComparables === true;
+    planDemoActivo = c.demoPlanActivation === true;
   } catch { /* sin config, la verificación queda apagada */ }
+}
+
+/**
+ * El texto que quita el miedo a un cobro, cuando toca decirlo.
+ *
+ * Durante el piloto el plan completo se activa sin pasar por caja, pero eso solo
+ * se cuenta en la página de planes: en el momento de pulsar «desbloquear» —que es
+ * cuando la persona duda— la palabra «suscripción» es justo la que la frena.
+ *
+ * Va atado a la variable del servidor y no escrito a mano: el día que se apague
+ * el piloto, este texto tiene que desaparecer solo. Un «sin tarjeta de crédito»
+ * que sobreviva al cobro real sería una promesa falsa, y de las caras.
+ */
+function avisoPiloto() {
+  if (!planDemoActivo) return '';
+  return '<p class="aviso-piloto">Durante el piloto se activa gratis y al instante: '
+    + 'sin cobros ni datos de pago.</p>';
 }
 
 async function loadStats() {

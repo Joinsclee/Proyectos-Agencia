@@ -590,7 +590,7 @@ export async function facets(source: 'portal' | 'bancos' = 'portal', city?: stri
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
   const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
-  const zones = [...new Set((data ?? []).map((r) => r.zone).filter(Boolean))].sort();
+  const zones = barriosPresentables((data ?? []).map((r) => r.zone));
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
 
   // Entidades con inventario, para el desplegable de la pestaña de Bancos.
@@ -1355,4 +1355,46 @@ async function computarMetricas(): Promise<MetricasOperacion> {
     scraping: serieCorridasPorDia((corridas.data ?? []) as FilaCorrida[], { dias: DIAS_METRICAS }),
     trabajos: estadoTrabajos((trabajos.data ?? []) as FilaTrabajo[]),
   };
+}
+
+/*
+ * ─── Qué merece salir en el desplegable de barrio ───
+ *
+ * La columna `zone` es lo que el aviso trae escrito, y ahí cabe de todo: barrios
+ * de verdad, pero también veredas («Vereda Vanguardia»), corregimientos y
+ * conjuntos residenciales concretos («Torres del Marfil»). Mezclados en la misma
+ * lista, el desplegable deja de ser un mapa de la ciudad y pasa a ser un vertedero
+ * donde el barrio que buscas está perdido entre nombres de edificios.
+ *
+ * SE FILTRA AL PRESENTAR, NO SE TOCA EL DATO. `zone` no es solo una etiqueta: el
+ * motor de comparables agrupa por ella para decidir contra qué se mide un
+ * inmueble, así que reescribirla en la base cambiaría el veredicto de miles de
+ * fichas de golpe y sin vuelta atrás. Además el scraper la vuelve a escribir en
+ * cada pasada, con lo que habría que repetir la limpieza para siempre. Aquí solo
+ * se decide qué se ofrece como filtro; el inmueble sigue teniendo su zona y
+ * comparándose igual que antes.
+ */
+
+/** Nombres que describen un tipo de asentamiento, no un barrio de ciudad. */
+const NO_ES_BARRIO = /^(vereda|corregimiento|parcelaci[oó]n|condominio|conjunto|urbanizaci[oó]n|edificio|torres?|manzana|etapa|lote|km\.?\s*\d|kil[oó]metro)\b/i;
+
+/** Cuántas fichas debe tener una zona para considerarla un barrio y no un edificio suelto. */
+const MINIMO_FICHAS_POR_BARRIO = 3;
+
+export function barriosPresentables(zonas: Array<string | null | undefined>): string[] {
+  const cuenta = new Map<string, number>();
+  for (const z of zonas) {
+    if (!z) continue;
+    const nombre = String(z).trim();
+    if (!nombre || NO_ES_BARRIO.test(nombre)) continue;
+    cuenta.set(nombre, (cuenta.get(nombre) ?? 0) + 1);
+  }
+  // El umbral de frecuencia es lo que separa «Laureles» de «Torres del Marfil»
+  // cuando el nombre no delata al segundo: un conjunto cerrado aporta una o dos
+  // fichas, un barrio aporta decenas. Si la ciudad entera tiene poco inventario y
+  // el filtro dejaría la lista vacía, se devuelve lo que haya: un desplegable con
+  // ruido sigue siendo mejor que uno vacío en una ciudad pequeña.
+  const frecuentes = [...cuenta.entries()].filter(([, n]) => n >= MINIMO_FICHAS_POR_BARRIO);
+  const elegidas = frecuentes.length ? frecuentes : [...cuenta.entries()];
+  return elegidas.map(([nombre]) => nombre).sort();
 }
