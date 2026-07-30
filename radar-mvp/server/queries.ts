@@ -665,8 +665,27 @@ async function computeStats() {
     head(base()),
     head(base().eq('is_opportunity', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
     head(base().eq('is_high', true).lte('discount_pct', MAX_OPP_DISCOUNT)),
-    head(supabase.from('inmuebles').select('id', { count: 'exact', head: true }).eq('is_active', true).in('source', BANK_SOURCES as unknown as string[])),
-    head(supabase.from('remates').select('id', { count: 'exact', head: true }).eq('is_active', true)),
+    // Bancos y remates contaban `is_active` a secas, sin el saneamiento que SÍ
+    // aplica el listado, así que el titular prometía más de lo que la pestaña
+    // entregaba: 458 bancos que eran 413, y 949 remates que eran 578 —un 64% de
+    // más—. La cifra grande de la portada es lo primero que alguien comprueba, y
+    // cuando no cuadra con lo que ve al entrar, lo que pierde credibilidad no es
+    // el contador: es el resto de los números del producto, que es justo lo que
+    // este producto vende.
+    head(
+      supabase.from('inmuebles').select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .in('source', BANK_SOURCES as unknown as string[])
+        .lte('price', MAX_DISPLAY_PRICE)
+        .or(`discount_pct.is.null,discount_pct.lte.${MAX_OPP_DISCOUNT}`),
+    ),
+    // Las audiencias pasadas no se pueden rematar y el listado no las enseña; el
+    // contador tampoco debe sumarlas.
+    head(
+      supabase.from('remates').select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .gte('auction_date', new Date().toISOString().slice(0, 10)),
+    ),
   ]);
 
   // Lista de ciudades del portal (solo nombres). Antes se hacían 2 counts por

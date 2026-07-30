@@ -2457,7 +2457,9 @@ function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
   return `<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
     <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
-    <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento y administración.</small>`;
+    <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento${
+      monthlyAdmin > 0 ? ` y ${fmtCOP(Math.round(monthlyAdmin))}/mes de administración` : ''
+    }.${monthlyAdmin > 0 ? '' : ' No incluye administración ni predial: si los hay, escríbelos arriba.'}</small>`;
 }
 window.__recalcGastos = function (input) {
   const calc = input.closest('.calc');
@@ -2816,7 +2818,7 @@ function gastosSection(valor, mode, context) {
                 tiene administración y dejar el campo vacío hacía que la rentabilidad
                 se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
                 «para que la fórmula no le vaya a generar un error». */ ''}
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="0"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0}"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
@@ -2911,6 +2913,12 @@ function openInmueble(p) {
     id: p.id,
     title: `${typeLbl(p.type)} en ${cap(p.city)}`,
     city: p.city,
+    // La administración que el propio aviso declara. La ficha ya la enseña unas
+    // líneas más abajo, así que empezar la calculadora en 0 no era «no saberlo»:
+    // era ignorar un dato que teníamos, y encima diciendo debajo que se había
+    // descontado. Sobre un canon de 1,3 millones, olvidar 150.000 de
+    // administración infla la rentabilidad neta dos puntos largos.
+    admin: Number((p.features || {}).administracion) || 0,
   });
 
   $('modal-content').innerHTML = `${gallery()}
