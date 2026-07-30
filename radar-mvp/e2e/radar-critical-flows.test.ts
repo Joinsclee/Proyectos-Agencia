@@ -581,7 +581,9 @@ describe('Radar de Oportunidades · recorridos críticos', { concurrency: 1 }, (
       await page.locator('#grid article.card .card-open').first().click();
 
       const rentalPanel = page.locator('[data-rental-market]');
-      await rentalPanel.getByText('Canon estimado de mercado').waitFor();
+      // «Canon» se retiró del producto: es vocabulario de abogado y el propio cliente
+      // no conocía la palabra. Ahora dice «Valor de arrendamiento estimado».
+      await rentalPanel.getByText('Valor de arrendamiento estimado').waitFor();
       assert.match(await rentalPanel.textContent() ?? '', /4[.\s]850[.\s]000\/mes/);
       assert.match(await page.locator('[data-rent]').inputValue(), /4[.\s]850[.\s]000/);
       assert.match(await page.locator('.rent-result').textContent() ?? '', /\d+[,.]\d+%/);
