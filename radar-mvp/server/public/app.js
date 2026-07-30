@@ -640,6 +640,9 @@ const TABLA_CRECE = [
 ];
 const CRECE_POR_TIER = new Map(TABLA_CRECE.map((t) => [t.tier, t]));
 
+/** Desde qué descuento vale la pena escribir la cifra en la tarjeta. */
+const MIN_DESCUENTO_MOSTRABLE = 8;
+
 /**
  * Las estrellas de la tabla maestra, en la tarjeta.
  *
@@ -664,6 +667,29 @@ function selloIguales(p) {
   const n = Number(p._iguales);
   if (!Number.isFinite(n) || n < 2) return '';
   return ` <span class="card-iguales" title="Hay ${n} avisos iguales a este, del mismo proyecto">×${n} iguales</span>`;
+}
+
+/**
+ * La valoración con estrellas, en la ficha y arriba.
+ *
+ * Estaba solo en la tarjeta del listado, así que al abrir la ficha desaparecía
+ * justo la única cosa que el producto afirma sobre ese inmueble. El cliente lo
+ * pidió dos veces: «me harían falta las estrellas» y «eso es lo que realmente aquí
+ * se vende, esto se sube».
+ *
+ * NO se muestra el Índice CRECE numérico. Es interno —«el índice es un índice, es
+ * interno»— y un 0,62 no significa nada para quien mira; las estrellas y el nombre
+ * de la categoría sí.
+ */
+function selloCreceFicha(p) {
+  const c = CRECE_POR_TIER.get(p.crece_tier);
+  if (!c) return '';
+  const d = p.discount_pct != null ? Math.round(Number(p.discount_pct)) : null;
+  return `<div class="ficha-crece${p.crece_tier === 'oportunidad_fuerte' ? ' es-fuerte' : ''}">
+    <span class="fc-estrellas" aria-hidden="true">${c.estrellasTexto}</span>
+    <span class="fc-lectura">${esc(c.lectura)}</span>
+    ${d != null && d > 0 ? `<span class="fc-desc">${d}% por debajo de los precios de su sector</span>` : ''}
+  </div>`;
 }
 
 function selloCrece(p) {
@@ -2090,8 +2116,13 @@ function frescura(p) {
   const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
   if (!Number.isFinite(d) || d < 0) return '';
   const cuando = d === 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`;
-  const verbo = SIN_CADUCIDAD.includes(p.source) ? 'Verificado' : 'Visto';
-  return `<span class="frescura" title="Última vez que el motor confirmó que sigue publicado">${ic('check')}${verbo} ${cuando}</span>`;
+  // Solo para la cartera de bancos, donde el aviso no caduca y saber que sigue
+  // vigente sí dice algo. En el portal se retiró: el cliente preguntó qué era
+  // «Visto hace 2 días» y, al explicárselo, «no es relevante». Es la fecha en que
+  // NUESTRO motor confirmó que el aviso seguía publicado —un dato de nuestra
+  // operación, no del inmueble— y ocupaba un sitio que ahora usa el descuento.
+  if (!SIN_CADUCIDAD.includes(p.source)) return '';
+  return `<span class="frescura" title="Última vez que el motor confirmó que sigue publicado">${ic('check')}Verificado ${cuando}</span>`;
 }
 
 /**
@@ -2136,7 +2167,11 @@ function selloSuscripcion(p) {
   // candado», dijo el cliente—. El porcentaje aparece ahora dos veces, aquí y en
   // su etiqueta de arriba, y es a propósito: la etiqueta es el dato, en el sitio
   // donde está en todas las tarjetas, y esto es el gancho.
-  const titular = d != null && d >= 20 ? `${d}% ${contra}` : 'Oportunidad detectada';
+  // Desde el 8%, no desde el 20%. Las «Interesante» rondan el 7-10% y salían sin
+  // cifra, que era justo lo que el cliente echaba en falta: «¿cree usted que debería
+  // estar ese porcentaje también? … está entre el 7 y el 9». Por debajo de 8 el
+  // número no distingue nada y el nombre de la categoría dice más que él.
+  const titular = d != null && d >= MIN_DESCUENTO_MOSTRABLE ? `${d}% ${contra}` : 'Oportunidad detectada';
   return `<div class="lock-overlay${invita ? ' es-invitacion' : ''}">${ic(invita ? 'tap' : 'lock')}`
     + `<span>${titular}</span><em>${accion}</em></div>`;
 }
@@ -2708,6 +2743,7 @@ function openInmueble(p) {
       <div class="detail-top"><span class="pill-src">${esc(srcLbl(p.source))}</span>${fav}</div>
       <h2>${esc(typeLbl(p.type))} en ${esc(cap(p.city))}</h2>
       <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${esc(cap(p.city))}</strong></div>
+      ${selloCreceFicha(p)}
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
       ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
@@ -2984,9 +3020,8 @@ function applyRentalMarket(market) {
     </div>
     <div class="rent-market-grid">
       <div><span>Rango central</span><strong>${fmtCOP(low)} – ${fmtCOP(high)}</strong></div>
-      <div><span>Canon por m²</span><strong>${ppm2 ? `${fmtCOP(ppm2)}/m²` : '—'}</strong></div>
+      <div><span>Arrendamiento por m²</span><strong>${ppm2 ? `${fmtCOP(ppm2)}/m²` : '—'}</strong></div>
       <div><span>Comparables</span><strong>${Number(market.n) || 0}</strong></div>
-      <div><span>Confianza</span><strong>${esc(rentalConfidenceLabel(market.confidence))}</strong></div>
     </div>
     ${criteria.length ? `<div class="crit-chips">${criteria.map((item) => `<span class="crit-chip">${esc(item)}</span>`).join('')}</div>` : ''}
     <p>Referencia basada en precios de oferta, no en contratos cerrados. El canon puede incluir o excluir administración según cada aviso.</p>`;
@@ -3616,7 +3651,7 @@ document.addEventListener('input', (event) => {
     if (event.target.matches('[data-rent]')) {
       event.target.dataset.rentSource = 'custom';
       const origin = event.target.closest('.calc')?.querySelector('[data-rent-origin]');
-      if (origin) origin.textContent = 'Canon ajustado por ti';
+      if (origin) origin.textContent = 'Valor de arrendamiento ajustado por ti';
     }
     window.__recalcRent(event.target);
   }
