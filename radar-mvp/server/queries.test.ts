@@ -62,3 +62,26 @@ test('facetas: en una ciudad pequeña se prefiere ruido a un desplegable vacío'
   const { barriosPresentables } = await import('./queries.js');
   assert.deepEqual(barriosPresentables(['Centro', 'La Playa']), ['Centro', 'La Playa']);
 });
+
+test('ciudades: una sola entrada por ciudad real', async () => {
+  // En la base conviven «bogota» y «bogota d.c.», «jamundi» y «jamundi -». Cada
+  // variante filtraba un subconjunto distinto: «bogota» daba 58 fichas y
+  // «bogota d.c.» otras 2. Quien elegía una veía una fracción de su ciudad sin
+  // ninguna señal de que existiera el resto.
+  const { ciudadesUnificadas } = await import('./queries.js');
+  const crudas = ['bogota', 'bogota d.c.', 'jamundi', 'jamundi -', 'floridablanca', 'florida blanca', 'cali'];
+  // Gana la forma más corta: las colas («d.c.», el guion suelto) son ruido de
+  // captura, no parte del nombre.
+  assert.deepEqual(ciudadesUnificadas(crudas), ['bogota', 'cali', 'floridablanca', 'jamundi']);
+});
+
+test('ciudades: al filtrar se buscan TODAS sus formas', async () => {
+  // Agrupar solo en el desplegable no arreglaría nada: el filtro seguiría yendo
+  // por igualdad exacta y el inventario de la otra variante quedaría escondido.
+  const { variantesDeCiudad } = await import('./queries.js');
+  const catalogo = ['bogota', 'bogota d.c.', 'cali', 'jamundi -'];
+  assert.deepEqual(variantesDeCiudad('bogota', catalogo).sort(), ['bogota', 'bogota d.c.']);
+  assert.deepEqual(variantesDeCiudad('jamundi', catalogo), ['jamundi -']);
+  // Sin catálogo se filtra por lo pedido: el comportamiento de siempre, nunca peor.
+  assert.deepEqual(variantesDeCiudad('bogota', []), ['bogota']);
+});
