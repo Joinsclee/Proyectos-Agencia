@@ -187,6 +187,34 @@ const clampPage = (p?: number) => Math.max(1, Math.floor(p ?? 1));
 const clampSize = (s?: number) => Math.min(60, Math.max(6, Math.floor(s ?? 24)));
 
 /**
+ * ¿El error es «pediste una página que no existe»?
+ *
+ * PostgREST responde 416 cuando el rango solicitado empieza más allá del último
+ * registro, y eso viajaba como un 500 hasta la pantalla: «No se pudo cargar»,
+ * con un botón de reintentar que repetía la misma petición muerta para siempre.
+ * La única salida era editar la dirección a mano.
+ *
+ * Importa más desde que la página viaja en la URL: cualquier enlace compartido a
+ * partir de la segunda página se rompe en cuanto el inventario encoge —y encoge
+ * cada semana, cuando el scraper retira lo vendido—.
+ */
+function esRangoFueraDeAlcance(
+  error: { code?: string; message?: string } | null,
+  page: number,
+): boolean {
+  if (!error || page <= 1) return false;
+  const mensaje = String(error.message ?? '');
+  // Los dos primeros son la respuesta que PostgREST documenta. El tercero es la
+  // que de verdad llega: el cuerpo del 416 vuelve cortado y el cliente lo deja en
+  // un `{"` suelto, sin código. Se comprueban los tres, y solo a partir de la
+  // página 2 —en la primera nunca puede sobrar rango, así que ahí un error es un
+  // error de verdad y tiene que seguir viéndose como tal.
+  return error.code === 'PGRST103'
+    || /range not satisfiable|416/i.test(mensaje)
+    || /^\{"?$/.test(mensaje.trim());
+}
+
+/**
  * ¿El usuario pidió un rango que ningún inmueble puede cumplir?
  *
  * Un mínimo por encima de su máximo describe el conjunto vacío, y eso se sabe
@@ -355,6 +383,8 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
       ({ data, count, error } = await build('none', 'planned'));
     }
   }
+  // Una página más allá del final no es un fallo: es una página vacía.
+  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
   if (error) throw new Error(`queryPortal: ${error.message}`);
 
   // El total tiene que reflejar los filtros SIEMPRE. Antes, con un filtro de
@@ -467,6 +497,8 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;
+  // Una página más allá del final no es un fallo: es una página vacía.
+  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
   if (error) throw new Error(`queryBancos: ${error.message}`);
   const total = count ?? 0;
   // Rotación semanal del pool bancario (HU de frescura): el inventario de bancos
@@ -528,6 +560,8 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;
+  // Una página más allá del final no es un fallo: es una página vacía.
+  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
   if (error) throw new Error(`queryRemates: ${error.message}`);
   const total = count ?? 0;
   return {
@@ -608,7 +642,11 @@ export async function facets(source: 'portal' | 'bancos' = 'portal', city?: stri
   if (city) qb = qb.eq('city', city);
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
-  const cities = ciudadesUnificadas((data ?? []).map((r) => r.city));
+  // Las ciudades salen del catálogo completo y no de esta consulta: `facets`
+  // también está topada y su muestra variaba entre llamadas. Los barrios sí se
+  // sacan de aquí, porque dependen de la ciudad ya elegida y ahí el tope no
+  // estorba.
+  const cities = ciudadesUnificadas(await catalogoDeCiudades(source));
   const zones = barriosPresentables((data ?? []).map((r) => r.zone), cities);
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
 
@@ -1565,7 +1603,24 @@ async function catalogoDeCiudades(fuente: 'portal' | 'bancos'): Promise<string[]
       : qb.in('source', BANK_SOURCES as unknown as string[]);
     const { data, error } = await qb;
     if (error) throw new Error(error.message);
-    const datos = [...new Set((data ?? []).map((r: any) => r.city).filter(Boolean))] as string[];
+    // SE ACUMULA, no se reemplaza.
+    //
+    // La consulta trae 8.000 filas de las 108.000 del portal, y PostgREST elige
+    // cuáles sin ningún orden garantizado: cada llamada ve un trozo distinto del
+    // inventario. Quedarse con la última respuesta hacía que el desplegable
+    // ofreciera entre 45 y 77 ciudades según el momento y que municipios con
+    // inventario real —Nilo con 103 fichas, Buga con 65— aparecieran una vez de
+    // cada quince.
+    //
+    // Ordenar no lo arregla: con `order` el tope de filas devuelve solo las
+    // ciudades alfabéticamente primeras, y la lista baja a once. Acumular sí: cada
+    // refresco añade lo que vea y la lista converge hacia el catálogo completo sin
+    // volver a encoger. El precio es que una ciudad que se quede sin inventario
+    // sigue ofreciéndose hasta el próximo reinicio, y ahí la búsqueda saldrá vacía
+    // — mucho menos grave que esconder inventario que sí existe.
+    const vistas = new Set(cacheCiudades.get(fuente)?.datos ?? []);
+    for (const fila of data ?? []) if ((fila as any).city) vistas.add((fila as any).city as string);
+    const datos = [...vistas];
     cacheCiudades.set(fuente, { at: Date.now(), datos });
     return datos;
   } catch (e) {
