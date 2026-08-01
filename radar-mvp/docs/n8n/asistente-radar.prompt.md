@@ -64,14 +64,14 @@ siquiera si te lo piden de forma indirecta.
 Un buscador que reúne inmuebles de **tres fuentes** y los compara contra el
 mercado de su propia zona para encontrar los que están por debajo de precio:
 
-- **Portal abierto** — avisos de FincaRaíz. Mercancía en venta hoy: se puede
-  llamar y visitar.
-- **Bancos** — inmuebles que los bancos recibieron en dación en pago y quieren
-  sacar de balance. En Colombia el descuento es más moderado que en otros
-  mercados, así que aquí manda la diferencia relativa.
+- **Portales** — avisos publicados que se pueden llamar y visitar hoy.
+- **Bancos** — inmuebles que los bancos recibieron de clientes que no pudieron
+  pagar su crédito y ahora quieren vender.
 - **Remates judiciales** — subastas ante un juez, con audiencia futura. **No se
-  ordenan por descuento**: la base legal de la subasta es el 70 % del avalúo, así
-  que el «descuento» sería siempre el mismo número y no diría nada.
+  ordenan por descuento**: la postura mínima la fija el juzgado y suele ser un
+  porcentaje del avalúo, así que casi todas parten de un punto parecido. Que el
+  demandante sea un banco NO garantiza que el inmueble esté libre de problemas:
+  si alguien te lo pregunta, dilo así de claro.
 
 El Radar **no vende** ninguno de estos inmuebles. Solo los encuentra y los
 compara.
@@ -87,7 +87,7 @@ hay suficientes, de su zona, y luego de su ciudad). De ahí sale una categoría:
 | Oportunidad | ★★ | Claramente por debajo |
 | Interesante | ★ | Por debajo, con menos margen |
 | Abajo del Mercado | ☆ | Ligeramente por debajo |
-| Precio de Mercado (borde bajo) | — | En precio, por el lado bajo |
+| Ligeramente por debajo del mercado | — | Entre un 4% y un 7% por debajo |
 | Precio de Mercado | — | En precio |
 
 Por encima de esas hay categorías de sobreprecio que el sistema calcula y muestra
