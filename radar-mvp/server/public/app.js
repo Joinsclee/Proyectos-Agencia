@@ -611,11 +611,38 @@ function gateFicha(id) {
   if (!auth.token) recordView(id);
   return true;
 }
+/**
+ * Lo que hay detrás del muro, con el precio dicho.
+ *
+ * El botón decía «Desbloquear» en los tres bloques por igual —análisis, datos
+ * del proceso, descripción— sin distinguir si hacía falta una cuenta gratuita o
+ * el plan de pago, y sin decir cuánto cupo le queda a quien ya tiene cuenta. Tres
+ * botones idénticos que llevan a sitios distintos enseñan a no leerlos.
+ *
+ * Ahora el botón nombra el paso siguiente y, cuando hay cuenta, se dice cuántas
+ * fichas quedan del mes: es el dato que decide si abrir esta o guardarla para
+ * después, y hasta ahora solo aparecía cuando ya se había agotado.
+ */
 function lockBox(label, sub) {
-  return `<div class="section"><a class="lockbox" href="/login">
+  const cupo = auth.account?.cupo;
+  const conCuenta = !!auth.token;
+  const restantes = Number(cupo?.restantes);
+  const ilimitado = cupo?.ilimitado === true;
+
+  const destino = conCuenta ? '/planes' : '/login';
+  const accion = conCuenta
+    ? (ilimitado || restantes > 0 ? 'Abrir con tu cupo' : 'Ver el plan sin límite')
+    : 'Crear cuenta gratis';
+  // El recordatorio del cupo solo tiene sentido para quien lo tiene y no es
+  // ilimitado. A quien no ha entrado se le ofrece la cuenta, no un contador que
+  // todavía no es suyo.
+  const pie = conCuenta && !ilimitado && Number.isFinite(restantes)
+    ? `<span class="lock-cupo">Te quedan ${restantes} de ${CUPO_FREE_MENSUAL} fichas este mes</span>`
+    : '';
+  return `<div class="section"><a class="lockbox" href="${destino}">
     <span class="lock-ic">${ic('lock')}</span>
-    <div class="lock-txt"><strong>${esc(label)}</strong><span>${esc(sub || 'Regístrate gratis para verlo')}</span></div>
-    <span class="lock-cta">Desbloquear</span>
+    <div class="lock-txt"><strong>${esc(label)}</strong><span>${esc(sub || 'Crea tu cuenta gratis para verlo')}</span>${pie}</div>
+    <span class="lock-cta">${esc(accion)}</span>
   </a></div>`;
 }
 function showRegisterWall(count) {
@@ -835,9 +862,12 @@ const ONBOARDING_PASOS = [
     icono: 'scale',
     titulo: 'Subastas judiciales, con su riesgo a la vista',
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
-    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La ley fija la base de todas las subastas en el 70% del avalúo, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
+    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La postura mínima la fija el juzgado —suele ser un porcentaje del avalúo—, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
     puntos: [
-      'Se ordenan por demandante bancario primero: título más limpio',
+      // Se retira «título más limpio». Que demande un banco es una señal, no un
+      // seguro, y prometerlo aquí rebaja la cautela justo en la categoría donde
+      // más falta hace. Es la misma corrección que ya se hizo en la portada.
+      'Que el demandante sea un banco no garantiza que el inmueble esté sin problemas',
       'Si solo se remata una parte del bien, la ficha lo avisa en amarillo',
     ],
     ir: 'remates',
@@ -3869,6 +3899,36 @@ function valorLargo(html) {
   return `<details class="kv-largo"><summary>${inicio}… <em>ver completo</em></summary><p>${html}</p></details>`;
 }
 
+/**
+ * Qué significa cada palabra del expediente.
+ *
+ * Una ficha de remate suelta «dominio pleno», «radicado», «secuestre» y
+ * «demandante» sin definir ninguna, y el público de esto es alguien que nunca ha
+ * invertido: la parte más arriesgada del producto era la que hablaba más difícil.
+ *
+ * Va plegado y al final, no como aviso: quien ya sabe lo salta sin que le
+ * estorbe, y quien no sabe lo encuentra donde le surgió la duda, sin salir de la
+ * ficha ni perder lo que estaba mirando.
+ */
+function glosarioRemate() {
+  const terminos = [
+    ['Postura mínima', 'La cantidad mínima con la que puedes participar. Otros participantes pueden ofrecer más.'],
+    ['Avalúo del juzgado', 'Valor de referencia usado en el proceso. Puede ser distinto del precio actual de mercado.'],
+    ['Audiencia', 'Fecha y hora en que se realiza la subasta.'],
+    ['Radicado', 'Número que identifica el proceso judicial.'],
+    ['Demandante', 'Persona o entidad que inició el proceso.'],
+    ['Secuestre', 'Auxiliar designado para custodiar o administrar el bien mientras dura el proceso.'],
+    ['Derechos', 'Que se subasta solo una participación del inmueble y no la propiedad completa.'],
+    ['Título / dominio pleno', 'Los papeles que prueban quién es el dueño legal. Un título «más limpio» tiene menos riesgo de líos legales después de comprar.'],
+    ['Estudio de títulos', 'Revisión legal de los papeles del inmueble para confirmar que no tiene deudas, embargos o dueños en disputa.'],
+  ];
+  const filas = terminos.map(([t, d]) => `<div class="glos-t">${esc(t)}</div><div class="glos-d">${esc(d)}</div>`).join('');
+  return `<div class="section"><details class="glosario">
+    <summary class="glos-titulo">${ic('chart')} ¿Qué significa esto?</summary>
+    <div class="glos-body">${filas}</div>
+  </details></div>`;
+}
+
 function openRemate(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
@@ -3946,6 +4006,7 @@ function openRemate(p) {
       ${muro}
       ${aiBlock}
       ${datosBlock}
+      ${glosarioRemate()}
       ${gastosSection(p.minimum_bid, 'remate', {
         kind: 'remate',
         id: p.id,
@@ -4351,7 +4412,25 @@ function renderLeyenda() {
   // contra el avalúo del juzgado— y una leyenda de estrellas explicaría algo que
   // esa pestaña no muestra.
   const conEstrellas = state.tab === 'portal' || state.tab === 'bancos';
-  $('legend').innerHTML = conEstrellas ? leyendaCrece() : '';
+  $('legend').innerHTML = introDeSeccion() + (conEstrellas ? leyendaCrece() : '');
+}
+
+/**
+ * Qué es esta sección, dicho al entrar en ella.
+ *
+ * La explicación de qué son los inmuebles de banco existía y estaba bien escrita,
+ * pero solo en la portada: quien entraba directo a la pestaña —o llegaba por un
+ * enlace compartido— veía un listado de precios sin saber qué está mirando ni por
+ * qué esos inmuebles están más baratos. Es una línea, y evita la pregunta.
+ */
+function introDeSeccion() {
+  const textos = {
+    bancos: 'Inmuebles que los bancos recibieron de clientes que no pudieron pagar su crédito y ahora quieren vender.',
+    remates: 'Subastas ante un juez. La postura mínima la fija el juzgado, y participar exige consignar una caución antes de la audiencia.',
+    portal: 'Avisos publicados por inmobiliarias y propietarios que puedes llamar y visitar hoy.',
+  };
+  const texto = textos[state.tab];
+  return texto ? `<p class="seccion-intro">${esc(texto)}</p>` : '';
 }
 
 /**
