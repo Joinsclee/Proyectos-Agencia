@@ -20,6 +20,7 @@
  * ocurre después, ya con el plan del usuario delante.
  */
 import { clasificar, redondearIndice } from '../engine/crece.js';
+import { esPlausible } from '../engine/plausibilidad.js';
 import { rotarSemanal, semanaISO } from '../engine/rotacion.js';
 import { periodoDe } from './cupo.js';
 
@@ -227,6 +228,13 @@ const enBanda = (d: number | null): boolean =>
  */
 export function esInmuebleDestacable(fila: FilaInmueble): boolean {
   if (!fila?.id) return false;
+  // Datos que no pueden ser ciertos: fuera de la portada, aunque la fila traiga
+  // categoría y descuento. El motor ya no se los concede (engine/plausibilidad.ts),
+  // pero la columna guardada sobrevive hasta el siguiente barrido completo, y una
+  // «oficina de 5 m²» destacada en la portada es exactamente el tipo de ficha que
+  // hace dudar de todas las demás. Se comprueba aquí, con el dato delante, y no se
+  // espera a que el motor vuelva a pasar.
+  if (!esPlausible({ type: fila.type, area_m2: fila.area_m2, price: fila.price })) return false;
   if (!enBanda(descuentoInmueble(fila))) return false;
   if (fila.crece_tier !== 'oportunidad_fuerte' && fila.crece_tier !== 'oportunidad') return false;
   const confianza = fila.features?.market?.confidence;

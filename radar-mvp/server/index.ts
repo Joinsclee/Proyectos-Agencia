@@ -314,6 +314,10 @@ async function evidenciaParaReporte(
       confianza: v.confidence,
       alcance,
       criterios: v.criteria ?? [],
+      // El veredicto del motor exige el mismo tipo en todos los niveles de la
+      // cascada (engine/comparables.ts): aquí nunca hay mezcla.
+      mismoTipo: true,
+      ambitoCiudad: v.cascada_nivel === 'ciudad',
     }
     : m && m.n
       ? {
@@ -323,6 +327,10 @@ async function evidenciaParaReporte(
         confianza: m.confidence,
         alcance: m.scope_label,
         criterios: m.criteria ?? [],
+        // El resumen de zona SÍ se abre a todos los tipos cuando no encuentra
+        // suficientes del pedido, y el reporte tiene que decirlo donde se lee.
+        mismoTipo: m.matched_type,
+        ambitoCiudad: m.scope === 'ciudad',
       }
       : null;
 
