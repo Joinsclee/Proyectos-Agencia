@@ -20,6 +20,7 @@
  * ocurre después, ya con el plan del usuario delante.
  */
 import { clasificar, redondearIndice } from '../engine/crece.js';
+import { esPlausible } from '../engine/plausibilidad.js';
 import { rotarSemanal, semanaISO } from '../engine/rotacion.js';
 import { periodoDe } from './cupo.js';
 
@@ -227,6 +228,13 @@ const enBanda = (d: number | null): boolean =>
  */
 export function esInmuebleDestacable(fila: FilaInmueble): boolean {
   if (!fila?.id) return false;
+  // Datos que no pueden ser ciertos: fuera de la portada, aunque la fila traiga
+  // categoría y descuento. El motor ya no se los concede (engine/plausibilidad.ts),
+  // pero la columna guardada sobrevive hasta el siguiente barrido completo, y una
+  // «oficina de 5 m²» destacada en la portada es exactamente el tipo de ficha que
+  // hace dudar de todas las demás. Se comprueba aquí, con el dato delante, y no se
+  // espera a que el motor vuelva a pasar.
+  if (!esPlausible({ type: fila.type, area_m2: fila.area_m2, price: fila.price })) return false;
   if (!enBanda(descuentoInmueble(fila))) return false;
   if (fila.crece_tier !== 'oportunidad_fuerte' && fila.crece_tier !== 'oportunidad') return false;
   const confianza = fila.features?.market?.confidence;
@@ -561,8 +569,8 @@ export function bloqueFuentes(
   return {
     id: 'fuentes',
     titulo: 'Las tres fuentes, cruzadas',
-    criterio: 'La misma pregunta hecha a las tres fuentes del Radar. Portal abierto y cartera de '
-      + 'bancos se miden contra el mercado de oferta de su propia zona y se ordenan por descuento. '
+    criterio: 'La misma pregunta hecha a las tres fuentes del Radar. Los avisos de portales y la '
+      + 'cartera de bancos se miden contra el mercado de oferta de su propia zona y se ordenan por descuento. '
       + 'Los remates se miden contra el avalúo oficial, y ahí el descuento no discrimina: la base '
       + 'legal de toda subasta es el 70% del avalúo, así que se ordenan por riesgo jurídico '
       + '—primero los de demandante bancario— y por audiencia más próxima.',
@@ -608,11 +616,16 @@ export function bloqueDeFuente(
   const META: Record<FuenteDestacado, { id: BloqueDestacados['id']; titulo: string; icono: string; criterio: string }> = {
     portal: {
       id: 'portal',
-      titulo: 'Lo mejor de la semana en el portal abierto',
+      // «en portales», no «en el portal abierto»: el rótulo tiene que sonar igual
+      // que los otros dos bloques, y «portal abierto» no le dice a nadie qué hay
+      // dentro. Tampoco se nombra FincaRaíz: hoy es la fuente, mañana pueden ser
+      // tres, y el usuario no compra por el nombre del portal.
+      titulo: 'Lo mejor de la semana en portales',
       icono: 'home',
-      criterio: 'Avisos de FincaRaíz con el mayor descuento frente a ofertas similares de su zona, '
-        + 'entre los que tienen comparables suficientes. Es mercancía en el mercado abierto: se '
-        + 'puede llamar y visitar hoy.',
+      // Fuera «es mercancía en el mercado abierto: se puede llamar y visitar hoy».
+      // Llamar «mercancía» a la casa de alguien es frío para lo que se está
+      // vendiendo, y la frase explicaba una obviedad del canal.
+      criterio: 'Avisos en portales con el mayor descuento frente a ofertas similares de su zona.',
     },
     banco: {
       id: 'bancos',
@@ -628,10 +641,21 @@ export function bloqueDeFuente(
       id: 'remates',
       titulo: 'Lo mejor de la semana en remates judiciales',
       icono: 'scale',
-      criterio: 'Subastas ante un juez con audiencia futura. NO se ordenan por descuento: la base legal '
-        + 'de todo remate es el 70% del avalúo, así que casi todos dan el mismo 30% y ordenar por ahí '
-        + 'sería ordenar por ruido. Se ordenan por riesgo jurídico —primero los de demandante bancario, '
-        + 'donde el título suele venir más limpio— y luego por audiencia más próxima.',
+      // DOS AFIRMACIONES RETIRADAS, y las dos por lo mismo: prometían certezas
+      // jurídicas que nadie puede dar.
+      //
+      // «donde el título suele venir más limpio» se leía como una garantía y
+      // rebajaba la cautela justo en la categoría donde más hace falta. Que
+      // demande un banco es una señal, no un seguro.
+      //
+      // Y la base del 70% no es universal: en segunda o tercera licitación baja,
+      // y hay fichas reales al 100%. Decirlo como ley sin excepciones deja al
+      // usuario con una expectativa que la propia ficha contradice.
+      criterio: 'Subastas ante un juez con audiencia futura. No se ordenan por descuento: la postura '
+        + 'mínima la fija el juzgado y suele ser un porcentaje del avalúo, así que casi todas parten '
+        + 'de un punto parecido. Se ordenan por audiencia más próxima. Que el demandante sea un banco '
+        + 'no garantiza que el inmueble esté libre de problemas: revisa el expediente y las '
+        + 'condiciones de entrega antes de participar.',
     },
   };
   const meta = META[fuente];

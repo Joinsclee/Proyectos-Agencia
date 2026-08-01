@@ -87,6 +87,21 @@ test('destacables: por debajo del umbral no hay nada que destacar', () => {
   assert.equal(esInmuebleDestacable(inmueble({ discount_pct: null })), false);
 });
 
+test('destacables: un aviso cuyos datos no pueden ser ciertos no llega a la portada', () => {
+  // La auditoría abrió «Oficina en Cúcuta · 5 m²» con la descripción de una
+  // vivienda de tres habitaciones. El motor ya no le concede veredicto
+  // (engine/plausibilidad.ts), pero la categoría que le calculó ANTES sigue escrita
+  // en su fila hasta el próximo barrido completo, y con ella podría colarse en la
+  // portada. Aquí se comprueba con el dato delante y no se espera al motor.
+  const oficinaImposible = inmueble({ type: 'office', area_m2: 5, price: 30_000_000 });
+  assert.equal(esInmuebleDestacable(oficinaImposible), false);
+  // Misma ficha con un área creíble para una oficina: entra sin problema.
+  assert.equal(esInmuebleDestacable(inmueble({ type: 'office', area_m2: 60, price: 300_000_000 })), true);
+  // Y el otro extremo: el precio por m² imposible, que es como se colaban las de
+  // «+416% sobre el mercado».
+  assert.equal(esInmuebleDestacable(inmueble({ type: 'house', area_m2: 150, price: 6_000_000_000 })), false);
+});
+
 test('destacables: una comparación con confianza baja no puede ser portada', () => {
   const flojo = inmueble({ source: 'aval', features: { market: { confidence: 'low', n_comparables: 7 } } });
   assert.equal(esInmuebleDestacable(flojo), false);

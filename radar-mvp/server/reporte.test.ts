@@ -41,7 +41,11 @@ const datos = (o: Partial<DatosReporte> = {}): DatosReporte => ({
   descuentoPct: 27,
   crece: { lectura: 'Oportunidad Fuerte', desviacion: '27% por debajo', estrellas: 3 },
   caracteristicas: [{ etiqueta: 'Área', valor: '80 m²' }, { etiqueta: 'Habitaciones', valor: '3' }],
-  comparables: { n: 14, medianaPpm2: 5_500_000, medianaTotal: 440_000_000, confianza: 'high', alcance: '1.5 km a la redonda', criterios: ['mismo tipo de inmueble'] },
+  comparables: {
+    n: 14, medianaPpm2: 5_500_000, medianaTotal: 440_000_000, confianza: 'high',
+    alcance: '1.5 km a la redonda', criterios: ['mismo tipo de inmueble'],
+    mismoTipo: true, ambitoCiudad: false,
+  },
   arriendo: null,
   remate: null,
   direccion: 'Carrera 70 # 44-12',
@@ -339,6 +343,76 @@ test('reporte: las características que faltan no salen como "—"', () => {
     { etiqueta: 'Tipo', valor: 'Lote' },
     { etiqueta: 'Área', valor: '500 m²' },
   ]);
+});
+
+test('reporte: un lote no imprime alcobas, garajes ni antigüedad', () => {
+  // El portal rellena esos tres campos en 8.715 de los 8.773 lotes activos —casi
+  // siempre con cero y con «1 a 8 años»—, así que preguntar «¿trae el dato?» no
+  // distingue nada. En un documento que el usuario lleva a una reunión, «Garajes:
+  // 0 · Antigüedad: 1 a 8 años» bajo un terreno se lee como una plantilla mal
+  // rellenada, y arrastra la credibilidad de lo que sí es cierto.
+  const lote = datosDeInmueble({
+    kind: 'portal',
+    fila: {
+      id: 'x', city: 'girardot', type: 'lot', price: 32_000_000, area_m2: 200,
+      features: { bedrooms: 0, bathrooms: 0, garages: 0, floor: 1, antiguedad: '1 a 8 años', stratum: 3 },
+    },
+    comparables: null, arriendo: null, plan: 'free',
+  });
+  assert.deepEqual(
+    lote.caracteristicas.map((c) => c.etiqueta),
+    ['Tipo', 'Área', 'Estrato'],
+  );
+
+  // Un local sí tiene baños y parqueaderos reales; lo que no tiene son alcobas.
+  const local = datosDeInmueble({
+    kind: 'portal',
+    fila: {
+      id: 'y', city: 'espinal', type: 'commercial', price: 55_000_000, area_m2: 30,
+      features: { bedrooms: 2, bathrooms: 1, garages: 1, antiguedad: '9 a 15 años' },
+    },
+    comparables: null, arriendo: null, plan: 'free',
+  });
+  assert.deepEqual(
+    local.caracteristicas.map((c) => c.etiqueta),
+    ['Tipo', 'Área', 'Baños', 'Garajes', 'Antigüedad'],
+  );
+});
+
+test('reporte: un lote no lista «sin parqueadero» como criterio de comparación', () => {
+  // El motor declara ese criterio porque el portal publica el campo en cero y no
+  // puede distinguir un cero publicado de un campo vacío. En la ficha de un
+  // terreno la etiqueta afirma que comparamos parcelas por su garaje.
+  const d = datosDeInmueble({
+    kind: 'portal',
+    fila: { id: 'x', city: 'girardot', type: 'lot', price: 32_000_000, area_m2: 200, features: {} },
+    comparables: {
+      n: 9, medianaPpm2: 200_000, medianaTotal: null, confianza: 'medium',
+      alcance: '1.5 km a la redonda',
+      criterios: ['mismo tipo de inmueble', 'mismo sector (1.5 km a la redonda)', 'área similar (±30%)', '0 habitaciones (±1)', 'sin parqueadero'],
+      mismoTipo: true, ambitoCiudad: false,
+    },
+    arriendo: null, plan: 'suscrito',
+  });
+  assert.deepEqual(d.comparables?.criterios, [
+    'mismo tipo de inmueble', 'mismo sector (1.5 km a la redonda)', 'área similar (±30%)',
+  ]);
+});
+
+test('reporte: cuando la comparación es contra la ciudad entera, el papel lo dice', () => {
+  // Es la diferencia entre un porcentaje fiable y uno orientativo, y en un
+  // documento impreso no hay a quién preguntarle después.
+  const html = construirReporte(datos({
+    comparables: {
+      n: 31, medianaPpm2: 2_000_000, medianaTotal: 180_000_000, confianza: 'low',
+      alcance: 'espinal (toda la ciudad)', criterios: ['misma ciudad (el aviso no indica barrio exacto)'],
+      mismoTipo: false, ambitoCiudad: true,
+    },
+  }));
+  assert.match(html, /Confianza baja: comparación contra toda la ciudad/);
+  assert.match(html, /Confianza baja: se compararon tipos distintos de inmueble/);
+  // Y cuando la muestra es buena, no se inventa una advertencia que no toca.
+  assert.doesNotMatch(construirReporte(datos()), /Confianza baja/);
 });
 
 test('reporte: el descuento de un remate se mide contra su avalúo, no contra la zona', () => {

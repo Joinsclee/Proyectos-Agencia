@@ -209,7 +209,9 @@ h1 .gold { color: var(--gold); }
    `opacity: 0` en vez de `display: none` para que el teclado pueda alcanzarlo. */
 .buscador-modo input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
 .buscador-modo span {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px;
+  /* 44px: el mismo objetivo táctil mínimo que el resto de la interfaz. Estas
+     píldoras son el selector principal del buscador y estaban en 32. */
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px;
   border-radius: 99px; background: #f4eef8; color: var(--pp-dark);
   font-size: 0.78rem; font-weight: 800; white-space: nowrap;
   transition: background .14s ease, color .14s ease;
@@ -255,6 +257,10 @@ h1 .gold { color: var(--gold); }
      mejor el propio contador de resultados en cuanto se busca. Ocupaba dos líneas
      justo por encima del botón. */
   .buscador-nota { display: none; }
+  /* El botón flotante del asistente (54px, esquina inferior derecha) montaba
+     sobre el extremo derecho de «Buscar»: el 12% final del botón principal abría
+     el chat en vez de buscar. Se le deja ese carril libre. */
+  .buscador-cta { margin-right: 62px; }
   /* Una sola columna, dicho explícitamente. Dos campos de 153px obligan a partir
      «Precio máximo (millones)» en dos líneas y dejan los controles desalineados.
      Además el panel de filtros declara `.f:nth-child(2) { grid-column: 1/-1 }`
@@ -433,7 +439,7 @@ h1 .gold { color: var(--gold); }
    recortar el velo por arriba para dejarlas asomar, y partía la imagen en dos: una
    banda nítida arriba y el resto oscurecido. La sombra es necesaria aquí: sobre una
    foto velada, un fondo casi blanco sin sombra se confunde con un reflejo. */
-.source-badge { position: absolute; top: 10px; right: 10px; z-index: 4; font-size: 0.58rem; padding: 4px 9px; border-radius: 7px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(255,255,255,0.92); backdrop-filter: blur(6px); color: #4a2560; box-shadow: 0 2px 10px rgba(0,0,0,0.28); }
+.source-badge { position: absolute; top: 10px; right: 10px; z-index: 4; font-size: 0.7rem; padding: 4px 9px; border-radius: 7px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; background: rgba(255,255,255,0.95); backdrop-filter: blur(6px); color: #4a2560; box-shadow: 0 2px 10px rgba(0,0,0,0.28); }
 .photo-count { position: absolute; bottom: 10px; right: 10px; font-size: 0.7rem; padding: 4px 10px; border-radius: 99px; font-weight: 700; background: rgba(0,0,0,0.65); color: #fff; z-index: 2; }
 .opp-badge { position: absolute; top: 10px; left: 10px; z-index: 4; display: inline-flex; align-items: center; gap: 5px; font-size: 0.68rem; padding: 5px 10px; border-radius: 7px; font-weight: 800; letter-spacing: 0.02em; background: #15803d; color: #fff; backdrop-filter: blur(6px); box-shadow: 0 2px 10px rgba(0,0,0,0.28); }
 .opp-badge .ic { width: 0.92em; height: 0.92em; stroke-width: 2.2; }
@@ -452,7 +458,7 @@ h1 .gold { color: var(--gold); }
    dorado se reserva para la señal (insignia de oportunidad alta), no para todo. */
 .card-body { padding: 14px 15px 15px; flex: 1; display: flex; flex-direction: column; }
 .card-price { font-family: 'Tilt Warp', cursive; font-size: 1.32rem; color: #23132b; line-height: 1; display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap; }
-.card-ppm2 { font-family: 'Barlow Semi Condensed', sans-serif; font-size: 0.72rem; font-weight: 600; color: #7c6a86; letter-spacing: 0.01em; }
+.card-ppm2 { font-family: 'Barlow Semi Condensed', sans-serif; font-size: 0.78rem; font-weight: 600; color: #6b5e75; letter-spacing: 0.01em; }
 .card-titulo { font-size: 0.86rem; color: #3a2a44; font-weight: 700; line-height: 1.3; margin: 10px 0 5px; }
 .card-ubic { font-size: 0.76rem; color: #6b7280; display: flex; align-items: center; gap: 5px; }
 .card-ubic .ic { color: var(--pp); opacity: 0.55; }
@@ -473,7 +479,10 @@ h1 .gold { color: var(--gold); }
 .countdown.now { background: #b91c1c; }
 .countdown.past { background: rgba(20,12,26,0.6); font-weight: 700; }
 /* Postura mínima destacada en la tarjeta de remate */
-.card-price-label { font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #8a7b93; margin-bottom: 5px; }
+/* 0,6rem son 9,6px, y esta etiqueta dice qué ES la cifra más grande de la
+   tarjeta —«Postura mínima»—. Sube a 12px legibles y a un gris que llega a 4,5:1;
+   antes se quedaba en 3,94:1, pequeño y pálido a la vez. */
+.card-price-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #6b5e75; margin-bottom: 5px; }
 .card-sub { font-size: 0.76rem; color: #6b7280; margin-top: 5px; }
 /* Placeholder branded para activos de banco sin foto real */
 .bank-ph { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: linear-gradient(135deg, var(--pp-dark), var(--pp)); color: #fff; }
@@ -643,6 +652,12 @@ h1 .gold { color: var(--gold); }
 .kv-largo > summary::marker { color: var(--pp); }
 .kv-largo[open] > summary { margin-bottom: 6px; }
 .kv-largo p { margin: 0; }
+/* El aviso del juzgado que no dice qué se subasta lo declara aquí, debajo del
+   título, para que «Inmueble» no se lea como si fuera el tipo. */
+.tipo-sin-confirmar { font-size: 0.76rem; color: #6b7280; line-height: 1.5; margin: 2px 0 8px; font-style: italic; }
+/* Cuando la descripción no está entera —la cortó la fuente o la cortamos nosotros—
+   se dice debajo, en voz baja: es una nota sobre el dato, no una alarma. */
+.desc-aviso { font-size: 0.74rem; color: #6b7280; line-height: 1.5; margin: 8px 0 0; font-style: italic; }
 .pub { white-space: pre-line; font-size: 0.88rem; line-height: 1.65; color: #374151; }
 /* Botón colapsable "Ver copia exacta de la publicación" (pedido del cliente) */
 .pub-toggle { display: inline-flex; align-items: center; gap: 8px; background: #f0e6f7; color: var(--pp); border: 1px solid #e3d4ee; border-radius: 10px; padding: 11px 16px; font-family: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: background 0.15s; }
@@ -1791,3 +1806,63 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
    en la página de planes. Discreto y en verde, porque quita un miedo; si gritara
    parecería justo lo contrario, una promoción con letra pequeña. */
 .aviso-piloto { margin: 10px 0 0; padding: 9px 12px; border-radius: 10px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 0.82rem; line-height: 1.45; }
+
+/* El umbral de cada nivel de estrellas. En cursiva y a media fuerza: es el dato
+   que convierte «más estrellas, más barato» en algo comprobable, pero no debe
+   competir con el nombre de la categoría. */
+.legend-umbral { display: block; font-style: normal; font-size: 0.72rem; color: #7c6a86; margin-top: 1px; }
+
+/* Aviso de rentabilidad fuera de rango. Ámbar y no rojo: el número no está mal
+   calculado, es que el dato de partida probablemente lo esté. */
+.rent-atipico { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: #fefce8; border: 1px solid #f3e08a; color: #7a5c05; font-size: 0.82rem; line-height: 1.5; }
+.rent-atipico .ic { flex: none; width: 16px; height: 16px; margin-top: 2px; }
+
+/* Salida del estado de error. Un mensaje que dice «reintenta» sin un botón deja
+   a la persona buscando dónde hacerlo; lo único que se le ocurre es recargar la
+   página, y eso le borra los filtros que había puesto. */
+.empty-retry { margin-top: 14px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: var(--pp); color: #fff; font-family: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+.empty-retry:hover { filter: brightness(1.08); }
+
+/* Confianza de la comparación, arriba del porcentaje y no en letra pequeña.
+   Cuando el motor tuvo que salirse del barrio —o mezclar tipos de inmueble— para
+   reunir la muestra, el porcentaje deja de ser una medida y pasa a ser una
+   orientación. Esa diferencia es lo único que le permite a alguien sin experiencia
+   saber cuánto peso ponerle a la cifra, así que ocupa el espacio de un aviso. */
+.market-confianza { margin: 0 0 12px; display: flex; flex-direction: column; gap: 8px; }
+.market-confianza p {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0;
+  padding: 11px 13px; border-radius: 10px; background: #fff8e1; border: 1px solid #f0d98a;
+  font-size: 0.83rem; line-height: 1.5; color: #7c4a03;
+}
+.market-confianza strong { display: block; color: #6b3d02; }
+.market-confianza .ic { flex: none; width: 17px; height: 17px; margin-top: 2px; }
+
+/* «Otras oportunidades cercanas»: la aclaración de que NO son los comparables del
+   cálculo va antes que las tarjetas, porque la confusión se produce al verlas. */
+.rec-aclaracion {
+  display: flex; align-items: flex-start; gap: 8px; margin: -2px 0 14px;
+  padding: 10px 12px; border-radius: 10px; background: #f6f2fa; border: 1px solid #e3d4ee;
+  color: #55406a; font-size: 0.8rem; line-height: 1.5;
+}
+.rec-aclaracion .ic { flex: none; width: 16px; height: 16px; margin-top: 2px; }
+.rec-sub { margin: 16px 0 6px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pp); }
+.rec-sub:first-of-type { margin-top: 4px; }
+
+/* Glosario del remate. Plegado por defecto: quien ya conoce los términos no
+   necesita verlos, y quien no, los encuentra donde le surgió la duda. */
+.glosario { border: 1px solid var(--border, #e7dfec); border-radius: 12px; background: #faf7fb; }
+.glos-titulo { display: flex; align-items: center; gap: 8px; padding: 12px 14px; font-weight: 700; font-size: 0.9rem; color: var(--pp-dark); cursor: pointer; list-style: none; }
+.glos-titulo::-webkit-details-marker { display: none; }
+.glos-body { display: grid; grid-template-columns: minmax(120px, auto) 1fr; gap: 8px 16px; padding: 0 14px 14px; font-size: 0.84rem; line-height: 1.5; }
+.glos-t { font-weight: 700; color: var(--pp-dark); }
+.glos-d { color: #55495e; }
+@media (max-width: 620px) { .glos-body { grid-template-columns: 1fr; gap: 2px 0; } .glos-t { margin-top: 8px; } }
+
+/* Cuánto cupo queda, dentro del propio bloque bloqueado. Es el dato que decide
+   si abrir esta ficha o guardarla para después, y antes solo aparecía cuando ya
+   se había agotado — es decir, cuando ya no servía para decidir nada. */
+.lock-cupo { display: block; margin-top: 6px; font-size: 0.76rem; font-weight: 700; color: var(--gold-dark, #8a6a00); }
+
+/* Qué es esta sección, al entrar. Discreto: es contexto para quien llega de
+   fuera, no un anuncio para quien ya sabe dónde está. */
+.seccion-intro { margin: 0 0 12px; font-size: 0.88rem; line-height: 1.5; color: #55495e; max-width: 76ch; }

@@ -278,9 +278,23 @@ function criteriaFor(c: Candidate, comps: Comp[], lvl: Level, cfg: ComparablesCo
   const mayoria = (f: (x: Comp) => boolean) => comps.length > 0 && comps.filter(f).length >= comps.length / 2;
 
   if (c.type) out.push('mismo tipo de inmueble');
+  // La etiqueta de ubicación sigue al NIVEL de la cascada, no solo al radio. Decía
+  // «mismo sector» siempre que el inmueble tuviera coordenadas, incluso en el
+  // último nivel: en Palmira eso ponía «mismo sector (4,5 km a la redonda)» —que
+  // es la ciudad entera— justo al lado del aviso de que la comparación había sido
+  // contra toda la ciudad. Dos frases opuestas en la misma pantalla no se leen
+  // como un matiz: se leen como que el sistema no sabe lo que dice. Es el mismo
+  // vocabulario que ya usa la portada (`server/destacados.ts`).
+  const nivel = cascadaNivel(lvl);
+  const conGeo = c.lat != null && c.lng != null;
+  const radio = Math.round(cfg.radiusKm * lvl.radiusMult * 10) / 10;
   out.push(
-    lvl.radiusMult != null && c.lat != null && c.lng != null
-      ? `mismo sector (${Math.round(cfg.radiusKm * lvl.radiusMult * 10) / 10} km a la redonda)`
+    conGeo
+      ? nivel === 'ciudad'
+        ? `toda la ciudad (${radio} km a la redonda)`
+        : nivel === 'zona_ampliada'
+          ? `zona ampliada (${radio} km a la redonda)`
+          : `mismo sector (${radio} km a la redonda)`
       : lvl.useZone && c.zone
         ? `mismo barrio (${c.zone})`
         : 'misma ciudad',

@@ -44,6 +44,13 @@ export interface ListQuery {
   type?: string;
   priceMin?: number;   // COP
   priceMax?: number;   // COP
+  /**
+   * Todas las formas en que la ciudad pedida aparece escrita en la base.
+   *
+   * Lo rellena quien llama —no el usuario— justo antes de consultar, porque
+   * resolverlo exige ir a la base y `applyInmuebleFilters` es síncrona.
+   */
+  _ciudadVariantes?: string[];
   areaMin?: number;    // m²
   areaMax?: number;    // m²
   bedroomsMin?: number;
@@ -139,7 +146,13 @@ function applyInmuebleFilters(qb: any, q: ListQuery) {
   // Descuentos imposibles (>70% = error de datos) fuera; se conservan los no
   // evaluados (discount_pct null) para no ocultar listados sin veredicto.
   qb = qb.or(`discount_pct.is.null,discount_pct.lte.${MAX_OPP_DISCOUNT}`);
-  if (q.city) qb = qb.eq('city', q.city);
+  // La misma ciudad está escrita de varias formas («bogota» y «bogota d.c.»), así
+  // que filtrar por igualdad exacta enseñaba una fracción del inventario sin
+  // decirlo. Cuando quien llama ya resolvió las variantes, se buscan todas.
+  if (q.city) {
+    const variantes = q._ciudadVariantes;
+    qb = variantes && variantes.length > 1 ? qb.in('city', variantes) : qb.eq('city', q.city);
+  }
   if (q.type) qb = qb.eq('type', q.type);
   if (q.priceMin) qb = qb.gte('price', q.priceMin);
   if (q.priceMax) qb = qb.lte('price', Math.min(q.priceMax, MAX_DISPLAY_PRICE));
@@ -172,6 +185,34 @@ export interface ListResult<T = Record<string, unknown>> {
 
 const clampPage = (p?: number) => Math.max(1, Math.floor(p ?? 1));
 const clampSize = (s?: number) => Math.min(60, Math.max(6, Math.floor(s ?? 24)));
+
+/**
+ * ¿El error es «pediste una página que no existe»?
+ *
+ * PostgREST responde 416 cuando el rango solicitado empieza más allá del último
+ * registro, y eso viajaba como un 500 hasta la pantalla: «No se pudo cargar»,
+ * con un botón de reintentar que repetía la misma petición muerta para siempre.
+ * La única salida era editar la dirección a mano.
+ *
+ * Importa más desde que la página viaja en la URL: cualquier enlace compartido a
+ * partir de la segunda página se rompe en cuanto el inventario encoge —y encoge
+ * cada semana, cuando el scraper retira lo vendido—.
+ */
+function esRangoFueraDeAlcance(
+  error: { code?: string; message?: string } | null,
+  page: number,
+): boolean {
+  if (!error || page <= 1) return false;
+  const mensaje = String(error.message ?? '');
+  // Los dos primeros son la respuesta que PostgREST documenta. El tercero es la
+  // que de verdad llega: el cuerpo del 416 vuelve cortado y el cliente lo deja en
+  // un `{"` suelto, sin código. Se comprueban los tres, y solo a partir de la
+  // página 2 —en la primera nunca puede sobrar rango, así que ahí un error es un
+  // error de verdad y tiene que seguir viéndose como tal.
+  return error.code === 'PGRST103'
+    || /range not satisfiable|416/i.test(mensaje)
+    || /^\{"?$/.test(mensaje.trim());
+}
 
 /**
  * ¿El usuario pidió un rango que ningún inmueble puede cumplir?
@@ -256,6 +297,9 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
   const pageSize = clampSize(q.pageSize);
   if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
+  // Se resuelven aquí las formas en que está escrita la ciudad pedida, porque
+  // exige ir a la base y el armado del filtro es síncrono.
+  if (q.city) q = { ...q, _ciudadVariantes: await ciudadesParaFiltrar(q.city, 'portal') };
 
   // Conteo: EXACTO cuando hay filtros (conjunto acotado → rápido y preciso, que
   // es lo que el usuario necesita para confiar en "X resultados"); PLANNED solo
@@ -339,6 +383,8 @@ export async function queryPortal(q: ListQuery): Promise<ListResult> {
       ({ data, count, error } = await build('none', 'planned'));
     }
   }
+  // Una página más allá del final no es un fallo: es una página vacía.
+  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
   if (error) throw new Error(`queryPortal: ${error.message}`);
 
   // El total tiene que reflejar los filtros SIEMPRE. Antes, con un filtro de
@@ -416,6 +462,9 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   const pageSize = clampSize(q.pageSize);
   if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
+  // Se resuelven aquí las formas en que está escrita la ciudad pedida, porque
+  // exige ir a la base y el armado del filtro es síncrono.
+  if (q.city) q = { ...q, _ciudadVariantes: await ciudadesParaFiltrar(q.city, 'bancos') };
 
   let qb = supabase
     .from('inmuebles')
@@ -448,6 +497,8 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;
+  // Una página más allá del final no es un fallo: es una página vacía.
+  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
   if (error) throw new Error(`queryBancos: ${error.message}`);
   const total = count ?? 0;
   // Rotación semanal del pool bancario (HU de frescura): el inventario de bancos
@@ -509,6 +560,8 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
   qb = qb.range(from, from + pageSize - 1);
 
   const { data, count, error } = await qb;
+  // Una página más allá del final no es un fallo: es una página vacía.
+  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
   if (error) throw new Error(`queryRemates: ${error.message}`);
   const total = count ?? 0;
   return {
@@ -589,7 +642,11 @@ export async function facets(source: 'portal' | 'bancos' = 'portal', city?: stri
   if (city) qb = qb.eq('city', city);
   const { data, error } = await qb;
   if (error) throw new Error(`facets: ${error.message}`);
-  const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
+  // Las ciudades salen del catálogo completo y no de esta consulta: `facets`
+  // también está topada y su muestra variaba entre llamadas. Los barrios sí se
+  // sacan de aquí, porque dependen de la ciudad ya elegida y ahí el tope no
+  // estorba.
+  const cities = ciudadesUnificadas(await catalogoDeCiudades(source));
   const zones = barriosPresentables((data ?? []).map((r) => r.zone), cities);
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
 
@@ -1419,7 +1476,7 @@ const NO_ES_BARRIO = /(^|\s)(vereda|corregimiento|parcelaci[oó]n|condominio|con
 const MINIMO_FICHAS_POR_BARRIO = 3;
 
 /** Minúsculas y sin tildes, para comparar nombres de sitio escritos de cualquier forma. */
-const claveDeLugar = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+const claveDeLugar = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
 
 export function barriosPresentables(
   zonas: Array<string | null | undefined>,
@@ -1448,4 +1505,131 @@ export function barriosPresentables(
   const frecuentes = [...cuenta.entries()].filter(([, n]) => n >= MINIMO_FICHAS_POR_BARRIO);
   const elegidas = frecuentes.length ? frecuentes : [...cuenta.entries()];
   return elegidas.map(([nombre]) => nombre).sort();
+}
+
+/*
+ * ─── La misma ciudad escrita de varias formas ───
+ *
+ * En la base conviven «bogota» y «bogota d.c.», «jamundi» y «jamundi -»,
+ * «floridablanca» y «florida blanca». Cada scraper escribe lo que trae el aviso,
+ * y nadie normalizó nunca esa columna.
+ *
+ * El efecto medido es peor que un desplegable feo: filtrar por «bogota» devolvía
+ * 58 fichas y por «bogota d.c.» otras 2 completamente distintas. Quien elige una
+ * está viendo una fracción del inventario de su ciudad sin ninguna señal de que
+ * exista el resto — el producto le está ocultando oportunidades reales.
+ *
+ * Se resuelve SIN tocar el dato, por la misma razón que los barrios: la columna
+ * la reescribe el scraper en cada pasada, así que una limpieza habría que
+ * repetirla para siempre. Aquí se agrupan las variantes al ofrecerlas y se
+ * expanden al filtrar, que es donde importa.
+ */
+
+/** Sin tildes, sin puntuación y sin espacios: «Bogotá, D.C.» y «bogota dc» colapsan. */
+export function clavePlanaDeCiudad(nombre: string): string {
+  return nombre
+    .normalize('NFD')
+    // Escapado y no el carácter literal: la clase de marcas combinantes escrita a
+    // mano se corrompe con cualquier herramienta que reescriba el archivo, y el
+    // síntoma es que deja de agrupar sin que nada falle.
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '')
+    // \u00abBogot\u00e1 D.C.\u00bb y \u00abBogot\u00e1\u00bb son la misma ciudad: el distrito capital es una
+    // categor\u00eda administrativa, no parte del nombre que alguien busca. Se quita
+    // al final y solo si queda algo, para no convertir un nombre entero en vac\u00edo.
+    .replace(/(distritocapital|dc)$/, '') || nombre.trim().toLowerCase();
+}
+
+/**
+ * Agrupa variantes y devuelve un nombre por ciudad real.
+ *
+ * Gana la forma más corta —«bogota» antes que «bogota d.c.»— porque las colas
+ * («d.c.», el guion suelto) son ruido de captura, no parte del nombre.
+ */
+export function ciudadesUnificadas(ciudades: Array<string | null | undefined>): string[] {
+  const porClave = new Map<string, string>();
+  for (const c of ciudades) {
+    if (!c) continue;
+    const nombre = String(c).trim();
+    if (!nombre) continue;
+    const clave = clavePlanaDeCiudad(nombre);
+    if (!clave) continue;
+    const actual = porClave.get(clave);
+    if (!actual || nombre.length < actual.length) porClave.set(clave, nombre);
+  }
+  return [...porClave.values()].sort();
+}
+
+/** Todas las formas en que esta ciudad aparece escrita en la base. */
+export function variantesDeCiudad(ciudad: string, todas: Array<string | null | undefined>): string[] {
+  const clave = clavePlanaDeCiudad(ciudad);
+  const variantes = todas
+    .filter((c): c is string => Boolean(c) && clavePlanaDeCiudad(String(c)) === clave)
+    .map((c) => String(c));
+  // Si no se conoce el catálogo todavía, se filtra por lo que pidió el usuario:
+  // es exactamente el comportamiento anterior, nunca peor.
+  return variantes.length ? [...new Set(variantes)] : [ciudad];
+}
+
+/**
+ * Catálogo de ciudades tal como están escritas, cacheado.
+ *
+ * Hace falta para expandir un filtro a sus variantes, y se consulta una vez cada
+ * diez minutos: pedirlo en cada búsqueda añadiría una consulta a cada listado
+ * para un dato que cambia cuando corre el scraper, no cuando alguien filtra.
+ *
+ * Un fallo aquí NO puede tumbar la búsqueda: se devuelve lo último que se supo, o
+ * una lista vacía, y entonces el filtro se comporta como siempre se comportó.
+ */
+const CIUDADES_TTL_MS = 10 * 60_000;
+const cacheCiudades = new Map<string, { at: number; datos: string[] }>();
+
+/**
+ * Se pide POR FUENTE y no de golpe.
+ *
+ * Una sola consulta a `inmuebles` se lleva un tope de filas, y con 108.000 del
+ * portal las variantes raras se quedan fuera del corte: «bogota d.c.» son dos
+ * fichas de banco y no aparecían nunca, así que la expansión no unía nada. Por
+ * fuente, los bancos caben enteros y el portal trae sus ciudades frecuentes.
+ */
+async function catalogoDeCiudades(fuente: 'portal' | 'bancos'): Promise<string[]> {
+  const cache = cacheCiudades.get(fuente);
+  if (cache && Date.now() - cache.at < CIUDADES_TTL_MS) return cache.datos;
+  try {
+    let qb = supabase.from('inmuebles').select('city').eq('is_active', true).limit(8000);
+    qb = fuente === 'portal'
+      ? qb.eq('source', 'fincaraiz')
+      : qb.in('source', BANK_SOURCES as unknown as string[]);
+    const { data, error } = await qb;
+    if (error) throw new Error(error.message);
+    // SE ACUMULA, no se reemplaza.
+    //
+    // La consulta trae 8.000 filas de las 108.000 del portal, y PostgREST elige
+    // cuáles sin ningún orden garantizado: cada llamada ve un trozo distinto del
+    // inventario. Quedarse con la última respuesta hacía que el desplegable
+    // ofreciera entre 45 y 77 ciudades según el momento y que municipios con
+    // inventario real —Nilo con 103 fichas, Buga con 65— aparecieran una vez de
+    // cada quince.
+    //
+    // Ordenar no lo arregla: con `order` el tope de filas devuelve solo las
+    // ciudades alfabéticamente primeras, y la lista baja a once. Acumular sí: cada
+    // refresco añade lo que vea y la lista converge hacia el catálogo completo sin
+    // volver a encoger. El precio es que una ciudad que se quede sin inventario
+    // sigue ofreciéndose hasta el próximo reinicio, y ahí la búsqueda saldrá vacía
+    // — mucho menos grave que esconder inventario que sí existe.
+    const vistas = new Set(cacheCiudades.get(fuente)?.datos ?? []);
+    for (const fila of data ?? []) if ((fila as any).city) vistas.add((fila as any).city as string);
+    const datos = [...vistas];
+    cacheCiudades.set(fuente, { at: Date.now(), datos });
+    return datos;
+  } catch (e) {
+    log.error(`no se pudo leer el catálogo de ciudades de ${fuente}: ${String(e)}`);
+    return cache?.datos ?? [];
+  }
+}
+
+/** Qué escribir en el `in(...)` de la consulta para cubrir todas las formas de esa ciudad. */
+export async function ciudadesParaFiltrar(ciudad: string, fuente: 'portal' | 'bancos'): Promise<string[]> {
+  return variantesDeCiudad(ciudad, await catalogoDeCiudades(fuente));
 }

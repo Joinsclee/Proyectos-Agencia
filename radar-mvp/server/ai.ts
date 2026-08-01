@@ -13,7 +13,7 @@
 import type { MarketContext } from '../engine/zone-comps.js';
 
 export interface AiPropertyFacts {
-  kind: 'banco' | 'remate';
+  kind: 'portal' | 'banco' | 'remate';
   tipo: string | null;
   ciudad: string | null;
   zona: string | null;
@@ -68,7 +68,13 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
         facts.banco_demandante ? 'El demandante es un BANCO (suele implicar título más limpio y proceso hipotecario estándar).' : '',
       ].filter(Boolean).join('\n')
     : [
-        `INMUEBLE DE BANCO (dación/venta directa). Tipo: ${facts.tipo ?? 'n/d'}. Ciudad: ${facts.ciudad ?? 'n/d'}${facts.zona ? `, ${facts.zona}` : ''}.`,
+        // La procedencia importa y hasta ahora se mentía: TODA ficha de portal se
+        // analizaba con el prompt de banco, así que el modelo escribía «propiedad
+        // de banco, posibilidad de negociación» sobre el aviso de un particular en
+        // FincaRaíz. Son 20.000 fichas afirmando algo falso sobre quién vende.
+        facts.kind === 'portal'
+          ? `AVISO PUBLICADO EN UN PORTAL por su propietario o una inmobiliaria (no es un inmueble de banco ni un remate). Tipo: ${facts.tipo ?? 'n/d'}. Ciudad: ${facts.ciudad ?? 'n/d'}${facts.zona ? `, ${facts.zona}` : ''}.`
+          : `INMUEBLE DE BANCO (dación/venta directa). Tipo: ${facts.tipo ?? 'n/d'}. Ciudad: ${facts.ciudad ?? 'n/d'}${facts.zona ? `, ${facts.zona}` : ''}.`,
         `Precio de lista: ${cop(facts.precio_lista_cop)}.`,
         facts.area_m2 ? `Área: ${facts.area_m2} m².` : '',
         facts.estrato ? `Estrato: ${facts.estrato}.` : '',
@@ -91,6 +97,18 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
     '- Si la confianza de los comparables es baja o no hubo del mismo tipo, dilo y modera el veredicto.',
     '- Refiérete al ámbito de los comparables: si están acotados al barrio/sector, di "en este sector"; si son de toda la ciudad, acláralo (es una referencia más gruesa).',
     '- Detecta riesgos en el texto del aviso: ocupado/arrendado, proindiviso o cuota/derechos (no el 100%), servidumbres, rural/lote de baja liquidez, fechas de audiencia muy próximas.',
+    // Un activo de banco se negocia y se firma; no hay audiencia, ni depósito
+    // previo, ni otros postores. Que el modelo hable de «pujar» sobre uno de
+    // estos le hace creer al lector que también sale a subasta.
+    facts.kind === 'banco'
+      ? '- Esta propiedad se compra por negociación directa con el banco, NO en subasta: no uses "pujar", "postura", "audiencia" ni "adjudicación"; di "comprar" o "hacer una oferta".'
+      : '',
+    facts.kind === 'remate'
+      ? ''
+      : '- Esta propiedad NO se subasta: no uses «pujar», «postura» ni «audiencia». Se compra por negociación directa.',
+    facts.kind === 'portal'
+      ? '- El vendedor es un particular o una inmobiliaria. NO lo describas como propiedad de un banco.'
+      : '',
     '- Sé conciso y accionable. Responde SOLO con un objeto JSON válido, sin texto adicional, con esta forma exacta:',
     '{',
     '  "veredicto": "atractiva|neutral|riesgosa",',
@@ -144,11 +162,15 @@ export async function analyzeWithAI(
 
   const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === 'string').slice(0, 6) : []);
   const veredicto = ['atractiva', 'neutral', 'riesgosa'].includes(parsed.veredicto) ? parsed.veredicto : 'neutral';
+  // El precio que el usuario está mirando, para poder comprobar si lo que dice el
+  // modelo se sostiene contra él.
+  const precioReal = facts.kind === 'remate' ? num(facts.postura_cop) : num(facts.precio_lista_cop);
+  const estimado = valorDeMercadoCreible(parsed.estimado_mercado_cop);
   return {
     veredicto,
     puntaje: Math.max(0, Math.min(100, Number(parsed.puntaje) || 0)),
-    estimado_mercado_cop: valorDeMercadoCreible(parsed.estimado_mercado_cop),
-    descuento_estimado_pct: descuentoCreible(parsed.descuento_estimado_pct),
+    estimado_mercado_cop: estimado,
+    descuento_estimado_pct: descuentoCoherente(parsed.descuento_estimado_pct, precioReal, estimado),
     resumen: String(parsed.resumen ?? '').slice(0, 600),
     a_favor: arr(parsed.a_favor),
     en_contra: arr(parsed.en_contra),
@@ -195,4 +217,42 @@ export function descuentoCreible(valor: unknown): number | null {
   const n = Number(valor);
   if (!Number.isFinite(n) || n < -100 || n > 95) return null;
   return Math.round(n * 10) / 10;
+}
+
+/** Número finito o nada. Local, para no arrastrar utilidades de otro módulo. */
+function num(v: unknown): number | null {
+  if (v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * El descuento del modelo, comprobado contra su propia estimación.
+ *
+ * El modelo llegó a decir «-30% de descuento» sobre un inmueble de 30 millones
+ * cuyo valor de mercado él mismo estimaba en 22: eso no es un descuento del 30%,
+ * es un sobreprecio del 36%. El signo contradecía a su propio número, y la ficha
+ * pintaba ese porcentaje al lado del veredicto del motor, que decía lo contrario.
+ *
+ * Quien lee no tiene cómo detectar la contradicción ni rehacer la cuenta, así que
+ * el riesgo real no es un número feo: es entusiasmarse con algo sobrevalorado
+ * creyendo que está barato. Cuando el porcentaje no cuadra con la estimación, se
+ * descarta y la ficha se queda sin esa línea —el resto del análisis sigue siendo
+ * útil— en vez de publicar una cifra que apunta al lado contrario.
+ *
+ * La tolerancia es amplia (10 puntos) a propósito: aquí no se persigue precisión
+ * decimal, solo se impide que el signo mienta.
+ */
+export function descuentoCoherente(
+  valor: unknown,
+  precio: number | null,
+  estimado: number | null,
+): number | null {
+  const declarado = descuentoCreible(valor);
+  if (declarado === null) return null;
+  // Sin con qué contrastarlo, se deja pasar lo que ya validó `descuentoCreible`.
+  if (precio === null || estimado === null || precio <= 0 || estimado <= 0) return declarado;
+  const real = ((estimado - precio) / estimado) * 100;
+  if (Math.sign(real) !== Math.sign(declarado) && Math.abs(real - declarado) > 1) return null;
+  return Math.abs(real - declarado) <= 10 ? declarado : null;
 }

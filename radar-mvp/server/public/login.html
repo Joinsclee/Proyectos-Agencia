@@ -49,22 +49,30 @@
     .submit { width: 100%; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--gold), #d4b000); color: var(--pp-deep); font-family: inherit; font-weight: 800; font-size: 1.05rem; cursor: pointer; margin-top: 6px; transition: transform 0.12s, box-shadow 0.15s; box-shadow: 0 8px 22px rgba(242,202,4,0.35); }
     .submit:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(242,202,4,0.45); }
     .submit:disabled { opacity: 0.6; cursor: default; transform: none; }
+    /* `[hidden]` tiene que ganar. La regla de autor `.google{display:flex}` pisaba
+       al navegador, así que el botón de Microsoft se veía aunque el servidor
+       dijera que no está configurado: pulsarlo no hacía absolutamente nada, sin
+       mensaje ni error. Un control muerto en la pantalla de acceso es peor que no
+       ofrecer ese proveedor. */
+    [hidden] { display: none !important; }
     .google { width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font-family: inherit; font-size: 1rem; font-weight: 700; color: #3c4043; cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
     .google:hover { background: #f7f7fa; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
     .google svg { width: 20px; height: 20px; }
-    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: #9ca3af; font-size: 0.82rem; }
+    .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: #6b7280; font-size: 0.82rem; }
     .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
     .msg { margin-top: 16px; padding: 12px 14px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; display: none; }
     .msg.err { display: block; background: #fdecec; color: #c0392b; }
     .msg.ok { display: block; background: #e8f7ee; color: #1e8e4f; }
-    .legal { margin-top: 20px; font-size: 0.78rem; color: #9ca3af; line-height: 1.5; }
+    /* #9ca3af sobre blanco es 2,39:1 — por debajo de lo legible, y aquí va el aviso
+   de Habeas Data, que es justo el texto que no puede quedar en un gris decorativo. */
+.legal { margin-top: 20px; font-size: 0.8rem; color: #6b7280; line-height: 1.5; }
     /* «¿Olvidaste tu contraseña?» es un botón, no un enlace: no navega a ningún
        sitio, intercambia el formulario aquí mismo. Se le quita el aspecto de botón
        pero se le deja el foco visible, que es lo que necesita quien va con teclado. */
     .olvide { margin: 10px 0 0; text-align: right; }
     /* Morado y no dorado: este panel es claro. El dorado de marca funciona sobre
        el degradado oscuro del vídeo, pero aquí quedaría amarillo sobre blanco. */
-    .olvide-link { background: none; border: 0; padding: 4px 2px; font-family: inherit; font-size: 0.84rem; font-weight: 700; color: var(--pp); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .olvide-link { background: none; border: 0; padding: 11px 4px; font-family: inherit; font-size: 0.84rem; font-weight: 700; color: var(--pp); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .olvide-link:hover { color: var(--pp-dark); }
     .olvide-link:focus-visible { outline: 2px solid var(--pp); outline-offset: 3px; border-radius: 4px; }
     .olvide-intro { margin: 0 0 18px; font-size: 0.92rem; line-height: 1.55; color: #5b5560; }
@@ -75,8 +83,14 @@
     @media (max-width: 880px) {
       body { grid-template-columns: 1fr; grid-template-rows: 150px auto; }
       .promo { min-height: 150px; height: 150px; }
-      .promo video { width: 100%; height: 100%; object-fit: cover; opacity: 0.58; }
-      .promo .veil { height: 100%; background: linear-gradient(90deg, rgba(10,4,20,0.88), rgba(10,4,20,0.45)); }
+      /* El vídeo NO se muestra en el teléfono. Trae sus propios titulares quemados
+         («Las mejores oportunidades inmobiliarias están a la vista») y en una banda
+         de 150px se superponían al titular de la página: dos textos distintos en el
+         mismo sitio, ninguno legible. Es la primera pantalla que ve cualquiera que
+         llega, y en Colombia la mayoría llega por el móvil.
+         De paso deja de descargarse un vídeo en datos móviles para hacer de fondo. */
+      .promo video { display: none; }
+      .promo .veil { height: 100%; background: linear-gradient(90deg, rgba(10,4,20,0.55), rgba(10,4,20,0.15)); }
       .promo .brand { top: 18px; left: 20px; }
       .promo .brand b { font-size: 0.78rem; }
       .promo .tagline { left: 20px; right: 20px; bottom: 18px; }
@@ -107,8 +121,12 @@
     <div class="veil"></div>
     <div class="brand"><span class="dot"></span><b>Radar de Oportunidades · CRECE</b></div>
     <div class="tagline">
-      <h2>Encuentra inmuebles hasta <span class="g">70% bajo el mercado.</span></h2>
-      <p>Bancos, remates judiciales y portal abierto — rastreados y comparados para ti, cada semana.</p>
+      <!-- El «hasta 70% bajo el mercado» no se sostenía en las tres categorías: los
+           remates se comparan contra el avalúo del juzgado, no contra el mercado, y
+           hay fichas del portal por ENCIMA del precio de su zona. Una promesa que la
+           propia app contradice al segundo clic cuesta más de lo que trae. -->
+      <h2>Inmuebles por debajo de <span class="g">lo que piden por otros iguales.</span></h2>
+      <p>Bancos, remates judiciales y portales — rastreados y comparados para ti, cada semana.</p>
     </div>
   </section>
 

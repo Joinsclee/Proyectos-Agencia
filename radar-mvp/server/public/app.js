@@ -9,13 +9,37 @@ const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos', other: 'Otros', others: 'Otros' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Rama Judicial' }[s] || s);
+/**
+ * Concuerda el sustantivo con el número, en vez de escribir «2 día(s)».
+ *
+ * El «(s)» es de formulario: lo pone quien no quiere decidir, y quien lee ve un
+ * campo de base de datos en medio de un aviso sobre su dinero. El número ya está
+ * ahí, así que no hay nada que decidir.
+ */
+const plural = (n, singular, varios) => `${n} ${Math.abs(Number(n)) === 1 ? singular : varios}`;
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
-const emptyState = (icon, title, description, tone = '') => `
+// `accion` es HTML ya formado y opcional: un estado de error sin forma de salir
+// de él deja al usuario mirando un mensaje que le dice «reintenta» sin darle con
+// qué. El resto de los estados vacíos no la necesitan y no la pasan.
+/**
+ * Cómo se desplaza la página, según lo que haya pedido la persona.
+ *
+ * `scroll-behavior: auto` en el CSS no basta: un `scrollIntoView({behavior:'smooth'})`
+ * escrito en el guion gana siempre sobre la hoja de estilos. Quien activa «reducir
+ * movimiento» lo hace por vértigo o migraña, y un desplazamiento animado que no
+ * pidió es exactamente lo que quería evitar.
+ */
+const suave = () => (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+
+const emptyState = (icon, title, description, tone = '', accion = '') => `
   <div class="empty-icon${tone ? ` is-${tone}` : ''}">${ic(icon, icon === 'alert-triangle' || icon === 'check-circle' ? 'ic-reicon' : '')}</div>
   <div class="h">${esc(title)}</div>
-  <div>${esc(description)}</div>`;
+  <div>${esc(description)}</div>${accion}`;
+
+/** El botón que repite la última carga, para los estados de error. */
+const botonReintentar = () => '<button class="empty-retry" type="button" data-reintentar>Reintentar</button>';
 // Oportunidad ALTA: la marca el motor (decil más barato + descuento grande +
 // comparables homogéneos) y viaja en la columna is_high.
 const isHighOpp = (d) => d.is_high === true;
@@ -360,6 +384,15 @@ window.__alTerminarRecorrido = () => {
   invitarAPersonalizar();
 };
 
+// Reintentar tras un error de carga. Repite lo último que se pidió —la portada o
+// el listado de la pestaña activa— sin recargar la página, para no perder los
+// filtros que la persona ya había puesto.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest?.('[data-reintentar]')) return;
+  if (state.tab === 'home') { void loadHome(); return; }
+  void load(state.page || 1);
+});
+
 document.addEventListener('click', (e) => {
   const boton = e.target.closest?.('[data-bv]');
   if (!boton) return;
@@ -404,7 +437,7 @@ function invitarAPersonalizar() {
       radarSetupState.open = true;
       radarSetupState.step = 0;
       renderRadarSetup();
-      $('radar-setup')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      $('radar-setup')?.scrollIntoView({ block: 'center', behavior: suave() });
     }, 1400);
   }, 700);
 }
@@ -588,11 +621,38 @@ function gateFicha(id) {
   if (!auth.token) recordView(id);
   return true;
 }
+/**
+ * Lo que hay detrás del muro, con el precio dicho.
+ *
+ * El botón decía «Desbloquear» en los tres bloques por igual —análisis, datos
+ * del proceso, descripción— sin distinguir si hacía falta una cuenta gratuita o
+ * el plan de pago, y sin decir cuánto cupo le queda a quien ya tiene cuenta. Tres
+ * botones idénticos que llevan a sitios distintos enseñan a no leerlos.
+ *
+ * Ahora el botón nombra el paso siguiente y, cuando hay cuenta, se dice cuántas
+ * fichas quedan del mes: es el dato que decide si abrir esta o guardarla para
+ * después, y hasta ahora solo aparecía cuando ya se había agotado.
+ */
 function lockBox(label, sub) {
-  return `<div class="section"><a class="lockbox" href="/login">
+  const cupo = auth.account?.cupo;
+  const conCuenta = !!auth.token;
+  const restantes = Number(cupo?.restantes);
+  const ilimitado = cupo?.ilimitado === true;
+
+  const destino = conCuenta ? '/planes' : '/login';
+  const accion = conCuenta
+    ? (ilimitado || restantes > 0 ? 'Abrir con tu cupo' : 'Ver el plan sin límite')
+    : 'Crear cuenta gratis';
+  // El recordatorio del cupo solo tiene sentido para quien lo tiene y no es
+  // ilimitado. A quien no ha entrado se le ofrece la cuenta, no un contador que
+  // todavía no es suyo.
+  const pie = conCuenta && !ilimitado && Number.isFinite(restantes)
+    ? `<span class="lock-cupo">Te quedan ${restantes} de ${CUPO_FREE_MENSUAL} fichas este mes</span>`
+    : '';
+  return `<div class="section"><a class="lockbox" href="${destino}">
     <span class="lock-ic">${ic('lock')}</span>
-    <div class="lock-txt"><strong>${esc(label)}</strong><span>${esc(sub || 'Regístrate gratis para verlo')}</span></div>
-    <span class="lock-cta">Desbloquear</span>
+    <div class="lock-txt"><strong>${esc(label)}</strong><span>${esc(sub || 'Crea tu cuenta gratis para verlo')}</span>${pie}</div>
+    <span class="lock-cta">${esc(accion)}</span>
   </a></div>`;
 }
 function showRegisterWall(count) {
@@ -650,11 +710,16 @@ function showRegisterWall(count) {
  * empaquetador) y `server/crece-tabla.test.ts` comprueba que las dos copias
  * digan lo mismo, que es lo que evita que se separen en silencio.
  */
+// El `umbral` sale de los cortes de `engine/crece.ts` (0,75 · 0,80 · 0,90 · 0,93):
+// un índice de 0,75 es estar un 25% por debajo. Se escribe aquí porque la leyenda
+// decía «más estrellas, más por debajo» sin un solo número, y sin números nadie
+// puede saber si tres estrellas son un 12% o un 40%. Si esos cortes cambian en el
+// motor, hay que tocar esta columna: son los mismos cuatro valores.
 const TABLA_CRECE = [
-  { tier: 'oportunidad_fuerte', lectura: 'Oportunidad Fuerte', estrellas: 3, huecas: 0, estrellasTexto: '★★★' },
-  { tier: 'oportunidad', lectura: 'Oportunidad', estrellas: 2, huecas: 0, estrellasTexto: '★★' },
-  { tier: 'interesante', lectura: 'Interesante', estrellas: 1, huecas: 0, estrellasTexto: '★' },
-  { tier: 'abajo_mercado', lectura: 'Abajo del Mercado', estrellas: 0, huecas: 1, estrellasTexto: '☆' },
+  { tier: 'oportunidad_fuerte', lectura: 'Oportunidad Fuerte', estrellas: 3, huecas: 0, estrellasTexto: '★★★', umbral: '25% o más por debajo' },
+  { tier: 'oportunidad', lectura: 'Oportunidad', estrellas: 2, huecas: 0, estrellasTexto: '★★', umbral: 'entre 20% y 25%' },
+  { tier: 'interesante', lectura: 'Interesante', estrellas: 1, huecas: 0, estrellasTexto: '★', umbral: 'entre 10% y 20%' },
+  { tier: 'abajo_mercado', lectura: 'Abajo del Mercado', estrellas: 0, huecas: 1, estrellasTexto: '☆', umbral: 'menos del 10%' },
   { tier: 'mercado_borde_bajo', lectura: 'Ligeramente por debajo del mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
   { tier: 'mercado', lectura: 'Precio de Mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
 ];
@@ -701,6 +766,23 @@ function selloIguales(p) {
  * interno»— y un 0,62 no significa nada para quien mira; las estrellas y el nombre
  * de la categoría sí.
  */
+/**
+ * Contra QUÉ se midió ese porcentaje, según hasta dónde tuvo que abrirse el motor.
+ *
+ * El sello decía siempre «de su sector», también cuando la comparación había sido
+ * contra la ciudad entera —4.271 fichas activas están en ese caso—. Es la misma
+ * frase de la portada (`server/destacados.ts`), que sí distingue los tres niveles,
+ * y aquí no distinguía ninguno: la ficha prometía una precisión de barrio que el
+ * dato no tiene, y unas líneas más abajo el propio análisis de mercado la
+ * desmentía. Dos afirmaciones opuestas en la misma pantalla es exactamente lo que
+ * hace que se deje de creer a las dos.
+ */
+function referenciaDeNivel(nivel) {
+  if (nivel === 'ciudad') return 'de los precios de su ciudad';
+  if (nivel === 'zona_ampliada') return 'de los precios de su zona';
+  return 'de los precios de su sector';
+}
+
 function selloCreceFicha(p) {
   const c = CRECE_POR_TIER.get(p.crece_tier);
   if (!c) return '';
@@ -708,7 +790,7 @@ function selloCreceFicha(p) {
   return `<div class="ficha-crece${p.crece_tier === 'oportunidad_fuerte' ? ' es-fuerte' : ''}">
     <span class="fc-estrellas" aria-hidden="true">${c.estrellasTexto}</span>
     <span class="fc-lectura">${esc(c.lectura)}</span>
-    ${d != null && d > 0 ? `<span class="fc-desc">${d}% por debajo de los precios de su sector</span>` : ''}
+    ${d != null && d > 0 ? `<span class="fc-desc">${d}% por debajo ${referenciaDeNivel(p.cascada_nivel)}</span>` : ''}
   </div>`;
 }
 
@@ -790,9 +872,12 @@ const ONBOARDING_PASOS = [
     icono: 'scale',
     titulo: 'Subastas judiciales, con su riesgo a la vista',
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
-    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La ley fija la base de todas las subastas en el 70% del avalúo, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
+    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La postura mínima la fija el juzgado —suele ser un porcentaje del avalúo—, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
     puntos: [
-      'Se ordenan por demandante bancario primero: título más limpio',
+      // Se retira «título más limpio». Que demande un banco es una señal, no un
+      // seguro, y prometerlo aquí rebaja la cautela justo en la categoría donde
+      // más falta hace. Es la misma corrección que ya se hizo en la portada.
+      'Que el demandante sea un banco no garantiza que el inmueble esté sin problemas',
       'Si solo se remata una parte del bien, la ficha lo avisa en amarillo',
     ],
     ir: 'remates',
@@ -1115,6 +1200,13 @@ const planActual = () => planDelServidor;
 
 function readFilters() {
   const g = (id) => { const e = $(id); return e && e.value ? e.value : undefined; };
+  // Un número negativo no es un filtro: el precio o el área de un inmueble no
+  // pueden serlo, y el servidor los descarta. Contarlos como activos hacía que la
+  // interfaz dijera «1 filtro» sobre un resultado sin filtrar.
+  const gNoNegativo = (id) => {
+    const v = g(id);
+    return v != null && Number(v) >= 0 ? v : undefined;
+  };
   // millones → COP. Un cero NO es un filtro: el servidor lo descarta por falso,
   // pero el contador lo sumaba igual, así que la interfaz decía «1 filtro activo»
   // sobre las 108.060 fichas sin filtrar. Un contador que no cuadra con lo que se
@@ -1126,8 +1218,8 @@ function readFilters() {
   return {
     city: g('f-city'), zone: g('f-zone'), type: g('f-type'),
     priceMin: M('f-priceMin'), priceMax: M('f-priceMax'),
-    areaMin: g('f-areaMin'), areaMax: g('f-areaMax'),
-    bedroomsMin: g('f-bedroomsMin'), stratumMin: g('f-stratumMin'), stratumMax: g('f-stratumMax'),
+    areaMin: gNoNegativo('f-areaMin'), areaMax: gNoNegativo('f-areaMax'),
+    bedroomsMin: gNoNegativo('f-bedroomsMin'), stratumMin: g('f-stratumMin'), stratumMax: g('f-stratumMax'),
     // El desplegable ya solo dice categorías del Índice CRECE, así que su valor
     // ES la categoría. El servidor sigue aceptando el viejo `opp` para no romper
     // enlaces ya compartidos, pero desde aquí no se envía nunca.
@@ -1497,11 +1589,196 @@ async function reconstruirFiltrosConservandoValores() {
 function restaurarValorDeFiltro(id, valor) {
   const el = $(id);
   if (!el) return;
-  // Un `<select>` al que se le asigna un valor inexistente se queda vacío en
-  // silencio, y eso es peor que no restaurar: el filtro parecería limpio.
-  if (el.tagName === 'SELECT' && ![...el.options].some((o) => o.value === valor)) return;
+  // Si el desplegable no ofrece ese valor, se AÑADE en vez de descartarlo.
+  //
+  // Descartarlo en silencio hacía que un enlace compartido perdiera su filtro sin
+  // decir nada: la dirección decía «Nilo» y la pantalla enseñaba las 108.000
+  // fichas del país. El catálogo de ciudades ya es estable, pero esto vale igual
+  // como red: un municipio con dos fichas, una lista recortada o un enlace de hace
+  // meses no pueden convertirse en «te enseño otra cosa sin avisar». Lo que la
+  // persona pidió manda sobre lo que la lista traía.
+  if (el.tagName === 'SELECT' && ![...el.options].some((o) => o.value === valor)) {
+    const opcion = document.createElement('option');
+    opcion.value = valor;
+    opcion.textContent = cap(valor);
+    el.appendChild(opcion);
+  }
   el.value = valor;
 }
+
+// ---------- La búsqueda, escrita en la dirección del navegador ----------
+/**
+ * La traducción entre pantalla y URL vive en `url-estado.js`, aparte y sin DOM,
+ * para poder probarla. Aquí está solo lo que necesita el navegador: leer los
+ * controles, escribir el historial y reconstruir la pantalla al volver.
+ */
+
+/**
+ * Mientras se reconstruye la pantalla DESDE la dirección no se escribe en ella.
+ *
+ * Sin esto, restaurar `?tab=bancos&page=3` pasaría por un `load(1)` intermedio
+ * que dejaría escrito `page=1` encima de la dirección que estamos leyendo, y el
+ * botón «atrás» acabaría llevando a un sitio que el usuario nunca visitó.
+ */
+let sincronizacionDeUrlEnPausa = false;
+/**
+ * Si el próximo cambio de dirección es un PASO de navegación o una corrección.
+ *
+ * Cambiar de sección es un paso: la persona espera que «atrás» la devuelva a
+ * donde estaba, y hasta hoy «atrás» la sacaba de la aplicación entera. Cambiar un
+ * filtro no lo es: quien mueve el precio cuatro veces seguidas no quiere pulsar
+ * «atrás» cuatro veces para salir, así que esos se reescriben en el sitio.
+ */
+let empujarProximaUrl = false;
+/**
+ * Filtros que la dirección traía y que todavía no tienen control donde ponerse.
+ *
+ * Solo pasa con «Mis fichas», que únicamente se pinta para el plan gratuito y por
+ * tanto no existe hasta que el servidor contesta cuál es el plan —después del
+ * primer listado—. Sin esta nota, un enlace compartido con `mias=1` perdía ese
+ * filtro en silencio, que es la peor forma de fallar: el listado enseña otra cosa
+ * y la pantalla no dice por qué.
+ */
+let estadoUrlPendiente = null;
+
+/** Lo que los controles tienen puesto ahora, con los nombres cortos de la URL. */
+function filtrosDeLosControles() {
+  const filtros = {};
+  for (const [control, parametro] of window.__radarUrlEstado.CONTROLES) {
+    const el = $(control);
+    if (el && el.value) filtros[parametro] = el.value;
+  }
+  return filtros;
+}
+
+/**
+ * La búsqueda que la pantalla está enseñando, escrita como cadena de consulta.
+ *
+ * Sirve para las dos direcciones: escribir la dirección y comprobar si la que
+ * llega ya es la que se ve. El orden inicial de cada sección lo decide `ORDERS`,
+ * y no se escribe en la dirección mientras nadie lo haya cambiado.
+ */
+function busquedaComoQuery(tab, page, filtros) {
+  const sinPaginador = tab === 'home' || tab === 'guardados';
+  return window.__radarUrlEstado.serializar({
+    tab,
+    page: sinPaginador ? 1 : page,
+    filtros,
+    ordenPorDefecto: ORDERS[tab]?.[0]?.[0],
+  });
+}
+
+/**
+ * Deja la dirección diciendo lo que la pantalla enseña.
+ *
+ * Se llama desde `load()`, que es por donde pasa TODA búsqueda —el panel, el
+ * buscador de la portada, el paginador, «aplicar mi Radar» y el asistente—. Tener
+ * un solo sitio donde se escribe la URL es lo que impide que mañana una de esas
+ * seis vías cambie el listado sin cambiar la dirección.
+ */
+function sincronizarUrl(page) {
+  const empujar = empujarProximaUrl;
+  empujarProximaUrl = false;
+  if (sincronizacionDeUrlEnPausa) return;
+  const query = busquedaComoQuery(state.tab, page, filtrosDeLosControles());
+  const destino = query ? `${location.pathname}?${query}` : location.pathname;
+  if (destino === location.pathname + location.search) return;
+  try {
+    if (empujar) history.pushState(null, '', destino);
+    else history.replaceState(null, '', destino);
+  } catch { /* sin historial utilizable la búsqueda funciona igual, solo no se puede compartir */ }
+}
+
+/**
+ * Vuelca en los controles la búsqueda que venía escrita en la dirección.
+ *
+ * Corre como `antesDeCargar` de `activarPestana`: con los filtros ya pintados y
+ * antes de pedir resultados, para que no se vea medio segundo de un listado que
+ * nadie pidió.
+ *
+ * El barrio va aparte porque sus opciones dependen de la ciudad: hay que repoblar
+ * la lista antes, o se restauraría un valor que todavía no existe en ella.
+ */
+async function aplicarEstadoDeLaUrl(estado) {
+  const filtros = estado.filtros;
+  const pendientes = {};
+  for (const [control, parametro] of window.__radarUrlEstado.CONTROLES) {
+    if (parametro === 'zone') continue;
+    const valor = filtros[parametro];
+    if (valor == null) continue;
+    if (!$(control)) { pendientes[parametro] = valor; continue; }
+    restaurarValorDeFiltro(control, valor);
+  }
+  estadoUrlPendiente = Object.keys(pendientes).length ? pendientes : null;
+
+  const ciudad = $('f-city');
+  if (state.tab === 'portal' && ciudad?.value) {
+    await repopZones(ciudad.value);
+    if (filtros.zone != null) restaurarValorDeFiltro('f-zone', filtros.zone);
+  }
+  updateFilterCount();
+}
+
+/**
+ * Segunda pasada para los filtros que aún no tenían control cuando se leyó la URL.
+ *
+ * Se llama tras reconstruir el panel con el plan ya conocido. Si algo entra de
+ * verdad, hay que volver a pedir el listado: el usuario está viendo un resultado
+ * que no corresponde al enlace que abrió.
+ */
+async function completarFiltrosPendientesDeLaUrl() {
+  const pendientes = estadoUrlPendiente;
+  estadoUrlPendiente = null;
+  if (!pendientes) return;
+  let aplicado = false;
+  for (const [control, parametro] of window.__radarUrlEstado.CONTROLES) {
+    const valor = pendientes[parametro];
+    const el = $(control);
+    // `el.value` no vacío = el usuario ya tocó ese filtro mientras cargaba, y su
+    // decisión es más reciente que la del enlace.
+    if (valor == null || !el || el.value) continue;
+    restaurarValorDeFiltro(control, valor);
+    if (el.value === valor) aplicado = true;
+  }
+  if (!aplicado) return;
+  updateFilterCount();
+  await load(state.page);
+}
+
+/**
+ * Reconstruye la pantalla a partir de la dirección actual.
+ *
+ * La usan las dos entradas por dirección: abrir un enlace compartido y pulsar
+ * «atrás»/«adelante». En ambas la URL es la fuente de verdad, incluso frente al
+ * Radar guardado: un enlace es una intención escrita y reciente, y la preferencia
+ * es una suposición sobre lo que le interesará a esta persona. Por eso se marca la
+ * preferencia como ya aplicada en vez de dejarla pisar la ciudad del enlace.
+ */
+async function restaurarDesdeUrl() {
+  const estado = window.__radarUrlEstado.leer(location.search);
+  if (estado.explicito) radarPrefsYaAplicadas = true;
+  sincronizacionDeUrlEnPausa = true;
+  try {
+    await activarPestana(estado.tab, () => aplicarEstadoDeLaUrl(estado), estado.page);
+  } finally {
+    sincronizacionDeUrlEnPausa = false;
+  }
+  // Y se deja la dirección en su forma canónica: sin los parámetros que esta
+  // pestaña no usa y sin el enlace a una ficha que ya se consumió.
+  sincronizarUrl(state.page);
+}
+
+// «Atrás» y «adelante» del navegador. Antes no hacían nada dentro de la
+// aplicación —«atrás» sacaba del sitio—, que es lo que reportó la auditoría.
+window.addEventListener('popstate', () => {
+  // Saltar a un ancla —el enlace «Saltar a los resultados»— también deja entrada
+  // en el historial, y volver de ella no cambia la búsqueda. Reconstruir el
+  // listado entero para acabar enseñando lo mismo sería un parpadeo gratuito.
+  const estado = window.__radarUrlEstado.leer(location.search);
+  if (busquedaComoQuery(estado.tab, estado.page, estado.filtros)
+    === busquedaComoQuery(state.tab, state.page, filtrosDeLosControles())) return;
+  void restaurarDesdeUrl();
+});
 
 async function applyRadarPreferences(preferences, reload = false) {
   if (state.tab !== 'portal' || !preferences.complete) return;
@@ -1530,7 +1807,7 @@ async function applyRadarPreferences(preferences, reload = false) {
   if (reload) {
     setFiltersOpen(false);
     await load(1);
-    $('results').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    $('results').scrollIntoView({ block: 'start', behavior: suave() });
   }
 }
 $('radar-setup').addEventListener('change', (event) => {
@@ -1712,33 +1989,6 @@ function homeSkeleton() {
  * fila lo dice, en vez de dejar que el usuario lo suponga.
  */
 /**
- * El porqué de cada ficha, debajo de sus datos.
- *
- * Va con `textContent` y no dentro del HTML de la tarjeta: el motivo lo compone el
- * servidor a partir de columnas de scraping (ciudad, barrio, banco demandante) y
- * este es el camino en el que no hay forma de equivocarse con el escapado.
- */
-function pintarMotivos(contenedor, fichas, desde = 0) {
-  const tarjetas = contenedor.querySelectorAll('article.card');
-  fichas.forEach((ficha, i) => {
-    const cuerpo = tarjetas[desde + i] && tarjetas[desde + i].querySelector('.card-body');
-    const sello = ficha._destacado;
-    if (!cuerpo || !sello) return;
-    const caja = document.createElement('p');
-    caja.className = 'card-motivo';
-    const titular = document.createElement('strong');
-    titular.textContent = sello.motivo;
-    caja.appendChild(titular);
-    if (sello.respaldo) {
-      const detalle = document.createElement('span');
-      detalle.textContent = sello.respaldo;
-      caja.appendChild(detalle);
-    }
-    cuerpo.appendChild(caja);
-  });
-}
-
-/**
  * Pinta un tramo del top con las MISMAS tarjetas del listado.
  *
  * La portada estuvo un tiempo en filas de texto, y el cliente pidió volver a las
@@ -1757,7 +2007,6 @@ function pintarTop(grid, fichas, desde, hasta) {
   // `true` = la ficha se PIDE a `/api/property` al abrirla, que es la única ruta
   // que aplica el plan del usuario y gasta el cupo del mes.
   renderCards(tanda, grid, true);
-  pintarMotivos(grid, tanda, desde);
 }
 
 function montarGrupoHome(grid, pie, grupo) {
@@ -1874,7 +2123,7 @@ async function loadHome() {
     if (loadSeq !== state.loadSeq) return;
     console.error('home:', e);
     raiz.removeAttribute('aria-busy');
-    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('alert-triangle', 'No se pudo cargar la portada', 'Revisa la conexión y reintenta.', 'warning')}</div></div>`;
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('alert-triangle', 'No se pudo cargar la portada', 'Puede ser tu conexión o el servidor.', 'warning', botonReintentar())}</div></div>`;
     setResultText('No disponible');
   } finally {
     state.loading = false;
@@ -1882,6 +2131,11 @@ async function loadHome() {
 }
 
 async function load(page) {
+  // Antes de pedir nada: la dirección tiene que decir lo mismo que se va a
+  // enseñar. Va aquí arriba, y no junto al render, porque también pasan por aquí
+  // la portada y Guardados, que se cargan por otro camino pero también son sitios
+  // a los que se debe poder volver.
+  sincronizarUrl(page);
   if (state.tab === 'home') return loadHome();
   if (state.tab === 'guardados') return loadGuardados();
   const loadSeq = ++state.loadSeq;
@@ -1937,7 +2191,7 @@ async function load(page) {
     state.total = null;
     state.mostrados = 0;
     $('empty').style.display = 'block';
-    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Revisa la conexión y reintenta.', 'warning');
+    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Puede ser tu conexión o el servidor. Los filtros que pusiste siguen puestos.', 'warning', botonReintentar());
     setResultText('No disponible');
     return;
   }
@@ -1958,7 +2212,9 @@ async function load(page) {
   const planNuevo = res.plan ?? planDelServidor;
   const faltaFiltroPropio = planNuevo === 'free' && state.tab !== 'remates' && !$('f-desbloqueadas');
   planDelServidor = planNuevo;
-  if (faltaFiltroPropio) void reconstruirFiltrosConservandoValores();
+  // Y con el panel ya completo se rescatan los filtros del enlace que no tenían
+  // dónde ponerse cuando se leyó la dirección. Ver `estadoUrlPendiente`.
+  if (faltaFiltroPropio) void reconstruirFiltrosConservandoValores().then(completarFiltrosPendientesDeLaUrl);
 
   renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
@@ -1979,10 +2235,54 @@ async function load(page) {
     ? 'Sin resultados'
     : `${mostrados.toLocaleString('es-CO')} de ${cifra} resultado${res.total === 1 ? '' : 's'}`);
   clearLoadingSkeletons();
-  $('empty').style.display = res.total === 0 ? 'block' : 'none';
+  pintarVacio(res.total === 0);
   renderPager(res.total, res.page, res.pages, res);
   renderVecinas();
   state.loading = false;
+}
+
+/**
+ * Qué se enseña cuando no sale nada.
+ *
+ * «Sin resultados · Ajusta los filtros» era la misma frase para dos situaciones
+ * que no se parecen: que no haya inventario, y que el filtro sea imposible de
+ * cumplir porque el mínimo es mayor que el máximo. En el segundo caso el usuario
+ * se queda mirando una pantalla que le dice que no hay casas de 300 a 500
+ * millones cuando lo que escribió fue de 500 a 300, y no tiene forma de saberlo.
+ */
+function pintarVacio(vacio) {
+  const caja = $('empty');
+  if (!caja) return;
+  caja.style.display = vacio ? 'block' : 'none';
+  if (!vacio) return;
+  const alReves = rangosAlReves();
+  const titulo = caja.querySelector('.h');
+  const detalle = titulo?.nextElementSibling;
+  if (!titulo || !detalle) return;
+  if (alReves.length) {
+    titulo.textContent = 'El filtro está al revés';
+    detalle.textContent = `En ${alReves.join(' y ')}, el mínimo es mayor que el máximo, así que ningún inmueble puede cumplirlo. Intercámbialos y vuelve a buscar.`;
+  } else {
+    titulo.textContent = 'Sin resultados';
+    detalle.textContent = 'Ajusta los filtros para ver más.';
+  }
+}
+
+/** Qué rangos tienen el mínimo por encima del máximo, con el nombre que el usuario ve. */
+function rangosAlReves() {
+  const pares = [
+    ['precio', 'f-priceMin', 'f-priceMax'],
+    ['postura', 'f-bidMin', 'f-bidMax'],
+    ['área', 'f-areaMin', 'f-areaMax'],
+    ['estrato', 'f-stratumMin', 'f-stratumMax'],
+  ];
+  return pares
+    .filter(([, idMin, idMax]) => {
+      const min = Number($(idMin)?.value);
+      const max = Number($(idMax)?.value);
+      return Number.isFinite(min) && Number.isFinite(max) && $(idMin)?.value !== '' && $(idMax)?.value !== '' && min > max;
+    })
+    .map(([nombre]) => nombre);
 }
 
 /**
@@ -2093,7 +2393,7 @@ async function loadGuardados() {
     $('grid').innerHTML = '';
     clearLoadingSkeletons();
     $('empty').style.display = 'block';
-    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Reintenta.', 'warning');
+    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Puede ser tu conexión o el servidor.', 'warning', botonReintentar());
     setResultText('No disponible');
     return;
   }
@@ -2137,7 +2437,7 @@ function renderPager(total, page, pages, meta = {}) {
   el.querySelectorAll('button[data-page]').forEach((b) => b.addEventListener('click', () => {
     if (b.disabled || b.classList.contains('active')) return;
     load(Number(b.dataset.page));
-    window.scrollTo({ top: $('grid').offsetTop - 120, behavior: 'smooth' });
+    window.scrollTo({ top: $('grid').offsetTop - 120, behavior: suave() });
   }));
 }
 
@@ -2187,6 +2487,7 @@ function imgList(p) {
 
 function inmuebleCard(p, kind) {
   const f = p.features || {};
+  const mods = modulosDe(p.type);
   const imgs = imgList(p);
   kind = kind || (p.source === 'fincaraiz' ? 'portal' : 'banco');
   const isBank = p.source !== 'fincaraiz';
@@ -2234,11 +2535,18 @@ function inmuebleCard(p, kind) {
       <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
       <div class="card-titulo">${esc(typeLbl(p.type))}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}${selloIguales(p)}</div>
       <div class="card-ubic">${ic('pin')}<span>${p.zone ? esc(p.zone) + ' · ' : ''}<strong>${esc(cap(p.city))}</strong></span></div>
+      ${/* La tarjeta obedece la misma política por tipo que la ficha. Sin esto, un
+             lote se anunciaba en la rejilla con «3 habitaciones, 2 baños» y al
+             abrirlo los tres desaparecían: la contradicción se ve sin moverse de
+             sitio y hace dudar de todo lo demás.
+
+             `> 0` y no solo truthy: el portal manda `-1` como «sin dato» y así se
+             colaban tarjetas con «Habitaciones: -1». */ ''}
       <div class="card-meta">
-        ${f.bedrooms ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : ''}
-        ${f.bathrooms ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : ''}
-        ${f.garages ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : ''}
-        ${f.stratum ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : ''}
+        ${mods.habitaciones && Number(f.bedrooms) > 0 ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : ''}
+        ${mods.banos && Number(f.bathrooms) > 0 ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : ''}
+        ${mods.parqueaderos && Number(f.garages) > 0 ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : ''}
+        ${Number(f.stratum) > 0 ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : ''}
       </div>
       ${frescura(p)}
     </div>`;
@@ -2361,6 +2669,18 @@ function selloSuscripcion(p) {
     + `<span>${titular}</span><em>${accion}</em></div>`;
 }
 
+/**
+ * ¿Sabemos qué clase de bien se subasta?
+ *
+ * Uno de cada seis avisos del juzgado llega sin tipo, y la tarjeta lo titulaba
+ * «Inmueble», al lado de las que dicen «Casa» o «Local». Se lee como un dato
+ * —vivienda genérica— cuando lo que pasa es que no lo sabemos: ese mismo aviso
+ * puede ser un lote, una bodega o hasta un vehículo, y son decisiones de compra
+ * distintas. Decir que falta cuesta una línea y no engaña a nadie.
+ */
+const tipoIdentificado = (t) => Boolean(t) && t !== 'other' && t !== 'others';
+const TIPO_POR_CONFIRMAR = 'Tipo por confirmar';
+
 function avisoCuotaParte(p) {
   if (!tieneCuotaParte(p)) return '';
   return `<span class="cuota-badge" title="${TEXTO_CUOTA_PARTE}">${ic('alert')}Solo el ${Number(p.cuota_parte)}% del bien</span>`;
@@ -2376,7 +2696,7 @@ function remateCard(p, kind) {
       <div class="card-price-label">Postura mínima</div>
       <div class="card-price">${fmtCOP(p.minimum_bid)}</div>
       ${p.appraisal_value ? `<div class="card-sub">Avalúo ${fmtCOP(p.appraisal_value)}${p.minimum_bid_pct ? ` · postura al ${p.minimum_bid_pct}%` : ''}</div>` : ''}
-      <div class="card-titulo">${esc(typeLbl(p.property_type))}${avisoCuotaParte(p)}</div>
+      <div class="card-titulo">${esc(tipoIdentificado(p.property_type) ? typeLbl(p.property_type) : TIPO_POR_CONFIRMAR)}${avisoCuotaParte(p)}</div>
       <div class="card-ubic">${ic('pin')}<span><strong>${esc(cap(p.city))}</strong>${p.department ? ', ' + esc(cap(p.department)) : ''}</span></div>
       <div class="card-meta">
         ${p.auction_date ? `<span title="Fecha de audiencia">${ic('calendar')}${fmtDate(p.auction_date)}</span>` : ''}
@@ -2471,9 +2791,21 @@ function calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin = 0) {
   };
 }
 function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
-  if (!monthlyRent) return '<span>Ingresa un canon esperado para calcular la rentabilidad.</span>';
+  // «Canon» es palabra de abogado y el campo de arriba ya se llama «Valor de
+  // arrendamiento mensual»: la ayuda pedía en otro idioma lo mismo que el campo.
+  if (!monthlyRent) return '<span>Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</span>';
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
-  return `<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
+  // Un 31% bruto anual sale de la calculadora sin que nada avise de que es
+  // extraordinario, y quien no ha invertido nunca no tiene con qué compararlo:
+  // se lo lleva como expectativa. Casi siempre viene de un precio de oferta
+  // atípico o de un arriendo estimado de más, no de un negocio irrepetible.
+  const fueraDeRango = result.grossYield > 12;
+  const aviso = fueraDeRango
+    ? `<p class="rent-atipico">${ic('alert')} En Colombia lo habitual es entre 5% y 8% bruto anual.
+       Un número muy por encima suele venir de un precio de oferta atípico o de un arriendo
+       estimado de más: contrástalo antes de contar con él.</p>`
+    : '';
+  return `${aviso}<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
     <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
     <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento${
       monthlyAdmin > 0 ? ` y ${fmtCOP(Math.round(monthlyAdmin))}/mes de administración` : ''
@@ -2566,7 +2898,7 @@ function analisisRemate(p) {
   if (/proindiviso|cuota parte|derechos?\s+(de\s+cuota|herenciales|y\s+acciones)|cuota\s+proindiviso|porcentaje\s+del\s+derecho/.test(text) || p.property_type === 'rights') flags.push(['warn', 'Podría rematarse solo una CUOTA/derechos (no el 100%): confirma qué porcentaje se adjudica.']);
   if (/ocupad|arrendad|poseedor|habitad|inquilino|en posesi/.test(text)) flags.push(['warn', 'El inmueble podría estar ocupado/arrendado: la entrega material puede demorar.']);
   const dias = daysToAuction(p.auction_date);
-  if (dias != null && dias >= 0 && dias <= 3) flags.push(['warn', `Audiencia ${dias === 0 ? 'HOY' : 'en ' + dias + ' día(s)'}: poco margen para revisar los documentos del inmueble y hacer el depósito bancario.`]);
+  if (dias != null && dias >= 0 && dias <= 3) flags.push(['warn', `Audiencia ${dias === 0 ? 'HOY' : 'en ' + plural(dias, 'día', 'días')}: poco margen para revisar los documentos del inmueble y hacer el depósito bancario.`]);
   // Cautela (-)
   if (p.property_type === 'lot' || p.property_type === 'farm' || /\bbald[ií]o|predio rural|vereda\b/.test(text)) flags.push(['neg', 'Bien rural/lote: menor liquidez y avalúo más variable.']);
   if (/servidumbre/.test(text)) flags.push(['neg', 'Menciona servidumbre: revisar afectaciones al predio.']);
@@ -2613,16 +2945,75 @@ function aiSection(kind, id) {
     </div></div>`;
 }
 const COPn = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('es-CO'));
+
+/**
+ * El aviso de confianza, arriba y en grande.
+ *
+ * Las dos cosas que más debilitan un porcentaje —haber tenido que salir del barrio
+ * y haber tenido que mezclar tipos de inmueble— se decían de pasada, en una línea
+ * pequeña bajo la cifra («31 comparables · todos los tipos»). Quien no sabe leer
+ * eso ve un número grande y se lo cree entero.
+ *
+ * La diferencia entre un porcentaje fiable y uno orientativo no es un matiz
+ * técnico: es la única forma que tiene quien lee de saber cuánto peso ponerle.
+ * Así que va donde se ve, con las mismas palabras que usaría alguien explicándolo
+ * en voz alta, y diciendo POR QUÉ pasó — que suele ser culpa del aviso, no del
+ * Radar.
+ */
+/** Plural español de un sustantivo simple: local → locales, casa → casas. */
+function enPlural(palabra) {
+  const p = String(palabra || '');
+  if (!p) return p;
+  const fin = p.slice(-1).toLowerCase();
+  if (fin === 's') return p;                       // «derechos» ya viene en plural
+  return 'aeiouáéíóú'.includes(fin) ? `${p}s` : `${p}es`;
+}
+
+function avisoDeConfianza({ ambitoCiudad, tiposMezclados, ciudad, tipo, sinBarrio }) {
+  const avisos = [];
+  if (ambitoCiudad) {
+    // «En una ciudad grande» se cayó del texto: la mitad de estas fichas están en
+    // municipios pequeños —Espinal, Girardot— y decirles «ciudad grande» delata
+    // que el aviso está escrito de plantilla. Lo que hay que transmitir es más
+    // simple y siempre cierto: el precio del metro no es igual en toda la ciudad.
+    avisos.push(`<strong>Confianza baja: comparación contra toda la ciudad.</strong> `
+      + (sinBarrio
+        ? 'Este aviso no dice en qué barrio está'
+        : 'No había suficientes avisos parecidos en su barrio')
+      + `, así que lo comparamos con ${ciudad ? esc(cap(ciudad)) : 'la ciudad'} entera. `
+      + 'El precio del metro cambia mucho de un sector a otro, así que este porcentaje '
+      + 'es orientativo: úsalo para descartar, no para decidir.');
+  }
+  if (tiposMezclados) {
+    avisos.push('<strong>Confianza baja: se compararon tipos distintos de inmueble.</strong> '
+      + `No había suficientes ${tipo ? esc(enPlural(typeLbl(tipo)).toLowerCase()) : 'inmuebles del mismo tipo'} `
+      + 'publicados cerca, así que el precio de referencia salió de inmuebles de otros tipos. '
+      + 'No es una comparación entre iguales.');
+  }
+  if (!avisos.length) return '';
+  return `<div class="market-confianza">${avisos
+    .map((t) => `<p>${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')}<span>${t}</span></p>`)
+    .join('')}</div>`;
+}
+
 function marketCtxHtml(m) {
   if (!m || !m.n) return '';
-  const tipo = m.matched_type ? `mismo tipo` : `todos los tipos`;
-  const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Insuficiente' }[m.confidence] || m.confidence;
   const scopeIcon = ic(m.scope === 'ciudad' ? 'map' : 'pin');
   const scopeLbl = m.scope === 'ciudad' ? `${esc(cap(m.city))} · toda la ciudad` : esc(m.scope_label || 'sector');
-  const crit = (m.criteria || []).length
-    ? `<div class="crit-chips" style="margin-bottom:10px">${m.criteria.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div>`
+  const criterios = criteriosDelTipo(m.criteria, m.type ?? fichaEnPantalla?.tipo);
+  const crit = criterios.length
+    ? `<div class="crit-chips" style="margin-bottom:10px">${criterios.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div>`
     : '';
-  return `<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
+  const aviso = avisoDeConfianza({
+    ambitoCiudad: m.scope === 'ciudad',
+    tiposMezclados: m.matched_type === false,
+    ciudad: m.city,
+    tipo: m.type,
+    // El motor distingue las dos causas en el criterio que declara, y no son lo
+    // mismo para quien lee: una es culpa del aviso, la otra del inventario.
+    sinBarrio: (m.criteria || []).some((c) => /no indica barrio/i.test(String(c))),
+  });
+  return `${aviso}<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
   ${crit}
   <div class="ai-mkt">
     <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
@@ -2630,10 +3021,20 @@ function marketCtxHtml(m) {
          apartamento no tiene por qué saber qué es un percentil, y aquí sobra:
          el dato es «el 25% más barato de la zona empieza en esta cifra». -->
     <div><span class="l">El 25% más barato</span><strong>${COPn(m.p25_total)}</strong></div>
-    <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${tipo}</span></div>
+    <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${m.matched_type ? 'mismo tipo' : 'tipos mezclados'}</span></div>
   </div>`;
 }
-function renderAI(result) {
+/**
+ * Cómo se llama aquí el paso de comprobar antes de comprometerse.
+ *
+ * Solo en un remate se puja. Un activo de banco se negocia y se firma, así que
+ * «Verificar antes de pujar» sobre una ficha de Bancos le hace creer al lector
+ * que ese inmueble también sale a subasta —y con ello, que hay una fecha, un
+ * depósito previo y otros postores compitiendo—. Nada de eso existe ahí.
+ */
+const tituloDueDiligence = (kind) => (kind === 'remate' ? 'Verificar antes de pujar' : 'Verificar antes de comprar');
+
+function renderAI(result, kind) {
   const m = result.market;
   if (!result.ok) {
     if (result.needs_key) {
@@ -2648,8 +3049,20 @@ function renderAI(result) {
     riesgosa: [ic('alert-triangle', 'ic-reicon analysis-icon is-warning'), 'Riesgosa', 'ai-precaucion'],
   }[ai.veredicto] || [ic('magnifier', 'analysis-icon is-review'), ai.veredicto, 'ai-media'];
   const li = (arr) => (arr && arr.length ? `<ul class="ai-list">${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="ai-empty">—</p>');
+  // La diferencia se calcula AQUÍ, con el precio de la ficha y el estimado del
+  // propio modelo. Antes se usaba el `descuento_estimado_pct` que él devuelve, y
+  // el signo de ese campo venía invertido en dos de cada tres análisis: la ficha
+  // mostraba «Descuento estimado −40%» en verde mientras el resumen del mismo
+  // modelo decía, dos líneas más abajo, que el precio está «significativamente
+  // superior al estimado de mercado». Restar dos números que ya están en pantalla
+  // no puede contradecirlos.
+  const precioFicha = Number(fichaEnPantalla?.kind === 'remate' ? result?.property?.minimum_bid : result?.property?.price)
+    || Number(result?.property?.price) || null;
+  const estimado = Number(ai.estimado_mercado_cop) || null;
+  const difPct = precioFicha && estimado ? Math.round(((estimado - precioFicha) / estimado) * 1000) / 10 : null;
+  const masBarato = difPct != null && difPct >= 0;
   const estim = ai.estimado_mercado_cop != null
-    ? `<div class="ai-estim"><div><span class="l">Valor de mercado estimado</span><strong>${COPn(ai.estimado_mercado_cop)}</strong></div>${ai.descuento_estimado_pct != null ? `<div><span class="l">Descuento estimado</span><strong style="color:${ai.descuento_estimado_pct >= 0 ? '#16a34a' : '#dc2626'}">${ai.descuento_estimado_pct >= 0 ? '−' : '+'}${Math.abs(ai.descuento_estimado_pct)}%</strong></div>` : ''}</div>`
+    ? `<div class="ai-estim"><div><span class="l">Valor de mercado estimado</span><strong>${COPn(ai.estimado_mercado_cop)}</strong></div>${difPct != null ? `<div><span class="l">${masBarato ? 'Por debajo del estimado' : 'Por encima del estimado'}</span><strong style="color:${masBarato ? '#16a34a' : '#dc2626'}">${masBarato ? '−' : '+'}${Math.abs(difPct)}%</strong></div>` : ''}</div>`
     : '';
   return `<div class="aiblock ${meta[2]}">
       <div class="ai-head">${meta[0]} <strong>${esc(meta[1])}</strong> <span class="ai-score">${Number(ai.puntaje) || 0}/100</span></div>
@@ -2660,7 +3073,7 @@ function renderAI(result) {
         <div><h4>${ic('check-circle', 'ic-reicon analysis-icon is-positive')} A favor</h4>${li(ai.a_favor)}</div>
         <div><h4>${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')} En contra</h4>${li(ai.en_contra)}</div>
       </div>
-      <h4>${ic('magnifier', 'analysis-icon is-review')} Verificar antes de pujar</h4>${li(ai.riesgos_due_diligence)}
+      <h4>${ic('magnifier', 'analysis-icon is-review')} ${tituloDueDiligence(kind)}</h4>${li(ai.riesgos_due_diligence)}
       <p class="ai-reco"><strong>Recomendación:</strong> ${esc(ai.recomendacion)}</p>
       <p class="ai-meta">Generado por IA (${esc(ai._meta?.model || 'modelo')}) · ${ai._meta?.comparables_n ?? m?.n ?? 0} comparables${result.cached ? ' · cacheado' : ''}. Opinión orientativa; no sustituye estudio de títulos ni asesoría profesional.</p>
     </div>`;
@@ -2691,15 +3104,50 @@ function recCard(r) {
       <div class="rec-meta">${disc}</div>
     </div></button>`;
 }
-function renderRecs(recs) {
+/**
+ * Otras oportunidades cercanas. NO son los comparables del cálculo.
+ *
+ * Este bloque se llamaba «Mejores oportunidades en la zona» y aparecía justo
+ * debajo del análisis de mercado, que unas líneas más arriba afirma haber
+ * comparado contra inmuebles del mismo tipo. En una ficha de lote la fila salía
+ * llena de casas y apartamentos, y la lectura natural —la que hizo la auditoría—
+ * es que el porcentaje de arriba se calculó con eso. No es así: el motor no relaja
+ * el tipo en ningún nivel de la cascada (engine/comparables.ts).
+ *
+ * Son dos cosas distintas y ahora se llaman distinto. Los comparables SOSTIENEN el
+ * precio y tienen que ser equivalentes; estas son SUGERENCIAS de qué mirar después,
+ * y pueden ser de otro tipo perfectamente. Lo único que no puede pasar es que se
+ * confundan, porque entonces no se cree ninguna de las dos.
+ */
+function renderRecs(recs, tipoFicha = fichaEnPantalla?.tipo ?? null) {
   if (!recs || !recs.length) return '';
-  const anyZone = recs.some((r) => r.same_zone);
-  const hint = anyZone
-    ? 'Priorizadas por cercanía (mismo barrio) y oportunidad de inversión.'
-    : 'Otras propiedades de la misma ciudad ordenadas por oportunidad de inversión.';
-  return `<div class="section"><h3>Mejores oportunidades en la zona</h3>
-    <p class="rec-hint">${hint}</p>
-    <div class="rec-grid">${recs.map(recCard).join('')}</div></div>`;
+  // `same_type` lo calcula el servidor contra el tipo de la ficha abierta; sin tipo
+  // conocido no se puede partir la lista y se enseña entera bajo el mismo rótulo.
+  const mismos = tipoFicha ? recs.filter((r) => r.same_type) : recs;
+  const otros = tipoFicha ? recs.filter((r) => !r.same_type) : [];
+  const nombreTipo = tipoFicha ? typeLbl(tipoFicha).toLowerCase() : null;
+  const grid = (lista) => `<div class="rec-grid">${lista.map(recCard).join('')}</div>`;
+  const bloque = (titulo, nota, lista) => (lista.length
+    ? `<h4 class="rec-sub">${titulo}</h4><p class="rec-hint">${nota}</p>${grid(lista)}`
+    : '');
+
+  return `<div class="section"><h3>Otras oportunidades cercanas</h3>
+    <p class="rec-hint rec-aclaracion">${ic('alert')} <span>Estas <strong>no</strong> son las que se usaron
+    para calcular el precio de esta ficha. Aquéllas aparecen arriba, en «Análisis de mercado», y son todas
+    del mismo tipo de inmueble. Éstas son sugerencias de qué mirar después.</span></p>
+    ${bloque(
+      nombreTipo ? `Del mismo tipo (${esc(nombreTipo)})` : 'Cerca de aquí',
+      recs.some((r) => r.same_zone)
+        ? 'Priorizadas por cercanía (mismo barrio) y por su descuento.'
+        : 'De la misma ciudad, ordenadas por su descuento.',
+      mismos,
+    )}
+    ${bloque(
+      'De otro tipo de inmueble',
+      'Buenas oportunidades de la misma zona, pero no comparables con esta ficha: '
+      + 'un local y un apartamento no se valoran con la misma vara.',
+      otros,
+    )}</div>`;
 }
 window.__openRec = async function (kind, id) {
   try {
@@ -2754,10 +3202,6 @@ function refrescarTarjeta(kind, id, ficha) {
   const nueva = sustituto.querySelector('article.card');
   if (nueva) {
     enHome.replaceWith(nueva);
-    // El motivo del destacado lo añade la portada por fuera de `renderCards`: sin
-    // esto, la tarjeta recién abierta perdería la línea que explica por qué está
-    // en el top.
-    pintarMotivos(nueva.parentElement, [ficha], [...nueva.parentElement.children].indexOf(nueva));
     paintFavs();
   }
 }
@@ -2808,7 +3252,7 @@ function mostrarCupoAgotado(cupo, kind, id, ficha) {
   // La ficha no llegó a abrirse, pero es exactamente la que el usuario quería:
   // si desde aquí se va a suscribirse, volver al listado sería hacerle repetir la
   // búsqueda que acaba de pagar.
-  if (kind && id) recordarFichaEnPantalla(kind, id, tituloFicha(ficha));
+  if (kind && id) recordarFichaEnPantalla(kind, id, tituloFicha(ficha), ficha?.type ?? ficha?.property_type ?? null, ficha?.area_m2 ?? null);
   showModal();
   $('cupo-seguir')?.addEventListener('click', closeModal);
 }
@@ -2825,7 +3269,7 @@ window.__analyzeAI = async function (btn, kind, id) {
     const data = await res.json();
     const lazy = $('rec-lazy'); // ya las mostró el mercado bajo demanda: no duplicar
     if (lazy) lazy.remove();
-    wrap.innerHTML = renderAI(data) + renderRecs(data.recommendations);
+    wrap.innerHTML = renderAI(data, kind) + renderRecs(data.recommendations);
   } catch (e) {
     wrap.innerHTML = `<div class="ai-note">No se pudo conectar con el análisis: ${esc(String(e))}.</div>`;
   }
@@ -2847,10 +3291,10 @@ function gastosSection(valor, mode, context) {
       <div class="calc-rows">${rows}</div>
       <div class="calc-total">${tot}</div>
       <div class="calc-grand">${grand}</div>
-      ${mode !== 'remate' ? `<div class="rent-box">
+      ${mode !== 'remate' && context?.arriendo !== false ? `<div class="rent-box">
         <div class="rent-head"><span class="calc-label">Rentabilidad por arriendo</span><small data-rent-origin>Buscando arriendos comparables…</small></div>
         <div class="rent-market-status" data-rental-market aria-live="polite">
-          <span class="spinner"></span> Estimando el canon con avisos similares de la zona…
+          <span class="spinner"></span> Estimando el valor del arriendo con avisos similares de la zona…
         </div>
         <div class="rent-inputs">
           <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
@@ -2902,8 +3346,150 @@ function tituloFicha(p) {
   return `${typeLbl(p?.type || p?.property_type)} en ${cap(p?.city)}`;
 }
 
-function recordarFichaEnPantalla(kind, id, titulo) {
-  fichaEnPantalla = { kind, id: String(id), titulo };
+function recordarFichaEnPantalla(kind, id, titulo, tipo = null, area = null) {
+  // El tipo viaja porque las respuestas que llegan después —mercado, comparables,
+  // recomendaciones— tienen que saber contra qué se está comparando para poder
+  // decir si lo que enseñan es del mismo tipo de inmueble o no.
+  // El área entra aquí porque el análisis de mercado la necesita para saber si la
+  // culpa de no tener veredicto es del aviso —que no la publica— o de que en su
+  // zona no hay comparables con área. Sin ella la comprobación daba NaN y la ficha
+  // acusaba SIEMPRE al aviso, incluso con el área impresa cuatro líneas más arriba
+  // en la misma pantalla.
+  fichaEnPantalla = { kind, id: String(id), titulo, tipo, area_m2: area };
+}
+
+/** Palabras con las que ninguna frase queda cerrada: si el texto acaba aquí, venía a medias. */
+const PALABRAS_COLGANTES = new Set([
+  'de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'e', 'o', 'u',
+  'en', 'con', 'por', 'para', 'que', 'se', 'su', 'sus', 'al', 'a', 'como', 'sobre',
+  'desde', 'hasta', 'entre', 'sin', 'tras', 'lo', 'le', 'les',
+]);
+/** Letras con las que sí termina una palabra en español; el resto delata un corte. */
+const FINALES_DE_PALABRA = 'nrsldzjxym';
+
+/**
+ * ¿La descripción llegó cortada desde la fuente?
+ *
+ * Varios bancos publican la descripción dentro de un PDF y el texto se corta
+ * donde se acaba la caja, a media palabra: «…esquinero de la urbani». Mostrarla
+ * tal cual hace creer que el aviso dice exactamente eso, y quien lee se queda
+ * buscando el resto de una frase que aquí no existe. Cuatro de cada diez avisos
+ * de Aval llegan así.
+ *
+ * Se detecta por la forma del final, no por la longitud: el corte no cae en una
+ * cifra fija de caracteres sino donde termina la caja del PDF. Un texto completo
+ * cierra con puntuación; uno cortado termina en una palabra que se queda a medias
+ * («urbani», «locali») o en una que no puede cerrar nada («…de la», «…por una»).
+ *
+ * Es deliberadamente prudente: prefiere callar antes que acusar de incompleta una
+ * descripción que sí está entera, porque un aviso falso enseña a desconfiar de los
+ * verdaderos. Contrastada contra 826 avisos reales de las cinco fuentes, marcó 101
+ * y ninguno estaba completo. Por eso se descartan los nombres propios («…en Cali»),
+ * los códigos y los enlaces, donde la forma de la palabra no dice nada.
+ */
+function descripcionIncompleta(texto) {
+  const limpio = String(texto ?? '').trim();
+  if (limpio.length < 12) return false;
+  if (/[.!?…»”’")\]]$/.test(limpio)) return false;
+  // Nadie termina de describir su inmueble con una coma. Cuando la frase acaba en
+  // un separador —«…Sala-comedor, cocina,», «…contáctanos:»— lo que venía después
+  // no cabía en la caja del PDF.
+  if (/[,;:—–-]$/.test(limpio)) return true;
+  const ultima = limpio.split(/\s+/).pop() ?? '';
+  if (/[./:@]|\d/.test(ultima)) return false;
+  const letras = ultima.toLowerCase().replace(/[^a-záéíóúüñ]/g, '');
+  if (!letras) return false;
+  if (PALABRAS_COLGANTES.has(letras)) return true;
+  if (ultima[0] !== ultima[0].toLowerCase()) return false;
+  if (letras.endsWith('ing')) return false; // «leasing», «parking»: préstamos completos
+  const fin = letras.slice(-1);
+  if ('aeoáéíóúü'.includes(fin)) return false;
+  if (fin === 'i' || fin === 'u') return letras.length >= 4;
+  return !FINALES_DE_PALABRA.includes(fin);
+}
+
+/** Hasta dónde se enseña la descripción del aviso dentro de la ficha. */
+const LARGO_MAXIMO_DESCRIPCION = 900;
+
+/**
+ * La descripción del aviso, diciendo cuándo no está entera.
+ *
+ * Son dos cortes distintos y hasta ahora los dos se hacían en silencio: el de la
+ * fuente y el nuestro, que pasado el largo máximo dejaba la frase a la mitad sin
+ * más. Da igual quién cortó: quien lee necesita saber que lo que tiene delante no
+ * es todo lo que decía el aviso, y a dónde ir por el resto.
+ */
+function bloqueDescripcion(texto) {
+  const completo = String(texto ?? '').trim();
+  if (!completo) return '';
+  const recortada = completo.length > LARGO_MAXIMO_DESCRIPCION;
+  // El corte cae en un espacio: partir la última palabra sería reproducir aquí el
+  // mismo defecto que estamos señalando en la fuente.
+  const corte = completo.lastIndexOf(' ', LARGO_MAXIMO_DESCRIPCION);
+  const visible = recortada
+    ? `${completo.slice(0, corte > 400 ? corte : LARGO_MAXIMO_DESCRIPCION)}…`
+    : completo;
+  let aviso = '';
+  if (recortada) aviso = 'Descripción recortada aquí; el aviso original la trae completa.';
+  else if (descripcionIncompleta(completo)) aviso = 'Texto incompleto en la fuente original.';
+  return `<div class="section"><h3>Descripción</h3><p>${esc(visible)}</p>${
+    aviso ? `<p class="desc-aviso">${aviso}</p>` : ''
+  }</div>`;
+}
+
+/**
+ * Qué módulos de la ficha tienen sentido según QUÉ es el inmueble.
+ *
+ * La ficha era una sola plantilla para todo. En un lote acababa mostrando la
+ * antigüedad de lo construido, el criterio «sin parqueadero» y una calculadora de
+ * rentabilidad por arriendo — de un terreno. Cada cosa por separado es un detalle;
+ * juntas hacen que la ficha se lea como un formulario rellenado a la fuerza, y
+ * quien la lee deja de creerse también lo que sí aplica.
+ *
+ * Se decide por TIPO y no por «trae el dato o no», que es lo que se hacía antes y
+ * por eso fallaba: el portal rellena habitaciones y parqueaderos con 0 en 8.215 de
+ * los 8.773 lotes activos, y la antigüedad en 8.715 de ellos. Preguntar por el
+ * dato no distingue nada; lo que distingue es qué es la cosa.
+ *
+ *  · construccion → antigüedad, piso y área privada: hablan de algo edificado.
+ *  · habitaciones → alcobas. Un local no las tiene; sus baños sí son reales.
+ *  · arriendo     → la calculadora de rentabilidad. Un lote no se arrienda por m²
+ *                   como un apartamento, y un parqueadero tampoco: el mercado de
+ *                   arriendo que tenemos son avisos de vivienda y locales.
+ */
+const MODULOS_TODOS = { habitaciones: true, banos: true, parqueaderos: true, construccion: true, arriendo: true };
+const MODULOS_POR_TIPO = {
+  lot: { habitaciones: false, banos: false, parqueaderos: false, construccion: false, arriendo: false },
+  parking: { habitaciones: false, banos: false, parqueaderos: false, construccion: false, arriendo: false },
+  rights: { habitaciones: false, banos: false, parqueaderos: false, construccion: false, arriendo: false },
+  commercial: { habitaciones: false, banos: true, parqueaderos: true, construccion: true, arriendo: true },
+  office: { habitaciones: false, banos: true, parqueaderos: true, construccion: true, arriendo: true },
+  warehouse: { habitaciones: false, banos: true, parqueaderos: true, construccion: true, arriendo: true },
+};
+const modulosDe = (tipo) => MODULOS_POR_TIPO[tipo] || MODULOS_TODOS;
+
+/**
+ * Criterios de comparación que significan algo para ESTE tipo de inmueble.
+ *
+ * El motor declara «sin parqueadero» y «0 habitaciones» también en lotes, porque
+ * el portal publica esos campos en cero por defecto y el motor no puede distinguir
+ * un cero publicado de un campo vacío. En la ficha de un terreno esa etiqueta
+ * afirma que comparamos parcelas por su parqueadero, que es absurdo y resta
+ * credibilidad a los criterios que sí sostienen el cálculo (tipo, zona, área).
+ *
+ * Aquí solo se OCULTAN de la lista visible. Que el motor además deje de usarlos
+ * para elegir comparables es una decisión aparte —cambia la valoración de fichas
+ * ya publicadas— y está medida y propuesta al cliente.
+ */
+function criteriosDelTipo(criterios, tipo) {
+  const mod = modulosDe(tipo);
+  if (mod.habitaciones && mod.parqueaderos) return criterios || [];
+  return (criterios || []).filter((c) => {
+    const t = String(c).toLowerCase();
+    if (!mod.habitaciones && /habitacion/.test(t)) return false;
+    if (!mod.parqueaderos && /parqueadero/.test(t)) return false;
+    return true;
+  });
 }
 
 function openModal(p) {
@@ -2914,20 +3500,28 @@ function openInmueble(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
   const f = p.features || {};
+  const mod = modulosDe(p.type);
   gImgs = imgList(p); gIdx = 0;
   const feats = [];
   if (p.area_m2) feats.push(['Área', fmtArea(p.area_m2)]);
-  if (f.bedrooms) feats.push(['Habitaciones', f.bedrooms]);
-  if (f.bathrooms) feats.push(['Baños', f.bathrooms]);
-  if (f.garages) feats.push(['Garajes', f.garages]);
+  if (mod.habitaciones && f.bedrooms) feats.push(['Habitaciones', f.bedrooms]);
+  if (mod.banos && f.bathrooms) feats.push(['Baños', f.bathrooms]);
+  if (mod.parqueaderos && f.garages) feats.push(['Garajes', f.garages]);
   if (f.stratum) feats.push(['Estrato', f.stratum]);
-  if (f.floor) feats.push(['Piso', f.floor]);
-  if (f.m2_private) feats.push(['Área priv.', fmtArea(f.m2_private)]);
-  if (f.antiguedad) feats.push(['Antigüedad', f.antiguedad]);
-  if (f.administracion) feats.push(['Admin', fmtCOP(f.administracion) + '/mes']);
+  if (mod.construccion && f.floor) feats.push(['Piso', f.floor]);
+  if (mod.construccion && f.m2_private) feats.push(['Área priv.', fmtArea(f.m2_private)]);
+  // Un terreno no tiene antigüedad. El portal rellena el campo igual —dos de cada
+  // tres lotes traen «1 a 8 años»—, y en la ficha se lee como si algo se hubiera
+  // construido ahí; en realidad describe el conjunto o la urbanización, cuando
+  // describe algo. Un dato que no se puede interpretar resta más de lo que suma.
+  if (mod.construccion && f.antiguedad) feats.push(['Antigüedad', f.antiguedad]);
+  // «Admin» abreviado no decía de qué: la cifra parecía un gasto del inmueble sin
+  // aclarar que es la cuota mensual que cobra el conjunto o el edificio. Se
+  // conserva en lotes: un lote dentro de un conjunto cerrado sí paga administración.
+  if (f.administracion) feats.push(['Administración del conjunto', fmtCOP(f.administracion) + '/mes']);
 
   const amen = Array.isArray(f.amenities) && f.amenities.length ? `<div class="section"><h3>Características</h3><div class="amenities">${f.amenities.slice(0, 30).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}</div></div>` : '';
-  const desc = f.description ? `<div class="section"><h3>Descripción</h3><p>${esc(String(f.description).slice(0, 900))}</p></div>` : '';
+  const desc = bloqueDescripcion(f.description);
   const addr = p.address ? `<div class="section"><h3>Dirección</h3><p>${esc(p.address)}</p></div>` : '';
   // Bloqueos para anónimo (freemium)
   // El servidor ya recortó lo que el plan no cubre; aquí solo se explica por qué.
@@ -2953,10 +3547,13 @@ function openInmueble(p) {
     id: p.id,
     title: `${typeLbl(p.type)} en ${cap(p.city)}`,
     city: p.city,
+    // Un terreno o un parqueadero no se arriendan por metro cuadrado como una
+    // vivienda: la calculadora de rentabilidad no aplica y no se pinta.
+    arriendo: mod.arriendo,
     // La administración que el propio aviso declara. La ficha ya la enseña unas
     // líneas más abajo, así que empezar la calculadora en 0 no era «no saberlo»:
     // era ignorar un dato que teníamos, y encima diciendo debajo que se había
-    // descontado. Sobre un canon de 1,3 millones, olvidar 150.000 de
+    // descontado. Sobre un arriendo de 1,3 millones, olvidar 150.000 de
     // administración infla la rentabilidad neta dos puntos largos.
     admin: Number((p.features || {}).administracion) || 0,
   });
@@ -2972,12 +3569,14 @@ function openInmueble(p) {
       ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
       <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
     </div>`;
-  recordarFichaEnPantalla(kind, p.id, tituloFicha(p));
+  recordarFichaEnPantalla(kind, p.id, tituloFicha(p), p.type, p.area_m2 ?? null);
   showModal();
   // El motor sólo persiste el mercado en fichas de banco; en las del portal se
   // calcula bajo demanda (gratis, sin IA) para justificar el −X% de la tarjeta.
   if (!mkt) fillMarketLazy(p.source === 'fincaraiz' ? 'portal' : 'banco', p.id, p.discount_pct);
-  fillRentalMarket(kind, p.id);
+  // Sin calculadora de arriendo no hay dónde pintar el resultado, y la consulta
+  // cuesta el pool de arriendos de la ciudad entera: no se pide.
+  if (mod.arriendo) fillRentalMarket(kind, p.id);
 }
 
 // Ficha abierta actualmente: si el usuario abre otra mientras el mercado carga, la
@@ -3046,6 +3645,24 @@ function textoCupoReportes(estado) {
 }
 
 /**
+ * Qué trae el reporte, según la categoría.
+ *
+ * El texto era uno solo y prometía «descuento frente a su zona» y «los
+ * comparables que lo respaldan» también en remates, donde esa comparación no
+ * existe: un remate se mide contra el avalúo del juzgado, no contra el mercado.
+ * Ofrecer en la descarga algo que la ficha no tiene es la forma más rápida de
+ * que alguien pague por un documento y se sienta engañado al abrirlo.
+ */
+function textoDelReporte(kind) {
+  if (kind === 'remate') {
+    return 'Postura mínima, avalúo del juzgado, fecha de audiencia, los datos visibles del proceso '
+      + 'y las alertas preliminares del aviso.';
+  }
+  return 'Precio, descuento frente a ofertas similares de su zona, categoría del Índice CRECE, los '
+    + 'comparables que lo respaldan y las características del inmueble.';
+}
+
+/**
  * Bloque del reporte descargable.
  *
  * Enseña el cupo ANTES de que el usuario pulse, no después: descubrir un límite
@@ -3061,8 +3678,7 @@ function reporteSection(kind, p) {
   if (!auth.token) {
     return `<div class="section"><div class="reporte-box">
       <h3>Reporte descargable</h3>
-      <p class="reporte-txt">Un documento con el precio, el descuento frente a su zona, los comparables que
-      lo sustentan y las características del inmueble. Se abre en cualquier navegador y se guarda como PDF
+      <p class="reporte-txt">${textoDelReporte(kind)} Se abre en cualquier navegador y se guarda como PDF
       al imprimirlo.</p>
       <a class="reporte-cta" href="/login">Crear cuenta gratis para descargarlo</a>
       <p class="reporte-hint">El plan gratuito incluye ${CUPO_REPORTES_MENSUAL} reportes al mes.</p>
@@ -3077,9 +3693,7 @@ function reporteSection(kind, p) {
       </button>`;
   return `<div class="section"><div class="reporte-box">
     <h3>Reporte descargable</h3>
-    <p class="reporte-txt">Precio, descuento frente a su zona, categoría del Índice CRECE, los comparables
-    que lo respaldan y las características${kind === 'remate' ? ', además de los datos de la audiencia' : ''}.
-    Se descarga como archivo y se guarda como PDF al imprimirlo.</p>
+    <p class="reporte-txt">${textoDelReporte(kind)} Se descarga como archivo y se guarda como PDF al imprimirlo.</p>
     ${accion}
     <p class="reporte-hint" data-reporte-cupo aria-live="polite">${esc(textoCupoReportes(estado))}</p>
   </div></div>`;
@@ -3178,24 +3792,54 @@ async function fillMarketLazy(kind, id, disc) {
     // falla, que además es el que el usuario puede verificar mirando el aviso.
     if (v?.datos_implausibles) {
       const porQue = {
-        area_minima: 'El área publicada en el aviso no parece correcta para este tipo de inmueble',
-        area_maxima: 'El área publicada en el aviso no parece correcta para este tipo de inmueble',
+        area_minima: 'El área publicada no encaja con el tipo de inmueble que dice ser',
+        area_maxima: 'El área publicada no encaja con el tipo de inmueble que dice ser',
         ppm2_alto: 'El precio por metro cuadrado que resulta del aviso está fuera de lo razonable',
         ppm2_bajo: 'El precio por metro cuadrado que resulta del aviso está fuera de lo razonable',
       }[v.datos_implausibles] || 'Los datos del aviso no permiten comparar este inmueble';
+      // «Datos por verificar» y no un párrafo explicativo a secas: es un SELLO, y
+      // tiene que leerse antes que el precio. La auditoría encontró una «oficina de
+      // 5 m²» descrita como vivienda de tres habitaciones; el problema de esa ficha
+      // no es que le falte un porcentaje, es que su clasificación está mal y quien
+      // la mira necesita saberlo antes de compararla con nada.
+      // El texto va dentro de UN solo <span>: `.market-aviso` es un contenedor
+      // flex y sin envolverlo el «Datos por verificar» quedaba como una columna
+      // aparte, partido en tres renglones al lado del párrafo.
       el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">
-        <p class="market-aviso">${ic('alert')} ${esc(porQue)}, así que no calculamos su posición frente al mercado.</p>
-        <p class="market-note">Puede ser un error de publicación del portal. Verifícalo en el aviso original antes de sacar conclusiones.</p>
+        <p class="market-aviso">${ic('alert')} <span><strong>Datos por verificar.</strong> ${esc(porQue)},
+        así que no calculamos su posición frente al mercado y esta ficha no entra en los destacados.</span></p>
+        <p class="market-note">Suele ser un error de publicación en la fuente: el tipo, el área o el precio
+        no coinciden entre sí. Verifícalo en el aviso original antes de sacar cualquier conclusión.</p>
         ${auditoriaComparables && fichaEnPantalla?.id ? botonComparables(fichaEnPantalla.id, 0) : ''}</div>`;
     } else if (v && v.market_ppm2 != null && v.candidate_ppm2 != null) {
-      el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody({ ...v, __id: fichaEnPantalla?.id }, v.criteria)}`;
+      el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody({
+        ...v,
+        type: fichaEnPantalla?.tipo ?? r.market?.type ?? null,
+        __ciudad: r.market?.city ?? null,
+        __id: fichaEnPantalla?.id,
+      }, v.criteria)}`;
     } else {
       // El botón va también aquí. La pregunta «contra qué compara» es más urgente
       // cuando NO hay veredicto, no menos: es el caso en que el usuario ve una
       // referencia de zona sin saber de dónde sale.
+      // Aquí se decía SIEMPRE «falta el área», y muchas veces el área estaba a
+      // cuatro líneas de distancia, en la cabecera de la misma ficha. Una
+      // contradicción así, dentro de la misma pantalla, no se lee como un matiz
+      // técnico: se lee como que el motor no sabe lo que dice, y arrastra consigo
+      // la credibilidad del resto de los números.
+      //
+      // La causa real casi nunca es el área del inmueble, sino que en su zona no
+      // hay suficientes avisos parecidos CON área publicada para sacar una
+      // mediana por metro cuadrado. Se dice esa, y solo se culpa al área cuando
+      // de verdad falta.
+      const areaFicha = Number(fichaEnPantalla?.area_m2);
+      const sinArea = !Number.isFinite(areaFicha) || areaFicha <= 0;
+      const porQueNoHayVeredicto = sinArea
+        ? 'Este aviso no publica el área, así que no se puede calcular su precio por m² ni compararlo.'
+        : 'No hay suficientes inmuebles parecidos con área publicada en su zona para comparar por metro cuadrado, así que no se estima descuento.';
       el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">${marketCtxHtml(r.market)}
         <p class="market-note">Referencia de precios de OFERTA de ${r.market.n} inmuebles de la zona.
-        No se pudo calcular un precio por m² para este inmueble (falta el área), así que no se estima descuento.</p>
+        ${porQueNoHayVeredicto}</p>
         ${auditoriaComparables && fichaEnPantalla?.id ? botonComparables(fichaEnPantalla.id, r.market.n) : ''}</div>`;
     }
     if (r.recommendations && r.recommendations.length) {
@@ -3253,7 +3897,7 @@ function applyRentalMarket(market) {
       <div><span>Comparables</span><strong>${Number(market.n) || 0}</strong></div>
     </div>
     ${criteria.length ? `<div class="crit-chips">${criteria.map((item) => `<span class="crit-chip">${esc(item)}</span>`).join('')}</div>` : ''}
-    <p>Referencia basada en precios de oferta, no en contratos cerrados. El canon puede incluir o excluir administración según cada aviso.</p>`;
+    <p>Referencia basada en precios de oferta, no en contratos cerrados. El valor mensual del arriendo publicado puede incluir o no la cuota de administración.</p>`;
   if (origin) origin.textContent = `${Number(market.n) || 0} avisos similares · ${market.scope_label || 'misma ciudad'}`;
   if (rentInput && (!rentInput.value || rentInput.dataset.rentSource === 'market')) {
     rentInput.value = fmtCOP(median);
@@ -3301,6 +3945,36 @@ function valorLargo(html) {
   return `<details class="kv-largo"><summary>${inicio}… <em>ver completo</em></summary><p>${html}</p></details>`;
 }
 
+/**
+ * Qué significa cada palabra del expediente.
+ *
+ * Una ficha de remate suelta «dominio pleno», «radicado», «secuestre» y
+ * «demandante» sin definir ninguna, y el público de esto es alguien que nunca ha
+ * invertido: la parte más arriesgada del producto era la que hablaba más difícil.
+ *
+ * Va plegado y al final, no como aviso: quien ya sabe lo salta sin que le
+ * estorbe, y quien no sabe lo encuentra donde le surgió la duda, sin salir de la
+ * ficha ni perder lo que estaba mirando.
+ */
+function glosarioRemate() {
+  const terminos = [
+    ['Postura mínima', 'La cantidad mínima con la que puedes participar. Otros participantes pueden ofrecer más.'],
+    ['Avalúo del juzgado', 'Valor de referencia usado en el proceso. Puede ser distinto del precio actual de mercado.'],
+    ['Audiencia', 'Fecha y hora en que se realiza la subasta.'],
+    ['Radicado', 'Número que identifica el proceso judicial.'],
+    ['Demandante', 'Persona o entidad que inició el proceso.'],
+    ['Secuestre', 'Auxiliar designado para custodiar o administrar el bien mientras dura el proceso.'],
+    ['Derechos', 'Que se subasta solo una participación del inmueble y no la propiedad completa.'],
+    ['Título / dominio pleno', 'Los papeles que prueban quién es el dueño legal. Un título «más limpio» tiene menos riesgo de líos legales después de comprar.'],
+    ['Estudio de títulos', 'Revisión legal de los papeles del inmueble para confirmar que no tiene deudas, embargos o dueños en disputa.'],
+  ];
+  const filas = terminos.map(([t, d]) => `<div class="glos-t">${esc(t)}</div><div class="glos-d">${esc(d)}</div>`).join('');
+  return `<div class="section"><details class="glosario">
+    <summary class="glos-titulo">${ic('chart')} ¿Qué significa esto?</summary>
+    <div class="glos-body">${filas}</div>
+  </details></div>`;
+}
+
 function openRemate(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
@@ -3336,7 +4010,9 @@ function openRemate(p) {
       </div>`
     : '';
   const descHtml = p.description
-    ? `<div class="section"><h3>Descripción del bien</h3><p class="pub">${esc(String(p.description))}</p></div>`
+    ? `<div class="section"><h3>Descripción del bien</h3><p class="pub">${esc(String(p.description))}</p>${
+      descripcionIncompleta(p.description) ? '<p class="desc-aviso">Texto incompleto en la fuente original.</p>' : ''
+    }</div>`
     : '';
   // Bloqueos para anónimo (freemium). El análisis preliminar (semáforo) y la
   // calculadora quedan visibles como gancho; lo sensible/valioso se bloquea.
@@ -3358,6 +4034,7 @@ function openRemate(p) {
       <div class="detail-top"><span class="pill-src">${ic('scale')}Remate judicial</span>${fav}</div>
       ${tieneCuotaParte(p) ? `<div class="alerta-legal">${ic('alert')}<div><strong>Se remata solo el ${Number(p.cuota_parte)}% del bien</strong><span>${TEXTO_CUOTA_PARTE}</span></div></div>` : ''}
       <h2>${esc(typeLbl(p.property_type))} en ${esc(cap(p.city))}</h2>
+      ${tipoIdentificado(p.property_type) ? '' : `<p class="tipo-sin-confirmar">${TIPO_POR_CONFIRMAR}: el aviso del juzgado no dice qué clase de bien se subasta.</p>`}
       <div class="loc">${ic('pin')}<strong>${esc(cap(p.city))}</strong>${p.department ? ', ' + esc(cap(p.department)) : ''}</div>
       <div class="priceblock remate">
         <div class="pb-row">
@@ -3375,6 +4052,7 @@ function openRemate(p) {
       ${muro}
       ${aiBlock}
       ${datosBlock}
+      ${glosarioRemate()}
       ${gastosSection(p.minimum_bid, 'remate', {
         kind: 'remate',
         id: p.id,
@@ -3387,7 +4065,7 @@ function openRemate(p) {
       ${mapSection({ address: null, city: p.city })}
       <p class="src-note">Fuente: Rama Judicial de Colombia · aviso de remate publicado por el juzgado.</p>
     </div>`;
-  recordarFichaEnPantalla('remate', p.id, tituloFicha(p));
+  recordarFichaEnPantalla('remate', p.id, tituloFicha(p), p.property_type ?? null, p.area_m2 ?? null);
   showModal();
 }
 function gallery() {
@@ -3484,7 +4162,6 @@ function pintarComparables(caja, d) {
     <td>${fmtCOP(c.price)}</td>
     <td><strong>$${Number(c.ppm2).toLocaleString('es-CO')}</strong></td>
     <td>${esc(cap(c.zone || '—'))}</td>
-    <td>${c.url ? `<a href="${esc(safeMediaUrl(c.url))}" target="_blank" rel="noopener">ver</a>` : '—'}</td>
   </tr>`;
   const ajenos = d.comparables.filter((c) => c.esDeOtroTipo).length;
   caja.innerHTML = `
@@ -3495,7 +4172,7 @@ function pintarComparables(caja, d) {
     </div>
     ${ajenos ? `<p class="comp-aviso">${ajenos} de ${d.comparables.length} no son del mismo tipo de inmueble.</p>` : ''}
     <div class="comp-scroll"><table class="comp-tabla">
-      <thead><tr><th>Tipo</th><th>Área</th><th>Precio</th><th>Por m²</th><th>Zona</th><th></th></tr></thead>
+      <thead><tr><th>Tipo</th><th>Área</th><th>Precio</th><th>Por m²</th><th>Zona</th></tr></thead>
       <tbody>${d.comparables.map(fila).join('')}</tbody>
     </table></div>
     ${d.omitidos ? `<p class="comp-aviso">Se muestran ${d.comparables.length}; hay ${d.omitidos} más que no caben en la lista.</p>` : ''}
@@ -3524,22 +4201,39 @@ document.addEventListener('click', async (e) => {
 });
 
 function marketBody(m, criteria) {
-  const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Sin datos' }[m.confidence] || m.confidence;
   const d = m.discount_pct;
   const pos = d != null
     ? `<strong style="color:${d >= 0 ? '#16a34a' : '#dc2626'}">${d >= 0 ? '−' : '+'}${Math.abs(Math.round(d))}% vs mercado</strong>`
     : '—';
-  const crit = Array.isArray(criteria) && criteria.length ? criteria : [];
+  const tipo = m.type ?? fichaEnPantalla?.tipo ?? null;
+  const crit = criteriosDelTipo(Array.isArray(criteria) ? criteria : [], tipo);
+  const n = Number(m.n_comparables) || 0;
+  // El título de este bloque es la mitad del arreglo del hallazgo: estos son los
+  // comparables que SOSTIENEN el porcentaje —mismo tipo de inmueble, el motor no
+  // relaja esa condición en ningún nivel—, y no tienen nada que ver con las
+  // sugerencias que aparecen más abajo, que sí pueden ser de otro tipo. Mezclar
+  // ambas cosas bajo un mismo rótulo era lo que hacía dudar de las dos.
   const critHtml = crit.length
-    ? `<div class="market-crit"><span class="crit-title">Criterios de comparación</span>
+    ? `<div class="market-crit"><span class="crit-title">Comparables usados para calcular el precio</span>
         <div class="crit-chips">${crit.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div></div>`
     : '';
-  return `<div class="market"><div class="market-grid">
+  // El nivel de la cascada dice hasta dónde hubo que abrirse para reunir la
+  // muestra. «ciudad» es el último recurso y cambia lo que vale el porcentaje.
+  const aviso = avisoDeConfianza({
+    ambitoCiudad: m.cascada_nivel === 'ciudad' || /solo-localidad/.test(String(m.method || '')),
+    tiposMezclados: false, // este bloque es el del motor: nunca mezcla tipos
+    ciudad: m.__ciudad,
+    tipo,
+    sinBarrio: false,
+  });
+  return `<div class="market">${aviso}<div class="market-grid">
     <div><span class="l">Este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Oportunidad</span>${pos}</div>
-    <div><span class="l">Comparables</span><strong>${Number(m.n_comparables) || 0}</strong></div>
-  </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${Number(m.n_comparables) || 0} inmuebles similares de la zona (precios de OFERTA).</p>${auditoriaComparables && m.__id ? botonComparables(m.__id, m.n_comparables) : ''}</div>`;
+    <div><span class="l">Comparables</span><strong>${n}</strong></div>
+  </div>${critHtml}<p class="market-note">El precio por m² de este inmueble comparado contra el de ${n} inmuebles
+  ${tipo ? `del mismo tipo (${esc(typeLbl(tipo).toLowerCase())})` : 'del mismo tipo'} en su zona. Son precios de OFERTA:
+  lo que piden, no lo que se pagó.</p>${auditoriaComparables && m.__id ? botonComparables(m.__id, n) : ''}</div>`;
 }
 
 function marketSection(p) {
@@ -3548,20 +4242,50 @@ function marketSection(p) {
   // Criterios que el motor REALMENTE aplicó. Solo si la ficha es vieja (evaluada
   // antes de que el motor los guardara) se deducen del nombre del método.
   const crit = Array.isArray(m.criteria) && m.criteria.length ? m.criteria : criteriosComparacion(m.method, m.radius_km);
+  // `cascada_nivel` vive en la fila, no dentro de `features.market`: es la columna
+  // que el motor escribe para poder auditar hasta dónde tuvo que abrirse.
   // discount_pct de la fila y market.* salen del mismo evaluate() del motor.
-  return `<div class="section"><h3>Análisis de mercado</h3>${marketBody({ ...m, discount_pct: p.discount_pct, __id: p.id }, crit)}</div>`;
+  return `<div class="section"><h3>Análisis de mercado</h3>${marketBody({
+    ...m,
+    discount_pct: p.discount_pct,
+    cascada_nivel: p.cascada_nivel,
+    type: p.type,
+    __ciudad: p.city,
+    __id: p.id,
+  }, crit)}</div>`;
 }
 function mapSection(p) {
   const f = p.features || {};
   let q;
   if (f.lat != null && f.lng != null) q = f.lat + ',' + f.lng;
   else if (p.address || p.city) q = [p.address, p.city, 'Colombia'].filter(Boolean).join(', ');
-  else return '';
+  else {
+    // Sin coordenadas ni dirección no se devolvía nada, y en la ficha quedaba un
+    // hueco donde debía ir el mapa. Un espacio en blanco bajo un título se lee
+    // como que algo no cargó, no como que el dato no existe: se dice cuál de las
+    // dos cosas es.
+    return `<div class="section"><h3>Ubicación aproximada</h3>
+      <p class="market-note">Este aviso no publica una dirección que podamos ubicar en el mapa.
+      Verifícala en la fuente original antes de desplazarte.</p></div>`;
+  }
   return `<div class="section"><h3>Ubicación aproximada</h3><iframe class="mapframe" loading="lazy" src="https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed"></iframe></div>`;
 }
 let lastModalFocus = null;
+/**
+ * La ficha desde la que se abrió el modal, por si su tarjeta se repinta.
+ *
+ * Guardar el elemento no basta: al abrir una ficha bloqueada, el servidor
+ * devuelve la versión completa y la tarjeta se reconstruye entera, así que el
+ * nodo que tenía el foco deja de estar en el documento y `isConnected` da falso.
+ * El resultado era que al cerrar con Escape el foco caía al `body` y quien navega
+ * con teclado tenía que recorrer la rejilla otra vez desde el principio para
+ * volver donde estaba.
+ */
+let lastModalFocusFicha = null;
 function showModal() {
   lastModalFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const conFav = lastModalFocus?.closest?.('article.card, li')?.querySelector?.('[data-fav-id]');
+  lastModalFocusFicha = conFav ? conFav.getAttribute('data-fav-id') : null;
   $('modal').classList.add('open');
   $('modal').setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
@@ -3581,14 +4305,25 @@ function closeModal() {
   $('modal').setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
   fichaEnPantalla = null;
-  if (lastModalFocus?.isConnected) lastModalFocus.focus({ preventScroll: true });
+  devolverFoco();
+}
+
+/** Devuelve el foco a donde estaba, aunque la tarjeta se haya repintado entretanto. */
+function devolverFoco() {
+  if (lastModalFocus?.isConnected) { lastModalFocus.focus({ preventScroll: true }); return; }
+  if (!lastModalFocusFicha) return;
+  const tarjeta = document.querySelector(`[data-fav-id="${CSS.escape(lastModalFocusFicha)}"]`)
+    ?.closest('article.card, li');
+  // El botón de abrir, y si no la tarjeta: lo importante es que el foco vuelva a
+  // la altura de la lista donde el usuario lo dejó, no al principio de la página.
+  const destino = tarjeta?.querySelector('.card-open, button, a') || tarjeta;
+  if (destino instanceof HTMLElement) destino.focus({ preventScroll: true });
 }
 
 // ---------- Stats + leyenda + tabs ----------
 let STATS = null;
 function renderStatsUnavailable() {
   STATS = null;
-  $('c-portal').textContent = '—';
   $('c-bancos').textContent = '—';
   $('c-remates').textContent = '—';
   $('summary').innerHTML = `
@@ -3632,7 +4367,6 @@ async function loadStats() {
     return;
   }
   STATS = payload;
-  $('c-portal').textContent = STATS.portal_total.toLocaleString('es-CO');
   $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
   $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
   // Tres cifras, y las tres del mismo tipo: oportunidades. Decisión de la reunión
@@ -3714,7 +4448,8 @@ function renderActualizado(frescura) {
  */
 function leyendaCrece() {
   const filas = TABLA_CRECE.filter((t) => t.estrellasTexto).map((t) => (
-    `<span class="legend-item"><span class="legend-estrellas">${t.estrellasTexto}</span> ${esc(t.lectura)}</span>`
+    `<span class="legend-item"><span class="legend-estrellas">${t.estrellasTexto}</span> ${esc(t.lectura)}${
+      t.umbral ? `<em class="legend-umbral">${esc(t.umbral)}</em>` : ''}</span>`
   )).join('');
   return `<details class="legend-card"${mobileQuery.matches ? '' : ' open'}>
     <summary class="legend-title">${ic('chart')} Qué significan las estrellas</summary>
@@ -3739,7 +4474,33 @@ function leyendaCrece() {
  */
 function renderLeyenda() {
   if (!STATS) return;
-  $('legend').innerHTML = state.tab === 'portal' ? leyendaCrece() : '';
+  // Portal Y Bancos: los dos pintan estrellas en sus tarjetas, así que en los dos
+  // hace falta saber qué significan. Solo estaba en Portal, y quien entraba
+  // directo a Bancos veía tres estrellas doradas sin ninguna explicación.
+  //
+  // En Remates no: ahí no hay Índice CRECE —no se calcula contra el mercado sino
+  // contra el avalúo del juzgado— y una leyenda de estrellas explicaría algo que
+  // esa pestaña no muestra.
+  const conEstrellas = state.tab === 'portal' || state.tab === 'bancos';
+  $('legend').innerHTML = introDeSeccion() + (conEstrellas ? leyendaCrece() : '');
+}
+
+/**
+ * Qué es esta sección, dicho al entrar en ella.
+ *
+ * La explicación de qué son los inmuebles de banco existía y estaba bien escrita,
+ * pero solo en la portada: quien entraba directo a la pestaña —o llegaba por un
+ * enlace compartido— veía un listado de precios sin saber qué está mirando ni por
+ * qué esos inmuebles están más baratos. Es una línea, y evita la pregunta.
+ */
+function introDeSeccion() {
+  const textos = {
+    bancos: 'Inmuebles que los bancos recibieron de clientes que no pudieron pagar su crédito y ahora quieren vender.',
+    remates: 'Subastas ante un juez. La postura mínima la fija el juzgado, y participar exige consignar una caución antes de la audiencia.',
+    portal: 'Avisos publicados por inmobiliarias y propietarios que puedes llamar y visitar hoy.',
+  };
+  const texto = textos[state.tab];
+  return texto ? `<p class="seccion-intro">${esc(texto)}</p>` : '';
 }
 
 /**
@@ -3749,8 +4510,12 @@ function renderLeyenda() {
  * Es lo que necesita el buscador de arriba para volcar en el panel lo que la
  * persona escribió: sin ese hueco habría que cargar una vez sin filtrar y otra
  * filtrada, y el usuario vería medio segundo de resultados que no pidió.
+ *
+ * `pagina` solo lo usa la reconstrucción desde la dirección: quien comparte la
+ * página 3 de una búsqueda comparte la página 3. Por lo demás, entrar en una
+ * sección siempre empieza por el principio.
  */
-async function activarPestana(tab, antesDeCargar) {
+async function activarPestana(tab, antesDeCargar, pagina = 1) {
   document.querySelectorAll('.tab-btn[data-tab]').forEach((x) => {
     const active = x.dataset.tab === tab;
     x.classList.toggle('active', active);
@@ -3782,13 +4547,16 @@ async function activarPestana(tab, antesDeCargar) {
   }
   renderRadarSetup();
   if (antesDeCargar) await antesDeCargar();
-  await load(1);
+  // Cambiar de sección SÍ es un paso de navegación: es lo que hace que «atrás»
+  // devuelva a la pantalla anterior en vez de sacar de la aplicación.
+  empujarProximaUrl = true;
+  await load(pagina);
   if (mobileQuery.matches) {
     // Al cambiar de sección en móvil se sube a donde empiezan los resultados. Antes
     // apuntaba a `.vstats`, la franja morada de cifras, que dejó de existir como
     // barra propia al bajar la navegación: sus cifras viven ahora dentro de la barra
     // de secciones. Sin el `?.` esto lanzaba y dejaba la carga a medias.
-    (document.querySelector('.tabs-bar') || $('results'))?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    (document.querySelector('.tabs-bar') || $('results'))?.scrollIntoView({ block: 'start', behavior: suave() });
   }
 }
 document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListener('click', () => {
@@ -3850,16 +4618,40 @@ document.addEventListener('click', (event) => {
  * el usuario volvió sin sesión —se arrepintió del registro— la nota ya no
  * significa nada, y dejarla ahí haría que la ficha le saltara en la cara la
  * próxima vez que entrara por cualquier otro camino.
+ *
+ * Devuelve si abrió algo, para que el enlace directo de la dirección no le ponga
+ * otra ficha encima.
  */
 function reabrirFichaPendiente() {
   const pendiente = window.__fichaPendiente?.leer();
-  if (!pendiente) return;
+  if (!pendiente) return false;
   window.__fichaPendiente.olvidar();
-  if (!auth.token) return;
+  if (!auth.token) return false;
   // El recorrido de bienvenida usa este mismo diálogo: abrir la ficha encima lo
   // borraría a media frase.
-  if (window.__radarTour?.activo || document.querySelector('.onboarding')) return;
+  if (window.__radarTour?.activo || document.querySelector('.onboarding')) return false;
   window.__openRec(pendiente.kind, pendiente.id);
+  return true;
+}
+
+/**
+ * Abre la ficha a la que apunta un enlace directo: `/?kind=banco&id=…`.
+ *
+ * Es el enlace que el asistente reparte cuando nombra una oportunidad concreta
+ * (`server/asistente-busqueda.ts`). Convive con los filtros sin estorbarlos:
+ * `kind` e `id` no describen una búsqueda, así que el listado de debajo es el que
+ * digan los demás parámetros, o la portada si no hay ninguno.
+ *
+ * Se consume una sola vez y desaparece de la dirección —lo hace `sincronizarUrl`,
+ * que solo escribe parámetros de búsqueda—. Es lo mismo que hace la ficha
+ * pendiente y por el mismo motivo: el enlace lleva a una ficha, pero desde el
+ * momento en que la persona empieza a filtrar, lo que su dirección debe describir
+ * es lo que está mirando ahora.
+ */
+function abrirFichaDeLaUrl(ficha) {
+  if (!ficha) return;
+  if (window.__radarTour?.activo || document.querySelector('.onboarding')) return;
+  window.__openRec(ficha.kind, ficha.id);
 }
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
@@ -4125,7 +4917,7 @@ try {
     } else {
       await activarPestana(fuente, () => volcarEnPanel(fuente, extras));
     }
-    $('results')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    $('results')?.scrollIntoView({ block: 'start', behavior: suave() });
   }
 
   form.addEventListener('submit', (evento) => {
@@ -4249,22 +5041,37 @@ try {
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.
 aplicarVistaDePestana();
+// Qué pidió la dirección con la que se abrió la página. Se lee ANTES que nada
+// porque la primera búsqueda ya la reescribe, y el enlace a una ficha concreta
+// —que no es un filtro— dejaría de estar ahí para cuando conteste `initAuth`.
+const estadoInicialDeLaUrl = window.__radarUrlEstado.leer(location.search);
 // La ficha pendiente se reabre DESPUÉS de `initAuth`, no antes: hasta que no
 // vuelve /api/favorites no se sabe si el token sigue siendo válido, y reabrirla
 // con una sesión caducada la mostraría bloqueada justo a quien acaba de entrar.
-initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(reabrirFichaPendiente);
+// Vale igual para el enlace directo del asistente, que abre el mismo diálogo.
+initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(() => {
+  // La ficha a medias manda sobre el enlace: es de hace minutos y de esta persona.
+  if (reabrirFichaPendiente()) return;
+  abrirFichaDeLaUrl(estadoInicialDeLaUrl.ficha);
+});
 // Sin `await` y sin bloquear nada: la calculadora solo aparece al abrir una
 // ficha, muchísimo después de que esto resuelva, y mientras tanto ya tiene los
 // valores de arranque.
 void cargarParametrosGastos();
 void cargarConfig();
 loadStats().catch(() => renderStatsUnavailable());
-buildFilters().then(async () => {
-  await applyRadarPreferences(radarPreferences);
-  renderRadarSetup();
-  load(1);
-}, (e) => {
-  console.error('filters:', e);
-  renderRadarSetup();
-  load(1);
-});
+if (estadoInicialDeLaUrl.explicito) {
+  // La dirección trae una búsqueda: se reconstruye tal cual, y el Radar guardado
+  // no propone nada esta vez. Ver `restaurarDesdeUrl`.
+  void restaurarDesdeUrl();
+} else {
+  buildFilters().then(async () => {
+    await applyRadarPreferences(radarPreferences);
+    renderRadarSetup();
+    load(1);
+  }, (e) => {
+    console.error('filters:', e);
+    renderRadarSetup();
+    load(1);
+  });
+}
