@@ -98,8 +98,12 @@ const PASOS = [
     // auditoría hablaba en cambio del «estado del bien», que no es ningún campo que
     // tengamos: prometer en el tutorial un dato que la ficha no da es peor que un
     // copy largo.
-    texto: 'La ley fija la base de todas las subastas en el 70% del avalúo. Lo que cambia entre una '
-      + 'y otra es el riesgo del título, y si solo se remata una parte del bien.',
+    // El 70% NO es universal: en segunda o tercera licitación la base baja, y hay
+    // fichas reales al 100%. Decirlo como ley sin excepciones deja al usuario con
+    // una expectativa que la propia ficha desmiente tres clics después.
+    texto: 'La postura mínima la fija el juzgado, y suele ser un porcentaje del avalúo —lo habitual '
+      + 'es el 70%, aunque en una segunda subasta cambia—. Cada ficha dice el suyo. Lo que de verdad '
+      + 'distingue un remate de otro es el riesgo del título, y si solo se remata una parte del bien.',
   },
   {
     id: 'guardar',
@@ -132,10 +136,14 @@ const PASOS = [
     // El número sale de `app.js`, que a su vez lo tiene de `server/cupo.ts`. Escrito a
     // mano decía 20 y habría seguido diciendo 20 el día que el cupo cambie: el
     // tutorial es justo donde una cifra vieja se lee como una promesa incumplida.
-    texto: `Con una cuenta gratuita abres ${window.CUPO_FREE_MENSUAL ?? 20} fichas completas al mes `
-      + '—dirección, fotos, comparables y análisis— y se quedan abiertas para siempre. Además guardas '
-      + 'las que te interesan y recibes alertas por correo cuando aparezca algo en tu zona. Con el plan '
-      + 'completo no hay límite de fichas ni de informes.',
+    // «Comparables» se explica aquí y no se da por sabido: es la palabra sobre la
+    // que descansa todo el producto y el tutorial era el único sitio donde
+    // enseñarla. «Abrir una ficha» también se dice con todas las letras —consultarla
+    // completa— porque en el paso anterior ya se usó sin definir.
+    texto: `Con una cuenta gratuita puedes consultar ${window.CUPO_FREE_MENSUAL ?? 20} fichas completas al mes: `
+      + 'dirección exacta, todas las fotos, el análisis y los comparables (los inmuebles parecidos de la '
+      + 'zona con los que calculamos el precio). Las que consultes quedan disponibles en tu cuenta. '
+      + 'Con el plan completo no hay límite.',
   },
 ];
 
