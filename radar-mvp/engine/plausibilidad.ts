@@ -53,12 +53,48 @@ export const PPM2_MINIMO_CREIBLE = 1_000;
  *
  * Solo se declara donde el tipo IMPLICA un mínimo físico. Una finca es rural: por
  * debajo de media hectárea el dato es de otra cosa —la casa que hay dentro, o
- * hectáreas publicadas como metros—. Un parqueadero de 11 m² en cambio es normal,
- * y por eso no aparece aquí: poner un mínimo a todo por simetría descartaría
- * inmuebles reales.
+ * hectáreas publicadas como metros—.
+ *
+ * EL RESTO DE LOS MÍNIMOS SE AÑADIÓ POR UNA FICHA CONCRETA. La auditoría abrió
+ * «Oficina en Cúcuta · 5 m²» a $6.000.000/m² y encontró que la descripción era la
+ * de una vivienda: sala-comedor, cocina, tres habitaciones y varios baños. Ni el
+ * precio por metro (creíble) ni el área (no había mínimo para `office`) la
+ * frenaban, así que el motor le puso porcentaje y la metió a comparar contra
+ * oficinas de verdad. Un aviso así no es una oportunidad ni un sobreprecio: es un
+ * aviso mal clasificado, y lo honesto es no opinar sobre él.
+ *
+ * LOS NÚMEROS SALEN DE MEDIR EL INVENTARIO ACTIVO (116.143 avisos), percentil 1
+ * del área por tipo, y el mínimo se pone POR DEBAJO de ese p1 para no tocar nada
+ * que exista de verdad:
+ *
+ *   tipo         p1 real   mínimo    avisos que caen
+ *   apartment       30       20            55
+ *   house           55       30             2
+ *   office          14       10             5
+ *   commercial       8        5             0
+ *   warehouse       80       40             7
+ *   lot             50       20            26
+ *   building         —       40             5
+ *   parking         11        6             0
+ *
+ * Son 100 avisos, el 0,09% del inventario. Ese es justo el punto: la regla no
+ * está para limpiar el catálogo sino para que ninguna ficha absurda llegue a
+ * afirmar un porcentaje, porque basta toparse una para dejar de creerse el resto.
+ *
+ * `commercial` y `parking` no descartan nada hoy y se declaran igual: un local de
+ * 4 m² o un parqueadero de 5 m² no existen, y el día que la fuente publique uno
+ * mal es exactamente cuando hace falta la regla.
  */
 const AREA_MINIMA: Record<string, number> = {
   farm: 500,
+  apartment: 20,
+  house: 30,
+  office: 10,
+  commercial: 5,
+  warehouse: 40,
+  lot: 20,
+  building: 40,
+  parking: 6,
 };
 
 /** Área máxima por tipo. Un apartamento de 5.000 m² no es un apartamento. */

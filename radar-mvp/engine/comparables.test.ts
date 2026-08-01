@@ -214,6 +214,26 @@ test('los criterios no afirman condiciones que no se aplicaron', () => {
   assert.ok(/tipo/i.test(texto) && /sector|barrio|ciudad/i.test(texto), `sí debe declarar tipo y ubicación: ${texto}`);
 });
 
+test('la etiqueta de ubicación no llama «sector» a la ciudad entera', () => {
+  // Comparables dispersos hasta 4 km: ningún nivel estricto reúne el mínimo y la
+  // cascada cae en `solo-localidad`, que es `cascada_nivel = 'ciudad'`. Antes la
+  // ficha decía «mismo sector (4.5 km a la redonda)» ahí mismo, contradiciendo al
+  // aviso de confianza que aparece dos líneas más arriba.
+  const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
+    comp({ ppm2: 3_000_000 + i * 20_000, area_m2: 60 + i * 30, lat: 6.27 + i * 0.002 }));
+  const candidate: Candidate = {
+    id: 'x', source: 'fincaraiz', source_id: 'F1', type: 'apartment',
+    price: 117_000_000, area_m2: 60,
+    lat: 6.2705, lng: -75.6102, stratum: null, city: 'palmira', zone: null,
+    bedrooms: null, garages: null,
+  };
+  const v = evaluate(candidate, pool, DEFAULT_CONFIG);
+  assert.equal(v.cascada_nivel, 'ciudad');
+  const texto = v.criteria.join(' | ');
+  assert.match(texto, /toda la ciudad/, `debe nombrar el nivel real: ${texto}`);
+  assert.ok(!/mismo sector/.test(texto), `no puede llamarlo «mismo sector»: ${texto}`);
+});
+
 test('los criterios SÍ declaran lo que de verdad se filtró', () => {
   const pool: Comp[] = Array.from({ length: 20 }, (_, i) =>
     comp({ ppm2: 3_000_000 + i * 20_000, bedrooms: 3, garages: 1, stratum: 4, lat: 6.27 + i * 0.0001 }));

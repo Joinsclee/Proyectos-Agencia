@@ -729,6 +729,23 @@ function selloIguales(p) {
  * interno»— y un 0,62 no significa nada para quien mira; las estrellas y el nombre
  * de la categoría sí.
  */
+/**
+ * Contra QUÉ se midió ese porcentaje, según hasta dónde tuvo que abrirse el motor.
+ *
+ * El sello decía siempre «de su sector», también cuando la comparación había sido
+ * contra la ciudad entera —4.271 fichas activas están en ese caso—. Es la misma
+ * frase de la portada (`server/destacados.ts`), que sí distingue los tres niveles,
+ * y aquí no distinguía ninguno: la ficha prometía una precisión de barrio que el
+ * dato no tiene, y unas líneas más abajo el propio análisis de mercado la
+ * desmentía. Dos afirmaciones opuestas en la misma pantalla es exactamente lo que
+ * hace que se deje de creer a las dos.
+ */
+function referenciaDeNivel(nivel) {
+  if (nivel === 'ciudad') return 'de los precios de su ciudad';
+  if (nivel === 'zona_ampliada') return 'de los precios de su zona';
+  return 'de los precios de su sector';
+}
+
 function selloCreceFicha(p) {
   const c = CRECE_POR_TIER.get(p.crece_tier);
   if (!c) return '';
@@ -736,7 +753,7 @@ function selloCreceFicha(p) {
   return `<div class="ficha-crece${p.crece_tier === 'oportunidad_fuerte' ? ' es-fuerte' : ''}">
     <span class="fc-estrellas" aria-hidden="true">${c.estrellasTexto}</span>
     <span class="fc-lectura">${esc(c.lectura)}</span>
-    ${d != null && d > 0 ? `<span class="fc-desc">${d}% por debajo de los precios de su sector</span>` : ''}
+    ${d != null && d > 0 ? `<span class="fc-desc">${d}% por debajo ${referenciaDeNivel(p.cascada_nivel)}</span>` : ''}
   </div>`;
 }
 
@@ -2869,16 +2886,75 @@ function aiSection(kind, id) {
     </div></div>`;
 }
 const COPn = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('es-CO'));
+
+/**
+ * El aviso de confianza, arriba y en grande.
+ *
+ * Las dos cosas que más debilitan un porcentaje —haber tenido que salir del barrio
+ * y haber tenido que mezclar tipos de inmueble— se decían de pasada, en una línea
+ * pequeña bajo la cifra («31 comparables · todos los tipos»). Quien no sabe leer
+ * eso ve un número grande y se lo cree entero.
+ *
+ * La diferencia entre un porcentaje fiable y uno orientativo no es un matiz
+ * técnico: es la única forma que tiene quien lee de saber cuánto peso ponerle.
+ * Así que va donde se ve, con las mismas palabras que usaría alguien explicándolo
+ * en voz alta, y diciendo POR QUÉ pasó — que suele ser culpa del aviso, no del
+ * Radar.
+ */
+/** Plural español de un sustantivo simple: local → locales, casa → casas. */
+function enPlural(palabra) {
+  const p = String(palabra || '');
+  if (!p) return p;
+  const fin = p.slice(-1).toLowerCase();
+  if (fin === 's') return p;                       // «derechos» ya viene en plural
+  return 'aeiouáéíóú'.includes(fin) ? `${p}s` : `${p}es`;
+}
+
+function avisoDeConfianza({ ambitoCiudad, tiposMezclados, ciudad, tipo, sinBarrio }) {
+  const avisos = [];
+  if (ambitoCiudad) {
+    // «En una ciudad grande» se cayó del texto: la mitad de estas fichas están en
+    // municipios pequeños —Espinal, Girardot— y decirles «ciudad grande» delata
+    // que el aviso está escrito de plantilla. Lo que hay que transmitir es más
+    // simple y siempre cierto: el precio del metro no es igual en toda la ciudad.
+    avisos.push(`<strong>Confianza baja: comparación contra toda la ciudad.</strong> `
+      + (sinBarrio
+        ? 'Este aviso no dice en qué barrio está'
+        : 'No había suficientes avisos parecidos en su barrio')
+      + `, así que lo comparamos con ${ciudad ? esc(cap(ciudad)) : 'la ciudad'} entera. `
+      + 'El precio del metro cambia mucho de un sector a otro, así que este porcentaje '
+      + 'es orientativo: úsalo para descartar, no para decidir.');
+  }
+  if (tiposMezclados) {
+    avisos.push('<strong>Confianza baja: se compararon tipos distintos de inmueble.</strong> '
+      + `No había suficientes ${tipo ? esc(enPlural(typeLbl(tipo)).toLowerCase()) : 'inmuebles del mismo tipo'} `
+      + 'publicados cerca, así que el precio de referencia salió de inmuebles de otros tipos. '
+      + 'No es una comparación entre iguales.');
+  }
+  if (!avisos.length) return '';
+  return `<div class="market-confianza">${avisos
+    .map((t) => `<p>${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')}<span>${t}</span></p>`)
+    .join('')}</div>`;
+}
+
 function marketCtxHtml(m) {
   if (!m || !m.n) return '';
-  const tipo = m.matched_type ? `mismo tipo` : `todos los tipos`;
-  const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Insuficiente' }[m.confidence] || m.confidence;
   const scopeIcon = ic(m.scope === 'ciudad' ? 'map' : 'pin');
   const scopeLbl = m.scope === 'ciudad' ? `${esc(cap(m.city))} · toda la ciudad` : esc(m.scope_label || 'sector');
-  const crit = (m.criteria || []).length
-    ? `<div class="crit-chips" style="margin-bottom:10px">${m.criteria.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div>`
+  const criterios = criteriosDelTipo(m.criteria, m.type ?? fichaEnPantalla?.tipo);
+  const crit = criterios.length
+    ? `<div class="crit-chips" style="margin-bottom:10px">${criterios.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div>`
     : '';
-  return `<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
+  const aviso = avisoDeConfianza({
+    ambitoCiudad: m.scope === 'ciudad',
+    tiposMezclados: m.matched_type === false,
+    ciudad: m.city,
+    tipo: m.type,
+    // El motor distingue las dos causas en el criterio que declara, y no son lo
+    // mismo para quien lee: una es culpa del aviso, la otra del inventario.
+    sinBarrio: (m.criteria || []).some((c) => /no indica barrio/i.test(String(c))),
+  });
+  return `${aviso}<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
   ${crit}
   <div class="ai-mkt">
     <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
@@ -2886,7 +2962,7 @@ function marketCtxHtml(m) {
          apartamento no tiene por qué saber qué es un percentil, y aquí sobra:
          el dato es «el 25% más barato de la zona empieza en esta cifra». -->
     <div><span class="l">El 25% más barato</span><strong>${COPn(m.p25_total)}</strong></div>
-    <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${tipo}</span></div>
+    <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${m.matched_type ? 'mismo tipo' : 'tipos mezclados'}</span></div>
   </div>`;
 }
 /**
@@ -2957,15 +3033,50 @@ function recCard(r) {
       <div class="rec-meta">${disc}</div>
     </div></button>`;
 }
-function renderRecs(recs) {
+/**
+ * Otras oportunidades cercanas. NO son los comparables del cálculo.
+ *
+ * Este bloque se llamaba «Mejores oportunidades en la zona» y aparecía justo
+ * debajo del análisis de mercado, que unas líneas más arriba afirma haber
+ * comparado contra inmuebles del mismo tipo. En una ficha de lote la fila salía
+ * llena de casas y apartamentos, y la lectura natural —la que hizo la auditoría—
+ * es que el porcentaje de arriba se calculó con eso. No es así: el motor no relaja
+ * el tipo en ningún nivel de la cascada (engine/comparables.ts).
+ *
+ * Son dos cosas distintas y ahora se llaman distinto. Los comparables SOSTIENEN el
+ * precio y tienen que ser equivalentes; estas son SUGERENCIAS de qué mirar después,
+ * y pueden ser de otro tipo perfectamente. Lo único que no puede pasar es que se
+ * confundan, porque entonces no se cree ninguna de las dos.
+ */
+function renderRecs(recs, tipoFicha = fichaEnPantalla?.tipo ?? null) {
   if (!recs || !recs.length) return '';
-  const anyZone = recs.some((r) => r.same_zone);
-  const hint = anyZone
-    ? 'Priorizadas por cercanía (mismo barrio) y oportunidad de inversión.'
-    : 'Otras propiedades de la misma ciudad ordenadas por oportunidad de inversión.';
-  return `<div class="section"><h3>Mejores oportunidades en la zona</h3>
-    <p class="rec-hint">${hint}</p>
-    <div class="rec-grid">${recs.map(recCard).join('')}</div></div>`;
+  // `same_type` lo calcula el servidor contra el tipo de la ficha abierta; sin tipo
+  // conocido no se puede partir la lista y se enseña entera bajo el mismo rótulo.
+  const mismos = tipoFicha ? recs.filter((r) => r.same_type) : recs;
+  const otros = tipoFicha ? recs.filter((r) => !r.same_type) : [];
+  const nombreTipo = tipoFicha ? typeLbl(tipoFicha).toLowerCase() : null;
+  const grid = (lista) => `<div class="rec-grid">${lista.map(recCard).join('')}</div>`;
+  const bloque = (titulo, nota, lista) => (lista.length
+    ? `<h4 class="rec-sub">${titulo}</h4><p class="rec-hint">${nota}</p>${grid(lista)}`
+    : '');
+
+  return `<div class="section"><h3>Otras oportunidades cercanas</h3>
+    <p class="rec-hint rec-aclaracion">${ic('alert')} <span>Estas <strong>no</strong> son las que se usaron
+    para calcular el precio de esta ficha. Aquéllas aparecen arriba, en «Análisis de mercado», y son todas
+    del mismo tipo de inmueble. Éstas son sugerencias de qué mirar después.</span></p>
+    ${bloque(
+      nombreTipo ? `Del mismo tipo (${esc(nombreTipo)})` : 'Cerca de aquí',
+      recs.some((r) => r.same_zone)
+        ? 'Priorizadas por cercanía (mismo barrio) y por su descuento.'
+        : 'De la misma ciudad, ordenadas por su descuento.',
+      mismos,
+    )}
+    ${bloque(
+      'De otro tipo de inmueble',
+      'Buenas oportunidades de la misma zona, pero no comparables con esta ficha: '
+      + 'un local y un apartamento no se valoran con la misma vara.',
+      otros,
+    )}</div>`;
 }
 window.__openRec = async function (kind, id) {
   try {
@@ -3070,7 +3181,7 @@ function mostrarCupoAgotado(cupo, kind, id, ficha) {
   // La ficha no llegó a abrirse, pero es exactamente la que el usuario quería:
   // si desde aquí se va a suscribirse, volver al listado sería hacerle repetir la
   // búsqueda que acaba de pagar.
-  if (kind && id) recordarFichaEnPantalla(kind, id, tituloFicha(ficha));
+  if (kind && id) recordarFichaEnPantalla(kind, id, tituloFicha(ficha), ficha?.type ?? ficha?.property_type ?? null);
   showModal();
   $('cupo-seguir')?.addEventListener('click', closeModal);
 }
@@ -3109,7 +3220,7 @@ function gastosSection(valor, mode, context) {
       <div class="calc-rows">${rows}</div>
       <div class="calc-total">${tot}</div>
       <div class="calc-grand">${grand}</div>
-      ${mode !== 'remate' ? `<div class="rent-box">
+      ${mode !== 'remate' && context?.arriendo !== false ? `<div class="rent-box">
         <div class="rent-head"><span class="calc-label">Rentabilidad por arriendo</span><small data-rent-origin>Buscando arriendos comparables…</small></div>
         <div class="rent-market-status" data-rental-market aria-live="polite">
           <span class="spinner"></span> Estimando el valor del arriendo con avisos similares de la zona…
@@ -3164,8 +3275,11 @@ function tituloFicha(p) {
   return `${typeLbl(p?.type || p?.property_type)} en ${cap(p?.city)}`;
 }
 
-function recordarFichaEnPantalla(kind, id, titulo) {
-  fichaEnPantalla = { kind, id: String(id), titulo };
+function recordarFichaEnPantalla(kind, id, titulo, tipo = null) {
+  // El tipo viaja porque las respuestas que llegan después —mercado, comparables,
+  // recomendaciones— tienen que saber contra qué se está comparando para poder
+  // decir si lo que enseñan es del mismo tipo de inmueble o no.
+  fichaEnPantalla = { kind, id: String(id), titulo, tipo };
 }
 
 /** Palabras con las que ninguna frase queda cerrada: si el texto acaba aquí, venía a medias. */
@@ -3247,6 +3361,61 @@ function bloqueDescripcion(texto) {
   }</div>`;
 }
 
+/**
+ * Qué módulos de la ficha tienen sentido según QUÉ es el inmueble.
+ *
+ * La ficha era una sola plantilla para todo. En un lote acababa mostrando la
+ * antigüedad de lo construido, el criterio «sin parqueadero» y una calculadora de
+ * rentabilidad por arriendo — de un terreno. Cada cosa por separado es un detalle;
+ * juntas hacen que la ficha se lea como un formulario rellenado a la fuerza, y
+ * quien la lee deja de creerse también lo que sí aplica.
+ *
+ * Se decide por TIPO y no por «trae el dato o no», que es lo que se hacía antes y
+ * por eso fallaba: el portal rellena habitaciones y parqueaderos con 0 en 8.215 de
+ * los 8.773 lotes activos, y la antigüedad en 8.715 de ellos. Preguntar por el
+ * dato no distingue nada; lo que distingue es qué es la cosa.
+ *
+ *  · construccion → antigüedad, piso y área privada: hablan de algo edificado.
+ *  · habitaciones → alcobas. Un local no las tiene; sus baños sí son reales.
+ *  · arriendo     → la calculadora de rentabilidad. Un lote no se arrienda por m²
+ *                   como un apartamento, y un parqueadero tampoco: el mercado de
+ *                   arriendo que tenemos son avisos de vivienda y locales.
+ */
+const MODULOS_TODOS = { habitaciones: true, banos: true, parqueaderos: true, construccion: true, arriendo: true };
+const MODULOS_POR_TIPO = {
+  lot: { habitaciones: false, banos: false, parqueaderos: false, construccion: false, arriendo: false },
+  parking: { habitaciones: false, banos: false, parqueaderos: false, construccion: false, arriendo: false },
+  rights: { habitaciones: false, banos: false, parqueaderos: false, construccion: false, arriendo: false },
+  commercial: { habitaciones: false, banos: true, parqueaderos: true, construccion: true, arriendo: true },
+  office: { habitaciones: false, banos: true, parqueaderos: true, construccion: true, arriendo: true },
+  warehouse: { habitaciones: false, banos: true, parqueaderos: true, construccion: true, arriendo: true },
+};
+const modulosDe = (tipo) => MODULOS_POR_TIPO[tipo] || MODULOS_TODOS;
+
+/**
+ * Criterios de comparación que significan algo para ESTE tipo de inmueble.
+ *
+ * El motor declara «sin parqueadero» y «0 habitaciones» también en lotes, porque
+ * el portal publica esos campos en cero por defecto y el motor no puede distinguir
+ * un cero publicado de un campo vacío. En la ficha de un terreno esa etiqueta
+ * afirma que comparamos parcelas por su parqueadero, que es absurdo y resta
+ * credibilidad a los criterios que sí sostienen el cálculo (tipo, zona, área).
+ *
+ * Aquí solo se OCULTAN de la lista visible. Que el motor además deje de usarlos
+ * para elegir comparables es una decisión aparte —cambia la valoración de fichas
+ * ya publicadas— y está medida y propuesta al cliente.
+ */
+function criteriosDelTipo(criterios, tipo) {
+  const mod = modulosDe(tipo);
+  if (mod.habitaciones && mod.parqueaderos) return criterios || [];
+  return (criterios || []).filter((c) => {
+    const t = String(c).toLowerCase();
+    if (!mod.habitaciones && /habitacion/.test(t)) return false;
+    if (!mod.parqueaderos && /parqueadero/.test(t)) return false;
+    return true;
+  });
+}
+
 function openModal(p) {
   if (state.tab === 'remates') return openRemate(p);
   return openInmueble(p);
@@ -3255,22 +3424,24 @@ function openInmueble(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
   const f = p.features || {};
+  const mod = modulosDe(p.type);
   gImgs = imgList(p); gIdx = 0;
   const feats = [];
   if (p.area_m2) feats.push(['Área', fmtArea(p.area_m2)]);
-  if (f.bedrooms) feats.push(['Habitaciones', f.bedrooms]);
-  if (f.bathrooms) feats.push(['Baños', f.bathrooms]);
-  if (f.garages) feats.push(['Garajes', f.garages]);
+  if (mod.habitaciones && f.bedrooms) feats.push(['Habitaciones', f.bedrooms]);
+  if (mod.banos && f.bathrooms) feats.push(['Baños', f.bathrooms]);
+  if (mod.parqueaderos && f.garages) feats.push(['Garajes', f.garages]);
   if (f.stratum) feats.push(['Estrato', f.stratum]);
-  if (f.floor) feats.push(['Piso', f.floor]);
-  if (f.m2_private) feats.push(['Área priv.', fmtArea(f.m2_private)]);
+  if (mod.construccion && f.floor) feats.push(['Piso', f.floor]);
+  if (mod.construccion && f.m2_private) feats.push(['Área priv.', fmtArea(f.m2_private)]);
   // Un terreno no tiene antigüedad. El portal rellena el campo igual —dos de cada
   // tres lotes traen «1 a 8 años»—, y en la ficha se lee como si algo se hubiera
   // construido ahí; en realidad describe el conjunto o la urbanización, cuando
   // describe algo. Un dato que no se puede interpretar resta más de lo que suma.
-  if (f.antiguedad && p.type !== 'lot') feats.push(['Antigüedad', f.antiguedad]);
+  if (mod.construccion && f.antiguedad) feats.push(['Antigüedad', f.antiguedad]);
   // «Admin» abreviado no decía de qué: la cifra parecía un gasto del inmueble sin
-  // aclarar que es la cuota mensual que cobra el conjunto o el edificio.
+  // aclarar que es la cuota mensual que cobra el conjunto o el edificio. Se
+  // conserva en lotes: un lote dentro de un conjunto cerrado sí paga administración.
   if (f.administracion) feats.push(['Administración del conjunto', fmtCOP(f.administracion) + '/mes']);
 
   const amen = Array.isArray(f.amenities) && f.amenities.length ? `<div class="section"><h3>Características</h3><div class="amenities">${f.amenities.slice(0, 30).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}</div></div>` : '';
@@ -3300,6 +3471,9 @@ function openInmueble(p) {
     id: p.id,
     title: `${typeLbl(p.type)} en ${cap(p.city)}`,
     city: p.city,
+    // Un terreno o un parqueadero no se arriendan por metro cuadrado como una
+    // vivienda: la calculadora de rentabilidad no aplica y no se pinta.
+    arriendo: mod.arriendo,
     // La administración que el propio aviso declara. La ficha ya la enseña unas
     // líneas más abajo, así que empezar la calculadora en 0 no era «no saberlo»:
     // era ignorar un dato que teníamos, y encima diciendo debajo que se había
@@ -3319,12 +3493,14 @@ function openInmueble(p) {
       ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
       <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
     </div>`;
-  recordarFichaEnPantalla(kind, p.id, tituloFicha(p));
+  recordarFichaEnPantalla(kind, p.id, tituloFicha(p), p.type);
   showModal();
   // El motor sólo persiste el mercado en fichas de banco; en las del portal se
   // calcula bajo demanda (gratis, sin IA) para justificar el −X% de la tarjeta.
   if (!mkt) fillMarketLazy(p.source === 'fincaraiz' ? 'portal' : 'banco', p.id, p.discount_pct);
-  fillRentalMarket(kind, p.id);
+  // Sin calculadora de arriendo no hay dónde pintar el resultado, y la consulta
+  // cuesta el pool de arriendos de la ciudad entera: no se pide.
+  if (mod.arriendo) fillRentalMarket(kind, p.id);
 }
 
 // Ficha abierta actualmente: si el usuario abre otra mientras el mercado carga, la
@@ -3540,17 +3716,32 @@ async function fillMarketLazy(kind, id, disc) {
     // falla, que además es el que el usuario puede verificar mirando el aviso.
     if (v?.datos_implausibles) {
       const porQue = {
-        area_minima: 'El área publicada en el aviso no parece correcta para este tipo de inmueble',
-        area_maxima: 'El área publicada en el aviso no parece correcta para este tipo de inmueble',
+        area_minima: 'El área publicada no encaja con el tipo de inmueble que dice ser',
+        area_maxima: 'El área publicada no encaja con el tipo de inmueble que dice ser',
         ppm2_alto: 'El precio por metro cuadrado que resulta del aviso está fuera de lo razonable',
         ppm2_bajo: 'El precio por metro cuadrado que resulta del aviso está fuera de lo razonable',
       }[v.datos_implausibles] || 'Los datos del aviso no permiten comparar este inmueble';
+      // «Datos por verificar» y no un párrafo explicativo a secas: es un SELLO, y
+      // tiene que leerse antes que el precio. La auditoría encontró una «oficina de
+      // 5 m²» descrita como vivienda de tres habitaciones; el problema de esa ficha
+      // no es que le falte un porcentaje, es que su clasificación está mal y quien
+      // la mira necesita saberlo antes de compararla con nada.
+      // El texto va dentro de UN solo <span>: `.market-aviso` es un contenedor
+      // flex y sin envolverlo el «Datos por verificar» quedaba como una columna
+      // aparte, partido en tres renglones al lado del párrafo.
       el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">
-        <p class="market-aviso">${ic('alert')} ${esc(porQue)}, así que no calculamos su posición frente al mercado.</p>
-        <p class="market-note">Puede ser un error de publicación del portal. Verifícalo en el aviso original antes de sacar conclusiones.</p>
+        <p class="market-aviso">${ic('alert')} <span><strong>Datos por verificar.</strong> ${esc(porQue)},
+        así que no calculamos su posición frente al mercado y esta ficha no entra en los destacados.</span></p>
+        <p class="market-note">Suele ser un error de publicación en la fuente: el tipo, el área o el precio
+        no coinciden entre sí. Verifícalo en el aviso original antes de sacar cualquier conclusión.</p>
         ${auditoriaComparables && fichaEnPantalla?.id ? botonComparables(fichaEnPantalla.id, 0) : ''}</div>`;
     } else if (v && v.market_ppm2 != null && v.candidate_ppm2 != null) {
-      el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody({ ...v, __id: fichaEnPantalla?.id }, v.criteria)}`;
+      el.innerHTML = `<h3>Análisis de mercado</h3>${marketBody({
+        ...v,
+        type: fichaEnPantalla?.tipo ?? r.market?.type ?? null,
+        __ciudad: r.market?.city ?? null,
+        __id: fichaEnPantalla?.id,
+      }, v.criteria)}`;
     } else {
       // El botón va también aquí. La pregunta «contra qué compara» es más urgente
       // cuando NO hay veredicto, no menos: es el caso en que el usuario ve una
@@ -3767,7 +3958,7 @@ function openRemate(p) {
       ${mapSection({ address: null, city: p.city })}
       <p class="src-note">Fuente: Rama Judicial de Colombia · aviso de remate publicado por el juzgado.</p>
     </div>`;
-  recordarFichaEnPantalla('remate', p.id, tituloFicha(p));
+  recordarFichaEnPantalla('remate', p.id, tituloFicha(p), p.property_type ?? null);
   showModal();
 }
 function gallery() {
@@ -3904,22 +4095,39 @@ document.addEventListener('click', async (e) => {
 });
 
 function marketBody(m, criteria) {
-  const conf = { high: 'Alta', medium: 'Media', low: 'Baja', insufficient: 'Sin datos' }[m.confidence] || m.confidence;
   const d = m.discount_pct;
   const pos = d != null
     ? `<strong style="color:${d >= 0 ? '#16a34a' : '#dc2626'}">${d >= 0 ? '−' : '+'}${Math.abs(Math.round(d))}% vs mercado</strong>`
     : '—';
-  const crit = Array.isArray(criteria) && criteria.length ? criteria : [];
+  const tipo = m.type ?? fichaEnPantalla?.tipo ?? null;
+  const crit = criteriosDelTipo(Array.isArray(criteria) ? criteria : [], tipo);
+  const n = Number(m.n_comparables) || 0;
+  // El título de este bloque es la mitad del arreglo del hallazgo: estos son los
+  // comparables que SOSTIENEN el porcentaje —mismo tipo de inmueble, el motor no
+  // relaja esa condición en ningún nivel—, y no tienen nada que ver con las
+  // sugerencias que aparecen más abajo, que sí pueden ser de otro tipo. Mezclar
+  // ambas cosas bajo un mismo rótulo era lo que hacía dudar de las dos.
   const critHtml = crit.length
-    ? `<div class="market-crit"><span class="crit-title">Criterios de comparación</span>
+    ? `<div class="market-crit"><span class="crit-title">Comparables usados para calcular el precio</span>
         <div class="crit-chips">${crit.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div></div>`
     : '';
-  return `<div class="market"><div class="market-grid">
+  // El nivel de la cascada dice hasta dónde hubo que abrirse para reunir la
+  // muestra. «ciudad» es el último recurso y cambia lo que vale el porcentaje.
+  const aviso = avisoDeConfianza({
+    ambitoCiudad: m.cascada_nivel === 'ciudad' || /solo-localidad/.test(String(m.method || '')),
+    tiposMezclados: false, // este bloque es el del motor: nunca mezcla tipos
+    ciudad: m.__ciudad,
+    tipo,
+    sinBarrio: false,
+  });
+  return `<div class="market">${aviso}<div class="market-grid">
     <div><span class="l">Este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Oportunidad</span>${pos}</div>
-    <div><span class="l">Comparables</span><strong>${Number(m.n_comparables) || 0}</strong></div>
-  </div>${critHtml}<p class="market-note">Precio por m² comparado contra el de ${Number(m.n_comparables) || 0} inmuebles similares de la zona (precios de OFERTA).</p>${auditoriaComparables && m.__id ? botonComparables(m.__id, m.n_comparables) : ''}</div>`;
+    <div><span class="l">Comparables</span><strong>${n}</strong></div>
+  </div>${critHtml}<p class="market-note">El precio por m² de este inmueble comparado contra el de ${n} inmuebles
+  ${tipo ? `del mismo tipo (${esc(typeLbl(tipo).toLowerCase())})` : 'del mismo tipo'} en su zona. Son precios de OFERTA:
+  lo que piden, no lo que se pagó.</p>${auditoriaComparables && m.__id ? botonComparables(m.__id, n) : ''}</div>`;
 }
 
 function marketSection(p) {
@@ -3928,8 +4136,17 @@ function marketSection(p) {
   // Criterios que el motor REALMENTE aplicó. Solo si la ficha es vieja (evaluada
   // antes de que el motor los guardara) se deducen del nombre del método.
   const crit = Array.isArray(m.criteria) && m.criteria.length ? m.criteria : criteriosComparacion(m.method, m.radius_km);
+  // `cascada_nivel` vive en la fila, no dentro de `features.market`: es la columna
+  // que el motor escribe para poder auditar hasta dónde tuvo que abrirse.
   // discount_pct de la fila y market.* salen del mismo evaluate() del motor.
-  return `<div class="section"><h3>Análisis de mercado</h3>${marketBody({ ...m, discount_pct: p.discount_pct, __id: p.id }, crit)}</div>`;
+  return `<div class="section"><h3>Análisis de mercado</h3>${marketBody({
+    ...m,
+    discount_pct: p.discount_pct,
+    cascada_nivel: p.cascada_nivel,
+    type: p.type,
+    __ciudad: p.city,
+    __id: p.id,
+  }, crit)}</div>`;
 }
 function mapSection(p) {
   const f = p.features || {};

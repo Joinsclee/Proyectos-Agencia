@@ -16,6 +16,7 @@
 import { supabase } from '../lib/supabase.js';
 import { BANK_SOURCES } from '../lib/types.js';
 import { haversineKm } from '../engine/stats.js';
+import { esPlausible } from '../engine/plausibilidad.js';
 import { normCity } from '../engine/zone-comps.js';
 
 export type RecKind = 'portal' | 'banco' | 'remate';
@@ -87,7 +88,11 @@ export async function recommendInZone(opts: {
   const POOL_INM = 40;
   const POOL_REM = 24;
 
-  const inmCols = 'id, type, city, zone, price, discount_pct, source, source_url, image_url, features';
+  // `area_m2` viaja solo para poder descartar los avisos cuyos datos no pueden ser
+  // ciertos: recomendar una «oficina de 5 m²» junto a la ficha que el usuario está
+  // leyendo la convierte en una sugerencia del Radar, no en un aviso más del
+  // catálogo. Ver `engine/plausibilidad.ts`.
+  const inmCols = 'id, type, city, zone, price, area_m2, discount_pct, source, source_url, image_url, features';
 
   const [bancos, portal, remates] = await Promise.all([
     supabase.from('inmuebles').select(inmCols)
@@ -120,6 +125,7 @@ export async function recommendInZone(opts: {
   const pushInmueble = (kind: 'portal' | 'banco', rows: any[]) => {
     for (const r of rows ?? []) {
       if (r.id === excludeId) continue;
+      if (!esPlausible({ type: r.type, area_m2: num(r.area_m2), price: num(r.price) })) continue;
       const d = num(r.discount_pct);
       if (d == null || d <= 0 || d > REC_MAX_DISCOUNT) continue;
       const zone = r.zone ?? (r.features?.neighborhood ?? null);

@@ -140,6 +140,16 @@ export interface ComparablesReporte {
   /** Contra qué se comparó: "1.5 km a la redonda", "barrio Laureles"… */
   alcance: string | null;
   criterios: string[];
+  /**
+   * ¿La muestra salió del MISMO tipo de inmueble, o hubo que mezclar?
+   *
+   * El veredicto del motor nunca mezcla tipos; el resumen de zona sí se abre a
+   * todos cuando no encuentra suficientes del pedido. Son dos cifras que se leen
+   * igual y valen distinto, así que el reporte tiene que poder decir cuál trae.
+   */
+  mismoTipo: boolean;
+  /** La comparación cubrió la ciudad entera: el último recurso de la cascada. */
+  ambitoCiudad: boolean;
 }
 
 export interface ArriendoReporte {
@@ -265,6 +275,41 @@ const tipoLegible = (t: unknown): string => TIPOS[String(t ?? '')] ?? (t ? capit
 const fuenteLegible = (s: unknown): string => FUENTES[String(s ?? '')] ?? (capitalizar(String(s ?? '')) || '—');
 
 /**
+ * Qué características tiene sentido imprimir según QUÉ es el inmueble.
+ *
+ * Gemela de la tabla del cliente (`server/public/app.js`), a propósito duplicada:
+ * el navegador carga scripts clásicos sin empaquetador, así que no hay forma de
+ * compartir el módulo. Si una cambia, la otra también — son la misma decisión.
+ *
+ *  · construccion → antigüedad y piso: hablan de algo edificado.
+ *  · habitaciones → alcobas. Un local no las tiene; sus baños sí son reales.
+ */
+export const MODULOS_TODOS = { habitaciones: true, banos: true, parqueaderos: true, construccion: true };
+const MODULOS_POR_TIPO: Record<string, typeof MODULOS_TODOS> = {
+  lot: { habitaciones: false, banos: false, parqueaderos: false, construccion: false },
+  parking: { habitaciones: false, banos: false, parqueaderos: false, construccion: false },
+  rights: { habitaciones: false, banos: false, parqueaderos: false, construccion: false },
+  vehicle: { habitaciones: false, banos: false, parqueaderos: false, construccion: false },
+  commercial: { habitaciones: false, banos: true, parqueaderos: true, construccion: true },
+  office: { habitaciones: false, banos: true, parqueaderos: true, construccion: true },
+  warehouse: { habitaciones: false, banos: true, parqueaderos: true, construccion: true },
+};
+export const modulosDeTipo = (tipo: unknown): typeof MODULOS_TODOS =>
+  MODULOS_POR_TIPO[String(tipo ?? '')] ?? MODULOS_TODOS;
+
+/** Criterios de comparación que significan algo para este tipo de inmueble. */
+export function criteriosDelTipo(criterios: string[], tipo: unknown): string[] {
+  const mod = modulosDeTipo(tipo);
+  if (mod.habitaciones && mod.parqueaderos) return criterios;
+  return criterios.filter((c) => {
+    const t = c.toLowerCase();
+    if (!mod.habitaciones && t.includes('habitacion')) return false;
+    if (!mod.parqueaderos && t.includes('parqueadero')) return false;
+    return true;
+  });
+}
+
+/**
  * Traduce una fila de la base a los datos del reporte.
  *
  * RECIBE LA FILA YA REDACTADA por `server/acceso.ts`, no la cruda. Es una
@@ -296,12 +341,18 @@ export function datosDeInmueble(args: {
   anotar('Tipo', tipoLegible(tipo));
   const area = numero(fila.area_m2) ?? numero(f.area_m2) ?? numero(f.area);
   anotar('Área', area != null ? `${area} m²` : null);
-  anotar('Habitaciones', numero(f.bedrooms));
-  anotar('Baños', numero(f.bathrooms));
-  anotar('Garajes', numero(f.garages));
+  // El reporte es la misma ficha en papel, así que hereda la misma regla: no se
+  // imprime lo que el tipo de inmueble no puede tener. En un lote, «Habitaciones:
+  // 0 · Garajes: 0 · Antigüedad: 1 a 8 años» no describe nada — son los valores por
+  // defecto del portal— y en un documento que el usuario se lleva a una reunión eso
+  // pesa más que en pantalla.
+  const mod = modulosDeTipo(tipo);
+  if (mod.habitaciones) anotar('Habitaciones', numero(f.bedrooms));
+  if (mod.banos) anotar('Baños', numero(f.bathrooms));
+  if (mod.parqueaderos) anotar('Garajes', numero(f.garages));
   anotar('Estrato', numero(f.stratum));
-  anotar('Piso', numero(f.floor));
-  anotar('Antigüedad', texto(f.antiguedad));
+  if (mod.construccion) anotar('Piso', numero(f.floor));
+  if (mod.construccion) anotar('Antigüedad', texto(f.antiguedad));
   anotar('Administración mensual', numero(f.administracion) != null ? cop(numero(f.administracion)) : null);
 
   // Índice CRECE: la clasificación guardada manda; la desviación se deriva del
@@ -335,7 +386,12 @@ export function datosDeInmueble(args: {
     descuentoPct: esRemate ? descuentoRemate : numero(fila.discount_pct),
     crece,
     caracteristicas,
-    comparables,
+    // Mismo criterio que las características: no se imprime como criterio de
+    // comparación algo que el tipo de inmueble no puede tener. «Sin parqueadero»
+    // bajo un lote afirma que comparamos terrenos por su garaje.
+    comparables: comparables
+      ? { ...comparables, criterios: criteriosDelTipo(comparables.criterios, tipo) }
+      : null,
     arriendo,
     remate: esRemate
       ? {
@@ -378,7 +434,24 @@ function bloqueComparables(c: ComparablesReporte | null): string {
   const chips = c.criterios.length
     ? `<ul class="chips">${c.criterios.map((x) => `<li>${escaparHtml(x)}</li>`).join('')}</ul>`
     : '';
-  return `<dl class="datos">
+  // Las dos cosas que debilitan un porcentaje van ARRIBA del porcentaje, no en la
+  // nota del pie. En un documento impreso es todavía más importante que en
+  // pantalla: quien lo lleva a una reunión no tiene forma de preguntar después.
+  const avisos: string[] = [];
+  if (c.ambitoCiudad) {
+    avisos.push('<strong>Confianza baja: comparación contra toda la ciudad.</strong> No hubo suficientes '
+      + 'avisos parecidos en el barrio del inmueble, así que la referencia se calculó con la ciudad entera. '
+      + 'El precio del metro cambia mucho de un sector a otro: este porcentaje es orientativo.');
+  }
+  if (!c.mismoTipo) {
+    avisos.push('<strong>Confianza baja: se compararon tipos distintos de inmueble.</strong> No hubo '
+      + 'suficientes avisos del mismo tipo publicados cerca, así que la referencia salió de inmuebles de '
+      + 'otros tipos. No es una comparación entre iguales.');
+  }
+  const aviso = avisos.length
+    ? `<div class="aviso-confianza">${avisos.map((t) => `<p>${t}</p>`).join('')}</div>`
+    : '';
+  return `${aviso}<dl class="datos">
       ${fila('Comparables usados', String(c.n))}
       ${/* «Nivel de confianza» se retiró por decisión del cliente: en un reporte se
             lee como una advertencia sobre el propio dato que lo acompaña. Lo que
@@ -485,6 +558,13 @@ ul.chips li { border:1px solid var(--linea); border-radius:999px; padding:3px 11
 .alerta { border-left:4px solid #d9a441; background:#fffaf0; color:var(--alerta);
   padding:11px 14px; border-radius:0 8px 8px 0; font-size:.85rem; line-height:1.55; margin:14px 0 0; }
 .alerta strong { color:#7a4d00; }
+/* La confianza de la comparación va ANTES de las cifras que califica: leerla
+   después ya no sirve, porque para entonces el número ya se creyó. */
+.aviso-confianza { margin:0 0 14px; }
+.aviso-confianza p { border-left:4px solid #d9a441; background:#fffaf0; color:var(--alerta);
+  padding:11px 14px; border-radius:0 8px 8px 0; font-size:.83rem; line-height:1.55; margin:0 0 8px; }
+.aviso-confianza p:last-child { margin-bottom:0; }
+.aviso-confianza strong { display:block; color:#7a4d00; }
 footer { margin-top:32px; padding-top:16px; border-top:1px solid var(--linea);
   color:var(--suave); font-size:.78rem; line-height:1.55; }
 a { color:var(--acento); overflow-wrap:anywhere; }
