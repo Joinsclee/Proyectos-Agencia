@@ -144,11 +144,15 @@ export async function analyzeWithAI(
 
   const arr = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === 'string').slice(0, 6) : []);
   const veredicto = ['atractiva', 'neutral', 'riesgosa'].includes(parsed.veredicto) ? parsed.veredicto : 'neutral';
+  // El precio que el usuario está mirando, para poder comprobar si lo que dice el
+  // modelo se sostiene contra él.
+  const precioReal = facts.kind === 'remate' ? num(facts.postura_cop) : num(facts.precio_lista_cop);
+  const estimado = valorDeMercadoCreible(parsed.estimado_mercado_cop);
   return {
     veredicto,
     puntaje: Math.max(0, Math.min(100, Number(parsed.puntaje) || 0)),
-    estimado_mercado_cop: valorDeMercadoCreible(parsed.estimado_mercado_cop),
-    descuento_estimado_pct: descuentoCreible(parsed.descuento_estimado_pct),
+    estimado_mercado_cop: estimado,
+    descuento_estimado_pct: descuentoCoherente(parsed.descuento_estimado_pct, precioReal, estimado),
     resumen: String(parsed.resumen ?? '').slice(0, 600),
     a_favor: arr(parsed.a_favor),
     en_contra: arr(parsed.en_contra),
@@ -195,4 +199,42 @@ export function descuentoCreible(valor: unknown): number | null {
   const n = Number(valor);
   if (!Number.isFinite(n) || n < -100 || n > 95) return null;
   return Math.round(n * 10) / 10;
+}
+
+/** Número finito o nada. Local, para no arrastrar utilidades de otro módulo. */
+function num(v: unknown): number | null {
+  if (v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * El descuento del modelo, comprobado contra su propia estimación.
+ *
+ * El modelo llegó a decir «-30% de descuento» sobre un inmueble de 30 millones
+ * cuyo valor de mercado él mismo estimaba en 22: eso no es un descuento del 30%,
+ * es un sobreprecio del 36%. El signo contradecía a su propio número, y la ficha
+ * pintaba ese porcentaje al lado del veredicto del motor, que decía lo contrario.
+ *
+ * Quien lee no tiene cómo detectar la contradicción ni rehacer la cuenta, así que
+ * el riesgo real no es un número feo: es entusiasmarse con algo sobrevalorado
+ * creyendo que está barato. Cuando el porcentaje no cuadra con la estimación, se
+ * descarta y la ficha se queda sin esa línea —el resto del análisis sigue siendo
+ * útil— en vez de publicar una cifra que apunta al lado contrario.
+ *
+ * La tolerancia es amplia (10 puntos) a propósito: aquí no se persigue precisión
+ * decimal, solo se impide que el signo mienta.
+ */
+export function descuentoCoherente(
+  valor: unknown,
+  precio: number | null,
+  estimado: number | null,
+): number | null {
+  const declarado = descuentoCreible(valor);
+  if (declarado === null) return null;
+  // Sin con qué contrastarlo, se deja pasar lo que ya validó `descuentoCreible`.
+  if (precio === null || estimado === null || precio <= 0 || estimado <= 0) return declarado;
+  const real = ((estimado - precio) / estimado) * 100;
+  if (Math.sign(real) !== Math.sign(declarado) && Math.abs(real - declarado) > 1) return null;
+  return Math.abs(real - declarado) <= 10 ? declarado : null;
 }

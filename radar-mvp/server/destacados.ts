@@ -608,11 +608,16 @@ export function bloqueDeFuente(
   const META: Record<FuenteDestacado, { id: BloqueDestacados['id']; titulo: string; icono: string; criterio: string }> = {
     portal: {
       id: 'portal',
-      titulo: 'Lo mejor de la semana en el portal abierto',
+      // «en portales», no «en el portal abierto»: el rótulo tiene que sonar igual
+      // que los otros dos bloques, y «portal abierto» no le dice a nadie qué hay
+      // dentro. Tampoco se nombra FincaRaíz: hoy es la fuente, mañana pueden ser
+      // tres, y el usuario no compra por el nombre del portal.
+      titulo: 'Lo mejor de la semana en portales',
       icono: 'home',
-      criterio: 'Avisos de FincaRaíz con el mayor descuento frente a ofertas similares de su zona, '
-        + 'entre los que tienen comparables suficientes. Es mercancía en el mercado abierto: se '
-        + 'puede llamar y visitar hoy.',
+      // Fuera «es mercancía en el mercado abierto: se puede llamar y visitar hoy».
+      // Llamar «mercancía» a la casa de alguien es frío para lo que se está
+      // vendiendo, y la frase explicaba una obviedad del canal.
+      criterio: 'Avisos en portales con el mayor descuento frente a ofertas similares de su zona.',
     },
     banco: {
       id: 'bancos',
@@ -628,10 +633,21 @@ export function bloqueDeFuente(
       id: 'remates',
       titulo: 'Lo mejor de la semana en remates judiciales',
       icono: 'scale',
-      criterio: 'Subastas ante un juez con audiencia futura. NO se ordenan por descuento: la base legal '
-        + 'de todo remate es el 70% del avalúo, así que casi todos dan el mismo 30% y ordenar por ahí '
-        + 'sería ordenar por ruido. Se ordenan por riesgo jurídico —primero los de demandante bancario, '
-        + 'donde el título suele venir más limpio— y luego por audiencia más próxima.',
+      // DOS AFIRMACIONES RETIRADAS, y las dos por lo mismo: prometían certezas
+      // jurídicas que nadie puede dar.
+      //
+      // «donde el título suele venir más limpio» se leía como una garantía y
+      // rebajaba la cautela justo en la categoría donde más hace falta. Que
+      // demande un banco es una señal, no un seguro.
+      //
+      // Y la base del 70% no es universal: en segunda o tercera licitación baja,
+      // y hay fichas reales al 100%. Decirlo como ley sin excepciones deja al
+      // usuario con una expectativa que la propia ficha contradice.
+      criterio: 'Subastas ante un juez con audiencia futura. No se ordenan por descuento: la postura '
+        + 'mínima la fija el juzgado y suele ser un porcentaje del avalúo, así que casi todas parten '
+        + 'de un punto parecido. Se ordenan por audiencia más próxima. Que el demandante sea un banco '
+        + 'no garantiza que el inmueble esté libre de problemas: revisa el expediente y las '
+        + 'condiciones de entrega antes de participar.',
     },
   };
   const meta = META[fuente];

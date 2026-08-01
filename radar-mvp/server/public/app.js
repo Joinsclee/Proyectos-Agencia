@@ -1712,33 +1712,6 @@ function homeSkeleton() {
  * fila lo dice, en vez de dejar que el usuario lo suponga.
  */
 /**
- * El porqué de cada ficha, debajo de sus datos.
- *
- * Va con `textContent` y no dentro del HTML de la tarjeta: el motivo lo compone el
- * servidor a partir de columnas de scraping (ciudad, barrio, banco demandante) y
- * este es el camino en el que no hay forma de equivocarse con el escapado.
- */
-function pintarMotivos(contenedor, fichas, desde = 0) {
-  const tarjetas = contenedor.querySelectorAll('article.card');
-  fichas.forEach((ficha, i) => {
-    const cuerpo = tarjetas[desde + i] && tarjetas[desde + i].querySelector('.card-body');
-    const sello = ficha._destacado;
-    if (!cuerpo || !sello) return;
-    const caja = document.createElement('p');
-    caja.className = 'card-motivo';
-    const titular = document.createElement('strong');
-    titular.textContent = sello.motivo;
-    caja.appendChild(titular);
-    if (sello.respaldo) {
-      const detalle = document.createElement('span');
-      detalle.textContent = sello.respaldo;
-      caja.appendChild(detalle);
-    }
-    cuerpo.appendChild(caja);
-  });
-}
-
-/**
  * Pinta un tramo del top con las MISMAS tarjetas del listado.
  *
  * La portada estuvo un tiempo en filas de texto, y el cliente pidió volver a las
@@ -1757,7 +1730,6 @@ function pintarTop(grid, fichas, desde, hasta) {
   // `true` = la ficha se PIDE a `/api/property` al abrirla, que es la única ruta
   // que aplica el plan del usuario y gasta el cupo del mes.
   renderCards(tanda, grid, true);
-  pintarMotivos(grid, tanda, desde);
 }
 
 function montarGrupoHome(grid, pie, grupo) {
@@ -2649,7 +2621,7 @@ function renderAI(result) {
   }[ai.veredicto] || [ic('magnifier', 'analysis-icon is-review'), ai.veredicto, 'ai-media'];
   const li = (arr) => (arr && arr.length ? `<ul class="ai-list">${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="ai-empty">—</p>');
   const estim = ai.estimado_mercado_cop != null
-    ? `<div class="ai-estim"><div><span class="l">Valor de mercado estimado</span><strong>${COPn(ai.estimado_mercado_cop)}</strong></div>${ai.descuento_estimado_pct != null ? `<div><span class="l">Descuento estimado</span><strong style="color:${ai.descuento_estimado_pct >= 0 ? '#16a34a' : '#dc2626'}">${ai.descuento_estimado_pct >= 0 ? '−' : '+'}${Math.abs(ai.descuento_estimado_pct)}%</strong></div>` : ''}</div>`
+    ? `<div class="ai-estim"><div><span class="l">Valor de mercado estimado</span><strong>${COPn(ai.estimado_mercado_cop)}</strong></div>${ai.descuento_estimado_pct != null ? `<div><span class="l">${ai.descuento_estimado_pct >= 0 ? 'Descuento estimado' : 'Sobreprecio estimado'}</span><strong style="color:${ai.descuento_estimado_pct >= 0 ? '#16a34a' : '#dc2626'}">${ai.descuento_estimado_pct >= 0 ? '−' : '+'}${Math.abs(ai.descuento_estimado_pct)}%</strong></div>` : ''}</div>`
     : '';
   return `<div class="aiblock ${meta[2]}">
       <div class="ai-head">${meta[0]} <strong>${esc(meta[1])}</strong> <span class="ai-score">${Number(ai.puntaje) || 0}/100</span></div>
@@ -2754,10 +2726,6 @@ function refrescarTarjeta(kind, id, ficha) {
   const nueva = sustituto.querySelector('article.card');
   if (nueva) {
     enHome.replaceWith(nueva);
-    // El motivo del destacado lo añade la portada por fuera de `renderCards`: sin
-    // esto, la tarjeta recién abierta perdería la línea que explica por qué está
-    // en el top.
-    pintarMotivos(nueva.parentElement, [ficha], [...nueva.parentElement.children].indexOf(nueva));
     paintFavs();
   }
 }
@@ -3193,9 +3161,24 @@ async function fillMarketLazy(kind, id, disc) {
       // El botón va también aquí. La pregunta «contra qué compara» es más urgente
       // cuando NO hay veredicto, no menos: es el caso en que el usuario ve una
       // referencia de zona sin saber de dónde sale.
+      // Aquí se decía SIEMPRE «falta el área», y muchas veces el área estaba a
+      // cuatro líneas de distancia, en la cabecera de la misma ficha. Una
+      // contradicción así, dentro de la misma pantalla, no se lee como un matiz
+      // técnico: se lee como que el motor no sabe lo que dice, y arrastra consigo
+      // la credibilidad del resto de los números.
+      //
+      // La causa real casi nunca es el área del inmueble, sino que en su zona no
+      // hay suficientes avisos parecidos CON área publicada para sacar una
+      // mediana por metro cuadrado. Se dice esa, y solo se culpa al área cuando
+      // de verdad falta.
+      const areaFicha = Number(fichaEnPantalla?.area_m2);
+      const sinArea = !Number.isFinite(areaFicha) || areaFicha <= 0;
+      const porQueNoHayVeredicto = sinArea
+        ? 'Este aviso no publica el área, así que no se puede calcular su precio por m² ni compararlo.'
+        : 'No hay suficientes inmuebles parecidos con área publicada en su zona para comparar por metro cuadrado, así que no se estima descuento.';
       el.innerHTML = `<h3>Análisis de mercado</h3><div class="market">${marketCtxHtml(r.market)}
         <p class="market-note">Referencia de precios de OFERTA de ${r.market.n} inmuebles de la zona.
-        No se pudo calcular un precio por m² para este inmueble (falta el área), así que no se estima descuento.</p>
+        ${porQueNoHayVeredicto}</p>
         ${auditoriaComparables && fichaEnPantalla?.id ? botonComparables(fichaEnPantalla.id, r.market.n) : ''}</div>`;
     }
     if (r.recommendations && r.recommendations.length) {
