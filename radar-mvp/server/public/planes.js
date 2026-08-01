@@ -15,11 +15,26 @@ function esc(value) {
   }[character]));
 }
 
+/**
+ * Lo que cuesta HOY, no lo que costará.
+ *
+ * Durante el piloto el plan completo se activa sin cobrar, pero la tarjeta
+ * enseñaba «$49.900 COP / 30 días» en letra grande y la gratuidad en letra
+ * pequeña. Alguien cauteloso lee el precio, asume que hay que pagar y se va
+ * antes de registrarse — justo lo contrario de para qué existe un piloto.
+ *
+ * Cuando la cortesía se apague, esto vuelve a enseñar el precio solo, sin tocar
+ * nada: depende de la misma variable que decide si se cobra.
+ */
 function price(plan) {
   if (plan.priceMonthlyCop === 0) return 'Gratis';
   if (typeof plan.priceMonthlyCop === 'number') {
     const period = plan.billingPeriodDays ? ` / ${plan.billingPeriodDays} días` : '/mes';
-    return `$${plan.priceMonthlyCop.toLocaleString('es-CO')} <small>COP${period}</small>`;
+    const tarifa = `$${plan.priceMonthlyCop.toLocaleString('es-CO')} <small>COP${period}</small>`;
+    if (plan.code === 'pro' && demoPlanActivation) {
+      return `Gratis <small class="plan-price-tachado">antes ${tarifa}</small>`;
+    }
+    return tarifa;
   }
   return 'Próximamente';
 }
@@ -67,7 +82,9 @@ function render(plans) {
       <ul class="plan-features">${plan.features.map((feature) => `<li>${esc(feature)}</li>`).join('')}</ul>
       ${plan.code === 'pro' ? `<p class="plan-terms">${paymentDemoReady
         ? 'Pago único de prueba · renovación manual · no se almacena información de tarjeta.'
-        : 'Activación manual del piloto · sin cobros automáticos · vigencia de 30 días.'}</p>` : ''}
+        : demoPlanActivation
+          ? 'Hoy pagas $0. Se activa al instante, sin tarjeta y sin cobros automáticos al terminar.'
+          : 'Activación manual del piloto · sin cobros automáticos · vigencia de 30 días.'}</p>` : ''}
       <a class="portal-button ${plan.code === 'free' ? 'secondary' : ''}" href="${href}"
         ${action}
         ${inerte ? 'aria-disabled="true"' : ''}>${esc(label)}</a>

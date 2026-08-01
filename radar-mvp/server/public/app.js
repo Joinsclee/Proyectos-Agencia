@@ -658,11 +658,16 @@ function showRegisterWall(count) {
  * empaquetador) y `server/crece-tabla.test.ts` comprueba que las dos copias
  * digan lo mismo, que es lo que evita que se separen en silencio.
  */
+// El `umbral` sale de los cortes de `engine/crece.ts` (0,75 · 0,80 · 0,90 · 0,93):
+// un índice de 0,75 es estar un 25% por debajo. Se escribe aquí porque la leyenda
+// decía «más estrellas, más por debajo» sin un solo número, y sin números nadie
+// puede saber si tres estrellas son un 12% o un 40%. Si esos cortes cambian en el
+// motor, hay que tocar esta columna: son los mismos cuatro valores.
 const TABLA_CRECE = [
-  { tier: 'oportunidad_fuerte', lectura: 'Oportunidad Fuerte', estrellas: 3, huecas: 0, estrellasTexto: '★★★' },
-  { tier: 'oportunidad', lectura: 'Oportunidad', estrellas: 2, huecas: 0, estrellasTexto: '★★' },
-  { tier: 'interesante', lectura: 'Interesante', estrellas: 1, huecas: 0, estrellasTexto: '★' },
-  { tier: 'abajo_mercado', lectura: 'Abajo del Mercado', estrellas: 0, huecas: 1, estrellasTexto: '☆' },
+  { tier: 'oportunidad_fuerte', lectura: 'Oportunidad Fuerte', estrellas: 3, huecas: 0, estrellasTexto: '★★★', umbral: '25% o más por debajo' },
+  { tier: 'oportunidad', lectura: 'Oportunidad', estrellas: 2, huecas: 0, estrellasTexto: '★★', umbral: 'entre 20% y 25%' },
+  { tier: 'interesante', lectura: 'Interesante', estrellas: 1, huecas: 0, estrellasTexto: '★', umbral: 'entre 10% y 20%' },
+  { tier: 'abajo_mercado', lectura: 'Abajo del Mercado', estrellas: 0, huecas: 1, estrellasTexto: '☆', umbral: 'menos del 10%' },
   { tier: 'mercado_borde_bajo', lectura: 'Ligeramente por debajo del mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
   { tier: 'mercado', lectura: 'Precio de Mercado', estrellas: 0, huecas: 0, estrellasTexto: '' },
 ];
@@ -2518,7 +2523,17 @@ function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   // arrendamiento mensual»: la ayuda pedía en otro idioma lo mismo que el campo.
   if (!monthlyRent) return '<span>Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</span>';
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
-  return `<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
+  // Un 31% bruto anual sale de la calculadora sin que nada avise de que es
+  // extraordinario, y quien no ha invertido nunca no tiene con qué compararlo:
+  // se lo lleva como expectativa. Casi siempre viene de un precio de oferta
+  // atípico o de un arriendo estimado de más, no de un negocio irrepetible.
+  const fueraDeRango = result.grossYield > 12;
+  const aviso = fueraDeRango
+    ? `<p class="rent-atipico">${ic('alert')} En Colombia lo habitual es entre 5% y 8% bruto anual.
+       Un número muy por encima suele venir de un precio de oferta atípico o de un arriendo
+       estimado de más: contrástalo antes de contar con él.</p>`
+    : '';
+  return `${aviso}<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
     <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
     <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento${
       monthlyAdmin > 0 ? ` y ${fmtCOP(Math.round(monthlyAdmin))}/mes de administración` : ''
@@ -3710,7 +3725,15 @@ function mapSection(p) {
   let q;
   if (f.lat != null && f.lng != null) q = f.lat + ',' + f.lng;
   else if (p.address || p.city) q = [p.address, p.city, 'Colombia'].filter(Boolean).join(', ');
-  else return '';
+  else {
+    // Sin coordenadas ni dirección no se devolvía nada, y en la ficha quedaba un
+    // hueco donde debía ir el mapa. Un espacio en blanco bajo un título se lee
+    // como que algo no cargó, no como que el dato no existe: se dice cuál de las
+    // dos cosas es.
+    return `<div class="section"><h3>Ubicación aproximada</h3>
+      <p class="market-note">Este aviso no publica una dirección que podamos ubicar en el mapa.
+      Verifícala en la fuente original antes de desplazarte.</p></div>`;
+  }
   return `<div class="section"><h3>Ubicación aproximada</h3><iframe class="mapframe" loading="lazy" src="https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed"></iframe></div>`;
 }
 let lastModalFocus = null;
@@ -3866,7 +3889,8 @@ function renderActualizado(frescura) {
  */
 function leyendaCrece() {
   const filas = TABLA_CRECE.filter((t) => t.estrellasTexto).map((t) => (
-    `<span class="legend-item"><span class="legend-estrellas">${t.estrellasTexto}</span> ${esc(t.lectura)}</span>`
+    `<span class="legend-item"><span class="legend-estrellas">${t.estrellasTexto}</span> ${esc(t.lectura)}${
+      t.umbral ? `<em class="legend-umbral">${esc(t.umbral)}</em>` : ''}</span>`
   )).join('');
   return `<details class="legend-card"${mobileQuery.matches ? '' : ' open'}>
     <summary class="legend-title">${ic('chart')} Qué significan las estrellas</summary>
@@ -3891,7 +3915,15 @@ function leyendaCrece() {
  */
 function renderLeyenda() {
   if (!STATS) return;
-  $('legend').innerHTML = state.tab === 'portal' ? leyendaCrece() : '';
+  // Portal Y Bancos: los dos pintan estrellas en sus tarjetas, así que en los dos
+  // hace falta saber qué significan. Solo estaba en Portal, y quien entraba
+  // directo a Bancos veía tres estrellas doradas sin ninguna explicación.
+  //
+  // En Remates no: ahí no hay Índice CRECE —no se calcula contra el mercado sino
+  // contra el avalúo del juzgado— y una leyenda de estrellas explicaría algo que
+  // esa pestaña no muestra.
+  const conEstrellas = state.tab === 'portal' || state.tab === 'bancos';
+  $('legend').innerHTML = conEstrellas ? leyendaCrece() : '';
 }
 
 /**
