@@ -1538,6 +1538,180 @@ function restaurarValorDeFiltro(id, valor) {
   el.value = valor;
 }
 
+// ---------- La búsqueda, escrita en la dirección del navegador ----------
+/**
+ * La traducción entre pantalla y URL vive en `url-estado.js`, aparte y sin DOM,
+ * para poder probarla. Aquí está solo lo que necesita el navegador: leer los
+ * controles, escribir el historial y reconstruir la pantalla al volver.
+ */
+
+/**
+ * Mientras se reconstruye la pantalla DESDE la dirección no se escribe en ella.
+ *
+ * Sin esto, restaurar `?tab=bancos&page=3` pasaría por un `load(1)` intermedio
+ * que dejaría escrito `page=1` encima de la dirección que estamos leyendo, y el
+ * botón «atrás» acabaría llevando a un sitio que el usuario nunca visitó.
+ */
+let sincronizacionDeUrlEnPausa = false;
+/**
+ * Si el próximo cambio de dirección es un PASO de navegación o una corrección.
+ *
+ * Cambiar de sección es un paso: la persona espera que «atrás» la devuelva a
+ * donde estaba, y hasta hoy «atrás» la sacaba de la aplicación entera. Cambiar un
+ * filtro no lo es: quien mueve el precio cuatro veces seguidas no quiere pulsar
+ * «atrás» cuatro veces para salir, así que esos se reescriben en el sitio.
+ */
+let empujarProximaUrl = false;
+/**
+ * Filtros que la dirección traía y que todavía no tienen control donde ponerse.
+ *
+ * Solo pasa con «Mis fichas», que únicamente se pinta para el plan gratuito y por
+ * tanto no existe hasta que el servidor contesta cuál es el plan —después del
+ * primer listado—. Sin esta nota, un enlace compartido con `mias=1` perdía ese
+ * filtro en silencio, que es la peor forma de fallar: el listado enseña otra cosa
+ * y la pantalla no dice por qué.
+ */
+let estadoUrlPendiente = null;
+
+/** Lo que los controles tienen puesto ahora, con los nombres cortos de la URL. */
+function filtrosDeLosControles() {
+  const filtros = {};
+  for (const [control, parametro] of window.__radarUrlEstado.CONTROLES) {
+    const el = $(control);
+    if (el && el.value) filtros[parametro] = el.value;
+  }
+  return filtros;
+}
+
+/**
+ * La búsqueda que la pantalla está enseñando, escrita como cadena de consulta.
+ *
+ * Sirve para las dos direcciones: escribir la dirección y comprobar si la que
+ * llega ya es la que se ve. El orden inicial de cada sección lo decide `ORDERS`,
+ * y no se escribe en la dirección mientras nadie lo haya cambiado.
+ */
+function busquedaComoQuery(tab, page, filtros) {
+  const sinPaginador = tab === 'home' || tab === 'guardados';
+  return window.__radarUrlEstado.serializar({
+    tab,
+    page: sinPaginador ? 1 : page,
+    filtros,
+    ordenPorDefecto: ORDERS[tab]?.[0]?.[0],
+  });
+}
+
+/**
+ * Deja la dirección diciendo lo que la pantalla enseña.
+ *
+ * Se llama desde `load()`, que es por donde pasa TODA búsqueda —el panel, el
+ * buscador de la portada, el paginador, «aplicar mi Radar» y el asistente—. Tener
+ * un solo sitio donde se escribe la URL es lo que impide que mañana una de esas
+ * seis vías cambie el listado sin cambiar la dirección.
+ */
+function sincronizarUrl(page) {
+  const empujar = empujarProximaUrl;
+  empujarProximaUrl = false;
+  if (sincronizacionDeUrlEnPausa) return;
+  const query = busquedaComoQuery(state.tab, page, filtrosDeLosControles());
+  const destino = query ? `${location.pathname}?${query}` : location.pathname;
+  if (destino === location.pathname + location.search) return;
+  try {
+    if (empujar) history.pushState(null, '', destino);
+    else history.replaceState(null, '', destino);
+  } catch { /* sin historial utilizable la búsqueda funciona igual, solo no se puede compartir */ }
+}
+
+/**
+ * Vuelca en los controles la búsqueda que venía escrita en la dirección.
+ *
+ * Corre como `antesDeCargar` de `activarPestana`: con los filtros ya pintados y
+ * antes de pedir resultados, para que no se vea medio segundo de un listado que
+ * nadie pidió.
+ *
+ * El barrio va aparte porque sus opciones dependen de la ciudad: hay que repoblar
+ * la lista antes, o se restauraría un valor que todavía no existe en ella.
+ */
+async function aplicarEstadoDeLaUrl(estado) {
+  const filtros = estado.filtros;
+  const pendientes = {};
+  for (const [control, parametro] of window.__radarUrlEstado.CONTROLES) {
+    if (parametro === 'zone') continue;
+    const valor = filtros[parametro];
+    if (valor == null) continue;
+    if (!$(control)) { pendientes[parametro] = valor; continue; }
+    restaurarValorDeFiltro(control, valor);
+  }
+  estadoUrlPendiente = Object.keys(pendientes).length ? pendientes : null;
+
+  const ciudad = $('f-city');
+  if (state.tab === 'portal' && ciudad?.value) {
+    await repopZones(ciudad.value);
+    if (filtros.zone != null) restaurarValorDeFiltro('f-zone', filtros.zone);
+  }
+  updateFilterCount();
+}
+
+/**
+ * Segunda pasada para los filtros que aún no tenían control cuando se leyó la URL.
+ *
+ * Se llama tras reconstruir el panel con el plan ya conocido. Si algo entra de
+ * verdad, hay que volver a pedir el listado: el usuario está viendo un resultado
+ * que no corresponde al enlace que abrió.
+ */
+async function completarFiltrosPendientesDeLaUrl() {
+  const pendientes = estadoUrlPendiente;
+  estadoUrlPendiente = null;
+  if (!pendientes) return;
+  let aplicado = false;
+  for (const [control, parametro] of window.__radarUrlEstado.CONTROLES) {
+    const valor = pendientes[parametro];
+    const el = $(control);
+    // `el.value` no vacío = el usuario ya tocó ese filtro mientras cargaba, y su
+    // decisión es más reciente que la del enlace.
+    if (valor == null || !el || el.value) continue;
+    restaurarValorDeFiltro(control, valor);
+    if (el.value === valor) aplicado = true;
+  }
+  if (!aplicado) return;
+  updateFilterCount();
+  await load(state.page);
+}
+
+/**
+ * Reconstruye la pantalla a partir de la dirección actual.
+ *
+ * La usan las dos entradas por dirección: abrir un enlace compartido y pulsar
+ * «atrás»/«adelante». En ambas la URL es la fuente de verdad, incluso frente al
+ * Radar guardado: un enlace es una intención escrita y reciente, y la preferencia
+ * es una suposición sobre lo que le interesará a esta persona. Por eso se marca la
+ * preferencia como ya aplicada en vez de dejarla pisar la ciudad del enlace.
+ */
+async function restaurarDesdeUrl() {
+  const estado = window.__radarUrlEstado.leer(location.search);
+  if (estado.explicito) radarPrefsYaAplicadas = true;
+  sincronizacionDeUrlEnPausa = true;
+  try {
+    await activarPestana(estado.tab, () => aplicarEstadoDeLaUrl(estado), estado.page);
+  } finally {
+    sincronizacionDeUrlEnPausa = false;
+  }
+  // Y se deja la dirección en su forma canónica: sin los parámetros que esta
+  // pestaña no usa y sin el enlace a una ficha que ya se consumió.
+  sincronizarUrl(state.page);
+}
+
+// «Atrás» y «adelante» del navegador. Antes no hacían nada dentro de la
+// aplicación —«atrás» sacaba del sitio—, que es lo que reportó la auditoría.
+window.addEventListener('popstate', () => {
+  // Saltar a un ancla —el enlace «Saltar a los resultados»— también deja entrada
+  // en el historial, y volver de ella no cambia la búsqueda. Reconstruir el
+  // listado entero para acabar enseñando lo mismo sería un parpadeo gratuito.
+  const estado = window.__radarUrlEstado.leer(location.search);
+  if (busquedaComoQuery(estado.tab, estado.page, estado.filtros)
+    === busquedaComoQuery(state.tab, state.page, filtrosDeLosControles())) return;
+  void restaurarDesdeUrl();
+});
+
 async function applyRadarPreferences(preferences, reload = false) {
   if (state.tab !== 'portal' || !preferences.complete) return;
   // `reload` distingue las dos formas de llegar aquí: con él, el usuario pulsó su
@@ -1889,6 +2063,11 @@ async function loadHome() {
 }
 
 async function load(page) {
+  // Antes de pedir nada: la dirección tiene que decir lo mismo que se va a
+  // enseñar. Va aquí arriba, y no junto al render, porque también pasan por aquí
+  // la portada y Guardados, que se cargan por otro camino pero también son sitios
+  // a los que se debe poder volver.
+  sincronizarUrl(page);
   if (state.tab === 'home') return loadHome();
   if (state.tab === 'guardados') return loadGuardados();
   const loadSeq = ++state.loadSeq;
@@ -1965,7 +2144,9 @@ async function load(page) {
   const planNuevo = res.plan ?? planDelServidor;
   const faltaFiltroPropio = planNuevo === 'free' && state.tab !== 'remates' && !$('f-desbloqueadas');
   planDelServidor = planNuevo;
-  if (faltaFiltroPropio) void reconstruirFiltrosConservandoValores();
+  // Y con el panel ya completo se rescatan los filtros del enlace que no tenían
+  // dónde ponerse cuando se leyó la dirección. Ver `estadoUrlPendiente`.
+  if (faltaFiltroPropio) void reconstruirFiltrosConservandoValores().then(completarFiltrosPendientesDeLaUrl);
 
   renderCards(res.data, $('grid'), true);
   renderAvisoBloqueo(res.plan, res.bloqueo, res.cupo);
@@ -3963,8 +4144,12 @@ function renderLeyenda() {
  * Es lo que necesita el buscador de arriba para volcar en el panel lo que la
  * persona escribió: sin ese hueco habría que cargar una vez sin filtrar y otra
  * filtrada, y el usuario vería medio segundo de resultados que no pidió.
+ *
+ * `pagina` solo lo usa la reconstrucción desde la dirección: quien comparte la
+ * página 3 de una búsqueda comparte la página 3. Por lo demás, entrar en una
+ * sección siempre empieza por el principio.
  */
-async function activarPestana(tab, antesDeCargar) {
+async function activarPestana(tab, antesDeCargar, pagina = 1) {
   document.querySelectorAll('.tab-btn[data-tab]').forEach((x) => {
     const active = x.dataset.tab === tab;
     x.classList.toggle('active', active);
@@ -3996,7 +4181,10 @@ async function activarPestana(tab, antesDeCargar) {
   }
   renderRadarSetup();
   if (antesDeCargar) await antesDeCargar();
-  await load(1);
+  // Cambiar de sección SÍ es un paso de navegación: es lo que hace que «atrás»
+  // devuelva a la pantalla anterior en vez de sacar de la aplicación.
+  empujarProximaUrl = true;
+  await load(pagina);
   if (mobileQuery.matches) {
     // Al cambiar de sección en móvil se sube a donde empiezan los resultados. Antes
     // apuntaba a `.vstats`, la franja morada de cifras, que dejó de existir como
@@ -4064,16 +4252,40 @@ document.addEventListener('click', (event) => {
  * el usuario volvió sin sesión —se arrepintió del registro— la nota ya no
  * significa nada, y dejarla ahí haría que la ficha le saltara en la cara la
  * próxima vez que entrara por cualquier otro camino.
+ *
+ * Devuelve si abrió algo, para que el enlace directo de la dirección no le ponga
+ * otra ficha encima.
  */
 function reabrirFichaPendiente() {
   const pendiente = window.__fichaPendiente?.leer();
-  if (!pendiente) return;
+  if (!pendiente) return false;
   window.__fichaPendiente.olvidar();
-  if (!auth.token) return;
+  if (!auth.token) return false;
   // El recorrido de bienvenida usa este mismo diálogo: abrir la ficha encima lo
   // borraría a media frase.
-  if (window.__radarTour?.activo || document.querySelector('.onboarding')) return;
+  if (window.__radarTour?.activo || document.querySelector('.onboarding')) return false;
   window.__openRec(pendiente.kind, pendiente.id);
+  return true;
+}
+
+/**
+ * Abre la ficha a la que apunta un enlace directo: `/?kind=banco&id=…`.
+ *
+ * Es el enlace que el asistente reparte cuando nombra una oportunidad concreta
+ * (`server/asistente-busqueda.ts`). Convive con los filtros sin estorbarlos:
+ * `kind` e `id` no describen una búsqueda, así que el listado de debajo es el que
+ * digan los demás parámetros, o la portada si no hay ninguno.
+ *
+ * Se consume una sola vez y desaparece de la dirección —lo hace `sincronizarUrl`,
+ * que solo escribe parámetros de búsqueda—. Es lo mismo que hace la ficha
+ * pendiente y por el mismo motivo: el enlace lleva a una ficha, pero desde el
+ * momento en que la persona empieza a filtrar, lo que su dirección debe describir
+ * es lo que está mirando ahora.
+ */
+function abrirFichaDeLaUrl(ficha) {
+  if (!ficha) return;
+  if (window.__radarTour?.activo || document.querySelector('.onboarding')) return;
+  window.__openRec(ficha.kind, ficha.id);
 }
 document.addEventListener('click', (event) => {
   if (!(event.target instanceof Element)) return;
@@ -4463,22 +4675,37 @@ try {
 // init — las propiedades cargan en PARALELO con las stats (no esperan a stats).
 // Tolerante a fallos: si stats o filtros fallan, igual cargan las propiedades.
 aplicarVistaDePestana();
+// Qué pidió la dirección con la que se abrió la página. Se lee ANTES que nada
+// porque la primera búsqueda ya la reescribe, y el enlace a una ficha concreta
+// —que no es un filtro— dejaría de estar ahí para cuando conteste `initAuth`.
+const estadoInicialDeLaUrl = window.__radarUrlEstado.leer(location.search);
 // La ficha pendiente se reabre DESPUÉS de `initAuth`, no antes: hasta que no
 // vuelve /api/favorites no se sabe si el token sigue siendo válido, y reabrirla
 // con una sesión caducada la mostraría bloqueada justo a quien acaba de entrar.
-initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(reabrirFichaPendiente);
+// Vale igual para el enlace directo del asistente, que abre el mismo diálogo.
+initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(() => {
+  // La ficha a medias manda sobre el enlace: es de hace minutos y de esta persona.
+  if (reabrirFichaPendiente()) return;
+  abrirFichaDeLaUrl(estadoInicialDeLaUrl.ficha);
+});
 // Sin `await` y sin bloquear nada: la calculadora solo aparece al abrir una
 // ficha, muchísimo después de que esto resuelva, y mientras tanto ya tiene los
 // valores de arranque.
 void cargarParametrosGastos();
 void cargarConfig();
 loadStats().catch(() => renderStatsUnavailable());
-buildFilters().then(async () => {
-  await applyRadarPreferences(radarPreferences);
-  renderRadarSetup();
-  load(1);
-}, (e) => {
-  console.error('filters:', e);
-  renderRadarSetup();
-  load(1);
-});
+if (estadoInicialDeLaUrl.explicito) {
+  // La dirección trae una búsqueda: se reconstruye tal cual, y el Radar guardado
+  // no propone nada esta vez. Ver `restaurarDesdeUrl`.
+  void restaurarDesdeUrl();
+} else {
+  buildFilters().then(async () => {
+    await applyRadarPreferences(radarPreferences);
+    renderRadarSetup();
+    load(1);
+  }, (e) => {
+    console.error('filters:', e);
+    renderRadarSetup();
+    load(1);
+  });
+}
