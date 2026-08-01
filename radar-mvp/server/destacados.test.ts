@@ -143,7 +143,6 @@ test('sello: el motivo dice contra qué se comparó, no "destacado"', () => {
   // «ofertas similares» y no «los precios»: al otro lado hay avisos parecidos, no
   // el precio medio de todo lo que se vende alrededor.
   assert.equal(_destacado.motivo, '37% por debajo de ofertas similares de su sector');
-  assert.match(_destacado.respaldo ?? '', /Oportunidad Fuerte/);
 });
 
 test('sello: el respaldo no enseña jerga interna', () => {
@@ -165,13 +164,22 @@ test('sello: la referencia cambia con el nivel de la cascada', () => {
   assert.match(sellarInmueble(inmueble({ cascada_nivel: 'ciudad' }))._destacado.referencia, /de su ciudad$/);
 });
 
-test('sello: un banco enseña sus comparables y su confianza', () => {
+test('sello: la ficha de portada no repite lo que ya dicen el badge y las estrellas', () => {
+  // El cliente pidió quitar la línea «Oportunidad Fuerte · 108 comparables,
+  // confianza media» de las fichas, porque el porcentaje ya está en el badge y la
+  // categoría en las estrellas: la misma tarjeta lo afirmaba tres veces.
+  //
+  // Se comprueba en el SERVIDOR y no solo en la pantalla. Dejar de pintarlo pero
+  // seguir enviándolo lo deja listo para que la próxima pantalla, el asistente o
+  // cualquier integración lo vuelvan a mostrar sin que nadie lo decida.
   const ficha = sellarInmueble(inmueble({
     source: 'bancolombia',
     features: { market: { confidence: 'medium', n_comparables: 289 } },
   }));
   assert.equal(ficha._kind, 'banco');
-  assert.match(ficha._destacado.respaldo ?? '', /289 comparables, confianza media/);
+  assert.equal(ficha._destacado.respaldo, null);
+  // El motivo sí se conserva: dice contra qué se comparó, que no lo dice nada más.
+  assert.match(ficha._destacado.motivo, /por debajo de ofertas similares/);
 });
 
 test('sello: el remate se explica con las dos cifras que enseña la tarjeta', () => {

@@ -65,7 +65,12 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
         `Avalúo (valuación oficial del juzgado): ${cop(facts.avaluo_cop)}.`,
         `Postura mínima (lo que se paga para adjudicarse): ${cop(facts.postura_cop)}${facts.postura_pct ? ` (${facts.postura_pct}% del avalúo)` : ''}.`,
         facts.area_m2 ? `Área: ${facts.area_m2} m².` : '',
-        facts.banco_demandante ? 'El demandante es un BANCO (suele implicar título más limpio y proceso hipotecario estándar).' : '',
+        // Se le dice el hecho, NO la conclusión. «Suele implicar título más
+        // limpio» es justo la frase que se retiró de la portada y del tutorial por
+        // prometer una garantía jurídica que nadie puede dar; dejarla aquí era
+        // dejar que el modelo se la repitiera al usuario dentro de la ficha, que
+        // es el único sitio donde ya nadie la revisa.
+        facts.banco_demandante ? 'El demandante es un BANCO: proceso hipotecario estándar. NO afirmes por ello que el título esté limpio; eso solo lo dice un estudio de títulos.' : '',
       ].filter(Boolean).join('\n')
     : [
         // La procedencia importa y hasta ahora se mentía: TODA ficha de portal se
