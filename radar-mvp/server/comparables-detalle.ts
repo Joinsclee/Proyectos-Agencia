@@ -41,7 +41,7 @@ export interface DetalleComparables {
     nivel: string | null;
     criterios: string[];
   };
-  comparables: Array<ComparableUsado & { url: string | null; esDeOtroTipo: boolean }>;
+  comparables: Array<Omit<ComparableUsado, 'source_id' | 'url'> & { esDeOtroTipo: boolean }>;
   /** Cuántos quedaron fuera del recorte, para no dar a entender que están todos. */
   omitidos: number;
 }
@@ -76,10 +76,6 @@ export async function detalleDeComparables(
 
   const usados = veredicto.comparables ?? [];
   const recortados = usados.slice(0, MAX_FILAS);
-  // Las URLs se resuelven en UNA consulta por `source_id`, no una por fila: la
-  // lista puede traer sesenta y sesenta idas a la base por abrir un detalle es
-  // exactamente el coste que se quería evitar.
-  const urls = await urlsPorSourceId(recortados.map((c) => c.source_id));
 
   return {
     ok: true,
@@ -97,9 +93,17 @@ export async function detalleDeComparables(
       nivel: veredicto.cascada_nivel,
       criterios: veredicto.criteria,
     },
-    comparables: recortados.map((c) => ({
+    // NI `url` NI `source_id`.
+    //
+    // Esta herramienta existe para responder «¿contra qué se comparó mi
+    // inmueble?», y eso se contesta con el tipo, el área, el precio y la zona de
+    // cada comparable. El enlace a la fuente no aporta nada a esa pregunta y sí
+    // rompe el muro: entre los comparables hay fichas que el Radar cobra —una de
+    // cada diez, medido—, y a esas `redactar()` les anula `source_url` y
+    // `source_id` en todas las demás rutas. Servirlos aquí era dejar la llave
+    // puesta en la puerta de atrás, sin sesión y a un clic de cualquier ficha.
+    comparables: recortados.map(({ source_id: _sinId, url: _sinUrl, ...c }) => ({
       ...c,
-      url: urls.get(c.source_id) ?? null,
       // Lo que hay que poder ver de un golpe: si el motor metió en la comparación
       // algo que no es del mismo tipo. Es la pregunta exacta que se hizo el
       // cliente al ver un lote medido contra parqueaderos.
@@ -109,13 +113,4 @@ export async function detalleDeComparables(
   };
 }
 
-async function urlsPorSourceId(ids: string[]): Promise<Map<string, string | null>> {
-  const mapa = new Map<string, string | null>();
-  if (!ids.length) return mapa;
-  const { data } = await supabase
-    .from('inmuebles')
-    .select('source_id, source_url')
-    .in('source_id', ids);
-  for (const fila of data ?? []) mapa.set(String(fila.source_id), fila.source_url ?? null);
-  return mapa;
-}
+

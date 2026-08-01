@@ -2,6 +2,8 @@
 
 const $ = (id) => document.getElementById(id);
 let mode = 'register';
+/** ¿Puede el servidor mandar el correo de recuperación? Lo dice `/api/config`. */
+let recuperacionDisponible = false;
 const guestFavorites = (() => {
   try {
     const value = JSON.parse(localStorage.getItem('radar_guest_favorites_v1') || '[]');
@@ -113,7 +115,8 @@ function setMode(nextMode) {
   else password.removeAttribute('minlength');
   // Solo se ofrece recuperar al iniciar sesión: al crear la cuenta todavía no hay
   // contraseña que olvidar.
-  $('olvide-fila').hidden = register;
+  // Solo si el servidor puede mandar el correo (ver `recuperacionDisponible`).
+  $('olvide-fila').hidden = register || !recuperacionDisponible;
   mostrarRecuperacion(false);
   hideMsg();
 }
@@ -244,10 +247,14 @@ $('google-btn').addEventListener('click', () => entrarCon('google', 'Google'));
 // botón que devuelve un error de OAuth al pulsarlo es peor que no tenerlo.
 (async () => {
   const boton = $('microsoft-btn');
-  if (!boton) return;
   try {
     const config = await fetch('/api/config').then((r) => r.json());
-    if (!config.microsoftLoginReady) return;
+    // La recuperación se esconde si el servidor no puede mandar el correo: sin
+    // remitente configurado, quien la pide se queda esperando un mensaje que
+    // nunca sale, y creyendo que va en camino.
+    recuperacionDisponible = config.recuperacionDisponible === true;
+    if (mode === 'login') $('olvide-fila').hidden = !recuperacionDisponible;
+    if (!boton || !config.microsoftLoginReady) return;
     boton.hidden = false;
     boton.addEventListener('click', () => entrarCon('azure', 'Microsoft'));
   } catch { /* si la config no responde, el botón se queda oculto */ }
@@ -303,3 +310,18 @@ $('form').addEventListener('submit', async (event) => {
     button.disabled = false;
   }
 });
+
+/*
+ * El vídeo de fondo se detiene si la persona pidió reducir movimiento.
+ *
+ * `autoplay loop` no lo consulta por su cuenta, y la hoja de estilos no puede
+ * pausar un vídeo. Quien activa esa preferencia lo hace por vértigo o migraña:
+ * un bucle de imágenes en movimiento detrás del formulario es justo lo que se
+ * quería evitar. Se queda el póster, que dice lo mismo sin moverse.
+ */
+try {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    const video = document.querySelector('.promo video');
+    if (video) { video.pause(); video.removeAttribute('autoplay'); video.removeAttribute('loop'); }
+  }
+} catch { /* si matchMedia no existe, el vídeo se queda como estaba */ }

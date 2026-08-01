@@ -23,7 +23,7 @@ import {
 import { parametrosGastos, warmParametrosGastos } from './parametros-gastos.js';
 import { fichasDe } from './destacados.js';
 import { registerUser, loginUser, refreshSession } from './auth.js';
-import { solicitarRecuperacion, restablecerPassword } from './recuperar-password.js';
+import { solicitarRecuperacion, restablecerPassword, correoDeRecuperacionDisponible } from './recuperar-password.js';
 import { analyzeProperty, marketOnly, rentalOnly } from './analysis.js';
 import { puedeForzarAnalisis } from './analysis-access.js';
 import { consumirCupo, estadoCupo, leerCupo, yaDesbloqueada } from './cupo.js';
@@ -1106,6 +1106,12 @@ const server = createServer(async (req, res) => {
       if (path === '/api/config') return sendJSON(res, 200, {
         supabaseUrl: env.SUPABASE_URL,
         alertEmailDeliveryReady: emailDeliveryReady(),
+        // Si no hay correo configurado, la recuperación no puede funcionar: el
+        // servidor lo registra y responde igual —para no delatar qué cuentas
+        // existen— pero la persona se queda esperando un mensaje que no va a
+        // llegar. El resto de la app ya esconde lo que no está listo
+        // (`microsoftLoginReady`, `asistenteReady`); esto faltaba.
+        recuperacionDisponible: correoDeRecuperacionDisponible(),
         // Proveedor configurado y despachador encendido son cosas distintas: sin
         // las dos no sale ningún correo, y la cuenta no debe prometer lo contrario.
         alertDispatchEnabled: await alertDispatchEnabled(),
