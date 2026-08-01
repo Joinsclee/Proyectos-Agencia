@@ -152,7 +152,7 @@ async function persistCache(table: 'inmuebles' | 'remates', id: string, features
 async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult> {
   const { data, error } = await supabase
     .from('inmuebles')
-    .select('id, type, price, area_m2, city, zone, features')
+    .select('id, source, type, price, area_m2, city, zone, features')
     .eq('id', id).single();
   if (error || !data) return { ok: false, cached: false, error: 'inmueble no encontrado' };
   const f = (data.features ?? {}) as any;
@@ -182,7 +182,12 @@ async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult
   if (f.ai_analysis && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis as AiResult, bank_verdict: verdict, recommendations };
 
   const facts: AiPropertyFacts = {
-    kind: 'banco', tipo: data.type, ciudad: data.city, zona: data.zone ?? (f.neighborhood as string | null) ?? null,
+    // De la fuente real de la fila, no de la ruta: `analyzeBanco` atiende también
+    // a las fichas de portal, y decirle al modelo que todas son de banco es
+    // exactamente lo que le hacía escribir «propiedad de banco» sobre el aviso de
+    // un particular.
+    kind: data.source === 'fincaraiz' ? 'portal' : 'banco',
+    tipo: data.type, ciudad: data.city, zona: data.zone ?? (f.neighborhood as string | null) ?? null,
     area_m2: num(data.area_m2), estrato: num(f.stratum), precio_lista_cop: num(data.price),
   };
   try {

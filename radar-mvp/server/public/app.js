@@ -2476,6 +2476,7 @@ function imgList(p) {
 
 function inmuebleCard(p, kind) {
   const f = p.features || {};
+  const mods = modulosDe(p.type);
   const imgs = imgList(p);
   kind = kind || (p.source === 'fincaraiz' ? 'portal' : 'banco');
   const isBank = p.source !== 'fincaraiz';
@@ -2523,11 +2524,18 @@ function inmuebleCard(p, kind) {
       <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
       <div class="card-titulo">${esc(typeLbl(p.type))}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}${selloIguales(p)}</div>
       <div class="card-ubic">${ic('pin')}<span>${p.zone ? esc(p.zone) + ' · ' : ''}<strong>${esc(cap(p.city))}</strong></span></div>
+      ${/* La tarjeta obedece la misma política por tipo que la ficha. Sin esto, un
+             lote se anunciaba en la rejilla con «3 habitaciones, 2 baños» y al
+             abrirlo los tres desaparecían: la contradicción se ve sin moverse de
+             sitio y hace dudar de todo lo demás.
+
+             `> 0` y no solo truthy: el portal manda `-1` como «sin dato» y así se
+             colaban tarjetas con «Habitaciones: -1». */ ''}
       <div class="card-meta">
-        ${f.bedrooms ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : ''}
-        ${f.bathrooms ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : ''}
-        ${f.garages ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : ''}
-        ${f.stratum ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : ''}
+        ${mods.habitaciones && Number(f.bedrooms) > 0 ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : ''}
+        ${mods.banos && Number(f.bathrooms) > 0 ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : ''}
+        ${mods.parqueaderos && Number(f.garages) > 0 ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : ''}
+        ${Number(f.stratum) > 0 ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : ''}
       </div>
       ${frescura(p)}
     </div>`;
@@ -3030,8 +3038,20 @@ function renderAI(result, kind) {
     riesgosa: [ic('alert-triangle', 'ic-reicon analysis-icon is-warning'), 'Riesgosa', 'ai-precaucion'],
   }[ai.veredicto] || [ic('magnifier', 'analysis-icon is-review'), ai.veredicto, 'ai-media'];
   const li = (arr) => (arr && arr.length ? `<ul class="ai-list">${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : '<p class="ai-empty">—</p>');
+  // La diferencia se calcula AQUÍ, con el precio de la ficha y el estimado del
+  // propio modelo. Antes se usaba el `descuento_estimado_pct` que él devuelve, y
+  // el signo de ese campo venía invertido en dos de cada tres análisis: la ficha
+  // mostraba «Descuento estimado −40%» en verde mientras el resumen del mismo
+  // modelo decía, dos líneas más abajo, que el precio está «significativamente
+  // superior al estimado de mercado». Restar dos números que ya están en pantalla
+  // no puede contradecirlos.
+  const precioFicha = Number(fichaEnPantalla?.kind === 'remate' ? result?.property?.minimum_bid : result?.property?.price)
+    || Number(result?.property?.price) || null;
+  const estimado = Number(ai.estimado_mercado_cop) || null;
+  const difPct = precioFicha && estimado ? Math.round(((estimado - precioFicha) / estimado) * 1000) / 10 : null;
+  const masBarato = difPct != null && difPct >= 0;
   const estim = ai.estimado_mercado_cop != null
-    ? `<div class="ai-estim"><div><span class="l">Valor de mercado estimado</span><strong>${COPn(ai.estimado_mercado_cop)}</strong></div>${ai.descuento_estimado_pct != null ? `<div><span class="l">${ai.descuento_estimado_pct >= 0 ? 'Descuento estimado' : 'Sobreprecio estimado'}</span><strong style="color:${ai.descuento_estimado_pct >= 0 ? '#16a34a' : '#dc2626'}">${ai.descuento_estimado_pct >= 0 ? '−' : '+'}${Math.abs(ai.descuento_estimado_pct)}%</strong></div>` : ''}</div>`
+    ? `<div class="ai-estim"><div><span class="l">Valor de mercado estimado</span><strong>${COPn(ai.estimado_mercado_cop)}</strong></div>${difPct != null ? `<div><span class="l">${masBarato ? 'Por debajo del estimado' : 'Por encima del estimado'}</span><strong style="color:${masBarato ? '#16a34a' : '#dc2626'}">${masBarato ? '−' : '+'}${Math.abs(difPct)}%</strong></div>` : ''}</div>`
     : '';
   return `<div class="aiblock ${meta[2]}">
       <div class="ai-head">${meta[0]} <strong>${esc(meta[1])}</strong> <span class="ai-score">${Number(ai.puntaje) || 0}/100</span></div>
@@ -3221,7 +3241,7 @@ function mostrarCupoAgotado(cupo, kind, id, ficha) {
   // La ficha no llegó a abrirse, pero es exactamente la que el usuario quería:
   // si desde aquí se va a suscribirse, volver al listado sería hacerle repetir la
   // búsqueda que acaba de pagar.
-  if (kind && id) recordarFichaEnPantalla(kind, id, tituloFicha(ficha), ficha?.type ?? ficha?.property_type ?? null);
+  if (kind && id) recordarFichaEnPantalla(kind, id, tituloFicha(ficha), ficha?.type ?? ficha?.property_type ?? null, ficha?.area_m2 ?? null);
   showModal();
   $('cupo-seguir')?.addEventListener('click', closeModal);
 }
@@ -3315,11 +3335,16 @@ function tituloFicha(p) {
   return `${typeLbl(p?.type || p?.property_type)} en ${cap(p?.city)}`;
 }
 
-function recordarFichaEnPantalla(kind, id, titulo, tipo = null) {
+function recordarFichaEnPantalla(kind, id, titulo, tipo = null, area = null) {
   // El tipo viaja porque las respuestas que llegan después —mercado, comparables,
   // recomendaciones— tienen que saber contra qué se está comparando para poder
   // decir si lo que enseñan es del mismo tipo de inmueble o no.
-  fichaEnPantalla = { kind, id: String(id), titulo, tipo };
+  // El área entra aquí porque el análisis de mercado la necesita para saber si la
+  // culpa de no tener veredicto es del aviso —que no la publica— o de que en su
+  // zona no hay comparables con área. Sin ella la comprobación daba NaN y la ficha
+  // acusaba SIEMPRE al aviso, incluso con el área impresa cuatro líneas más arriba
+  // en la misma pantalla.
+  fichaEnPantalla = { kind, id: String(id), titulo, tipo, area_m2: area };
 }
 
 /** Palabras con las que ninguna frase queda cerrada: si el texto acaba aquí, venía a medias. */
@@ -3533,7 +3558,7 @@ function openInmueble(p) {
       ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
       <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
     </div>`;
-  recordarFichaEnPantalla(kind, p.id, tituloFicha(p), p.type);
+  recordarFichaEnPantalla(kind, p.id, tituloFicha(p), p.type, p.area_m2 ?? null);
   showModal();
   // El motor sólo persiste el mercado en fichas de banco; en las del portal se
   // calcula bajo demanda (gratis, sin IA) para justificar el −X% de la tarjeta.
@@ -4029,7 +4054,7 @@ function openRemate(p) {
       ${mapSection({ address: null, city: p.city })}
       <p class="src-note">Fuente: Rama Judicial de Colombia · aviso de remate publicado por el juzgado.</p>
     </div>`;
-  recordarFichaEnPantalla('remate', p.id, tituloFicha(p), p.property_type ?? null);
+  recordarFichaEnPantalla('remate', p.id, tituloFicha(p), p.property_type ?? null, p.area_m2 ?? null);
   showModal();
 }
 function gallery() {

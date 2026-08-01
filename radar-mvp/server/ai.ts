@@ -13,7 +13,7 @@
 import type { MarketContext } from '../engine/zone-comps.js';
 
 export interface AiPropertyFacts {
-  kind: 'banco' | 'remate';
+  kind: 'portal' | 'banco' | 'remate';
   tipo: string | null;
   ciudad: string | null;
   zona: string | null;
@@ -68,7 +68,13 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
         facts.banco_demandante ? 'El demandante es un BANCO (suele implicar título más limpio y proceso hipotecario estándar).' : '',
       ].filter(Boolean).join('\n')
     : [
-        `INMUEBLE DE BANCO (dación/venta directa). Tipo: ${facts.tipo ?? 'n/d'}. Ciudad: ${facts.ciudad ?? 'n/d'}${facts.zona ? `, ${facts.zona}` : ''}.`,
+        // La procedencia importa y hasta ahora se mentía: TODA ficha de portal se
+        // analizaba con el prompt de banco, así que el modelo escribía «propiedad
+        // de banco, posibilidad de negociación» sobre el aviso de un particular en
+        // FincaRaíz. Son 20.000 fichas afirmando algo falso sobre quién vende.
+        facts.kind === 'portal'
+          ? `AVISO PUBLICADO EN UN PORTAL por su propietario o una inmobiliaria (no es un inmueble de banco ni un remate). Tipo: ${facts.tipo ?? 'n/d'}. Ciudad: ${facts.ciudad ?? 'n/d'}${facts.zona ? `, ${facts.zona}` : ''}.`
+          : `INMUEBLE DE BANCO (dación/venta directa). Tipo: ${facts.tipo ?? 'n/d'}. Ciudad: ${facts.ciudad ?? 'n/d'}${facts.zona ? `, ${facts.zona}` : ''}.`,
         `Precio de lista: ${cop(facts.precio_lista_cop)}.`,
         facts.area_m2 ? `Área: ${facts.area_m2} m².` : '',
         facts.estrato ? `Estrato: ${facts.estrato}.` : '',
@@ -96,6 +102,12 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
     // estos le hace creer al lector que también sale a subasta.
     facts.kind === 'banco'
       ? '- Esta propiedad se compra por negociación directa con el banco, NO en subasta: no uses "pujar", "postura", "audiencia" ni "adjudicación"; di "comprar" o "hacer una oferta".'
+      : '',
+    facts.kind === 'remate'
+      ? ''
+      : '- Esta propiedad NO se subasta: no uses «pujar», «postura» ni «audiencia». Se compra por negociación directa.',
+    facts.kind === 'portal'
+      ? '- El vendedor es un particular o una inmobiliaria. NO lo describas como propiedad de un banco.'
       : '',
     '- Sé conciso y accionable. Responde SOLO con un objeto JSON válido, sin texto adicional, con esta forma exacta:',
     '{',
