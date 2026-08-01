@@ -20,10 +20,16 @@ const plural = (n, singular, varios) => `${n} ${Math.abs(Number(n)) === 1 ? sing
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
-const emptyState = (icon, title, description, tone = '') => `
+// `accion` es HTML ya formado y opcional: un estado de error sin forma de salir
+// de él deja al usuario mirando un mensaje que le dice «reintenta» sin darle con
+// qué. El resto de los estados vacíos no la necesitan y no la pasan.
+const emptyState = (icon, title, description, tone = '', accion = '') => `
   <div class="empty-icon${tone ? ` is-${tone}` : ''}">${ic(icon, icon === 'alert-triangle' || icon === 'check-circle' ? 'ic-reicon' : '')}</div>
   <div class="h">${esc(title)}</div>
-  <div>${esc(description)}</div>`;
+  <div>${esc(description)}</div>${accion}`;
+
+/** El botón que repite la última carga, para los estados de error. */
+const botonReintentar = () => '<button class="empty-retry" type="button" data-reintentar>Reintentar</button>';
 // Oportunidad ALTA: la marca el motor (decil más barato + descuento grande +
 // comparables homogéneos) y viaja en la columna is_high.
 const isHighOpp = (d) => d.is_high === true;
@@ -367,6 +373,15 @@ window.__alTerminarRecorrido = () => {
   void marcarHito('recorrido');
   invitarAPersonalizar();
 };
+
+// Reintentar tras un error de carga. Repite lo último que se pidió —la portada o
+// el listado de la pestaña activa— sin recargar la página, para no perder los
+// filtros que la persona ya había puesto.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest?.('[data-reintentar]')) return;
+  if (state.tab === 'home') { void loadHome(); return; }
+  void load(state.page || 1);
+});
 
 document.addEventListener('click', (e) => {
   const boton = e.target.closest?.('[data-bv]');
@@ -1866,7 +1881,7 @@ async function loadHome() {
     if (loadSeq !== state.loadSeq) return;
     console.error('home:', e);
     raiz.removeAttribute('aria-busy');
-    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('alert-triangle', 'No se pudo cargar la portada', 'Revisa la conexión y reintenta.', 'warning')}</div></div>`;
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('alert-triangle', 'No se pudo cargar la portada', 'Puede ser tu conexión o el servidor.', 'warning', botonReintentar())}</div></div>`;
     setResultText('No disponible');
   } finally {
     state.loading = false;
@@ -1929,7 +1944,7 @@ async function load(page) {
     state.total = null;
     state.mostrados = 0;
     $('empty').style.display = 'block';
-    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Revisa la conexión y reintenta.', 'warning');
+    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Puede ser tu conexión o el servidor. Los filtros que pusiste siguen puestos.', 'warning', botonReintentar());
     setResultText('No disponible');
     return;
   }
@@ -2129,7 +2144,7 @@ async function loadGuardados() {
     $('grid').innerHTML = '';
     clearLoadingSkeletons();
     $('empty').style.display = 'block';
-    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Reintenta.', 'warning');
+    $('empty').innerHTML = emptyState('alert-triangle', 'No se pudo cargar', 'Puede ser tu conexión o el servidor.', 'warning', botonReintentar());
     setResultText('No disponible');
     return;
   }
@@ -3197,6 +3212,24 @@ function textoCupoReportes(estado) {
 }
 
 /**
+ * Qué trae el reporte, según la categoría.
+ *
+ * El texto era uno solo y prometía «descuento frente a su zona» y «los
+ * comparables que lo respaldan» también en remates, donde esa comparación no
+ * existe: un remate se mide contra el avalúo del juzgado, no contra el mercado.
+ * Ofrecer en la descarga algo que la ficha no tiene es la forma más rápida de
+ * que alguien pague por un documento y se sienta engañado al abrirlo.
+ */
+function textoDelReporte(kind) {
+  if (kind === 'remate') {
+    return 'Postura mínima, avalúo del juzgado, fecha de audiencia, los datos visibles del proceso '
+      + 'y las alertas preliminares del aviso.';
+  }
+  return 'Precio, descuento frente a ofertas similares de su zona, categoría del Índice CRECE, los '
+    + 'comparables que lo respaldan y las características del inmueble.';
+}
+
+/**
  * Bloque del reporte descargable.
  *
  * Enseña el cupo ANTES de que el usuario pulse, no después: descubrir un límite
@@ -3212,8 +3245,7 @@ function reporteSection(kind, p) {
   if (!auth.token) {
     return `<div class="section"><div class="reporte-box">
       <h3>Reporte descargable</h3>
-      <p class="reporte-txt">Un documento con el precio, el descuento frente a su zona, los comparables que
-      lo sustentan y las características del inmueble. Se abre en cualquier navegador y se guarda como PDF
+      <p class="reporte-txt">${textoDelReporte(kind)} Se abre en cualquier navegador y se guarda como PDF
       al imprimirlo.</p>
       <a class="reporte-cta" href="/login">Crear cuenta gratis para descargarlo</a>
       <p class="reporte-hint">El plan gratuito incluye ${CUPO_REPORTES_MENSUAL} reportes al mes.</p>
@@ -3228,9 +3260,7 @@ function reporteSection(kind, p) {
       </button>`;
   return `<div class="section"><div class="reporte-box">
     <h3>Reporte descargable</h3>
-    <p class="reporte-txt">Precio, descuento frente a su zona, categoría del Índice CRECE, los comparables
-    que lo respaldan y las características${kind === 'remate' ? ', además de los datos de la audiencia' : ''}.
-    Se descarga como archivo y se guarda como PDF al imprimirlo.</p>
+    <p class="reporte-txt">${textoDelReporte(kind)} Se descarga como archivo y se guarda como PDF al imprimirlo.</p>
     ${accion}
     <p class="reporte-hint" data-reporte-cupo aria-live="polite">${esc(textoCupoReportes(estado))}</p>
   </div></div>`;
