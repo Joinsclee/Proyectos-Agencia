@@ -42,8 +42,22 @@ export async function registerUser(input: unknown): Promise<AuthResult> {
 
   if (error) {
     // Correo ya registrado → mensaje claro, no error 500.
+    // NO se dice que el correo ya existe.
+    //
+    // La recuperación de contraseña se cuida mucho de no delatar qué direcciones
+    // tienen cuenta —ahí está el argumento, en `recuperar-password.ts`— y este
+    // formulario lo regalaba en texto plano: probar correos aquí devolvía «ya está
+    // registrado» o «cuenta creada», que es un oráculo perfecto. Cerrar una puerta
+    // y dejar la otra abierta no protege nada.
+    //
+    // El mensaje sirve igual a quien de verdad se equivocó de pestaña: le dice qué
+    // hacer sin confirmarle a un desconocido que esa dirección existe.
     if (/already.*regist|already.*exist|duplicate/i.test(error.message)) {
-      return { ok: false, error: 'Ese correo ya está registrado. Inicia sesión.' };
+      return {
+        ok: false,
+        error: 'No pudimos crear la cuenta con ese correo. Si ya tienes una, inicia sesión; '
+          + 'y si olvidaste la contraseña, puedes recuperarla.',
+      };
     }
     log.error(`register ${email}: ${error.message}`);
     return { ok: false, error: 'No se pudo crear la cuenta. Intenta de nuevo.' };

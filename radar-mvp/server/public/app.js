@@ -23,6 +23,16 @@ const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
 // `accion` es HTML ya formado y opcional: un estado de error sin forma de salir
 // de él deja al usuario mirando un mensaje que le dice «reintenta» sin darle con
 // qué. El resto de los estados vacíos no la necesitan y no la pasan.
+/**
+ * Cómo se desplaza la página, según lo que haya pedido la persona.
+ *
+ * `scroll-behavior: auto` en el CSS no basta: un `scrollIntoView({behavior:'smooth'})`
+ * escrito en el guion gana siempre sobre la hoja de estilos. Quien activa «reducir
+ * movimiento» lo hace por vértigo o migraña, y un desplazamiento animado que no
+ * pidió es exactamente lo que quería evitar.
+ */
+const suave = () => (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+
 const emptyState = (icon, title, description, tone = '', accion = '') => `
   <div class="empty-icon${tone ? ` is-${tone}` : ''}">${ic(icon, icon === 'alert-triangle' || icon === 'check-circle' ? 'ic-reicon' : '')}</div>
   <div class="h">${esc(title)}</div>
@@ -427,7 +437,7 @@ function invitarAPersonalizar() {
       radarSetupState.open = true;
       radarSetupState.step = 0;
       renderRadarSetup();
-      $('radar-setup')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      $('radar-setup')?.scrollIntoView({ block: 'center', behavior: suave() });
     }, 1400);
   }, 700);
 }
@@ -1786,7 +1796,7 @@ async function applyRadarPreferences(preferences, reload = false) {
   if (reload) {
     setFiltersOpen(false);
     await load(1);
-    $('results').scrollIntoView({ block: 'start', behavior: 'smooth' });
+    $('results').scrollIntoView({ block: 'start', behavior: suave() });
   }
 }
 $('radar-setup').addEventListener('change', (event) => {
@@ -2416,7 +2426,7 @@ function renderPager(total, page, pages, meta = {}) {
   el.querySelectorAll('button[data-page]').forEach((b) => b.addEventListener('click', () => {
     if (b.disabled || b.classList.contains('active')) return;
     load(Number(b.dataset.page));
-    window.scrollTo({ top: $('grid').offsetTop - 120, behavior: 'smooth' });
+    window.scrollTo({ top: $('grid').offsetTop - 120, behavior: suave() });
   }));
 }
 
@@ -4116,7 +4126,6 @@ function pintarComparables(caja, d) {
     <td>${fmtCOP(c.price)}</td>
     <td><strong>$${Number(c.ppm2).toLocaleString('es-CO')}</strong></td>
     <td>${esc(cap(c.zone || '—'))}</td>
-    <td>${c.url ? `<a href="${esc(safeMediaUrl(c.url))}" target="_blank" rel="noopener">ver</a>` : '—'}</td>
   </tr>`;
   const ajenos = d.comparables.filter((c) => c.esDeOtroTipo).length;
   caja.innerHTML = `
@@ -4127,7 +4136,7 @@ function pintarComparables(caja, d) {
     </div>
     ${ajenos ? `<p class="comp-aviso">${ajenos} de ${d.comparables.length} no son del mismo tipo de inmueble.</p>` : ''}
     <div class="comp-scroll"><table class="comp-tabla">
-      <thead><tr><th>Tipo</th><th>Área</th><th>Precio</th><th>Por m²</th><th>Zona</th><th></th></tr></thead>
+      <thead><tr><th>Tipo</th><th>Área</th><th>Precio</th><th>Por m²</th><th>Zona</th></tr></thead>
       <tbody>${d.comparables.map(fila).join('')}</tbody>
     </table></div>
     ${d.omitidos ? `<p class="comp-aviso">Se muestran ${d.comparables.length}; hay ${d.omitidos} más que no caben en la lista.</p>` : ''}
@@ -4226,8 +4235,21 @@ function mapSection(p) {
   return `<div class="section"><h3>Ubicación aproximada</h3><iframe class="mapframe" loading="lazy" src="https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed"></iframe></div>`;
 }
 let lastModalFocus = null;
+/**
+ * La ficha desde la que se abrió el modal, por si su tarjeta se repinta.
+ *
+ * Guardar el elemento no basta: al abrir una ficha bloqueada, el servidor
+ * devuelve la versión completa y la tarjeta se reconstruye entera, así que el
+ * nodo que tenía el foco deja de estar en el documento y `isConnected` da falso.
+ * El resultado era que al cerrar con Escape el foco caía al `body` y quien navega
+ * con teclado tenía que recorrer la rejilla otra vez desde el principio para
+ * volver donde estaba.
+ */
+let lastModalFocusFicha = null;
 function showModal() {
   lastModalFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const conFav = lastModalFocus?.closest?.('article.card, li')?.querySelector?.('[data-fav-id]');
+  lastModalFocusFicha = conFav ? conFav.getAttribute('data-fav-id') : null;
   $('modal').classList.add('open');
   $('modal').setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
@@ -4247,7 +4269,19 @@ function closeModal() {
   $('modal').setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
   fichaEnPantalla = null;
-  if (lastModalFocus?.isConnected) lastModalFocus.focus({ preventScroll: true });
+  devolverFoco();
+}
+
+/** Devuelve el foco a donde estaba, aunque la tarjeta se haya repintado entretanto. */
+function devolverFoco() {
+  if (lastModalFocus?.isConnected) { lastModalFocus.focus({ preventScroll: true }); return; }
+  if (!lastModalFocusFicha) return;
+  const tarjeta = document.querySelector(`[data-fav-id="${CSS.escape(lastModalFocusFicha)}"]`)
+    ?.closest('article.card, li');
+  // El botón de abrir, y si no la tarjeta: lo importante es que el foco vuelva a
+  // la altura de la lista donde el usuario lo dejó, no al principio de la página.
+  const destino = tarjeta?.querySelector('.card-open, button, a') || tarjeta;
+  if (destino instanceof HTMLElement) destino.focus({ preventScroll: true });
 }
 
 // ---------- Stats + leyenda + tabs ----------
@@ -4486,7 +4520,7 @@ async function activarPestana(tab, antesDeCargar, pagina = 1) {
     // apuntaba a `.vstats`, la franja morada de cifras, que dejó de existir como
     // barra propia al bajar la navegación: sus cifras viven ahora dentro de la barra
     // de secciones. Sin el `?.` esto lanzaba y dejaba la carga a medias.
-    (document.querySelector('.tabs-bar') || $('results'))?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    (document.querySelector('.tabs-bar') || $('results'))?.scrollIntoView({ block: 'start', behavior: suave() });
   }
 }
 document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListener('click', () => {
@@ -4847,7 +4881,7 @@ try {
     } else {
       await activarPestana(fuente, () => volcarEnPanel(fuente, extras));
     }
-    $('results')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    $('results')?.scrollIntoView({ block: 'start', behavior: suave() });
   }
 
   form.addEventListener('submit', (evento) => {
