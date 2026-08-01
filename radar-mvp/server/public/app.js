@@ -3571,7 +3571,6 @@ function closeModal() {
 let STATS = null;
 function renderStatsUnavailable() {
   STATS = null;
-  $('c-portal').textContent = '—';
   $('c-bancos').textContent = '—';
   $('c-remates').textContent = '—';
   $('summary').innerHTML = `
@@ -3615,7 +3614,6 @@ async function loadStats() {
     return;
   }
   STATS = payload;
-  $('c-portal').textContent = STATS.portal_total.toLocaleString('es-CO');
   $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
   $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
   // Tres cifras, y las tres del mismo tipo: oportunidades. Decisión de la reunión
