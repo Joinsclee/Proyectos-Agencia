@@ -561,8 +561,8 @@ export function bloqueFuentes(
   return {
     id: 'fuentes',
     titulo: 'Las tres fuentes, cruzadas',
-    criterio: 'La misma pregunta hecha a las tres fuentes del Radar. Portal abierto y cartera de '
-      + 'bancos se miden contra el mercado de oferta de su propia zona y se ordenan por descuento. '
+    criterio: 'La misma pregunta hecha a las tres fuentes del Radar. Los avisos de portales y la '
+      + 'cartera de bancos se miden contra el mercado de oferta de su propia zona y se ordenan por descuento. '
       + 'Los remates se miden contra el avalúo oficial, y ahí el descuento no discrimina: la base '
       + 'legal de toda subasta es el 70% del avalúo, así que se ordenan por riesgo jurídico '
       + '—primero los de demandante bancario— y por audiencia más próxima.',

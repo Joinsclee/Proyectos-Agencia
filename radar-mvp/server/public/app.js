@@ -9,6 +9,14 @@ const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos', other: 'Otros', others: 'Otros' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Rama Judicial' }[s] || s);
+/**
+ * Concuerda el sustantivo con el número, en vez de escribir «2 día(s)».
+ *
+ * El «(s)» es de formulario: lo pone quien no quiere decidir, y quien lee ve un
+ * campo de base de datos en medio de un aviso sobre su dinero. El número ya está
+ * ahí, así que no hay nada que decidir.
+ */
+const plural = (n, singular, varios) => `${n} ${Math.abs(Number(n)) === 1 ? singular : varios}`;
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
@@ -2384,6 +2392,18 @@ function selloSuscripcion(p) {
     + `<span>${titular}</span><em>${accion}</em></div>`;
 }
 
+/**
+ * ¿Sabemos qué clase de bien se subasta?
+ *
+ * Uno de cada seis avisos del juzgado llega sin tipo, y la tarjeta lo titulaba
+ * «Inmueble», al lado de las que dicen «Casa» o «Local». Se lee como un dato
+ * —vivienda genérica— cuando lo que pasa es que no lo sabemos: ese mismo aviso
+ * puede ser un lote, una bodega o hasta un vehículo, y son decisiones de compra
+ * distintas. Decir que falta cuesta una línea y no engaña a nadie.
+ */
+const tipoIdentificado = (t) => Boolean(t) && t !== 'other' && t !== 'others';
+const TIPO_POR_CONFIRMAR = 'Tipo por confirmar';
+
 function avisoCuotaParte(p) {
   if (!tieneCuotaParte(p)) return '';
   return `<span class="cuota-badge" title="${TEXTO_CUOTA_PARTE}">${ic('alert')}Solo el ${Number(p.cuota_parte)}% del bien</span>`;
@@ -2399,7 +2419,7 @@ function remateCard(p, kind) {
       <div class="card-price-label">Postura mínima</div>
       <div class="card-price">${fmtCOP(p.minimum_bid)}</div>
       ${p.appraisal_value ? `<div class="card-sub">Avalúo ${fmtCOP(p.appraisal_value)}${p.minimum_bid_pct ? ` · postura al ${p.minimum_bid_pct}%` : ''}</div>` : ''}
-      <div class="card-titulo">${esc(typeLbl(p.property_type))}${avisoCuotaParte(p)}</div>
+      <div class="card-titulo">${esc(tipoIdentificado(p.property_type) ? typeLbl(p.property_type) : TIPO_POR_CONFIRMAR)}${avisoCuotaParte(p)}</div>
       <div class="card-ubic">${ic('pin')}<span><strong>${esc(cap(p.city))}</strong>${p.department ? ', ' + esc(cap(p.department)) : ''}</span></div>
       <div class="card-meta">
         ${p.auction_date ? `<span title="Fecha de audiencia">${ic('calendar')}${fmtDate(p.auction_date)}</span>` : ''}
@@ -2494,7 +2514,9 @@ function calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin = 0) {
   };
 }
 function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
-  if (!monthlyRent) return '<span>Ingresa un canon esperado para calcular la rentabilidad.</span>';
+  // «Canon» es palabra de abogado y el campo de arriba ya se llama «Valor de
+  // arrendamiento mensual»: la ayuda pedía en otro idioma lo mismo que el campo.
+  if (!monthlyRent) return '<span>Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</span>';
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
   return `<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
     <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
@@ -2589,7 +2611,7 @@ function analisisRemate(p) {
   if (/proindiviso|cuota parte|derechos?\s+(de\s+cuota|herenciales|y\s+acciones)|cuota\s+proindiviso|porcentaje\s+del\s+derecho/.test(text) || p.property_type === 'rights') flags.push(['warn', 'Podría rematarse solo una CUOTA/derechos (no el 100%): confirma qué porcentaje se adjudica.']);
   if (/ocupad|arrendad|poseedor|habitad|inquilino|en posesi/.test(text)) flags.push(['warn', 'El inmueble podría estar ocupado/arrendado: la entrega material puede demorar.']);
   const dias = daysToAuction(p.auction_date);
-  if (dias != null && dias >= 0 && dias <= 3) flags.push(['warn', `Audiencia ${dias === 0 ? 'HOY' : 'en ' + dias + ' día(s)'}: poco margen para revisar los documentos del inmueble y hacer el depósito bancario.`]);
+  if (dias != null && dias >= 0 && dias <= 3) flags.push(['warn', `Audiencia ${dias === 0 ? 'HOY' : 'en ' + plural(dias, 'día', 'días')}: poco margen para revisar los documentos del inmueble y hacer el depósito bancario.`]);
   // Cautela (-)
   if (p.property_type === 'lot' || p.property_type === 'farm' || /\bbald[ií]o|predio rural|vereda\b/.test(text)) flags.push(['neg', 'Bien rural/lote: menor liquidez y avalúo más variable.']);
   if (/servidumbre/.test(text)) flags.push(['neg', 'Menciona servidumbre: revisar afectaciones al predio.']);
@@ -2656,7 +2678,17 @@ function marketCtxHtml(m) {
     <div><span class="l">Comparables</span><strong>${m.n}</strong><span class="sub">${tipo}</span></div>
   </div>`;
 }
-function renderAI(result) {
+/**
+ * Cómo se llama aquí el paso de comprobar antes de comprometerse.
+ *
+ * Solo en un remate se puja. Un activo de banco se negocia y se firma, así que
+ * «Verificar antes de pujar» sobre una ficha de Bancos le hace creer al lector
+ * que ese inmueble también sale a subasta —y con ello, que hay una fecha, un
+ * depósito previo y otros postores compitiendo—. Nada de eso existe ahí.
+ */
+const tituloDueDiligence = (kind) => (kind === 'remate' ? 'Verificar antes de pujar' : 'Verificar antes de comprar');
+
+function renderAI(result, kind) {
   const m = result.market;
   if (!result.ok) {
     if (result.needs_key) {
@@ -2683,7 +2715,7 @@ function renderAI(result) {
         <div><h4>${ic('check-circle', 'ic-reicon analysis-icon is-positive')} A favor</h4>${li(ai.a_favor)}</div>
         <div><h4>${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')} En contra</h4>${li(ai.en_contra)}</div>
       </div>
-      <h4>${ic('magnifier', 'analysis-icon is-review')} Verificar antes de pujar</h4>${li(ai.riesgos_due_diligence)}
+      <h4>${ic('magnifier', 'analysis-icon is-review')} ${tituloDueDiligence(kind)}</h4>${li(ai.riesgos_due_diligence)}
       <p class="ai-reco"><strong>Recomendación:</strong> ${esc(ai.recomendacion)}</p>
       <p class="ai-meta">Generado por IA (${esc(ai._meta?.model || 'modelo')}) · ${ai._meta?.comparables_n ?? m?.n ?? 0} comparables${result.cached ? ' · cacheado' : ''}. Opinión orientativa; no sustituye estudio de títulos ni asesoría profesional.</p>
     </div>`;
@@ -2844,7 +2876,7 @@ window.__analyzeAI = async function (btn, kind, id) {
     const data = await res.json();
     const lazy = $('rec-lazy'); // ya las mostró el mercado bajo demanda: no duplicar
     if (lazy) lazy.remove();
-    wrap.innerHTML = renderAI(data) + renderRecs(data.recommendations);
+    wrap.innerHTML = renderAI(data, kind) + renderRecs(data.recommendations);
   } catch (e) {
     wrap.innerHTML = `<div class="ai-note">No se pudo conectar con el análisis: ${esc(String(e))}.</div>`;
   }
@@ -2869,7 +2901,7 @@ function gastosSection(valor, mode, context) {
       ${mode !== 'remate' ? `<div class="rent-box">
         <div class="rent-head"><span class="calc-label">Rentabilidad por arriendo</span><small data-rent-origin>Buscando arriendos comparables…</small></div>
         <div class="rent-market-status" data-rental-market aria-live="polite">
-          <span class="spinner"></span> Estimando el canon con avisos similares de la zona…
+          <span class="spinner"></span> Estimando el valor del arriendo con avisos similares de la zona…
         </div>
         <div class="rent-inputs">
           <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
@@ -2925,6 +2957,85 @@ function recordarFichaEnPantalla(kind, id, titulo) {
   fichaEnPantalla = { kind, id: String(id), titulo };
 }
 
+/** Palabras con las que ninguna frase queda cerrada: si el texto acaba aquí, venía a medias. */
+const PALABRAS_COLGANTES = new Set([
+  'de', 'del', 'la', 'el', 'los', 'las', 'un', 'una', 'unos', 'unas', 'y', 'e', 'o', 'u',
+  'en', 'con', 'por', 'para', 'que', 'se', 'su', 'sus', 'al', 'a', 'como', 'sobre',
+  'desde', 'hasta', 'entre', 'sin', 'tras', 'lo', 'le', 'les',
+]);
+/** Letras con las que sí termina una palabra en español; el resto delata un corte. */
+const FINALES_DE_PALABRA = 'nrsldzjxym';
+
+/**
+ * ¿La descripción llegó cortada desde la fuente?
+ *
+ * Varios bancos publican la descripción dentro de un PDF y el texto se corta
+ * donde se acaba la caja, a media palabra: «…esquinero de la urbani». Mostrarla
+ * tal cual hace creer que el aviso dice exactamente eso, y quien lee se queda
+ * buscando el resto de una frase que aquí no existe. Cuatro de cada diez avisos
+ * de Aval llegan así.
+ *
+ * Se detecta por la forma del final, no por la longitud: el corte no cae en una
+ * cifra fija de caracteres sino donde termina la caja del PDF. Un texto completo
+ * cierra con puntuación; uno cortado termina en una palabra que se queda a medias
+ * («urbani», «locali») o en una que no puede cerrar nada («…de la», «…por una»).
+ *
+ * Es deliberadamente prudente: prefiere callar antes que acusar de incompleta una
+ * descripción que sí está entera, porque un aviso falso enseña a desconfiar de los
+ * verdaderos. Contrastada contra 826 avisos reales de las cinco fuentes, marcó 101
+ * y ninguno estaba completo. Por eso se descartan los nombres propios («…en Cali»),
+ * los códigos y los enlaces, donde la forma de la palabra no dice nada.
+ */
+function descripcionIncompleta(texto) {
+  const limpio = String(texto ?? '').trim();
+  if (limpio.length < 12) return false;
+  if (/[.!?…»”’")\]]$/.test(limpio)) return false;
+  // Nadie termina de describir su inmueble con una coma. Cuando la frase acaba en
+  // un separador —«…Sala-comedor, cocina,», «…contáctanos:»— lo que venía después
+  // no cabía en la caja del PDF.
+  if (/[,;:—–-]$/.test(limpio)) return true;
+  const ultima = limpio.split(/\s+/).pop() ?? '';
+  if (/[./:@]|\d/.test(ultima)) return false;
+  const letras = ultima.toLowerCase().replace(/[^a-záéíóúüñ]/g, '');
+  if (!letras) return false;
+  if (PALABRAS_COLGANTES.has(letras)) return true;
+  if (ultima[0] !== ultima[0].toLowerCase()) return false;
+  if (letras.endsWith('ing')) return false; // «leasing», «parking»: préstamos completos
+  const fin = letras.slice(-1);
+  if ('aeoáéíóúü'.includes(fin)) return false;
+  if (fin === 'i' || fin === 'u') return letras.length >= 4;
+  return !FINALES_DE_PALABRA.includes(fin);
+}
+
+/** Hasta dónde se enseña la descripción del aviso dentro de la ficha. */
+const LARGO_MAXIMO_DESCRIPCION = 900;
+
+/**
+ * La descripción del aviso, diciendo cuándo no está entera.
+ *
+ * Son dos cortes distintos y hasta ahora los dos se hacían en silencio: el de la
+ * fuente y el nuestro, que pasado el largo máximo dejaba la frase a la mitad sin
+ * más. Da igual quién cortó: quien lee necesita saber que lo que tiene delante no
+ * es todo lo que decía el aviso, y a dónde ir por el resto.
+ */
+function bloqueDescripcion(texto) {
+  const completo = String(texto ?? '').trim();
+  if (!completo) return '';
+  const recortada = completo.length > LARGO_MAXIMO_DESCRIPCION;
+  // El corte cae en un espacio: partir la última palabra sería reproducir aquí el
+  // mismo defecto que estamos señalando en la fuente.
+  const corte = completo.lastIndexOf(' ', LARGO_MAXIMO_DESCRIPCION);
+  const visible = recortada
+    ? `${completo.slice(0, corte > 400 ? corte : LARGO_MAXIMO_DESCRIPCION)}…`
+    : completo;
+  let aviso = '';
+  if (recortada) aviso = 'Descripción recortada aquí; el aviso original la trae completa.';
+  else if (descripcionIncompleta(completo)) aviso = 'Texto incompleto en la fuente original.';
+  return `<div class="section"><h3>Descripción</h3><p>${esc(visible)}</p>${
+    aviso ? `<p class="desc-aviso">${aviso}</p>` : ''
+  }</div>`;
+}
+
 function openModal(p) {
   if (state.tab === 'remates') return openRemate(p);
   return openInmueble(p);
@@ -2942,11 +3053,17 @@ function openInmueble(p) {
   if (f.stratum) feats.push(['Estrato', f.stratum]);
   if (f.floor) feats.push(['Piso', f.floor]);
   if (f.m2_private) feats.push(['Área priv.', fmtArea(f.m2_private)]);
-  if (f.antiguedad) feats.push(['Antigüedad', f.antiguedad]);
-  if (f.administracion) feats.push(['Admin', fmtCOP(f.administracion) + '/mes']);
+  // Un terreno no tiene antigüedad. El portal rellena el campo igual —dos de cada
+  // tres lotes traen «1 a 8 años»—, y en la ficha se lee como si algo se hubiera
+  // construido ahí; en realidad describe el conjunto o la urbanización, cuando
+  // describe algo. Un dato que no se puede interpretar resta más de lo que suma.
+  if (f.antiguedad && p.type !== 'lot') feats.push(['Antigüedad', f.antiguedad]);
+  // «Admin» abreviado no decía de qué: la cifra parecía un gasto del inmueble sin
+  // aclarar que es la cuota mensual que cobra el conjunto o el edificio.
+  if (f.administracion) feats.push(['Administración del conjunto', fmtCOP(f.administracion) + '/mes']);
 
   const amen = Array.isArray(f.amenities) && f.amenities.length ? `<div class="section"><h3>Características</h3><div class="amenities">${f.amenities.slice(0, 30).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}</div></div>` : '';
-  const desc = f.description ? `<div class="section"><h3>Descripción</h3><p>${esc(String(f.description).slice(0, 900))}</p></div>` : '';
+  const desc = bloqueDescripcion(f.description);
   const addr = p.address ? `<div class="section"><h3>Dirección</h3><p>${esc(p.address)}</p></div>` : '';
   // Bloqueos para anónimo (freemium)
   // El servidor ya recortó lo que el plan no cubre; aquí solo se explica por qué.
@@ -2975,7 +3092,7 @@ function openInmueble(p) {
     // La administración que el propio aviso declara. La ficha ya la enseña unas
     // líneas más abajo, así que empezar la calculadora en 0 no era «no saberlo»:
     // era ignorar un dato que teníamos, y encima diciendo debajo que se había
-    // descontado. Sobre un canon de 1,3 millones, olvidar 150.000 de
+    // descontado. Sobre un arriendo de 1,3 millones, olvidar 150.000 de
     // administración infla la rentabilidad neta dos puntos largos.
     admin: Number((p.features || {}).administracion) || 0,
   });
@@ -3287,7 +3404,7 @@ function applyRentalMarket(market) {
       <div><span>Comparables</span><strong>${Number(market.n) || 0}</strong></div>
     </div>
     ${criteria.length ? `<div class="crit-chips">${criteria.map((item) => `<span class="crit-chip">${esc(item)}</span>`).join('')}</div>` : ''}
-    <p>Referencia basada en precios de oferta, no en contratos cerrados. El canon puede incluir o excluir administración según cada aviso.</p>`;
+    <p>Referencia basada en precios de oferta, no en contratos cerrados. El valor mensual del arriendo publicado puede incluir o no la cuota de administración.</p>`;
   if (origin) origin.textContent = `${Number(market.n) || 0} avisos similares · ${market.scope_label || 'misma ciudad'}`;
   if (rentInput && (!rentInput.value || rentInput.dataset.rentSource === 'market')) {
     rentInput.value = fmtCOP(median);
@@ -3370,7 +3487,9 @@ function openRemate(p) {
       </div>`
     : '';
   const descHtml = p.description
-    ? `<div class="section"><h3>Descripción del bien</h3><p class="pub">${esc(String(p.description))}</p></div>`
+    ? `<div class="section"><h3>Descripción del bien</h3><p class="pub">${esc(String(p.description))}</p>${
+      descripcionIncompleta(p.description) ? '<p class="desc-aviso">Texto incompleto en la fuente original.</p>' : ''
+    }</div>`
     : '';
   // Bloqueos para anónimo (freemium). El análisis preliminar (semáforo) y la
   // calculadora quedan visibles como gancho; lo sensible/valioso se bloquea.
@@ -3392,6 +3511,7 @@ function openRemate(p) {
       <div class="detail-top"><span class="pill-src">${ic('scale')}Remate judicial</span>${fav}</div>
       ${tieneCuotaParte(p) ? `<div class="alerta-legal">${ic('alert')}<div><strong>Se remata solo el ${Number(p.cuota_parte)}% del bien</strong><span>${TEXTO_CUOTA_PARTE}</span></div></div>` : ''}
       <h2>${esc(typeLbl(p.property_type))} en ${esc(cap(p.city))}</h2>
+      ${tipoIdentificado(p.property_type) ? '' : `<p class="tipo-sin-confirmar">${TIPO_POR_CONFIRMAR}: el aviso del juzgado no dice qué clase de bien se subasta.</p>`}
       <div class="loc">${ic('pin')}<strong>${esc(cap(p.city))}</strong>${p.department ? ', ' + esc(cap(p.department)) : ''}</div>
       <div class="priceblock remate">
         <div class="pb-row">

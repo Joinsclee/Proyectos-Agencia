@@ -91,6 +91,12 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
     '- Si la confianza de los comparables es baja o no hubo del mismo tipo, dilo y modera el veredicto.',
     '- Refiérete al ámbito de los comparables: si están acotados al barrio/sector, di "en este sector"; si son de toda la ciudad, acláralo (es una referencia más gruesa).',
     '- Detecta riesgos en el texto del aviso: ocupado/arrendado, proindiviso o cuota/derechos (no el 100%), servidumbres, rural/lote de baja liquidez, fechas de audiencia muy próximas.',
+    // Un activo de banco se negocia y se firma; no hay audiencia, ni depósito
+    // previo, ni otros postores. Que el modelo hable de «pujar» sobre uno de
+    // estos le hace creer al lector que también sale a subasta.
+    facts.kind === 'banco'
+      ? '- Esta propiedad se compra por negociación directa con el banco, NO en subasta: no uses "pujar", "postura", "audiencia" ni "adjudicación"; di "comprar" o "hacer una oferta".'
+      : '',
     '- Sé conciso y accionable. Responde SOLO con un objeto JSON válido, sin texto adicional, con esta forma exacta:',
     '{',
     '  "veredicto": "atractiva|neutral|riesgosa",',

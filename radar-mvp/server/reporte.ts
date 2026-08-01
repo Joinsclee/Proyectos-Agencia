@@ -405,7 +405,7 @@ function bloqueArriendo(a: ArriendoReporte | null): string {
       ${a.alcance ? fila('Ámbito de comparación', escaparHtml(capitalizar(a.alcance))) : ''}
     </dl>
     <p class="nota">Estimación construida con ofertas de arriendo activas, no con contratos firmados.
-    El canon publicado puede incluir o excluir administración según cada aviso.</p>`;
+    El valor mensual del arriendo publicado puede incluir o no la cuota de administración.</p>`;
 }
 
 /**
