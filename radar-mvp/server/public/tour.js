@@ -50,9 +50,13 @@ const PASOS = [
     id: 'bienvenida',
     centrado: true,
     etiqueta: 'Bienvenido',
-    titulo: 'Esto compara contra el barrio, no contra el país',
-    texto: 'Cada inmueble se mide contra el precio real de ofertas parecidas en su propia zona. '
-      + 'Por eso un descuento aquí significa algo. Te enseño la herramienta en un minuto.',
+    // El primer paso decía «compara contra el barrio, no contra el país», que es la
+    // respuesta a una objeción que el recién llegado todavía no tiene. Antes de
+    // defender el método hay que decir qué hace el producto.
+    titulo: 'Qué hace el Radar',
+    texto: 'Cada semana revisamos miles de avisos de portales, de las carteras de los bancos y de los '
+      + 'remates de los juzgados, y te mostramos los que están por debajo de lo que piden por otros '
+      + 'parecidos en la misma zona. Tú eliges ciudad y presupuesto; la comparación la ponemos nosotros.',
   },
   {
     id: 'fuentes',
@@ -63,8 +67,8 @@ const PASOS = [
     // Los nombres son los de las pestañas que la persona tiene delante. Si aquí se
     // llamaran «Portal Abierto» o «Activos de Bancos», el recorrido dejaría de
     // señalar la pantalla para describir otra.
-    texto: 'Portal, Bancos y Remates: cada mercado tiene su pestaña, y los tres se miden con la '
-      + 'misma vara.',
+    texto: 'Portal son avisos publicados que puedes llamar y visitar hoy. Bancos, inmuebles que se '
+      + 'quedaron por créditos sin pagar. Remates, subastas ante un juez. Cada uno tiene su pestaña.',
   },
   {
     id: 'filtros',
@@ -83,8 +87,12 @@ const PASOS = [
     lado: 'derecha',
     etiqueta: 'Cada ficha',
     titulo: 'El porcentaje es contra su propio barrio',
+    // «Mediana» es la palabra correcta y la que usa el motor, pero en un tutorial
+    // para alguien que nunca invirtió no dice nada. Se explica con lo que significa:
+    // el precio del que está justo en medio.
     texto: 'No es una rebaja sobre el precio de lista ni un promedio nacional: es cuánto está por '
-      + 'debajo de la mediana de ofertas parecidas en su zona. Ábrela para ver los comparables que lo sostienen.',
+      + 'debajo de lo que piden por inmuebles parecidos en su zona —el precio del que queda justo en '
+      + 'medio, ni el más caro ni el más barato—. Ábrela y verás cuáles se usaron para la cuenta.',
   },
   {
     id: 'remates',
@@ -103,7 +111,9 @@ const PASOS = [
     // una expectativa que la propia ficha desmiente tres clics después.
     texto: 'La postura mínima la fija el juzgado, y suele ser un porcentaje del avalúo —lo habitual '
       + 'es el 70%, aunque en una segunda subasta cambia—. Cada ficha dice el suyo. Lo que de verdad '
-      + 'distingue un remate de otro es el riesgo del título, y si solo se remata una parte del bien.',
+      + 'distingue un remate de otro es el riesgo del título —si los papeles del inmueble vienen '
+      + 'limpios o traen deudas, embargos o dueños en disputa— y si se remata el bien entero o solo '
+      + 'una parte.',
   },
   {
     id: 'guardar',
