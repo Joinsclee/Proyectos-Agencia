@@ -1115,6 +1115,13 @@ const planActual = () => planDelServidor;
 
 function readFilters() {
   const g = (id) => { const e = $(id); return e && e.value ? e.value : undefined; };
+  // Un número negativo no es un filtro: el precio o el área de un inmueble no
+  // pueden serlo, y el servidor los descarta. Contarlos como activos hacía que la
+  // interfaz dijera «1 filtro» sobre un resultado sin filtrar.
+  const gNoNegativo = (id) => {
+    const v = g(id);
+    return v != null && Number(v) >= 0 ? v : undefined;
+  };
   // millones → COP. Un cero NO es un filtro: el servidor lo descarta por falso,
   // pero el contador lo sumaba igual, así que la interfaz decía «1 filtro activo»
   // sobre las 108.060 fichas sin filtrar. Un contador que no cuadra con lo que se
@@ -1126,8 +1133,8 @@ function readFilters() {
   return {
     city: g('f-city'), zone: g('f-zone'), type: g('f-type'),
     priceMin: M('f-priceMin'), priceMax: M('f-priceMax'),
-    areaMin: g('f-areaMin'), areaMax: g('f-areaMax'),
-    bedroomsMin: g('f-bedroomsMin'), stratumMin: g('f-stratumMin'), stratumMax: g('f-stratumMax'),
+    areaMin: gNoNegativo('f-areaMin'), areaMax: gNoNegativo('f-areaMax'),
+    bedroomsMin: gNoNegativo('f-bedroomsMin'), stratumMin: g('f-stratumMin'), stratumMax: g('f-stratumMax'),
     // El desplegable ya solo dice categorías del Índice CRECE, así que su valor
     // ES la categoría. El servidor sigue aceptando el viejo `opp` para no romper
     // enlaces ya compartidos, pero desde aquí no se envía nunca.
@@ -1951,10 +1958,54 @@ async function load(page) {
     ? 'Sin resultados'
     : `${mostrados.toLocaleString('es-CO')} de ${cifra} resultado${res.total === 1 ? '' : 's'}`);
   clearLoadingSkeletons();
-  $('empty').style.display = res.total === 0 ? 'block' : 'none';
+  pintarVacio(res.total === 0);
   renderPager(res.total, res.page, res.pages, res);
   renderVecinas();
   state.loading = false;
+}
+
+/**
+ * Qué se enseña cuando no sale nada.
+ *
+ * «Sin resultados · Ajusta los filtros» era la misma frase para dos situaciones
+ * que no se parecen: que no haya inventario, y que el filtro sea imposible de
+ * cumplir porque el mínimo es mayor que el máximo. En el segundo caso el usuario
+ * se queda mirando una pantalla que le dice que no hay casas de 300 a 500
+ * millones cuando lo que escribió fue de 500 a 300, y no tiene forma de saberlo.
+ */
+function pintarVacio(vacio) {
+  const caja = $('empty');
+  if (!caja) return;
+  caja.style.display = vacio ? 'block' : 'none';
+  if (!vacio) return;
+  const alReves = rangosAlReves();
+  const titulo = caja.querySelector('.h');
+  const detalle = titulo?.nextElementSibling;
+  if (!titulo || !detalle) return;
+  if (alReves.length) {
+    titulo.textContent = 'El filtro está al revés';
+    detalle.textContent = `En ${alReves.join(' y ')}, el mínimo es mayor que el máximo, así que ningún inmueble puede cumplirlo. Intercámbialos y vuelve a buscar.`;
+  } else {
+    titulo.textContent = 'Sin resultados';
+    detalle.textContent = 'Ajusta los filtros para ver más.';
+  }
+}
+
+/** Qué rangos tienen el mínimo por encima del máximo, con el nombre que el usuario ve. */
+function rangosAlReves() {
+  const pares = [
+    ['precio', 'f-priceMin', 'f-priceMax'],
+    ['postura', 'f-bidMin', 'f-bidMax'],
+    ['área', 'f-areaMin', 'f-areaMax'],
+    ['estrato', 'f-stratumMin', 'f-stratumMax'],
+  ];
+  return pares
+    .filter(([, idMin, idMax]) => {
+      const min = Number($(idMin)?.value);
+      const max = Number($(idMax)?.value);
+      return Number.isFinite(min) && Number.isFinite(max) && $(idMin)?.value !== '' && $(idMax)?.value !== '' && min > max;
+    })
+    .map(([nombre]) => nombre);
 }
 
 /**
