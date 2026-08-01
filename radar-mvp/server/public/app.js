@@ -1589,9 +1589,20 @@ async function reconstruirFiltrosConservandoValores() {
 function restaurarValorDeFiltro(id, valor) {
   const el = $(id);
   if (!el) return;
-  // Un `<select>` al que se le asigna un valor inexistente se queda vacío en
-  // silencio, y eso es peor que no restaurar: el filtro parecería limpio.
-  if (el.tagName === 'SELECT' && ![...el.options].some((o) => o.value === valor)) return;
+  // Si el desplegable no ofrece ese valor, se AÑADE en vez de descartarlo.
+  //
+  // Descartarlo en silencio hacía que un enlace compartido perdiera su filtro sin
+  // decir nada: la dirección decía «Nilo» y la pantalla enseñaba las 108.000
+  // fichas del país. El catálogo de ciudades ya es estable, pero esto vale igual
+  // como red: un municipio con dos fichas, una lista recortada o un enlace de hace
+  // meses no pueden convertirse en «te enseño otra cosa sin avisar». Lo que la
+  // persona pidió manda sobre lo que la lista traía.
+  if (el.tagName === 'SELECT' && ![...el.options].some((o) => o.value === valor)) {
+    const opcion = document.createElement('option');
+    opcion.value = valor;
+    opcion.textContent = cap(valor);
+    el.appendChild(opcion);
+  }
   el.value = valor;
 }
 

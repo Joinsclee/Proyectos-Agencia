@@ -86,7 +86,12 @@
   /** Ningún valor legítimo de un filtro llega a esto. Corta la basura pegada a mano. */
   const MAX_LARGO = 80;
   /** El servidor tampoco sirve más allá de este tramo; ver el aviso de `renderPager`. */
-  const MAX_PAGINA = 500;
+  // 40, el mismo tope que el paginador ofrece y que el servidor sabe servir
+  // (`MAX_PAGINAS_NAVEGABLES` en `server/queries.ts`). Estaba en 500: una URL con
+  // `page=200` pasaba el validador, la petición tardaba un minuto en morir y la
+  // pantalla se quedaba en «Buscando…» todo ese rato. Aceptar lo que no se puede
+  // servir no es ser permisivo, es hacer esperar para nada.
+  const MAX_PAGINA = 40;
 
   /**
    * Deja el valor como debe viajar, o `null` si no es un filtro de verdad.
