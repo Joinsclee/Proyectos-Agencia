@@ -288,40 +288,7 @@ function referenciaDeNivel(nivel: string | null | undefined): string {
   return 'ofertas similares de su ciudad';
 }
 
-/** Etiqueta del Índice CRECE ya resuelta por la tabla maestra (engine/crece.ts). */
-function etiquetaCrece(fila: FilaInmueble): string | null {
-  const indice = num(fila.crece_index);
-  if (indice === null) return null;
-  // Solo la lectura, sin el número. El Índice CRECE es interno: «índice CRECE 0,45»
-  // no le dice nada a nadie que no conozca la escala, y el listado ya cumplía esta
-  // regla —era la portada la que se la saltaba—. La lectura («Oportunidad Fuerte»)
-  // es la misma información en el idioma de quien la lee.
-  return clasificar(indice).lectura;
-}
 
-/**
- * Cuánta confianza merece la comparación.
- *
- * Los bancos guardan la trazabilidad completa en `features.market` (cuántos
- * comparables y con qué confianza). El portal no: con 108.000 filas el motor solo
- * escribe columnas, así que su garantía es `is_high` —que el propio motor solo
- * concede con confianza alta— y el nivel de la cascada. Se dice lo que hay de
- * cada uno, sin inventarle al portal un número de comparables que no existe.
- */
-function etiquetaConfianza(fila: FilaInmueble): string | null {
-  const market = fila.features?.market as Record<string, any> | undefined;
-  const n = num(market?.n_comparables);
-  const conf = typeof market?.confidence === 'string' ? market.confidence : null;
-  const legible: Record<string, string> = { high: 'confianza alta', medium: 'confianza media', low: 'confianza baja' };
-  if (n !== null && conf && legible[conf]) return `${n} comparables, ${legible[conf]}`;
-  if (n !== null) return `${n} comparables`;
-  // Antes decía «confianza alta del motor» y «comparables del propio barrio».
-  // Ninguna de las dos dice nada útil en un vistazo: la primera habla de un motor
-  // que el usuario no sabe que existe, y la segunda promete un barrio cuando la
-  // comparación cubre 1,5 km. Cuando no hay un número de comparables que enseñar,
-  // es mejor no decir nada que llenar el hueco con jerga.
-  return null;
-}
 
 const fuenteDeInmueble = (fila: FilaInmueble): 'portal' | 'banco' =>
   fila.source === 'fincaraiz' ? 'portal' : 'banco';
@@ -330,7 +297,16 @@ const fuenteDeInmueble = (fila: FilaInmueble): 'portal' | 'banco' =>
 export function sellarInmueble(fila: FilaInmueble): FichaDestacada {
   const descuento = descuentoInmueble(fila);
   const referencia = referenciaDeNivel(fila.cascada_nivel);
-  const respaldo = [etiquetaCrece(fila), etiquetaConfianza(fila)].filter(Boolean).join(' · ') || null;
+  // El cliente pidió quitar esta línea de las fichas —«Oportunidad Fuerte · 108
+  // comparables, confianza media»— porque repite lo que el badge y las estrellas
+  // ya dicen arriba. Se quitó de la pantalla, pero se seguía enviando en cada
+  // ficha de la respuesta: lista para que la próxima pantalla, el asistente o
+  // cualquier integración la volvieran a pintar sin que nadie lo decidiera.
+  //
+  // Se deja de componer aquí. El campo se conserva en el tipo porque los remates
+  // sí lo usan para algo distinto —postura, fecha de audiencia y quién demanda—,
+  // que no es una repetición de nada.
+  const respaldo = null;
   return {
     ...fila,
     _kind: fuenteDeInmueble(fila),
@@ -361,9 +337,15 @@ export function sellarRemate(fila: FilaRemate): FichaDestacada {
   const postura = num(fila.minimum_bid);
   const base = avaluo && postura ? Math.round((postura / avaluo) * 100) : null;
   const fecha = fechaCorta(fila.auction_date);
+  // «Título más limpio» fuera también de aquí. Se quitó de la portada y del
+  // tutorial por prometer una garantía jurídica que nadie puede dar, pero seguía
+  // saliendo en cada ficha destacada de la respuesta —treinta y nueve veces por
+  // petición— lista para que cualquier pantalla nueva la pintara otra vez. Se dice
+  // quién demanda, que es el hecho, y se deja la conclusión para quien revise los
+  // papeles.
   const origen = fila.origen_demandante === 'bancario'
-    ? 'demandante bancario, título más limpio'
-    : 'demandante particular, verificar título';
+    ? 'demandante bancario'
+    : 'demandante particular';
   const respaldo = [
     base !== null ? `postura mínima = ${base}% del avalúo` : null,
     num(fila.cuota_parte) === 100 ? 'dominio pleno' : null,

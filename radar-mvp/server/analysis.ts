@@ -144,8 +144,35 @@ export async function rentalOnly(
   return { ok: true, rental_market: rentalMarket };
 }
 
+/**
+ * Versión del análisis con IA.
+ *
+ * SÚBELA cuando cambie algo que altere lo que el modelo responde: el prompt, los
+ * hechos que se le pasan o las comprobaciones que se aplican a su respuesta. Un
+ * análisis guardado con una versión anterior se descarta y se vuelve a pedir.
+ *
+ * Sin esto, arreglar el prompt no arreglaba nada de lo ya visible. El caché vive
+ * en la fila y no caducaba nunca: el día que se corrigió que las fichas de portal
+ * se analizaran como si fueran de banco, las decenas de miles ya analizadas
+ * siguieron diciendo «propiedad de banco, posibilidad de negociación» sobre el
+ * aviso de un particular. Lo mismo con el «verificar antes de pujar» en fichas que
+ * no se subastan y con los estimados que ahora se comprueban antes de enseñarlos.
+ *
+ * 2 = 1 de agosto de 2026: procedencia real en el prompt, prohibido hablar de
+ * pujas fuera de remates, y validación de las cifras que devuelve el modelo.
+ */
+const VERSION_ANALISIS = 2;
+
+/** ¿Este análisis guardado se generó con las reglas de ahora? */
+function analisisVigente(ai: unknown): ai is AiResult {
+  return !!ai && typeof ai === 'object' && (ai as any)?._meta?.version === VERSION_ANALISIS;
+}
+
 async function persistCache(table: 'inmuebles' | 'remates', id: string, features: any, ai: AiResult) {
-  const next = { ...(features ?? {}), ai_analysis: ai };
+  // La versión viaja DENTRO del análisis guardado: así una fila vieja se reconoce
+  // sola, sin necesidad de una migración ni de saber cuándo se escribió.
+  const sellado = { ...ai, _meta: { ...(ai._meta ?? {}), version: VERSION_ANALISIS } };
+  const next = { ...(features ?? {}), ai_analysis: sellado };
   await supabase.from(table).update({ features: next }).eq('id', id);
 }
 
@@ -179,7 +206,7 @@ async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult
     minDiscount: verdict.discount_pct ?? 0,
   });
 
-  if (f.ai_analysis && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis as AiResult, bank_verdict: verdict, recommendations };
+  if (analisisVigente(f.ai_analysis) && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis, bank_verdict: verdict, recommendations };
 
   const facts: AiPropertyFacts = {
     // De la fuente real de la fila, no de la ruta: `analyzeBanco` atiende también
@@ -226,7 +253,7 @@ async function analyzeRemate(id: string, refresh: boolean): Promise<AnalyzeResul
     minDiscount: auctionDisc,
   });
 
-  if (f.ai_analysis && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis as AiResult, recommendations };
+  if (analisisVigente(f.ai_analysis) && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis, recommendations };
 
   const facts: AiPropertyFacts = {
     kind: 'remate', tipo: safeData.property_type, ciudad: safeData.city, zona: safeData.department,
