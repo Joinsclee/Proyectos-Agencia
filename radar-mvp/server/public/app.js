@@ -4276,8 +4276,6 @@ function devolverFoco() {
 let STATS = null;
 function renderStatsUnavailable() {
   STATS = null;
-  $('c-bancos').textContent = '—';
-  $('c-remates').textContent = '—';
   $('summary').innerHTML = `
     <div class="summary-stat muted">
       <div class="num">Actualizando</div>
@@ -4319,8 +4317,6 @@ async function loadStats() {
     return;
   }
   STATS = payload;
-  $('c-bancos').textContent = STATS.bancos.toLocaleString('es-CO');
-  $('c-remates').textContent = STATS.remates.toLocaleString('es-CO');
   // Tres cifras, y las tres del mismo tipo: oportunidades. Decisión de la reunión
   // del 28-jul, y las dos razones que se dieron son buenas:
   //
