@@ -17,7 +17,10 @@ const html = (body: string, status = 200) => new Response(body, {
   headers: { 'content-type': 'text/html; charset=utf-8' },
 });
 
-const PLANES_OK = '<html><body><h2>Pro</h2><p>$79.000/mes</p></body></html>';
+// El HTML real: la grilla se sirve VACÍA y la llena planes.js en el cliente.
+const PLANES_OK = '<html><body><section class="plans-grid" id="plans"></section>'
+  + '<script src="/planes.js"></script></body></html>';
+const PLANES_API_OK = { ok: true, plans: [{ code: 'free' }, { code: 'pro' }] };
 
 describe('monitor de producción', () => {
   test('normaliza la URL y rechaza protocolos inseguros', () => {
@@ -35,6 +38,7 @@ describe('monitor de producción', () => {
         alertEmailDeliveryReady: true,
       })],
       ['/planes', html(PLANES_OK)],
+      ['/api/plans', json(PLANES_API_OK)],
     ]);
     let tick = 0;
     const report = await runProductionMonitor({
@@ -72,8 +76,12 @@ describe('monitor de producción', () => {
     const caidas: Array<[string, Response, RegExp]> = [
       ['502 del proxy', html('<html><body>Bad Gateway</body></html>', 502), /HTTP 502/],
       ['página vacía', html(''), /vacía/],
-      ['respuesta cortada', html('<html><body><h2>Pro</h2>'), /cortada/],
-      ['página sin planes', html('<html><body>Vuelve pronto</body></html>'), /no muestra los planes/],
+      ['respuesta cortada', html('<html><body><section id="plans"></section>'), /cortada/],
+      ['sin la grilla', html('<html><body>Vuelve pronto</body></html>'), /no trae la grilla/],
+      // El caso que delataba a la sonda anterior: buscaba la palabra «Pro», que
+      // vive en un párrafo de marketing fijo, así que una página sin el script
+      // que carga los planes le daba verde.
+      ['sin el script', html('<html><body><p>Radar Pro</p><section id="plans"></section></body></html>'), /no carga el script/],
     ];
     for (const [caso, respuesta, esperado] of caidas) {
       const report = await runProductionMonitor({
@@ -91,6 +99,31 @@ describe('monitor de producción', () => {
       fetchImpl: async () => html(PLANES_OK),
     });
     assert.equal(sana.ok, true, 'una página de planes servida entera pasa');
+  });
+
+  // La otra mitad de H-29: la página puede servirse perfecta y quedarse vacía
+  // para siempre si /api/plans cae. Ninguna sonda que mire solo el HTML lo vería.
+  test('los planes también se vigilan en su origen', async () => {
+    const api = DEFAULT_MONITOR_PROBES.find(p => p.name === 'planes-api');
+    assert.ok(api, 'la sonda de /api/plans forma parte del monitor por omisión');
+
+    const caidas: Array<[string, Response, RegExp]> = [
+      ['catálogo vacío', json({ ok: true, plans: [] }), /lista vacía/],
+      ['sin la lista', json({ ok: true }), /no devolvió una lista/],
+      ['plan sin código', json({ ok: true, plans: [{ name: 'Pro' }] }), /sin código/],
+    ];
+    for (const [caso, respuesta, esperado] of caidas) {
+      const report = await runProductionMonitor({
+        baseUrl: 'https://radar.test', probes: [api], fetchImpl: async () => respuesta,
+      });
+      assert.equal(report.ok, false, `${caso} debe abrir incidente`);
+      assert.match(report.results[0].error ?? '', esperado, caso);
+    }
+
+    const sana = await runProductionMonitor({
+      baseUrl: 'https://radar.test', probes: [api], fetchImpl: async () => json(PLANES_API_OK),
+    });
+    assert.equal(sana.ok, true);
   });
 
   test('falla si el contrato JSON cambia', async () => {

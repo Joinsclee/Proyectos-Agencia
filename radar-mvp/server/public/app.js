@@ -2892,7 +2892,18 @@ function analisisRemate(p) {
   } else if (pct) {
     flags.push(['info', `La postura mínima es el ${pct}% del avalúo fijado por el juzgado. Es la base legal de todas las subastas, no un descuento de este bien: el avalúo puede estar por encima o por debajo del precio de mercado.`]);
   }
-  if (f.is_bank_plaintiff) flags.push(['pos', 'Demandante es banco: los procesos hipotecarios suelen tener título limpio y bien documentado.']);
+  // El dato sin la conclusión, y como dato neutro, no como punto a favor.
+  //
+  // Decía «suelen tener título limpio y bien documentado» y sumaba a los positivos
+  // que ascienden la ficha a «buena». Es la misma afirmación que el cliente mandó
+  // quitar de la portada: se lee como una garantía jurídica y rebaja la cautela
+  // justo donde más cara sale. Que el demandante sea un banco no dice nada sobre
+  // los gravámenes, la posesión ni la entrega — eso solo lo dice el expediente.
+  if (f.is_bank_plaintiff) {
+    flags.push(['info', 'El demandante es un banco, así que el proceso es una ejecución hipotecaria. '
+      + 'Eso no garantiza que el inmueble esté libre de riesgos: revisa el expediente, la tradición '
+      + 'y las condiciones de entrega antes de participar.']);
+  }
   if (/(remate|venta).{0,20}(del|sobre el)\s*100\s*%/.test(text) && !/proindiviso|cuota parte/.test(text)) flags.push(['pos', 'Se remata el 100% del inmueble (no una cuota parte).']);
   // Riesgo alto (!)
   if (/proindiviso|cuota parte|derechos?\s+(de\s+cuota|herenciales|y\s+acciones)|cuota\s+proindiviso|porcentaje\s+del\s+derecho/.test(text) || p.property_type === 'rights') flags.push(['warn', 'Podría rematarse solo una CUOTA/derechos (no el 100%): confirma qué porcentaje se adjudica.']);

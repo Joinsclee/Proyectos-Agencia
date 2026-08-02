@@ -264,7 +264,7 @@ async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult
     area_m2: num(data.area_m2), estrato: num(f.stratum), precio_lista_cop: num(data.price),
   };
   try {
-    const ai = await analyzeWithAI(facts, market);
+    const ai = await analyzeWithAI(facts, market, undefined, verdict?.discount_pct ?? null);
     await persistCache('inmuebles', id, data.features, ai);
     return { ok: true, cached: false, market, ai, bank_verdict: verdict, recommendations };
   } catch (e) {

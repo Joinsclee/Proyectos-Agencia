@@ -534,7 +534,14 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
     .select('*', { count: 'exact' })
     .eq('is_active', true);
 
-  if (q.city) qb = qb.eq('city', q.city);
+  // Igual que en Portal y Bancos: se buscan TODAS las formas de esa ciudad.
+  // Agrupar solo el desplegable no arreglaría nada, porque el filtro seguiría
+  // yendo por igualdad exacta y las audiencias de la otra variante quedarían
+  // escondidas — que es justo el fallo que se reportó.
+  if (q.city) {
+    const variantes = await ciudadesParaFiltrar(q.city, 'remates');
+    qb = variantes.length > 1 ? qb.in('city', variantes) : qb.eq('city', q.city);
+  }
   if (q.type) qb = qb.eq('property_type', q.type);
   // Por defecto solo audiencias PRÓXIMAS (hoy en adelante): las pasadas no se
   // pueden rematar, no sirven al usuario. `?past=1` las incluye.
@@ -625,7 +632,11 @@ export async function facetsRemates() {
     .gte('auction_date', hoy)
     .limit(5000);
   if (error) throw new Error(`facetsRemates: ${error.message}`);
-  const cities = [...new Set((data ?? []).map((r) => r.city).filter(Boolean))].sort();
+  // Una sola entrada por ciudad real, igual que en Portal y Bancos. Aquí la
+  // captura viene del edicto del juzgado, así que las mismas variantes aparecen
+  // por su cuenta: ofrecer «Bogota» y «Bogota d.c.» como dos opciones distintas
+  // le esconde al usuario la mitad de las audiencias de su ciudad.
+  const cities = ciudadesUnificadas((data ?? []).map((r) => r.city));
   const types = [...new Set((data ?? []).map((r) => r.property_type).filter(Boolean))].sort();
   return { cities, zones: [], types };
 }
@@ -1593,14 +1604,18 @@ const cacheCiudades = new Map<string, { at: number; datos: string[] }>();
  * fichas de banco y no aparecían nunca, así que la expansión no unía nada. Por
  * fuente, los bancos caben enteros y el portal trae sus ciudades frecuentes.
  */
-async function catalogoDeCiudades(fuente: 'portal' | 'bancos'): Promise<string[]> {
+async function catalogoDeCiudades(fuente: 'portal' | 'bancos' | 'remates'): Promise<string[]> {
   const cache = cacheCiudades.get(fuente);
   if (cache && Date.now() - cache.at < CIUDADES_TTL_MS) return cache.datos;
   try {
-    let qb = supabase.from('inmuebles').select('city').eq('is_active', true).limit(8000);
-    qb = fuente === 'portal'
-      ? qb.eq('source', 'fincaraiz')
-      : qb.in('source', BANK_SOURCES as unknown as string[]);
+    // Los remates viven en su propia tabla y con su propia captura, así que
+    // heredan el mismo problema por su cuenta: la ciudad la escribe quien
+    // transcribe el edicto del juzgado, no un formulario.
+    let qb = fuente === 'remates'
+      ? supabase.from('remates').select('city').limit(8000)
+      : supabase.from('inmuebles').select('city').eq('is_active', true).limit(8000);
+    if (fuente === 'portal') qb = qb.eq('source', 'fincaraiz');
+    else if (fuente === 'bancos') qb = qb.in('source', BANK_SOURCES as unknown as string[]);
     const { data, error } = await qb;
     if (error) throw new Error(error.message);
     // SE ACUMULA, no se reemplaza.
@@ -1630,6 +1645,6 @@ async function catalogoDeCiudades(fuente: 'portal' | 'bancos'): Promise<string[]
 }
 
 /** Qué escribir en el `in(...)` de la consulta para cubrir todas las formas de esa ciudad. */
-export async function ciudadesParaFiltrar(ciudad: string, fuente: 'portal' | 'bancos'): Promise<string[]> {
+export async function ciudadesParaFiltrar(ciudad: string, fuente: 'portal' | 'bancos' | 'remates'): Promise<string[]> {
   return variantesDeCiudad(ciudad, await catalogoDeCiudades(fuente));
 }
