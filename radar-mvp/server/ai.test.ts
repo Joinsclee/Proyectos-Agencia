@@ -215,3 +215,36 @@ test('IA: se compara contra el sello de la ficha, no contra otra mediana', async
     'sello 0 = precio de mercado, y 40% de descuento no lo contradice por signo',
   );
 });
+
+test('IA: un valor de mercado que no salió de los comparables tumba el análisis', async () => {
+  const { contradiceAlMotor } = await import('./ai.js');
+  // El caso real, encontrado abriendo la ficha en producción: sobre el lote de
+  // Carmen de Apicalá el modelo declaró un mercado de $18.000.000 cuando la
+  // mediana de sus propios comparables era $88.500.000. Contra esos 18 millones
+  // todo lo que dijo después es coherente y falso.
+  const choque = contradiceAlMotor(
+    analisis({ estimado_mercado_cop: 18_000_000, veredicto: 'riesgosa' }),
+    lote,
+    mercado({ median_total: 88_500_000 }),
+  );
+  assert.match(choque ?? '', /no salió de los datos/);
+  assert.match(choque ?? '', /4\.9×/, 'dice cuánto se desvió');
+
+  // El margen es enorme a propósito: la mediana es de precios totales y un
+  // inmueble concreto puede ser mucho más pequeño que el típico de su zona.
+  assert.equal(
+    contradiceAlMotor(analisis({ estimado_mercado_cop: 30_000_000 }), lote, mercado({ median_total: 88_500_000 })),
+    null,
+    'tres veces por debajo sigue siendo una lectura posible',
+  );
+  // Y también se caza al revés, cuando el modelo infla el mercado.
+  assert.match(
+    contradiceAlMotor(analisis({ estimado_mercado_cop: 400_000_000 }), lote, mercado({ median_total: 88_500_000 })) ?? '',
+    /no salió de los datos/,
+  );
+  // Sin mediana con la que contrastar no se descarta nada.
+  assert.equal(
+    contradiceAlMotor(analisis({ estimado_mercado_cop: 18_000_000 }), lote, mercado({ median_total: null })),
+    null,
+  );
+});
