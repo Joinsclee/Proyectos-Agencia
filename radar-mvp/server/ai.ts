@@ -277,6 +277,16 @@ const MARGEN_CONTRADICCION_PCT = 12;
 const CHOCA_CON_ESTRELLA_PCT = 10;
 const CHOCA_CON_ALERTA_PCT = 6;
 
+/**
+ * Cuántas veces puede alejarse el «valor de mercado estimado» del modelo de la
+ * mediana de los comparables que se le pasaron antes de considerar que se lo
+ * inventó. Cuatro es holgadísimo a propósito: la mediana es de precios totales
+ * de la zona y un inmueble concreto puede ser legítimamente mucho más pequeño o
+ * más grande que el típico. Aun así habría cazado el caso real que lo motivó,
+ * que se desviaba casi cinco veces.
+ */
+const FACTOR_ESTIMADO_ABSURDO = 4;
+
 export function contradiceAlMotor(
   resultado: AiResult,
   facts: AiPropertyFacts,
@@ -292,6 +302,35 @@ export function contradiceAlMotor(
 
   const pct = (n: number) => `${n > 0 ? '' : '+'}${Math.abs(Math.round(n))}%`;
   const lado = (n: number) => (n > 0 ? 'por debajo' : 'por encima');
+
+  // 0. El estimado del modelo no se parece a los comparables que se le dieron.
+  //
+  //    Esta es la RAÍZ del Ejemplo 1, encontrada mirando la ficha en producción:
+  //    sobre el lote de Carmen de Apicalá el modelo declaró un «valor de mercado
+  //    estimado» de $18.000.000 cuando la mediana de sus propios comparables era
+  //    $88.500.000 — cinco veces menos—. A partir de ahí todo su razonamiento es
+  //    coherente consigo mismo y falso: contra 18 millones, un lote de 30 está
+  //    «muy por encima del mercado», así que lo llamó riesgoso mientras la ficha
+  //    lo sellaba 19% por debajo.
+  //
+  //    El prompt ya le pide anclarse en los números provistos. Cuando no lo hace,
+  //    no vale con tirar la cifra y publicar el resto: el resumen, los contras y
+  //    el veredicto salieron de ella. Se cae el análisis entero.
+  //
+  //    El margen es deliberadamente enorme —cuatro veces arriba o abajo— porque
+  //    la mediana es de precios totales de la zona y el inmueble concreto puede
+  //    ser legítimamente mucho más pequeño o más grande que el típico. Lo que se
+  //    persigue aquí no es la imprecisión: es el número que no salió de los datos.
+  const estimado = resultado.estimado_mercado_cop;
+  const referencia = market.median_total;
+  if (estimado !== null && referencia !== null && referencia > 0
+    && (estimado > referencia * FACTOR_ESTIMADO_ABSURDO || estimado < referencia / FACTOR_ESTIMADO_ABSURDO)) {
+    const veces = estimado > referencia
+      ? Math.round((estimado / referencia) * 10) / 10
+      : Math.round((referencia / estimado) * 10) / 10;
+    return `la IA estimó el mercado en ${cop(estimado)} y la mediana de sus comparables es ${cop(referencia)}`
+      + ` (${veces}× de diferencia): ese estimado no salió de los datos que se le dieron`;
+  }
 
   // 1. Los dos porcentajes apuntan a lados opuestos. Es el Ejemplo 2 del informe:
   //    la ficha decía «+38% vs mercado» y la IA «-30% de descuento».

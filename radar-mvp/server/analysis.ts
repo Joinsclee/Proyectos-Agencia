@@ -171,8 +171,23 @@ export async function rentalOnly(
  * y no se publica si lo contradice. Los guardados como 2 nunca pasaron por esa
  * comprobación, así que se descartan: si no, las fichas que la auditoría citó
  * seguirían enseñando el análisis contradictorio que ya tienen en la fila.
+ * 4 = 2 de agosto de 2026: esa comprobación se hacía contra la mediana y no
+ * contra el porcentaje que la ficha PINTA, así que dejaba pasar la contradicción
+ * visible. Comprobado en producción sobre un lote en Espinal: sello «Interesante
+ * · 16,7% por debajo» arriba y «Riesgosa, el precio de lista es
+ * significativamente más alto» abajo, en la misma pantalla y con el arreglo ya
+ * desplegado — porque el análisis guardado seguía siendo de la versión 3.
+ *
+ * ── Cómo se olvida esto ──
+ *
+ * Las tres veces que este caché ha mordido, el arreglo del código era correcto y
+ * lo que faltó fue subir el número de aquí. Pasa porque el defecto se corrige en
+ * `ai.ts` y la versión vive en este archivo, así que la regla práctica es: si
+ * tocas `contradiceAlMotor`, `buildPrompt` o cualquier validación de `ai.ts`,
+ * este número sube en el MISMO commit. Sin eso, el arreglo solo alcanza a las
+ * fichas que nadie ha visitado todavía.
  */
-const VERSION_ANALISIS = 3;
+const VERSION_ANALISIS = 4;
 
 /** ¿Este análisis guardado se generó con las reglas de ahora? */
 function analisisVigente(ai: unknown): ai is AiResult {
