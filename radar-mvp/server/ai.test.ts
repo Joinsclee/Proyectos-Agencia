@@ -183,3 +183,35 @@ test('IA: en un remate, «riesgosa» con precio bajo NO es contradicción', asyn
     /por debajo.*por encima/,
   );
 });
+
+test('IA: se compara contra el sello de la ficha, no contra otra mediana', async () => {
+  const { contradiceAlMotor } = await import('./ai.js');
+  // El sello que ve el usuario lo produce `evaluateBank` (engine/comparables.ts),
+  // que recorre una cascada de comparables DISTINTA de la de `summarizeMarket`.
+  // Comprobar la coherencia contra la mediana dejaba pasar justo la contradicción
+  // que se ve en pantalla, que es la única que importa.
+  //
+  // Aquí la mediana deja el inmueble en zona neutra (30M contra 31M) pero el sello
+  // dice «22% por debajo». Con la mediana no habría choque; con el sello, sí.
+  const choque = contradiceAlMotor(
+    analisis({ veredicto: 'riesgosa' }),
+    lote,
+    mercado({ median_total: 31_000_000 }),
+    22,
+  );
+  assert.match(choque ?? '', /22% por debajo.*riesgosa/, 'manda el sello, no la mediana');
+
+  // Y al revés: sin sello se sigue usando la mediana, que es lo correcto en
+  // remates y en las fichas que el motor no pudo evaluar.
+  assert.equal(
+    contradiceAlMotor(analisis({ veredicto: 'riesgosa' }), lote, mercado({ median_total: 31_000_000 }), null),
+    null,
+  );
+
+  // Un sello de 0 es un dato, no un hueco: no debe confundirse con «no hay sello».
+  assert.equal(
+    contradiceAlMotor(analisis({ descuento_estimado_pct: 40 }), lote, mercado({ n: 0 }), 0),
+    null,
+    'sello 0 = precio de mercado, y 40% de descuento no lo contradice por signo',
+  );
+});

@@ -76,14 +76,34 @@ const configValidator = (body: unknown): string | null => {
  * La página de planes es la única pantalla que decide si alguien paga, y durante
  * la auditoría devolvió 502 sin que nadie se enterara: las tres sondas de arriba
  * miran la salud del proceso, y un proceso vivo puede servir una página rota.
- * Por eso esta sonda comprueba lo que el visitante necesita ver —que la página
- * llegue y traiga los planes—, no que el servidor responda.
+ *
+ * Se comprueba que el documento llegue entero y que traiga lo que lo hace
+ * funcionar. Buscar la palabra «Pro» en el HTML NO sirve: la grilla se sirve
+ * vacía (`<section id="plans">`) y la llena `planes.js` en el cliente, así que
+ * esa palabra solo aparece en un párrafo de marketing fijo y la sonda daría
+ * verde con la página rota. Lo que sí es prueba de vida es el contenedor y el
+ * script que lo llena; el contenido de los planes lo cubre la sonda de la API.
  */
 const planesValidator = (body: unknown): string | null => {
   const html = typeof body === 'string' ? body : '';
   if (!html.trim()) return 'La página de planes llegó vacía';
   if (!/<\/html>/i.test(html)) return 'La página de planes llegó cortada';
-  return /\bPro\b/.test(html) ? null : 'La página de planes no muestra los planes';
+  if (!/id="plans"/.test(html)) return 'La página de planes no trae la grilla de planes';
+  return /planes\.js/.test(html) ? null : 'La página de planes no carga el script que la llena';
+};
+
+/**
+ * Y esta es la otra mitad: de dónde salen los planes. Si `/api/plans` cae, la
+ * página se sirve perfecta y se queda vacía para siempre — un fallo invisible
+ * para cualquier sonda que solo mire el HTML.
+ */
+const planesApiValidator = (body: unknown): string | null => {
+  const planes = Array.isArray(body) ? body : (object(body)?.plans as unknown[] | undefined);
+  if (!Array.isArray(planes)) return 'La API de planes no devolvió una lista';
+  if (!planes.length) return 'La API de planes devolvió la lista vacía';
+  return planes.every(p => typeof object(p)?.code === 'string')
+    ? null
+    : 'Algún plan llegó sin código';
 };
 
 export const DEFAULT_MONITOR_PROBES: MonitorProbe[] = [
@@ -93,6 +113,7 @@ export const DEFAULT_MONITOR_PROBES: MonitorProbe[] = [
   {
     name: 'planes', path: '/planes', maxLatencyMs: 4_000, accept: 'html', validate: planesValidator,
   },
+  { name: 'planes-api', path: '/api/plans', maxLatencyMs: 3_000, validate: planesApiValidator },
 ];
 
 export function normalizeMonitorBaseUrl(input: string): string {

@@ -129,11 +129,21 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
   ].join('\n');
 }
 
-/** Llama a OpenAI y devuelve la opinión estructurada. Lanza NoOpenAIKeyError si falta la key. */
+/**
+ * Llama a OpenAI y devuelve la opinión estructurada. Lanza NoOpenAIKeyError si
+ * falta la key, y AnalisisIncoherenteError si lo que devuelve el modelo
+ * contradice al motor.
+ *
+ * `sello` es el `discount_pct` de `evaluateBank` — el porcentaje que la ficha
+ * pinta en el badge. Pásalo siempre que exista: es contra ese número, y no contra
+ * la mediana, contra el que hay que comprobar la coherencia, porque es el que el
+ * usuario tiene delante.
+ */
 export async function analyzeWithAI(
   facts: AiPropertyFacts,
   market: MarketContext,
   avisoText?: string,
+  sello: number | null = null,
 ): Promise<AiResult> {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new NoOpenAIKeyError();
@@ -184,7 +194,7 @@ export async function analyzeWithAI(
     _meta: { model: MODEL, generated_at: new Date().toISOString(), comparables_n: market.n, confidence: market.confidence },
   };
 
-  const choque = contradiceAlMotor(resultado, facts, market);
+  const choque = contradiceAlMotor(resultado, facts, market, sello);
   if (choque) throw new AnalisisIncoherenteError(choque);
   return resultado;
 }
@@ -216,10 +226,24 @@ export class AnalisisIncoherenteError extends Error {
 /**
  * Cuánto por debajo del mercado está el inmueble SEGÚN EL MOTOR, en porcentaje.
  * Positivo = por debajo (buena señal), que es el mismo signo que usa la IA en
- * `descuento_estimado_pct`. Se prefiere el precio por m² porque es lo que compara
- * la ficha; el total solo entra cuando no hay área.
+ * `descuento_estimado_pct`.
+ *
+ * `sello` es el `discount_pct` de `evaluateBank`, y cuando existe MANDA sobre todo
+ * lo demás: es literalmente la cifra que la ficha pinta en el badge. Comparar la
+ * IA contra otro cálculo —aunque sea del mismo motor— dejaría pasar justo la
+ * contradicción que se ve en pantalla, que es la que importa. `summarizeMarket` y
+ * `evaluateBank` recorren cascadas de comparables distintas y pueden divergir.
+ *
+ * La mediana solo entra cuando no hay sello: en remates, y en las fichas que el
+ * motor no pudo evaluar por falta de área o geo.
  */
-function posicionDelMotor(facts: AiPropertyFacts, market: MarketContext, precio: number | null): number | null {
+function posicionDelMotor(
+  facts: AiPropertyFacts,
+  market: MarketContext,
+  precio: number | null,
+  sello: number | null,
+): number | null {
+  if (sello !== null && Number.isFinite(sello)) return sello;
   if (precio === null || precio <= 0) return null;
   const area = num(facts.area_m2);
   if (area && area > 0 && market.median_ppm2 && market.median_ppm2 > 0) {
@@ -257,12 +281,13 @@ export function contradiceAlMotor(
   resultado: AiResult,
   facts: AiPropertyFacts,
   market: MarketContext,
+  sello: number | null = null,
 ): string | null {
   // Sin comparables no hay veredicto del motor con el que chocar: la IA es lo
   // único que hay, y ahí su opinión no contradice a nada.
-  if (!market.n) return null;
+  if (!market.n && sello === null) return null;
   const precio = facts.kind === 'remate' ? num(facts.postura_cop) : num(facts.precio_lista_cop);
-  const motor = posicionDelMotor(facts, market, precio);
+  const motor = posicionDelMotor(facts, market, precio, sello);
   if (motor === null) return null;
 
   const pct = (n: number) => `${n > 0 ? '' : '+'}${Math.abs(Math.round(n))}%`;
