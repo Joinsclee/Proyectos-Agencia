@@ -171,7 +171,7 @@ export async function analyzeWithAI(
   // modelo se sostiene contra él.
   const precioReal = facts.kind === 'remate' ? num(facts.postura_cop) : num(facts.precio_lista_cop);
   const estimado = valorDeMercadoCreible(parsed.estimado_mercado_cop);
-  return {
+  const resultado: AiResult = {
     veredicto,
     puntaje: Math.max(0, Math.min(100, Number(parsed.puntaje) || 0)),
     estimado_mercado_cop: estimado,
@@ -183,6 +183,118 @@ export async function analyzeWithAI(
     recomendacion: String(parsed.recomendacion ?? '').slice(0, 400),
     _meta: { model: MODEL, generated_at: new Date().toISOString(), comparables_n: market.n, confidence: market.confidence },
   };
+
+  const choque = contradiceAlMotor(resultado, facts, market);
+  if (choque) throw new AnalisisIncoherenteError(choque);
+  return resultado;
+}
+
+/**
+ * ─── Que la IA no le lleve la contraria al motor en la misma pantalla ───
+ *
+ * `descuentoCoherente` comprueba que la IA no se contradiga A SÍ MISMA. Esto es lo
+ * otro: que no contradiga al motor. Son fallos distintos, y el segundo fue el más
+ * grave de la auditoría —un lote con el sello «19% por debajo de los precios de su
+ * sector» arriba y, unos centímetros más abajo, un análisis que lo llamaba
+ * «riesgosa» porque el precio era «significativamente superior» al mercado—.
+ *
+ * Ambas cifras salen del mismo sitio: los comparables del motor. Si apuntan a lados
+ * opuestos, una de las dos está mal y nadie puede saber cuál desde la pantalla. El
+ * usuario del Radar es justamente quien no tiene cómo rehacer la cuenta.
+ *
+ * Así que la ficha se queda sin análisis de IA —el motor, que es determinista y
+ * auditable, sigue mostrándose entero—. Es lo que pedía el criterio de aceptación:
+ * si no se puede validar la consistencia, el análisis no se publica.
+ */
+export class AnalisisIncoherenteError extends Error {
+  constructor(motivo: string) {
+    super(`Análisis descartado por incoherencia con el motor: ${motivo}`);
+    this.name = 'AnalisisIncoherenteError';
+  }
+}
+
+/**
+ * Cuánto por debajo del mercado está el inmueble SEGÚN EL MOTOR, en porcentaje.
+ * Positivo = por debajo (buena señal), que es el mismo signo que usa la IA en
+ * `descuento_estimado_pct`. Se prefiere el precio por m² porque es lo que compara
+ * la ficha; el total solo entra cuando no hay área.
+ */
+function posicionDelMotor(facts: AiPropertyFacts, market: MarketContext, precio: number | null): number | null {
+  if (precio === null || precio <= 0) return null;
+  const area = num(facts.area_m2);
+  if (area && area > 0 && market.median_ppm2 && market.median_ppm2 > 0) {
+    return ((market.median_ppm2 - precio / area) / market.median_ppm2) * 100;
+  }
+  if (market.median_total && market.median_total > 0) {
+    return ((market.median_total - precio) / market.median_total) * 100;
+  }
+  return null;
+}
+
+/**
+ * Margen antes de llamar contradicción a una diferencia. Dos estimaciones del
+ * mismo mercado nunca coinciden al decimal, y descartar análisis por un roce
+ * alrededor del cero dejaría fichas sin IA sin ninguna ganancia: lo que se
+ * persigue es el choque que el usuario nota, no la discrepancia estadística.
+ */
+const MARGEN_CONTRADICCION_PCT = 12;
+
+/**
+ * A partir de dónde el veredicto en palabras choca con el sello de la ficha.
+ *
+ * No son números inventados para esta comprobación: son los mismos cortes con los
+ * que el producto ya califica un inmueble (engine/crece.ts). El Radar le pone
+ * estrella y lo llama «Interesante» a partir de un 10% por debajo, y le pone
+ * alerta a partir de un 6% por encima. Que la IA diga «riesgosa» sobre algo que
+ * la ficha acaba de sellar con estrella es exactamente la contradicción que
+ * describía el Ejemplo 1 del informe —un lote al 19% por debajo—, y usar aquí el
+ * corte del sello garantiza que ambas cosas no puedan volver a divergir.
+ */
+const CHOCA_CON_ESTRELLA_PCT = 10;
+const CHOCA_CON_ALERTA_PCT = 6;
+
+export function contradiceAlMotor(
+  resultado: AiResult,
+  facts: AiPropertyFacts,
+  market: MarketContext,
+): string | null {
+  // Sin comparables no hay veredicto del motor con el que chocar: la IA es lo
+  // único que hay, y ahí su opinión no contradice a nada.
+  if (!market.n) return null;
+  const precio = facts.kind === 'remate' ? num(facts.postura_cop) : num(facts.precio_lista_cop);
+  const motor = posicionDelMotor(facts, market, precio);
+  if (motor === null) return null;
+
+  const pct = (n: number) => `${n > 0 ? '' : '+'}${Math.abs(Math.round(n))}%`;
+  const lado = (n: number) => (n > 0 ? 'por debajo' : 'por encima');
+
+  // 1. Los dos porcentajes apuntan a lados opuestos. Es el Ejemplo 2 del informe:
+  //    la ficha decía «+38% vs mercado» y la IA «-30% de descuento».
+  const ia = resultado.descuento_estimado_pct;
+  if (ia !== null && Math.abs(motor) > MARGEN_CONTRADICCION_PCT && Math.abs(ia) > MARGEN_CONTRADICCION_PCT
+    && Math.sign(motor) !== Math.sign(ia)) {
+    return `el motor lo sitúa ${pct(motor)} ${lado(motor)} del mercado y la IA ${pct(ia)} ${lado(ia)}`;
+  }
+
+  // 2. El veredicto en palabras contradice al porcentaje del motor. Es el Ejemplo 1:
+  //    sello «19% por debajo» y análisis «Riesgosa» por precio superior. Solo se
+  //    exige cuando el motor tiene una posición marcada; en la banda intermedia
+  //    caben legítimamente las dos lecturas, porque la IA pesa cosas que el motor
+  //    no ve (estado del inmueble, texto del aviso).
+  //
+  //    En remates no se exige en absoluto: ahí «riesgosa» casi nunca habla del
+  //    precio —la postura mínima está por debajo del mercado casi por definición—
+  //    sino del expediente, la tradición y la entrega. Llamar contradicción a eso
+  //    sería borrar justo la advertencia que más falta hace.
+  if (facts.kind !== 'remate') {
+    if (motor >= CHOCA_CON_ESTRELLA_PCT && resultado.veredicto === 'riesgosa') {
+      return `el motor lo sitúa ${pct(motor)} por debajo del mercado y la IA lo declara riesgosa`;
+    }
+    if (motor <= -CHOCA_CON_ALERTA_PCT && resultado.veredicto === 'atractiva') {
+      return `el motor lo sitúa ${pct(motor)} por encima del mercado y la IA lo declara atractiva`;
+    }
+  }
+  return null;
 }
 
 /*

@@ -400,8 +400,10 @@ test('reporte: un lote no lista «sin parqueadero» como criterio de comparació
 });
 
 test('reporte: cuando la comparación es contra la ciudad entera, el papel lo dice', () => {
-  // Es la diferencia entre un porcentaje fiable y uno orientativo, y en un
-  // documento impreso no hay a quién preguntarle después.
+  // Los avisos «Confianza baja» se retiraron por decisión del cliente. Los dos
+  // hechos que declaraban siguen ahí como dato —contra qué se comparó y si los
+  // tipos coincidían—, que es lo que permite juzgar el porcentaje sin que el
+  // reporte se desdiga a sí mismo.
   const html = construirReporte(datos({
     comparables: {
       n: 31, medianaPpm2: 2_000_000, medianaTotal: 180_000_000, confianza: 'low',
@@ -409,10 +411,11 @@ test('reporte: cuando la comparación es contra la ciudad entera, el papel lo di
       mismoTipo: false, ambitoCiudad: true,
     },
   }));
-  assert.match(html, /Confianza baja: comparación contra toda la ciudad/);
-  assert.match(html, /Confianza baja: se compararon tipos distintos de inmueble/);
-  // Y cuando la muestra es buena, no se inventa una advertencia que no toca.
-  assert.doesNotMatch(construirReporte(datos()), /Confianza baja/);
+  assert.doesNotMatch(html, /Confianza baja/, 'el rótulo de alarma ya no va en el reporte');
+  assert.match(html, /Espinal \(toda la ciudad\)/, 'pero el ámbito real sigue declarado');
+  assert.match(html, /Tipos mezclados/, 'y que los tipos no coincidían, también');
+  // Y cuando la muestra sí es del mismo tipo, la fila lo dice sin ambigüedad.
+  assert.match(construirReporte(datos()), /Mismo tipo de inmueble/);
 });
 
 test('reporte: el descuento de un remate se mide contra su avalúo, no contra la zona', () => {

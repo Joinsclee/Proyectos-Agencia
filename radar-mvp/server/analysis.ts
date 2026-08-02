@@ -16,7 +16,7 @@ import {
   rentalMarketForProperty,
   type RentalMarketContext,
 } from '../engine/rental-comparables.js';
-import { analyzeWithAI, NoOpenAIKeyError, type AiResult, type AiPropertyFacts } from './ai.js';
+import { analyzeWithAI, AnalisisIncoherenteError, NoOpenAIKeyError, type AiResult, type AiPropertyFacts } from './ai.js';
 import { recommendInZone, type Rec } from './recommend.js';
 import { sanitizeRemateForDisplay } from './data-quality.js';
 
@@ -30,6 +30,13 @@ export interface AnalyzeResult {
   cached: boolean;
   error?: string;
   needs_key?: boolean;
+  /**
+   * El análisis existía pero no pasó la comprobación de consistencia contra el
+   * motor, así que se retiró a propósito. No es un fallo técnico y no debe
+   * contarse ni presentarse como tal: `error` ya trae la explicación completa
+   * para el usuario.
+   */
+  sin_verificar?: boolean;
   market?: MarketContext;
   ai?: AiResult;
   bank_verdict?: ReturnType<typeof evaluateBank> | null;
@@ -160,8 +167,12 @@ export async function rentalOnly(
  *
  * 2 = 1 de agosto de 2026: procedencia real en el prompt, prohibido hablar de
  * pujas fuera de remates, y validación de las cifras que devuelve el modelo.
+ * 3 = 1 de agosto de 2026: el análisis se contrasta contra el veredicto del motor
+ * y no se publica si lo contradice. Los guardados como 2 nunca pasaron por esa
+ * comprobación, así que se descartan: si no, las fichas que la auditoría citó
+ * seguirían enseñando el análisis contradictorio que ya tienen en la fila.
  */
-const VERSION_ANALISIS = 2;
+const VERSION_ANALISIS = 3;
 
 /** ¿Este análisis guardado se generó con las reglas de ahora? */
 function analisisVigente(ai: unknown): ai is AiResult {
@@ -172,9 +183,41 @@ async function persistCache(table: 'inmuebles' | 'remates', id: string, features
   // La versión viaja DENTRO del análisis guardado: así una fila vieja se reconoce
   // sola, sin necesidad de una migración ni de saber cuándo se escribió.
   const sellado = { ...ai, _meta: { ...(ai._meta ?? {}), version: VERSION_ANALISIS } };
-  const next = { ...(features ?? {}), ai_analysis: sellado };
+  const next = { ...(features ?? {}), ai_analysis: sellado, ai_descartado: null };
   await supabase.from(table).update({ features: next }).eq('id', id);
 }
+
+/**
+ * Un análisis descartado por contradecir al motor se anota en la fila.
+ *
+ * Sin esto, cada visita a esa ficha vuelve a pagarle a OpenAI por un análisis que
+ * se va a tirar otra vez: el modelo es determinista a temperatura 0.2 y los
+ * comparables no cambian entre dos visitas seguidas. La anotación lleva versión,
+ * así que al subir `VERSION_ANALISIS` se reintenta sola —que es justo lo que hay
+ * que hacer cuando se toca el prompt—.
+ */
+async function persistDescarte(table: 'inmuebles' | 'remates', id: string, features: any, motivo: string) {
+  const next = {
+    ...(features ?? {}),
+    ai_analysis: null,
+    ai_descartado: { motivo, version: VERSION_ANALISIS, at: new Date().toISOString() },
+  };
+  await supabase.from(table).update({ features: next }).eq('id', id);
+}
+
+function descarteVigente(marca: unknown): marca is { motivo: string } {
+  return !!marca && typeof marca === 'object' && (marca as any)?.version === VERSION_ANALISIS;
+}
+
+/**
+ * Lo que ve el usuario cuando el análisis se descartó. No se le enseña el motivo
+ * técnico —«el motor lo sitúa 19% por debajo y la IA lo declara riesgosa» delata
+ * un desacuerdo interno y no le sirve de nada—, sino qué tiene delante y qué mirar
+ * en su lugar, que es el análisis de mercado y sí está completo en la misma ficha.
+ */
+const AVISO_SIN_ANALISIS = 'No pudimos verificar el análisis con IA de este inmueble, así que preferimos '
+  + 'no mostrarlo. El análisis de mercado de esta misma ficha —comparables, mediana y posición frente '
+  + 'a la zona— sí está calculado y es el que sostiene la valoración.';
 
 async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult> {
   const { data, error } = await supabase
@@ -207,6 +250,9 @@ async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult
   });
 
   if (analisisVigente(f.ai_analysis) && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis, bank_verdict: verdict, recommendations };
+  if (descarteVigente(f.ai_descartado) && !refresh) {
+    return { ok: false, cached: true, market, bank_verdict: verdict, recommendations, sin_verificar: true, error: AVISO_SIN_ANALISIS };
+  }
 
   const facts: AiPropertyFacts = {
     // De la fuente real de la fila, no de la ruta: `analyzeBanco` atiende también
@@ -223,6 +269,11 @@ async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult
     return { ok: true, cached: false, market, ai, bank_verdict: verdict, recommendations };
   } catch (e) {
     if (e instanceof NoOpenAIKeyError) return { ok: false, cached: false, needs_key: true, market, bank_verdict: verdict, recommendations, error: e.message };
+    if (e instanceof AnalisisIncoherenteError) {
+      console.warn(`[analysis] inmueble ${id}: ${e.message}`);
+      await persistDescarte('inmuebles', id, data.features, e.message);
+      return { ok: false, cached: false, market, bank_verdict: verdict, recommendations, sin_verificar: true, error: AVISO_SIN_ANALISIS };
+    }
     return { ok: false, cached: false, market, bank_verdict: verdict, recommendations, error: e instanceof Error ? e.message : String(e) };
   }
 }
@@ -254,6 +305,9 @@ async function analyzeRemate(id: string, refresh: boolean): Promise<AnalyzeResul
   });
 
   if (analisisVigente(f.ai_analysis) && !refresh) return { ok: true, cached: true, market, ai: f.ai_analysis, recommendations };
+  if (descarteVigente(f.ai_descartado) && !refresh) {
+    return { ok: false, cached: true, market, recommendations, sin_verificar: true, error: AVISO_SIN_ANALISIS };
+  }
 
   const facts: AiPropertyFacts = {
     kind: 'remate', tipo: safeData.property_type, ciudad: safeData.city, zona: safeData.department,
@@ -270,6 +324,11 @@ async function analyzeRemate(id: string, refresh: boolean): Promise<AnalyzeResul
     return { ok: true, cached: false, market, ai, recommendations };
   } catch (e) {
     if (e instanceof NoOpenAIKeyError) return { ok: false, cached: false, needs_key: true, market, recommendations, error: e.message };
+    if (e instanceof AnalisisIncoherenteError) {
+      console.warn(`[analysis] remate ${id}: ${e.message}`);
+      await persistDescarte('remates', id, safeData.features, e.message);
+      return { ok: false, cached: false, market, recommendations, sin_verificar: true, error: AVISO_SIN_ANALISIS };
+    }
     return { ok: false, cached: false, market, recommendations, error: e instanceof Error ? e.message : String(e) };
   }
 }

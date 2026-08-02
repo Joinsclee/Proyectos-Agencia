@@ -3,6 +3,12 @@ export interface MonitorProbe {
   path: string;
   maxLatencyMs: number;
   validate: (body: unknown) => string | null;
+  /**
+   * Qué se espera recibir. Por omisión JSON, que es lo que devuelven las sondas
+   * de infraestructura. Con `'html'` el cuerpo llega como texto: hace falta para
+   * vigilar páginas servidas, que es donde apareció el 502 que nadie vio.
+   */
+  accept?: 'json' | 'html';
 }
 
 export interface MonitorResult {
@@ -66,10 +72,27 @@ const configValidator = (body: unknown): string | null => {
     : 'Estado del canal de correo ausente';
 };
 
+/**
+ * La página de planes es la única pantalla que decide si alguien paga, y durante
+ * la auditoría devolvió 502 sin que nadie se enterara: las tres sondas de arriba
+ * miran la salud del proceso, y un proceso vivo puede servir una página rota.
+ * Por eso esta sonda comprueba lo que el visitante necesita ver —que la página
+ * llegue y traiga los planes—, no que el servidor responda.
+ */
+const planesValidator = (body: unknown): string | null => {
+  const html = typeof body === 'string' ? body : '';
+  if (!html.trim()) return 'La página de planes llegó vacía';
+  if (!/<\/html>/i.test(html)) return 'La página de planes llegó cortada';
+  return /\bPro\b/.test(html) ? null : 'La página de planes no muestra los planes';
+};
+
 export const DEFAULT_MONITOR_PROBES: MonitorProbe[] = [
   { name: 'liveness', path: '/health', maxLatencyMs: 2_000, validate: healthValidator },
   { name: 'readiness', path: '/ready', maxLatencyMs: 2_500, validate: readinessValidator },
   { name: 'config', path: '/api/config', maxLatencyMs: 3_000, validate: configValidator },
+  {
+    name: 'planes', path: '/planes', maxLatencyMs: 4_000, accept: 'html', validate: planesValidator,
+  },
 ];
 
 export function normalizeMonitorBaseUrl(input: string): string {
@@ -115,8 +138,9 @@ export async function runProductionMonitor(options: {
     let status: number | null = null;
     let error: string | null = null;
     try {
+      const esHtml = probe.accept === 'html';
       const response = await fetchImpl(`${baseUrl}${probe.path}`, {
-        headers: { Accept: 'application/json' },
+        headers: { Accept: esHtml ? 'text/html' : 'application/json' },
         redirect: 'error',
         signal: AbortSignal.timeout(timeoutMs),
       });
@@ -124,7 +148,7 @@ export async function runProductionMonitor(options: {
       if (!response.ok) {
         error = `HTTP ${response.status}`;
       } else {
-        error = probe.validate(await readJson(response));
+        error = probe.validate(esHtml ? await response.text() : await readJson(response));
       }
     } catch (cause) {
       error = cause instanceof Error ? cause.message : 'Fallo de red desconocido';
