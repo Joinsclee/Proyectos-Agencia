@@ -2947,54 +2947,18 @@ function aiSection(kind, id) {
 const COPn = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('es-CO'));
 
 /**
- * El aviso de confianza, arriba y en grande.
+ * Aquí vivía el aviso «Confianza baja».
  *
- * Las dos cosas que más debilitan un porcentaje —haber tenido que salir del barrio
- * y haber tenido que mezclar tipos de inmueble— se decían de pasada, en una línea
- * pequeña bajo la cifra («31 comparables · todos los tipos»). Quien no sabe leer
- * eso ve un número grande y se lo cree entero.
+ * Se retiró por decisión del cliente: en pantalla se leía como una advertencia
+ * sobre el propio dato que acompañaba, y en fichas donde el porcentaje era el
+ * único argumento acababa desarmando la ficha entera.
  *
- * La diferencia entre un porcentaje fiable y uno orientativo no es un matiz
- * técnico: es la única forma que tiene quien lee de saber cuánto peso ponerle.
- * Así que va donde se ve, con las mismas palabras que usaría alguien explicándolo
- * en voz alta, y diciendo POR QUÉ pasó — que suele ser culpa del aviso, no del
- * Radar.
+ * Lo que sostiene la comparación —contra qué se comparó y con cuántos
+ * comparables— sigue estando, en «Comparado contra …» y en el contador. Son los
+ * mismos dos hechos, dichos sin alarma. Si en algún momento se quiere volver a
+ * limitar el alcance, el camino no es el aviso: es subir el umbral para que una
+ * comparación contra la ciudad entera no llegue a llamarse «Oportunidad Fuerte».
  */
-/** Plural español de un sustantivo simple: local → locales, casa → casas. */
-function enPlural(palabra) {
-  const p = String(palabra || '');
-  if (!p) return p;
-  const fin = p.slice(-1).toLowerCase();
-  if (fin === 's') return p;                       // «derechos» ya viene en plural
-  return 'aeiouáéíóú'.includes(fin) ? `${p}s` : `${p}es`;
-}
-
-function avisoDeConfianza({ ambitoCiudad, tiposMezclados, ciudad, tipo, sinBarrio }) {
-  const avisos = [];
-  if (ambitoCiudad) {
-    // «En una ciudad grande» se cayó del texto: la mitad de estas fichas están en
-    // municipios pequeños —Espinal, Girardot— y decirles «ciudad grande» delata
-    // que el aviso está escrito de plantilla. Lo que hay que transmitir es más
-    // simple y siempre cierto: el precio del metro no es igual en toda la ciudad.
-    avisos.push(`<strong>Confianza baja: comparación contra toda la ciudad.</strong> `
-      + (sinBarrio
-        ? 'Este aviso no dice en qué barrio está'
-        : 'No había suficientes avisos parecidos en su barrio')
-      + `, así que lo comparamos con ${ciudad ? esc(cap(ciudad)) : 'la ciudad'} entera. `
-      + 'El precio del metro cambia mucho de un sector a otro, así que este porcentaje '
-      + 'es orientativo: úsalo para descartar, no para decidir.');
-  }
-  if (tiposMezclados) {
-    avisos.push('<strong>Confianza baja: se compararon tipos distintos de inmueble.</strong> '
-      + `No había suficientes ${tipo ? esc(enPlural(typeLbl(tipo)).toLowerCase()) : 'inmuebles del mismo tipo'} `
-      + 'publicados cerca, así que el precio de referencia salió de inmuebles de otros tipos. '
-      + 'No es una comparación entre iguales.');
-  }
-  if (!avisos.length) return '';
-  return `<div class="market-confianza">${avisos
-    .map((t) => `<p>${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')}<span>${t}</span></p>`)
-    .join('')}</div>`;
-}
 
 function marketCtxHtml(m) {
   if (!m || !m.n) return '';
@@ -3004,16 +2968,7 @@ function marketCtxHtml(m) {
   const crit = criterios.length
     ? `<div class="crit-chips" style="margin-bottom:10px">${criterios.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div>`
     : '';
-  const aviso = avisoDeConfianza({
-    ambitoCiudad: m.scope === 'ciudad',
-    tiposMezclados: m.matched_type === false,
-    ciudad: m.city,
-    tipo: m.type,
-    // El motor distingue las dos causas en el criterio que declara, y no son lo
-    // mismo para quien lee: una es culpa del aviso, la otra del inventario.
-    sinBarrio: (m.criteria || []).some((c) => /no indica barrio/i.test(String(c))),
-  });
-  return `${aviso}<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
+  return `<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
   ${crit}
   <div class="ai-mkt">
     <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
@@ -3039,6 +2994,12 @@ function renderAI(result, kind) {
   if (!result.ok) {
     if (result.needs_key) {
       return `${marketCtxHtml(m)}<div class="ai-note">${ic('alert-triangle', 'ic-reicon analysis-icon is-warning')}<span>La opinión con IA aún no está activa: falta configurar la clave de OpenAI en el servidor. Arriba ves los comparables de mercado de la zona.</span></div>`;
+    }
+    // Un análisis retirado por no cuadrar con el motor no es una avería, y
+    // presentarlo como tal («No se pudo generar…») invita a recargar esperando
+    // que aparezca. El servidor lo distingue y manda el texto ya redactado.
+    if (result.sin_verificar) {
+      return `${marketCtxHtml(m)}<div class="ai-note">${ic('magnifier', 'analysis-icon is-review')}<span>${esc(result.error)}</span></div>`;
     }
     return `${marketCtxHtml(m)}<div class="ai-note">No se pudo generar el análisis: ${esc(result.error || 'error')}.</div>`;
   }
@@ -4217,16 +4178,7 @@ function marketBody(m, criteria) {
     ? `<div class="market-crit"><span class="crit-title">Comparables usados para calcular el precio</span>
         <div class="crit-chips">${crit.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div></div>`
     : '';
-  // El nivel de la cascada dice hasta dónde hubo que abrirse para reunir la
-  // muestra. «ciudad» es el último recurso y cambia lo que vale el porcentaje.
-  const aviso = avisoDeConfianza({
-    ambitoCiudad: m.cascada_nivel === 'ciudad' || /solo-localidad/.test(String(m.method || '')),
-    tiposMezclados: false, // este bloque es el del motor: nunca mezcla tipos
-    ciudad: m.__ciudad,
-    tipo,
-    sinBarrio: false,
-  });
-  return `<div class="market">${aviso}<div class="market-grid">
+  return `<div class="market"><div class="market-grid">
     <div><span class="l">Este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Oportunidad</span>${pos}</div>

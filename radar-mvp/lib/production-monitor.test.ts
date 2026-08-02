@@ -12,6 +12,13 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
   headers: { 'content-type': 'application/json; charset=utf-8' },
 });
 
+const html = (body: string, status = 200) => new Response(body, {
+  status,
+  headers: { 'content-type': 'text/html; charset=utf-8' },
+});
+
+const PLANES_OK = '<html><body><h2>Pro</h2><p>$79.000/mes</p></body></html>';
+
 describe('monitor de producción', () => {
   test('normaliza la URL y rechaza protocolos inseguros', () => {
     assert.equal(normalizeMonitorBaseUrl('https://radar.test///?x=1#top'), 'https://radar.test');
@@ -27,6 +34,7 @@ describe('monitor de producción', () => {
         supabaseUrl: 'https://radar-test.supabase.co',
         alertEmailDeliveryReady: true,
       })],
+      ['/planes', html(PLANES_OK)],
     ]);
     let tick = 0;
     const report = await runProductionMonitor({
@@ -52,6 +60,37 @@ describe('monitor de producción', () => {
     assert.equal(report.results[0].status, 503);
     assert.match(report.results[0].error ?? '', /HTTP 503/);
     assert.match(monitorMarkdown(report), /FALLO/);
+  });
+
+  // H-29: la página de planes devolvió 502 durante la auditoría y ninguna sonda
+  // lo vio, porque las tres que había miraban la salud del proceso. Un proceso
+  // sano puede servir una página rota, así que esta sonda mira la página.
+  test('la página de planes se vigila como página, no como servicio', async () => {
+    const planes = DEFAULT_MONITOR_PROBES.find(p => p.name === 'planes');
+    assert.ok(planes, 'la sonda de /planes forma parte del monitor por omisión');
+
+    const caidas: Array<[string, Response, RegExp]> = [
+      ['502 del proxy', html('<html><body>Bad Gateway</body></html>', 502), /HTTP 502/],
+      ['página vacía', html(''), /vacía/],
+      ['respuesta cortada', html('<html><body><h2>Pro</h2>'), /cortada/],
+      ['página sin planes', html('<html><body>Vuelve pronto</body></html>'), /no muestra los planes/],
+    ];
+    for (const [caso, respuesta, esperado] of caidas) {
+      const report = await runProductionMonitor({
+        baseUrl: 'https://radar.test',
+        probes: [planes],
+        fetchImpl: async () => respuesta,
+      });
+      assert.equal(report.ok, false, `${caso} debe abrir incidente`);
+      assert.match(report.results[0].error ?? '', esperado, caso);
+    }
+
+    const sana = await runProductionMonitor({
+      baseUrl: 'https://radar.test',
+      probes: [planes],
+      fetchImpl: async () => html(PLANES_OK),
+    });
+    assert.equal(sana.ok, true, 'una página de planes servida entera pasa');
   });
 
   test('falla si el contrato JSON cambia', async () => {
