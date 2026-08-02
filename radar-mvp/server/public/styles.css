@@ -1823,14 +1823,54 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 .empty-retry { margin-top: 14px; min-height: 44px; padding: 0 20px; border: 0; border-radius: 999px; background: var(--pp); color: #fff; font-family: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
 .empty-retry:hover { filter: brightness(1.08); }
 
-/* «Otras oportunidades cercanas»: la aclaración de que NO son los comparables del
-   cálculo va antes que las tarjetas, porque la confusión se produce al verlas. */
-.rec-aclaracion {
-  display: flex; align-items: flex-start; gap: 8px; margin: -2px 0 14px;
-  padding: 10px 12px; border-radius: 10px; background: #f6f2fa; border: 1px solid #e3d4ee;
-  color: #55406a; font-size: 0.8rem; line-height: 1.5;
+/* ── Aclaraciones a un clic ──
+   Avisos que hacen falta pero que no merecen ocupar sitio fijo: quien ya los
+   entendió los lee cada vez que abre una ficha, y a fuerza de estar siempre
+   dejan de leerse también para quien los necesitaba.
+
+   Se abre con ratón, con teclado y con el dedo. Los tres importan: `:hover` no
+   existe en un móvil y `:focus-visible` no se dispara al tocar, así que sin
+   `:focus` el aviso sería invisible justo en el dispositivo donde la pantalla
+   es más pequeña y la duda más probable. */
+.con-tip { display: inline-flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.tip {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  /* 28px de caja para un icono de 16: el objetivo táctil no puede ser del tamaño
+     del dibujo. El margen negativo evita que ese aire desalinee el título. */
+  width: 28px; height: 28px; margin: -6px 0; padding: 0;
+  border: 0; background: none; color: var(--pp); cursor: help; border-radius: 50%;
 }
-.rec-aclaracion .ic { flex: none; width: 16px; height: 16px; margin-top: 2px; }
+.tip:hover, .tip:focus-visible { background: #f4ebf8; }
+.tip:focus-visible { outline: 2px solid var(--pp); outline-offset: 1px; }
+.tip .tip-ic { width: 16px; height: 16px; opacity: 0.75; }
+.tip:hover .tip-ic, .tip:focus .tip-ic { opacity: 1; }
+.tip-burbuja {
+  position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  z-index: 40; width: max-content; max-width: min(300px, 78vw);
+  padding: 10px 12px; border-radius: 10px;
+  background: #2f1c3d; color: #f6f2fa; border: 1px solid #4a2560;
+  font-size: 0.78rem; font-weight: 400; line-height: 1.5; text-align: left;
+  text-transform: none; letter-spacing: normal; white-space: normal;
+  box-shadow: 0 8px 22px rgba(47, 28, 61, 0.28);
+  opacity: 0; visibility: hidden; transition: opacity 0.12s ease;
+}
+.tip-burbuja strong { color: #fff; }
+.tip:hover .tip-burbuja, .tip:focus .tip-burbuja { opacity: 1; visibility: visible; }
+/* La punta que lo ata al icono. Sin ella la burbuja flota y no se sabe de quién
+   habla cuando hay varias cerca. */
+.tip-burbuja::after {
+  content: ''; position: absolute; top: 100%; left: 50%; margin-left: -5px;
+  border: 5px solid transparent; border-top-color: #2f1c3d;
+}
+@media (prefers-reduced-motion: reduce) { .tip-burbuja { transition: none; } }
+/* En pantallas estrechas la burbuja se ancla al icono y crecería fuera del
+   viewport si el título está pegado al borde. Se centra en la pantalla. */
+@media (max-width: 480px) {
+  .tip-burbuja { position: fixed; left: 12px; right: 12px; bottom: auto; top: auto;
+    transform: none; max-width: none; width: auto; margin-top: 8px; }
+  .tip-burbuja::after { display: none; }
+}
+
 .rec-sub { margin: 16px 0 6px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pp); }
 .rec-sub:first-of-type { margin-top: 4px; }
 

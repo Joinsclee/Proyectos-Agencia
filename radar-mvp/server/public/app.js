@@ -20,6 +20,23 @@ const plural = (n, singular, varios) => `${n} ${Math.abs(Number(n)) === 1 ? sing
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
+
+/**
+ * Una aclaración que solo estorba hasta que hace falta.
+ *
+ * Hay avisos que son necesarios —quien no ha entendido la diferencia entre los
+ * comparables del cálculo y las sugerencias de al lado toma una decisión mala— y
+ * que aun así no merecen tres líneas fijas al lado del título: quien ya lo
+ * entendió las lee cada vez que abre una ficha, y a fuerza de estar siempre
+ * dejan de leerse también para quien las necesitaba.
+ *
+ * Va en un botón, no en un `title=`: el atributo nativo no aparece al tocar en
+ * móvil, no se puede alcanzar con el teclado y no se puede dar estilo. Este se
+ * abre al pasar el ratón, al enfocarlo con Tab y al tocarlo con el dedo —los
+ * tres, porque cada uno es la única vía de alguien—.
+ */
+const tip = (texto, etiqueta = 'Más información') => `<button type="button" class="tip" aria-label="${esc(etiqueta)}">${
+  ic('info', 'tip-ic')}<span class="tip-burbuja" role="tooltip">${texto}</span></button>`;
 // `accion` es HTML ya formado y opcional: un estado de error sin forma de salir
 // de él deja al usuario mirando un mensaje que le dice «reintenta» sin darle con
 // qué. El resto de los estados vacíos no la necesitan y no la pasan.
@@ -3103,10 +3120,14 @@ function renderRecs(recs, tipoFicha = fichaEnPantalla?.tipo ?? null) {
     ? `<h4 class="rec-sub">${titulo}</h4><p class="rec-hint">${nota}</p>${grid(lista)}`
     : '');
 
-  return `<div class="section"><h3>Otras oportunidades cercanas</h3>
-    <p class="rec-hint rec-aclaracion">${ic('alert')} <span>Estas <strong>no</strong> son las que se usaron
-    para calcular el precio de esta ficha. Aquéllas aparecen arriba, en «Análisis de mercado», y son todas
-    del mismo tipo de inmueble. Éstas son sugerencias de qué mirar después.</span></p>
+  // La aclaración pasó de párrafo fijo a tooltip por decisión del cliente. El
+  // hecho que evita la confusión —que son sugerencias y no el cálculo— queda en
+  // el propio título, que es lo primero que se lee; el porqué completo vive a un
+  // clic, para quien dude.
+  return `<div class="section"><h3 class="con-tip">Otras oportunidades cercanas
+    ${tip('Estas <strong>no</strong> son las que se usaron para calcular el precio de esta ficha. '
+      + 'Aquéllas aparecen arriba, en «Análisis de mercado», y son todas del mismo tipo de inmueble. '
+      + 'Éstas son sugerencias de qué mirar después.', 'Qué son estas oportunidades')}</h3>
     ${bloque(
       nombreTipo ? `Del mismo tipo (${esc(nombreTipo)})` : 'Cerca de aquí',
       recs.some((r) => r.same_zone)
