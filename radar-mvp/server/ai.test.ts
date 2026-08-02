@@ -8,7 +8,8 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { valorDeMercadoCreible, descuentoCreible } from './ai.js';
+import { valorDeMercadoCreible, descuentoCreible, type AiResult, type AiPropertyFacts } from './ai.js';
+import type { MarketContext } from '../engine/zone-comps.js';
 
 test('IA: un valor de mercado imposible no se enseña', () => {
   // El caso reportado en la auditoría: «valores estimados de $2 COP en oficinas».
@@ -72,4 +73,113 @@ test('IA: sin con qué contrastar, el descuento pasa como antes', async () => {
   const { descuentoCoherente } = await import('./ai.js');
   assert.equal(descuentoCoherente(20, null, 500_000_000), 20);
   assert.equal(descuentoCoherente(20, 400_000_000, null), 20);
+});
+
+/*
+ * ─── H-04: la IA no puede llevarle la contraria al motor en la misma ficha ───
+ *
+ * El hallazgo más grave de la auditoría, y distinto del anterior: ahí la IA se
+ * contradecía a sí misma; aquí contradice al motor. Los dos ejemplos del informe
+ * están reproducidos con sus cifras reales.
+ */
+const mercado = (over: Partial<MarketContext> = {}): MarketContext => ({
+  city: 'carmen de apicalá', type: 'lote', matched_type: true, scope: 'barrio',
+  scope_label: '1.5 km a la redonda', radius_km: 1.5, criteria: [],
+  n: 14, n_ppm2: 14,
+  median_total: 37_000_000, p25_total: 30_000_000,
+  median_ppm2: null, p25_ppm2: null,
+  spread: null, confidence: 'medium', sample: [],
+  ...over,
+});
+
+const analisis = (over: Partial<AiResult> = {}): AiResult => ({
+  veredicto: 'neutral', puntaje: 50, estimado_mercado_cop: null, descuento_estimado_pct: null,
+  resumen: '', a_favor: [], en_contra: [], riesgos_due_diligence: [], recomendacion: '',
+  _meta: { model: 'test', generated_at: '2026-08-01T00:00:00.000Z', comparables_n: 14, confidence: 'medium' },
+  ...over,
+});
+
+const lote: AiPropertyFacts = {
+  kind: 'portal', tipo: 'lote', ciudad: 'carmen de apicalá', zona: null,
+  area_m2: null, estrato: null, precio_lista_cop: 30_000_000,
+};
+
+test('IA: Ejemplo 1 del informe — el motor dice «por debajo» y la IA dice «riesgosa»', async () => {
+  const { contradiceAlMotor } = await import('./ai.js');
+  // $30.000.000 contra una mediana de $37.000.000 son un 19% por debajo: es el
+  // sello que la propia ficha mostraba arriba. Llamar «riesgosa» a eso, unos
+  // centímetros más abajo, deja al usuario sin saber a cuál de las dos creerle.
+  const choque = contradiceAlMotor(analisis({ veredicto: 'riesgosa', puntaje: 40 }), lote, mercado());
+  assert.match(choque ?? '', /19% por debajo.*riesgosa/);
+
+  // Y el mismo veredicto sobre un inmueble que el motor deja al borde del precio
+  // de mercado no contradice nada: ahí la ficha no le pone estrella, y la IA sí
+  // puede pesar cosas que el motor no ve —el estado, el texto del aviso—.
+  assert.equal(
+    contradiceAlMotor(analisis({ veredicto: 'riesgosa' }), lote, mercado({ median_total: 31_000_000 })),
+    null,
+  );
+});
+
+test('IA: Ejemplo 2 del informe — los dos porcentajes apuntan a lados opuestos', async () => {
+  const { contradiceAlMotor } = await import('./ai.js');
+  // La oficina de Cúcuta: la ficha calculaba +38% sobre el mercado y la IA
+  // anunciaba un 30% de descuento. Uno de los dos miente y no hay forma de saber
+  // cuál desde la pantalla.
+  const oficina: AiPropertyFacts = {
+    kind: 'portal', tipo: 'oficina', ciudad: 'cúcuta', zona: null,
+    area_m2: 5, estrato: null, precio_lista_cop: 30_000_000,
+  };
+  const choque = contradiceAlMotor(
+    analisis({ descuento_estimado_pct: 30, estimado_mercado_cop: 22_105_265 }),
+    oficina,
+    mercado({ city: 'cúcuta', type: 'oficina', median_ppm2: 4_350_000, median_total: null }),
+  );
+  assert.match(choque ?? '', /por encima.*por debajo/);
+});
+
+test('IA: un análisis que va en la misma dirección que el motor se publica', async () => {
+  const { contradiceAlMotor } = await import('./ai.js');
+  // Los dos coinciden en que está por debajo: no hay nada que descartar.
+  assert.equal(
+    contradiceAlMotor(analisis({ veredicto: 'atractiva', descuento_estimado_pct: 22 }), lote, mercado()),
+    null,
+  );
+  // Diferencias de magnitud tampoco son contradicción: dos estimaciones del mismo
+  // mercado nunca coinciden al decimal, y lo que se persigue es el signo.
+  assert.equal(
+    contradiceAlMotor(analisis({ descuento_estimado_pct: 35 }), lote, mercado()),
+    null,
+  );
+  // Sin comparables no hay veredicto del motor con el que chocar.
+  assert.equal(
+    contradiceAlMotor(analisis({ veredicto: 'riesgosa' }), lote, mercado({ n: 0 })),
+    null,
+  );
+});
+
+test('IA: en un remate, «riesgosa» con precio bajo NO es contradicción', async () => {
+  const { contradiceAlMotor } = await import('./ai.js');
+  // La postura mínima de un remate está por debajo del mercado casi por
+  // definición, y «riesgosa» ahí habla del expediente, de la tradición y de la
+  // entrega —no del precio—. Descartar el análisis por eso borraría justo la
+  // advertencia que más falta hace en la sección más delicada del producto.
+  const remate: AiPropertyFacts = {
+    kind: 'remate', tipo: 'casa', ciudad: 'cúcuta', zona: null,
+    area_m2: null, estrato: null, avaluo_cop: 55_000_000, postura_cop: 39_055_800,
+  };
+  assert.equal(
+    contradiceAlMotor(analisis({ veredicto: 'riesgosa', puntaje: 35 }), remate, mercado({ city: 'cúcuta', median_total: 70_000_000 })),
+    null,
+  );
+  // Pero la aritmética sí se le exige igual que a cualquiera: si el motor lo pone
+  // por debajo y la IA anuncia sobreprecio, uno de los dos está mal.
+  assert.match(
+    contradiceAlMotor(
+      analisis({ descuento_estimado_pct: -40 }),
+      remate,
+      mercado({ city: 'cúcuta', median_total: 70_000_000 }),
+    ) ?? '',
+    /por debajo.*por encima/,
+  );
 });
