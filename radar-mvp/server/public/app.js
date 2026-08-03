@@ -4736,8 +4736,24 @@ document.addEventListener('keydown', (e) => {
 // recorrido lo lanza ella cuando el usuario lo pide. Sin esta condición se abrían
 // las dos a la vez —el recorrido encima de la bienvenida— porque una la decide el
 // navegador y la otra la cuenta.
+/**
+ * El recorrido de 5 pasos, en pausa.
+ *
+ * Decisión del cliente (3 de agosto de 2026): no se abre solo hasta tener
+ * feedback de usuarios reales. La duda que la motiva es razonable — cinco pasos
+ * encima de la pantalla, antes de que nadie haya visto un solo inmueble, es una
+ * apuesta a que la gente no entiende el producto sin que se lo expliquen; y esa
+ * apuesta se comprueba mirando, no adivinando.
+ *
+ * Se apaga el arranque automático, NO el recorrido: el botón «Ver tutorial» de la
+ * barra sigue abriéndolo, así que se puede enseñar al cliente y probarlo sin
+ * revertir nada. Volver a activarlo es poner esta constante en `true`.
+ */
+const ONBOARDING_AUTOMATICO = false;
+
 try {
-  if (!localStorage.getItem(ONBOARDING_KEY) && !localStorage.getItem('radar_token')) {
+  if (ONBOARDING_AUTOMATICO
+    && !localStorage.getItem(ONBOARDING_KEY) && !localStorage.getItem('radar_token')) {
     marcarOnboardingVisto();
     // El recorrido guiado necesita que la página ya tenga contenido que iluminar,
     // así que espera a que las pestañas estén pintadas. Si `tour.js` no cargó por

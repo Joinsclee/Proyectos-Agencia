@@ -1767,9 +1767,49 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 @media (min-width: 981px) {
   .pie-legal { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 22px; }
   .pie-legal p { margin: 0; }
+  /* El enlace legal no es una cuarta columna: cruza el ancho por debajo de las
+     tres. Sin esto, el grid lo colocaría junto a los párrafos y se leería como
+     un cuarto aviso a medio escribir. */
+  .pie-legal .pie-enlaces { grid-column: 1 / -1; padding-top: 14px; border-top: 1px solid #ece6f2; }
 }
+.pie-enlaces { margin-top: 14px; }
+.pie-enlaces a { color: var(--pp); font-weight: 700; text-decoration: none; border-bottom: 1px solid #d9c9e6; }
+.pie-enlaces a:hover { border-bottom-color: var(--pp); }
 @media (max-width: 760px) {
   .pie-legal { padding: 20px 16px calc(150px + env(safe-area-inset-bottom)); }
+}
+
+/* ── Enlaces por categoría y ciudad ──
+   El bloque que hace descubribles las combinaciones de tipo + ciudad que hasta
+   ahora no enlazaba nadie. Son enlaces de verdad y se ven como tales: alguien que
+   llega buscando «casas en remate en Bogotá» tiene que reconocer aquí su búsqueda.
+   Va al final del todo, en tono discreto — es una ayuda de navegación, no una
+   sección del producto. */
+.seo-enlaces {
+  max-width: 1280px; margin: 0 auto; padding: 26px 20px calc(90px + env(safe-area-inset-bottom));
+  border-top: 1px solid #ece6f2;
+}
+.seo-enlaces h3 {
+  margin: 0 0 16px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #9a90a8;
+}
+.seo-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px 24px; }
+.seo-col { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.seo-col h4 { margin: 0 0 3px; font-size: 0.82rem; font-weight: 800; color: #5d5568; }
+.seo-col a {
+  color: #7b7288; font-size: 0.8rem; line-height: 1.4; text-decoration: none;
+  /* 44px de alto táctil sin cambiar la densidad visual: el padding hace el
+     objetivo, no el tamaño de la letra. */
+  padding: 4px 0; min-height: 22px;
+}
+.seo-col a:hover, .seo-col a:focus-visible { color: var(--pp); text-decoration: underline; }
+.seo-col .seo-mas { font-weight: 700; color: var(--pp); }
+@media (max-width: 760px) {
+  .seo-enlaces { padding: 22px 16px calc(150px + env(safe-area-inset-bottom)); }
+  .seo-cols { gap: 18px; }
+  /* En móvil el pie ya reserva el hueco de la barra inferior; si lo reservan los
+     dos, queda un vacío del alto de media pantalla. */
+  .pie-legal { padding-bottom: 20px; }
 }
 
 /* ───── Barra de cuenta (arriba del todo) ─────
