@@ -365,9 +365,17 @@ function mostrarBienvenida() {
         <li><strong>Guardados y alertas</strong> por correo, sin límite</li>
       </ul>
       <p class="bv-nota">Las fichas que abras quedan abiertas todo el mes: volver a mirarlas no gasta otra.</p>`}
+      ${/* Aquí había un «Ver cómo funciona en 1 minuto» que abría el recorrido.
+             Se retiró con el resto del tutorial: quien acaba de registrarse es
+             justo el «nuevo usuario» del que habla la decisión del cliente, así
+             que dejarlo aquí habría sido quitar el tutorial de todas partes
+             menos de la única pantalla que ve el 100% de los recién llegados.
+
+             Queda una sola acción, y eso mejora la pantalla: antes la primaria
+             llevaba al recorrido y la secundaria a personalizar el Radar, que es
+             lo que de verdad hace útil la cuenta. */ ''}
       <div class="bv-acciones">
-        <button type="button" class="bv-cta" data-bv="recorrido">Ver cómo funciona en 1 minuto</button>
-        <button type="button" class="bv-secundaria" data-bv="cerrar">Explorar por mi cuenta</button>
+        <button type="button" class="bv-cta" data-bv="cerrar">Empezar a explorar</button>
       </div>
     </div>
     <!-- La misma ilustración del muro de registro, y a propósito: quien llega aquí
@@ -414,6 +422,9 @@ document.addEventListener('click', (e) => {
   const boton = e.target.closest?.('[data-bv]');
   if (!boton) return;
   closeModal();
+  // La rama que abría el recorrido se fue con el botón que la disparaba. Se
+  // conserva la guarda por si el recorrido vuelve: sin ella, reactivarlo
+  // exigiría acordarse de este archivo además del HTML.
   if (boton.dataset.bv === 'recorrido' && window.__radarTour) {
     setTimeout(() => window.__radarTour.abrir(), 250);
     return;
@@ -4543,12 +4554,11 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   void activarPestana(b.dataset.tab);
 }));
 $('modal-close').addEventListener('click', closeModal);
-// «Ver tutorial» reabre el RECORRIDO, que es la bienvenida real. El diálogo
-// por pasos queda como respaldo para cuando el recorrido no esté disponible.
-$('ver-tutorial').addEventListener('click', () => {
-  if (window.__radarTour) window.__radarTour.abrir();
-  else abrirOnboarding();
-});
+// El manejador de «Ver tutorial» se retiró con el botón. Iba sin `?.`, así que
+// dejarlo mirando un elemento que ya no existe habría lanzado un TypeError aquí
+// mismo —y con él se caía el resto del archivo: los filtros, las pestañas y el
+// paginador se quedan sin manejadores, y la página parece cargada pero no
+// responde a nada.
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-onboarding-siguiente]')) { avanzarOnboarding(1); return; }
   if (e.target.closest('[data-onboarding-atras]')) { avanzarOnboarding(-1); return; }

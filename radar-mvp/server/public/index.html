@@ -82,7 +82,11 @@
         <button class="tab-btn tab-fav" data-tab="guardados"><svg class="ic"><use href="#i-heart"/></svg> <span class="nav-label">Guardados</span> <span class="tab-count" id="c-guardados">0</span></button>
         <!-- Siempre visible: quien cierra el tutorial tiene que poder volver a él
              sin buscarlo. Es el requisito del onboarding, no un adorno. -->
-        <button class="tab-btn tab-tutorial" id="ver-tutorial" type="button"><svg class="ic"><use href="#i-spark"/></svg> <span class="nav-label">Ver tutorial</span></button>
+        <!-- Aquí estaba «Ver tutorial». Retirado por decisión del cliente junto con
+             el arranque automático: el recorrido entero queda en pausa hasta tener
+             feedback de usuarios reales. El código sigue en el repo (tour.js y
+             `abrirOnboarding` en app.js), así que reactivarlo es devolver este
+             botón y su `<script>`. -->
         <span class="nav-sep" aria-hidden="true"></span>
         <div class="authbar" id="authbar"></div>
       </div>
@@ -358,9 +362,14 @@
        reconstruir la pantalla al abrir un enlace compartido. -->
   <script src="/url-estado.js"></script>
   <script src="/app.js"></script>
-  <!-- Recorrido guiado de bienvenida. Va después de app.js: necesita que las
-       pestañas y los listados ya tengan sus manejadores para poder navegarlos. -->
+  <!-- Recorrido guiado de bienvenida, en pausa por decisión del cliente.
+       No se carga: son 17 KB en cada visita para algo que ya no tiene ninguna
+       forma de abrirse. Las comprobaciones que quedan en app.js preguntan por
+       `window.__radarTour` con `?.`, así que su ausencia no rompe nada.
+       Para reactivarlo: descomentar esta línea, devolver el botón «Ver tutorial»
+       de la barra y poner ONBOARDING_AUTOMATICO en true.
   <script src="/tour.js"></script>
+  -->
   <script src="/asistente.js"></script>
 </body>
 </html>
