@@ -2558,14 +2558,23 @@ function inmuebleCard(p, kind) {
              sitio y hace dudar de todo lo demás.
 
              `> 0` y no solo truthy: el portal manda `-1` como «sin dato» y así se
-             colaban tarjetas con «Habitaciones: -1». */ ''}
-      <div class="card-meta">
-        ${mods.habitaciones && Number(f.bedrooms) > 0 ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : ''}
-        ${mods.banos && Number(f.bathrooms) > 0 ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : ''}
-        ${mods.parqueaderos && Number(f.garages) > 0 ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : ''}
-        ${Number(f.stratum) > 0 ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : ''}
-      </div>
-      ${frescura(p)}
+             colaban tarjetas con «Habitaciones: -1».
+
+             La fila SOLO se pinta si lleva algo dentro. Un local no tiene
+             habitaciones ni baños ni parqueadero, y si además no trae estrato se
+             quedaba vacía —pero con su línea divisoria y su hueco—, separando la
+             ubicación de nada. Antes lo tapaba la etiqueta «Verificado hace…»;
+             al retirarla quedó el agujero a la vista, que es como se descubren
+             estas cosas. */ ''}
+      ${(() => {
+        const meta = [
+          mods.habitaciones && Number(f.bedrooms) > 0 ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : '',
+          mods.banos && Number(f.bathrooms) > 0 ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : '',
+          mods.parqueaderos && Number(f.garages) > 0 ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : '',
+          Number(f.stratum) > 0 ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : '',
+        ].filter(Boolean);
+        return meta.length ? `<div class="card-meta">${meta.join('')}</div>` : '';
+      })()}
     </div>`;
 }
 
@@ -2611,29 +2620,20 @@ const tieneCuotaParte = (p) => p && p.cuota_parte != null && Number(p.cuota_part
 /** ¿El servidor entregó esta ficha recortada por plan? */
 const esBloqueada = (p) => p && p._bloqueada === true;
 
-/**
- * Frescura de la ficha.
+/*
+ * Aquí vivía «Verificado hace N días».
  *
- * A un activo de banco se le dice cuándo se VERIFICÓ que sigue disponible, nunca
- * su antigüedad: un inmueble en dación de pago puede llevar meses publicado sin
- * que eso signifique nada malo, y "Publicado hace 2 meses" lo mata sin motivo.
- * En el portal sí interesa cuándo se vio por última vez.
+ * Se retiró del portal cuando el cliente preguntó qué significaba y, al
+ * explicárselo, dijo que no era relevante. Ahora sale también de las fichas de
+ * banco, que era donde quedaba, por la misma razón llevada hasta el final: la
+ * fecha decía cuándo NUESTRO motor confirmó que el aviso seguía publicado. Es un
+ * dato de nuestra operación, no del inmueble, y quien compara tres locales no
+ * tiene por qué cargar con él.
+ *
+ * Lo que el visitante sí necesita saber —que un aviso puede haberse vendido o
+ * retirado en su fuente— no depende de esta etiqueta: está dicho en el pie, en
+ * una frase, para todas las fichas a la vez.
  */
-const SIN_CADUCIDAD = ['davivienda', 'bancolombia', 'bbva', 'aval'];
-function frescura(p) {
-  const iso = p.last_seen_at || p.updated_at;
-  if (!iso) return '';
-  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-  if (!Number.isFinite(d) || d < 0) return '';
-  const cuando = d === 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`;
-  // Solo para la cartera de bancos, donde el aviso no caduca y saber que sigue
-  // vigente sí dice algo. En el portal se retiró: el cliente preguntó qué era
-  // «Visto hace 2 días» y, al explicárselo, «no es relevante». Es la fecha en que
-  // NUESTRO motor confirmó que el aviso seguía publicado —un dato de nuestra
-  // operación, no del inmueble— y ocupaba un sitio que ahora usa el descuento.
-  if (!SIN_CADUCIDAD.includes(p.source)) return '';
-  return `<span class="frescura" title="Última vez que el motor confirmó que sigue publicado">${ic('check')}Verificado ${cuando}</span>`;
-}
 
 /**
  * Sello sobre la foto: la ficha existe y se ve el descuento, falta desbloquearla.
