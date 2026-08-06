@@ -1932,3 +1932,103 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 /* Qué es esta sección, al entrar. Discreto: es contexto para quien llega de
    fuera, no un anuncio para quien ya sabe dónde está. */
 .seccion-intro { margin: 0 0 12px; font-size: 0.88rem; line-height: 1.5; color: #55495e; max-width: 76ch; }
+
+/* ─────────────────────────── Consentimiento de cookies ───────────────────────────
+   El banner NO bloquea la pantalla. Un modal a pantalla completa antes de dejar
+   ver nada convierte el consentimiento en un peaje: la gente pulsa lo que sea
+   para quitarlo de en medio, y ese «sí» no vale nada. Este se queda abajo, se lee
+   entero y espera.
+
+   «Aceptar todo» y «Solo lo necesario» tienen el MISMO peso visual. Un aceptar
+   grande en color junto a un rechazar gris no es una elección libre. */
+.cookie-banner {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
+  padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  background: #2f1c3d; color: #ece6f2;
+  border-top: 3px solid var(--gold);
+  box-shadow: 0 -8px 28px rgba(20, 12, 26, 0.3);
+}
+.cookie-caja {
+  max-width: 1280px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 22px;
+}
+.cookie-texto { flex: 1 1 380px; min-width: 0; }
+/* `> strong` y no `strong` a secas: el título es hijo directo, pero dentro del
+   párrafo hay negritas en medio de la frase y con el selector descendiente se
+   volvían bloque, partiendo el texto en tres renglones sueltos. */
+.cookie-texto > strong { display: block; margin-bottom: 3px; font-size: 0.9rem; color: #fff; }
+.cookie-texto p strong { color: #fff; font-weight: 700; }
+.cookie-texto p { margin: 0; font-size: 0.8rem; line-height: 1.5; max-width: 76ch; }
+.cookie-texto a { color: var(--gold); }
+.cookie-botones { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.cookie-btn {
+  min-height: 42px; padding: 0 17px; border-radius: 9px; cursor: pointer;
+  border: 1px solid rgba(236, 230, 242, 0.4); background: transparent; color: #ece6f2;
+  font-family: inherit; font-size: 0.82rem; font-weight: 700; white-space: nowrap;
+}
+.cookie-btn:hover { background: rgba(236, 230, 242, 0.12); }
+.cookie-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.cookie-si { background: var(--gold); border-color: var(--gold); color: #2f1c3d; }
+.cookie-si:hover { filter: brightness(1.06); background: var(--gold); }
+
+/* El panel de detalle SÍ es modal: aquí ya se está decidiendo a conciencia. */
+.cookie-panel {
+  position: fixed; inset: 0; z-index: 95; display: flex; align-items: center; justify-content: center;
+  padding: 18px; background: rgba(20, 12, 26, 0.55);
+}
+.cookie-panel-caja {
+  width: min(560px, 100%); max-height: 86vh; overflow-y: auto;
+  background: #fff; border-radius: 14px; padding: 22px;
+  box-shadow: 0 20px 50px rgba(20, 12, 26, 0.32);
+}
+.cookie-panel-caja h2 { margin: 0 0 6px; font-size: 1.1rem; color: #2f1c3d; }
+.cookie-panel-sub { margin: 0 0 16px; font-size: 0.82rem; line-height: 1.55; color: #6b6274; }
+.cookie-cat {
+  display: flex; gap: 11px; align-items: flex-start; padding: 13px;
+  border: 1px solid #ece6f2; border-radius: 11px; margin-bottom: 10px; cursor: pointer;
+}
+.cookie-cat:hover { border-color: #d9c9e6; }
+.cookie-cat.es-fija { background: #faf7fc; cursor: default; }
+.cookie-cat input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--pp); flex: none; }
+.cookie-cat strong { display: block; margin-bottom: 3px; font-size: 0.87rem; color: #2f1c3d; }
+.cookie-cat-txt { display: block; font-size: 0.79rem; line-height: 1.5; color: #6b6274; }
+.cookie-panel-pie { display: flex; justify-content: flex-end; gap: 9px; margin-top: 16px; flex-wrap: wrap; }
+.cookie-panel-pie .cookie-btn { border-color: #d9c9e6; color: var(--pp); }
+.cookie-panel-pie .cookie-btn:hover { background: #f4ebf8; }
+.cookie-panel-pie .cookie-si { color: #2f1c3d; }
+
+/* El mapa: sin `src` no se pinta, y en su lugar va el aviso. Se hace con CSS y no
+   con JavaScript para que una ficha recién pintada nazca ya en el estado correcto
+   y no haya un parpadeo del mapa antes de que nadie lo tape. */
+.mapframe:not([src]) { display: none; }
+body.cookies-mapas .mapa-bloqueado { display: none; }
+.mapa-bloqueado {
+  padding: 16px; border-radius: 12px; background: #faf7fc; border: 1px dashed #d9c9e6;
+}
+.mapa-bloqueado p {
+  display: flex; align-items: flex-start; gap: 9px; margin: 0 0 13px;
+  font-size: 0.83rem; line-height: 1.55; color: #55406a;
+}
+.mapa-bloqueado .ic { flex: none; width: 18px; height: 18px; margin-top: 1px; color: var(--pp); }
+.mapa-bloqueado-acciones { display: flex; gap: 9px; flex-wrap: wrap; }
+.mapa-btn, .mapa-btn-sec {
+  min-height: 42px; padding: 0 16px; border-radius: 9px; cursor: pointer;
+  font-family: inherit; font-size: 0.82rem; font-weight: 700;
+}
+.mapa-btn { border: 0; background: var(--pp); color: #fff; }
+.mapa-btn:hover { filter: brightness(1.08); }
+.mapa-btn-sec { border: 1px solid #d9c9e6; background: transparent; color: var(--pp); }
+.mapa-btn-sec:hover { background: #f4ebf8; }
+
+@media (max-width: 760px) {
+  .cookie-caja { flex-direction: column; align-items: stretch; }
+  /* `flex: 0 0 auto` — en horizontal el texto crece para llenar el ancho, pero al
+     apilar esa misma regla lo estira EN ALTO y abría un vacío del tamaño de media
+     pantalla entre el texto y los botones. */
+  .cookie-texto { flex: 0 0 auto; }
+  .cookie-botones { justify-content: stretch; }
+  .cookie-botones .cookie-btn { flex: 1 1 auto; }
+  /* Encima de la barra de pestañas, no debajo. */
+  .cookie-banner { bottom: calc(58px + env(safe-area-inset-bottom)); padding-bottom: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .cookie-banner, .cookie-panel { animation: none; } }
