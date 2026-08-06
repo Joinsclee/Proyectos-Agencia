@@ -1743,7 +1743,10 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
    condición de cómo funciona el producto, no una advertencia. Deja hueco abajo por
    el botón flotante del asistente y por la barra de pestañas del móvil. */
 .pie-legal {
-  max-width: 1280px; margin: 40px auto 0; padding: 24px 20px 90px;
+  /* `margin-top: 0` porque ya no abre el pie: viene pegado al bloque de enlaces,
+     que es quien separa del contenido. Dos márgenes seguidos dejarían un vacío
+     del alto de media pantalla entre las dos mitades del mismo pie. */
+  max-width: 1280px; margin: 0 auto; padding: 22px 20px 90px;
   border-top: 1px solid #ece6f2; color: #7b7288; font-size: 0.78rem; line-height: 1.6;
 }
 .pie-legal p { margin: 0 0 9px; max-width: 68ch; }
@@ -1780,7 +1783,10 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
    Va al final del todo, en tono discreto — es una ayuda de navegación, no una
    sección del producto. */
 .seo-enlaces {
-  max-width: 1280px; margin: 0 auto; padding: 26px 20px calc(90px + env(safe-area-inset-bottom));
+  /* Abre el pie, así que carga el margen que lo separa del contenido — y no
+     reserva hueco abajo: el que cierra la página es el aviso legal, y es él quien
+     deja sitio para la barra de pestañas del móvil. */
+  max-width: 1280px; margin: 40px auto 0; padding: 26px 20px 24px;
   border-top: 1px solid #ece6f2;
 }
 .seo-enlaces h3 {
@@ -1797,13 +1803,13 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
   padding: 4px 0; min-height: 22px;
 }
 .seo-col a:hover, .seo-col a:focus-visible { color: var(--pp); text-decoration: underline; }
-.seo-col .seo-mas { font-weight: 700; color: var(--pp); }
+/* `margin-top: auto` alinea todos los «Más …» a la misma línea aunque una columna
+   tenga menos ciudades que otra —el inventario manda, y no siempre da tres—. Sin
+   esto, el enlace sube y la retícula se lee como si faltara algo. */
+.seo-col .seo-mas { font-weight: 700; color: var(--pp); margin-top: auto; padding-top: 6px; }
 @media (max-width: 760px) {
-  .seo-enlaces { padding: 22px 16px calc(150px + env(safe-area-inset-bottom)); }
+  .seo-enlaces { padding: 22px 16px 20px; }
   .seo-cols { gap: 18px; }
-  /* En móvil el pie ya reserva el hueco de la barra inferior; si lo reservan los
-     dos, queda un vacío del alto de media pantalla. */
-  .pie-legal { padding-bottom: 20px; }
 }
 
 /* ───── Barra de cuenta (arriba del todo) ─────
