@@ -4263,7 +4263,22 @@ function mapSection(p) {
       <p class="market-note">Este aviso no publica una dirección que podamos ubicar en el mapa.
       Verifícala en la fuente original antes de desplazarte.</p></div>`;
   }
-  return `<div class="section"><h3>Ubicación aproximada</h3><iframe class="mapframe" loading="lazy" src="https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed"></iframe></div>`;
+  // El iframe se pinta SIN `src`: la URL viaja en `data-mapa-src` y solo pasa a
+  // `src` si hay consentimiento (cookies.js). Cargarlo antes de preguntar sería
+  // dejar que Google ponga sus cookies y vea la IP del visitante mientras el
+  // banner todavía le está pidiendo permiso — que es la trampa más común de los
+  // avisos de cookies, y la que los vuelve papel mojado.
+  const src = `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=16&output=embed`;
+  return `<div class="section"><h3>Ubicación aproximada</h3>
+    <iframe class="mapframe" loading="lazy" data-mapa-src="${esc(src)}" title="Mapa de la ubicación aproximada"></iframe>
+    <div class="mapa-bloqueado">
+      <p>${ic('map')}<span>El mapa lo sirve <strong>Google</strong>, que al cargarlo puede instalar
+      sus cookies y ver tu dirección IP. Como no lo has autorizado, no lo mostramos.</span></p>
+      <div class="mapa-bloqueado-acciones">
+        <button type="button" class="mapa-btn" data-cargar-mapa>Ver el mapa solo esta vez</button>
+        <button type="button" class="mapa-btn-sec" data-cookie="abrir-preferencias">Cambiar mis preferencias</button>
+      </div>
+    </div></div>`;
 }
 let lastModalFocus = null;
 /**
