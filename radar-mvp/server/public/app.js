@@ -365,9 +365,17 @@ function mostrarBienvenida() {
         <li><strong>Guardados y alertas</strong> por correo, sin límite</li>
       </ul>
       <p class="bv-nota">Las fichas que abras quedan abiertas todo el mes: volver a mirarlas no gasta otra.</p>`}
+      ${/* Aquí había un «Ver cómo funciona en 1 minuto» que abría el recorrido.
+             Se retiró con el resto del tutorial: quien acaba de registrarse es
+             justo el «nuevo usuario» del que habla la decisión del cliente, así
+             que dejarlo aquí habría sido quitar el tutorial de todas partes
+             menos de la única pantalla que ve el 100% de los recién llegados.
+
+             Queda una sola acción, y eso mejora la pantalla: antes la primaria
+             llevaba al recorrido y la secundaria a personalizar el Radar, que es
+             lo que de verdad hace útil la cuenta. */ ''}
       <div class="bv-acciones">
-        <button type="button" class="bv-cta" data-bv="recorrido">Ver cómo funciona en 1 minuto</button>
-        <button type="button" class="bv-secundaria" data-bv="cerrar">Explorar por mi cuenta</button>
+        <button type="button" class="bv-cta" data-bv="cerrar">Empezar a explorar</button>
       </div>
     </div>
     <!-- La misma ilustración del muro de registro, y a propósito: quien llega aquí
@@ -414,6 +422,9 @@ document.addEventListener('click', (e) => {
   const boton = e.target.closest?.('[data-bv]');
   if (!boton) return;
   closeModal();
+  // La rama que abría el recorrido se fue con el botón que la disparaba. Se
+  // conserva la guarda por si el recorrido vuelve: sin ella, reactivarlo
+  // exigiría acordarse de este archivo además del HTML.
   if (boton.dataset.bv === 'recorrido' && window.__radarTour) {
     setTimeout(() => window.__radarTour.abrir(), 250);
     return;
@@ -2558,14 +2569,23 @@ function inmuebleCard(p, kind) {
              sitio y hace dudar de todo lo demás.
 
              `> 0` y no solo truthy: el portal manda `-1` como «sin dato» y así se
-             colaban tarjetas con «Habitaciones: -1». */ ''}
-      <div class="card-meta">
-        ${mods.habitaciones && Number(f.bedrooms) > 0 ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : ''}
-        ${mods.banos && Number(f.bathrooms) > 0 ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : ''}
-        ${mods.parqueaderos && Number(f.garages) > 0 ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : ''}
-        ${Number(f.stratum) > 0 ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : ''}
-      </div>
-      ${frescura(p)}
+             colaban tarjetas con «Habitaciones: -1».
+
+             La fila SOLO se pinta si lleva algo dentro. Un local no tiene
+             habitaciones ni baños ni parqueadero, y si además no trae estrato se
+             quedaba vacía —pero con su línea divisoria y su hueco—, separando la
+             ubicación de nada. Antes lo tapaba la etiqueta «Verificado hace…»;
+             al retirarla quedó el agujero a la vista, que es como se descubren
+             estas cosas. */ ''}
+      ${(() => {
+        const meta = [
+          mods.habitaciones && Number(f.bedrooms) > 0 ? `<span title="Habitaciones">${ic('bed')}${esc(f.bedrooms)}</span>` : '',
+          mods.banos && Number(f.bathrooms) > 0 ? `<span title="Baños">${ic('bath')}${esc(f.bathrooms)}</span>` : '',
+          mods.parqueaderos && Number(f.garages) > 0 ? `<span title="Parqueaderos">${ic('car')}${esc(f.garages)}</span>` : '',
+          Number(f.stratum) > 0 ? `<span class="e">Estrato ${esc(f.stratum)}</span>` : '',
+        ].filter(Boolean);
+        return meta.length ? `<div class="card-meta">${meta.join('')}</div>` : '';
+      })()}
     </div>`;
 }
 
@@ -2611,29 +2631,20 @@ const tieneCuotaParte = (p) => p && p.cuota_parte != null && Number(p.cuota_part
 /** ¿El servidor entregó esta ficha recortada por plan? */
 const esBloqueada = (p) => p && p._bloqueada === true;
 
-/**
- * Frescura de la ficha.
+/*
+ * Aquí vivía «Verificado hace N días».
  *
- * A un activo de banco se le dice cuándo se VERIFICÓ que sigue disponible, nunca
- * su antigüedad: un inmueble en dación de pago puede llevar meses publicado sin
- * que eso signifique nada malo, y "Publicado hace 2 meses" lo mata sin motivo.
- * En el portal sí interesa cuándo se vio por última vez.
+ * Se retiró del portal cuando el cliente preguntó qué significaba y, al
+ * explicárselo, dijo que no era relevante. Ahora sale también de las fichas de
+ * banco, que era donde quedaba, por la misma razón llevada hasta el final: la
+ * fecha decía cuándo NUESTRO motor confirmó que el aviso seguía publicado. Es un
+ * dato de nuestra operación, no del inmueble, y quien compara tres locales no
+ * tiene por qué cargar con él.
+ *
+ * Lo que el visitante sí necesita saber —que un aviso puede haberse vendido o
+ * retirado en su fuente— no depende de esta etiqueta: está dicho en el pie, en
+ * una frase, para todas las fichas a la vez.
  */
-const SIN_CADUCIDAD = ['davivienda', 'bancolombia', 'bbva', 'aval'];
-function frescura(p) {
-  const iso = p.last_seen_at || p.updated_at;
-  if (!iso) return '';
-  const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-  if (!Number.isFinite(d) || d < 0) return '';
-  const cuando = d === 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`;
-  // Solo para la cartera de bancos, donde el aviso no caduca y saber que sigue
-  // vigente sí dice algo. En el portal se retiró: el cliente preguntó qué era
-  // «Visto hace 2 días» y, al explicárselo, «no es relevante». Es la fecha en que
-  // NUESTRO motor confirmó que el aviso seguía publicado —un dato de nuestra
-  // operación, no del inmueble— y ocupaba un sitio que ahora usa el descuento.
-  if (!SIN_CADUCIDAD.includes(p.source)) return '';
-  return `<span class="frescura" title="Última vez que el motor confirmó que sigue publicado">${ic('check')}Verificado ${cuando}</span>`;
-}
 
 /**
  * Sello sobre la foto: la ficha existe y se ve el descuento, falta desbloquearla.
@@ -4543,12 +4554,11 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   void activarPestana(b.dataset.tab);
 }));
 $('modal-close').addEventListener('click', closeModal);
-// «Ver tutorial» reabre el RECORRIDO, que es la bienvenida real. El diálogo
-// por pasos queda como respaldo para cuando el recorrido no esté disponible.
-$('ver-tutorial').addEventListener('click', () => {
-  if (window.__radarTour) window.__radarTour.abrir();
-  else abrirOnboarding();
-});
+// El manejador de «Ver tutorial» se retiró con el botón. Iba sin `?.`, así que
+// dejarlo mirando un elemento que ya no existe habría lanzado un TypeError aquí
+// mismo —y con él se caía el resto del archivo: los filtros, las pestañas y el
+// paginador se quedan sin manejadores, y la página parece cargada pero no
+// responde a nada.
 document.addEventListener('click', (e) => {
   if (e.target.closest('[data-onboarding-siguiente]')) { avanzarOnboarding(1); return; }
   if (e.target.closest('[data-onboarding-atras]')) { avanzarOnboarding(-1); return; }
@@ -4736,8 +4746,24 @@ document.addEventListener('keydown', (e) => {
 // recorrido lo lanza ella cuando el usuario lo pide. Sin esta condición se abrían
 // las dos a la vez —el recorrido encima de la bienvenida— porque una la decide el
 // navegador y la otra la cuenta.
+/**
+ * El recorrido de 5 pasos, en pausa.
+ *
+ * Decisión del cliente (3 de agosto de 2026): no se abre solo hasta tener
+ * feedback de usuarios reales. La duda que la motiva es razonable — cinco pasos
+ * encima de la pantalla, antes de que nadie haya visto un solo inmueble, es una
+ * apuesta a que la gente no entiende el producto sin que se lo expliquen; y esa
+ * apuesta se comprueba mirando, no adivinando.
+ *
+ * Se apaga el arranque automático, NO el recorrido: el botón «Ver tutorial» de la
+ * barra sigue abriéndolo, así que se puede enseñar al cliente y probarlo sin
+ * revertir nada. Volver a activarlo es poner esta constante en `true`.
+ */
+const ONBOARDING_AUTOMATICO = false;
+
 try {
-  if (!localStorage.getItem(ONBOARDING_KEY) && !localStorage.getItem('radar_token')) {
+  if (ONBOARDING_AUTOMATICO
+    && !localStorage.getItem(ONBOARDING_KEY) && !localStorage.getItem('radar_token')) {
     marcarOnboardingVisto();
     // El recorrido guiado necesita que la página ya tenga contenido que iluminar,
     // así que espera a que las pestañas estén pintadas. Si `tour.js` no cargó por

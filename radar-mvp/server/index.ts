@@ -377,7 +377,61 @@ function parseListQuery(url: URL): ListQuery {
   };
 }
 
-async function serveStatic(res: import('node:http').ServerResponse, pathname: string) {
+/**
+ * El dominio público, para las URLs absolutas que exigen el mapa del sitio y la
+ * etiqueta canónica.
+ *
+ * Sale de `RADAR_PUBLIC_URL` cuando está puesta y, si no, del `Host` de la
+ * petición. Así el mismo binario sirve en pruebas y en el dominio definitivo sin
+ * tocar código —el documento del cliente avisa de que el dominio de hoy es de
+ * staging— y sin dejar una URL cableada que apunte al sitio equivocado el día del
+ * cambio. El `Host` se limpia porque llega del cliente y acaba dentro del HTML.
+ */
+function baseUrlDe(req: import('node:http').IncomingMessage): string {
+  const configurada = process.env.RADAR_PUBLIC_URL?.trim();
+  if (configurada) return configurada.replace(/\/+$/, '');
+  const host = String(req.headers.host ?? '').trim();
+  if (!/^[a-z0-9.-]+(:\d+)?$/i.test(host)) return '';
+  const protocolo = String(req.headers['x-forwarded-proto'] ?? '').split(',')[0].trim()
+    || (host.startsWith('localhost') || host.startsWith('127.') ? 'http' : 'https');
+  return `${protocolo === 'http' ? 'http' : 'https'}://${host}`;
+}
+
+/**
+ * Los metadatos y el bloque de enlaces se inyectan en el HTML servido, no se
+ * pintan desde el navegador: un rastreador no ejecuta la aplicación, así que todo
+ * lo que dependa de `app.js` para existir, para él no existe.
+ */
+async function inyectarSeo(html: string, url: URL, base: string): Promise<string> {
+  const { metaDeUrl, bloqueSeoHtml } = await import('./seo.js');
+  const meta = metaDeUrl(url.searchParams);
+  const e = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+
+  let salida = html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${e(meta.title)}</title>`);
+  const cabeza = [
+    `<meta name="description" content="${e(meta.description)}">`,
+    base ? `<link rel="canonical" href="${e(base + meta.canonical)}">` : '',
+    `<meta property="og:title" content="${e(meta.title)}">`,
+    `<meta property="og:description" content="${e(meta.description)}">`,
+    `<meta property="og:type" content="website">`,
+    base ? `<meta property="og:url" content="${e(base + meta.canonical)}">` : '',
+  ].filter(Boolean).join('\n  ');
+  salida = salida.replace('</head>', `  ${cabeza}\n</head>`);
+
+  // El bloque va donde pidió el cliente: al final, después del aviso legal. Si el
+  // marcador no está —o el inventario no da para ninguna columna— la página se
+  // sirve igual: esto no puede ser motivo de que el sitio deje de cargar.
+  if (salida.includes('<!--SEO-ENLACES-->')) {
+    salida = salida.replace('<!--SEO-ENLACES-->', await bloqueSeoHtml().catch(() => ''));
+  }
+  return salida;
+}
+
+async function serveStatic(
+  res: import('node:http').ServerResponse,
+  pathname: string,
+  seo?: { url: URL; base: string },
+) {
   const rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
   // Evita traversal
   if (rel.includes('..')) {
@@ -388,6 +442,12 @@ async function serveStatic(res: import('node:http').ServerResponse, pathname: st
     const file = join(PUBLIC, rel);
     const buf = await readFile(file);
     const contentType = contentTypeFor(file);
+    if (seo && contentType.startsWith('text/html')) {
+      const html = await inyectarSeo(buf.toString('utf8'), seo.url, seo.base);
+      res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache, must-revalidate' });
+      res.end(html);
+      return;
+    }
     allowCrossOriginImageEmbedding(res, contentType);
     // no-cache: el navegador SIEMPRE revalida los estáticos. Evita el bug de
     // assets desincronizados (HTML nuevo + app.js viejo cacheado → pantalla
@@ -1140,13 +1200,32 @@ const server = createServer(async (req, res) => {
       });
       return sendJSON(res, 404, { error: 'ruta API no encontrada' });
     }
+    // Mapa del sitio y robots. Hasta ahora los dos devolvían 404: nada bloqueaba
+    // la indexación, pero tampoco había forma de decirle a Google qué URLs
+    // existen. El mapa se arma del inventario, así que no envejece solo.
+    if (path === '/sitemap.xml' || path === '/robots.txt') {
+      const { sitemapXml, robotsTxt } = await import('./seo.js');
+      const base = baseUrlDe(req);
+      const esMapa = path === '/sitemap.xml';
+      res.writeHead(200, {
+        'Content-Type': esMapa ? 'application/xml; charset=utf-8' : 'text/plain; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600',
+      });
+      return res.end(esMapa ? await sitemapXml(base) : robotsTxt(base));
+    }
     if (path === '/login') return await serveStatic(res, '/login.html');
     if (path === '/auth/callback') return await serveStatic(res, '/auth-callback.html');
     if (path === '/planes') return await serveStatic(res, '/planes.html');
+    if (path === '/terminos') return await serveStatic(res, '/terminos.html');
     if (path === '/cuenta') return await serveStatic(res, '/cuenta.html');
     if (path === '/pago') return await serveStatic(res, '/pago.html');
     if (path === '/comparador') return await serveStatic(res, '/comparador.html');
     if (path === '/admin') return await serveStatic(res, '/admin.html');
+    // Solo la portada lleva metadatos por combinación y bloque de enlaces: es la
+    // única ruta cuyo contenido cambia según la querystring.
+    if (path === '/' || path === '/index.html') {
+      return await serveStatic(res, path, { url, base: baseUrlDe(req) });
+    }
     return await serveStatic(res, path);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

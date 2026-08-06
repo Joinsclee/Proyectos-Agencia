@@ -82,7 +82,11 @@
         <button class="tab-btn tab-fav" data-tab="guardados"><svg class="ic"><use href="#i-heart"/></svg> <span class="nav-label">Guardados</span> <span class="tab-count" id="c-guardados">0</span></button>
         <!-- Siempre visible: quien cierra el tutorial tiene que poder volver a él
              sin buscarlo. Es el requisito del onboarding, no un adorno. -->
-        <button class="tab-btn tab-tutorial" id="ver-tutorial" type="button"><svg class="ic"><use href="#i-spark"/></svg> <span class="nav-label">Ver tutorial</span></button>
+        <!-- Aquí estaba «Ver tutorial». Retirado por decisión del cliente junto con
+             el arranque automático: el recorrido entero queda en pausa hasta tener
+             feedback de usuarios reales. El código sigue en el repo (tour.js y
+             `abrirOnboarding` en app.js), así que reactivarlo es devolver este
+             botón y su `<script>`. -->
         <span class="nav-sep" aria-hidden="true"></span>
         <div class="authbar" id="authbar"></div>
       </div>
@@ -323,6 +327,26 @@
     Al final de la página y en tono discreto, no como advertencia: es una condición
     de cómo funciona el producto, no una disculpa.
   -->
+  <!--
+    Bloque de enlaces por categoría y ciudad.
+
+    Lo inyecta el servidor (server/seo.ts) en este punto exacto. No se pinta desde
+    app.js a propósito: un rastreador no ejecuta la aplicación, así que un enlace
+    que solo existe tras correr JavaScript, para Google no existe — y el objetivo
+    entero del bloque es que descubra las combinaciones de ciudad y tipo que hoy
+    no enlaza nadie.
+
+    Va ANTES del aviso legal, que es el orden que pidió el cliente y el que usan
+    los portales: primero los enlaces, que son navegación y sirven para seguir
+    buscando; y el aviso legal cerrando la página, que es donde se espera y donde
+    no interrumpe nada.
+
+    Las ciudades salen del inventario real, no de una lista fija: la propuesta
+    original enlazaba a Cali en las cuatro columnas y Cali no tiene ni una casa ni
+    un apartamento en remate.
+  -->
+  <!--SEO-ENLACES-->
+
   <footer class="pie-legal">
     <p>Los inmuebles que ves aquí provienen de <strong>portales y fuentes públicas</strong>
     (FincaRaíz, carteras de bancos y remates judiciales). El Radar los recopila, los compara
@@ -332,6 +356,7 @@
     Verifica siempre en el aviso original antes de tomar una decisión.</p>
     <p>Las cifras y valoraciones son <strong>estimaciones estadísticas orientativas</strong>
     sobre precios de oferta publicados, no avalúos ni recomendaciones de inversión.</p>
+    <p class="pie-enlaces"><a href="/terminos">Términos de uso y política de datos</a></p>
   </footer>
 
   <!-- Memoria de la ficha que el usuario dejó a medias al irse a registrarse o a
@@ -342,9 +367,14 @@
        reconstruir la pantalla al abrir un enlace compartido. -->
   <script src="/url-estado.js"></script>
   <script src="/app.js"></script>
-  <!-- Recorrido guiado de bienvenida. Va después de app.js: necesita que las
-       pestañas y los listados ya tengan sus manejadores para poder navegarlos. -->
+  <!-- Recorrido guiado de bienvenida, en pausa por decisión del cliente.
+       No se carga: son 17 KB en cada visita para algo que ya no tiene ninguna
+       forma de abrirse. Las comprobaciones que quedan en app.js preguntan por
+       `window.__radarTour` con `?.`, así que su ausencia no rompe nada.
+       Para reactivarlo: descomentar esta línea, devolver el botón «Ver tutorial»
+       de la barra y poner ONBOARDING_AUTOMATICO en true.
   <script src="/tour.js"></script>
+  -->
   <script src="/asistente.js"></script>
 </body>
 </html>

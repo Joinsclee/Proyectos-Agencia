@@ -798,7 +798,6 @@ h1 .gold { color: var(--gold); }
 .tab-fav.active { border-bottom-color: #e23e6a; }
 /* El acceso al tutorial no es una sección: no se marca como activa ni compite con
    las pestañas. En móvil se queda solo el icono, como el corazón. */
-.tab-tutorial .ic { color: var(--gold); opacity: 1; }
 .nav-right .tab-btn { padding-left: 14px; padding-right: 14px; }
 /* ---- Freemium: bloqueos + muro de registro ---- */
 .lockbox { display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, #faf6fc, #f1e8f7); border: 1.5px dashed #c9b3da; border-radius: 12px; padding: 15px 18px; cursor: pointer; text-decoration: none; transition: border-color .15s, background .15s; }
@@ -912,11 +911,6 @@ h1 .gold { color: var(--gold); }
 @media (max-width: 720px) {
   .reporte-cta { width: 100%; }
 }
-
-/* Frescura: en bancos comunica la última VERIFICACIÓN, no la antigüedad. */
-.frescura { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px;
-  font-size: 0.7rem; font-weight: 600; color: #15803d; }
-.frescura .ic { width: 13px; height: 13px; stroke-width: 2.4; }
 
 @media (min-width: 761px) {
   .legend-card { display: grid; grid-template-columns: auto minmax(0, 1fr); }
@@ -1749,7 +1743,10 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
    condición de cómo funciona el producto, no una advertencia. Deja hueco abajo por
    el botón flotante del asistente y por la barra de pestañas del móvil. */
 .pie-legal {
-  max-width: 1280px; margin: 40px auto 0; padding: 24px 20px 90px;
+  /* `margin-top: 0` porque ya no abre el pie: viene pegado al bloque de enlaces,
+     que es quien separa del contenido. Dos márgenes seguidos dejarían un vacío
+     del alto de media pantalla entre las dos mitades del mismo pie. */
+  max-width: 1280px; margin: 0 auto; padding: 22px 20px 90px;
   border-top: 1px solid #ece6f2; color: #7b7288; font-size: 0.78rem; line-height: 1.6;
 }
 .pie-legal p { margin: 0 0 9px; max-width: 68ch; }
@@ -1767,9 +1764,52 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 @media (min-width: 981px) {
   .pie-legal { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 22px; }
   .pie-legal p { margin: 0; }
+  /* El enlace legal no es una cuarta columna: cruza el ancho por debajo de las
+     tres. Sin esto, el grid lo colocaría junto a los párrafos y se leería como
+     un cuarto aviso a medio escribir. */
+  .pie-legal .pie-enlaces { grid-column: 1 / -1; padding-top: 14px; border-top: 1px solid #ece6f2; }
 }
+.pie-enlaces { margin-top: 14px; }
+.pie-enlaces a { color: var(--pp); font-weight: 700; text-decoration: none; border-bottom: 1px solid #d9c9e6; }
+.pie-enlaces a:hover { border-bottom-color: var(--pp); }
 @media (max-width: 760px) {
   .pie-legal { padding: 20px 16px calc(150px + env(safe-area-inset-bottom)); }
+}
+
+/* ── Enlaces por categoría y ciudad ──
+   El bloque que hace descubribles las combinaciones de tipo + ciudad que hasta
+   ahora no enlazaba nadie. Son enlaces de verdad y se ven como tales: alguien que
+   llega buscando «casas en remate en Bogotá» tiene que reconocer aquí su búsqueda.
+   Va al final del todo, en tono discreto — es una ayuda de navegación, no una
+   sección del producto. */
+.seo-enlaces {
+  /* Abre el pie, así que carga el margen que lo separa del contenido — y no
+     reserva hueco abajo: el que cierra la página es el aviso legal, y es él quien
+     deja sitio para la barra de pestañas del móvil. */
+  max-width: 1280px; margin: 40px auto 0; padding: 26px 20px 24px;
+  border-top: 1px solid #ece6f2;
+}
+.seo-enlaces h3 {
+  margin: 0 0 16px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: #9a90a8;
+}
+.seo-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px 24px; }
+.seo-col { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.seo-col h4 { margin: 0 0 3px; font-size: 0.82rem; font-weight: 800; color: #5d5568; }
+.seo-col a {
+  color: #7b7288; font-size: 0.8rem; line-height: 1.4; text-decoration: none;
+  /* 44px de alto táctil sin cambiar la densidad visual: el padding hace el
+     objetivo, no el tamaño de la letra. */
+  padding: 4px 0; min-height: 22px;
+}
+.seo-col a:hover, .seo-col a:focus-visible { color: var(--pp); text-decoration: underline; }
+/* `margin-top: auto` alinea todos los «Más …» a la misma línea aunque una columna
+   tenga menos ciudades que otra —el inventario manda, y no siempre da tres—. Sin
+   esto, el enlace sube y la retícula se lee como si faltara algo. */
+.seo-col .seo-mas { font-weight: 700; color: var(--pp); margin-top: auto; padding-top: 6px; }
+@media (max-width: 760px) {
+  .seo-enlaces { padding: 22px 16px 20px; }
+  .seo-cols { gap: 18px; }
 }
 
 /* ───── Barra de cuenta (arriba del todo) ─────
