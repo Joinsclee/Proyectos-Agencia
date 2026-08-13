@@ -48,6 +48,36 @@ interface Opts {
   useArchive?: boolean; // ⭐ blog archive /remates-judiciales/page/N/ — TODOS los avisos vivos (default)
 }
 
+/**
+ * Con ventana o sin ella, decidido por el entorno y no por una variable que hay
+ * que acordarse de poner.
+ *
+ * Este scraper corría con ventana a propósito: Cloudflare da challenges
+ * silenciosos en headless y con ventana pasan. La idea era poner
+ * `REMATES_HEADLESS=1` el día que fuera a un cron Linux — y ese día llegó sin
+ * que nadie pusiera la variable. Resultado: dos días seguidos fallando en dos
+ * segundos con «Looks like you launched a headed browser without having a
+ * XServer running», mientras el inventario de remates se vaciaba solo porque las
+ * audiencias van pasando y no entraban nuevas.
+ *
+ * El fallo no era discutible: sin servidor X, una ventana no se puede abrir. Así
+ * que en vez de depender de la memoria de alguien, se mira si hay entorno
+ * gráfico. En un contenedor no lo hay, y entonces headless no es una preferencia
+ * sino la única opción que puede funcionar.
+ *
+ * `REMATES_HEADLESS` se conserva para forzar cualquiera de los dos modos a mano:
+ * `1` headless, `0` con ventana. Sirve para depurar Cloudflare en local.
+ */
+function decidirHeadless(): boolean {
+  const forzado = process.env.REMATES_HEADLESS;
+  if (forzado === '1') return true;
+  if (forzado === '0') return false;
+  // macOS y Windows siempre tienen escritorio. En Linux, `DISPLAY` (o Wayland)
+  // es lo que dice si hay uno; en un contenedor no está.
+  if (process.platform !== 'linux') return false;
+  return !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY;
+}
+
 function parseArgs(): Opts {
   const args = process.argv.slice(2);
   const o: Opts = {};
@@ -59,7 +89,7 @@ function parseArgs(): Opts {
     else if (a === '--sitemap-alive') o.useSitemapAlive = true;
     else if (a === '--archive') o.useArchive = true;
   }
-  if (process.env.REMATES_HEADLESS === '1') o.headless = true;
+  o.headless = decidirHeadless();
   // DEFAULT: blog archive. Es la única fuente que da TODOS los avisos vivos
   // (~597) sin los 404 zombies del sitemap ni el cap de paginación del menú.
   if (!o.dept && !o.city && !o.useSitemap && !o.useSitemapAlive) o.useArchive = true;
