@@ -138,20 +138,59 @@ interface ZoneStats {
 /**
  * El lifecycle solo es seguro cuando se observaron todas las zonas y páginas.
  * Un fallo parcial no significa que el aviso desapareció del portal.
+ *
+ * ── Qué cuenta como fallo, y qué no ──
+ *
+ * Antes bastaba UN error de cualquier clase para no marcar nada. Y como cada
+ * corrida trae decenas de avisos con datos malos —«area_m2: Number must be
+ * greater than 0» es el más común—, la condición no se cumplía nunca. Efecto
+ * medido: la última desactivación por ausencia fue el 9 de julio, ninguna de las
+ * 131.084 fichas activas tiene `times_missed >= 1`, y el inventario solo crece
+ * aunque la corrida más reciente encontrara 110.609 avisos, veinte mil menos de
+ * los que hay guardados. Es decir: el catálogo acumula avisos que el portal ya
+ * no publica, y el único mecanismo que los limpiaba llevaba un mes parado.
+ *
+ * La confusión estaba en tratar igual dos cosas distintas:
+ *
+ *  · Un fallo de COBERTURA —una página que no cargó, una zona que reventó— sí
+ *    invalida el lifecycle: no viste todo el inventario, así que no puedes
+ *    concluir que lo que falta desapareció.
+ *  · Un aviso concreto RECHAZADO por datos inválidos no invalida nada. Lo viste;
+ *    simplemente no lo guardaste. La cobertura fue completa igual.
+ *
+ * Lo que de verdad garantiza la cobertura ya se comprueba aparte: que estén
+ * todas las zonas pedidas y que cada una llegara hasta su última página.
  */
 export function canMarkSourceStale(
   requestedZones: number,
   stats: Array<Pick<ZoneStats, 'completed'>>,
-  errorCount: number,
+  erroresDeCobertura: number,
   scopedRun: boolean,
   dryRun: boolean,
 ): boolean {
   return !scopedRun
     && !dryRun
-    && errorCount === 0
+    && erroresDeCobertura === 0
     && stats.length === requestedZones
     && stats.every((item) => item.completed);
 }
+
+/**
+ * Separa los errores que hablan de la corrida de los que hablan de un aviso.
+ *
+ * Un error de validación nombra el campo que falló (`area_m2`, `price`…) o dice
+ * explícitamente que el registro se descartó. Todo lo demás —timeouts, HTTP,
+ * fallos de red o de parseo de una página entera— se considera de cobertura, que
+ * es el lado prudente: ante la duda, no se desactiva nada.
+ */
+const VALIDACION = /(^|\W)(area_m2|price|precio|currency|type|city|source_id|stratum|bedrooms|bathrooms)\b|Number must be|Required|Invalid|inválid|descartad/i;
+
+export function esErrorDeValidacion(mensaje: string): boolean {
+  return VALIDACION.test(mensaje);
+}
+
+export const contarErroresDeCobertura = (errores: Array<{ message?: string }>): number =>
+  errores.filter((e) => !esErrorDeValidacion(String(e?.message ?? ''))).length;
 
 async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
   const runStartISO = new Date().toISOString();
@@ -279,10 +318,17 @@ async function runOperation(operation: 'venta' | 'arriendo', opts: Opts) {
   // normalmente NO completamos → no marcamos stale para evitar desactivar
   // listings que solo se movieron de página. El historial de precios + last_seen_at
   // siguen reflejando frescura.
+  // Solo los errores de COBERTURA bloquean el lifecycle. Los de validación por
+  // aviso no dicen nada sobre si el resto del inventario sigue publicado.
+  const erroresDeCobertura = contarErroresDeCobertura(errors);
+  if (errors.length !== erroresDeCobertura) {
+    log.info(`Errores: ${errors.length} en total · ${erroresDeCobertura} de cobertura `
+      + `(${errors.length - erroresDeCobertura} son avisos rechazados por datos inválidos, no bloquean el lifecycle)`);
+  }
   const fullRun = canMarkSourceStale(
     zonas.length,
     stats,
-    errors.length,
+    erroresDeCobertura,
     Boolean(opts.slug || opts.maxPages),
     Boolean(opts.dry),
   );

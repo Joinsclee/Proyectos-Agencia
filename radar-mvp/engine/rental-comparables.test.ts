@@ -116,3 +116,50 @@ test('el lifecycle no desactiva avisos cuando faltó una zona o página', () => 
   assert.equal(canMarkSourceStale(2, [{ completed: true }, { completed: false }], 1, false, false), false);
   assert.equal(canMarkSourceStale(2, [{ completed: true }, { completed: true }], 0, true, false), false);
 });
+
+/*
+ * El bug que tuvo el catálogo inflado un mes.
+ *
+ * `canMarkSourceStale` exigía CERO errores de cualquier clase, y cada corrida de
+ * FincaRaíz trae decenas de avisos rechazados por datos malos —«area_m2: Number
+ * must be greater than 0» es el más común—. Así que la condición no se cumplía
+ * nunca y el lifecycle no corrió desde el 9 de julio: ninguna de las 131.084
+ * fichas activas tenía `times_missed >= 1`, mientras la última corrida encontraba
+ * 110.609 avisos, veinte mil menos de los guardados. El catálogo acumulaba
+ * avisos que el portal ya no publica.
+ */
+test('un aviso con datos inválidos no bloquea el lifecycle; un fallo de cobertura sí', async () => {
+  const { contarErroresDeCobertura, esErrorDeValidacion } = await import('../scrapers/CO/fincaraiz/index.js');
+
+  // Lo que llenaba el registro y bloqueaba todo: avisos concretos rechazados.
+  // Se vieron, no se guardaron. La cobertura fue completa igual.
+  assert.equal(esErrorDeValidacion('area_m2: Number must be greater than 0'), true);
+  assert.equal(esErrorDeValidacion('price: Required'), true);
+  assert.equal(esErrorDeValidacion('registro descartado por precio absurdo'), true);
+
+  // Esto sí habla de la corrida: no viste el inventario entero, así que no
+  // puedes concluir que lo que falta desapareció.
+  assert.equal(esErrorDeValidacion('Timeout navegando a la página 12'), false);
+  assert.equal(esErrorDeValidacion('HTTP 503 al listar la zona chapinero'), false);
+  assert.equal(esErrorDeValidacion('fetch failed'), false);
+
+  const soloValidacion = [
+    { message: 'area_m2: Number must be greater than 0' },
+    { message: 'area_m2: Number must be greater than 0' },
+    { message: 'price: Required' },
+  ];
+  assert.equal(contarErroresDeCobertura(soloValidacion), 0);
+  assert.equal(
+    canMarkSourceStale(2, [{ completed: true }, { completed: true }], contarErroresDeCobertura(soloValidacion), false, false),
+    true,
+    'con las zonas completas y solo avisos malos, el lifecycle debe correr',
+  );
+
+  const conCobertura = [...soloValidacion, { message: 'Timeout navegando a la página 12' }];
+  assert.equal(contarErroresDeCobertura(conCobertura), 1);
+  assert.equal(
+    canMarkSourceStale(2, [{ completed: true }, { completed: true }], contarErroresDeCobertura(conCobertura), false, false),
+    false,
+    'un fallo de cobertura sigue bloqueando: ante la duda no se desactiva nada',
+  );
+});
