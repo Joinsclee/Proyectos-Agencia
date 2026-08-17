@@ -235,3 +235,40 @@ test('asistente: un suscriptor no arrastra contador', () => {
   assert.equal(estado.ilimitado, true);
   assert.equal(estado.restantes, null);
 });
+
+/*
+ * Una ruta declarada dentro de una guarda que no la deja pasar es una ruta que
+ * no existe, y responde 404 sin que nada falle en las pruebas.
+ *
+ * Pasó con `/api/propiedades` —la que reabre una ficha desde las simulaciones
+ * guardadas—: el manejador estaba escrito dentro del bloque que solo admite
+ * `/api/me` y `/api/favorites`, así que nunca se alcanzaba. Compilaba, no
+ * rompía nada y en producción devolvía 404.
+ */
+test('rutas: cada manejador está dentro de una guarda que lo deja entrar', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const fuente = await readFile(new URL('./index.ts', import.meta.url), 'utf8');
+
+  // Las guardas por prefijo que agrupan rutas: se recogen todas las condiciones
+  // de la forma `if (path === 'A' || path === 'B' || path.startsWith('C'))`.
+  const guardas = [...fuente.matchAll(/if \(path === '([^']+)'((?:\s*\|\|\s*path(?:\.startsWith\()?[^)]*\)?)*)\) \{/g)];
+  const admitidas = new Set<string>();
+  const prefijos: string[] = [];
+  for (const g of guardas) {
+    const bloque = g[0];
+    for (const [, ruta] of bloque.matchAll(/path === '([^']+)'/g)) admitidas.add(ruta);
+    for (const [, pre] of bloque.matchAll(/path\.startsWith\('([^']+)'\)/g)) prefijos.push(pre);
+  }
+
+  // Toda ruta con manejador propio debe estar admitida por alguna guarda, o no
+  // estar dentro de ninguna (las de primer nivel).
+  const declaradas = [...fuente.matchAll(/if \(path === '(\/api\/[^']+)'(?: && req\.method)/g)].map((m) => m[1]);
+  const inalcanzables = declaradas.filter((ruta) => {
+    const dentroDeGuarda = prefijos.some((p) => ruta.startsWith(p)) || admitidas.has(ruta);
+    // Solo interesan las que el código trata como agrupadas: si la ruta aparece
+    // en una guarda de agrupación, tiene que estar admitida.
+    return !dentroDeGuarda && fuente.includes(`path === '${ruta}' && req.method`) && /\/api\/(propiedades|favorites)/.test(ruta);
+  });
+  assert.deepEqual(inalcanzables, [], `estas rutas no las deja pasar ninguna guarda: ${inalcanzables.join(', ')}`);
+  assert.ok(admitidas.has('/api/propiedades'), '/api/propiedades debe estar admitida en su guarda');
+});

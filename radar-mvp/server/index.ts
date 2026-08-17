@@ -816,11 +816,20 @@ const server = createServer(async (req, res) => {
         return sendJSON(res, 405, { ok: false, error: 'Método o ruta administrativa no permitido' });
       }
       // ── Favoritos (requieren Bearer token del usuario) ──
-      if (path === '/api/me' || path.startsWith('/api/favorites')) {
+      // `/api/propiedades` entra aquí porque comparte todo lo de dentro: la
+      // sesión, el cupo y el redactado de las fichas. Estaba fuera de esta
+      // condición y por eso devolvía 404 en vez de responder — la guarda de
+      // arriba solo dejaba pasar `/api/me` y los favoritos, así que el bloque
+      // que la atendía no se alcanzaba nunca.
+      if (path === '/api/me' || path === '/api/propiedades' || path.startsWith('/api/favorites')) {
         const token = (req.headers.authorization ?? '').replace(/^Bearer\s+/i, '') || null;
         const user = await getUserFromToken(token);
         if (path === '/api/me') return sendJSON(res, 200, { ok: !!user, user });
-        if (!user) return sendJSON(res, 401, { ok: false, error: 'Inicia sesión para usar favoritos' });
+        // El mensaje ya no habla solo de favoritos: por aquí pasan también las
+        // fichas de las simulaciones guardadas, y decirle a alguien que inicie
+        // sesión «para usar favoritos» cuando venía de su lista de simulaciones
+        // no explica nada.
+        if (!user) return sendJSON(res, 401, { ok: false, error: 'Inicia sesión para acceder a tus guardados y simulaciones' });
         if (path === '/api/favorites/toggle') {
           if (req.method !== 'POST') return sendJSON(res, 405, { ok: false, error: 'Método no permitido' });
           const body = (await readJsonBody(req)) as { kind?: string; id?: string };
