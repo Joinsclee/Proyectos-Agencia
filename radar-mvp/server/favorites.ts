@@ -132,3 +132,42 @@ export async function favoriteProperties(userId: string): Promise<any[]> {
     .map((f) => { const r = byId.get(f.id); return r ? { ...r, _kind: f.kind, _fav_at: f.at } : null; })
     .filter(Boolean);
 }
+
+/**
+ * Fichas concretas por identificador, para reabrir lo que el usuario ya había
+ * mirado.
+ *
+ * Nace para las simulaciones guardadas (B1): la lista dice «Apartamento en
+ * Bogotá, simulado el 4 de agosto» y hay que poder volver a esa ficha. Guardar
+ * los datos de la simulación no basta si no hay forma de regresar al inmueble
+ * que los motivó.
+ *
+ * Se parece a `favoriteProperties` pero recibe las referencias en vez de leerlas
+ * de los favoritos: una simulación no implica haber guardado el inmueble, y son
+ * dos listas independientes.
+ *
+ * El tope es deliberado: quien llama pasa lo que quiera, y sin él una petición
+ * con mil identificadores se convertiría en una consulta que nadie pidió.
+ */
+export async function propiedadesPorReferencia(
+  refs: Array<{ kind: string; id: string }>,
+): Promise<any[]> {
+  const limpias = refs
+    .filter((r) => r && typeof r.id === 'string' && /^[0-9a-f-]{36}$/i.test(r.id))
+    .slice(0, 50);
+  if (!limpias.length) return [];
+  const inmIds = limpias.filter((r) => r.kind !== 'remate').map((r) => r.id);
+  const remIds = limpias.filter((r) => r.kind === 'remate').map((r) => r.id);
+  const [inm, rem] = await Promise.all([
+    inmIds.length ? supabase.from('inmuebles').select('*').in('id', inmIds) : Promise.resolve({ data: [] as any[] }),
+    remIds.length ? supabase.from('remates').select('*').in('id', remIds) : Promise.resolve({ data: [] as any[] }),
+  ]);
+  const byId = new Map<string, any>();
+  for (const r of (inm.data ?? [])) byId.set(r.id, r);
+  for (const r of (rem.data ?? [])) byId.set(r.id, r);
+  // En el orden en que se pidieron: la lista de simulaciones ya viene ordenada
+  // por fecha y el servidor no debe reordenarla por su cuenta.
+  return limpias
+    .map((r) => { const fila = byId.get(r.id); return fila ? { ...fila, _kind: r.kind } : null; })
+    .filter(Boolean);
+}

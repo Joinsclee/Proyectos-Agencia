@@ -1499,7 +1499,12 @@ function renderRadarSetup() {
 
   if (radarPreferences.complete) {
     const savedChip = favSet.size ? `<span class="setup-chip">${favSet.size} guardado${favSet.size === 1 ? '' : 's'}</span>` : '';
-    const simulationChip = savedSimulations.size ? `<span class="setup-chip">${savedSimulations.size} simulación${savedSimulations.size === 1 ? '' : 'es'}</span>` : '';
+    // Pulsable (B1): el panel decía cuántas simulaciones había y no daba forma de
+    // verlas. Un dato que no lleva a ninguna parte invita a pulsarlo y no hace
+    // nada, que es peor que no mostrarlo.
+    const simulationChip = savedSimulations.size
+      ? `<button type="button" class="setup-chip setup-chip-accion" data-ver-simulaciones>${ic('chart')}${savedSimulations.size} simulación${savedSimulations.size === 1 ? '' : 'es'}</button>`
+      : '';
     const alertActive = radarAlertDraft?.status === 'active';
     const alertChip = radarAlertDraft ? `<span class="setup-chip">${alertActive ? 'Alerta activa' : 'Alerta preparada'}</span>` : '';
     root.innerHTML = `<div class="radar-setup-card is-complete">
@@ -1542,6 +1547,12 @@ function renderRadarSetup() {
       <p>${dismissed ? 'Elige ciudad, presupuesto y tipo de inmueble.' : 'Tres elecciones rápidas reducen el ruido. No necesitas crear una cuenta.'}</p>
     </div>
     <div class="setup-actions">
+      ${/* Las simulaciones también se alcanzan desde aquí. Sin esto, quien guardó
+            números sin personalizar el Radar no tenía NINGUNA forma de volver a
+            ellos: el acceso vivía solo en la tarjeta del panel ya configurado. */ ''}
+      ${savedSimulations.size
+        ? `<button class="setup-secondary" type="button" data-ver-simulaciones>${ic('chart')} Ver mis ${savedSimulations.size} simulación${savedSimulations.size === 1 ? '' : 'es'}</button>`
+        : ''}
       ${dismissed ? '' : '<button class="setup-secondary" type="button" data-setup-dismiss>Ahora no</button>'}
       <button class="setup-primary" type="button" data-setup-start>Personalizar en 3 pasos</button>
     </div>
@@ -2930,6 +2941,101 @@ window.__recalcRent = function (input) {
 function persistSimulations() {
   writeStoredJson(RADAR_SIMULATIONS_KEY, [...savedSimulations.values()]);
 }
+
+/**
+ * La lista de simulaciones guardadas (B1).
+ *
+ * El panel decía «3 simulaciones» y no había dónde verlas: los números vivían
+ * dentro de la ficha que los originó, y para recuperarlos había que acordarse de
+ * qué inmueble era y volver a buscarlo. Guardar algo que luego no se encuentra
+ * es la peor forma de ofrecer que se guarde.
+ *
+ * Cada fila lleva lo que pide el requisito —inmueble, fecha, canon simulado y
+ * rentabilidad— y la acción de volver a la ficha.
+ */
+function abrirSimulaciones() {
+  const lista = [...savedSimulations.values()]
+    .sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')));
+
+  const filas = lista.map((s) => {
+    // La rentabilidad se recalcula con lo guardado en vez de guardarse aparte:
+    // así una simulación vieja se lee con las reglas de gastos de HOY, que es lo
+    // que el usuario vería si volviera a abrir la ficha.
+    const anual = Number(s.monthlyRent) > 0 && Number(s.acquisitionTotal) > 0
+      ? ((Number(s.monthlyRent) - Number(s.monthlyAdmin || 0)) * 12) / Number(s.acquisitionTotal) * 100
+      : null;
+    const fecha = s.savedAt
+      ? new Date(s.savedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+    return `<article class="sim-fila">
+      <div class="sim-datos">
+        <h4>${esc(s.title || 'Inmueble')}</h4>
+        <p class="sim-meta">${s.city ? esc(cap(s.city)) + ' · ' : ''}Simulada el ${esc(fecha)}</p>
+        <dl class="sim-cifras">
+          <div><dt>Valor simulado</dt><dd>${fmtCOP(Number(s.base) || 0)}</dd></div>
+          <div><dt>Costo total estimado</dt><dd>${fmtCOP(Number(s.acquisitionTotal) || 0)}</dd></div>
+          <div><dt>Arriendo mensual</dt><dd>${Number(s.monthlyRent) > 0 ? fmtCOP(Number(s.monthlyRent)) : 'sin simular'}</dd></div>
+          <div><dt>Rentabilidad anual</dt><dd>${anual != null ? `${anual.toFixed(1)}%` : '—'}</dd></div>
+        </dl>
+      </div>
+      <div class="sim-acciones">
+        <button type="button" class="sim-abrir" data-sim-abrir data-kind="${esc(s.kind)}" data-id="${esc(s.id)}">Abrir la ficha</button>
+        <button type="button" class="sim-borrar" data-sim-borrar data-key="${esc(s.key)}">Borrar</button>
+      </div>
+    </article>`;
+  }).join('');
+
+  $('modal-content').innerHTML = `<div class="simulaciones">
+    <h2>Tus simulaciones guardadas</h2>
+    <p class="sim-intro">Los números que ajustaste en cada ficha. Se guardan con tu cuenta, así que
+      los tienes en cualquier dispositivo donde inicies sesión.</p>
+    ${lista.length ? filas : '<p class="sim-vacio">Todavía no has guardado ninguna. En la calculadora de cualquier ficha, ajusta el valor y pulsa «Guardar simulación».</p>'}
+  </div>`;
+  showModal();
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest?.('[data-ver-simulaciones]')) { abrirSimulaciones(); return; }
+
+  const borrar = e.target.closest?.('[data-sim-borrar]');
+  if (borrar) {
+    savedSimulations.delete(borrar.dataset.key);
+    persistSimulations();
+    if (auth.token) void syncAccountContext();
+    abrirSimulaciones();   // se repinta la lista, no la página entera
+    renderRadarSetup();
+    return;
+  }
+
+  const abrir = e.target.closest?.('[data-sim-abrir]');
+  if (abrir) void abrirFichaDeSimulacion(abrir.dataset.kind, abrir.dataset.id);
+});
+
+/**
+ * Vuelve a la ficha desde la lista de simulaciones.
+ *
+ * Se pide al servidor en vez de guardarse la ficha entera con la simulación: el
+ * precio, el descuento y hasta la disponibilidad cambian, y devolver una copia
+ * de hace tres semanas sería enseñar un inmueble que quizá ya no existe. Y el
+ * servidor aplica el muro igual que en cualquier otra vía.
+ */
+async function abrirFichaDeSimulacion(kind, id) {
+  if (!kind || !id) return;
+  if (!auth.token) { showToast('Inicia sesión para volver a la ficha.'); return; }
+  try {
+    const r = await fetch('/api/propiedades', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refs: [{ kind, id }] }),
+    }).then((x) => x.json());
+    const p = (r.properties || [])[0];
+    if (!p) { showToast('Esta ficha ya no está disponible en el Radar.'); return; }
+    closeModal();
+    if (kind === 'remate') openRemate(p); else openInmueble(p);
+  } catch {
+    showToast('No se pudo abrir la ficha. Inténtalo de nuevo.');
+  }
+}
 function saveSimulation(calc) {
   const input = calc.querySelector('.calc-input');
   const valor = Number((input?.value || '').replace(/[^0-9]/g, '')) || 0;
@@ -3348,10 +3454,20 @@ window.__analyzeAI = async function (btn, kind, id) {
 
 function gastosSection(valor, mode, context) {
   if (!valor || valor <= 0) return '';
-  const { rows, tot, grand, acquisitionTotal } = renderCalc(valor, mode);
-  const titulo = mode === 'remate' ? 'Calculadora de gastos (registro de la adjudicación)' : 'Calculadora de gastos de compra';
   const key = context?.kind && context?.id ? favKey(context.kind, context.id) : '';
   const saved = key ? savedSimulations.has(key) : false;
+  // Lo que esta persona ya había simulado para ESTE inmueble manda sobre el
+  // precio del anuncio (B2).
+  //
+  // Antes la calculadora arrancaba siempre en el precio publicado, así que quien
+  // había ajustado el valor a lo que pensaba ofrecer —o escrito el arriendo que
+  // esperaba— volvía a la ficha y se lo encontraba todo en blanco. La simulación
+  // se guardaba de verdad, pero la ficha no la miraba: guardar algo que no se
+  // recupera es peor que no ofrecer guardarlo.
+  const previa = key ? savedSimulations.get(key) : null;
+  if (previa && Number(previa.base) > 0) valor = Number(previa.base);
+  const { rows, tot, grand, acquisitionTotal } = renderCalc(valor, mode);
+  const titulo = mode === 'remate' ? 'Calculadora de gastos (registro de la adjudicación)' : 'Calculadora de gastos de compra';
   const contextData = key
     ? ` data-kind="${esc(context.kind)}" data-id="${esc(context.id)}" data-title="${esc(context.title || 'Inmueble')}" data-city="${esc(context.city || '')}"`
     : '';
@@ -3368,18 +3484,23 @@ function gastosSection(valor, mode, context) {
           <span class="spinner"></span> Estimando el valor del arriendo con avisos similares de la zona…
         </div>
         <div class="rent-inputs">
-          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
+          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"${Number(previa?.monthlyRent) > 0 ? ` value="${Math.round(Number(previa.monthlyRent))}"` : ''}></label>
           ${/* Con 0 escrito, no solo como sugerencia: la mayoría de los inmuebles no
                 tiene administración y dejar el campo vacío hacía que la rentabilidad
                 se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
                 «para que la fórmula no le vaya a generar un error». */ ''}
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0}"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0)}"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
       ${key ? `<div class="calc-save-row">
         <button class="calc-save" type="button" data-save-simulation>${saved ? 'Actualizar simulación' : 'Guardar simulación'}</button>
-        <span class="calc-save-status" aria-live="polite">${saved ? 'Ya guardada en este dispositivo.' : 'No necesitas crear una cuenta.'}</span>
+        ${/* Se dice que los números son suyos y no los del anuncio. Sin avisarlo,
+              alguien que ajustó el valor a lo que pensaba ofrecer vuelve semanas
+              después, ve esa cifra y la toma por el precio publicado. */ ''}
+        <span class="calc-save-status" aria-live="polite">${previa
+          ? `Recuperada tu simulación del ${new Date(previa.savedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}.`
+          : 'No necesitas crear una cuenta.'}</span>
       </div>` : ''}
       <p class="calc-note">Estimado de gastos en Colombia${mode === 'remate' ? ' (la postura mínima puede no ser el precio final; el auto de adjudicación se registra)' : ''}. Varía por departamento; no incluye honorarios, hipoteca, administración ni intermediación.</p>
     </div></div>`;
