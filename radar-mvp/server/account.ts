@@ -6,7 +6,7 @@ import { estadoCupo, leerCupo, type Cupo } from './cupo.js';
 import { metricasOperacion, oportunidadesPorZona } from './queries.js';
 import { guardarParametrosGastos } from './parametros-gastos.js';
 import { estadoCupoReportes, leerCupoReportes, type CupoReportes } from './cupo-reportes.js';
-import { type Consultas } from './asistente.js';
+import { estadoConsultas, leerConsultas, type Consultas } from './asistente.js';
 import { conHito, leerHitos, type Hito } from './bienvenida.js';
 import { env } from '../lib/env.js';
 import { createLogger } from '../lib/logger.js';
@@ -85,6 +85,11 @@ function publicAccount(user: CuentaCruda) {
     // Y cuántos reportes descargables, que es un cupo aparte: el botón de la
     // ficha necesita poder decir "te quedan N" antes de que el usuario lo pulse.
     cupoReportes: estadoCupoReportes(leerCupoReportes(metadata), plan === 'pro' ? 'suscrito' : 'free'),
+    // Las preguntas que le quedan al Asistente. Se calculaba ya, pero solo
+    // viajaba en la respuesta del propio Asistente: para saber cuántas le
+    // quedaban había que escribirle una, que es justo lo que el usuario quiere
+    // decidir ANTES. Con esto la cuenta puede decirlo sin gastar ninguna.
+    consultas: estadoConsultas(leerConsultas(metadata), plan === 'pro' ? 'suscrito' : 'free'),
   };
 }
 

@@ -469,12 +469,46 @@ function invitarAPersonalizar() {
     }, 1400);
   }, 700);
 }
+/**
+ * Lo que le queda del mes, a la vista y sin gastarlo para saberlo.
+ *
+ * Los dos límites del plan gratuito —fichas y preguntas al Asistente— solo se
+ * conocían al chocarse con ellos: el de fichas aparecía en el muro cuando ya no
+ * quedaban, y el de preguntas había que escribirle una al Asistente para que la
+ * respuesta dijera cuántas sobraban. Eso obliga a gastar para poder decidir.
+ *
+ * No se muestra en Pro: ahí no hay límite que contar, y un contador de algo
+ * ilimitado solo hace ruido.
+ */
+function consumoDelPlan() {
+  const c = auth.account;
+  if (!c || c.plan === 'pro') return '';
+  const partes = [];
+  const fichas = c.cupo;
+  const preguntas = c.consultas;
+  if (fichas && !fichas.ilimitado && Number.isFinite(fichas.restantes)) {
+    partes.push([`${fichas.restantes} de ${fichas.limite}`, 'fichas', fichas.restantes === 0]);
+  }
+  if (preguntas && !preguntas.ilimitado && Number.isFinite(preguntas.restantes)) {
+    partes.push([`${preguntas.restantes} de ${preguntas.limite}`, 'preguntas', preguntas.restantes === 0]);
+  }
+  if (!partes.length) return '';
+  // El título completo va en `title` y no en pantalla: en la barra caben dos
+  // cifras, no dos frases, y en móvil ni eso —el CSS lo esconde por debajo de
+  // 900 px, donde ya compite con la navegación—.
+  const cuerpo = partes
+    .map(([n, que, agotado]) => `<span class="consumo-dato${agotado ? ' agotado' : ''}"><b>${esc(n)}</b> ${esc(que)}</span>`)
+    .join('');
+  const titulo = partes.map(([n, que]) => `Te quedan ${n} ${que} este mes`).join(' · ');
+  return `<a class="consumo" href="/cuenta" title="${esc(titulo)}">${cuerpo}</a>`;
+}
+
 function renderAuthBar() {
   const el = $('authbar'); if (!el) return;
   if (auth.user) {
     const who = auth.user.name || (auth.user.email || '').split('@')[0];
     const plan = auth.account?.plan === 'pro' ? '<span class="auth-plan">Pro</span>' : '';
-    el.innerHTML = `<a class="auth-user" href="/cuenta">${ic('user')}${esc(who)}${plan}</a><a class="auth-link" href="/planes">Planes</a><button class="auth-link" id="auth-logout"><span>Salir</span></button>`;
+    el.innerHTML = `<a class="auth-user" href="/cuenta">${ic('user')}${esc(who)}${plan}</a>${consumoDelPlan()}<a class="auth-link" href="/planes">Planes</a><button class="auth-link" id="auth-logout"><span>Salir</span></button>`;
     $('auth-logout').addEventListener('click', () => {
       localStorage.removeItem('radar_token'); localStorage.removeItem('radar_refresh'); location.reload();
     });
@@ -1465,7 +1499,12 @@ function renderRadarSetup() {
 
   if (radarPreferences.complete) {
     const savedChip = favSet.size ? `<span class="setup-chip">${favSet.size} guardado${favSet.size === 1 ? '' : 's'}</span>` : '';
-    const simulationChip = savedSimulations.size ? `<span class="setup-chip">${savedSimulations.size} simulación${savedSimulations.size === 1 ? '' : 'es'}</span>` : '';
+    // Pulsable (B1): el panel decía cuántas simulaciones había y no daba forma de
+    // verlas. Un dato que no lleva a ninguna parte invita a pulsarlo y no hace
+    // nada, que es peor que no mostrarlo.
+    const simulationChip = savedSimulations.size
+      ? `<button type="button" class="setup-chip setup-chip-accion" data-ver-simulaciones>${ic('chart')}${savedSimulations.size} simulación${savedSimulations.size === 1 ? '' : 'es'}</button>`
+      : '';
     const alertActive = radarAlertDraft?.status === 'active';
     const alertChip = radarAlertDraft ? `<span class="setup-chip">${alertActive ? 'Alerta activa' : 'Alerta preparada'}</span>` : '';
     root.innerHTML = `<div class="radar-setup-card is-complete">
@@ -1508,6 +1547,12 @@ function renderRadarSetup() {
       <p>${dismissed ? 'Elige ciudad, presupuesto y tipo de inmueble.' : 'Tres elecciones rápidas reducen el ruido. No necesitas crear una cuenta.'}</p>
     </div>
     <div class="setup-actions">
+      ${/* Las simulaciones también se alcanzan desde aquí. Sin esto, quien guardó
+            números sin personalizar el Radar no tenía NINGUNA forma de volver a
+            ellos: el acceso vivía solo en la tarjeta del panel ya configurado. */ ''}
+      ${savedSimulations.size
+        ? `<button class="setup-secondary" type="button" data-ver-simulaciones>${ic('chart')} Ver mis ${savedSimulations.size} simulación${savedSimulations.size === 1 ? '' : 'es'}</button>`
+        : ''}
       ${dismissed ? '' : '<button class="setup-secondary" type="button" data-setup-dismiss>Ahora no</button>'}
       <button class="setup-primary" type="button" data-setup-start>Personalizar en 3 pasos</button>
     </div>
@@ -1607,6 +1652,33 @@ async function reconstruirFiltrosConservandoValores() {
 
   const ciudad = $('f-city');
   if (zona && ciudad?.value) {
+    await repopZones(ciudad.value);
+    restaurarValorDeFiltro('f-zone', zona);
+  }
+  updateFilterCount();
+}
+
+/**
+ * Lleva los filtros de una sección a la siguiente, saltándose los que no existen
+ * allí.
+ *
+ * «Compatibles» se resuelve solo, sin lista de equivalencias que mantener: si el
+ * control no está en el panel nuevo, no se restaura. La valoración de oportunidad
+ * solo existe en Portales; los barrios, solo donde hay ciudad elegida. Cada panel
+ * se construye con lo suyo, así que preguntar por el elemento ES la comprobación.
+ *
+ * El barrio va al final y aparte porque sus opciones dependen de la ciudad: hay
+ * que repoblarlas antes o se restauraría un valor que la lista todavía no tiene.
+ */
+async function restaurarFiltrosCompatibles(previos) {
+  if (!previos || !previos.size) return;
+  const zona = previos.get('f-zone');
+  for (const [id, valor] of previos) {
+    if (id === 'f-zone') continue;
+    if ($(id)) restaurarValorDeFiltro(id, valor);
+  }
+  const ciudad = $('f-city');
+  if (zona && ciudad?.value && $('f-zone')) {
     await repopZones(ciudad.value);
     restaurarValorDeFiltro('f-zone', zona);
   }
@@ -2092,7 +2164,7 @@ function renderHome(payload) {
   // `payload.semana` sigue llegando y el servidor la sigue usando para la rotación.
   const cabecera = `<div class="home-intro">
     <h2>Destacados de hoy</h2>
-    <p>Cada bloque dice con qué regla se eligió.</p>
+    <p>Cada bloque explica el motivo de su selección.</p>
   </div>
   <div id="home-aviso"></div>`;
 
@@ -2869,6 +2941,101 @@ window.__recalcRent = function (input) {
 function persistSimulations() {
   writeStoredJson(RADAR_SIMULATIONS_KEY, [...savedSimulations.values()]);
 }
+
+/**
+ * La lista de simulaciones guardadas (B1).
+ *
+ * El panel decía «3 simulaciones» y no había dónde verlas: los números vivían
+ * dentro de la ficha que los originó, y para recuperarlos había que acordarse de
+ * qué inmueble era y volver a buscarlo. Guardar algo que luego no se encuentra
+ * es la peor forma de ofrecer que se guarde.
+ *
+ * Cada fila lleva lo que pide el requisito —inmueble, fecha, canon simulado y
+ * rentabilidad— y la acción de volver a la ficha.
+ */
+function abrirSimulaciones() {
+  const lista = [...savedSimulations.values()]
+    .sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')));
+
+  const filas = lista.map((s) => {
+    // La rentabilidad se recalcula con lo guardado en vez de guardarse aparte:
+    // así una simulación vieja se lee con las reglas de gastos de HOY, que es lo
+    // que el usuario vería si volviera a abrir la ficha.
+    const anual = Number(s.monthlyRent) > 0 && Number(s.acquisitionTotal) > 0
+      ? ((Number(s.monthlyRent) - Number(s.monthlyAdmin || 0)) * 12) / Number(s.acquisitionTotal) * 100
+      : null;
+    const fecha = s.savedAt
+      ? new Date(s.savedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+    return `<article class="sim-fila">
+      <div class="sim-datos">
+        <h4>${esc(s.title || 'Inmueble')}</h4>
+        <p class="sim-meta">${s.city ? esc(cap(s.city)) + ' · ' : ''}Simulada el ${esc(fecha)}</p>
+        <dl class="sim-cifras">
+          <div><dt>Valor simulado</dt><dd>${fmtCOP(Number(s.base) || 0)}</dd></div>
+          <div><dt>Costo total estimado</dt><dd>${fmtCOP(Number(s.acquisitionTotal) || 0)}</dd></div>
+          <div><dt>Arriendo mensual</dt><dd>${Number(s.monthlyRent) > 0 ? fmtCOP(Number(s.monthlyRent)) : 'sin simular'}</dd></div>
+          <div><dt>Rentabilidad anual</dt><dd>${anual != null ? `${anual.toFixed(1)}%` : '—'}</dd></div>
+        </dl>
+      </div>
+      <div class="sim-acciones">
+        <button type="button" class="sim-abrir" data-sim-abrir data-kind="${esc(s.kind)}" data-id="${esc(s.id)}">Abrir la ficha</button>
+        <button type="button" class="sim-borrar" data-sim-borrar data-key="${esc(s.key)}">Borrar</button>
+      </div>
+    </article>`;
+  }).join('');
+
+  $('modal-content').innerHTML = `<div class="simulaciones">
+    <h2>Tus simulaciones guardadas</h2>
+    <p class="sim-intro">Los números que ajustaste en cada ficha. Se guardan con tu cuenta, así que
+      los tienes en cualquier dispositivo donde inicies sesión.</p>
+    ${lista.length ? filas : '<p class="sim-vacio">Todavía no has guardado ninguna. En la calculadora de cualquier ficha, ajusta el valor y pulsa «Guardar simulación».</p>'}
+  </div>`;
+  showModal();
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest?.('[data-ver-simulaciones]')) { abrirSimulaciones(); return; }
+
+  const borrar = e.target.closest?.('[data-sim-borrar]');
+  if (borrar) {
+    savedSimulations.delete(borrar.dataset.key);
+    persistSimulations();
+    if (auth.token) void syncAccountContext();
+    abrirSimulaciones();   // se repinta la lista, no la página entera
+    renderRadarSetup();
+    return;
+  }
+
+  const abrir = e.target.closest?.('[data-sim-abrir]');
+  if (abrir) void abrirFichaDeSimulacion(abrir.dataset.kind, abrir.dataset.id);
+});
+
+/**
+ * Vuelve a la ficha desde la lista de simulaciones.
+ *
+ * Se pide al servidor en vez de guardarse la ficha entera con la simulación: el
+ * precio, el descuento y hasta la disponibilidad cambian, y devolver una copia
+ * de hace tres semanas sería enseñar un inmueble que quizá ya no existe. Y el
+ * servidor aplica el muro igual que en cualquier otra vía.
+ */
+async function abrirFichaDeSimulacion(kind, id) {
+  if (!kind || !id) return;
+  if (!auth.token) { showToast('Inicia sesión para volver a la ficha.'); return; }
+  try {
+    const r = await fetch('/api/propiedades', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refs: [{ kind, id }] }),
+    }).then((x) => x.json());
+    const p = (r.properties || [])[0];
+    if (!p) { showToast('Esta ficha ya no está disponible en el Radar.'); return; }
+    closeModal();
+    if (kind === 'remate') openRemate(p); else openInmueble(p);
+  } catch {
+    showToast('No se pudo abrir la ficha. Inténtalo de nuevo.');
+  }
+}
 function saveSimulation(calc) {
   const input = calc.querySelector('.calc-input');
   const valor = Number((input?.value || '').replace(/[^0-9]/g, '')) || 0;
@@ -2955,7 +3122,13 @@ function analisisSection(p) {
   const meta = {
     buena: [ic('check-circle', 'ic-reicon analysis-icon is-positive'), 'Oportunidad atractiva'],
     media: [ic('magnifier', 'analysis-icon is-review'), 'Requiere revisión'],
-    precaucion: [ic('alert-triangle', 'ic-reicon analysis-icon is-warning'), 'Revisar con cuidado'],
+    // «Revisar detalladamente» y no «con cuidado», con icono de información y no
+    // de alerta. Es lo único que el cliente pidió cambiar aquí por ahora, y va en
+    // la dirección del informe: la comunicación de remates debe hablar desde el
+    // control y la verificación, no desde el miedo. «Cuidado» y un triángulo rojo
+    // dicen «esto es peligroso»; «detalladamente» dice «esto se mira despacio»,
+    // que es exactamente lo que hay que hacer y lo que el Radar ayuda a hacer.
+    precaucion: [ic('info', 'analysis-icon is-review'), 'Revisar detalladamente'],
   }[nivel];
   const icon = {
     pos: ic('check-circle', 'ic-reicon analysis-icon is-positive'),
@@ -3281,10 +3454,20 @@ window.__analyzeAI = async function (btn, kind, id) {
 
 function gastosSection(valor, mode, context) {
   if (!valor || valor <= 0) return '';
-  const { rows, tot, grand, acquisitionTotal } = renderCalc(valor, mode);
-  const titulo = mode === 'remate' ? 'Calculadora de gastos (registro de la adjudicación)' : 'Calculadora de gastos de compra';
   const key = context?.kind && context?.id ? favKey(context.kind, context.id) : '';
   const saved = key ? savedSimulations.has(key) : false;
+  // Lo que esta persona ya había simulado para ESTE inmueble manda sobre el
+  // precio del anuncio (B2).
+  //
+  // Antes la calculadora arrancaba siempre en el precio publicado, así que quien
+  // había ajustado el valor a lo que pensaba ofrecer —o escrito el arriendo que
+  // esperaba— volvía a la ficha y se lo encontraba todo en blanco. La simulación
+  // se guardaba de verdad, pero la ficha no la miraba: guardar algo que no se
+  // recupera es peor que no ofrecer guardarlo.
+  const previa = key ? savedSimulations.get(key) : null;
+  if (previa && Number(previa.base) > 0) valor = Number(previa.base);
+  const { rows, tot, grand, acquisitionTotal } = renderCalc(valor, mode);
+  const titulo = mode === 'remate' ? 'Calculadora de gastos (registro de la adjudicación)' : 'Calculadora de gastos de compra';
   const contextData = key
     ? ` data-kind="${esc(context.kind)}" data-id="${esc(context.id)}" data-title="${esc(context.title || 'Inmueble')}" data-city="${esc(context.city || '')}"`
     : '';
@@ -3301,18 +3484,23 @@ function gastosSection(valor, mode, context) {
           <span class="spinner"></span> Estimando el valor del arriendo con avisos similares de la zona…
         </div>
         <div class="rent-inputs">
-          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"></label>
+          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"${Number(previa?.monthlyRent) > 0 ? ` value="${Math.round(Number(previa.monthlyRent))}"` : ''}></label>
           ${/* Con 0 escrito, no solo como sugerencia: la mayoría de los inmuebles no
                 tiene administración y dejar el campo vacío hacía que la rentabilidad
                 se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
                 «para que la fórmula no le vaya a generar un error». */ ''}
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0}"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0)}"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
       ${key ? `<div class="calc-save-row">
         <button class="calc-save" type="button" data-save-simulation>${saved ? 'Actualizar simulación' : 'Guardar simulación'}</button>
-        <span class="calc-save-status" aria-live="polite">${saved ? 'Ya guardada en este dispositivo.' : 'No necesitas crear una cuenta.'}</span>
+        ${/* Se dice que los números son suyos y no los del anuncio. Sin avisarlo,
+              alguien que ajustó el valor a lo que pensaba ofrecer vuelve semanas
+              después, ve esa cifra y la toma por el precio publicado. */ ''}
+        <span class="calc-save-status" aria-live="polite">${previa
+          ? `Recuperada tu simulación del ${new Date(previa.savedAt).toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })}.`
+          : 'No necesitas crear una cuenta.'}</span>
       </div>` : ''}
       <p class="calc-note">Estimado de gastos en Colombia${mode === 'remate' ? ' (la postura mínima puede no ser el precio final; el auto de adjudicación se registra)' : ''}. Varía por departamento; no incluye honorarios, hipoteca, administración ni intermediación.</p>
     </div></div>`;
@@ -3500,6 +3688,33 @@ function openModal(p) {
   if (state.tab === 'remates') return openRemate(p);
   return openInmueble(p);
 }
+/**
+ * Un bloque de la ficha que se abre solo si el usuario lo pide.
+ *
+ * La ficha reunía análisis, otras oportunidades, calculadora, rentabilidad, IA,
+ * mapa, descripción, reporte y fuente en un recorrido largo, todo al mismo peso.
+ * El efecto es que la metodología compite visualmente con el hallazgo, y quien
+ * baja se pierde por qué merecía la pena mirar este inmueble.
+ *
+ * Lo que decide —precio, porcentaje, comparables, alertas y la acción siguiente—
+ * se queda arriba y a la vista. Lo que profundiza pasa aquí dentro: sigue
+ * estando entero, a un clic, y deja de disputarle la atención a lo primero.
+ *
+ * `<details>` y no un acordeón propio: lo abre el teclado, lo lee un lector de
+ * pantalla, y el buscador del navegador (Ctrl+F) encuentra el texto de dentro.
+ */
+function bloqueSecundario(titulo, contenido, icono) {
+  const cuerpo = String(contenido ?? '').trim();
+  if (!cuerpo) return '';
+  // Varios de estos bloques ya traen su propio `<h3>`. Al meterlos aquí dentro
+  // el título se vería dos veces —una en el desplegable y otra al abrirlo—, así
+  // que el primero se absorbe: el `<summary>` pasa a ser ese encabezado en vez
+  // de sumarse a él.
+  const sinTitulo = cuerpo.replace(/<h3[^>]*>[\s\S]*?<\/h3>/i, '');
+  return `<details class="bloque-sec"><summary>${icono ? ic(icono) : ''}<span>${esc(titulo)}</span></summary>`
+    + `<div class="bloque-sec-cuerpo">${sinTitulo}</div></details>`;
+}
+
 function openInmueble(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
@@ -3562,16 +3777,42 @@ function openInmueble(p) {
     admin: Number((p.features || {}).administracion) || 0,
   });
 
+  // ── El orden de la ficha, alrededor de la decisión ──
+  //
+  // Lo pidió el informe y sigue su lista: qué es y cuánto cuesta, cuánto se
+  // separa del mercado, con qué respaldo, qué habría que verificar, y qué hacer
+  // ahora. Todo lo demás pasa a desplegables.
+  //
+  // Dos cambios de fondo respecto a lo que había:
+  //
+  //  · El PRECIO sube por delante del sello de oportunidad. Un «-22%» antes de
+  //    saber sobre cuánto se aplica no significa nada; con el precio delante, el
+  //    porcentaje ya cae sobre una cifra que la persona acaba de leer.
+  //  · «Ver en la fuente» sube al cuerpo. Estaba al final del todo, después de
+  //    la descripción, las características y el reporte: la acción que cierra la
+  //    visita quedaba detrás de lo que menos decide, y había que recorrer la
+  //    ficha entera para encontrarla.
+  const accionSiguiente = `<div class="ficha-accion">
+    <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
+    <p class="ficha-accion-nota">El aviso original tiene las fotos completas, la descripción del anunciante y sus datos de contacto. Verifica ahí precio y disponibilidad antes de decidir.</p>
+  </div>`;
+
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
       <div class="detail-top"><span class="pill-src">${esc(srcLbl(p.source))}</span>${fav}</div>
       <h2>${esc(typeLbl(p.type))} en ${esc(cap(p.city))}</h2>
       <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${esc(cap(p.city))}</strong></div>
-      ${selloCreceFicha(p)}
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
-      ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
-      <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
+      ${selloCreceFicha(p)}
+      ${mkt || marketLazyBox()}
+      ${muro}
+      ${bloq ? '' : accionSiguiente}
+      ${bloqueSecundario('Costos de compra y rentabilidad', acquisition, 'chart')}
+      ${bloqueSecundario('Análisis con IA', aiBlock, 'spark')}
+      ${bloqueSecundario('Ubicación en el mapa', addrBlock + mapBlock, 'map')}
+      ${bloqueSecundario('Descripción del anuncio', descBlock + amen, 'home')}
+      ${bloqueSecundario('Descargar el reporte', reporte, 'arrow')}
     </div>`;
   recordarFichaEnPantalla(kind, p.id, tituloFicha(p), p.type, p.area_m2 ?? null);
   showModal();
@@ -4333,12 +4574,11 @@ function devolverFoco() {
 // ---------- Stats + leyenda + tabs ----------
 let STATS = null;
 function renderStatsUnavailable() {
+  // Sin contadores en el encabezado no hay nada que pintar aquí: escribir en
+  // `$('summary')` ahora sería leer `null.innerHTML` y llevarse por delante el
+  // resto del archivo. `STATS = null` sigue importando —el buscador del inicio
+  // consulta esa variable— y los resultados no dependen de esto.
   STATS = null;
-  $('summary').innerHTML = `
-    <div class="summary-stat muted">
-      <div class="num">Actualizando</div>
-      <div class="lbl">Las estadísticas volverán automáticamente; los resultados siguen disponibles.</div>
-    </div>`;
 }
 /** Un solo viaje por la configuración: la usan el asistente y la verificación. */
 async function cargarConfig() {
@@ -4375,38 +4615,17 @@ async function loadStats() {
     return;
   }
   STATS = payload;
-  // Tres cifras, y las tres del mismo tipo: oportunidades. Decisión de la reunión
-  // del 28-jul, y las dos razones que se dieron son buenas:
+  // Los tres contadores del encabezado se retiraron por decisión del cliente.
   //
-  //  · «Listados portal» invitaba a competir en cantidad, y esa es una carrera
-  //    perdida —siempre habrá un portal con más inventario—. El producto no vende
-  //    volumen, vende criterio: por eso las tres cifras cuentan oportunidades.
-  //  · La fecha de actualización es un dato interno. A un visitante que lee
-  //    «actualizado hace dos días» le suena a desactualizado, cuando el Radar
-  //    nunca prometió tiempo real: promete un corte semanal bien hecho.
+  // Fueron perdiendo función por su cuenta: primero eran cifras de tipos
+  // distintos, luego las tres de oportunidades, después botones para saltar a su
+  // sección. Al mirarlos por última vez la conclusión fue la más simple —«si no
+  // nos parece demasiado relevante a ninguno, hasta eliminémoslo»— y coincide con
+  // dos cosas del informe: ocupaban justo la altura que impedía ver una tarjeta
+  // completa sin desplazar, y eran una de las TRES formas de cambiar de fuente
+  // que el punto 6 pide reducir a una sola.
   //
-  // Y quitarlas resuelve de paso lo que más molestó al verlo: había cifras en tres
-  // filas distintas —resumen, pestañas y franja— y varias eran la misma repetida.
-  // Cada cifra lleva a su sección. Lo pidió el cliente al verlas: «la gente
-  // podría hacer clic aquí, sin problema — quiere ir a bancos, pum, le llega a
-  // bancos». Y tenía razón en el diagnóstico previo: puestas ahí, en grande y sin
-  // ser pulsables, invitaban a pulsarlas y no pasaba nada.
-  //
-  // Son <button> y no <div>: un destino que se activa con un clic tiene que
-  // activarse también con el teclado, y esto ya es navegación de la aplicación.
-  $('summary').innerHTML = `
-    <button class="summary-stat" type="button" data-ir="portal"><span class="num">${STATS.portal_opps.toLocaleString('es-CO')}</span><span class="lbl">Oportunidades en portales</span></button>
-    <button class="summary-stat" type="button" data-ir="bancos"><span class="num">${STATS.bancos.toLocaleString('es-CO')}</span><span class="lbl">En bancos</span></button>
-    <button class="summary-stat" type="button" data-ir="remates"><span class="num">${STATS.remates.toLocaleString('es-CO')}</span><span class="lbl">Remates judiciales</span></button>`;
-  // Se delega en el botón real de la pestaña en vez de duplicar su manejador:
-  // cambiar de sección hace una docena de cosas —filtros, paginador, foco, el
-  // desplazamiento en móvil— y tener dos caminos que las hagan es tener dos
-  // caminos que se desincronicen.
-  $('summary').querySelectorAll('[data-ir]').forEach((boton) => {
-    boton.addEventListener('click', () => {
-      document.querySelector(`.tab-btn[data-tab="${boton.dataset.ir}"]`)?.click();
-    });
-  });
+  // `STATS` se sigue guardando: lo usan el buscador del inicio y la leyenda.
   renderLeyenda();
 }
 /**
@@ -4540,6 +4759,23 @@ async function activarPestana(tab, antesDeCargar, pagina = 1) {
   $('pager').innerHTML = '';
   $('empty').style.display = 'none';
   $('loading').style.display = state.tab === 'home' ? 'none' : 'block';
+  // Lo que la persona ya eligió se lleva a la sección nueva.
+  //
+  // Antes se vaciaba el panel y se reconstruía en blanco, así que buscar
+  // «Medellín» en Portales y pasar a Bancos obligaba a volver a elegir Medellín.
+  // Es una tarea central del producto —comparar la misma búsqueda entre las tres
+  // fuentes— y romperla en cada salto hace que la herramienta se sienta a trozos.
+  //
+  // Se guarda ANTES de vaciar y se restaura DESPUÉS de reconstruir, porque las
+  // opciones de cada sección son distintas: las ciudades de Remates no son las de
+  // Portales. `restaurarValorDeFiltro` añade el valor si el desplegable nuevo no
+  // lo trae, así que una ciudad con inventario en una fuente y no en la otra se
+  // conserva y devuelve «sin resultados» —que es la verdad— en vez de
+  // desaparecer sin avisar y enseñar el país entero.
+  const filtrosPrevios = new Map();
+  document.querySelectorAll('#filters [id^="f-"]').forEach((el) => {
+    if (el.value) filtrosPrevios.set(el.id, el.value);
+  });
   $('filters').innerHTML = '';
   setResultText(`Preparando ${state.tab === 'portal' ? 'el portal' : state.tab === 'home' ? 'la portada' : state.tab}…`);
   setFiltersOpen(false);
@@ -4547,6 +4783,7 @@ async function activarPestana(tab, antesDeCargar, pagina = 1) {
   try {
     await buildFilters();
     if (state.tab === 'portal') await applyRadarPreferences(radarPreferences);
+    await restaurarFiltrosCompatibles(filtrosPrevios);
   } catch (error) {
     console.error('filters:', error);
     $('filters').innerHTML = '<div class="f-note">Los filtros no están disponibles por el momento.</div>';
@@ -4569,6 +4806,34 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   void activarPestana(b.dataset.tab);
 }));
 $('modal-close').addEventListener('click', closeModal);
+
+/**
+ * La rueda desplaza la ficha desde cualquier punto, no solo sobre la columna
+ * derecha.
+ *
+ * El recorrido vive en `.detail`, que es la única con `overflow-y: auto`; la
+ * galería de la izquierda no desplaza nada porque `.modal-box` está en
+ * `overflow: hidden`. Así que con el cursor sobre la foto la rueda no hacía nada
+ * —ni movía la ficha ni la página— y eso se lee como «se acabó» o «está
+ * bloqueado», cuando debajo quedaban el análisis, la calculadora y la fuente.
+ *
+ * Se reenvía en vez de mover el scroll a `.modal-box` porque la galería debe
+ * quedarse quieta mientras el texto avanza: es lo que permite mirar la foto y
+ * leer los datos a la vez, y es el motivo del diseño en dos columnas.
+ *
+ * `preventDefault` solo cuando el reenvío sirve de algo. Si la ficha ya está
+ * arriba del todo y el gesto es hacia arriba, se deja pasar para que el gesto de
+ * «volver» del navegador siga funcionando.
+ */
+$('modal').addEventListener('wheel', (e) => {
+  const detalle = document.querySelector('.detail');
+  if (!detalle || detalle.contains(e.target)) return; // ya desplaza sola
+  const arriba = detalle.scrollTop <= 0;
+  const abajo = Math.ceil(detalle.scrollTop + detalle.clientHeight) >= detalle.scrollHeight;
+  if ((e.deltaY < 0 && arriba) || (e.deltaY > 0 && abajo)) return;
+  e.preventDefault();
+  detalle.scrollTop += e.deltaY;
+}, { passive: false });
 // El manejador de «Ver tutorial» se retiró con el botón. Iba sin `?.`, así que
 // dejarlo mirando un elemento que ya no existe habría lanzado un TypeError aquí
 // mismo —y con él se caía el resto del archivo: los filtros, las pestañas y el

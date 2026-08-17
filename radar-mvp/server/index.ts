@@ -48,7 +48,7 @@ import { buscarParaAsistente, olvidarBusqueda, tomarBusqueda } from './asistente
 import { parseHito } from './bienvenida.js';
 import { auditoriaHabilitada, detalleDeComparables } from './comparables-detalle.js';
 import { esWord, textoDeWord } from './asistente-word.js';
-import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties } from './favorites.js';
+import { getUserFromToken, listFavorites, toggleFavorite, favoriteProperties, propiedadesPorReferencia } from './favorites.js';
 import {
   activarPlanDemo,
   deleteAlert,
@@ -858,6 +858,32 @@ const server = createServer(async (req, res) => {
           });
           return sendJSON(res, 200, { ok: true, user, favorites, properties });
         }
+        // Fichas concretas por referencia, para reabrir desde la lista de
+        // simulaciones guardadas (B1). Pasa por el MISMO redactado que los
+        // favoritos: una ficha que aquí llegara entera sería una puerta de atrás
+        // al muro, y da igual que el camino sea poco frecuentado.
+        if (path === '/api/propiedades' && req.method === 'POST') {
+          if (rateLimited(res, `props:${user.id}`, { limit: 120, windowMs: 60 * 60 * 1000 })) return;
+          const cuerpo = (await readJsonBody(req)) as { refs?: Array<{ kind?: string; id?: string }> };
+          const refs = Array.isArray(cuerpo?.refs)
+            ? cuerpo.refs.map((r) => ({ kind: String(r?.kind ?? ''), id: String(r?.id ?? '') }))
+            : [];
+          const crudas = await propiedadesPorReferencia(refs);
+          const planProps = planDe(user);
+          const cupoProps = user?.cupo ?? leerCupo(null);
+          const abiertasProps = new Set(cupoProps.desbloqueadas ?? []);
+          const restantesProps = estadoCupo(cupoProps, planProps).restantes;
+          const properties = crudas.map((property: any) => {
+            const estado = { desbloqueada: abiertasProps.has(String(property.id)), restantes: restantesProps };
+            return redactar(
+              property,
+              property._kind === 'remate'
+                ? accesoRemateFicha(property, planProps, estado)
+                : accesoInmueble(property.crece_tier, planProps, estado),
+            );
+          });
+          return sendJSON(res, 200, { ok: true, properties });
+        }
         return sendJSON(res, 404, { ok: false, error: 'ruta de favoritos no encontrada' });
       }
       // Análisis IA de una propiedad (POST { kind:'banco'|'remate', id, refresh? }).
@@ -1248,6 +1274,12 @@ server.listen(PORT, () => {
     .then(() => log.info('Estadísticas precargadas'))
     .then(() => warmDestacados())
     .then(() => log.info('Destacados de la portada precargados'))
+    // El bloque de enlaces del pie va aquí, con la portada, porque forma parte de
+    // ella. Sin precalentar, el primer visitante tras cada despliegue esperaba
+    // treinta segundos: ahora la portada nunca espera —si no está listo se sirve
+    // sin el bloque— pero calentarlo hace que en la práctica siempre esté.
+    .then(() => import('./seo.js').then((m) => m.ciudadesDestacadas()))
+    .then(() => log.info('Enlaces del pie precargados'))
     .then(() => warmCityPools(WARM_CITIES))
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
     // Al final y sin prisa: si compite con los dos precalentamientos anteriores

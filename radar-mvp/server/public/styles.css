@@ -1176,6 +1176,27 @@ h1 .gold { color: var(--gold); }
 .home[hidden] { display: none; }
 .home-inner { display: flex; flex-direction: column; gap: 30px; }
 
+/* ── Que se vea una tarjeta antes del primer desplazamiento ──
+   Punto 1 del informe: en una pantalla de escritorio estándar había que
+   desplazar para ver el primer inmueble, así que lo único que se veía al llegar
+   era texto explicando el producto. El sitio entero existe para enseñar
+   oportunidades; que ninguna quepa en la primera pantalla es el problema.
+
+   Medido en una ventana de 720 px de alto: el primer bloque empezaba a 767 px.
+   Se recorta el aire de las tres piezas de arriba —encabezado, buscador y el
+   titular de destacados— sin tocar ningún tamaño de letra: lo que sobraba era
+   espacio, no contenido.
+
+   Solo en pantallas anchas y bajas, que es donde ocurre. En móvil el recorrido
+   vertical es natural y el aire ayuda a separar secciones. */
+@media (min-width: 1025px) {
+  header { padding-top: 26px; padding-bottom: 18px; }
+  .buscador { margin-top: 14px; }
+  .home { padding-top: 14px; }
+  .home-inner { gap: 22px; }
+  .home-intro h2 { margin-top: 9px; }
+}
+
 .home-intro { max-width: 780px; }
 .home-kicker {
   display: inline-flex; align-items: center; gap: 7px;
@@ -2032,3 +2053,115 @@ body.cookies-mapas .mapa-bloqueado { display: none; }
   .cookie-banner { bottom: calc(58px + env(safe-area-inset-bottom)); padding-bottom: 14px; }
 }
 @media (prefers-reduced-motion: reduce) { .cookie-banner, .cookie-panel { animation: none; } }
+
+/* ── Bloques secundarios de la ficha ──
+   Lo que profundiza, plegado. Sigue entero y a un clic, pero deja de disputarle
+   la atención al precio, al porcentaje y a la acción siguiente — que es lo que
+   el informe pedía al «ordenar la ficha alrededor de la decisión». */
+.bloque-sec { border: 1px solid #ece6f2; border-radius: 12px; margin-bottom: 10px; background: #fff; }
+.bloque-sec > summary {
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+  padding: 14px 16px; list-style: none; min-height: 44px;
+  font-size: 0.92rem; font-weight: 700; color: var(--pp-dark);
+  border-radius: 12px;
+}
+.bloque-sec > summary::-webkit-details-marker { display: none; }
+.bloque-sec > summary:hover { background: #faf7fc; }
+.bloque-sec > summary:focus-visible { outline: 2px solid var(--pp); outline-offset: -2px; }
+.bloque-sec > summary .ic { width: 18px; height: 18px; color: var(--pp); flex: none; }
+/* La flecha se dibuja aquí y gira al abrir: es la única señal de que esto se
+   despliega, y sin ella el bloque parece un título más. */
+.bloque-sec > summary::after {
+  content: ''; margin-left: auto; width: 9px; height: 9px; flex: none;
+  border-right: 2px solid var(--pp); border-bottom: 2px solid var(--pp);
+  transform: rotate(45deg) translate(-2px, -2px); transition: transform 0.15s ease;
+}
+.bloque-sec[open] > summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+.bloque-sec[open] > summary { border-bottom: 1px solid #ece6f2; border-radius: 12px 12px 0 0; }
+.bloque-sec-cuerpo { padding: 4px 16px 14px; }
+/* Los bloques de dentro ya no necesitan su propio marco ni su margen: el
+   desplegable es el marco. */
+.bloque-sec-cuerpo > .section { margin: 0; padding: 0; border: 0; background: none; }
+@media (prefers-reduced-motion: reduce) { .bloque-sec > summary::after { transition: none; } }
+
+/* La acción siguiente, en el cuerpo y no al final del recorrido. */
+.ficha-accion { margin: 18px 0 20px; }
+.ficha-accion .cta { margin: 0; }
+.ficha-accion-nota { margin: 9px 0 0; font-size: 0.78rem; line-height: 1.5; color: #6b7280; }
+
+/* Consumo del plan gratuito en la barra de cuenta (B3). Discreto: es un dato de
+   control, no una llamada a la acción. Se pone en ámbar al agotarse, que es
+   cuando de verdad hay que enterarse. */
+.consumo {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 4px 11px; border-radius: 999px; text-decoration: none;
+  background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16);
+  font-size: 0.72rem; color: rgba(255,255,255,0.78); white-space: nowrap;
+}
+.consumo:hover { background: rgba(255,255,255,0.16); color: #fff; }
+.consumo:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.consumo-dato b { font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; }
+.consumo-dato.agotado b { color: var(--gold); }
+/* Por debajo de 900 px la barra ya compite con la navegación: dos cifras más la
+   desbordan, y el dato sigue estando en /cuenta. */
+@media (max-width: 900px) { .consumo { display: none; } }
+
+/* ── El Asistente no se pisa con el banner legal (B5) ──
+   El botón flotante vive en la esquina inferior derecha con z-index 1300; el
+   banner de cookies ocupa toda esa franja con z-index 90. Sin esto el botón se
+   pinta encima y tapa justo «Aceptar todo» y «Solo lo necesario», que son los
+   dos controles que el visitante necesita pulsar primero.
+
+   Se sube mientras el banner esté, y vuelve a su sitio en cuanto se decide. Las
+   medidas salen del alto real del banner: ~100 px en escritorio, ~175 en móvil,
+   donde se apila y además ya va por encima de la barra de pestañas. */
+body.con-banner-cookies .asis-btn { bottom: 118px; }
+body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 260px); }
+@media (max-width: 760px) {
+  body.con-banner-cookies .asis-btn { bottom: calc(250px + env(safe-area-inset-bottom)); }
+  body.con-banner-cookies .asis-panel {
+    bottom: calc(312px + env(safe-area-inset-bottom));
+    max-height: calc(100vh - 380px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .asis-btn, .asis-panel { transition: bottom 0.2s ease; }
+}
+
+/* ── Simulaciones guardadas (B1) ── */
+.simulaciones { padding: 30px 32px 26px; max-height: 88vh; overflow-y: auto; }
+.simulaciones h2 { margin: 0 0 6px; font-family: 'Tilt Warp', cursive; font-size: 1.5rem; color: var(--pp-dark); font-weight: 400; }
+.sim-intro { margin: 0 0 20px; font-size: 0.9rem; color: #6b7280; max-width: 62ch; line-height: 1.55; }
+.sim-vacio { padding: 22px; border: 1px dashed #d9c9e6; border-radius: 12px; color: #6b7280; font-size: 0.9rem; }
+.sim-fila {
+  display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: flex-start; justify-content: space-between;
+  padding: 16px; border: 1px solid #ece6f2; border-radius: 13px; margin-bottom: 12px; background: #fff;
+}
+.sim-datos { flex: 1 1 340px; min-width: 0; }
+.sim-fila h4 { margin: 0 0 3px; font-size: 1rem; color: var(--pp-dark); }
+.sim-meta { margin: 0 0 12px; font-size: 0.79rem; color: #6b7280; }
+/* Rejilla de cifras: se leen en columna, con los números alineados. */
+.sim-cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px 16px; margin: 0; }
+.sim-cifras div { min-width: 0; }
+.sim-cifras dt { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #9a90a8; }
+.sim-cifras dd { margin: 2px 0 0; font-size: 0.93rem; font-weight: 700; color: var(--pp-dark); font-variant-numeric: tabular-nums; }
+.sim-acciones { display: flex; flex-direction: column; gap: 8px; flex: 0 0 auto; }
+.sim-abrir, .sim-borrar {
+  min-height: 42px; padding: 0 16px; border-radius: 9px; cursor: pointer;
+  font-family: inherit; font-size: 0.83rem; font-weight: 700; white-space: nowrap;
+}
+.sim-abrir { border: 0; background: var(--pp); color: #fff; }
+.sim-abrir:hover { filter: brightness(1.08); }
+.sim-borrar { border: 1px solid #e3d4ee; background: transparent; color: #6b7280; }
+.sim-borrar:hover { border-color: var(--red); color: var(--red); }
+.setup-chip-accion {
+  border: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  font-family: inherit; min-height: 32px;
+}
+.setup-chip-accion:hover { filter: brightness(0.96); }
+.setup-chip-accion .ic { width: 14px; height: 14px; }
+@media (max-width: 560px) {
+  .simulaciones { padding: 24px 18px 20px; }
+  .sim-acciones { flex-direction: row; width: 100%; }
+  .sim-acciones button { flex: 1 1 auto; }
+}

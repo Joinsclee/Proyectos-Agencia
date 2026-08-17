@@ -142,27 +142,63 @@ async function contarPorCiudad(cat: CategoriaSeo): Promise<CiudadSeo[]> {
     .slice(0, CANDIDATAS)
     .map(([slug]) => slug);
 
-  const exactos: CiudadSeo[] = [];
-  for (const slug of candidatas) {
+  // En paralelo, no una detrás de otra: son doce consultas independientes que no
+  // se necesitan entre sí. Encadenadas, las cuatro categorías sumaban cuarenta y
+  // ocho viajes en fila y el conjunto tardaba medio minuto.
+  const conteos = await Promise.all(candidatas.map(async (slug) => {
     const { count } = await consultaDe(cat, 'id', { count: 'exact', head: true }).eq('city', slug);
-    const n = count ?? 0;
-    if (n >= MINIMO_FICHAS_CIUDAD) exactos.push({ slug, nombre: nombreDeCiudad(slug), n });
-  }
-  return exactos
+    return { slug, nombre: nombreDeCiudad(slug), n: count ?? 0 };
+  }));
+  return conteos
+    .filter((c) => c.n >= MINIMO_FICHAS_CIUDAD)
     .sort((a, b) => b.n - a.n || a.slug.localeCompare(b.slug))
     .slice(0, CIUDADES_POR_COLUMNA);
 }
+
+let enVuelo: Promise<Map<string, CiudadSeo[]>> | null = null;
 
 /**
  * Ciudades con inventario por categoría. Si la consulta falla se devuelve lo
  * último que se supo —o nada—: un bloque de enlaces desactualizado es mucho mejor
  * que una página que no carga porque Supabase tuvo un mal minuto.
+ *
+ * La promesa se memoriza, no solo el resultado: sin eso, las peticiones que
+ * llegan mientras el caché se llena disparan cada una su propia tanda de
+ * consultas.
  */
 export async function ciudadesDestacadas(): Promise<Map<string, CiudadSeo[]>> {
   if (cache && Date.now() - cache.at < TTL_MS) return cache.datos;
+  if (enVuelo) return enVuelo;
+  enVuelo = calcular().finally(() => { enVuelo = null; });
+  return enVuelo;
+}
+
+/**
+ * Lo mismo, pero sin hacer esperar a nadie.
+ *
+ * Con el caché frío devuelve vacío y se pone a calcularlo por detrás. Es lo que
+ * usa la portada, y el motivo es un fallo medido: la primera visita después de
+ * cada arranque tardaba **31 segundos** —cuarenta y ocho consultas a Supabase en
+ * fila, con el HTML esperando— y cualquier tiempo de espera por el camino (un
+ * proxy, el navegador) la convertía en una página en blanco con código 200. Que
+ * es exactamente lo que se vio una vez en producción.
+ *
+ * Un bloque de enlaces que aparece en la segunda carga es un coste aceptable;
+ * una portada que no carga, no. Y en la práctica ni eso se nota: el arranque lo
+ * precalienta.
+ */
+export function ciudadesDestacadasSiListo(): Map<string, CiudadSeo[]> | null {
+  if (cache && Date.now() - cache.at < TTL_MS) return cache.datos;
+  void ciudadesDestacadas().catch(() => {}); // calienta para la próxima
+  return null;
+}
+
+async function calcular(): Promise<Map<string, CiudadSeo[]>> {
   try {
     const datos = new Map<string, CiudadSeo[]>();
-    for (const cat of CATEGORIAS_SEO) datos.set(cat.id, await contarPorCiudad(cat));
+    // Las cuatro categorías también en paralelo: no dependen entre sí.
+    const listas = await Promise.all(CATEGORIAS_SEO.map((cat) => contarPorCiudad(cat)));
+    CATEGORIAS_SEO.forEach((cat, i) => datos.set(cat.id, listas[i]));
     cache = { at: Date.now(), datos };
     return datos;
   } catch (e) {
@@ -182,7 +218,11 @@ const esc = (s: string): string =>
  * botón central del ratón, en una pestaña nueva y con el enlace copiado.
  */
 export async function bloqueSeoHtml(): Promise<string> {
-  const ciudades = await ciudadesDestacadas();
+  // Si el caché está frío se devuelve vacío y se calienta por detrás. La portada
+  // no puede quedarse esperando a esto: ver el motivo en
+  // `ciudadesDestacadasSiListo`.
+  const ciudades = ciudadesDestacadasSiListo();
+  if (!ciudades) return '';
   const columnas = CATEGORIAS_SEO.map((cat) => {
     const lista = ciudades.get(cat.id) ?? [];
     // Una columna sin ciudades con inventario se cae entera. Enseñar el titular

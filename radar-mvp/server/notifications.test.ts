@@ -32,14 +32,39 @@ test('el resumen de alerta escapa contenido y contiene una ruta administrable', 
     image_url: 'https://images.example.com/property.jpg',
   }]);
   assert.match(html, /RADAR <span style="color:#f2ca04">CRECE/);
-  assert.match(html, /resumen personalizado/i);
   assert.match(html, /300\.000\.000/);
   assert.match(html, /Chapinero/);
   assert.match(html, /property\.jpg/);
-  assert.match(html, /login-poster\.jpg/);
   assert.doesNotMatch(html, /<script>/);
   assert.match(html, /city=bogota/);
-  assert.match(html, /administrar o eliminar esta alerta/);
+  // Poder darse de baja no es opcional en un correo comercial.
+  assert.match(html, /Modificarla o darte de baja/);
+
+  // El cartel promocional de la cabecera se retiró: se comía la primera
+  // pantalla entera de un correo que se recibe cada semana, y quien lo abre
+  // viene a ver inmuebles, no un eslogan.
+  assert.doesNotMatch(html, /login-poster\.jpg/, 'sin banner promocional');
+
+  // Lo que justifica el envío va arriba y con el número delante.
+  assert.match(html, /1 oportunidad nueva en Bogotá/, 'singular bien concordado');
+  assert.match(html, /25% por debajo de comparables/);
+
+  // El botón se construye con tabla y `bgcolor`: Outlook ignora el padding de
+  // un <a> con fondo y lo deja en un texto suelto en medio de la tarjeta.
+  assert.match(html, /bgcolor="#613174"/);
+
+  // Gmail y Apple Mail convierten direcciones en enlaces a Maps, y ese clic
+  // compite con el botón de la tarjeta.
+  assert.match(html, /format-detection/);
+  assert.match(html, /x-apple-data-detectors/);
+
+  // El texto de la bandeja de entrada. Sin él, el cliente de correo enseña la
+  // primera migaja que encuentre del cuerpo.
+  assert.match(html, /por debajo de sus comparables\. Tu alerta de Bogotá/);
+
+  // Gmail recorta a partir de ~102 KB y esconde el resto tras «ver mensaje
+  // completo», que es donde muere la mitad de los clics.
+  assert.ok(Buffer.byteLength(html, 'utf8') < 92_000, `el correo pesa ${Buffer.byteLength(html, 'utf8')} bytes`);
 });
 
 test('incluye una alternativa de texto útil para clientes sin HTML', () => {
