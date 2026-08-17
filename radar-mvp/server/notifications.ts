@@ -26,7 +26,17 @@ export interface AlertMatch {
 
 export const ALERT_EMAIL_TEMPLATE_VERSION = 'v2-premium';
 const ALERT_MAX_CREDIBLE_DISCOUNT = 60;
-const ALERT_EMAIL_FEATURED_LIMIT = 3;
+/**
+ * Cuántas tarjetas caben en el correo.
+ *
+ * Gmail recorta a partir de ~102 KB y esconde el resto tras «ver mensaje
+ * completo», así que esto no es una preferencia editorial sino el límite del
+ * medio. Seis inmuebles con foto entran de sobra; el resto se resume en una
+ * línea con el botón al Radar, que es donde se ven todos sin recorte.
+ *
+ * Antes eran 3, y el asunto prometía doce.
+ */
+const ALERT_EMAIL_FEATURED_LIMIT = 6;
 
 export interface AlertDispatchCanary {
   email: string;
@@ -198,45 +208,110 @@ function matchImageUrl(match: AlertMatch): string {
   return new URL(`/img/ph/${fallbackType}.jpg`, env.APP_BASE_URL).toString();
 }
 
+/**
+ * El correo de alerta.
+ *
+ * ── Qué se cambió y por qué ──
+ *
+ * La versión anterior abría con un banner promocional a toda página —«Las
+ * mejores oportunidades inmobiliarias están a la vista de todos»— que se comía
+ * la primera pantalla entera. En un correo que llega cada semana, ese cartel se
+ * lee una vez y estorba las cincuenta siguientes: quien abre una alerta viene a
+ * ver inmuebles, y los inmuebles empezaban donde ya nadie mira.
+ *
+ * Y el asunto prometía doce oportunidades mientras el cuerpo enseñaba tres.
+ *
+ * Así lo resuelven los portales que viven de este correo —Idealista, Zillow,
+ * Redfin—: cabecera mínima, el dato que justifica el envío arriba del todo, y a
+ * partir de ahí una tarjeta por inmueble con la foto grande. Nada de hero.
+ *
+ * ── Las reglas del medio ──
+ *
+ * Un correo no es una página web:
+ *
+ *  · Tablas para maquetar. Ni flex ni grid: Outlook usa el motor de Word.
+ *  · Estilos en línea. Gmail descarta buena parte de un `<style>`.
+ *  · 600 px de ancho, que es el estándar que respetan todos los clientes.
+ *  · Gmail RECORTA el correo a partir de ~102 KB y esconde el resto tras un
+ *    «ver mensaje completo». Por eso el número de tarjetas está topado: doce
+ *    inmuebles con foto caben; treinta no.
+ *  · Botones con tabla y `bgcolor`, no un `<a>` con fondo: Outlook ignora el
+ *    padding de los enlaces y el botón se queda en un texto suelto.
+ *  · Las imágenes llegan bloqueadas por defecto en muchos buzones, así que
+ *    ninguna carga información que no esté también en texto.
+ */
 export function buildAlertDigestHtml(alert: RadarAlert, matches: AlertMatch[]): string {
   const city = displayCity(alert.city);
   const searchUrl = alertSearchUrl(alert);
   const accountUrl = new URL('/cuenta', env.APP_BASE_URL).toString();
-  const heroUrl = new URL('/radar/login-poster.jpg', env.APP_BASE_URL).toString();
-  const featured = matches.slice(0, ALERT_EMAIL_FEATURED_LIMIT);
-  const cards = featured.map((match) => {
+  const visibles = matches.slice(0, ALERT_EMAIL_FEATURED_LIMIT);
+  const ocultas = Math.max(0, matches.length - visibles.length);
+  const budget = alert.budget ? `hasta $${Number(alert.budget).toLocaleString('es-CO')} millones` : 'sin tope de precio';
+  // Dos plurales distintos y no uno: «oportunidad» pide `-es` y «nueva» pide
+  // `-s`. Con un solo sufijo salía «4 oportunidades nuevaes», que es la clase de
+  // detalle que hace que un correo automático parezca hecho por una máquina.
+  const varias = matches.length !== 1;
+  const nOportunidades = `${matches.length} oportunidad${varias ? 'es' : ''} nueva${varias ? 's' : ''}`;
+
+  /** Botón que sobrevive a Outlook: tabla con `bgcolor`, no un `<a>` con fondo. */
+  const boton = (href: string, texto: string, ancho: 'auto' | 'full' = 'auto') => `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"${ancho === 'full' ? ' width="100%"' : ''}>
+      <tr>
+        <td align="center" bgcolor="#613174" style="border-radius:10px">
+          <a href="${escapeHtml(href)}" style="display:block;padding:14px 26px;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;line-height:1.2;text-decoration:none;border-radius:10px">${escapeHtml(texto)}</a>
+        </td>
+      </tr>
+    </table>`;
+
+  const cards = visibles.map((match, i) => {
     const matchCity = displayCity(match.city || alert.city);
-    const location = [match.zone, match.address].filter(Boolean).join(' · ') || matchCity;
-    const discount = match.discount_pct != null ? `${Math.round(match.discount_pct)}% bajo comparables` : 'Oportunidad CRECE';
-    const details = [
+    const titulo = `${propertyTypeLabel(match.type)} en ${matchCity}`;
+    // El barrio basta y la dirección se omite a propósito: Gmail detecta las
+    // direcciones postales y las convierte en enlaces azules a Maps, así que el
+    // clic más visible de la tarjeta se lo llevaba Google en vez del Radar.
+    const zona = match.zone ? displayCity(match.zone) : matchCity;
+    const dto = match.discount_pct != null ? Math.round(match.discount_pct) : null;
+    const ficha = new URL(`/?tab=${match.source === 'fincaraiz' ? 'portal' : 'bancos'}&city=${encodeURIComponent(String(match.city ?? '').toLowerCase())}`, env.APP_BASE_URL).toString();
+    // Cada trozo se escapa por separado y solo DESPUÉS se une con el separador
+    // HTML. Escapar la cadena ya unida convertiría el `&nbsp;` en texto visible;
+    // no escapar nada deja pasar lo que venga en el nombre de la fuente, que es
+    // dato de scraping y no debe llegar crudo a un correo.
+    const datos = [
       match.area_m2 ? `${Math.round(match.area_m2)} m²` : null,
       sourceLabel(match.source),
-    ].filter(Boolean).join(' · ');
+    ].filter(Boolean).map((x) => escapeHtml(x)).join(' &nbsp;·&nbsp; ');
+
     return `
       <tr>
-        <td style="padding:0 28px 16px">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e7ddea;border-radius:14px;background:#ffffff;overflow:hidden">
+        <td style="padding:0 24px 18px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e7ddea;border-radius:14px;background:#ffffff">
             <tr>
-              <td class="card-image" width="190" valign="top" style="width:190px;background:#2a1438">
-                <img src="${escapeHtml(matchImageUrl(match))}" width="190" height="132" alt="${escapeHtml(`${propertyTypeLabel(match.type)} en ${matchCity}`)}" style="display:block;width:190px;height:132px;object-fit:cover;border:0">
+              <td style="padding:0">
+                <a href="${escapeHtml(ficha)}" style="display:block;text-decoration:none">
+                  <img src="${escapeHtml(matchImageUrl(match))}" width="552" alt="${escapeHtml(titulo)}" style="display:block;width:100%;max-width:552px;height:auto;border:0;border-radius:14px 14px 0 0">
+                </a>
               </td>
-              <td class="card-content" valign="top" style="padding:18px 20px">
-                <div style="display:inline-block;padding:5px 9px;border-radius:99px;background:#fff5bf;color:#4a2560;font-size:11px;line-height:1;font-weight:800;letter-spacing:.04em;text-transform:uppercase">${escapeHtml(discount)}</div>
-                <h3 style="margin:10px 0 5px;color:#2a1438;font-size:20px;line-height:1.2;font-weight:800">${escapeHtml(`${propertyTypeLabel(match.type)} en ${matchCity}`)}</h3>
-                <p style="margin:0 0 10px;color:#76677e;font-size:13px;line-height:1.4">${escapeHtml(location)}</p>
-                <p style="margin:0;color:#4a2560;font-size:21px;line-height:1.15;font-weight:800">${escapeHtml(moneyLabel(match.price))}</p>
-                <p style="margin:6px 0 0;color:#8b7c92;font-size:12px;line-height:1.35">${escapeHtml(details)}</p>
+            </tr>
+            <tr>
+              <td style="padding:18px 20px 20px">
+                ${dto != null ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#f2ca04" style="border-radius:6px;padding:6px 10px;color:#2a1438;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:bold;line-height:1">${dto}% por debajo de comparables</td></tr></table>` : ''}
+                <p style="margin:${dto != null ? '13px' : '0'} 0 0;color:#2a1438;font-family:Arial,Helvetica,sans-serif;font-size:26px;font-weight:bold;line-height:1.1">${escapeHtml(moneyLabel(match.price))}</p>
+                <p style="margin:7px 0 0;color:#2a1438;font-family:Arial,Helvetica,sans-serif;font-size:17px;font-weight:bold;line-height:1.3">${escapeHtml(titulo)}</p>
+                <p style="margin:4px 0 0;color:#76677e;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45">${escapeHtml(zona)}</p>
+                <p style="margin:10px 0 16px;color:#8b7c92;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.4">${datos}</p>
+                ${boton(ficha, 'Ver esta oportunidad')}
               </td>
             </tr>
           </table>
         </td>
       </tr>`;
   }).join('');
-  const budget = alert.budget
-    ? `Hasta $${Number(alert.budget).toLocaleString('es-CO')} M`
-    : 'Sin tope';
-  const opportunityNoun = matches.length === 1 ? 'oportunidad' : 'oportunidades';
-  const preheader = `${matches.length} ${opportunityNoun} nueva${matches.length === 1 ? '' : 's'} en ${city}, seleccionada${matches.length === 1 ? '' : 's'} por tu Radar CRECE.`;
+
+  // Lo que Gmail enseña en la bandeja detrás del asunto. Sin esto pone el primer
+  // texto que encuentre del cuerpo, que suele ser una migaja sin sentido.
+  const preheader = dto0(matches)
+    ? `El mejor está ${dto0(matches)}% por debajo de sus comparables. Tu alerta de ${city}, ${budget}.`
+    : `Tu alerta de ${city}, ${budget}.`;
 
   return `<!doctype html>
 <html lang="es">
@@ -244,93 +319,89 @@ export function buildAlertDigestHtml(alert: RadarAlert, matches: AlertMatch[]): 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="x-apple-disable-message-reformatting">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <!-- Apple Mail y Gmail convierten direcciones, fechas y teléfonos en enlaces
+       propios. En una tarjeta de inmueble eso pinta la ubicación de azul y se
+       lleva el clic a Maps, compitiendo con el botón que sí queremos. -->
+  <meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
   <title>Radar CRECE · ${escapeHtml(city)}</title>
   <style>
+    a[x-apple-data-detectors] { color:inherit !important; text-decoration:none !important; }
     @media only screen and (max-width:620px) {
-      .email-shell { width:100% !important; border-radius:0 !important; }
-      .mobile-pad { padding-left:20px !important; padding-right:20px !important; }
-      .card-image, .card-content { display:block !important; width:100% !important; }
-      .card-image img { width:100% !important; height:190px !important; }
-      .metric { display:block !important; width:100% !important; padding:8px 0 !important; }
-      .brand-tag { display:none !important; }
+      .shell { width:100% !important; border-radius:0 !important; }
+      .pad { padding-left:18px !important; padding-right:18px !important; }
+      .card-pad { padding-left:14px !important; padding-right:14px !important; }
+      .h1 { font-size:25px !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#f4f0f6;color:#23132b;font-family:Arial,Helvetica,sans-serif">
-  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent">${escapeHtml(preheader)}</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f0f6">
+<body style="margin:0;padding:0;background:#f4f0f6;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;visibility:hidden">${escapeHtml(preheader)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f0f6">
     <tr>
-      <td align="center" style="padding:24px 10px">
-        <table class="email-shell" role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:640px;max-width:640px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 14px 45px rgba(42,20,56,.14)">
+      <td align="center" style="padding:22px 10px 34px">
+        <table class="shell" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border-radius:16px">
+
+          <!-- Cabecera. Una franja, no una portada: en un correo semanal la marca
+               solo tiene que identificar quién escribe. -->
           <tr>
-            <td style="padding:20px 28px;background:#2a1438;border-bottom:3px solid #f2ca04">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="color:#ffffff;font-size:17px;line-height:1.2;font-weight:800;letter-spacing:.02em">RADAR <span style="color:#f2ca04">CRECE</span></td>
-                  <td class="brand-tag" align="right" style="color:#cbbdd2;font-size:11px;line-height:1.2;font-weight:700;letter-spacing:.1em;text-transform:uppercase">Inteligencia inmobiliaria</td>
-                </tr>
-              </table>
+            <td bgcolor="#2a1438" style="padding:16px 24px;border-radius:16px 16px 0 0;border-bottom:3px solid #f2ca04">
+              <span style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:bold;letter-spacing:.02em">RADAR <span style="color:#f2ca04">CRECE</span></span>
             </td>
           </tr>
+
+          <!-- El titular y, justo debajo, de qué alerta viene. Es la primera
+               pregunta de quien recibe un correo que no pidió hoy. -->
           <tr>
-            <td>
-              <img src="${escapeHtml(heroUrl)}" width="640" alt="Radar de Oportunidades CRECE" style="display:block;width:100%;max-width:640px;height:auto;border:0">
+            <td class="pad" style="padding:28px 28px 6px">
+              <h1 class="h1" style="margin:0;color:#2a1438;font-family:Arial,Helvetica,sans-serif;font-size:30px;font-weight:bold;line-height:1.15">${escapeHtml(nOportunidades)} en ${escapeHtml(city)}</h1>
+              <p style="margin:10px 0 0;color:#6f6476;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55">De tu alerta: <strong style="color:#4a2560">${escapeHtml(city)}, ${escapeHtml(budget)}</strong>. Todas siguen publicadas y están por debajo del precio de sus comparables.</p>
             </td>
           </tr>
-          <tr>
-            <td class="mobile-pad" style="padding:32px 36px 20px">
-              <p style="margin:0 0 9px;color:#613174;font-size:12px;line-height:1.3;font-weight:800;letter-spacing:.12em;text-transform:uppercase">Tu resumen personalizado</p>
-              <h1 style="margin:0 0 12px;color:#2a1438;font-size:32px;line-height:1.12;font-weight:800">Tu Radar encontró ${matches.length} oportunidad${matches.length === 1 ? '' : 'es'} en ${escapeHtml(city)}</h1>
-              <p style="margin:0;color:#6f6476;font-size:16px;line-height:1.55">Seleccionamos inmuebles activos que cumplen tus criterios y muestran una diferencia atractiva frente a sus comparables.</p>
-            </td>
-          </tr>
-          <tr>
-            <td class="mobile-pad" style="padding:4px 36px 28px">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f7f1fa;border:1px solid #eadfee;border-radius:12px">
-                <tr>
-                  <td class="metric" width="33%" align="center" style="padding:16px 8px;border-right:1px solid #eadfee">
-                    <div style="color:#613174;font-size:22px;font-weight:800">${matches.length}</div>
-                    <div style="color:#817187;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">${matches.length === 1 ? 'Coincidencia' : 'Coincidencias'}</div>
-                  </td>
-                  <td class="metric" width="33%" align="center" style="padding:16px 8px;border-right:1px solid #eadfee">
-                    <div style="color:#613174;font-size:18px;font-weight:800">${escapeHtml(city)}</div>
-                    <div style="color:#817187;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Ciudad</div>
-                  </td>
-                  <td class="metric" width="34%" align="center" style="padding:16px 8px">
-                    <div style="color:#613174;font-size:18px;font-weight:800">${escapeHtml(budget)}</div>
-                    <div style="color:#817187;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase">Presupuesto</div>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td class="mobile-pad" style="padding:0 28px 14px">
-              <h2 style="margin:0;color:#2a1438;font-size:21px;line-height:1.25;font-weight:800">Oportunidades destacadas</h2>
-              <p style="margin:5px 0 0;color:#8b7c92;font-size:13px;line-height:1.4">Una selección de las mejores coincidencias de este corte.</p>
-            </td>
-          </tr>
+
+          <tr><td class="pad" style="padding:22px 28px 6px"><div style="height:1px;background:#eadfee;line-height:1px;font-size:0">&nbsp;</div></td></tr>
+
           ${cards}
+
+          ${ocultas > 0 ? `
           <tr>
-            <td class="mobile-pad" align="center" style="padding:16px 36px 36px">
-              <a href="${escapeHtml(searchUrl)}" style="display:inline-block;padding:15px 28px;border-radius:10px;background:#613174;color:#ffffff;font-size:15px;line-height:1.2;font-weight:800;text-decoration:none">Ver ${matches.length === 1 ? 'la oportunidad' : `las ${matches.length} oportunidades`} en mi Radar</a>
-              <p style="margin:12px 0 0;color:#8b7c92;font-size:12px;line-height:1.4">Accede para comparar, guardar y analizar cada inmueble.</p>
+            <td class="pad" align="center" style="padding:6px 28px 4px">
+              <p style="margin:0 0 14px;color:#6f6476;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.5">Hay <strong style="color:#2a1438">${ocultas} más</strong> que encajan con esta alerta.</p>
+              ${boton(searchUrl, `Ver las ${matches.length} en mi Radar`)}
+            </td>
+          </tr>` : `
+          <tr>
+            <td class="pad" align="center" style="padding:6px 28px 4px">
+              ${boton(searchUrl, 'Abrir mi Radar')}
+            </td>
+          </tr>`}
+
+          <tr>
+            <td class="pad" align="center" style="padding:12px 28px 30px">
+              <p style="margin:0;color:#8b7c92;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5">Dentro puedes comparar, guardar y ver contra qué inmuebles se calculó cada diferencia.</p>
             </td>
           </tr>
+
           <tr>
-            <td class="mobile-pad" style="padding:25px 36px;background:#2a1438;border-top:3px solid #f2ca04">
-              <p style="margin:0 0 8px;color:#ffffff;font-size:14px;line-height:1.45;font-weight:700">Decisiones con más contexto, no con más ruido.</p>
-              <p style="margin:0 0 14px;color:#cbbdd2;font-size:11px;line-height:1.55">El Índice CRECE es una señal orientativa basada en comparables. Verifica precio, estado jurídico y condiciones del inmueble antes de invertir.</p>
-              <p style="margin:0;color:#cbbdd2;font-size:11px;line-height:1.5">Puedes <a href="${escapeHtml(accountUrl)}" style="color:#f2ca04;text-decoration:underline">administrar o eliminar esta alerta</a> desde Mi cuenta.</p>
+            <td class="pad" bgcolor="#2a1438" style="padding:22px 28px;border-radius:0 0 16px 16px;border-top:3px solid #f2ca04">
+              <p style="margin:0 0 10px;color:#cbbdd2;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6">Los porcentajes comparan el precio publicado con inmuebles similares de la zona. Son precios de oferta, no ventas cerradas: verifica precio, estado jurídico y condiciones antes de invertir.</p>
+              <p style="margin:0;color:#cbbdd2;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6">Recibes esto porque creaste una alerta en el Radar. <a href="${escapeHtml(accountUrl)}" style="color:#f2ca04;text-decoration:underline">Modificarla o darte de baja</a>.</p>
             </td>
           </tr>
         </table>
-        <p style="margin:16px 0 0;color:#8f8494;font-size:10px;line-height:1.5">Radar de Oportunidades · CRECE · Colombia</p>
+        <p style="margin:14px 0 0;color:#8f8494;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.5">Radar de Oportunidades · CRECE · Colombia</p>
       </td>
     </tr>
   </table>
 </body>
 </html>`;
+}
+
+/** El descuento del primero, para el preheader. `null` si no lo trae. */
+function dto0(matches: AlertMatch[]): number | null {
+  const d = matches[0]?.discount_pct;
+  return d != null && Number.isFinite(d) ? Math.round(d) : null;
 }
 
 export function buildAlertDigestText(alert: RadarAlert, matches: AlertMatch[]): string {
