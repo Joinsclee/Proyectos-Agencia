@@ -207,3 +207,31 @@ test('asistente: una búsqueda vieja no mueve la pantalla', async (t) => {
   t.mock.timers.tick(3 * 60 * 1000);
   assert.equal(tomarBusqueda(uid), undefined, 'a los 3 minutos ya no debe aplicarse');
 });
+
+/*
+ * B3: los dos límites del plan gratuito, visibles sin gastarlos.
+ *
+ * El de preguntas se calculaba ya, pero solo viajaba dentro de la respuesta del
+ * propio Asistente: para saber cuántas quedaban había que escribirle una. Eso
+ * obliga a gastar para poder decidir, que es justo lo contrario de lo que pide
+ * un contador.
+ */
+test('cuenta: el cupo del asistente viaja con la cuenta, no solo con su respuesta', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const fuente = await readFile(new URL('./account.ts', import.meta.url), 'utf8');
+  // El campo tiene que estar en `publicAccount`, que es lo que lee la interfaz
+  // en `/api/account`.
+  assert.match(fuente, /consultas: estadoConsultas\(leerConsultas\(metadata\)/);
+  // Y con la misma traducción de plan que los otros dos cupos: un suscriptor no
+  // tiene límite, y confundirlo con `free` le pintaría un contador que no le
+  // aplica.
+  assert.match(fuente, /consultas: estadoConsultas\(leerConsultas\(metadata\), plan === 'pro' \? 'suscrito' : 'free'\)/);
+});
+
+test('asistente: un suscriptor no arrastra contador', () => {
+  // `restantes: null` es lo que hace que la interfaz no pinte nada en Pro. Si
+  // devolviera 0, la barra diría «0 de 0 preguntas» a quien las tiene todas.
+  const estado = estadoConsultas({ periodo: '2026-08', usadas: 12 }, 'suscrito');
+  assert.equal(estado.ilimitado, true);
+  assert.equal(estado.restantes, null);
+});

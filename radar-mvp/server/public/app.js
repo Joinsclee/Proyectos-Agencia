@@ -469,12 +469,46 @@ function invitarAPersonalizar() {
     }, 1400);
   }, 700);
 }
+/**
+ * Lo que le queda del mes, a la vista y sin gastarlo para saberlo.
+ *
+ * Los dos límites del plan gratuito —fichas y preguntas al Asistente— solo se
+ * conocían al chocarse con ellos: el de fichas aparecía en el muro cuando ya no
+ * quedaban, y el de preguntas había que escribirle una al Asistente para que la
+ * respuesta dijera cuántas sobraban. Eso obliga a gastar para poder decidir.
+ *
+ * No se muestra en Pro: ahí no hay límite que contar, y un contador de algo
+ * ilimitado solo hace ruido.
+ */
+function consumoDelPlan() {
+  const c = auth.account;
+  if (!c || c.plan === 'pro') return '';
+  const partes = [];
+  const fichas = c.cupo;
+  const preguntas = c.consultas;
+  if (fichas && !fichas.ilimitado && Number.isFinite(fichas.restantes)) {
+    partes.push([`${fichas.restantes} de ${fichas.limite}`, 'fichas', fichas.restantes === 0]);
+  }
+  if (preguntas && !preguntas.ilimitado && Number.isFinite(preguntas.restantes)) {
+    partes.push([`${preguntas.restantes} de ${preguntas.limite}`, 'preguntas', preguntas.restantes === 0]);
+  }
+  if (!partes.length) return '';
+  // El título completo va en `title` y no en pantalla: en la barra caben dos
+  // cifras, no dos frases, y en móvil ni eso —el CSS lo esconde por debajo de
+  // 900 px, donde ya compite con la navegación—.
+  const cuerpo = partes
+    .map(([n, que, agotado]) => `<span class="consumo-dato${agotado ? ' agotado' : ''}"><b>${esc(n)}</b> ${esc(que)}</span>`)
+    .join('');
+  const titulo = partes.map(([n, que]) => `Te quedan ${n} ${que} este mes`).join(' · ');
+  return `<a class="consumo" href="/cuenta" title="${esc(titulo)}">${cuerpo}</a>`;
+}
+
 function renderAuthBar() {
   const el = $('authbar'); if (!el) return;
   if (auth.user) {
     const who = auth.user.name || (auth.user.email || '').split('@')[0];
     const plan = auth.account?.plan === 'pro' ? '<span class="auth-plan">Pro</span>' : '';
-    el.innerHTML = `<a class="auth-user" href="/cuenta">${ic('user')}${esc(who)}${plan}</a><a class="auth-link" href="/planes">Planes</a><button class="auth-link" id="auth-logout"><span>Salir</span></button>`;
+    el.innerHTML = `<a class="auth-user" href="/cuenta">${ic('user')}${esc(who)}${plan}</a>${consumoDelPlan()}<a class="auth-link" href="/planes">Planes</a><button class="auth-link" id="auth-logout"><span>Salir</span></button>`;
     $('auth-logout').addEventListener('click', () => {
       localStorage.removeItem('radar_token'); localStorage.removeItem('radar_refresh'); location.reload();
     });
