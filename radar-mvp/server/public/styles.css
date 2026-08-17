@@ -2105,3 +2105,25 @@ body.cookies-mapas .mapa-bloqueado { display: none; }
 /* Por debajo de 900 px la barra ya compite con la navegación: dos cifras más la
    desbordan, y el dato sigue estando en /cuenta. */
 @media (max-width: 900px) { .consumo { display: none; } }
+
+/* ── El Asistente no se pisa con el banner legal (B5) ──
+   El botón flotante vive en la esquina inferior derecha con z-index 1300; el
+   banner de cookies ocupa toda esa franja con z-index 90. Sin esto el botón se
+   pinta encima y tapa justo «Aceptar todo» y «Solo lo necesario», que son los
+   dos controles que el visitante necesita pulsar primero.
+
+   Se sube mientras el banner esté, y vuelve a su sitio en cuanto se decide. Las
+   medidas salen del alto real del banner: ~100 px en escritorio, ~175 en móvil,
+   donde se apila y además ya va por encima de la barra de pestañas. */
+body.con-banner-cookies .asis-btn { bottom: 118px; }
+body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 260px); }
+@media (max-width: 760px) {
+  body.con-banner-cookies .asis-btn { bottom: calc(250px + env(safe-area-inset-bottom)); }
+  body.con-banner-cookies .asis-panel {
+    bottom: calc(312px + env(safe-area-inset-bottom));
+    max-height: calc(100vh - 380px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .asis-btn, .asis-panel { transition: bottom 0.2s ease; }
+}

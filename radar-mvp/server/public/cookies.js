@@ -150,6 +150,7 @@
   function cerrar() {
     var n = document.getElementById('cookie-banner');
     if (n) n.remove();
+    document.body.classList.remove('con-banner-cookies');
     document.removeEventListener('keydown', escapar);
   }
 
@@ -190,6 +191,11 @@
       + '<button type="button" class="cookie-btn cookie-si" data-cookie="si">Aceptar todo</button>'
       + '</div></div>';
     document.body.appendChild(n);
+    // Se marca el `body` mientras el banner ocupa la franja inferior. El botón
+    // flotante del Asistente vive ahí abajo con un z-index mucho más alto, así
+    // que sin esto se pinta ENCIMA del banner y tapa justo los botones de
+    // aceptar y rechazar. El CSS lo sube mientras dure.
+    document.body.classList.add('con-banner-cookies');
     document.addEventListener('keydown', escapar);
     // El foco va al banner para que quien navegue con teclado no tenga que
     // recorrer la página entera hasta encontrarlo.
