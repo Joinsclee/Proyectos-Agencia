@@ -1248,6 +1248,12 @@ server.listen(PORT, () => {
     .then(() => log.info('Estadísticas precargadas'))
     .then(() => warmDestacados())
     .then(() => log.info('Destacados de la portada precargados'))
+    // El bloque de enlaces del pie va aquí, con la portada, porque forma parte de
+    // ella. Sin precalentar, el primer visitante tras cada despliegue esperaba
+    // treinta segundos: ahora la portada nunca espera —si no está listo se sirve
+    // sin el bloque— pero calentarlo hace que en la práctica siempre esté.
+    .then(() => import('./seo.js').then((m) => m.ciudadesDestacadas()))
+    .then(() => log.info('Enlaces del pie precargados'))
     .then(() => warmCityPools(WARM_CITIES))
     .then(() => log.info('Comparables precargados: ' + WARM_CITIES.join(', ')))
     // Al final y sin prisa: si compite con los dos precalentamientos anteriores
