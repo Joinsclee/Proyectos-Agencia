@@ -3533,6 +3533,33 @@ function openModal(p) {
   if (state.tab === 'remates') return openRemate(p);
   return openInmueble(p);
 }
+/**
+ * Un bloque de la ficha que se abre solo si el usuario lo pide.
+ *
+ * La ficha reunía análisis, otras oportunidades, calculadora, rentabilidad, IA,
+ * mapa, descripción, reporte y fuente en un recorrido largo, todo al mismo peso.
+ * El efecto es que la metodología compite visualmente con el hallazgo, y quien
+ * baja se pierde por qué merecía la pena mirar este inmueble.
+ *
+ * Lo que decide —precio, porcentaje, comparables, alertas y la acción siguiente—
+ * se queda arriba y a la vista. Lo que profundiza pasa aquí dentro: sigue
+ * estando entero, a un clic, y deja de disputarle la atención a lo primero.
+ *
+ * `<details>` y no un acordeón propio: lo abre el teclado, lo lee un lector de
+ * pantalla, y el buscador del navegador (Ctrl+F) encuentra el texto de dentro.
+ */
+function bloqueSecundario(titulo, contenido, icono) {
+  const cuerpo = String(contenido ?? '').trim();
+  if (!cuerpo) return '';
+  // Varios de estos bloques ya traen su propio `<h3>`. Al meterlos aquí dentro
+  // el título se vería dos veces —una en el desplegable y otra al abrirlo—, así
+  // que el primero se absorbe: el `<summary>` pasa a ser ese encabezado en vez
+  // de sumarse a él.
+  const sinTitulo = cuerpo.replace(/<h3[^>]*>[\s\S]*?<\/h3>/i, '');
+  return `<details class="bloque-sec"><summary>${icono ? ic(icono) : ''}<span>${esc(titulo)}</span></summary>`
+    + `<div class="bloque-sec-cuerpo">${sinTitulo}</div></details>`;
+}
+
 function openInmueble(p) {
   if (!gateFicha(p.id)) return; // muro de registro si el anónimo superó el cupo
   const anon = !auth.token;
@@ -3595,16 +3622,42 @@ function openInmueble(p) {
     admin: Number((p.features || {}).administracion) || 0,
   });
 
+  // ── El orden de la ficha, alrededor de la decisión ──
+  //
+  // Lo pidió el informe y sigue su lista: qué es y cuánto cuesta, cuánto se
+  // separa del mercado, con qué respaldo, qué habría que verificar, y qué hacer
+  // ahora. Todo lo demás pasa a desplegables.
+  //
+  // Dos cambios de fondo respecto a lo que había:
+  //
+  //  · El PRECIO sube por delante del sello de oportunidad. Un «-22%» antes de
+  //    saber sobre cuánto se aplica no significa nada; con el precio delante, el
+  //    porcentaje ya cae sobre una cifra que la persona acaba de leer.
+  //  · «Ver en la fuente» sube al cuerpo. Estaba al final del todo, después de
+  //    la descripción, las características y el reporte: la acción que cierra la
+  //    visita quedaba detrás de lo que menos decide, y había que recorrer la
+  //    ficha entera para encontrarla.
+  const accionSiguiente = `<div class="ficha-accion">
+    <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
+    <p class="ficha-accion-nota">El aviso original tiene las fotos completas, la descripción del anunciante y sus datos de contacto. Verifica ahí precio y disponibilidad antes de decidir.</p>
+  </div>`;
+
   $('modal-content').innerHTML = `${gallery()}
     <div class="detail">
       <div class="detail-top"><span class="pill-src">${esc(srcLbl(p.source))}</span>${fav}</div>
       <h2>${esc(typeLbl(p.type))} en ${esc(cap(p.city))}</h2>
       <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${esc(cap(p.city))}</strong></div>
-      ${selloCreceFicha(p)}
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
-      ${mkt || marketLazyBox()}${acquisition}${muro}${aiBlock}${addrBlock}${mapBlock}${descBlock}${amen}${reporte}
-      <a class="cta" href="${esc(safeExternalUrl(p.source_url))}" target="_blank" rel="noopener noreferrer">Ver en ${esc(srcLbl(p.source))} ↗</a>
+      ${selloCreceFicha(p)}
+      ${mkt || marketLazyBox()}
+      ${muro}
+      ${bloq ? '' : accionSiguiente}
+      ${bloqueSecundario('Costos de compra y rentabilidad', acquisition, 'chart')}
+      ${bloqueSecundario('Análisis con IA', aiBlock, 'spark')}
+      ${bloqueSecundario('Ubicación en el mapa', addrBlock + mapBlock, 'map')}
+      ${bloqueSecundario('Descripción del anuncio', descBlock + amen, 'home')}
+      ${bloqueSecundario('Descargar el reporte', reporte, 'arrow')}
     </div>`;
   recordarFichaEnPantalla(kind, p.id, tituloFicha(p), p.type, p.area_m2 ?? null);
   showModal();
