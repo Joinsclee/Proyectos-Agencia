@@ -1613,6 +1613,33 @@ async function reconstruirFiltrosConservandoValores() {
   updateFilterCount();
 }
 
+/**
+ * Lleva los filtros de una sección a la siguiente, saltándose los que no existen
+ * allí.
+ *
+ * «Compatibles» se resuelve solo, sin lista de equivalencias que mantener: si el
+ * control no está en el panel nuevo, no se restaura. La valoración de oportunidad
+ * solo existe en Portales; los barrios, solo donde hay ciudad elegida. Cada panel
+ * se construye con lo suyo, así que preguntar por el elemento ES la comprobación.
+ *
+ * El barrio va al final y aparte porque sus opciones dependen de la ciudad: hay
+ * que repoblarlas antes o se restauraría un valor que la lista todavía no tiene.
+ */
+async function restaurarFiltrosCompatibles(previos) {
+  if (!previos || !previos.size) return;
+  const zona = previos.get('f-zone');
+  for (const [id, valor] of previos) {
+    if (id === 'f-zone') continue;
+    if ($(id)) restaurarValorDeFiltro(id, valor);
+  }
+  const ciudad = $('f-city');
+  if (zona && ciudad?.value && $('f-zone')) {
+    await repopZones(ciudad.value);
+    restaurarValorDeFiltro('f-zone', zona);
+  }
+  updateFilterCount();
+}
+
 /** Devuelve un valor a su control, salvo que el desplegable ya no lo ofrezca. */
 function restaurarValorDeFiltro(id, valor) {
   const el = $(id);
@@ -2092,7 +2119,7 @@ function renderHome(payload) {
   // `payload.semana` sigue llegando y el servidor la sigue usando para la rotación.
   const cabecera = `<div class="home-intro">
     <h2>Destacados de hoy</h2>
-    <p>Cada bloque dice con qué regla se eligió.</p>
+    <p>Cada bloque explica el motivo de su selección.</p>
   </div>
   <div id="home-aviso"></div>`;
 
@@ -2955,7 +2982,13 @@ function analisisSection(p) {
   const meta = {
     buena: [ic('check-circle', 'ic-reicon analysis-icon is-positive'), 'Oportunidad atractiva'],
     media: [ic('magnifier', 'analysis-icon is-review'), 'Requiere revisión'],
-    precaucion: [ic('alert-triangle', 'ic-reicon analysis-icon is-warning'), 'Revisar con cuidado'],
+    // «Revisar detalladamente» y no «con cuidado», con icono de información y no
+    // de alerta. Es lo único que el cliente pidió cambiar aquí por ahora, y va en
+    // la dirección del informe: la comunicación de remates debe hablar desde el
+    // control y la verificación, no desde el miedo. «Cuidado» y un triángulo rojo
+    // dicen «esto es peligroso»; «detalladamente» dice «esto se mira despacio»,
+    // que es exactamente lo que hay que hacer y lo que el Radar ayuda a hacer.
+    precaucion: [ic('info', 'analysis-icon is-review'), 'Revisar detalladamente'],
   }[nivel];
   const icon = {
     pos: ic('check-circle', 'ic-reicon analysis-icon is-positive'),
@@ -4333,12 +4366,11 @@ function devolverFoco() {
 // ---------- Stats + leyenda + tabs ----------
 let STATS = null;
 function renderStatsUnavailable() {
+  // Sin contadores en el encabezado no hay nada que pintar aquí: escribir en
+  // `$('summary')` ahora sería leer `null.innerHTML` y llevarse por delante el
+  // resto del archivo. `STATS = null` sigue importando —el buscador del inicio
+  // consulta esa variable— y los resultados no dependen de esto.
   STATS = null;
-  $('summary').innerHTML = `
-    <div class="summary-stat muted">
-      <div class="num">Actualizando</div>
-      <div class="lbl">Las estadísticas volverán automáticamente; los resultados siguen disponibles.</div>
-    </div>`;
 }
 /** Un solo viaje por la configuración: la usan el asistente y la verificación. */
 async function cargarConfig() {
@@ -4375,38 +4407,17 @@ async function loadStats() {
     return;
   }
   STATS = payload;
-  // Tres cifras, y las tres del mismo tipo: oportunidades. Decisión de la reunión
-  // del 28-jul, y las dos razones que se dieron son buenas:
+  // Los tres contadores del encabezado se retiraron por decisión del cliente.
   //
-  //  · «Listados portal» invitaba a competir en cantidad, y esa es una carrera
-  //    perdida —siempre habrá un portal con más inventario—. El producto no vende
-  //    volumen, vende criterio: por eso las tres cifras cuentan oportunidades.
-  //  · La fecha de actualización es un dato interno. A un visitante que lee
-  //    «actualizado hace dos días» le suena a desactualizado, cuando el Radar
-  //    nunca prometió tiempo real: promete un corte semanal bien hecho.
+  // Fueron perdiendo función por su cuenta: primero eran cifras de tipos
+  // distintos, luego las tres de oportunidades, después botones para saltar a su
+  // sección. Al mirarlos por última vez la conclusión fue la más simple —«si no
+  // nos parece demasiado relevante a ninguno, hasta eliminémoslo»— y coincide con
+  // dos cosas del informe: ocupaban justo la altura que impedía ver una tarjeta
+  // completa sin desplazar, y eran una de las TRES formas de cambiar de fuente
+  // que el punto 6 pide reducir a una sola.
   //
-  // Y quitarlas resuelve de paso lo que más molestó al verlo: había cifras en tres
-  // filas distintas —resumen, pestañas y franja— y varias eran la misma repetida.
-  // Cada cifra lleva a su sección. Lo pidió el cliente al verlas: «la gente
-  // podría hacer clic aquí, sin problema — quiere ir a bancos, pum, le llega a
-  // bancos». Y tenía razón en el diagnóstico previo: puestas ahí, en grande y sin
-  // ser pulsables, invitaban a pulsarlas y no pasaba nada.
-  //
-  // Son <button> y no <div>: un destino que se activa con un clic tiene que
-  // activarse también con el teclado, y esto ya es navegación de la aplicación.
-  $('summary').innerHTML = `
-    <button class="summary-stat" type="button" data-ir="portal"><span class="num">${STATS.portal_opps.toLocaleString('es-CO')}</span><span class="lbl">Oportunidades en portales</span></button>
-    <button class="summary-stat" type="button" data-ir="bancos"><span class="num">${STATS.bancos.toLocaleString('es-CO')}</span><span class="lbl">En bancos</span></button>
-    <button class="summary-stat" type="button" data-ir="remates"><span class="num">${STATS.remates.toLocaleString('es-CO')}</span><span class="lbl">Remates judiciales</span></button>`;
-  // Se delega en el botón real de la pestaña en vez de duplicar su manejador:
-  // cambiar de sección hace una docena de cosas —filtros, paginador, foco, el
-  // desplazamiento en móvil— y tener dos caminos que las hagan es tener dos
-  // caminos que se desincronicen.
-  $('summary').querySelectorAll('[data-ir]').forEach((boton) => {
-    boton.addEventListener('click', () => {
-      document.querySelector(`.tab-btn[data-tab="${boton.dataset.ir}"]`)?.click();
-    });
-  });
+  // `STATS` se sigue guardando: lo usan el buscador del inicio y la leyenda.
   renderLeyenda();
 }
 /**
@@ -4540,6 +4551,23 @@ async function activarPestana(tab, antesDeCargar, pagina = 1) {
   $('pager').innerHTML = '';
   $('empty').style.display = 'none';
   $('loading').style.display = state.tab === 'home' ? 'none' : 'block';
+  // Lo que la persona ya eligió se lleva a la sección nueva.
+  //
+  // Antes se vaciaba el panel y se reconstruía en blanco, así que buscar
+  // «Medellín» en Portales y pasar a Bancos obligaba a volver a elegir Medellín.
+  // Es una tarea central del producto —comparar la misma búsqueda entre las tres
+  // fuentes— y romperla en cada salto hace que la herramienta se sienta a trozos.
+  //
+  // Se guarda ANTES de vaciar y se restaura DESPUÉS de reconstruir, porque las
+  // opciones de cada sección son distintas: las ciudades de Remates no son las de
+  // Portales. `restaurarValorDeFiltro` añade el valor si el desplegable nuevo no
+  // lo trae, así que una ciudad con inventario en una fuente y no en la otra se
+  // conserva y devuelve «sin resultados» —que es la verdad— en vez de
+  // desaparecer sin avisar y enseñar el país entero.
+  const filtrosPrevios = new Map();
+  document.querySelectorAll('#filters [id^="f-"]').forEach((el) => {
+    if (el.value) filtrosPrevios.set(el.id, el.value);
+  });
   $('filters').innerHTML = '';
   setResultText(`Preparando ${state.tab === 'portal' ? 'el portal' : state.tab === 'home' ? 'la portada' : state.tab}…`);
   setFiltersOpen(false);
@@ -4547,6 +4575,7 @@ async function activarPestana(tab, antesDeCargar, pagina = 1) {
   try {
     await buildFilters();
     if (state.tab === 'portal') await applyRadarPreferences(radarPreferences);
+    await restaurarFiltrosCompatibles(filtrosPrevios);
   } catch (error) {
     console.error('filters:', error);
     $('filters').innerHTML = '<div class="f-note">Los filtros no están disponibles por el momento.</div>';
@@ -4569,6 +4598,34 @@ document.querySelectorAll('.tab-btn[data-tab]').forEach((b) => b.addEventListene
   void activarPestana(b.dataset.tab);
 }));
 $('modal-close').addEventListener('click', closeModal);
+
+/**
+ * La rueda desplaza la ficha desde cualquier punto, no solo sobre la columna
+ * derecha.
+ *
+ * El recorrido vive en `.detail`, que es la única con `overflow-y: auto`; la
+ * galería de la izquierda no desplaza nada porque `.modal-box` está en
+ * `overflow: hidden`. Así que con el cursor sobre la foto la rueda no hacía nada
+ * —ni movía la ficha ni la página— y eso se lee como «se acabó» o «está
+ * bloqueado», cuando debajo quedaban el análisis, la calculadora y la fuente.
+ *
+ * Se reenvía en vez de mover el scroll a `.modal-box` porque la galería debe
+ * quedarse quieta mientras el texto avanza: es lo que permite mirar la foto y
+ * leer los datos a la vez, y es el motivo del diseño en dos columnas.
+ *
+ * `preventDefault` solo cuando el reenvío sirve de algo. Si la ficha ya está
+ * arriba del todo y el gesto es hacia arriba, se deja pasar para que el gesto de
+ * «volver» del navegador siga funcionando.
+ */
+$('modal').addEventListener('wheel', (e) => {
+  const detalle = document.querySelector('.detail');
+  if (!detalle || detalle.contains(e.target)) return; // ya desplaza sola
+  const arriba = detalle.scrollTop <= 0;
+  const abajo = Math.ceil(detalle.scrollTop + detalle.clientHeight) >= detalle.scrollHeight;
+  if ((e.deltaY < 0 && arriba) || (e.deltaY > 0 && abajo)) return;
+  e.preventDefault();
+  detalle.scrollTop += e.deltaY;
+}, { passive: false });
 // El manejador de «Ver tutorial» se retiró con el botón. Iba sin `?.`, así que
 // dejarlo mirando un elemento que ya no existe habría lanzado un TypeError aquí
 // mismo —y con él se caía el resto del archivo: los filtros, las pestañas y el
