@@ -728,12 +728,37 @@ h1 .gold { color: var(--gold); }
 .rent-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 .rent-inputs label { color: #5f5268; font-size: .72rem; font-weight: 800; }
 .rent-input { width: 100%; min-height: 42px; margin-top: 5px; padding: 8px 10px; border: 1px solid #d9c7e6; border-radius: 8px; background: #fff; color: #23132b; font-family: inherit; font-size: .92rem; }
-.rent-result { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
-.rent-result > div { padding: 9px; border-radius: 8px; background: #fff; }
-.rent-result span, .rent-result strong { display: block; }
-.rent-result span { color: #6b7280; font-size: .74rem; }
-.rent-result strong { margin-top: 3px; color: var(--pp); font-family: 'Tilt Warp', cursive; font-size: 1.18rem; }
-.rent-result small { grid-column: 1 / -1; color: #6b7280; line-height: 1.4; }
+/* Resultado de la rentabilidad. Bloque en columna —aviso, cifras, desglose— en
+   vez del grid de dos columnas de antes, donde el aviso caía en una celda y
+   descolocaba las dos cifras en diagonal. */
+.rent-result { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Las dos cifras, como pareja y en su orden de importancia: la neta ocupa más
+   sitio porque es la que se cobra; la bruta va al lado como referencia. */
+.rent-cifras { display: grid; grid-template-columns: 1.25fr 1fr; gap: 10px; }
+.rent-cifra {
+  padding: 12px 14px; border-radius: 10px; background: #fff; border: 1px solid #ece3f1;
+  display: flex; flex-direction: column; justify-content: center; min-width: 0;
+}
+.rent-cifra span {
+  color: #7c6a86; font-size: 0.68rem; font-weight: 800;
+  letter-spacing: 0.05em; text-transform: uppercase; line-height: 1.3;
+}
+.rent-cifra strong {
+  margin-top: 5px; color: var(--pp); font-family: 'Tilt Warp', cursive;
+  font-size: 1.5rem; line-height: 1; font-weight: 400; font-variant-numeric: tabular-nums;
+}
+.rent-cifra em { margin-top: 4px; color: #8b7c92; font-size: 0.75rem; font-style: normal; line-height: 1.35; }
+/* La principal se distingue por fondo y por tamaño, no solo por el orden: quien
+   mira de reojo tiene que saber cuál de los dos números es el suyo. */
+.rent-cifra.es-principal { background: #f6effa; border-color: #e0cdea; }
+.rent-cifra.es-principal strong { font-size: 1.95rem; }
+
+.rent-desglose { margin: 0; color: #7c6a86; font-size: 0.76rem; line-height: 1.5; }
+
+@media (max-width: 560px) {
+  .rent-cifras { grid-template-columns: 1fr; }
+}
 /* Análisis preliminar automático (semáforo) */
 .analisis { border-radius: 12px; padding: 14px 16px; border: 1px solid; }
 .analisis-buena { background: #e9f9ef; border-color: #b7e7c6; }
@@ -1896,7 +1921,11 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 
 /* Aviso de rentabilidad fuera de rango. Ámbar y no rojo: el número no está mal
    calculado, es que el dato de partida probablemente lo esté. */
-.rent-atipico { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: #fefce8; border: 1px solid #f3e08a; color: #7a5c05; font-size: 0.82rem; line-height: 1.5; }
+/* El aviso ocupa el ancho completo. Metido en una celda de media columna, sus
+   tres frases salían en renglones de veinte caracteres y el bloque parecía
+   una torre de texto al lado de un hueco. */
+.rent-atipico { display: flex; align-items: flex-start; gap: 9px; margin: 0; padding: 11px 13px; border-radius: 10px; background: #fefce8; border: 1px solid #f3e08a; color: #7a5c05; font-size: 0.79rem; line-height: 1.5; }
+.rent-atipico strong { color: #6b4f04; }
 .rent-atipico .ic { flex: none; width: 16px; height: 16px; margin-top: 2px; }
 
 /* Salida del estado de error. Un mensaje que dice «reintenta» sin un botón deja

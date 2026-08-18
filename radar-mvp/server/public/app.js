@@ -2901,15 +2901,35 @@ function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   // atípico o de un arriendo estimado de más, no de un negocio irrepetible.
   const fueraDeRango = result.grossYield > 12;
   const aviso = fueraDeRango
-    ? `<p class="rent-atipico">${ic('alert')} En Colombia lo habitual es entre 5% y 8% bruto anual.
-       Un número muy por encima suele venir de un precio de oferta atípico o de un arriendo
-       estimado de más: contrástalo antes de contar con él.</p>`
+    ? `<p class="rent-atipico">${ic('alert')}<span><strong>Revisa este número.</strong> En Colombia lo habitual
+       es entre 5% y 8% bruto anual. Uno muy por encima suele venir de un precio de oferta atípico o de un
+       arriendo estimado de más.</span></p>`
     : '';
-  return `${aviso}<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
-    <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
-    <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento${
-      monthlyAdmin > 0 ? ` y ${fmtCOP(Math.round(monthlyAdmin))}/mes de administración` : ''
-    }.${monthlyAdmin > 0 ? '' : ' No incluye administración ni predial: si los hay, escríbelos arriba.'}</small>`;
+  // Las dos cifras van juntas y en su orden de importancia: la NETA primero,
+  // porque es la que queda después de vacancia, mantenimiento y administración
+  // —o sea, la que se cobra—, y la bruta al lado como referencia de mercado.
+  // Antes salían en diagonal y se leían como dos datos sueltos: el aviso era el
+  // primer hijo del grid de dos columnas, así que ocupaba media celda y empujaba
+  // la bruta a la derecha y la neta a la fila de abajo. De ahí los renglones de
+  // veinte caracteres y el hueco.
+  const descuentos = ['8% de vacancia', '5% de mantenimiento']
+    .concat(monthlyAdmin > 0 ? [`${fmtCOP(Math.round(monthlyAdmin))}/mes de administración`] : []);
+  return `${aviso}
+    <div class="rent-cifras">
+      <div class="rent-cifra es-principal">
+        <span>Rentabilidad neta estimada</span>
+        <strong>${result.netYield.toFixed(1)}%</strong>
+        <em>${fmtCOP(Math.round(result.annualNet))} al año</em>
+      </div>
+      <div class="rent-cifra">
+        <span>Bruta anual</span>
+        <strong>${result.grossYield.toFixed(1)}%</strong>
+        <em>antes de gastos</em>
+      </div>
+    </div>
+    <p class="rent-desglose">La neta descuenta ${descuentos.join(', ')}.${
+      monthlyAdmin > 0 ? '' : ' No incluye administración ni predial: si los hay, escríbelos arriba.'
+    }</p>`;
 }
 window.__recalcGastos = function (input) {
   const calc = input.closest('.calc');
@@ -3489,12 +3509,12 @@ function gastosSection(valor, mode, context) {
           <span class="spinner"></span> Estimando el valor del arriendo con avisos similares de la zona…
         </div>
         <div class="rent-inputs">
-          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"${Number(previa?.monthlyRent) > 0 ? ` value="${Math.round(Number(previa.monthlyRent))}"` : ''}></label>
+          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"${Number(previa?.monthlyRent) > 0 ? ` value="${fmtCOP(Math.round(Number(previa.monthlyRent)))}"` : ''}></label>
           ${/* Con 0 escrito, no solo como sugerencia: la mayoría de los inmuebles no
                 tiene administración y dejar el campo vacío hacía que la rentabilidad
                 se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
                 «para que la fórmula no le vaya a generar un error». */ ''}
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0)}"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${fmtCOP(Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0))}"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
@@ -5366,3 +5386,18 @@ if (estadoInicialDeLaUrl.explicito) {
     load(1);
   });
 }
+
+/**
+ * Los importes de la calculadora se ven como importes.
+ *
+ * «343000» y «$3.000.000» en dos campos contiguos delatan que uno lo escribió el
+ * sitio y el otro una persona, y obligan a contar ceros para compararlos. Se
+ * formatea al salir del campo y no mientras se teclea: reformatear en cada tecla
+ * mueve el cursor de sitio y hace imposible corregir un dígito del medio.
+ */
+document.addEventListener('blur', (event) => {
+  const el = event.target;
+  if (!(el instanceof Element) || !el.matches('.rent-input, .calc-input')) return;
+  const n = Number(String(el.value || '').replace(/[^0-9]/g, '')) || 0;
+  el.value = n > 0 ? fmtCOP(n) : (el.matches('[data-admin]') ? fmtCOP(0) : '');
+}, true);
