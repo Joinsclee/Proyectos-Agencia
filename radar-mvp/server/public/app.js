@@ -360,7 +360,7 @@ function mostrarBienvenida() {
         ? 'Tienes acceso completo: todas las fichas, sin límite.'
         : 'Esto es lo que incluye tu plan gratuito, cada mes:'}</p>
       ${esPro ? '' : `<ul class="bv-lista">
-        <li><strong>${CUPO_FREE_MENSUAL} fichas</strong> de oportunidad para abrir, las que tú elijas · en portales, bancos o remates</li>
+        <li><strong>${CUPO_FREE_MENSUAL} fichas</strong> de oportunidad para abrir, las que tú elijas · en portales, inmuebles de banco o remates judiciales</li>
         <li><strong>30 preguntas</strong> al asistente, que también revisa documentos y fotos</li>
         <li><strong>Guardados y alertas</strong> por correo, sin límite</li>
       </ul>
@@ -909,7 +909,7 @@ const ONBOARDING_PASOS = [
     ir: 'home',
   },
   {
-    etiqueta: 'Portal',
+    etiqueta: 'Portales',
     icono: 'home',
     titulo: 'El mercado abierto, filtrado con criterio',
     cifra: (s) => (s?.portal_total ? `${s.portal_total.toLocaleString('es-CO')} avisos` : null),
@@ -918,7 +918,7 @@ const ONBOARDING_PASOS = [
     ir: 'portal',
   },
   {
-    etiqueta: 'Bancos',
+    etiqueta: 'Inmuebles de banco',
     icono: 'bank',
     titulo: 'Inmuebles que los bancos quieren soltar',
     cifra: (s) => (s?.bancos ? `${s.bancos.toLocaleString('es-CO')} activos` : null),
@@ -930,7 +930,7 @@ const ONBOARDING_PASOS = [
     ir: 'bancos',
   },
   {
-    etiqueta: 'Remates',
+    etiqueta: 'Remates judiciales',
     icono: 'scale',
     titulo: 'Subastas judiciales, con su riesgo a la vista',
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
@@ -2431,7 +2431,7 @@ function renderAvisoBloqueo(plan, bloqueo, cupo, caja = $('aviso-bloqueo')) {
       : `Te quedan ${cupo?.restantes ?? 0} de ${cupo?.limite ?? CUPO_FREE_MENSUAL} fichas este mes`;
 
   const cuerpo = anonimo
-    ? 'Crea tu cuenta gratis y ábrelas en cualquier categoría: portales, bancos o remates.'
+    ? 'Crea tu cuenta gratis y ábrelas en cualquier categoría: portales, inmuebles de banco o remates judiciales.'
     : sinCupo
       ? 'Son las de mayor descuento de esta búsqueda. Con el plan completo no hay límite.'
       // El verbo y el pronombre concuerdan con el número. Al pasar «fichas» a
@@ -3143,7 +3143,12 @@ function analisisSection(p) {
     <div class="analisis analisis-${nivel}">
       <div class="analisis-head">${meta[0]} <strong>${meta[1]}</strong></div>
       <ul class="analisis-list">${flags.map(([t, txt]) => `<li>${icon[t]} ${txt}</li>`).join('')}</ul>
-      <p class="analisis-note">Análisis automático orientativo a partir del texto del aviso. No sustituye el estudio de títulos ni la asesoría legal.</p>
+      ${/* La coletilla «Análisis automático orientativo… no sustituye el estudio
+            de títulos ni la asesoría legal» se retiró por decisión del cliente.
+            El propio título ya dice «preliminar automático», y la advertencia de
+            comprobar el expediente tiene su propia sección, además del pie legal
+            y la política. Repetirla aquí no añadía cautela: la diluía, y restaba
+            crédito a las señales que la lista acababa de dar. */ ''}
     </div></div>`;
 }
 
