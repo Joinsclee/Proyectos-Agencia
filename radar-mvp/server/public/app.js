@@ -6,6 +6,17 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[c]));
 const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
+/**
+ * Un importe dentro de un campo que la persona puede editar.
+ *
+ * `fmtCOP` devuelve «—» con el cero, y para una cifra de la ficha está bien: ahí
+ * el cero suele significar «no tenemos el dato». En un campo editable significa
+ * lo contrario —«este inmueble no paga administración», que es el caso normal— y
+ * dejar un guion obliga a borrarlo antes de escribir, además de romper la razón
+ * por la que ese campo nace con un 0 puesto: que la fórmula no calcule sobre un
+ * hueco.
+ */
+const importeEditable = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CO');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos', other: 'Otros', others: 'Otros' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Rama Judicial' }[s] || s);
@@ -895,7 +906,7 @@ const ONBOARDING_PASOS = [
     titulo: 'El Radar compara contra el barrio, no contra el país',
     texto: 'Cada inmueble se mide contra el precio real de ofertas parecidas en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional que no le sirve a nadie.',
     puntos: [
-      'Tres mercados distintos en un mismo lugar: Portal, Bancos y Remates',
+      'Tres mercados distintos en un mismo lugar: Portales, Inmuebles de banco y Remates judiciales',
       'El Índice CRECE dice cuánto está por debajo de su mercado',
     ],
     video: { src: '', poster: '', pie: 'Qué encuentra el Radar y de dónde salen los inmuebles.' },
@@ -2153,7 +2164,7 @@ function renderHome(payload) {
   const bloques = Array.isArray(payload.bloques) ? payload.bloques : [];
   raiz.removeAttribute('aria-busy');
   if (!bloques.length) {
-    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('magnifier', 'Todavía no hay destacados', 'El motor aún no ha marcado oportunidades suficientes para armar la portada. Explora el Portal mientras tanto.')}</div></div>`;
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('magnifier', 'Todavía no hay destacados', 'El motor aún no ha marcado oportunidades suficientes para armar la portada. Explora Portales mientras tanto.')}</div></div>`;
     setResultText('Sin destacados');
     return;
   }
@@ -3277,7 +3288,11 @@ function renderAI(result, kind) {
     </div>`;
 }
 // Recomendaciones: otras oportunidades en la misma ciudad (cruzando fuentes).
-const RKIND = { portal: ['home', 'Portal'], banco: ['bank', 'Banco'], remate: ['scale', 'Remate'] };
+// Los mismos nombres que las pestañas. Estas etiquetas aparecen en «Otras
+// oportunidades cercanas», dentro de una ficha: con los nombres viejos se leía
+// «Banco» a dos dedos de una barra que dice «Inmuebles de banco», y el usuario
+// no tiene por qué deducir que son lo mismo.
+const RKIND = { portal: ['home', 'Portales'], banco: ['bank', 'Inmuebles de banco'], remate: ['scale', 'Remates judiciales'] };
 window.__recFallback = (el) => {
   const w = el.parentElement;
   if (w) w.innerHTML = `<div class="rec-ph">${ic('home', 'ic-lg')}</div>`;
@@ -3514,7 +3529,7 @@ function gastosSection(valor, mode, context) {
                 tiene administración y dejar el campo vacío hacía que la rentabilidad
                 se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
                 «para que la fórmula no le vaya a generar un error». */ ''}
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${fmtCOP(Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0))}"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${importeEditable(Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0))}"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
@@ -5399,5 +5414,5 @@ document.addEventListener('blur', (event) => {
   const el = event.target;
   if (!(el instanceof Element) || !el.matches('.rent-input, .calc-input')) return;
   const n = Number(String(el.value || '').replace(/[^0-9]/g, '')) || 0;
-  el.value = n > 0 ? fmtCOP(n) : (el.matches('[data-admin]') ? fmtCOP(0) : '');
+  el.value = n > 0 ? importeEditable(n) : (el.matches('[data-admin]') ? importeEditable(0) : '');
 }, true);

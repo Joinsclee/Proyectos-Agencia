@@ -36,11 +36,6 @@ body { margin: 0; font-family: 'Barlow Semi Condensed', sans-serif; background: 
   pointer-events: none;
 }
 .hero-content { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; }
-.pill {
-  display: inline-flex; align-items: center; gap: 7px; background: linear-gradient(90deg, #F1C901, #e6b800);
-  color: #1a1a1a; font-weight: 700; font-size: 0.7rem; padding: 5px 16px; border-radius: 99px;
-  margin-bottom: 16px; letter-spacing: 0.1em; text-transform: uppercase;
-}
 .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #15803d; box-shadow: 0 0 0 0 rgba(21,128,61,0.6); animation: pulse 2s infinite; }
 @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(21,128,61,0.6)} 70%{box-shadow:0 0 0 7px rgba(21,128,61,0)} 100%{box-shadow:0 0 0 0 rgba(21,128,61,0)} }
 h1 { font-family: 'Tilt Warp', cursive; font-size: clamp(1.9rem, 5vw, 3rem); margin: 0 0 12px; line-height: 1.1; }
@@ -1044,9 +1039,13 @@ h1 .gold { color: var(--gold); }
      En una pantalla de 812px, 353 de hero son demasiados para un producto cuya
      primera acción es buscar. */
   .hero { padding: 18px 18px 14px; }
-  .pill { margin-bottom: 8px; padding: 5px 12px; }
-  h1 { font-size: clamp(1.75rem, 8.4vw, 2.1rem); margin-bottom: 8px; }
-  .sub { font-size: 0.94rem; line-height: 1.3; }
+  /* El titular de la portada ES `.sub` desde que se retiró el h1 anterior, así
+     que aquí ya no se encoge al tamaño de una bajada. Esta regla venía de cuando
+     eran dos elementos distintos y, por tener la misma especificidad y ir más
+     abajo en el archivo, ganaba a la nueva: en móvil el titular se quedaba en
+     15 px. Justo donde más se nota, porque es donde está la mayoría del tráfico.
+     La regla de `h1` a secas se retira: ya no hay ningún h1 que no sea este. */
+  .sub { font-size: clamp(1.15rem, 5.6vw, 1.55rem); line-height: 1.2; }
   .summary-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; padding: 10px 0 6px; }
   .summary-stat { min-width: 0; padding: 2px 6px; }
   .summary-stat.muted { display: none; }
@@ -1135,8 +1134,7 @@ h1 .gold { color: var(--gold); }
   .calc-grand, .calc-save-row { align-items: stretch; flex-direction: column; }
   .calc-grand strong { text-align: left; }
   .calc-save { width: 100%; }
-  .rent-inputs, .rent-result, .rent-market-grid { grid-template-columns: 1fr; }
-  .rent-result small { grid-column: auto; }
+  .rent-inputs, .rent-market-grid { grid-template-columns: 1fr; }
 
   .controls { margin-top: 12px; padding: 0 12px; }
   .controls-mobilebar {

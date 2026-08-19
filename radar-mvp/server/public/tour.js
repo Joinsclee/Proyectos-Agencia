@@ -67,8 +67,8 @@ const PASOS = [
     // Los nombres son los de las pestañas que la persona tiene delante. Si aquí se
     // llamaran «Portal Abierto» o «Activos de Bancos», el recorrido dejaría de
     // señalar la pantalla para describir otra.
-    texto: 'Portal son avisos publicados que puedes llamar y visitar hoy. Bancos, inmuebles que se '
-      + 'quedaron por créditos sin pagar. Remates, subastas ante un juez. Cada uno tiene su pestaña.',
+    texto: 'Portales son avisos publicados que puedes llamar y visitar hoy. Inmuebles de banco son los que una '
+      + 'entidad recibió por créditos sin pagar. Remates judiciales son subastas ante un juez. Cada uno tiene su pestaña.',
   },
   {
     id: 'filtros',
