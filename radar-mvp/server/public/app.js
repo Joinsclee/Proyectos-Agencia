@@ -18,6 +18,24 @@ const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
  */
 const importeEditable = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CO');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+/**
+ * ¿El barrio y la ciudad son el mismo sitio?
+ *
+ * El municipio pequeño no tiene barrios en la fuente, así que llega con la zona
+ * igual al nombre del pueblo. La tarjeta los pintaba los dos y salía «Ricaurte ·
+ * Ricaurte»; peor aún cuando solo uno trae tilde —«Medellín · Medellin»,
+ * «Cajicá · Cajica»—, porque entonces no se lee como una repetición sino como
+ * un fallo de codificación. Pasa en 11 de cada 80 tarjetas.
+ *
+ * Se comparan sin tildes ni mayúsculas porque la fuente no es consistente en
+ * ninguna de las dos: la zona viene capitalizada y acentuada, la ciudad no.
+ */
+const mismoLugar = (a, b) => {
+  const plano = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  return !!a && plano(a) === plano(b);
+};
+/** La zona solo aporta si no repite la ciudad. Devuelve ya el separador. */
+const zonaSiAporta = (p, sep) => (p.zone && !mismoLugar(p.zone, p.city) ? esc(p.zone) + sep : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos', other: 'Otros', others: 'Otros' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Rama Judicial' }[s] || s);
 /**
@@ -2658,7 +2676,7 @@ function inmuebleCard(p, kind) {
       ${selloCrece(p)}
       <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
       <div class="card-titulo">${esc(typeLbl(p.type))}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}${selloIguales(p)}</div>
-      <div class="card-ubic">${ic('pin')}<span>${p.zone ? esc(p.zone) + ' · ' : ''}<strong>${esc(cap(p.city))}</strong></span></div>
+      <div class="card-ubic">${ic('pin')}<span>${zonaSiAporta(p, ' · ')}<strong>${esc(cap(p.city))}</strong></span></div>
       ${/* La tarjeta obedece la misma política por tipo que la ficha. Sin esto, un
              lote se anunciaba en la rejilla con «3 habitaciones, 2 baños» y al
              abrirlo los tres desaparecían: la contradicción se ve sin moverse de
@@ -3320,7 +3338,7 @@ function recCard(r) {
   // El tipo del inmueble se lee en la línea de abajo: repetirlo aquí solo hacía
   // que la etiqueta se cortara a media palabra.
   const zoneBadge = r.same_zone ? `<span class="rec-zone">${ic('pin')}mismo barrio</span>` : '';
-  const loc = `${r.zone ? esc(r.zone) + ', ' : ''}${esc(cap(r.city))}`;
+  const loc = `${zonaSiAporta(r, ', ')}${esc(cap(r.city))}`;
   return `<button class="rec-card" data-rec-kind="${esc(r.kind)}" data-rec-id="${esc(r.id)}">
     <div class="rec-img">${img}<span class="rec-disc">−${Math.round(r.discount_pct || 0)}%</span>${zoneBadge}</div>
     <div class="rec-body">
@@ -3854,7 +3872,7 @@ function openInmueble(p) {
     <div class="detail">
       <div class="detail-top"><span class="pill-src">${esc(srcLbl(p.source))}</span>${fav}</div>
       <h2>${esc(typeLbl(p.type))} en ${esc(cap(p.city))}</h2>
-      <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${esc(cap(p.city))}</strong></div>
+      <div class="loc">${ic('pin')}${zonaSiAporta(p, ', ')}<strong>${esc(cap(p.city))}</strong></div>
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
       ${selloCreceFicha(p)}
