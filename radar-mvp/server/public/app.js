@@ -2945,7 +2945,14 @@ function calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin = 0) {
 function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   // «Canon» es palabra de abogado y el campo de arriba ya se llama «Valor de
   // arrendamiento mensual»: la ayuda pedía en otro idioma lo mismo que el campo.
-  if (!monthlyRent) return '<span>Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</span>';
+  // `.rent-desglose` y no un `<span>` pelado: al rediseñar el bloque se retiraron
+  // `.rent-result span { color:#6b7280; font-size:.74rem }` dándolas por
+  // huérfanas, y no lo eran —esta frase es el estado con el que ARRANCA el
+  // bloque en toda ficha—. Sin regla que la alcance heredaba el cuerpo de la
+  // ficha: 16 px casi negros, el texto más grande del recuadro, una pista
+  // gritando más que el dato al que ayuda. Es la misma clase que viste el
+  // desglose de debajo, que es exactamente lo que esta frase es.
+  if (!monthlyRent) return '<p class="rent-desglose">Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</p>';
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
   // Un 31% bruto anual sale de la calculadora sin que nada avise de que es
   // extraordinario, y quien no ha invertido nunca no tiene con qué compararlo:

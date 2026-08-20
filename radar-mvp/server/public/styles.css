@@ -45,7 +45,7 @@ h1 .gold { color: var(--gold); }
    empujan las tarjetas fuera de pantalla — que es justo lo que se acaba de
    arreglar. `text-wrap: balance` reparte las líneas para que no quede una
    huérfana con dos palabras. */
-.sub {
+.hero-titulo {
   /* La tipografía de titulares de la marca, la misma del logotipo y de las
      cifras. Estaba heredando Arial porque `.sub` pisaba la regla de `h1`, así
      que el titular de la portada era el único que no hablaba con la voz del
@@ -59,7 +59,15 @@ h1 .gold { color: var(--gold); }
    sitio ofrece— y el resto son las fuentes de donde sale. Es el mismo recurso
    que usaba el titular anterior, así que la portada no estrena un lenguaje
    nuevo: recupera el suyo. */
-.sub .gold { color: var(--gold); }
+.hero-titulo .gold { color: var(--gold); }
+/* Se llamaba `.sub` —de «subtítulo»— y ese nombre ya no describía nada: es el
+   titular desde que se retiró el h1 anterior. Peor que impreciso, era una
+   colisión: `.sub` existe también como etiqueta pequeña dentro del análisis de
+   mercado («$1.772.043/m²», «mismo tipo», en app.js). Esas dos reglas de ahí
+   abajo declaran color, tamaño y grosor, así que ganaban en lo suyo; pero la
+   tipografía de titulares, el interlineado y el `text-wrap` NO los declaran, y
+   se colaban. Dos cifras del análisis de mercado de cualquier ficha estaban
+   saliendo en Tilt Warp, que es la voz de los titulares. */
 
 .summary-bar { margin: 30px auto 0; display: flex; flex-wrap: wrap; justify-content: center; border-top: 1px solid rgba(255,255,255,0.12); border-bottom: 1px solid rgba(255,255,255,0.12); padding: 18px 0; max-width: 880px; }
 /* Son <button>: llevan a su sección. Necesitan el reset porque el navegador les
@@ -749,7 +757,14 @@ h1 .gold { color: var(--gold); }
 .rent-cifra.es-principal { background: #f6effa; border-color: #e0cdea; }
 .rent-cifra.es-principal strong { font-size: 1.95rem; }
 
-.rent-desglose { margin: 0; color: #7c6a86; font-size: 0.76rem; line-height: 1.5; }
+/* `p.rent-desglose` y no `.rent-desglose` a secas: la ficha declara
+   `.section p { font-size: 0.9rem; color: #374151 }` y esa combinación de clase
+   más elemento (0,1,1) le gana a una clase sola (0,1,0). Con el selector corto
+   el desglose salía a 14,4 px en gris de párrafo en vez de a 12,16 en malva:
+   pesaba lo mismo que el cuerpo de la ficha, cuando es la letra pequeña de una
+   cifra. El `<small>` al que sustituye no tenía el problema porque `.section p`
+   ni siquiera lo alcanzaba. */
+p.rent-desglose { margin: 0; color: #7c6a86; font-size: 0.76rem; line-height: 1.5; }
 
 @media (max-width: 560px) {
   .rent-cifras { grid-template-columns: 1fr; }
@@ -1039,13 +1054,13 @@ h1 .gold { color: var(--gold); }
      En una pantalla de 812px, 353 de hero son demasiados para un producto cuya
      primera acción es buscar. */
   .hero { padding: 18px 18px 14px; }
-  /* El titular de la portada ES `.sub` desde que se retiró el h1 anterior, así
+  /* El titular de la portada, que aquí ya no se encoge al tamaño de una bajada.
      que aquí ya no se encoge al tamaño de una bajada. Esta regla venía de cuando
      eran dos elementos distintos y, por tener la misma especificidad y ir más
      abajo en el archivo, ganaba a la nueva: en móvil el titular se quedaba en
      15 px. Justo donde más se nota, porque es donde está la mayoría del tráfico.
      La regla de `h1` a secas se retira: ya no hay ningún h1 que no sea este. */
-  .sub { font-size: clamp(1.15rem, 5.6vw, 1.55rem); line-height: 1.2; }
+  .hero-titulo { font-size: clamp(1.15rem, 5.6vw, 1.55rem); line-height: 1.2; }
   .summary-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12px; padding: 10px 0 6px; }
   .summary-stat { min-width: 0; padding: 2px 6px; }
   .summary-stat.muted { display: none; }
@@ -1066,10 +1081,26 @@ h1 .gold { color: var(--gold); }
   .tabs-inner { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; padding: 0 2px; }
   .tabs-group, .nav-right, .authbar { display: contents; }
   .nav-sep, .authbar .auth-link:not(.primary), .authbar #auth-logout { display: none; }
+  /* El rótulo se parte en dos renglones en vez de recortarse.
+     
+     `white-space: nowrap` viene de la barra ancha, donde el texto va en línea
+     con el icono y partirlo no tendría sentido. Aquí el icono va encima y hay
+     una cuarta parte del ancho de pantalla por rótulo, así que con los nombres
+     completos deja de caber: medido, «Inmuebles de banco» se salía 8 px a
+     320 px y 3 px a 360 —el ancho de Android más común en Colombia—. Y como el
+     botón es `flex-direction: column` con `align-items: center`, el texto
+     desbordado no se recorta por la derecha sino POR LOS DOS LADOS: en un
+     iPhone SE se leía «nmuebles de banc». Con «Bancos» y «Remates» no pasaba;
+     lo estrenó el renombrado.
+     
+     `text-overflow: ellipsis` no sirve: el texto es un elemento flex anónimo,
+     no una caja de bloque, y la propiedad no le llega. Partir en dos renglones
+     sí, y la barra solo crece de 60 a 62 px. */
   .tab-btn, .nav-right .tab-btn {
     min-width: 0; min-height: 60px; padding: 6px 2px 5px;
     justify-content: center; flex-direction: column; gap: 4px;
     font-size: 0.7rem; line-height: 1; overflow: hidden;
+    white-space: normal; text-align: center; line-height: 1.08;
     border-top: 3px solid transparent; border-bottom: 0;
   }
   .tab-btn.active { border-top-color: var(--gold); border-bottom-color: transparent; }
