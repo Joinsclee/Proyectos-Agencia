@@ -1902,9 +1902,18 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 .cuenta-bar .auth-link.primary:hover { background: #ffd91f; }
 
 @media (max-width: 760px) {
-  /* La marca se retira: en 375px el sitio lo necesitan los controles de cuenta. */
-  .cuenta-marca { display: none; }
-  .cuenta-inner { padding: 6px 12px; justify-content: flex-end; }
+  /* La marca NO se retira: se encoge.
+     
+     Retirarla entera era lo que hacía esta regla, de cuando aquí solo ponía
+     «Radar CRECE» y la barra de pestañas de debajo repetía el contexto. Con el
+     logotipo del punto 7 dentro, el efecto medido era que por debajo de 760 px
+     la página no nombraba ni a su dueño ni a sí misma: cero apariciones de
+     «Radar CRECE» en todo el documento, y la barra superior con un único botón
+     «Ingresar». El punto 7 existe justamente para el tráfico frío, que en
+     inmobiliario llega sobre todo por móvil, así que se caía donde más importa.
+     
+     Cabe: a 390 px quedan ~270 px libres junto a «Ingresar», y esto ocupa ~200. */
+  .cuenta-inner { padding: 6px 12px; gap: 8px; }
 }
 
 /* El aviso del piloto: va donde la persona duda —al pulsar desbloquear—, no solo
@@ -2254,8 +2263,26 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
   width: 1px; height: 20px; background: rgba(255,255,255,0.28);
   display: inline-block; margin: 0 3px;
 }
-/* En móvil manda el nombre del producto: el logo del socio es contexto, y con
-   350 px de ancho de barra compite con la navegación. */
-@media (max-width: 560px) {
-  .marca-ag, .marca-sep { display: none; }
+/* Las medidas de móvil van AQUÍ y no arriba con el resto del bloque de 760 px.
+   Puestas allí no se aplicaban: `.marca-ag { height: 26px }` está unas líneas más
+   abajo en este mismo archivo, con la misma especificidad, así que ganaba por
+   orden y el logotipo seguía a tamaño de escritorio. Es el mismo fallo que dejó
+   el titular en 15 px, y por eso se anota: en esta hoja el bloque de una
+   pantalla estrecha tiene que ir después de la regla que pretende corregir. */
+@media (max-width: 760px) {
+  .cuenta-marca { font-size: 0.72rem; gap: 5px; }
+  .cuenta-marca .ic { width: 15px; height: 15px; }
+  .marca-ag { height: 20px; }
+}
+/* Por debajo de 420 px —iPhone SE y similares— sí hay que elegir, y gana el
+   logotipo: es la señal que el punto 7 pide y la que no se puede deducir de
+   ninguna otra parte de la pantalla. El nombre del producto se queda en el
+   título del documento y en el pie.
+   
+   Esta regla vivía en 560 px y no se aplicaba nunca: a 760 el contenedor entero
+   estaba ya en `display: none`, así que su comentario describía un
+   comportamiento que el navegador no llegaba a ejecutar. */
+@media (max-width: 420px) {
+  .cuenta-marca { font-size: 0; gap: 0; }
+  .marca-sep, .cuenta-marca .ic { display: none; }
 }
