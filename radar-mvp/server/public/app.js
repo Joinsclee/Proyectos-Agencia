@@ -46,6 +46,16 @@ const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', b
  * ahí, así que no hay nada que decidir.
  */
 const plural = (n, singular, varios) => `${n} ${Math.abs(Number(n)) === 1 ? singular : varios}`;
+/**
+ * Enumera en castellano: «a, b y c», no «a, b, c».
+ *
+ * La coma final es de lista de la compra; en una frase corrida se lee como si
+ * faltara algo. Aquí importa porque la frase enumera lo que se le RESTA a una
+ * cifra de dinero, y quien la lee está comprobando si están todos los conceptos.
+ */
+const enumerar = (partes) => (partes.length < 2
+  ? (partes[0] || '')
+  : `${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}`);
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
@@ -2969,7 +2979,7 @@ function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
         <em>antes de gastos</em>
       </div>
     </div>
-    <p class="rent-desglose">La neta descuenta ${descuentos.join(', ')}.${
+    <p class="rent-desglose">La neta descuenta ${enumerar(descuentos)}.${
       monthlyAdmin > 0 ? '' : ' No incluye administración ni predial: si los hay, escríbelos arriba.'
     }</p>`;
 }
