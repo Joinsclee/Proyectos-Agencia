@@ -6,7 +6,36 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[c]));
 const fmtCOP = (n) => (n ? '$' + Number(n).toLocaleString('es-CO') : '—');
+/**
+ * Un importe dentro de un campo que la persona puede editar.
+ *
+ * `fmtCOP` devuelve «—» con el cero, y para una cifra de la ficha está bien: ahí
+ * el cero suele significar «no tenemos el dato». En un campo editable significa
+ * lo contrario —«este inmueble no paga administración», que es el caso normal— y
+ * dejar un guion obliga a borrarlo antes de escribir, además de romper la razón
+ * por la que ese campo nace con un 0 puesto: que la fórmula no calcule sobre un
+ * hueco.
+ */
+const importeEditable = (n) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CO');
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+/**
+ * ¿El barrio y la ciudad son el mismo sitio?
+ *
+ * El municipio pequeño no tiene barrios en la fuente, así que llega con la zona
+ * igual al nombre del pueblo. La tarjeta los pintaba los dos y salía «Ricaurte ·
+ * Ricaurte»; peor aún cuando solo uno trae tilde —«Medellín · Medellin»,
+ * «Cajicá · Cajica»—, porque entonces no se lee como una repetición sino como
+ * un fallo de codificación. Pasa en 11 de cada 80 tarjetas.
+ *
+ * Se comparan sin tildes ni mayúsculas porque la fuente no es consistente en
+ * ninguna de las dos: la zona viene capitalizada y acentuada, la ciudad no.
+ */
+const mismoLugar = (a, b) => {
+  const plano = (x) => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  return !!a && plano(a) === plano(b);
+};
+/** La zona solo aporta si no repite la ciudad. Devuelve ya el separador. */
+const zonaSiAporta = (p, sep) => (p.zone && !mismoLugar(p.zone, p.city) ? esc(p.zone) + sep : '');
 const typeLbl = (t) => ({ apartment: 'Apartamento', house: 'Casa', commercial: 'Local', lot: 'Lote', farm: 'Finca', office: 'Oficina', warehouse: 'Bodega', parking: 'Parqueadero', building: 'Edificio', vehicle: 'Vehículo', rights: 'Derechos', other: 'Otros', others: 'Otros' }[t] || (t ? cap(t) : 'Inmueble'));
 const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', bbva: 'BBVA', aval: 'Aval', fincaraiz: 'FincaRaíz', rematandobienes: 'Rama Judicial' }[s] || s);
 /**
@@ -17,6 +46,16 @@ const srcLbl = (s) => ({ davivienda: 'Davivienda', bancolombia: 'Bancolombia', b
  * ahí, así que no hay nada que decidir.
  */
 const plural = (n, singular, varios) => `${n} ${Math.abs(Number(n)) === 1 ? singular : varios}`;
+/**
+ * Enumera en castellano: «a, b y c», no «a, b, c».
+ *
+ * La coma final es de lista de la compra; en una frase corrida se lee como si
+ * faltara algo. Aquí importa porque la frase enumera lo que se le RESTA a una
+ * cifra de dinero, y quien la lee está comprobando si están todos los conceptos.
+ */
+const enumerar = (partes) => (partes.length < 2
+  ? (partes[0] || '')
+  : `${partes.slice(0, -1).join(', ')} y ${partes[partes.length - 1]}`);
 /** Icono del sprite SVG (index.html). Sustituye a los emoji: hereda color y tamaño del texto. */
 const ic = (name, cls) => `<svg class="ic${cls ? ' ' + cls : ''}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const srcIcon = (s) => ic(s === 'fincaraiz' ? 'home' : 'bank');
@@ -895,7 +934,7 @@ const ONBOARDING_PASOS = [
     titulo: 'El Radar compara contra el barrio, no contra el país',
     texto: 'Cada inmueble se mide contra el precio real de ofertas parecidas en su propia zona. Por eso un descuento aquí significa algo: no es una rebaja sobre un promedio nacional que no le sirve a nadie.',
     puntos: [
-      'Tres mercados distintos en un mismo lugar: Portal, Bancos y Remates',
+      'Tres mercados distintos en un mismo lugar: Portales, Inmuebles de banco y Remates judiciales',
       'El Índice CRECE dice cuánto está por debajo de su mercado',
     ],
     video: { src: '', poster: '', pie: 'Qué encuentra el Radar y de dónde salen los inmuebles.' },
@@ -932,14 +971,33 @@ const ONBOARDING_PASOS = [
   {
     etiqueta: 'Remates judiciales',
     icono: 'scale',
-    titulo: 'Subastas judiciales, con su riesgo a la vista',
+    // El punto 3 del informe: el mismo hecho, dicho desde el control.
+    //
+    // Decía «con su riesgo a la vista», y luego «lo que cambia es el riesgo del
+    // título», y luego «no garantiza que el inmueble esté sin problemas». Tres
+    // de cuatro líneas abrían en negativo antes de que nadie hubiera visto qué
+    // hace el Radar con eso, y quien lee decide no entrar en la categoría.
+    //
+    // No se rebaja ni una advertencia: siguen aquí el título, el alcance parcial
+    // y el «un banco demandando no es un seguro». Cambia de qué es la frase. El
+    // riesgo deja de ser el sujeto —algo que le pasa a quien compra— y pasa a
+    // ser el objeto: algo que se mira, con el expediente delante. Que es
+    // exactamente lo que esta pestaña sirve para hacer.
+    titulo: 'Subastas judiciales, con el expediente a la vista',
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
-    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La postura mínima la fija el juzgado —suele ser un porcentaje del avalúo—, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
+    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La postura mínima la fija el juzgado —suele ser un porcentaje del avalúo—, así que el descuento no distingue: lo que separa una de otra es el estado del título, y de eso te mostramos lo que consta en el proceso.',
     puntos: [
+      // «Estado del bien» NO. Es lo que proponía la auditoría, `tour.js` ya lo
+      // rechazó por escrito —«no es ningún campo que tengamos: prometer en el
+      // tutorial un dato que la ficha no da es peor que un copy largo»—, y aquí
+      // volvió a colarse. Los cuatro que quedan sí están en «Datos del proceso»,
+      // uno por uno, y la matrícula es justamente la que abre el estudio de
+      // títulos, que es lo que hay que verificar de verdad.
+      'Cada ficha te dice qué verificar antes de participar: juzgado, radicado, demandante y matrícula inmobiliaria',
       // Se retira «título más limpio». Que demande un banco es una señal, no un
       // seguro, y prometerlo aquí rebaja la cautela justo en la categoría donde
       // más falta hace. Es la misma corrección que ya se hizo en la portada.
-      'Que el demandante sea un banco no garantiza que el inmueble esté sin problemas',
+      'Que el demandante sea un banco es una señal a favor, no una garantía: se verifica igual',
       'Si solo se remata una parte del bien, la ficha lo avisa en amarillo',
     ],
     ir: 'remates',
@@ -1014,7 +1072,7 @@ function renderOnboardingPaso() {
         <button class="ob-cta" type="button" ${ultimo ? 'data-onboarding-cerrar' : 'data-onboarding-siguiente'}>${ultimo ? 'Empezar a explorar' : 'Siguiente'}</button>
       </div>
     </nav>
-    <p class="ob-nota">Paso ${i + 1} de ${total} · puedes volver cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
+    <p class="ob-nota">Paso ${i + 1} de ${total}</p>
   </div>`;
 }
 
@@ -2153,7 +2211,7 @@ function renderHome(payload) {
   const bloques = Array.isArray(payload.bloques) ? payload.bloques : [];
   raiz.removeAttribute('aria-busy');
   if (!bloques.length) {
-    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('magnifier', 'Todavía no hay destacados', 'El motor aún no ha marcado oportunidades suficientes para armar la portada. Explora el Portal mientras tanto.')}</div></div>`;
+    raiz.innerHTML = `<div class="home-inner"><div class="empty">${emptyState('magnifier', 'Todavía no hay destacados', 'El motor aún no ha marcado oportunidades suficientes para armar la portada. Explora Portales mientras tanto.')}</div></div>`;
     setResultText('Sin destacados');
     return;
   }
@@ -2634,7 +2692,7 @@ function inmuebleCard(p, kind) {
       ${selloCrece(p)}
       <div class="card-price">${fmtCOP(p.price)}${ppm2 ? `<span class="card-ppm2">${ppm2}</span>` : ''}</div>
       <div class="card-titulo">${esc(typeLbl(p.type))}${p.area_m2 ? ' · ' + fmtArea(p.area_m2) : ''}${selloIguales(p)}</div>
-      <div class="card-ubic">${ic('pin')}<span>${p.zone ? esc(p.zone) + ' · ' : ''}<strong>${esc(cap(p.city))}</strong></span></div>
+      <div class="card-ubic">${ic('pin')}<span>${zonaSiAporta(p, ' · ')}<strong>${esc(cap(p.city))}</strong></span></div>
       ${/* La tarjeta obedece la misma política por tipo que la ficha. Sin esto, un
              lote se anunciaba en la rejilla con «3 habitaciones, 2 baños» y al
              abrirlo los tres desaparecían: la contradicción se ve sin moverse de
@@ -2893,7 +2951,25 @@ function calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin = 0) {
 function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   // «Canon» es palabra de abogado y el campo de arriba ya se llama «Valor de
   // arrendamiento mensual»: la ayuda pedía en otro idioma lo mismo que el campo.
-  if (!monthlyRent) return '<span>Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</span>';
+  // `.rent-desglose` y no un `<span>` pelado: al rediseñar el bloque se retiraron
+  // `.rent-result span { color:#6b7280; font-size:.74rem }` dándolas por
+  // huérfanas, y no lo eran —esta frase es el estado con el que ARRANCA el
+  // bloque en toda ficha—. Sin regla que la alcance heredaba el cuerpo de la
+  // ficha: 16 px casi negros, el texto más grande del recuadro, una pista
+  // gritando más que el dato al que ayuda. Es la misma clase que viste el
+  // desglose de debajo, que es exactamente lo que esta frase es.
+  if (!monthlyRent) return '<p class="rent-desglose">Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</p>';
+  // Sin valor base no hay porcentaje que dar, y callarlo salía peor que decirlo.
+  //
+  // `calcRentalYield` devuelve 0 en los dos rendimientos cuando no hay sobre qué
+  // dividir, pero `annualNet` solo depende del arriendo y sobrevive intacto. Al
+  // subir esa cifra al mismo recuadro que el porcentaje —antes iba al pie del
+  // bloque— la tarjeta pasó a decir «0.0 %» y dos renglones más abajo
+  // «$26.100.000 al año», una encima de otra y sin nada que las reconcilie.
+  //
+  // Y no es un caso raro: se ve cada vez que alguien BORRA el valor base para
+  // escribir otro, porque el recálculo va en cada pulsación.
+  if (!(acquisitionTotal > 0)) return '<p class="rent-desglose">Escribe el valor base de la compra, arriba, para saber qué rentabilidad deja ese arriendo.</p>';
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
   // Un 31% bruto anual sale de la calculadora sin que nada avise de que es
   // extraordinario, y quien no ha invertido nunca no tiene con qué compararlo:
@@ -2901,15 +2977,35 @@ function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   // atípico o de un arriendo estimado de más, no de un negocio irrepetible.
   const fueraDeRango = result.grossYield > 12;
   const aviso = fueraDeRango
-    ? `<p class="rent-atipico">${ic('alert')} En Colombia lo habitual es entre 5% y 8% bruto anual.
-       Un número muy por encima suele venir de un precio de oferta atípico o de un arriendo
-       estimado de más: contrástalo antes de contar con él.</p>`
+    ? `<p class="rent-atipico">${ic('alert')}<span><strong>Revisa este número.</strong> En Colombia lo habitual
+       es entre 5% y 8% bruto anual. Uno muy por encima suele venir de un precio de oferta atípico o de un
+       arriendo estimado de más.</span></p>`
     : '';
-  return `${aviso}<div><span>Rentabilidad bruta anual</span><strong>${result.grossYield.toFixed(2)}%</strong></div>
-    <div><span>Rentabilidad neta estimada</span><strong>${result.netYield.toFixed(2)}%</strong></div>
-    <small>Neto estimado: ${fmtCOP(Math.round(result.annualNet))}/año, descontando 8% de vacancia, 5% de mantenimiento${
-      monthlyAdmin > 0 ? ` y ${fmtCOP(Math.round(monthlyAdmin))}/mes de administración` : ''
-    }.${monthlyAdmin > 0 ? '' : ' No incluye administración ni predial: si los hay, escríbelos arriba.'}</small>`;
+  // Las dos cifras van juntas y en su orden de importancia: la NETA primero,
+  // porque es la que queda después de vacancia, mantenimiento y administración
+  // —o sea, la que se cobra—, y la bruta al lado como referencia de mercado.
+  // Antes salían en diagonal y se leían como dos datos sueltos: el aviso era el
+  // primer hijo del grid de dos columnas, así que ocupaba media celda y empujaba
+  // la bruta a la derecha y la neta a la fila de abajo. De ahí los renglones de
+  // veinte caracteres y el hueco.
+  const descuentos = ['8% de vacancia', '5% de mantenimiento']
+    .concat(monthlyAdmin > 0 ? [`${fmtCOP(Math.round(monthlyAdmin))}/mes de administración`] : []);
+  return `${aviso}
+    <div class="rent-cifras">
+      <div class="rent-cifra es-principal">
+        <span>Rentabilidad neta estimada</span>
+        <strong>${result.netYield.toFixed(1)}%</strong>
+        <em>${fmtCOP(Math.round(result.annualNet))} al año</em>
+      </div>
+      <div class="rent-cifra">
+        <span>Bruta anual</span>
+        <strong>${result.grossYield.toFixed(1)}%</strong>
+        <em>antes de gastos</em>
+      </div>
+    </div>
+    <p class="rent-desglose">La neta descuenta ${enumerar(descuentos)}.${
+      monthlyAdmin > 0 ? '' : ' No incluye administración ni predial: si los hay, escríbelos arriba.'
+    }</p>`;
 }
 window.__recalcGastos = function (input) {
   const calc = input.closest('.calc');
@@ -3257,7 +3353,11 @@ function renderAI(result, kind) {
     </div>`;
 }
 // Recomendaciones: otras oportunidades en la misma ciudad (cruzando fuentes).
-const RKIND = { portal: ['home', 'Portal'], banco: ['bank', 'Banco'], remate: ['scale', 'Remate'] };
+// Los mismos nombres que las pestañas. Estas etiquetas aparecen en «Otras
+// oportunidades cercanas», dentro de una ficha: con los nombres viejos se leía
+// «Banco» a dos dedos de una barra que dice «Inmuebles de banco», y el usuario
+// no tiene por qué deducir que son lo mismo.
+const RKIND = { portal: ['home', 'Portales'], banco: ['bank', 'Inmuebles de banco'], remate: ['scale', 'Remates judiciales'] };
 window.__recFallback = (el) => {
   const w = el.parentElement;
   if (w) w.innerHTML = `<div class="rec-ph">${ic('home', 'ic-lg')}</div>`;
@@ -3272,7 +3372,7 @@ function recCard(r) {
   // El tipo del inmueble se lee en la línea de abajo: repetirlo aquí solo hacía
   // que la etiqueta se cortara a media palabra.
   const zoneBadge = r.same_zone ? `<span class="rec-zone">${ic('pin')}mismo barrio</span>` : '';
-  const loc = `${r.zone ? esc(r.zone) + ', ' : ''}${esc(cap(r.city))}`;
+  const loc = `${zonaSiAporta(r, ', ')}${esc(cap(r.city))}`;
   return `<button class="rec-card" data-rec-kind="${esc(r.kind)}" data-rec-id="${esc(r.id)}">
     <div class="rec-img">${img}<span class="rec-disc">−${Math.round(r.discount_pct || 0)}%</span>${zoneBadge}</div>
     <div class="rec-body">
@@ -3489,12 +3589,12 @@ function gastosSection(valor, mode, context) {
           <span class="spinner"></span> Estimando el valor del arriendo con avisos similares de la zona…
         </div>
         <div class="rent-inputs">
-          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"${Number(previa?.monthlyRent) > 0 ? ` value="${Math.round(Number(previa.monthlyRent))}"` : ''}></label>
+          <label>Valor de arrendamiento mensual<input class="rent-input" data-rent type="text" inputmode="numeric" placeholder="$ 2.500.000"${Number(previa?.monthlyRent) > 0 ? ` value="${fmtCOP(Math.round(Number(previa.monthlyRent)))}"` : ''}></label>
           ${/* Con 0 escrito, no solo como sugerencia: la mayoría de los inmuebles no
                 tiene administración y dejar el campo vacío hacía que la rentabilidad
                 se calculara sobre un dato ausente. Lo pidió el cliente por eso mismo,
                 «para que la fórmula no le vaya a generar un error». */ ''}
-          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0)}"></label>
+          <label>Administración mensual<input class="rent-input" data-admin type="text" inputmode="numeric" placeholder="$ 0" value="${importeEditable(Number(previa?.monthlyAdmin) > 0 ? Math.round(Number(previa.monthlyAdmin)) : (Number(context?.admin) > 0 ? Math.round(Number(context.admin)) : 0))}"></label>
         </div>
         <div class="rent-result">${renderRentalYield(acquisitionTotal, 0, 0)}</div>
       </div>` : ''}
@@ -3806,7 +3906,7 @@ function openInmueble(p) {
     <div class="detail">
       <div class="detail-top"><span class="pill-src">${esc(srcLbl(p.source))}</span>${fav}</div>
       <h2>${esc(typeLbl(p.type))} en ${esc(cap(p.city))}</h2>
-      <div class="loc">${ic('pin')}${p.zone ? esc(p.zone) + ', ' : ''}<strong>${esc(cap(p.city))}</strong></div>
+      <div class="loc">${ic('pin')}${zonaSiAporta(p, ', ')}<strong>${esc(cap(p.city))}</strong></div>
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
       ${selloCreceFicha(p)}
@@ -5040,9 +5140,10 @@ document.addEventListener('keydown', (e) => {
  * apuesta a que la gente no entiende el producto sin que se lo expliquen; y esa
  * apuesta se comprueba mirando, no adivinando.
  *
- * Se apaga el arranque automático, NO el recorrido: el botón «Ver tutorial» de la
- * barra sigue abriéndolo, así que se puede enseñar al cliente y probarlo sin
- * revertir nada. Volver a activarlo es poner esta constante en `true`.
+ * Se apaga el arranque automático, y el botón «Ver tutorial» se retiró de la barra
+ * en la misma tanda, así que hoy el recorrido no tiene entrada: sigue en el código,
+ * intacto y con los nombres de sección al día, esperando la decisión. Reactivarlo
+ * son dos cosas, no una: poner esta constante en `true` Y devolver el botón.
  */
 const ONBOARDING_AUTOMATICO = false;
 
@@ -5366,3 +5467,18 @@ if (estadoInicialDeLaUrl.explicito) {
     load(1);
   });
 }
+
+/**
+ * Los importes de la calculadora se ven como importes.
+ *
+ * «343000» y «$3.000.000» en dos campos contiguos delatan que uno lo escribió el
+ * sitio y el otro una persona, y obligan a contar ceros para compararlos. Se
+ * formatea al salir del campo y no mientras se teclea: reformatear en cada tecla
+ * mueve el cursor de sitio y hace imposible corregir un dígito del medio.
+ */
+document.addEventListener('blur', (event) => {
+  const el = event.target;
+  if (!(el instanceof Element) || !el.matches('.rent-input, .calc-input')) return;
+  const n = Number(String(el.value || '').replace(/[^0-9]/g, '')) || 0;
+  el.value = n > 0 ? importeEditable(n) : (el.matches('[data-admin]') ? importeEditable(0) : '');
+}, true);
