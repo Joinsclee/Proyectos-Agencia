@@ -987,7 +987,13 @@ const ONBOARDING_PASOS = [
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
     texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La postura mínima la fija el juzgado —suele ser un porcentaje del avalúo—, así que el descuento no distingue: lo que separa una de otra es el estado del título, y de eso te mostramos lo que consta en el proceso.',
     puntos: [
-      'Cada ficha te dice qué verificar antes de participar: juzgado, radicado, demandante y estado del bien',
+      // «Estado del bien» NO. Es lo que proponía la auditoría, `tour.js` ya lo
+      // rechazó por escrito —«no es ningún campo que tengamos: prometer en el
+      // tutorial un dato que la ficha no da es peor que un copy largo»—, y aquí
+      // volvió a colarse. Los cuatro que quedan sí están en «Datos del proceso»,
+      // uno por uno, y la matrícula es justamente la que abre el estudio de
+      // títulos, que es lo que hay que verificar de verdad.
+      'Cada ficha te dice qué verificar antes de participar: juzgado, radicado, demandante y matrícula inmobiliaria',
       // Se retira «título más limpio». Que demande un banco es una señal, no un
       // seguro, y prometerlo aquí rebaja la cautela justo en la categoría donde
       // más falta hace. Es la misma corrección que ya se hizo en la portada.
@@ -2953,6 +2959,17 @@ function renderRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin) {
   // gritando más que el dato al que ayuda. Es la misma clase que viste el
   // desglose de debajo, que es exactamente lo que esta frase es.
   if (!monthlyRent) return '<p class="rent-desglose">Escribe cuánto crees que podrías cobrar de arriendo al mes para calcular la rentabilidad.</p>';
+  // Sin valor base no hay porcentaje que dar, y callarlo salía peor que decirlo.
+  //
+  // `calcRentalYield` devuelve 0 en los dos rendimientos cuando no hay sobre qué
+  // dividir, pero `annualNet` solo depende del arriendo y sobrevive intacto. Al
+  // subir esa cifra al mismo recuadro que el porcentaje —antes iba al pie del
+  // bloque— la tarjeta pasó a decir «0.0 %» y dos renglones más abajo
+  // «$26.100.000 al año», una encima de otra y sin nada que las reconcilie.
+  //
+  // Y no es un caso raro: se ve cada vez que alguien BORRA el valor base para
+  // escribir otro, porque el recálculo va en cada pulsación.
+  if (!(acquisitionTotal > 0)) return '<p class="rent-desglose">Escribe el valor base de la compra, arriba, para saber qué rentabilidad deja ese arriendo.</p>';
   const result = calcRentalYield(acquisitionTotal, monthlyRent, monthlyAdmin);
   // Un 31% bruto anual sale de la calculadora sin que nada avise de que es
   // extraordinario, y quien no ha invertido nunca no tiene con qué compararlo:

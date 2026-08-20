@@ -1264,8 +1264,17 @@ p.rent-desglose { margin: 0; color: #7c6a86; font-size: 0.76rem; line-height: 1.
 @media (min-width: 1025px) {
   /* Con el titular fuera, el encabezado es una sola línea: el aire que
      rodeaba a un bloque de tres se nota como un hueco. Se ajusta a lo que
-     hay, y esos píxeles se los lleva la primera tarjeta. */
-  header { padding-top: 16px; padding-bottom: 14px; }
+     hay, y esos píxeles se los lleva la primera tarjeta.
+     
+     `.hero` y no `header`: el elemento es `<header class="hero">`, y `.hero`
+     declara el atajo `padding: 44px 24px 26px` — una clase (0,1,0) le gana a un
+     tipo (0,0,1) esté donde esté en el archivo y aunque venga dentro de una
+     media query. Con el selector de tipo esta regla no se aplicaba NUNCA: el
+     encabezado seguía midiendo lo de siempre y el recorte que este bloque cree
+     hacer no lo hacía. La versión anterior (26/18) estaba igual de muerta, así
+     que llevaba dos revisiones siendo un no-op que nadie notaba porque el
+     comentario afirmaba lo contrario. Medido: la primera tarjeta sube 40 px. */
+  .hero { padding-top: 16px; padding-bottom: 14px; }
   .buscador { margin-top: 14px; }
   .home { padding-top: 14px; }
   .home-inner { gap: 22px; }
@@ -2276,17 +2285,26 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
    la oscuridad del logotipo pasó a ser su opacidad y el color a blanco. Ahora la
    transparencia es real y no hace falta ningún filtro.
 
-   El archivo se recortó a su contenido real. Venía con 110 px de margen
-   transparente sobre un lienzo de 350×180, así que a la altura de una barra el
-   logotipo se encogía hasta ser una mancha de 43 px de ancho. Sin ese margen la
-   proporción pasa de 1,9:1 a 5:1 y el nombre se lee.
+   El archivo se recortó a su contenido real, DOS VECES. Venía con 110 px de
+   margen sobre un lienzo de 350×180 y el primer recorte lo dejó en 350×70, que
+   parecía ajustado y no lo estaba: medido el canal alfa, la tinta ocupaba
+   308×38 y el 49% del alto seguía siendo aire. A 26 px de alto declarado solo
+   13 eran logotipo, y el descriptor «GUÍA DEL INVERSIONISTA INMOBILIARIO» —9 px
+   en el archivo— salía a 3,3 px: un borrón, no una línea de texto.
+   
+   Ahora el lienzo ES la tinta (308×38, proporción 8,1:1), así que la altura que
+   se declara aquí es la altura que se ve. El descriptor sigue sin ser legible a
+   tamaño de barra —a 24 px de alto son 5,7 px— y eso no lo arregla ningún
+   recorte: es una segunda línea de texto dentro de un logotipo de navegación.
+   Se deja porque forma parte de la marca y a esa escala se lee como una regla
+   fina bajo el nombre, que es lo que hace un descriptor.
 
    El alto manda y el ancho se calcula solo; las medidas van declaradas en el
    HTML para que el navegador reserve el sitio y la barra no salte al cargar. */
 .marca-ag {
   /* 26 px sobre una barra de 59: el logotipo del socio se lee sin disputarle
      la barra a la navegación, que es lo que pasaría llevándolo más lejos. */
-  height: 26px; width: auto; display: block; opacity: 0.95;
+  height: 24px; width: auto; display: block; opacity: 0.95;
 }
 /* Separador entre las dos marcas: el «|» del informe, dibujado en vez de escrito
    para que no lo lea un lector de pantalla ni se descoloque con la tipografía. */
@@ -2303,7 +2321,7 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
 @media (max-width: 760px) {
   .cuenta-marca { font-size: 0.72rem; gap: 5px; }
   .cuenta-marca .ic { width: 15px; height: 15px; }
-  .marca-ag { height: 20px; }
+  .marca-ag { height: 16px; }
 }
 /* Por debajo de 420 px —iPhone SE y similares— sí hay que elegir, y gana el
    logotipo: es la señal que el punto 7 pide y la que no se puede deducir de
