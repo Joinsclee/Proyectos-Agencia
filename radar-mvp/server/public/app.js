@@ -943,14 +943,27 @@ const ONBOARDING_PASOS = [
   {
     etiqueta: 'Remates judiciales',
     icono: 'scale',
-    titulo: 'Subastas judiciales, con su riesgo a la vista',
+    // El punto 3 del informe: el mismo hecho, dicho desde el control.
+    //
+    // Decía «con su riesgo a la vista», y luego «lo que cambia es el riesgo del
+    // título», y luego «no garantiza que el inmueble esté sin problemas». Tres
+    // de cuatro líneas abrían en negativo antes de que nadie hubiera visto qué
+    // hace el Radar con eso, y quien lee decide no entrar en la categoría.
+    //
+    // No se rebaja ni una advertencia: siguen aquí el título, el alcance parcial
+    // y el «un banco demandando no es un seguro». Cambia de qué es la frase. El
+    // riesgo deja de ser el sujeto —algo que le pasa a quien compra— y pasa a
+    // ser el objeto: algo que se mira, con el expediente delante. Que es
+    // exactamente lo que esta pestaña sirve para hacer.
+    titulo: 'Subastas judiciales, con el expediente a la vista',
     cifra: (s) => (s?.remates ? `${s.remates.toLocaleString('es-CO')} remates` : null),
-    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La postura mínima la fija el juzgado —suele ser un porcentaje del avalúo—, así que el descuento no distingue: lo que cambia entre una y otra es el riesgo del título.',
+    texto: 'Inmuebles que un juez va a rematar, con su fecha de audiencia. La postura mínima la fija el juzgado —suele ser un porcentaje del avalúo—, así que el descuento no distingue: lo que separa una de otra es el estado del título, y de eso te mostramos lo que consta en el proceso.',
     puntos: [
+      'Cada ficha te dice qué verificar antes de participar: juzgado, radicado, demandante y estado del bien',
       // Se retira «título más limpio». Que demande un banco es una señal, no un
       // seguro, y prometerlo aquí rebaja la cautela justo en la categoría donde
       // más falta hace. Es la misma corrección que ya se hizo en la portada.
-      'Que el demandante sea un banco no garantiza que el inmueble esté sin problemas',
+      'Que el demandante sea un banco es una señal a favor, no una garantía: se verifica igual',
       'Si solo se remata una parte del bien, la ficha lo avisa en amarillo',
     ],
     ir: 'remates',
@@ -1025,7 +1038,7 @@ function renderOnboardingPaso() {
         <button class="ob-cta" type="button" ${ultimo ? 'data-onboarding-cerrar' : 'data-onboarding-siguiente'}>${ultimo ? 'Empezar a explorar' : 'Siguiente'}</button>
       </div>
     </nav>
-    <p class="ob-nota">Paso ${i + 1} de ${total} · puedes volver cuando quieras con <strong>Ver tutorial</strong>, arriba a la derecha.</p>
+    <p class="ob-nota">Paso ${i + 1} de ${total}</p>
   </div>`;
 }
 
@@ -5075,9 +5088,10 @@ document.addEventListener('keydown', (e) => {
  * apuesta a que la gente no entiende el producto sin que se lo expliquen; y esa
  * apuesta se comprueba mirando, no adivinando.
  *
- * Se apaga el arranque automático, NO el recorrido: el botón «Ver tutorial» de la
- * barra sigue abriéndolo, así que se puede enseñar al cliente y probarlo sin
- * revertir nada. Volver a activarlo es poner esta constante en `true`.
+ * Se apaga el arranque automático, y el botón «Ver tutorial» se retiró de la barra
+ * en la misma tanda, así que hoy el recorrido no tiene entrada: sigue en el código,
+ * intacto y con los nombres de sección al día, esperando la decisión. Reactivarlo
+ * son dos cosas, no una: poner esta constante en `true` Y devolver el botón.
  */
 const ONBOARDING_AUTOMATICO = false;
 
