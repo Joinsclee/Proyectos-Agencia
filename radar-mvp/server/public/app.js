@@ -568,7 +568,11 @@ function renderAuthBar() {
   if (auth.user) {
     const who = auth.user.name || (auth.user.email || '').split('@')[0];
     const plan = auth.account?.plan === 'pro' ? '<span class="auth-plan">Pro</span>' : '';
-    el.innerHTML = `${consumoDelPlan()}
+    // El consumo va a su hueco propio de la barra, no aquí dentro: ver el
+    // comentario de `#consumo-slot` en index.html.
+    const hueco = $('consumo-slot');
+    if (hueco) hueco.innerHTML = consumoDelPlan();
+    el.innerHTML = `
       <div class="menu-cuenta">
         <button class="auth-icono" id="auth-menu-btn" aria-haspopup="true" aria-expanded="false"
                 aria-label="Tu cuenta: ${esc(who)}" title="${esc(who)}">${ic('user')}${plan}</button>
@@ -586,6 +590,8 @@ function renderAuthBar() {
   } else {
     // Sin sesión no hay menú que abrir, y «Planes» es aquí la mitad comercial de
     // la barra: quien no ha entrado todavía es justo a quien le interesa.
+    const hueco = $('consumo-slot');
+    if (hueco) hueco.innerHTML = '';
     el.innerHTML = `<a class="auth-link" href="/planes">Planes</a><a class="auth-link primary" href="/login">${ic('user')}<span>Ingresar</span></a>`;
   }
   aplicarVisibilidadDeCuenta();
@@ -4794,6 +4800,14 @@ async function cargarConfig() {
     const c = await fetch('/api/config').then((r) => r.json());
     auditoriaComparables = c.auditoriaComparables === true;
     planDemoActivo = c.demoPlanActivation === true;
+    // El botón de comunidad nace oculto en el HTML y solo se enciende si hay
+    // adónde ir. Así el día que cambie de plataforma —o que la comunidad se
+    // abra— basta con la variable de entorno, sin desplegar código.
+    const comunidad = $('comunidad-link');
+    if (comunidad && typeof c.comunidadUrl === 'string' && c.comunidadUrl) {
+      comunidad.href = c.comunidadUrl;
+      comunidad.hidden = false;
+    }
   } catch { /* sin config, la verificación queda apagada */ }
 }
 

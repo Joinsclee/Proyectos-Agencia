@@ -44,6 +44,15 @@ const EnvSchema = z.object({
   // '0' es el único cambio necesario para cerrarlo, sin desplegar código nuevo.
   RADAR_DEMO_PLAN: z.enum(['0', '1']).default('0'),
 
+  // ── Comunidad ──
+  //
+  // El botón de la barra superior existe solo si esto existe. Un icono que lleva
+  // a ninguna parte es peor que no tener icono, así que sin URL configurada el
+  // botón no se pinta: mismo trato que el asistente y que el acceso con
+  // Microsoft. Cambiar de plataforma —o abrir la comunidad más adelante— es
+  // poner esta variable, sin desplegar código.
+  RADAR_COMUNIDAD_URL: z.string().url().optional(),
+
   // ── Asistente (workflow «Asistente Radar CRECE» en n8n) ──
   //
   // Sin webhook configurado el asistente no existe: el botón no se pinta y la

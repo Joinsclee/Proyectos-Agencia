@@ -1990,6 +1990,17 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
   border-top: 4px solid rgba(255,255,255,0.7);
 }
 .auth-icono[aria-expanded="true"] { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.45); }
+/* El de comunidad es un enlace, no un menú: sin la flecha, que ahí mentiría. */
+.auth-icono.comunidad { padding: 0 10px; }
+.auth-icono.comunidad::after { content: none; }
+/* `display: inline-flex` de la regla base gana al `display: none` que el
+   navegador aplica a [hidden], así que sin esto el botón se ve aunque no haya
+   comunidad configurada — y llevaría a `#`. Mismo caso que `.asis-btn[hidden]`. */
+.auth-icono[hidden] { display: none; }
+/* Los dos logotipos son un enlace: sin esto heredan el subrayado y el azul. */
+a.cuenta-marca { text-decoration: none; color: inherit; border-radius: 8px; }
+a.cuenta-marca:hover .marca-nombre { color: var(--gold); }
+a.cuenta-marca:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 
 .menu-cuenta-panel {
   position: absolute; top: calc(100% + 8px); right: 0; z-index: 1400;

@@ -59,6 +59,9 @@
       <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v14"/><path d="m6 12.5 6 6 6-6"/></symbol>
       <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-1.5a4.5 4.5 0 0 0-4.5-4.5h-5A4.5 4.5 0 0 0 5 19.5V21"/><circle cx="12" cy="7.5" r="4"/></symbol>
       <symbol id="i-map" viewBox="0 0 24 24"><path d="m9 4-6 2.5V21l6-2.5 6 2.5 6-2.5V4l-6 2.5L9 4Z"/><path d="M9 4v14.5"/><path d="M15 6.5V21"/></symbol>
+      <!-- Tres personas: una delante y dos detrás. Es el gesto de «grupo» que se
+           reconoce a 19 px sin leer nada. -->
+      <symbol id="i-comunidad" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.2 19.4a5.8 5.8 0 0 1 11.6 0"/><path d="M16.4 5.2a3.2 3.2 0 0 1 0 6.1"/><path d="M18.1 14.2a5.2 5.2 0 0 1 3.1 4.8"/></symbol>
       <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21V11"/><path d="M12 21V4"/><path d="M18 21v-6"/></symbol>
       <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2.5"/><path d="M3.5 10h17"/><path d="M8 3v4"/><path d="M16 3v4"/></symbol>
       <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></symbol>
@@ -108,7 +111,15 @@
            Se sirve desde el propio sitio y no desde el CDN del cliente: una
            imagen de marca que depende de un dominio ajeno desaparece el día que
            ese dominio falle, y aquí lo que se cae es la señal de confianza. -->
-      <span class="cuenta-marca">
+      <!-- Enlace, no un `<span>`: pulsar el logotipo lleva al inicio.
+           Es lo que hace todo el mundo sin pensarlo, y hasta ahora aquí no
+           pasaba nada — mientras que en Planes, Cuenta y Comparador esta misma
+           marca SÍ era un enlace. La misma pieza se comportaba distinto según en
+           qué página estuvieras.
+           Va a `/` a secas y no a la pestaña de Inicio por dentro: desde una
+           ficha abierta o un listado filtrado, «volver al principio» significa
+           empezar de cero, no cambiar de pestaña conservando los filtros. -->
+      <a class="cuenta-marca" href="/" aria-label="Radar CRECE · ir al inicio">
         <img class="marca-ag" src="/radar/andres-giraldo.png" alt="Andrés Giraldo" width="308" height="38">
         <span class="marca-sep" aria-hidden="true"></span>
         <!-- El logotipo del Radar en su versión blanca, que es la que existe para
@@ -119,7 +130,7 @@
              de lejos. -->
         <img class="marca-radar" src="/radar/radar-crece-blanco.png" alt="" width="256" height="244">
         <span class="marca-nombre">Radar CRECE</span>
-      </span>
+      </a>
       <div class="nav-right" id="nav-right">
         <!-- Sin la palabra «Guardados»: el corazón ya la dice, y en una barra que
              ha perdido el nombre del usuario y dos enlaces, el texto era lo único
@@ -134,6 +145,19 @@
              `abrirOnboarding` en app.js), así que reactivarlo es devolver este
              botón y su `<script>`. -->
         <span class="nav-sep" aria-hidden="true"></span>
+        <!-- El consumo del plan sale del `authbar` y pasa a tener sitio propio,
+             ANTES de la comunidad. Rendido dentro del authbar quedaba entre el
+             icono de comunidad y el de la cuenta, separando las dos cosas que
+             tienen que leerse juntas. Aquí queda: cupo · comunidad · cuenta. -->
+        <span id="consumo-slot"></span>
+        <!-- La comunidad. Solo icono, como Guardados y como la cuenta: en una
+             barra con dos logotipos, cada palabra suelta compite con ellos.
+             Nace oculto y lo enciende `/api/config` si hay URL configurada — un
+             icono que lleva a ninguna parte es peor que no tener icono. -->
+        <a class="auth-icono comunidad" id="comunidad-link" href="#" target="_blank" rel="noopener noreferrer"
+           aria-label="Comunidad" title="Comunidad" hidden>
+          <svg class="ic" aria-hidden="true"><use href="#i-comunidad"/></svg>
+        </a>
         <div class="authbar" id="authbar"></div>
       </div>
     </div>

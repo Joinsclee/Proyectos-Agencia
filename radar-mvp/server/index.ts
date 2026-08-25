@@ -1250,6 +1250,8 @@ const server = createServer(async (req, res) => {
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
         paymentDemoReady: wompiPaymentDemoReady(),
+        // Sin URL no hay botón. Ver `RADAR_COMUNIDAD_URL` en lib/env.ts.
+        comunidadUrl: env.RADAR_COMUNIDAD_URL ?? null,
         // Entrar con Microsoft, pedido en la reunión del 28-jul. Va tras una
         // bandera y apagado por defecto porque el botón depende de que el
         // proveedor esté dado de alta en Supabase: enseñarlo antes sería ofrecer
