@@ -88,7 +88,59 @@ test('SEO: robots.txt no deja fuera el sitio ni deja dentro la API', () => {
   assert.match(txt, /^Disallow: \/api\//m, 'la API no aporta nada en un buscador');
   assert.match(txt, /^Disallow: \/cuenta$/m);
   assert.match(txt, /Sitemap: https:\/\/radarcrece\.com\/sitemap\.xml/);
-  // Lo que nunca puede aparecer: un bloqueo total. Se ha ido más de un sitio a
-  // cero de tráfico por un `Disallow: /` que quedó de una versión de pruebas.
-  assert.doesNotMatch(txt, /^Disallow: \/$/m);
+  // Lo que nunca puede aparecer: un bloqueo total EN EL GRUPO GENERAL. Se ha ido
+  // más de un sitio a cero de tráfico por un `Disallow: /` que quedó de una
+  // versión de pruebas.
+  //
+  // La comprobación se acota al grupo en vez de al archivo entero desde que los
+  // rastreadores de modelos tienen el suyo, donde ese `Disallow: /` es justo lo
+  // que se quiere. Acotarla mantiene la red donde hace falta: un `Disallow: /`
+  // bajo `User-agent: *` sigue siendo el fallo que apaga el sitio.
+  const lineas = txt.split('\n').map((l) => l.trim());
+  const iGeneral = lineas.indexOf('User-agent: *');
+  const siguienteGrupo = lineas.findIndex((l, i) => i > iGeneral && l.startsWith('User-agent:'));
+  const grupoGeneral = lineas.slice(iGeneral, siguienteGrupo > 0 ? siguienteGrupo : undefined);
+  assert.ok(!grupoGeneral.includes('Disallow: /'), 'el grupo general no puede cerrar el sitio entero');
+});
+
+test('robots.txt: una IA puede recomendar el Radar, no servir su inventario', () => {
+  const txt = robotsTxt('https://radarcrece.com');
+  const lineas = txt.split('\n').map((l) => l.trim());
+
+  // La decisión de producto, escrita donde la leen los rastreadores.
+  //   · ai-train=no  — nada de aquí alimenta el entrenamiento de un modelo.
+  //   · search=yes   — que se indexe: es el canal por el que llega quien busca
+  //                    una herramienta como esta.
+  //   · ai-input=no  — que no se use como fuente para responder en lugar nuestro.
+  const senales = lineas.filter((l) => l.startsWith('Content-Signal:'));
+  assert.ok(senales.length >= 2, 'la señal va en el grupo general Y en el de los rastreadores de IA');
+  for (const s of senales) {
+    assert.match(s, /ai-train=no/);
+    assert.match(s, /search=yes/);
+    assert.match(s, /ai-input=no/);
+  }
+
+  // Los rastreadores de modelos tienen su propio grupo, y ahí la regla se
+  // invierte: cerrado por defecto, abierto solo a lo que describe la herramienta.
+  const iBot = lineas.indexOf('User-agent: GPTBot');
+  assert.ok(iBot > 0, 'GPTBot necesita grupo propio: lo que se le dice no es lo que se le dice a Google');
+  const grupoIA = lineas.slice(iBot);
+  assert.ok(grupoIA.includes('Disallow: /'), 'el inventario queda fuera para los rastreadores de IA');
+  for (const ruta of ['/$', '/planes', '/terminos']) {
+    assert.ok(grupoIA.includes(`Allow: ${ruta}`), `${ruta} describe el producto y sí puede leerse`);
+  }
+  // ClaudeBot y PerplexityBot no son un caso aparte del de GPTBot.
+  for (const bot of ['ClaudeBot', 'PerplexityBot', 'Google-Extended']) {
+    assert.ok(lineas.includes(`User-agent: ${bot}`), `falta ${bot} en la lista`);
+  }
+
+  // Y lo de siempre sigue: el grupo general no cambia de comportamiento.
+  const iGeneral = lineas.indexOf('User-agent: *');
+  assert.ok(iGeneral >= 0 && iGeneral < iBot, 'el grupo general va primero');
+  const grupoGeneral = lineas.slice(iGeneral, iBot);
+  assert.ok(grupoGeneral.includes('Allow: /'), 'Google y los demás siguen entrando a todo');
+  for (const cerrado of ['/api/', '/login', '/cuenta', '/auth/']) {
+    assert.ok(grupoGeneral.includes(`Disallow: ${cerrado}`), `${cerrado} sigue cerrado para todos`);
+  }
+  assert.match(txt, /Sitemap: https:\/\/radarcrece\.com\/sitemap\.xml/);
 });

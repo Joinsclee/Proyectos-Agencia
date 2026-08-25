@@ -444,7 +444,21 @@ async function serveStatic(
     const contentType = contentTypeFor(file);
     if (seo && contentType.startsWith('text/html')) {
       const html = await inyectarSeo(buf.toString('utf8'), seo.url, seo.base);
-      res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache, must-revalidate' });
+      const { metaDeUrl } = await import('./seo.js');
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Cache-Control': 'no-cache, must-revalidate',
+        // El mapa y la canónica también en la cabecera, no solo en el `<head>`.
+        //
+        // Un rastreador que solo hace `HEAD` —o que corta la descarga al ver el
+        // tamaño— no llega a leer el HTML, así que hoy no encontraba ninguna de
+        // las dos. Es la misma información que ya está dentro; lo que cambia es
+        // que ahora se puede obtener sin bajarse la página entera.
+        Link: [
+          `<${seo.base}/sitemap.xml>; rel="sitemap"; type="application/xml"`,
+          `<${seo.base}${metaDeUrl(seo.url.searchParams).canonical}>; rel="canonical"`,
+        ].join(', '),
+      });
       res.end(html);
       return;
     }
