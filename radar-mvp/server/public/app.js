@@ -117,6 +117,11 @@ const ORDERS = {
   portal: [['precio_asc', 'Precio menor'], ['discount_desc', 'Mayor descuento'], ['precio_m2_asc', 'Precio/m² menor'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
   bancos: [['precio_asc', 'Precio menor'], ['precio_m2_asc', 'Precio/m² menor'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
   remates: [['auction_asc', 'Audiencia próxima'], ['min_asc', 'Postura menor'], ['min_desc', 'Postura mayor']],
+  // Solo los criterios que las TRES fuentes saben contestar. «Precio/m²» se cae
+  // porque un remate no publica área con la fiabilidad que exige dividir por
+  // ella, y ordenar una lista mezclada por un campo que un tercio de las filas no
+  // tiene la deja partida en dos mitades sin que nada lo explique.
+  todas: [['precio_asc', 'Precio menor'], ['discount_desc', 'Mayor descuento'], ['precio_desc', 'Precio mayor'], ['recent', 'Más recientes']],
 };
 
 // La portada es la primera pantalla del producto: se entra por ella, no por el
@@ -542,20 +547,76 @@ function consumoDelPlan() {
   return `<a class="consumo" href="/cuenta" title="${esc(titulo)}">${cuerpo}</a>`;
 }
 
+/**
+ * La barra de cuenta: un icono, y todo lo demás dentro.
+ *
+ * Estaba el nombre de la persona, su plan, el consumo, «Planes» y «Salir», los
+ * cinco a la vez y en la misma fila que la marca. Ninguno se usa a diario —el
+ * nombre menos que ninguno: quien inició sesión ya sabe quién es— y entre todos
+ * dejaban la barra tan cargada que el logotipo del socio no tenía dónde crecer.
+ *
+ * Ahora solo el icono de usuario, y detrás un menú con lo que sí se pulsa alguna
+ * vez. «Mi cuenta» entra ahí aunque no se pidiera: era el destino del nombre, y
+ * quitarlo sin más dejaba `/cuenta` sin ninguna entrada desde la portada.
+ *
+ * El consumo del plan se queda FUERA del menú, a la vista: «te quedan 12 de 20
+ * fichas» es lo que evita que alguien se quede sin cupo sin haberlo visto venir,
+ * y un dato que avisa no puede vivir detrás de un clic.
+ */
 function renderAuthBar() {
   const el = $('authbar'); if (!el) return;
   if (auth.user) {
     const who = auth.user.name || (auth.user.email || '').split('@')[0];
     const plan = auth.account?.plan === 'pro' ? '<span class="auth-plan">Pro</span>' : '';
-    el.innerHTML = `<a class="auth-user" href="/cuenta">${ic('user')}${esc(who)}${plan}</a>${consumoDelPlan()}<a class="auth-link" href="/planes">Planes</a><button class="auth-link" id="auth-logout"><span>Salir</span></button>`;
+    el.innerHTML = `${consumoDelPlan()}
+      <div class="menu-cuenta">
+        <button class="auth-icono" id="auth-menu-btn" aria-haspopup="true" aria-expanded="false"
+                aria-label="Tu cuenta: ${esc(who)}" title="${esc(who)}">${ic('user')}${plan}</button>
+        <div class="menu-cuenta-panel" id="auth-menu" hidden>
+          <span class="menu-cuenta-quien">${esc(who)}</span>
+          <a class="menu-cuenta-op" href="/cuenta">${ic('user')} Mi cuenta</a>
+          <a class="menu-cuenta-op" href="/planes">${ic('chart')} Planes</a>
+          <button class="menu-cuenta-op" id="auth-logout">${ic('arrow')} Cerrar sesión</button>
+        </div>
+      </div>`;
+    conectarMenuDeCuenta();
     $('auth-logout').addEventListener('click', () => {
       localStorage.removeItem('radar_token'); localStorage.removeItem('radar_refresh'); location.reload();
     });
   } else {
+    // Sin sesión no hay menú que abrir, y «Planes» es aquí la mitad comercial de
+    // la barra: quien no ha entrado todavía es justo a quien le interesa.
     el.innerHTML = `<a class="auth-link" href="/planes">Planes</a><a class="auth-link primary" href="/login">${ic('user')}<span>Ingresar</span></a>`;
   }
   aplicarVisibilidadDeCuenta();
   updateFavCount();
+}
+
+/** Abrir, cerrar con Escape o con un clic fuera, y devolver el foco al botón. */
+function conectarMenuDeCuenta() {
+  const btn = $('auth-menu-btn');
+  const panel = $('auth-menu');
+  if (!btn || !panel) return;
+  const cerrar = () => {
+    if (panel.hidden) return;
+    panel.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  };
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const abierto = !panel.hidden;
+    panel.hidden = abierto;
+    btn.setAttribute('aria-expanded', String(!abierto));
+    // El foco entra al menú al abrirlo: si no, tabular desde el botón se lleva a
+    // quien navega con teclado al contenido de la página, por detrás del panel.
+    if (!abierto) panel.querySelector('a, button')?.focus();
+  });
+  document.addEventListener('click', (e) => { if (!panel.contains(e.target)) cerrar(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || panel.hidden) return;
+    cerrar();
+    btn.focus();
+  });
 }
 
 /**
@@ -2600,8 +2661,8 @@ function renderPager(total, page, pages, meta = {}) {
 }
 
 function cardKind(p) {
-  // Guardados y portada mezclan las tres fuentes: cada ficha trae el suyo.
-  if (state.tab === 'guardados' || state.tab === 'home') return p._kind;
+  // Guardados, portada y «Todas» mezclan las tres fuentes: cada ficha trae el suyo.
+  if (state.tab === 'guardados' || state.tab === 'home' || state.tab === 'todas') return p._kind;
   return state.tab === 'remates' ? 'remate' : (state.tab === 'bancos' ? 'banco' : 'portal');
 }
 /**
@@ -5218,13 +5279,25 @@ try {
 (function buscadorPrincipal() {
   const form = $('buscador-form');
   if (!form) return;
-  const FUENTES = ['portal', 'bancos', 'remates'];
+  const FUENTES = ['todas', 'portal', 'bancos', 'remates'];
   const selCiudad = $('b-city');
   const selTipo = $('b-type');
   const campoPrecio = $('b-price');
   const etiquetaPrecio = $('b-price-label');
-  const radios = [...form.querySelectorAll('input[name="buscador-fuente"]')];
-  const fuenteElegida = () => radios.find((r) => r.checked)?.value || 'portal';
+  // Un desplegable, no tres píldoras.
+  //
+  // Las píldoras eran el SEGUNDO control para elegir fuente en la misma pantalla
+  // —el otro es la barra de pestañas, ochenta píxeles más arriba, con los mismos
+  // tres nombres—, que es lo que el punto 6 del informe pide reducir a uno.
+  // Además ocupaban una fila entera del buscador para una pregunta que la mayoría
+  // no necesita contestar: quien busca «apartamento en Bogotá hasta 300 millones»
+  // no está pensando en si el vendedor es una inmobiliaria, un banco o un juzgado.
+  //
+  // Por eso el defecto es «Todas las fuentes». Y por eso es un campo más, con la
+  // misma altura y la misma flecha que ciudad, tipo y precio: elegir fuente pasa
+  // de ser una decisión previa a ser un filtro como los demás.
+  const selFuente = $('b-fuente');
+  const fuenteElegida = () => selFuente.value || 'todas';
   const tieneOpcion = (select, valor) => !valor || [...select.options].some((o) => o.value === valor);
 
   // Las facetas de cada fuente se piden una vez. Son tres listas que no cambian
@@ -5318,8 +5391,7 @@ try {
   /** Trae al buscador lo que el panel tiene puesto ahora mismo. */
   async function sincronizar() {
     if (!FUENTES.includes(state.tab)) return;
-    const radio = radios.find((r) => r.value === state.tab);
-    if (radio) radio.checked = true;
+    selFuente.value = state.tab;
     ajustarEtiquetaPrecio(state.tab);
     // Primero las opciones: asignarle a un desplegable un valor que todavía no
     // existe entre sus opciones lo deja vacío, y el buscador diría «todas las
@@ -5362,10 +5434,12 @@ try {
   });
   // Cambiar de modalidad reconfigura el formulario, no busca: son otras ciudades y
   // otro campo de precio, pero la persona todavía no ha dicho que quiera irse.
-  radios.forEach((radio) => radio.addEventListener('change', () => {
-    ajustarEtiquetaPrecio(radio.value);
-    void pintarOpciones(radio.value);
-  }));
+  // Cambiar de fuente reconfigura el formulario, no busca: son otras ciudades y
+  // otro campo de precio, pero la persona todavía no ha dicho que quiera irse.
+  selFuente.addEventListener('change', () => {
+    ajustarEtiquetaPrecio(selFuente.value);
+    void pintarOpciones(selFuente.value);
+  });
 
   /** Lo que el asistente llama «banco» o «remate» son aquí pestañas en plural. */
   function fuenteDesde(valor) {
@@ -5420,8 +5494,7 @@ try {
    */
   async function aplicar(peticion = {}) {
     const fuente = fuenteDesde(peticion.fuente) || (FUENTES.includes(state.tab) ? state.tab : fuenteElegida());
-    const radio = radios.find((r) => r.value === fuente);
-    if (radio) radio.checked = true;
+    selFuente.value = fuente;
     ajustarEtiquetaPrecio(fuente);
     // Antes de escribir hay que tener las opciones de ESTA fuente: asignarle a un
     // desplegable un valor que todavía no está entre sus opciones lo deja vacío.

@@ -92,8 +92,14 @@ test('buscador: sus controles existen en la página', async () => {
 test('buscador: sus modalidades son secciones que existen', async () => {
   const html = await leer('server/public/index.html');
   const index = await leer('server/index.ts');
-  const modalidades = [...html.matchAll(/name="buscador-fuente"\s+value="([a-z]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(modalidades, ['portal', 'bancos', 'remates']);
+  // Las tres píldoras pasaron a ser un desplegable con una cuarta opción, «todas»,
+  // que es la que viene puesta. La prueba sigue diciendo lo mismo: cada modalidad
+  // que se ofrece tiene que tener sección donde aterrizar y ruta que la sirva, o
+  // buscar dejaría la pantalla en un sitio que no existe.
+  const bloque = html.slice(html.indexOf('id="b-fuente"'));
+  const modalidades = [...bloque.slice(0, bloque.indexOf('</select>')).matchAll(/value="([a-z]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(modalidades, ['todas', 'portal', 'bancos', 'remates']);
+  assert.match(bloque, /value="todas" selected/, 'buscar en las tres fuentes es el defecto');
   for (const fuente of modalidades) {
     assert.ok(
       html.includes(`data-tab="${fuente}"`),

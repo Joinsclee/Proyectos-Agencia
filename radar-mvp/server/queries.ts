@@ -51,6 +51,19 @@ export interface ListQuery {
    * resolverlo exige ir a la base y `applyInmuebleFilters` es síncrona.
    */
   _ciudadVariantes?: string[];
+  /**
+   * Cuántas filas pedir, saltándose el tope de `clampSize`.
+   *
+   * Solo lo usa `queryTodas`, y no es una página: es el material que necesita
+   * para intercalar. Para saber quién ocupa la fila 100 del listado combinado hay
+   * que haber traído 100 de cada fuente, y `clampSize` topa en 60 —correcto para
+   * una página que alguien mira, absurdo para un montón intermedio que nadie ve.
+   * Sin esto, a partir de la tercera página se agotaba el lado de inmuebles y el
+   * intercalado rellenaba con remates: medido, 10 de 24 en la página 3.
+   *
+   * No llega del cliente. `parseListQuery` no lo lee.
+   */
+  _ventana?: number;
   areaMin?: number;    // m²
   areaMax?: number;    // m²
   bedroomsMin?: number;
@@ -525,7 +538,7 @@ export async function queryBancos(q: ListQuery): Promise<ListResult> {
 /** Remates judiciales activos. */
 export async function queryRemates(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
-  const pageSize = clampSize(q.pageSize);
+  const pageSize = q._ventana ?? clampSize(q.pageSize);
   if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
 
@@ -578,6 +591,192 @@ export async function queryRemates(q: ListQuery): Promise<ListResult> {
     pageSize,
     pages: Math.ceil(total / pageSize),
   };
+}
+
+/**
+ * Las tres fuentes en un solo listado.
+ *
+ * Es la opción por defecto del buscador —«Todas las fuentes»— y existe porque
+ * quien busca «apartamento en Bogotá hasta 300 millones» no está pensando en si
+ * el vendedor es una inmobiliaria, un banco o un juzgado. Esa distinción importa
+ * DESPUÉS, al mirar la ficha, no al buscar.
+ *
+ * Portal y bancos viven en la misma tabla y salen de una consulta sin filtro de
+ * `source`. Remates es otra tabla y otra forma —lo que se paga es la POSTURA
+ * MÍNIMA, no un precio de venta—, así que se pide aparte y se funde aquí.
+ *
+ * La fusión se hace en memoria y no en la base a propósito: una vista SQL que
+ * uniera las dos tablas obligaría a mantener el mapeo de columnas en dos sitios
+ * y se rompería en silencio la próxima vez que una de las dos cambie.
+ *
+ * Se sobre-piden `page * pageSize` filas de cada lado antes de fundir, que es lo
+ * que hace correcta la paginación: para saber quién ocupa la fila 41 del listado
+ * combinado hay que haber visto las 40 anteriores de AMBOS. A cambio, el coste
+ * crece con la profundidad de la página; por eso `MAX_PAGINAS_TODAS` corta antes
+ * de que eso importe, y `paginasLimitadas` lo dice en vez de fingir que no hay
+ * más.
+ */
+const MAX_PAGINAS_TODAS = 25;
+
+export async function queryTodas(q: ListQuery): Promise<ListResult> {
+  const page = clampPage(q.page);
+  const pageSize = clampSize(q.pageSize);
+  if (rangoImposible(q)) return listaVacia(page, pageSize);
+
+  // Cuántas filas hay que ver de cada lado para poder cortar la página pedida.
+  const ventana = Math.min(page, MAX_PAGINAS_TODAS) * pageSize;
+  const comun: ListQuery = { ...q, page: 1, _ventana: ventana };
+
+  // El orden de remates tiene otros nombres. Se traduce al equivalente más
+  // cercano en vez de dejarlo en su defecto —«audiencia próxima»—, que mezclado
+  // con inmuebles ordenados por precio daría un listado sin criterio visible.
+  const ordenRemates = q.order === 'precio_desc' ? 'min_desc'
+    : q.order === 'recent' ? 'auction_asc'
+    : 'min_asc';
+
+  const [inmuebles, remates] = await Promise.all([
+    queryInmueblesTodos(comun),
+    // Un filtro que en remates no existe (estrato, habitaciones) los descartaría
+    // TODOS y el listado combinado se quedaría sin una de sus tres fuentes sin
+    // avisar. Cuando el filtro no aplica, esa fuente sencillamente no participa.
+    filtroSoloDeInmuebles(q) ? listaVacia(1, ventana) : queryRemates({ ...comun, order: ordenRemates }),
+  ]);
+
+  const fila = (d: Record<string, unknown>, kind: 'portal' | 'banco' | 'remate') => ({
+    ...d,
+    _kind: kind,
+    // Con qué cifra entra en el orden. En un remate es la postura mínima: es lo
+    // que hay que poner para participar, y es la que el buscador ya compara
+    // cuando alguien pone un techo de precio.
+    _cmp: kind === 'remate' ? Number(d.minimum_bid ?? 0) : Number(d.price ?? 0),
+    _desc: Number(d.discount_pct ?? 0),
+    _nuevo: String(d.first_seen_at ?? d.created_at ?? ''),
+  });
+
+  const mezcla = [
+    ...inmuebles.data.map((d) => fila(d as Record<string, unknown>, esDeBanco(d as Record<string, unknown>) ? 'banco' : 'portal')),
+    ...remates.data.map((d) => fila(d as Record<string, unknown>, 'remate')),
+  ];
+
+  // ── Por qué esto NO es un `sort` sobre la lista fundida ──
+  //
+  // Lo era, y el resultado medido fue que la pestaña «Todas» nunca enseñaba
+  // todas. Con «precio menor» sobre Bogotá salían 24 remates de 24: lo más barato
+  // del país son parqueaderos subastados a tres millones. Con «mayor descuento»,
+  // 0 remates de 24, porque el suyo se calcula contra el avalúo del juzgado y
+  // muchos edictos no lo publican. Cada criterio dejaba fuera una fuente entera,
+  // y el que la dejaba fuera cambiaba con el criterio.
+  //
+  // El problema es que las dos escalas no son comparables: la postura mínima de
+  // una subasta y el precio de oferta de un anuncio no miden lo mismo aunque
+  // ambos sean pesos. Ordenar juntas dos escalas distintas no produce un orden,
+  // produce un montón donde manda la que tenga la cola más larga.
+  //
+  // Así que cada fuente se ordena por su propio criterio —eso sí es comparable
+  // dentro de ella— y se intercalan en proporción a lo que cada una aporta al
+  // total. Con 4.100 inmuebles y 250 remates, una página de 24 lleva uno o dos
+  // remates: que es exactamente su peso en lo que hay.
+  const orden = q.order ?? 'precio_asc';
+  const porCriterio = (a: typeof mezcla[number], b: typeof mezcla[number]) => {
+    if (orden === 'precio_desc') return b._cmp - a._cmp;
+    if (orden === 'discount_desc') return b._desc - a._desc;
+    if (orden === 'recent') return b._nuevo.localeCompare(a._nuevo);
+    // `precio_asc` por defecto. Un cero no es «lo más barato», es «no lo sabemos»:
+    // sin esto, los avisos sin precio ocuparían toda la primera página.
+    const av = a._cmp > 0 ? a._cmp : Number.POSITIVE_INFINITY;
+    const bv = b._cmp > 0 ? b._cmp : Number.POSITIVE_INFINITY;
+    return av - bv;
+  };
+  const deInmuebles = mezcla.filter((f) => f._kind !== 'remate').sort(porCriterio);
+  const deRemates = mezcla.filter((f) => f._kind === 'remate').sort(porCriterio);
+  const combinada = intercalarProporcional(
+    [{ filas: deInmuebles, peso: inmuebles.total }, { filas: deRemates, peso: remates.total }],
+  );
+
+  const desde = (page - 1) * pageSize;
+  const total = inmuebles.total + remates.total;
+  const pages = Math.ceil(total / pageSize);
+  return {
+    data: combinada.slice(desde, desde + pageSize),
+    total,
+    page,
+    pageSize,
+    pages: Math.min(pages, MAX_PAGINAS_TODAS),
+    totalAproximado: inmuebles.totalAproximado === true,
+    paginasLimitadas: pages > MAX_PAGINAS_TODAS,
+  };
+}
+
+/**
+ * Intercala varias listas ya ordenadas, cada una según su peso.
+ *
+ * En cada paso emite de la lista que más atrasada va respecto a su cuota. La
+ * fórmula es la de reparto de escaños por cociente: `emitidas / peso`, el menor
+ * gana. Estable y sin azar, así que la misma consulta devuelve siempre lo mismo
+ * y la paginación no baila entre página y página.
+ *
+ * Una lista sin peso —cero resultados— no participa; una lista que se agota deja
+ * de competir y el resto se reparte lo que queda, así que el final del listado no
+ * tiene huecos.
+ */
+function intercalarProporcional<T>(fuentes: Array<{ filas: T[]; peso: number }>): T[] {
+  const vivas = fuentes.filter((f) => f.filas.length > 0 && f.peso > 0);
+  if (vivas.length <= 1) return vivas[0]?.filas ?? [];
+  const cursor = vivas.map(() => 0);
+  const total = vivas.reduce((n, f) => n + f.filas.length, 0);
+  const salida: T[] = [];
+  for (let i = 0; i < total; i += 1) {
+    let elegida = -1;
+    let mejor = Number.POSITIVE_INFINITY;
+    for (let j = 0; j < vivas.length; j += 1) {
+      if (cursor[j] >= vivas[j].filas.length) continue;
+      const coste = cursor[j] / vivas[j].peso;
+      if (coste < mejor) { mejor = coste; elegida = j; }
+    }
+    if (elegida < 0) break;
+    salida.push(vivas[elegida].filas[cursor[elegida]]);
+    cursor[elegida] += 1;
+  }
+  return salida;
+}
+
+/** ¿Este filtro solo tiene sentido en `inmuebles`? Entonces remates no participa. */
+function filtroSoloDeInmuebles(q: ListQuery): boolean {
+  return q.stratumMin != null || q.stratumMax != null || q.bedroomsMin != null
+    || q.zone != null && q.zone !== '' || q.opp === 'high';
+}
+
+/** ¿La fila viene de un banco o del portal? Lo dice su `source`. */
+function esDeBanco(d: Record<string, unknown>): boolean {
+  return (BANK_SOURCES as readonly string[]).includes(String(d.source ?? ''));
+}
+
+/**
+ * Portal y bancos juntos: la misma tabla sin filtrar por `source`.
+ *
+ * Es `queryPortal`/`queryBancos` sin la única línea que las diferencia. Se
+ * escribe aparte en vez de añadirle una bandera a una de las dos porque las dos
+ * llevan además reglas propias —la rotación de bancos, el filtro por entidad— que
+ * aquí no aplican.
+ */
+async function queryInmueblesTodos(q: ListQuery): Promise<ListResult> {
+  const page = clampPage(q.page);
+  const pageSize = q._ventana ?? clampSize(q.pageSize);
+  const from = (page - 1) * pageSize;
+  if (q.city) q = { ...q, _ciudadVariantes: await ciudadesParaFiltrar(q.city, 'portal') };
+
+  let qb = supabase.from('inmuebles').select('*', { count: 'exact' }).eq('is_active', true);
+  qb = applyInmuebleFilters(qb, q);
+  qb = aplicarSoloDesbloqueadas(qb, q);
+  qb = aplicarTier(qb, q);
+  if (q.opp === '1') qb = qb.eq('is_opportunity', true);
+  qb = applyOrderInmuebles(qb, q.order === 'discount_desc' || q.order === 'recent' ? q.order : 'precio_asc');
+
+  const { data, count, error } = await qb.range(from, from + pageSize - 1);
+  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
+  if (error) throw new Error(`queryTodas/inmuebles: ${error.message}`);
+  const total = count ?? 0;
+  return { data: data ?? [], total, page, pageSize, pages: Math.ceil(total / pageSize) };
 }
 
 /** Una sola propiedad por id (para abrir una recomendación en su modal). */
@@ -641,9 +840,12 @@ export async function facetsRemates() {
   return { cities, zones: [], types };
 }
 
-export async function facets(source: 'portal' | 'bancos' = 'portal', city?: string) {
+export async function facets(source: 'portal' | 'bancos' | 'todas' = 'portal', city?: string) {
   let qb = supabase.from('inmuebles').select('city, zone, type, source').eq('is_active', true).limit(8000);
-  qb = source === 'portal' ? qb.eq('source', 'fincaraiz') : qb.in('source', BANK_SOURCES as unknown as string[]);
+  // `todas` no filtra por origen: portal y bancos comparten tabla, y las ciudades
+  // y tipos que ofrece el buscador combinado tienen que ser la unión de las dos.
+  if (source === 'portal') qb = qb.eq('source', 'fincaraiz');
+  else if (source === 'bancos') qb = qb.in('source', BANK_SOURCES as unknown as string[]);
   // Los MISMOS dos filtros de saneamiento que aplica el listado (`applyInmuebleFilters`).
   // Sin ellos las opciones prometen inventario que la pestaña no va a enseñar: el
   // desplegable diría «Aval (219)» y al elegirlo saldrían 186. Ya pasó una vez
@@ -657,7 +859,16 @@ export async function facets(source: 'portal' | 'bancos' = 'portal', city?: stri
   // también está topada y su muestra variaba entre llamadas. Los barrios sí se
   // sacan de aquí, porque dependen de la ciudad ya elegida y ahí el tope no
   // estorba.
-  const cities = ciudadesUnificadas(await catalogoDeCiudades(source));
+  // En «todas» el desplegable ofrece la UNIÓN de las tres fuentes. Ofrecer solo
+  // las de `inmuebles` dejaría fuera municipios donde el único inventario es una
+  // subasta, y la búsqueda combinada diría «no hay nada» sobre una ciudad que sí
+  // tiene algo — que es la clase de hueco que hace desconfiar del catálogo entero.
+  const cities = source === 'todas'
+    ? ciudadesUnificadas([
+      ...await catalogoDeCiudades('todas'),
+      ...await catalogoDeCiudades('remates'),
+    ])
+    : ciudadesUnificadas(await catalogoDeCiudades(source));
   const zones = barriosPresentables((data ?? []).map((r) => r.zone), cities);
   const types = [...new Set((data ?? []).map((r) => r.type).filter(Boolean))].sort();
 
@@ -1604,7 +1815,7 @@ const cacheCiudades = new Map<string, { at: number; datos: string[] }>();
  * fichas de banco y no aparecían nunca, así que la expansión no unía nada. Por
  * fuente, los bancos caben enteros y el portal trae sus ciudades frecuentes.
  */
-async function catalogoDeCiudades(fuente: 'portal' | 'bancos' | 'remates'): Promise<string[]> {
+async function catalogoDeCiudades(fuente: 'portal' | 'bancos' | 'remates' | 'todas'): Promise<string[]> {
   const cache = cacheCiudades.get(fuente);
   if (cache && Date.now() - cache.at < CIUDADES_TTL_MS) return cache.datos;
   try {
