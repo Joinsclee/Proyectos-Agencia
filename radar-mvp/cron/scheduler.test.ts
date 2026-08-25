@@ -10,6 +10,7 @@ import {
   tomarCerrojoCon,
   soltarCerrojoCon,
   crearRevisionSerializada,
+  subtareasCaidas,
   type ActualizarCerrojo,
   type LiberarCerrojo,
 } from './scheduler.js';
@@ -261,4 +262,32 @@ test('cron: una revisión que falla no deja el planificador bloqueado', async ()
   await assert.rejects(revisar());
   await assert.rejects(revisar());
   assert.equal(corridas, 2);
+});
+
+test('un job con subtareas caídas NO se registra como «ok»', () => {
+  // El caso real: la corrida de bancos del 25 de agosto. Davivienda y
+  // Bancolombia guardaron; BBVA y AVAL murieron con `pdfinfo: not found` y
+  // devolvieron cero. El job entero se anotó como «ok» y así estuvo doce días.
+  const bancos = [
+    { portal: 'davivienda', status: 'partial', found: 29, inserted: 28, errors: 1 },
+    { portal: 'bancolombia', status: 'ok', found: 13, inserted: 13, errors: 0 },
+    { portal: 'bbva', status: 'error', found: 0, inserted: 0, errors: 1 },
+    { portal: 'aval', status: 'error', found: 0, inserted: 0, errors: 1 },
+  ];
+  assert.deepEqual(subtareasCaidas(bancos), ['bbva', 'aval']);
+
+  // «Parcial» NO es caída: Davivienda dejó 28 de 29 y ese registro perdido no
+  // justifica declarar vencido todo el inventario de bancos.
+  assert.deepEqual(subtareasCaidas([bancos[0], bancos[1]]), []);
+
+  // El ruido de validación de FincaRaíz tampoco: cientos de avisos mal formados
+  // conviven con 106.000 filas insertadas en un scrape perfectamente sano. Si
+  // esto encendiera el aviso, el aviso estaría encendido siempre.
+  assert.deepEqual(subtareasCaidas({
+    venta: { records_found: 108624, records_inserted: 106197, errors: [{ message: 'area_m2: Number must be greater than 0' }] },
+  }), []);
+
+  // Y el motor, que no tiene subtareas, no puede caerse por accidente.
+  assert.deepEqual(subtareasCaidas({ evaluated: 144730, opportunities: 25662, written: 73887 }), []);
+  assert.deepEqual(subtareasCaidas(null), []);
 });

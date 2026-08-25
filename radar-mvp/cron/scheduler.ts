@@ -190,6 +190,37 @@ async function soltarCerrojo(
   await soltarCerrojoCon(liberarCerrojo, nombre, token, estado, detalle, seg);
 }
 
+/**
+ * ¿El resultado de una tarea confiesa que algo NO se hizo?
+ *
+ * `ejecutar` marcaba `ok` con que la tarea no lanzara. Pero `runAll` de bancos
+ * atrapa el fallo de cada portal y lo DEVUELVE en su array en vez de propagarlo
+ * —que es lo correcto: que BBVA caiga no puede impedir que Bancolombia se
+ * guarde—. El precio fue que BBVA y AVAL estuvieron doce días devolviendo cero
+ * registros con el tablero en verde. `frescura.ts` ya sabe qué hacer con un
+ * trabajo en error —marca sus datos como vencidos—; nunca se enteró.
+ *
+ * Se busca solo la confesión dura: una subtarea que se declara en error Y no
+ * insertó nada. Los `errors` sueltos no cuentan, porque un scrape sano de
+ * FincaRaíz trae cientos de avisos mal formados y sigue metiendo 106.000 filas:
+ * tratar eso como fallo dejaría el aviso encendido siempre, que es la manera más
+ * rápida de que nadie lo vuelva a mirar.
+ */
+export function subtareasCaidas(resultado: unknown): string[] {
+  const caidas: string[] = [];
+  const mirar = (v: unknown) => {
+    if (Array.isArray(v)) { v.forEach(mirar); return; }
+    if (!v || typeof v !== 'object') return;
+    const o = v as Record<string, unknown>;
+    if (o.status === 'error' && Number(o.records_inserted ?? o.inserted ?? 0) === 0) {
+      caidas.push(String(o.portal ?? o.source ?? o.nombre ?? 'subtarea'));
+    }
+    Object.values(o).forEach(mirar);
+  };
+  mirar(resultado);
+  return [...new Set(caidas)];
+}
+
 async function ejecutar(nombre: string) {
   if (!TAREAS[nombre]) { log.warn(`Sin tarea definida para "${nombre}"`); return; }
   const token = await tomarCerrojo(nombre);
@@ -199,8 +230,10 @@ async function ejecutar(nombre: string) {
   try {
     const r = await TAREAS[nombre]();
     const seg = Math.round((Date.now() - t0) / 1000);
-    await soltarCerrojo(nombre, token, 'ok', JSON.stringify(r ?? {}), seg);
-    log.info(`✅ ${nombre} en ${seg}s`);
+    const caidas = subtareasCaidas(r);
+    await soltarCerrojo(nombre, token, caidas.length ? 'error' : 'ok', JSON.stringify(r ?? {}), seg);
+    if (caidas.length) log.error(`⚠ ${nombre} en ${seg}s, pero sin datos de: ${caidas.join(', ')}`);
+    else log.info(`✅ ${nombre} en ${seg}s`);
   } catch (e) {
     const seg = Math.round((Date.now() - t0) / 1000);
     // Se suelta el cerrojo SIEMPRE: si un fallo lo dejara tomado, el trabajo no

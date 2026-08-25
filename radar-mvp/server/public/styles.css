@@ -621,11 +621,31 @@ h1 .gold { color: var(--gold); }
 .priceblock { background: linear-gradient(135deg, var(--pp) 0%, var(--pp-dark) 100%); color: #fff; padding: 20px 24px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 8px 24px rgba(97,49,116,0.18); }
 .priceblock .p { font-family: 'Tilt Warp', cursive; font-size: 2.1rem; color: var(--gold); line-height: 1; }
 .priceblock .s { font-size: 0.92rem; color: rgba(255,255,255,0.88); margin-top: 8px; }
-.feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-@media (max-width: 1200px) { .feats { grid-template-columns: repeat(2, 1fr); } }
-.feat { background: #faf6fc; padding: 11px 13px; border-radius: 12px; border: 1px solid #f0e6f7; }
-.feat .l { color: var(--pp); font-size: 0.64rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-.feat .v { font-size: 0.92rem; font-weight: 700; margin-top: 2px; }
+/* Tres columnas fijas para un contenido que es «112 m²» o «3».
+   
+   El ancho lo fijaba la rejilla, no el dato: en una ficha con siete
+   características salían tres filas donde la palabra más larga —«HABITACIONES»—
+   ocupaba media caja y el resto era aire. Siete cajas de dos renglones cada una
+   empujaban el análisis de mercado fuera de la pantalla.
+   
+   `auto-fill` con un mínimo deja que el número de columnas lo decida el ancho
+   disponible: cinco por fila en la ficha de escritorio, dos en móvil, sin una
+   media query por cada corte.
+   
+   El mínimo son 84 px y el número sale de medir, no de tantear: «HABITACIONES»
+   —la etiqueta más larga que existe— ocupa 61 px a 0,6 rem con su interletraje,
+   más 20 de relleno son 81. Con 84 caben cinco columnas en la ficha de
+   escritorio y las seis quedan descartadas por tres píxeles, que es justo lo que
+   queremos: la sexta obligaría a partir esa etiqueta en dos renglones y cada
+   caja crecería a lo alto lo que hubiéramos ahorrado a lo ancho.
+   La media query de 1200 px sobra: `auto-fill` ya hace eso solo. */
+.feats {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 7px; margin-bottom: 18px;
+}
+.feat { background: #faf6fc; padding: 7px 9px; border-radius: 9px; border: 1px solid #f0e6f7; }
+.feat .l { color: var(--pp); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.25; }
+.feat .v { font-size: 0.86rem; font-weight: 700; margin-top: 1px; }
 .section { margin-bottom: 20px; }
 .section h3 { font-size: 0.74rem; color: var(--pp); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 9px; display: flex; align-items: center; gap: 8px; }
 .section h3::before { content: ''; width: 4px; height: 15px; background: var(--gold); border-radius: 2px; }
