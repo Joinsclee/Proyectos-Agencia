@@ -740,10 +740,24 @@ function intercalarProporcional<T>(fuentes: Array<{ filas: T[]; peso: number }>)
   return salida;
 }
 
-/** ¿Este filtro solo tiene sentido en `inmuebles`? Entonces remates no participa. */
+/**
+ * ¿Este filtro solo tiene sentido en `inmuebles`? Entonces remates no participa.
+ *
+ * No es una lista de campos que a remates «le faltan»: es una lista de preguntas
+ * que sobre un remate no se pueden contestar. Un edicto de juzgado no dice el
+ * estrato ni cuántas habitaciones tiene, y la valoración del Índice CRECE no se
+ * calcula para él —su descuento se mide contra el avalúo del juzgado, que es otra
+ * cosa que un precio de mercado—.
+ *
+ * Dejarlos pasar sin filtrar sería peor que excluirlos: alguien que pide
+ * «Oportunidad Fuerte» vería remates que nadie ha calificado así, mezclados con
+ * los que sí. Se les excluye y el contador lo dice, en vez de colar filas que no
+ * cumplen lo que se pidió.
+ */
 function filtroSoloDeInmuebles(q: ListQuery): boolean {
   return q.stratumMin != null || q.stratumMax != null || q.bedroomsMin != null
-    || q.zone != null && q.zone !== '' || q.opp === 'high';
+    || (q.zone != null && q.zone !== '') || q.opp === 'high'
+    || (q.tier != null && q.tier !== '');
 }
 
 /** ¿La fila viene de un banco o del portal? Lo dice su `source`. */

@@ -113,9 +113,9 @@ function submitCheckout(checkout) {
 
 async function init() {
   const [plansResponse, accountResponse, configResponse] = await Promise.all([
-    fetch('/api/plans'),
-    token ? fetch('/api/account', { headers: headers() }) : Promise.resolve(null),
-    fetch('/api/config'),
+    RadarSesion.fetch('/api/plans'),
+    token ? RadarSesion.fetch('/api/account', { headers: headers() }) : Promise.resolve(null),
+    RadarSesion.fetch('/api/config'),
   ]);
   const plansData = await plansResponse.json();
   const config = await configResponse.json();
@@ -153,7 +153,7 @@ document.addEventListener('click', async (event) => {
 
   const endpoint = demoButton ? '/api/account/activar-demo'
     : checkoutButton ? '/api/account/checkout' : '/api/account/plan-interest';
-  const response = await fetch(
+  const response = await RadarSesion.fetch(
     endpoint,
     {
       method: 'POST',
@@ -194,7 +194,7 @@ document.addEventListener('click', async (event) => {
     setTimeout(() => { location.href = '/'; }, 1_200);
     return;
   }
-  const plansData = await fetch('/api/plans').then((result) => result.json());
+  const plansData = await RadarSesion.fetch('/api/plans').then((result) => result.json());
   render(plansData.plans || []);
 });
 

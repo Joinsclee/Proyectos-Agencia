@@ -131,7 +131,7 @@ function renderAccount() {
 }
 
 async function downloadAccountExport(path, filename) {
-  const result = await fetch(path, { headers: authHeaders() });
+  const result = await RadarSesion.fetch(path, { headers: authHeaders() });
   if (!result.ok) throw new Error('No se pudo preparar la descarga');
   const blob = await result.blob();
   const url = URL.createObjectURL(blob);
@@ -149,8 +149,8 @@ async function init() {
     return;
   }
   const [response, configResponse] = await Promise.all([
-    fetch('/api/account', { headers: authHeaders() }),
-    fetch('/api/config'),
+    RadarSesion.fetch('/api/account', { headers: authHeaders() }),
+    RadarSesion.fetch('/api/config'),
   ]);
   if (response.status === 401) {
     localStorage.removeItem('radar_token');
@@ -198,7 +198,7 @@ document.getElementById('alert-form').addEventListener('submit', async (event) =
     frequency: 'weekly',
     active: true,
   };
-  const response = await fetch('/api/account/alerts', {
+  const response = await RadarSesion.fetch('/api/account/alerts', {
     method: 'POST',
     headers: authHeaders(true),
     body: JSON.stringify(payload),
@@ -221,7 +221,7 @@ document.getElementById('alerts-list').addEventListener('click', async (event) =
   const button = event.target.closest('[data-delete-alert]');
   if (!button) return;
   button.disabled = true;
-  const response = await fetch(`/api/account/alerts/${button.dataset.deleteAlert}`, {
+  const response = await RadarSesion.fetch(`/api/account/alerts/${button.dataset.deleteAlert}`, {
     method: 'DELETE',
     headers: authHeaders(),
   });

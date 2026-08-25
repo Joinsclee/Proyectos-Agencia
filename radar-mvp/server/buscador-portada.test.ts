@@ -102,14 +102,24 @@ test('buscador: sus modalidades son secciones que existen', async () => {
   assert.match(bloque, /value="todas" selected/, 'buscar en las tres fuentes es el defecto');
   for (const fuente of modalidades) {
     assert.ok(
-      html.includes(`data-tab="${fuente}"`),
-      `la modalidad ${fuente} no corresponde a ninguna pestaña, así que buscar dejaría la pantalla en otra sección`,
-    );
-    assert.ok(
       index.includes(`'/api/${fuente}'`),
       `no hay ruta de listado para ${fuente}`,
     );
   }
+  // Las tres fuentes concretas SÍ son pestañas: se llega a ellas por la barra sin
+  // pasar por el buscador, y buscar en una tiene que dejar marcada la suya.
+  for (const fuente of ['portal', 'bancos', 'remates']) {
+    assert.ok(
+      html.includes(`data-tab="${fuente}"`),
+      `la modalidad ${fuente} no corresponde a ninguna pestaña, así que buscar dejaría la pantalla en otra sección`,
+    );
+  }
+  // «Todas» no. Es el defecto del desplegable, y ponerla también en la barra
+  // devolvería el doble control que el desplegable viene a quitar.
+  assert.ok(
+    !html.includes('data-tab="todas"'),
+    '«Todas» vive en el desplegable del buscador, no como quinta pestaña',
+  );
 });
 
 test('buscador: no es un segundo cliente de la API de listados', async () => {
