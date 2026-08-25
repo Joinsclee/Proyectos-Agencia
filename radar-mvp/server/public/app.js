@@ -3549,9 +3549,16 @@ window.__analyzeAI = async function (btn, kind, id) {
       body: JSON.stringify({ kind, id }),
     });
     const data = await res.json();
-    const lazy = $('rec-lazy'); // ya las mostró el mercado bajo demanda: no duplicar
-    if (lazy) lazy.remove();
-    wrap.innerHTML = renderAI(data, kind) + renderRecs(data.recommendations);
+    // El análisis va en su desplegable; las recomendaciones, al cajón del final.
+    // Iban las dos juntas dentro de `wrap`, así que abrir la IA arrastraba consigo
+    // media docena de inmuebles ajenos al sitio donde alguien lee la opinión sobre
+    // ESTE. Escribir en el cajón —en vez de añadir— es además lo que evita
+    // duplicarlas cuando el mercado ya las había pintado.
+    wrap.innerHTML = renderAI(data, kind);
+    const cajon = $('recs-ficha');
+    if (cajon && data.recommendations && data.recommendations.length) {
+      cajon.innerHTML = renderRecs(data.recommendations);
+    }
   } catch (e) {
     wrap.innerHTML = `<div class="ai-note">No se pudo conectar con el análisis: ${esc(String(e))}.</div>`;
   }
@@ -3842,7 +3849,13 @@ function openInmueble(p) {
   // «Admin» abreviado no decía de qué: la cifra parecía un gasto del inmueble sin
   // aclarar que es la cuota mensual que cobra el conjunto o el edificio. Se
   // conserva en lotes: un lote dentro de un conjunto cerrado sí paga administración.
-  if (f.administracion) feats.push(['Administración del conjunto', fmtCOP(f.administracion) + '/mes']);
+  //
+  // Pero «del conjunto» sobra: lo que le faltaba a «Admin» era la palabra entera,
+  // no el complemento —en Colombia «administración» ya ES la cuota del conjunto, y
+  // el «/mes» del valor lo remata—. Con 27 caracteres era la única etiqueta que no
+  // cabía de una línea en las cajas de características, y por ella sola la rejilla
+  // habría tenido que ensancharse hasta caber tres por fila en vez de cinco.
+  if (f.administracion) feats.push(['Administración', fmtCOP(f.administracion) + '/mes']);
 
   const amen = Array.isArray(f.amenities) && f.amenities.length ? `<div class="section"><h3>Características</h3><div class="amenities">${f.amenities.slice(0, 30).map((x) => `<span class="chip">${esc(x)}</span>`).join('')}</div></div>` : '';
   const desc = bloqueDescripcion(f.description);
@@ -3907,17 +3920,43 @@ function openInmueble(p) {
       <div class="detail-top"><span class="pill-src">${esc(srcLbl(p.source))}</span>${fav}</div>
       <h2>${esc(typeLbl(p.type))} en ${esc(cap(p.city))}</h2>
       <div class="loc">${ic('pin')}${zonaSiAporta(p, ', ')}<strong>${esc(cap(p.city))}</strong></div>
+      ${/* La valoración SUBE por delante del precio.
+             Estaba detrás del precio y de las características, y esa posición
+             venía de un razonamiento que sigue siendo bueno —«un -19% antes de
+             saber sobre cuánto se aplica no significa nada»—; solo que ahí
+             llegaba tarde. Quien abre una ficha ya vio el porcentaje y las
+             estrellas en la tarjeta que pulsó: no es un dato nuevo que haya que
+             preparar, es la razón por la que está aquí, y sirve de encabezado
+             del precio en vez de comentario suyo. El precio queda inmediatamente
+             debajo, así que la cifra sobre la que se aplica se sigue leyendo
+             junto al porcentaje. */''}
+      ${selloCreceFicha(p)}
       <div class="priceblock"><div class="p">${fmtCOP(p.price)}</div><div class="s">${p.price_per_m2 ? '$' + Math.round(p.price_per_m2).toLocaleString('es-CO') + ' por m²' : ''}</div></div>
       <div class="feats">${feats.map(([l, v]) => `<div class="feat"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
-      ${selloCreceFicha(p)}
+      ${/* La descripción sube a continuación de las características, antes del
+             análisis. Es lo que el anunciante cuenta del inmueble —si tiene
+             ascensor, si está arrendado, en qué piso— y estaba en el quinto
+             desplegable, después de la calculadora, la IA y el mapa: hay que
+             saber QUÉ es el inmueble antes de que nada opine sobre su precio.
+             Sigue plegada, como sus hermanas: cambia dónde está, no cuánto
+             ocupa. */''}
+      ${bloqueSecundario('Descripción del anuncio', descBlock + amen, 'home')}
       ${mkt || marketLazyBox()}
       ${muro}
       ${bloq ? '' : accionSiguiente}
       ${bloqueSecundario('Costos de compra y rentabilidad', acquisition, 'chart')}
       ${bloqueSecundario('Análisis con IA', aiBlock, 'spark')}
       ${bloqueSecundario('Ubicación en el mapa', addrBlock + mapBlock, 'map')}
-      ${bloqueSecundario('Descripción del anuncio', descBlock + amen, 'home')}
       ${bloqueSecundario('Descargar el reporte', reporte, 'arrow')}
+      ${/* El cajón de «Otras oportunidades cercanas», siempre el último.
+             Antes no tenía sitio propio: el mercado lo insertaba con un
+             `afterend` justo debajo de sí mismo y la IA lo volvía a pintar
+             dentro de su propio bloque, así que acababa colándose entre el
+             análisis y la acción —irse a mirar otro inmueble ofrecido justo
+             antes de decidir sobre este—. Y según cuál de las dos peticiones
+             respondiera primero, salía en un sitio distinto. Ahora hay un ancla
+             fija y las dos escriben aquí. */''}
+      <div id="recs-ficha"></div>
     </div>`;
   recordarFichaEnPantalla(kind, p.id, tituloFicha(p), p.type, p.area_m2 ?? null);
   showModal();
@@ -4192,8 +4231,11 @@ async function fillMarketLazy(kind, id, disc) {
         ${porQueNoHayVeredicto}</p>
         ${auditoriaComparables && fichaEnPantalla?.id ? botonComparables(fichaEnPantalla.id, r.market.n) : ''}</div>`;
     }
-    if (r.recommendations && r.recommendations.length) {
-      el.insertAdjacentHTML('afterend', `<div id="rec-lazy">${renderRecs(r.recommendations)}</div>`);
+    // Al ancla del final de la ficha, no `afterend` del mercado. Ver el comentario
+    // de `#recs-ficha` en el ensamblado: este bloque es lo último que se mira.
+    const cajon = $('recs-ficha');
+    if (cajon && r.recommendations && r.recommendations.length) {
+      cajon.innerHTML = renderRecs(r.recommendations);
     }
   } catch {
     const el = $('mkt-lazy');

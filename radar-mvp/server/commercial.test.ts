@@ -12,7 +12,9 @@ import {
   readDeliveryHistory,
   readSubscriptionAudit,
   subscriptionStatusFromMetadata,
+  type RadarAlert,
 } from './commercial.js';
+import { huellaDeAlerta, principalesDeAlertas } from './notifications.js';
 
 test('normaliza planes históricos al catálogo comercial', () => {
   assert.equal(commercialPlanFromMetadata(undefined), 'free');
@@ -215,4 +217,46 @@ test('preferencias: varios tipos, y lo guardado como texto sigue valiendo', () =
   assert.deepEqual(RadarPreferencesSchema.parse({ ...base, type: ['', 'house'] }).type, ['house']);
   // Y sin repetidos.
   assert.deepEqual(RadarPreferencesSchema.parse({ ...base, type: ['house', 'house'] }).type, ['house']);
+});
+
+test('dos alertas gemelas mandan un solo correo, y gana la de ventana más antigua', () => {
+  // El caso real de la cuenta que da el feedback: dos alertas idénticas para
+  // Armenia. Una veía 1 inmueble y la otra 7, así que sin agrupar habría
+  // recibido dos correos que se desmienten.
+  const alerta = (extra: Partial<RadarAlert> & { id: string }): RadarAlert => ({
+    city: 'armenia', budget: '200', type: [], active: true, frequency: 'weekly',
+    createdAt: '2026-07-29T22:47:22.265Z', updatedAt: '2026-07-29T22:47:22.265Z',
+    ...extra,
+  } as RadarAlert);
+  const gemelas: RadarAlert[] = [
+    alerta({ id: 'nueva', createdAt: '2026-08-11T18:39:50.058Z' }),
+    alerta({ id: 'vieja' }),
+  ];
+  const mando = principalesDeAlertas(gemelas);
+  assert.equal(mando.get('nueva'), 'vieja', 'manda la de ventana más antigua, que es la que más trae');
+  assert.equal(mando.get('vieja'), 'vieja');
+
+  // Lo que las hace gemelas es qué piden, no cuándo se crearon.
+  assert.equal(huellaDeAlerta(gemelas[0]), huellaDeAlerta(gemelas[1]));
+
+  // Y lo que las separa, también: cambiar cualquiera de los tres criterios las
+  // vuelve alertas distintas y las dos vuelven a enviar.
+  const otraCiudad = alerta({ id: 'otra', city: 'pereira' });
+  const otroTope = alerta({ id: 'tope', budget: '300' });
+  const otroTipo = alerta({ id: 'tipo', type: ['apartment'] });
+  for (const distinta of [otraCiudad, otroTope, otroTipo]) {
+    const m = principalesDeAlertas([gemelas[1], distinta]);
+    assert.equal(m.get(distinta.id), distinta.id, `${distinta.id} no es gemela: manda sobre sí misma`);
+  }
+
+  // El orden de los tipos no puede decidir si dos alertas son la misma.
+  assert.equal(
+    huellaDeAlerta(alerta({ id: 'a', type: ['house', 'apartment'] })),
+    huellaDeAlerta(alerta({ id: 'b', type: ['apartment', 'house'] })),
+  );
+
+  // Una alerta apagada no manda sobre su gemela encendida.
+  const apagada = alerta({ id: 'apagada', active: false });
+  const m2 = principalesDeAlertas([apagada, gemelas[0]]);
+  assert.equal(m2.get('nueva'), 'nueva');
 });
