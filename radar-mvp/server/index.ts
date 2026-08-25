@@ -16,7 +16,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createLogger } from '../lib/logger.js';
 import {
-  queryPortal, queryBancos, queryRemates, facets, facetsRemates, stats, getProperty, remateBankFacets,
+  queryPortal, queryBancos, queryRemates, queryTodas, facets, facetsRemates, stats, getProperty, remateBankFacets,
   warmStats, warmTotalPortal, warmZonas, warmMetricas, destacados, warmDestacados,
   type ListQuery,
 } from './queries.js';
@@ -444,7 +444,21 @@ async function serveStatic(
     const contentType = contentTypeFor(file);
     if (seo && contentType.startsWith('text/html')) {
       const html = await inyectarSeo(buf.toString('utf8'), seo.url, seo.base);
-      res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache, must-revalidate' });
+      const { metaDeUrl } = await import('./seo.js');
+      res.writeHead(200, {
+        'Content-Type': contentType,
+        'Cache-Control': 'no-cache, must-revalidate',
+        // El mapa y la canónica también en la cabecera, no solo en el `<head>`.
+        //
+        // Un rastreador que solo hace `HEAD` —o que corta la descarga al ver el
+        // tamaño— no llega a leer el HTML, así que hoy no encontraba ninguna de
+        // las dos. Es la misma información que ya está dentro; lo que cambia es
+        // que ahora se puede obtener sin bajarse la página entera.
+        Link: [
+          `<${seo.base}/sitemap.xml>; rel="sitemap"; type="application/xml"`,
+          `<${seo.base}${metaDeUrl(seo.url.searchParams).canonical}>; rel="canonical"`,
+        ].join(', '),
+      });
       res.end(html);
       return;
     }
@@ -1102,6 +1116,28 @@ const server = createServer(async (req, res) => {
       // Los listados se filtran según el plan ANTES de salir del servidor: lo que
       // el usuario no ha pagado no debe viajar en la respuesta (antes el muro era
       // solo visual y los datos iban igual, visibles desde el navegador).
+      // ── Las tres fuentes juntas: el defecto del buscador ──
+      // Va por `redactarMixta` y no por `redactarLista` porque la lista viene
+      // mezclada: un remate y un aviso de portal no ocultan las mismas cosas ni
+      // por los mismos motivos. Es la misma puerta que usa la portada.
+      if (path === '/api/todas') {
+        const usuario = await getUserFromToken(bearer(req));
+        const plan = planDe(usuario);
+        const q = parseListQuery(url);
+        if (url.searchParams.get('desbloqueadas') === '1' && plan === 'free') {
+          q.soloDesbloqueadas = (usuario?.cupo ?? leerCupo(null)).desbloqueadas ?? [];
+        }
+        const r = await queryTodas(q);
+        const cupo = usuario?.cupo ?? leerCupo(null);
+        const estado = estadoCupo(cupo, plan);
+        const filas = redactarMixta(r.data as any[], plan, {
+          desbloqueadas: cupo.desbloqueadas,
+          restantes: estado.restantes,
+        });
+        return sendJSON(res, 200, {
+          ...r, plan, cupo: estado, bloqueo: resumenBloqueo(filas), data: filas,
+        });
+      }
       if (path === '/api/portal' || path === '/api/bancos' || path === '/api/remates') {
         const usuario = await getUserFromToken(bearer(req));
         const plan = planDe(usuario);
@@ -1178,7 +1214,7 @@ const server = createServer(async (req, res) => {
         });
       }
       if (path === '/api/facets') {
-        const source = (url.searchParams.get('source') as 'portal' | 'bancos' | 'remates') ?? 'portal';
+        const source = (url.searchParams.get('source') as 'portal' | 'bancos' | 'remates' | 'todas') ?? 'portal';
         if (source === 'remates') return sendJSON(res, 200, await facetsRemates());
         return sendJSON(res, 200, await facets(source, url.searchParams.get('city') ?? undefined));
       }
@@ -1214,6 +1250,8 @@ const server = createServer(async (req, res) => {
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
         paymentDemoReady: wompiPaymentDemoReady(),
+        // Sin URL no hay botón. Ver `RADAR_COMUNIDAD_URL` en lib/env.ts.
+        comunidadUrl: env.RADAR_COMUNIDAD_URL ?? null,
         // Entrar con Microsoft, pedido en la reunión del 28-jul. Va tras una
         // bandera y apagado por defecto porque el botón depende de que el
         // proveedor esté dado de alta en Supabase: enseñarlo antes sería ofrecer

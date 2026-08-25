@@ -245,7 +245,13 @@ h1 .gold { color: var(--gold); }
 
 /* Ciudad manda —es lo primero que se pregunta en un portal— y por eso se lleva
    la fracción ancha. El botón se dimensiona por su contenido y nunca se encoge. */
-.buscador-campos { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+/* Cinco huecos, no cuatro: «Buscar en» entró donde estaban las píldoras y sin
+   columna propia empujaba el botón a una fila suelta, ancho y solo, con el
+   buscador partido en dos. Ciudad se lleva la columna más generosa porque es el
+   filtro que más se usa y el que trae los nombres largos («El carmen de
+   viboral»); la fuente y el tipo caben en una unidad, y el precio pide menos
+   porque son tres dígitos. */
+.buscador-campos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 0.8fr) auto; gap: 10px; align-items: end; }
 .b-campo { min-width: 0; gap: 3px; }
 .b-campo select, .b-campo input { width: 100%; min-width: 0; height: 44px; }
 .buscador-cta {
@@ -1961,6 +1967,73 @@ body.sin-cuenta .tab-btn[data-tab="guardados"] { display: none; }
 .cuenta-bar .auth-link.primary { background: var(--gold); color: #2b1438; }
 .cuenta-bar .auth-link.primary:hover { background: #ffd91f; }
 
+/* ───── El menú de la cuenta ─────
+   Un icono en la barra y, detrás, lo que se pulsa alguna vez. Sustituye al
+   nombre de la persona, «Planes» y «Salir», que ocupaban media barra para tres
+   cosas que nadie usa a diario. */
+.menu-cuenta { position: relative; }
+.auth-icono {
+  display: inline-flex; align-items: center; gap: 5px;
+  min-height: 38px; padding: 0 11px; border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92); cursor: pointer;
+  font-family: inherit; font-size: 0.8rem;
+  transition: background .14s ease, border-color .14s ease;
+}
+.auth-icono:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.38); }
+.auth-icono .ic { width: 19px; height: 19px; }
+/* La flecha que dice que esto abre algo. Sin ella el icono se lee como un enlace
+   al perfil y quien busca «salir» no llega nunca. */
+.auth-icono::after {
+  content: ''; width: 0; height: 0; margin-left: 1px;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 4px solid rgba(255,255,255,0.7);
+}
+.auth-icono[aria-expanded="true"] { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.45); }
+/* El de comunidad es un enlace, no un menú: sin la flecha, que ahí mentiría. */
+.auth-icono.comunidad { padding: 0 10px; }
+.auth-icono.comunidad::after { content: none; }
+/* `display: inline-flex` de la regla base gana al `display: none` que el
+   navegador aplica a [hidden], así que sin esto el botón se ve aunque no haya
+   comunidad configurada — y llevaría a `#`. Mismo caso que `.asis-btn[hidden]`. */
+.auth-icono[hidden] { display: none; }
+/* Los dos logotipos son un enlace: sin esto heredan el subrayado y el azul. */
+a.cuenta-marca { text-decoration: none; color: inherit; border-radius: 8px; }
+a.cuenta-marca:hover .marca-nombre { color: var(--gold); }
+a.cuenta-marca:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+.menu-cuenta-panel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 1400;
+  min-width: 194px; padding: 6px;
+  background: #fff; border: 1px solid #e7e2ee; border-radius: 11px;
+  box-shadow: 0 14px 38px rgba(43,20,56,0.24);
+  display: flex; flex-direction: column; gap: 1px;
+}
+/* `display: flex` de la regla de arriba gana al `display: none` que el navegador
+   aplica a [hidden]: sin esto el menú nace abierto. Es el mismo caso que
+   `.asis-btn[hidden]`, anotado ahí por la misma razón. */
+.menu-cuenta-panel[hidden] { display: none; }
+/* El nombre, que salía de la barra, no desaparece del producto: aquí dentro,
+   como encabezado del menú, que es donde alguien lo busca —para comprobar con
+   qué cuenta entró antes de cerrar sesión. */
+.menu-cuenta-quien {
+  padding: 7px 10px 8px; margin-bottom: 3px;
+  border-bottom: 1px solid #f0ecf4;
+  font-size: 0.72rem; font-weight: 800; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--pp);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.menu-cuenta-op {
+  display: flex; align-items: center; gap: 9px;
+  min-height: 40px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: transparent; color: #2b1438; cursor: pointer;
+  font-family: inherit; font-size: 0.88rem; font-weight: 600;
+  text-align: left; text-decoration: none; width: 100%;
+}
+.menu-cuenta-op:hover, .menu-cuenta-op:focus-visible { background: #f6effa; color: var(--pp); }
+.menu-cuenta-op .ic { width: 17px; height: 17px; color: var(--pp); }
+
+
 @media (max-width: 760px) {
   /* La marca NO se retira: se encoge.
      
@@ -2322,9 +2395,25 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
    El alto manda y el ancho se calcula solo; las medidas van declaradas en el
    HTML para que el navegador reserve el sitio y la barra no salte al cargar. */
 .marca-ag {
-  /* 26 px sobre una barra de 59: el logotipo del socio se lee sin disputarle
-     la barra a la navegación, que es lo que pasaría llevándolo más lejos. */
-  height: 24px; width: auto; display: block; opacity: 0.95;
+  /* De 24 a 34 px. Los 24 se eligieron cuando la mitad derecha de la barra
+     llevaba el nombre del usuario, su plan, el consumo, «Planes» y «Salir»: con
+     todo eso enfrente, el logotipo del socio no podía crecer sin empujar. Ahora
+     esa mitad es el consumo y un icono, y el sitio que sobra es justo el que le
+     faltaba. La barra pasa de 59 a 66 px de alto, que es lo que cuesta. */
+  height: 34px; width: auto; display: block; opacity: 0.95;
+}
+/* El logotipo del Radar, en su versión blanca sobre este fondo.
+   
+   Es más alto que el del socio a propósito: el del socio es la firma de quién
+   respalda la herramienta y va en segundo plano; este es la herramienta. La
+   proporción es cuadrada, así que a 38 px ocupa 40 de ancho — menos que los 275
+   del otro, aunque se vea más grande. */
+.marca-radar { height: 38px; width: auto; display: block; }
+/* El nombre, con la tipografía de los titulares: es un logotipo escrito, no una
+   etiqueta de navegación. */
+.marca-nombre {
+  font-family: 'Tilt Warp', cursive; font-weight: 400;
+  font-size: 1.02rem; letter-spacing: 0.01em; color: #fff; white-space: nowrap;
 }
 /* Separador entre las dos marcas: el «|» del informe, dibujado en vez de escrito
    para que no lo lea un lector de pantalla ni se descoloque con la tipografía. */
@@ -2339,9 +2428,11 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
    el titular en 15 px, y por eso se anota: en esta hoja el bloque de una
    pantalla estrecha tiene que ir después de la regla que pretende corregir. */
 @media (max-width: 760px) {
-  .cuenta-marca { font-size: 0.72rem; gap: 5px; }
+  .cuenta-marca { gap: 5px; }
   .cuenta-marca .ic { width: 15px; height: 15px; }
-  .marca-ag { height: 16px; }
+  .marca-ag { height: 22px; }
+  .marca-radar { height: 26px; }
+  .marca-nombre { font-size: 0.8rem; }
 }
 /* Por debajo de 420 px —iPhone SE y similares— sí hay que elegir, y gana el
    logotipo: es la señal que el punto 7 pide y la que no se puede deducir de
@@ -2352,6 +2443,9 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
    estaba ya en `display: none`, así que su comentario describía un
    comportamiento que el navegador no llegaba a ejecutar. */
 @media (max-width: 420px) {
-  .cuenta-marca { font-size: 0; gap: 0; }
+  .cuenta-marca { gap: 4px; }
+  .marca-nombre { display: none; }
   .marca-sep, .cuenta-marca .ic { display: none; }
+  .marca-ag { height: 18px; }
+  .marca-radar { height: 24px; }
 }

@@ -62,7 +62,7 @@ const diaCorto = (dia) => {
 const plural = (n, singular, plural_) => `${numero(n)} ${n === 1 ? singular : plural_}`;
 
 async function adminFetch(path, options = {}) {
-  const response = await fetch(path, {
+  const response = await RadarSesion.fetch(path, {
     ...options,
     headers: {
       Authorization: `Bearer ${adminToken}`,
@@ -989,7 +989,7 @@ async function loadParametros() {
   mostrar('grupo-configuracion');
   const message = document.getElementById('param-message');
   try {
-    const response = await fetch('/api/config');
+    const response = await RadarSesion.fetch('/api/config');
     const config = await response.json();
     if (!config || !config.gastos) throw new Error('La configuración no trae los porcentajes');
     pintarParametros(config.gastos);

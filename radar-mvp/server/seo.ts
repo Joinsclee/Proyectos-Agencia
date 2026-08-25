@@ -334,14 +334,62 @@ export async function sitemapXml(base: string): Promise<string> {
  * búsqueda y gastan presupuesto de rastreo. El resto queda abierto — hasta hoy no
  * había archivo, que no bloquea nada pero tampoco dice dónde está el mapa.
  */
+/**
+ * Rastreadores que alimentan modelos de lenguaje.
+ *
+ * No es una lista para bloquearlos: es la lista de a quién hay que decirle algo
+ * distinto de lo que se le dice a Google. Se mantiene explícita —y no con un
+ * comodín— porque un comodín que prohíba «todo lo que parezca IA» acabaría
+ * cerrando la puerta a buscadores que sí queremos.
+ */
+const RASTREADORES_DE_IA = [
+  'GPTBot', 'OAI-SearchBot', 'ChatGPT-User',
+  'ClaudeBot', 'Claude-User', 'Claude-SearchBot', 'anthropic-ai',
+  'PerplexityBot', 'Perplexity-User',
+  'Google-Extended', 'Applebot-Extended', 'meta-externalagent',
+  'Bytespider', 'CCBot', 'cohere-ai', 'Diffbot', 'Amazonbot',
+];
+
+/**
+ * Lo que el Radar deja mirar a un rastreador de IA: qué ES, no qué TIENE.
+ *
+ * La portada, los planes y las condiciones describen la herramienta. Todo lo
+ * demás es inventario —listados, fichas, páginas de ciudad— y ese es el producto:
+ * sale de rastrear portales, bancos y edictos, cruzarlos y clasificarlos. Es
+ * exactamente lo que no se regala.
+ */
+const ABIERTO_A_LA_IA = ['/$', '/planes', '/terminos'];
+
 export function robotsTxt(base: string): string {
   return [
+    '# Radar CRECE',
+    '#',
+    '# La política en una frase: que una IA pueda RECOMENDAR la herramienta a',
+    '# quien busca invertir, y no pueda SERVIR su inventario en lugar de ella.',
+    '',
     'User-agent: *',
     'Allow: /',
     'Disallow: /api/',
     'Disallow: /login',
     'Disallow: /cuenta',
     'Disallow: /auth/',
+    // Content Signals declara el USO permitido, no el acceso. Es la otra mitad de
+    // la política: `Disallow` dice dónde no entrar; esto dice qué no hacer con lo
+    // que sí se puede leer.
+    //   · ai-train=no  — nada de este sitio alimenta el entrenamiento de un modelo.
+    //   · search=yes   — que se indexe y se pueda encontrar: es el canal por el que
+    //                    llega quien busca una herramienta como esta.
+    //   · ai-input=no  — que no se use como fuente para responder en lugar nuestro,
+    //                    que es la forma moderna de quedarse con el tráfico.
+    'Content-Signal: ai-train=no, search=yes, ai-input=no',
+    '',
+    '# Rastreadores de modelos de lenguaje: pueden leer qué es el Radar y para',
+    '# quién, no su inventario. El orden importa — `Allow` más específico gana',
+    '# sobre el `Disallow` general, que es lo que deja pasar solo estas rutas.',
+    ...RASTREADORES_DE_IA.map((bot) => `User-agent: ${bot}`),
+    'Content-Signal: ai-train=no, search=yes, ai-input=no',
+    ...ABIERTO_A_LA_IA.map((ruta) => `Allow: ${ruta}`),
+    'Disallow: /',
     '',
     `Sitemap: ${base}/sitemap.xml`,
     '',

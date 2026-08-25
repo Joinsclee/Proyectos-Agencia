@@ -107,7 +107,7 @@ async function init() {
     location.href = '/login';
     return;
   }
-  const response = await fetch('/api/favorites?full=1', { headers: { Authorization: `Bearer ${token}` } });
+  const response = await RadarSesion.fetch('/api/favorites?full=1', { headers: { Authorization: `Bearer ${token}` } });
   if (response.status === 401) {
     localStorage.removeItem('radar_token');
     location.href = '/login';

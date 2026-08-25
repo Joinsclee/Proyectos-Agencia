@@ -38,7 +38,7 @@ function render(kind, title, copy, payment) {
 
 async function refresh() {
   attempts += 1;
-  const response = await fetch(`/api/account/payment?reference=${encodeURIComponent(reference)}`, {
+  const response = await RadarSesion.fetch(`/api/account/payment?reference=${encodeURIComponent(reference)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await response.json();
