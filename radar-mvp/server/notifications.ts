@@ -188,6 +188,58 @@ function tiposDeAlerta(alert: { type?: unknown }): string[] {
   return typeof alert.type === 'string' && alert.type !== '' ? [alert.type] : [];
 }
 
+/**
+ * Dos alertas que piden lo mismo son una alerta.
+ *
+ * Ciudad, tipos y presupuesto: si coinciden, el correo que saldría de una es el
+ * que saldría de la otra. La idempotencia de envío no protege de esto —su clave
+ * lleva el `alert.id`, así que dos identificadores distintos son dos correos—,
+ * y no es hipotético: al revisar antes de encender el despacho, dos de las tres
+ * cuentas con alertas tenían la suya duplicada. Una habría recibido el mismo
+ * correo dos veces; la otra, dos correos con 1 y con 7 inmuebles, que es peor
+ * porque parecen desmentirse.
+ */
+export function huellaDeAlerta(alert: RadarAlert): string {
+  return [
+    String(alert.city ?? '').trim().toLowerCase(),
+    tiposDeAlerta(alert).slice().sort().join('+'),
+    String(alert.budget ?? ''),
+  ].join('|');
+}
+
+/**
+ * De cada grupo de alertas gemelas, cuál manda.
+ *
+ * Gana la de ventana más antigua: `alertMatches` solo mira lo aparecido desde
+ * `lastCheckedAt || createdAt`, así que la más vieja es la que trae más. En el
+ * caso real, elegir por orden de array habría mandado la de 1 inmueble y
+ * descartado la de 7.
+ *
+ * Devuelve, para cada id, el id de la que manda en su grupo. Una alerta sin
+ * gemelas manda sobre sí misma, así que el caso normal no cambia en nada.
+ */
+export function principalesDeAlertas(alerts: RadarAlert[]): Map<string, string> {
+  const porHuella = new Map<string, RadarAlert>();
+  for (const a of alerts) {
+    if (!a.active) continue;
+    const h = huellaDeAlerta(a);
+    const actual = porHuella.get(h);
+    if (!actual || ventanaDe(a) < ventanaDe(actual)) porHuella.set(h, a);
+  }
+  const mando = new Map<string, string>();
+  for (const a of alerts) {
+    const jefa = a.active ? porHuella.get(huellaDeAlerta(a)) : undefined;
+    mando.set(a.id, jefa ? jefa.id : a.id);
+  }
+  return mando;
+}
+
+/** Desde cuándo mira esta alerta. Sin fecha válida, desde el principio. */
+function ventanaDe(a: RadarAlert): number {
+  const t = Date.parse(a.lastCheckedAt || a.createdAt || '');
+  return Number.isFinite(t) ? t : 0;
+}
+
 function alertSearchUrl(alert: RadarAlert): string {
   const searchUrl = new URL('/', env.APP_BASE_URL);
   searchUrl.searchParams.set('city', alert.city);
@@ -535,8 +587,15 @@ export async function runAlertDispatch(now = new Date(), canary?: AlertDispatchC
       const alerts = readAlerts(metadata);
       const deliveries = readDeliveryHistory(metadata);
       let changed = false;
+      // Quién manda en cada grupo de alertas gemelas. En modo canario no se
+      // agrupa: ahí se prueba UNA alerta concreta por su id, y saltársela porque
+      // tiene una hermana sería contestar sobre otra cosa.
+      const mando = canary ? null : principalesDeAlertas(alerts);
+      // Lo que le pasó a cada principal, para copiárselo a sus gemelas después.
+      const resultados = new Map<string, { attemptedAt: string; matchCount: number; enviada: boolean }>();
       for (const alert of alerts) {
         if (canary && alert.id !== canary.alertId) continue;
+        if (mando && mando.get(alert.id) !== alert.id) continue;
         if (canary) {
           targetAlertFound = true;
           targetAlertActive = alert.active;
@@ -588,6 +647,7 @@ export async function runAlertDispatch(now = new Date(), canary?: AlertDispatchC
           delete alert.lastError;
           deliveries.unshift(delivery);
           changed = true;
+          resultados.set(alert.id, { attemptedAt, matchCount: matches.length, enviada: matches.length > 0 });
         } catch (alertError) {
           const errorMessage = (alertError instanceof Error ? alertError.message : String(alertError)).slice(0, 500);
           const failures = Math.min((alert.consecutiveFailures ?? 0) + 1, 10);
@@ -608,6 +668,33 @@ export async function runAlertDispatch(now = new Date(), canary?: AlertDispatchC
           changed = true;
           failed += 1;
           errors.push(`${user.id.slice(0, 8)}:${alert.id.slice(0, 8)} ${errorMessage}`);
+        }
+      }
+      // Las gemelas no envían, pero SÍ se ponen al día. Dejarlas intactas las
+      // dejaría vencidas para siempre: cada ciclo volverían a contarse como
+      // pendientes y el informe diría que hay envíos atrasados que nadie va a
+      // hacer. Se anotan con la fecha y el recuento de la que sí salió.
+      if (mando) {
+        for (const alert of alerts) {
+          const jefa = mando.get(alert.id);
+          if (!jefa || jefa === alert.id) continue;
+          const r = resultados.get(jefa);
+          if (!r) continue;
+          alert.lastCheckedAt = r.attemptedAt;
+          alert.lastMatchCount = r.matchCount;
+          if (r.enviada) alert.lastSentAt = r.attemptedAt;
+          alert.lastDeliveryStatus = r.enviada ? 'sent' : 'no_matches';
+          alert.consecutiveFailures = 0;
+          delete alert.nextRetryAt;
+          delete alert.lastError;
+          deliveries.unshift({
+            id: randomUUID(),
+            alertId: alert.id,
+            attemptedAt: r.attemptedAt,
+            status: r.enviada ? 'sent' : 'no_matches',
+            matchCount: r.matchCount,
+          });
+          changed = true;
         }
       }
       if (changed) {
