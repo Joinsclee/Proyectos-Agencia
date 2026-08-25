@@ -307,7 +307,7 @@ const isTimeout = (msg?: string) => !!msg && /statement timeout|57014/i.test(msg
 /** Listados del portal abierto (FincaRaíz), excluyendo proyectos preventa. */
 export async function queryPortal(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
-  const pageSize = clampSize(q.pageSize);
+  const pageSize = q._ventana ?? clampSize(q.pageSize);
   if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
   // Se resuelven aquí las formas en que está escrita la ciudad pedida, porque
@@ -472,7 +472,7 @@ export async function warmTotalPortal(): Promise<void> {
 /** Inmuebles bancarios (todas las fuentes salvo fincaraiz). */
 export async function queryBancos(q: ListQuery): Promise<ListResult> {
   const page = clampPage(q.page);
-  const pageSize = clampSize(q.pageSize);
+  const pageSize = q._ventana ?? clampSize(q.pageSize);
   if (rangoImposible(q)) return listaVacia(page, pageSize);
   const from = (page - 1) * pageSize;
   // Se resuelven aquí las formas en que está escrita la ciudad pedida, porque
@@ -623,61 +623,48 @@ export async function queryTodas(q: ListQuery): Promise<ListResult> {
   const pageSize = clampSize(q.pageSize);
   if (rangoImposible(q)) return listaVacia(page, pageSize);
 
-  // Cuántas filas hay que ver de cada lado para poder cortar la página pedida.
+  // Cuántas filas hay que ver de cada fuente para poder cortar la página pedida.
   const ventana = Math.min(page, MAX_PAGINAS_TODAS) * pageSize;
   const comun: ListQuery = { ...q, page: 1, _ventana: ventana };
 
-  // El orden de remates tiene otros nombres. Se traduce al equivalente más
-  // cercano en vez de dejarlo en su defecto —«audiencia próxima»—, que mezclado
-  // con inmuebles ordenados por precio daría un listado sin criterio visible.
-  const ordenRemates = q.order === 'precio_desc' ? 'min_desc'
-    : q.order === 'recent' ? 'auction_asc'
-    : 'min_asc';
-
-  const [inmuebles, remates] = await Promise.all([
-    queryInmueblesTodos(comun),
-    // Un filtro que en remates no existe (estrato, habitaciones) los descartaría
-    // TODOS y el listado combinado se quedaría sin una de sus tres fuentes sin
-    // avisar. Cuando el filtro no aplica, esa fuente sencillamente no participa.
-    filtroSoloDeInmuebles(q) ? listaVacia(1, ventana) : queryRemates({ ...comun, order: ordenRemates }),
+  // Se apoya en las TRES consultas que ya existen, no en una nueva.
+  //
+  // La primera versión hacía su propia consulta a `inmuebles` sin filtrar por
+  // `source` —portal y bancos comparten tabla, así que parecía lo natural—. Fue
+  // diez veces más lenta: 9,4 s frente a los 0,89 de `/api/portal`, que ordena
+  // casi las mismas filas. La diferencia es el índice: filtrando por `source`,
+  // Postgres tiene por dónde entrar; sin filtrar, ordena las 145.000 a mano.
+  //
+  // Y de paso heredaba nada: ni la escalera de reintentos ante timeout, ni el
+  // total exacto cacheado, ni la exclusión de proyectos en preventa, ni la
+  // rotación de bancos. Todo eso está resuelto y comentado en `queryPortal` y
+  // `queryBancos`; reescribirlo era garantizar que las dos versiones se
+  // separaran con el tiempo.
+  //
+  // Un filtro que en remates no existe (estrato, habitaciones, valoración) los
+  // descartaría a todos, así que esa fuente sencillamente no participa.
+  const [portal, bancos, remates] = await Promise.all([
+    queryPortal(comun),
+    queryBancos(comun),
+    filtroSoloDeInmuebles(q) ? listaVacia(1, ventana) : queryRemates({ ...comun, order: ordenDeRemates(q.order) }),
   ]);
 
-  const fila = (d: Record<string, unknown>, kind: 'portal' | 'banco' | 'remate') => ({
-    ...d,
-    _kind: kind,
-    // Con qué cifra entra en el orden. En un remate es la postura mínima: es lo
-    // que hay que poner para participar, y es la que el buscador ya compara
-    // cuando alguien pone un techo de precio.
-    _cmp: kind === 'remate' ? Number(d.minimum_bid ?? 0) : Number(d.price ?? 0),
-    _desc: Number(d.discount_pct ?? 0),
-    _nuevo: String(d.first_seen_at ?? d.created_at ?? ''),
+  const marcar = (r: ListResult, kind: 'portal' | 'banco' | 'remate') => r.data.map((d) => {
+    const f = d as Record<string, unknown>;
+    return {
+      ...f,
+      _kind: kind,
+      // Con qué cifra entra en el orden. En un remate es la postura mínima: es lo
+      // que hay que poner para participar, y la que el buscador ya compara cuando
+      // alguien pone un techo de precio.
+      _cmp: kind === 'remate' ? Number(f.minimum_bid ?? 0) : Number(f.price ?? 0),
+      _desc: Number(f.discount_pct ?? 0),
+      _nuevo: String(f.first_seen_at ?? f.created_at ?? ''),
+    };
   });
 
-  const mezcla = [
-    ...inmuebles.data.map((d) => fila(d as Record<string, unknown>, esDeBanco(d as Record<string, unknown>) ? 'banco' : 'portal')),
-    ...remates.data.map((d) => fila(d as Record<string, unknown>, 'remate')),
-  ];
-
-  // ── Por qué esto NO es un `sort` sobre la lista fundida ──
-  //
-  // Lo era, y el resultado medido fue que la pestaña «Todas» nunca enseñaba
-  // todas. Con «precio menor» sobre Bogotá salían 24 remates de 24: lo más barato
-  // del país son parqueaderos subastados a tres millones. Con «mayor descuento»,
-  // 0 remates de 24, porque el suyo se calcula contra el avalúo del juzgado y
-  // muchos edictos no lo publican. Cada criterio dejaba fuera una fuente entera,
-  // y el que la dejaba fuera cambiaba con el criterio.
-  //
-  // El problema es que las dos escalas no son comparables: la postura mínima de
-  // una subasta y el precio de oferta de un anuncio no miden lo mismo aunque
-  // ambos sean pesos. Ordenar juntas dos escalas distintas no produce un orden,
-  // produce un montón donde manda la que tenga la cola más larga.
-  //
-  // Así que cada fuente se ordena por su propio criterio —eso sí es comparable
-  // dentro de ella— y se intercalan en proporción a lo que cada una aporta al
-  // total. Con 4.100 inmuebles y 250 remates, una página de 24 lleva uno o dos
-  // remates: que es exactamente su peso en lo que hay.
   const orden = q.order ?? 'precio_asc';
-  const porCriterio = (a: typeof mezcla[number], b: typeof mezcla[number]) => {
+  const porCriterio = (a: { _cmp: number; _desc: number; _nuevo: string }, b: typeof a) => {
     if (orden === 'precio_desc') return b._cmp - a._cmp;
     if (orden === 'discount_desc') return b._desc - a._desc;
     if (orden === 'recent') return b._nuevo.localeCompare(a._nuevo);
@@ -687,14 +674,31 @@ export async function queryTodas(q: ListQuery): Promise<ListResult> {
     const bv = b._cmp > 0 ? b._cmp : Number.POSITIVE_INFINITY;
     return av - bv;
   };
-  const deInmuebles = mezcla.filter((f) => f._kind !== 'remate').sort(porCriterio);
-  const deRemates = mezcla.filter((f) => f._kind === 'remate').sort(porCriterio);
-  const combinada = intercalarProporcional(
-    [{ filas: deInmuebles, peso: inmuebles.total }, { filas: deRemates, peso: remates.total }],
-  );
+
+  // ── Por qué esto NO es un `sort` sobre todo junto ──
+  //
+  // Lo era, y el resultado medido fue que «Todas» nunca enseñaba todas. Con
+  // «precio menor» sobre Bogotá salían 24 remates de 24: lo más barato del país
+  // son parqueaderos subastados a tres millones. Con «mayor descuento», 0 de 24,
+  // porque el suyo se calcula contra el avalúo del juzgado y muchos edictos no lo
+  // publican. Cada criterio expulsaba una fuente entera, y cuál cambiaba con el
+  // criterio.
+  //
+  // La causa es que las escalas no son comparables: la postura mínima de una
+  // subasta y el precio de oferta de un anuncio no miden lo mismo aunque ambos
+  // sean pesos. Ordenar juntas escalas distintas no da un orden, da un montón
+  // donde manda la que tenga la cola más larga.
+  //
+  // Así que cada fuente se ordena por su criterio —eso sí es comparable dentro de
+  // ella— y se intercalan en proporción a lo que cada una aporta al total.
+  const combinada = intercalarProporcional([
+    { filas: marcar(portal, 'portal').sort(porCriterio), peso: portal.total },
+    { filas: marcar(bancos, 'banco').sort(porCriterio), peso: bancos.total },
+    { filas: marcar(remates, 'remate').sort(porCriterio), peso: remates.total },
+  ]);
 
   const desde = (page - 1) * pageSize;
-  const total = inmuebles.total + remates.total;
+  const total = portal.total + bancos.total + remates.total;
   const pages = Math.ceil(total / pageSize);
   return {
     data: combinada.slice(desde, desde + pageSize),
@@ -702,9 +706,20 @@ export async function queryTodas(q: ListQuery): Promise<ListResult> {
     page,
     pageSize,
     pages: Math.min(pages, MAX_PAGINAS_TODAS),
-    totalAproximado: inmuebles.totalAproximado === true,
+    totalAproximado: portal.totalAproximado === true || bancos.totalAproximado === true,
     paginasLimitadas: pages > MAX_PAGINAS_TODAS,
   };
+}
+
+/**
+ * El orden de remates tiene otros nombres. Se traduce al equivalente más cercano
+ * en vez de dejarlo en su defecto —«audiencia próxima»—, que mezclado con
+ * inmuebles ordenados por precio daría un listado sin criterio visible.
+ */
+function ordenDeRemates(orden?: string): string {
+  if (orden === 'precio_desc') return 'min_desc';
+  if (orden === 'recent') return 'auction_asc';
+  return 'min_asc';
 }
 
 /**
@@ -763,34 +778,6 @@ function filtroSoloDeInmuebles(q: ListQuery): boolean {
 /** ¿La fila viene de un banco o del portal? Lo dice su `source`. */
 function esDeBanco(d: Record<string, unknown>): boolean {
   return (BANK_SOURCES as readonly string[]).includes(String(d.source ?? ''));
-}
-
-/**
- * Portal y bancos juntos: la misma tabla sin filtrar por `source`.
- *
- * Es `queryPortal`/`queryBancos` sin la única línea que las diferencia. Se
- * escribe aparte en vez de añadirle una bandera a una de las dos porque las dos
- * llevan además reglas propias —la rotación de bancos, el filtro por entidad— que
- * aquí no aplican.
- */
-async function queryInmueblesTodos(q: ListQuery): Promise<ListResult> {
-  const page = clampPage(q.page);
-  const pageSize = q._ventana ?? clampSize(q.pageSize);
-  const from = (page - 1) * pageSize;
-  if (q.city) q = { ...q, _ciudadVariantes: await ciudadesParaFiltrar(q.city, 'portal') };
-
-  let qb = supabase.from('inmuebles').select('*', { count: 'exact' }).eq('is_active', true);
-  qb = applyInmuebleFilters(qb, q);
-  qb = aplicarSoloDesbloqueadas(qb, q);
-  qb = aplicarTier(qb, q);
-  if (q.opp === '1') qb = qb.eq('is_opportunity', true);
-  qb = applyOrderInmuebles(qb, q.order === 'discount_desc' || q.order === 'recent' ? q.order : 'precio_asc');
-
-  const { data, count, error } = await qb.range(from, from + pageSize - 1);
-  if (esRangoFueraDeAlcance(error, page)) return listaVacia(page, pageSize);
-  if (error) throw new Error(`queryTodas/inmuebles: ${error.message}`);
-  const total = count ?? 0;
-  return { data: data ?? [], total, page, pageSize, pages: Math.ceil(total / pageSize) };
 }
 
 /** Una sola propiedad por id (para abrir una recomendación en su modal). */
