@@ -1106,7 +1106,12 @@ p.rent-desglose { margin: 0; color: #7c6a86; font-size: 0.76rem; line-height: 1.
      impide que un rótulo largo empuje la barra fuera de los 375px. */
   .tabs-inner { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 0; padding: 0 2px; }
   .tabs-group, .nav-right, .authbar { display: contents; }
-  .nav-sep, .authbar .auth-link:not(.primary), .authbar #auth-logout { display: none; }
+  /* `#auth-logout` YA NO se oculta aquí. Esa regla es de cuando «Salir» era un
+     enlace suelto de la barra y en móvil no cabía; desde que vive dentro del
+     menú de la cuenta, ocultarlo dejaba a quien entra por el móvil sin ninguna
+     forma de cerrar sesión — el menú se abría con «Perfil» y «Tu plan» y nada
+     más. Es el sitio donde MÁS falta hace: un teléfono se presta y se pierde. */
+  .nav-sep, .authbar .auth-link:not(.primary) { display: none; }
   /* El rótulo se parte en dos renglones en vez de recortarse.
      
      `white-space: nowrap` viene de la barra ancha, donde el texto va en línea
@@ -2061,6 +2066,18 @@ a.cuenta-marca:focus-visible { outline: 2px solid var(--gold); outline-offset: 3
   color: rgba(255,255,255,0.66); font-size: 0.52rem; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase; line-height: 1;
 }
+/* La flecha que en esta barra anuncia «esto abre un menú». La lleva el botón de
+   cuenta y tiene que llevarla este: sin ella, dos controles idénticos por fuera
+   se comportan distinto al pulsarlos. */
+.aprende-btn::after {
+  content: ''; position: absolute; right: 6px; top: 50%; margin-top: -2px;
+  border-left: 4px solid transparent; border-right: 4px solid transparent;
+  border-top: 4px solid rgba(255,255,255,0.7);
+}
+.aprende-btn { position: relative; padding-right: 20px; }
+/* La marca sin menú: mismas medidas, sin caja ni flecha, porque no se pulsa. */
+.aprende-marca { display: inline-flex; align-items: center; padding: 4px 0; }
+.aprende-marca[hidden], .aprende-btn[hidden] { display: none; }
 /* `display: flex` de la regla base gana al `display: none` de [hidden]: sin esto
    el botón se ve aunque no haya ni un destino configurado. Mismo caso que
    `.auth-icono[hidden]` y `.asis-btn[hidden]`, anotados por lo mismo. */
@@ -2431,11 +2448,14 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
 
    El alto manda y el ancho se calcula solo; las medidas van declaradas en el
    HTML para que el navegador reserve el sitio y la barra no salte al cargar. */
-/* Sin el descriptor, la proporción pasó de 8,1:1 a 11,8:1 — el logotipo es ahora
-   solo el nombre. A 34 px de alto mediría 401 px de ancho y se comería la barra,
-   así que baja a 17: el nombre se lee igual porque ya no comparte altura con una
-   segunda línea que nadie podía leer. */
-.marca-ag { height: 17px; width: auto; display: block; opacity: 0.95; }
+/* Sin el descriptor, la proporción queda en 8,5:1 — el águila y el nombre, sin la
+   línea que nadie podía leer.
+   
+   El primer recorte cortó el águila: di por hecho que todo lo que había bajo la
+   fila 26 era descriptor, y en la mitad izquierda esas filas son la cola del
+   ave. Se ve en cuanto se amplía, y no se ve a tamaño real. El recorte bueno
+   borra solo la región del texto —de x=80 a la derecha— y deja el símbolo entero. */
+.marca-ag { height: 20px; width: auto; display: block; opacity: 0.95; }
 /* El logotipo del Radar, en su versión blanca sobre este fondo.
    
    Es más alto que el del socio a propósito: el del socio es la firma de quién
@@ -2464,7 +2484,7 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
 @media (max-width: 760px) {
   .cuenta-marca { gap: 5px; }
   .cuenta-marca .ic { width: 15px; height: 15px; }
-  .marca-ag { height: 12px; }
+  .marca-ag { height: 16px; }
   .marca-radar { height: 26px; }
   .marca-nombre { font-size: 0.8rem; }
   /* El rótulo «Aprende con» NO se retira en móvil, aunque sea lo primero que
@@ -2486,9 +2506,17 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
    estaba ya en `display: none`, así que su comentario describía un
    comportamiento que el navegador no llegaba a ejecutar. */
 @media (max-width: 420px) {
+  /* El nombre del producto SE QUEDA. Se ocultaba de cuando esta esquina llevaba
+     los dos logotipos y no cabían; ahora solo lleva el del Radar, y sin el
+     nombre el sello «beta» quedaba colgando de un icono sin nombre, diciendo que
+     algo está en pruebas sin decir qué. Se encoge en vez de irse. */
   .cuenta-marca { gap: 4px; }
-  .marca-nombre { display: none; }
+  .marca-nombre { font-size: 0.72rem; }
   .marca-sep, .cuenta-marca .ic { display: none; }
+  /* 13 px, MENOS que los 16 del bloque de 760. Estaba en 13 cuando el de 760
+     ponía 12, así que el logotipo CRECÍA al estrecharse la pantalla y reventaba
+     la barra justo donde menos sitio hay. Las tres medidas van de mayor a menor
+     a propósito: 20 → 16 → 13. */
   .marca-ag { height: 13px; }
   .marca-radar { height: 24px; }
 }

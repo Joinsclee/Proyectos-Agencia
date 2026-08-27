@@ -99,11 +99,41 @@ test('los acuerdos de la reunión que se pierden sin hacer ruido', async () => {
   // «Mediana» es palabra de estadístico, y es la cifra contra la que se mide
   // todo: si esa no se entiende, no se entiende ni el porcentaje ni las
   // estrellas. La mediana se sigue calculando; cambia cómo se llama en pantalla.
-  const visibles = app
-    .split('\n')
-    .filter((l) => !l.trim().startsWith('//') && !l.trim().startsWith('*'))
-    .join('\n');
-  assert.doesNotMatch(visibles, /[Mm]ediana/, 'no puede quedar ninguna «mediana» a la vista del usuario');
+  //
+  // Y se comprueba en TODAS las superficies, no solo en app.js. La primera
+  // versión de esta prueba enunciaba la regla en términos amplios —«a la vista
+  // del usuario»— y la ataba a un solo archivo; el barrido dejó cuatro
+  // «medianas» vivas en el reporte descargable, una en el aviso que manda el
+  // servidor y una instrucción al modelo cuyo texto libre se pinta en la ficha.
+  // Una prueba cuyo alcance es más estrecho que su propia afirmación da una
+  // seguridad que no tiene.
+  const superficies = [
+    ['server/public/app.js', app],
+    ['server/public/tour.js', await readProjectFile('server/public/tour.js')],
+    ['server/reporte.ts', await readProjectFile('server/reporte.ts')],
+    ['server/analysis.ts', await readProjectFile('server/analysis.ts')],
+  ];
+  const conMediana: string[] = [];
+  for (const [ruta, fuente] of superficies) {
+    // Los bloques /* … */ se blanquean CONSERVANDO los saltos de línea, para que
+    // el número de línea del hallazgo siga siendo el del archivo. Hace falta
+    // hacerlo sobre la fuente entera y no línea a línea: este repositorio usa
+    // `${/* … */ ''}` dentro de plantillas para comentar sin romper el HTML, y
+    // esas líneas intermedias no empiezan por `*`.
+    const limpia = fuente
+      .replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
+      .replace(/\/\/.*$/gm, '');
+    limpia.split('\n').forEach((l, i) => {
+      // `medianaPpm2` y compañía son nombres de campo, no texto de pantalla.
+      if (/[Mm]ediana/.test(l.replace(/\bmediana(Ppm2|Total)\b/g, ''))) {
+        conMediana.push(`${ruta}:${i + 1} ${fuente.split('\n')[i].trim().slice(0, 90)}`);
+      }
+    });
+  }
+  assert.deepEqual(
+    conMediana, [],
+    'no puede quedar ninguna «mediana» a la vista del usuario:\n  ' + conMediana.join('\n  '),
+  );
   assert.match(app, /Precio por m² de este inmueble/, '«Este inmueble» no decía de qué cifra hablaba');
   assert.match(app, /Precio medio de comparables/);
 });

@@ -46,8 +46,8 @@ const firmaDe = (ruta: string) => createHash('sha256').update(esqueleto(ruta)).d
  * Lo que NO se puede hacer es ignorarla. Sin el número nuevo, el arreglo solo
  * alcanza a las fichas que nadie ha abierto todavía.
  */
-const FIRMA_ESPERADA = 'bcf9f80139f0c53d';
-const VERSION_DECLARADA = 4;
+const FIRMA_ESPERADA = 'b1871c6c7d492288';
+const VERSION_DECLARADA = 5;
 
 test('análisis: cambiar las reglas de la IA obliga a caducar lo ya guardado', () => {
   const firma = firmaDe(join(AQUI, 'ai.ts'));

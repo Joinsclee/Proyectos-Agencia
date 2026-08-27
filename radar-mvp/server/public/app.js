@@ -627,10 +627,14 @@ function montarMenuDeFormacion(config) {
     ['mentoria3a1Url', 'users', 'Mentoría 3 a 1', 'En grupo pequeño'],
   ].filter(([clave]) => typeof config[clave] === 'string' && config[clave]);
 
+  // Sin destinos, la marca se queda como marca: visible, sin menú y sin
+  // pretender que se puede pulsar. Con destinos, el botón la sustituye.
   if (!opciones.length) return;
+  const marca = $('aprende-marca');
+  if (marca) marca.hidden = true;
+  btn.hidden = false;
   panel.innerHTML = '<span class="menu-cuenta-quien">Aprende con Andrés Giraldo</span>'
     + opciones.map(([clave, icono, titulo, pie]) => `<a class="menu-cuenta-op es-doble" href="${esc(config[clave])}" target="_blank" rel="noopener noreferrer">${ic(icono)}<span><strong>${esc(titulo)}</strong><em>${esc(pie)}</em></span></a>`).join('');
-  wrap.hidden = false;
   conectarDesplegable(btn, panel);
 }
 
