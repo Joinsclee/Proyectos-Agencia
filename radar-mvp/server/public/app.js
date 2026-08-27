@@ -647,8 +647,7 @@ function conectarDesplegable(btn, panel) {
     panel.hidden = true;
     btn.setAttribute('aria-expanded', 'false');
   };
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
+  btn.addEventListener('click', () => {
     const abierto = !panel.hidden;
     panel.hidden = abierto;
     btn.setAttribute('aria-expanded', String(!abierto));
@@ -656,7 +655,21 @@ function conectarDesplegable(btn, panel) {
     // quien navega con teclado al contenido de la página, por detrás del panel.
     if (!abierto) panel.querySelector('a, button')?.focus();
   });
-  document.addEventListener('click', (e) => { if (!panel.contains(e.target)) cerrar(); });
+  // SIN `stopPropagation` en el botón, y con el botón excluido aquí.
+  //
+  // Llevaba `stopPropagation`, que funcionaba mientras hubo un solo desplegable
+  // en la barra. Con dos —cuenta y formación— el clic sobre el botón de uno
+  // dejaba de llegar a `document`, así que el oyente del OTRO no se enteraba y su
+  // panel se quedaba abierto: los dos desplegados a la vez, solapándose.
+  //
+  // Dejando pasar el clic, cada panel decide por sí mismo: se cierra salvo que el
+  // clic haya sido dentro de él o sobre su propio botón. El botón se excluye aquí
+  // porque su oyente ya corrió —los eventos burbujean de dentro afuera— y volver
+  // a cerrarlo desharía la apertura que acaba de hacer.
+  document.addEventListener('click', (e) => {
+    if (panel.contains(e.target) || btn.contains(e.target)) return;
+    cerrar();
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || panel.hidden) return;
     cerrar();

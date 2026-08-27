@@ -107,3 +107,33 @@ test('los acuerdos de la reunión que se pierden sin hacer ruido', async () => {
   assert.match(app, /Precio por m² de este inmueble/, '«Este inmueble» no decía de qué cifra hablaba');
   assert.match(app, /Precio medio de comparables/);
 });
+
+test('los dos desplegables de la barra no pueden quedar abiertos a la vez', async () => {
+  const app = await readProjectFile('server/public/app.js');
+  const fn = app.slice(app.indexOf('function conectarDesplegable'));
+  // Sin comentarios: el propio comentario que explica por qué no hay
+  // `stopPropagation` contiene la palabra, y sin esto la prueba se caza a sí
+  // misma. El guardián tiene que mirar el código, no la prosa que lo justifica.
+  const cuerpo = fn
+    .slice(0, fn.indexOf('\n}\n') + 2)
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/^\s*\/\/.*$/gm, ' ');
+
+  // La mecánica llevaba `stopPropagation` en el botón, y funcionaba mientras hubo
+  // UN solo desplegable. Con dos —cuenta y formación— el clic sobre el botón de
+  // uno dejaba de llegar a `document`, así que el oyente del otro no se enteraba
+  // y su panel se quedaba abierto: los dos desplegados a la vez, solapándose.
+  assert.doesNotMatch(
+    cuerpo,
+    /stopPropagation/,
+    'con dos desplegables, cortar la propagación deja el otro abierto',
+  );
+  // Lo que lo sustituye: cada panel se cierra salvo que el clic sea dentro de él
+  // o sobre su propio botón. El botón se excluye porque su oyente ya corrió —los
+  // eventos burbujean de dentro afuera— y cerrar aquí desharía la apertura.
+  assert.match(cuerpo, /panel\.contains\(e\.target\) \|\| btn\.contains\(e\.target\)/);
+
+  // Y que de verdad haya DOS usándola, que es lo que hace que esto importe.
+  assert.match(app, /conectarDesplegable\(\$\('auth-menu-btn'\), \$\('auth-menu'\)\)/);
+  assert.match(app, /conectarDesplegable\(btn, panel\)/);
+});
