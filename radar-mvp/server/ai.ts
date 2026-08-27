@@ -98,6 +98,13 @@ function buildPrompt(facts: AiPropertyFacts, market: MarketContext, avisoText?: 
     '',
     '## Instrucciones',
     '- Ánclate en los números provistos; NO inventes precios. El "estimado de mercado" debe derivarse de la mediana de comparables (ajústalo por área/tipo si aplica).',
+    // Lo que el modelo escribe se pinta tal cual en la ficha, así que su
+    // vocabulario es vocabulario de producto. «Mediana» se retiró de todas las
+    // pantallas por acuerdo del cliente —«hay personas que no saben qué es»— y
+    // no sirve de nada quitarla de las etiquetas si el párrafo de al lado la
+    // reintroduce. Los datos de arriba SÍ la nombran, y está bien: eso es la
+    // entrada del modelo, no su salida.
+    '- No uses la palabra "mediana" en tu respuesta. Si necesitas nombrar esa cifra, llámala "precio medio de comparables".',
     '- Para remates: recuerda que la postura suele estar ~30% bajo el avalúo por diseño; el valor real está en si el AVALÚO mismo está por debajo del mercado, y en los riesgos del proceso.',
     '- Si la confianza de los comparables es baja o no hubo del mismo tipo, dilo y modera el veredicto.',
     '- Refiérete al ámbito de los comparables: si están acotados al barrio/sector, di "en este sector"; si son de toda la ciudad, acláralo (es una referencia más gruesa).',

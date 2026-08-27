@@ -171,7 +171,7 @@ test('reporte: cuando no hay comparables lo dice, no calla', () => {
   assert.match(html, /No hubo suficientes avisos comparables/);
 });
 
-test('reporte: la estimación de arriendo va con su nivel de confianza', () => {
+test('reporte: la estimación de arriendo dice con cuánto y contra qué se hizo', () => {
   const html = construirReporte(datos({
     arriendo: {
       canonMediano: 2_500_000, rangoBajo: 2_100_000, rangoAlto: 3_000_000,
@@ -180,7 +180,17 @@ test('reporte: la estimación de arriendo va con su nivel de confianza', () => {
   }));
   assert.match(html, /Estimación del valor de arrendamiento/);
   assert.match(html, /\$2\.500\.000/);
-  assert.match(html, /Media/, 'confianza de la estimación');
+  // Esta línea buscaba /Media/ esperando el nivel de confianza «Media», y ese
+  // nivel se retiró del reporte por decisión del cliente hace tiempo. Seguía en
+  // verde porque casaba con «Mediana del mercado», que estaba dos secciones más
+  // arriba: una prueba viva por una coincidencia de letras, comprobando algo que
+  // ya no existía. Al renombrar «mediana» quedó al descubierto.
+  //
+  // Se comprueba lo que el bloque SÍ promete ahora: con cuántos avisos se hizo la
+  // estimación y en qué ámbito, que es lo que la sostiene desde que no hay nivel.
+  assert.match(html, /Avisos de arriendo comparados/);
+  assert.match(html, />11</, 'cuántos avisos sostienen la estimación');
+  assert.match(html, /Barrio Laureles/, 'contra qué zona se comparó');
   assert.match(html, /no con contratos firmados/);
 });
 

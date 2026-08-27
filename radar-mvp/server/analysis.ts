@@ -187,7 +187,7 @@ export async function rentalOnly(
  * este número sube en el MISMO commit. Sin eso, el arreglo solo alcanza a las
  * fichas que nadie ha visitado todavía.
  */
-const VERSION_ANALISIS = 4;
+const VERSION_ANALISIS = 5;
 
 /** ¿Este análisis guardado se generó con las reglas de ahora? */
 function analisisVigente(ai: unknown): ai is AiResult {
@@ -231,7 +231,7 @@ function descarteVigente(marca: unknown): marca is { motivo: string } {
  * en su lugar, que es el análisis de mercado y sí está completo en la misma ficha.
  */
 const AVISO_SIN_ANALISIS = 'No pudimos verificar el análisis con IA de este inmueble, así que preferimos '
-  + 'no mostrarlo. El análisis de mercado de esta misma ficha —comparables, mediana y posición frente '
+  + 'no mostrarlo. El análisis de mercado de esta misma ficha —comparables, precio medio y posición frente '
   + 'a la zona— sí está calculado y es el que sostiene la valoración.';
 
 async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult> {

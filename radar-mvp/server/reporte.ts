@@ -445,8 +445,8 @@ function bloqueComparables(c: ComparablesReporte | null): string {
             sostiene la conclusión son los comparables y el ámbito, que sí están. */ ''}
       ${c.alcance ? fila('Ámbito de comparación', escaparHtml(capitalizar(c.alcance))) : ''}
       ${fila('Tipo de los comparables', c.mismoTipo ? 'Mismo tipo de inmueble' : 'Tipos mezclados')}
-      ${c.medianaPpm2 != null ? fila('Mediana del mercado por m²', cop(c.medianaPpm2)) : ''}
-      ${c.medianaTotal != null ? fila('Mediana del mercado', cop(c.medianaTotal)) : ''}
+      ${c.medianaPpm2 != null ? fila('Precio medio de comparables por m²', cop(c.medianaPpm2)) : ''}
+      ${c.medianaTotal != null ? fila('Precio medio de comparables', cop(c.medianaTotal)) : ''}
     </dl>
     ${chips}
     <p class="nota">Los comparables son precios de OFERTA publicados en FincaRaíz, no ventas cerradas.
@@ -580,6 +580,12 @@ export function construirReporte(datos: DatosReporte): string {
   const precioPrincipal = esRemate ? datos.remate?.posturaMinima ?? null : datos.precio;
   const etiquetaPrecio = esRemate ? 'Postura mínima' : 'Precio';
   // El descuento de un remate NO es el mismo concepto: sale de comparar la postura
+  // El reporte usa el MISMO vocabulario que la ficha: «precio medio de
+  // comparables», no «mediana». Es el archivo que la persona le enseña a un
+  // tercero, así que es donde peor sienta encontrar la palabra de estadístico
+  // que la ficha acababa de retirar — el mismo número con dos nombres hace dudar
+  // de los dos. Por dentro se sigue calculando la mediana, que es lo correcto
+  // con precios de oferta porque resiste los atípicos.
   // contra el avalúo del juzgado, no contra la mediana de la zona. Etiquetarlos
   // igual haría creer que el remate está un 30% bajo el mercado del barrio.
   const etiquetaDescuento = esRemate ? 'Frente al avalúo judicial' : 'Frente al mercado de su zona';
@@ -615,8 +621,8 @@ export function construirReporte(datos: DatosReporte): string {
 
   const conclusion = datos.crece
     ? `<p class="nota" style="font-size:.88rem;color:var(--tinta)">Categoría <strong>${escaparHtml(datos.crece.lectura)}</strong>${
-      datos.crece.desviacion ? `: su precio por m² está ${escaparHtml(datos.crece.desviacion)} de la mediana de inmuebles comparables de su zona` : ''
-    }. El Índice CRECE divide el precio por m² del inmueble entre la mediana de su grupo comparable; por debajo de 1 está más barato que su zona.</p>`
+      datos.crece.desviacion ? `: su precio por m² está ${escaparHtml(datos.crece.desviacion)} del precio medio de los inmuebles comparables de su zona` : ''
+    }. El Índice CRECE divide el precio por m² del inmueble entre el precio medio de su grupo comparable; por debajo de 1 está más barato que su zona.</p>`
     : '';
 
   return `<meta charset="utf-8">

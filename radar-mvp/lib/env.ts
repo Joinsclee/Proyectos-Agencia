@@ -53,6 +53,16 @@ const EnvSchema = z.object({
   // poner esta variable, sin desplegar código.
   RADAR_COMUNIDAD_URL: z.string().url().optional(),
 
+  // ── Formación: «Aprende con Andrés Giraldo» ──
+  //
+  // Los tres destinos del menú de la barra. El botón entero no se pinta si no hay
+  // ninguno: un menú que se abre y no ofrece nada es peor que no tener menú.
+  // Van por variable y no escritos en el código porque son landings de campaña —
+  // cambian de URL cada lanzamiento, y no debería hacer falta desplegar por eso.
+  RADAR_FORMACION_KIT_URL: z.string().url().optional(),
+  RADAR_FORMACION_1A1_URL: z.string().url().optional(),
+  RADAR_FORMACION_3A1_URL: z.string().url().optional(),
+
   // ── Asistente (workflow «Asistente Radar CRECE» en n8n) ──
   //
   // Sin webhook configurado el asistente no existe: el botón no se pinta y la
