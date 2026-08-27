@@ -578,8 +578,15 @@ function renderAuthBar() {
                 aria-label="Tu cuenta: ${esc(who)}" title="${esc(who)}">${ic('user')}${plan}</button>
         <div class="menu-cuenta-panel" id="auth-menu" hidden>
           <span class="menu-cuenta-quien">${esc(who)}</span>
-          <a class="menu-cuenta-op" href="/cuenta">${ic('user')} Mi cuenta</a>
-          <a class="menu-cuenta-op" href="/planes">${ic('chart')} Planes</a>
+          <a class="menu-cuenta-op" href="/cuenta">${ic('user')} Perfil</a>
+          <!-- «Tu plan», no «Planes». La reunión estuvo a punto de retirarlo
+               entero —«¿y por qué no quitamos planes? Es que no hay planes en
+               este momento»— y lo que lo salvó fue cambiarle la pregunta que
+               contesta: no es un catálogo de lo que se vende, es qué tienes tú
+               ahora mismo y a qué te da acceso. Eso sí existe hoy: el cupo de
+               fichas y el de preguntas al asistente. Lo que viene después vive
+               dentro, con su «próximamente». -->
+          <a class="menu-cuenta-op" href="/planes">${ic('chart')} Tu plan</a>
           <button class="menu-cuenta-op" id="auth-logout">${ic('arrow')} Cerrar sesión</button>
         </div>
       </div>`;
@@ -598,10 +605,42 @@ function renderAuthBar() {
   updateFavCount();
 }
 
+/**
+ * «Aprende con Andrés Giraldo»: el puente entre la herramienta y lo que enseña.
+ *
+ * Tres destinos, y el orden importa: primero por tu cuenta, luego acompañado.
+ * Es de menos a más compromiso, que es como decide quien todavía está mirando.
+ *
+ * Nace oculto y solo aparece si hay al menos un destino configurado. Igual que
+ * el botón de comunidad: un menú que se abre y no ofrece nada es peor que no
+ * tener menú, y así cambiar una landing es cambiar una variable, no desplegar.
+ */
+function montarMenuDeFormacion(config) {
+  const wrap = $('aprende-wrap');
+  const panel = $('aprende-menu');
+  const btn = $('aprende-btn');
+  if (!wrap || !panel || !btn) return;
+
+  const opciones = [
+    ['kitUrl', 'compass', 'Kit de inicio', 'Empieza por tu cuenta'],
+    ['mentoria1a1Url', 'user', 'Mentoría 1 a 1', 'Con Andrés, a solas'],
+    ['mentoria3a1Url', 'users', 'Mentoría 3 a 1', 'En grupo pequeño'],
+  ].filter(([clave]) => typeof config[clave] === 'string' && config[clave]);
+
+  if (!opciones.length) return;
+  panel.innerHTML = '<span class="menu-cuenta-quien">Aprende con Andrés Giraldo</span>'
+    + opciones.map(([clave, icono, titulo, pie]) => `<a class="menu-cuenta-op es-doble" href="${esc(config[clave])}" target="_blank" rel="noopener noreferrer">${ic(icono)}<span><strong>${esc(titulo)}</strong><em>${esc(pie)}</em></span></a>`).join('');
+  wrap.hidden = false;
+  conectarDesplegable(btn, panel);
+}
+
 /** Abrir, cerrar con Escape o con un clic fuera, y devolver el foco al botón. */
 function conectarMenuDeCuenta() {
-  const btn = $('auth-menu-btn');
-  const panel = $('auth-menu');
+  conectarDesplegable($('auth-menu-btn'), $('auth-menu'));
+}
+
+/** La mecánica compartida por los dos menús de la barra. */
+function conectarDesplegable(btn, panel) {
   if (!btn || !panel) return;
   const cerrar = () => {
     if (panel.hidden) return;
@@ -3351,7 +3390,7 @@ function marketCtxHtml(m) {
   return `<div class="ai-scope">${scopeIcon} Comparado contra <strong>${scopeLbl}</strong></div>
   ${crit}
   <div class="ai-mkt">
-    <div><span class="l">Mediana de mercado</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
+    <div><span class="l">Precio medio de comparables</span><strong>${COPn(m.median_total)}</strong>${m.median_ppm2 ? `<span class="sub">${COPn(m.median_ppm2)}/m²</span>` : ''}</div>
     <!-- «Cuartil bajo (P25)» decía lo mismo en estadístico. Quien compra un
          apartamento no tiene por qué saber qué es un percentil, y aquí sobra:
          el dato es «el 25% más barato de la zona empieza en esta cifra». -->
@@ -4611,7 +4650,7 @@ function pintarComparables(caja, d) {
       <p class="comp-aviso">El motor no encontró suficientes inmuebles similares para comparar este.</p>
       <p class="comp-nota">Por eso esta ficha no lleva un porcentaje frente al mercado. Se buscaron del
       mismo tipo, en la misma zona y de área parecida, ampliando el radio por pasos, y en ningún paso se
-      alcanzó el mínimo que hace fiable una mediana.
+      alcanzó el mínimo que hace fiable la comparación.
       ${d.candidato.ppm2 ? ` Su precio es de $${Number(d.candidato.ppm2).toLocaleString('es-CO')}/m².` : ''}</p>`;
     return;
   }
@@ -4625,8 +4664,8 @@ function pintarComparables(caja, d) {
   const ajenos = d.comparables.filter((c) => c.esDeOtroTipo).length;
   caja.innerHTML = `
     <div class="comp-cab">
-      <span>Este inmueble: <strong>$${Number(d.candidato.ppm2 || 0).toLocaleString('es-CO')}/m²</strong></span>
-      <span>Mediana de los ${d.veredicto.n_comparables}: <strong>$${Number(d.veredicto.ppm2_mercado || 0).toLocaleString('es-CO')}/m²</strong></span>
+      <span>Precio por m² de este inmueble: <strong>$${Number(d.candidato.ppm2 || 0).toLocaleString('es-CO')}/m²</strong></span>
+      <span>Precio medio de los ${d.veredicto.n_comparables}: <strong>$${Number(d.veredicto.ppm2_mercado || 0).toLocaleString('es-CO')}/m²</strong></span>
       <span>Ámbito: <strong>${esc(d.veredicto.nivel || '—')}</strong></span>
     </div>
     ${ajenos ? `<p class="comp-aviso">${ajenos} de ${d.comparables.length} no son del mismo tipo de inmueble.</p>` : ''}
@@ -4635,7 +4674,7 @@ function pintarComparables(caja, d) {
       <tbody>${d.comparables.map(fila).join('')}</tbody>
     </table></div>
     ${d.omitidos ? `<p class="comp-aviso">Se muestran ${d.comparables.length}; hay ${d.omitidos} más que no caben en la lista.</p>` : ''}
-    <p class="comp-nota">Ordenados del más barato al más caro por metro cuadrado. La mediana de esta lista es contra lo que se mide el inmueble.</p>`;
+    <p class="comp-nota">Ordenados del más barato al más caro por metro cuadrado. El precio medio de esta lista es contra lo que se mide el inmueble.</p>`;
 }
 
 document.addEventListener('click', async (e) => {
@@ -4676,9 +4715,22 @@ function marketBody(m, criteria) {
     ? `<div class="market-crit"><span class="crit-title">Comparables usados para calcular el precio</span>
         <div class="crit-chips">${crit.map((c) => `<span class="crit-chip">${esc(c)}</span>`).join('')}</div></div>`
     : '';
+  // «Este inmueble» y «Mediana comparables», renombradas en la reunión.
+  //
+  // La primera no decía de qué cifra hablaba: «este inmueble: $1.772.043/m²» son
+  // dos datos pegados sin que nada diga que el segundo es el precio del metro.
+  // Basta con nombrarlo — «le falta un textico adelante», fue la corrección.
+  //
+  // Y «mediana» es palabra de estadístico. Quien compra un apartamento no tiene
+  // por qué saber qué es, y es justo la cifra contra la que se mide todo lo
+  // demás: si esa no se entiende, no se entiende el porcentaje ni las estrellas.
+  // «Precio medio de comparables» dice lo mismo y no hay que haber estudiado
+  // para leerlo. La mediana sigue siendo lo que se calcula por dentro —resiste
+  // los atípicos, que es justo lo que hace falta con precios de oferta—; lo que
+  // cambia es cómo se llama en pantalla.
   return `<div class="market"><div class="market-grid">
-    <div><span class="l">Este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
-    <div><span class="l">Mediana comparables</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
+    <div><span class="l">Precio por m² de este inmueble</span><strong>$${Number(m.candidate_ppm2 || 0).toLocaleString('es-CO')}/m²</strong></div>
+    <div><span class="l">Precio medio de comparables en la zona</span><strong>$${Number(m.market_ppm2).toLocaleString('es-CO')}/m²</strong></div>
     <div><span class="l">Oportunidad</span>${pos}</div>
     <div><span class="l">Comparables</span><strong>${n}</strong></div>
   </div>${critHtml}<p class="market-note">El precio por m² de este inmueble comparado contra el de ${n} inmuebles
@@ -4808,6 +4860,7 @@ async function cargarConfig() {
       comunidad.href = c.comunidadUrl;
       comunidad.hidden = false;
     }
+    montarMenuDeFormacion(c.formacion || {});
   } catch { /* sin config, la verificación queda apagada */ }
 }
 

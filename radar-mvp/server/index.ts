@@ -1252,6 +1252,12 @@ const server = createServer(async (req, res) => {
         paymentDemoReady: wompiPaymentDemoReady(),
         // Sin URL no hay botón. Ver `RADAR_COMUNIDAD_URL` en lib/env.ts.
         comunidadUrl: env.RADAR_COMUNIDAD_URL ?? null,
+        // Los destinos de «Aprende con Andrés Giraldo». Sin ninguno, sin botón.
+        formacion: {
+          kitUrl: env.RADAR_FORMACION_KIT_URL ?? null,
+          mentoria1a1Url: env.RADAR_FORMACION_1A1_URL ?? null,
+          mentoria3a1Url: env.RADAR_FORMACION_3A1_URL ?? null,
+        },
         // Entrar con Microsoft, pedido en la reunión del 28-jul. Va tras una
         // bandera y apagado por defecto porque el botón depende de que el
         // proveedor esté dado de alta en Supabase: enseñarlo antes sería ofrecer

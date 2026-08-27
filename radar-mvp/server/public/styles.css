@@ -2033,6 +2033,43 @@ a.cuenta-marca:focus-visible { outline: 2px solid var(--gold); outline-offset: 3
 .menu-cuenta-op:hover, .menu-cuenta-op:focus-visible { background: #f6effa; color: var(--pp); }
 .menu-cuenta-op .ic { width: 17px; height: 17px; color: var(--pp); }
 
+/* ───── El sello de versión beta ─────
+   Pequeño y a media asta, no una pegatina: dice «esto está vivo», no «esto está
+   sin terminar». Va pegado al nombre del producto, así que hereda su línea. */
+.sello-beta {
+  align-self: flex-start; margin-top: 1px;
+  padding: 1px 5px; border-radius: 5px;
+  background: rgba(242,202,4,0.16); border: 1px solid rgba(242,202,4,0.4);
+  color: var(--gold); font-size: 0.56rem; font-weight: 800;
+  letter-spacing: 0.09em; text-transform: uppercase; line-height: 1.5;
+}
+
+/* ───── «Aprende con Andrés Giraldo» ─────
+   El logotipo del socio hace de botón. Lleva encima un «Aprende con» pequeño
+   porque el nombre solo no dice a qué lleva: quien llega sin conocerle ve
+   «Andrés Giraldo» y no sabe si es quien montó la plataforma o quien enseña. */
+.aprende-btn {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  min-height: 38px; padding: 4px 11px; border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.08);
+  cursor: pointer; font-family: inherit;
+  transition: background .14s ease, border-color .14s ease;
+}
+.aprende-btn:hover { background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.38); }
+.aprende-btn[aria-expanded="true"] { background: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.45); }
+.aprende-eyebrow {
+  color: rgba(255,255,255,0.66); font-size: 0.52rem; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase; line-height: 1;
+}
+/* `display: flex` de la regla base gana al `display: none` de [hidden]: sin esto
+   el botón se ve aunque no haya ni un destino configurado. Mismo caso que
+   `.auth-icono[hidden]` y `.asis-btn[hidden]`, anotados por lo mismo. */
+.menu-cuenta[hidden] { display: none; }
+/* Opción de dos líneas: qué es y para quién. */
+.menu-cuenta-op.es-doble { min-height: 46px; align-items: center; }
+.menu-cuenta-op.es-doble span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.menu-cuenta-op.es-doble em { font-style: normal; font-size: 0.74rem; font-weight: 600; color: #7c6a86; }
+
 
 @media (max-width: 760px) {
   /* La marca NO se retira: se encoge.
@@ -2394,14 +2431,11 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
 
    El alto manda y el ancho se calcula solo; las medidas van declaradas en el
    HTML para que el navegador reserve el sitio y la barra no salte al cargar. */
-.marca-ag {
-  /* De 24 a 34 px. Los 24 se eligieron cuando la mitad derecha de la barra
-     llevaba el nombre del usuario, su plan, el consumo, «Planes» y «Salir»: con
-     todo eso enfrente, el logotipo del socio no podía crecer sin empujar. Ahora
-     esa mitad es el consumo y un icono, y el sitio que sobra es justo el que le
-     faltaba. La barra pasa de 59 a 66 px de alto, que es lo que cuesta. */
-  height: 34px; width: auto; display: block; opacity: 0.95;
-}
+/* Sin el descriptor, la proporción pasó de 8,1:1 a 11,8:1 — el logotipo es ahora
+   solo el nombre. A 34 px de alto mediría 401 px de ancho y se comería la barra,
+   así que baja a 17: el nombre se lee igual porque ya no comparte altura con una
+   segunda línea que nadie podía leer. */
+.marca-ag { height: 17px; width: auto; display: block; opacity: 0.95; }
 /* El logotipo del Radar, en su versión blanca sobre este fondo.
    
    Es más alto que el del socio a propósito: el del socio es la firma de quién
@@ -2430,9 +2464,18 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
 @media (max-width: 760px) {
   .cuenta-marca { gap: 5px; }
   .cuenta-marca .ic { width: 15px; height: 15px; }
-  .marca-ag { height: 22px; }
+  .marca-ag { height: 12px; }
   .marca-radar { height: 26px; }
   .marca-nombre { font-size: 0.8rem; }
+  /* El rótulo «Aprende con» NO se retira en móvil, aunque sea lo primero que
+     apetece quitar cuando falta sitio. Sin él el botón dice solo «Andrés
+     Giraldo», que es exactamente el problema que el rótulo viene a resolver:
+     quien llega sin conocerle no sabe si es quien montó la plataforma o quien
+     enseña de esto. Sin rótulo, el botón deja de ser una invitación y pasa a ser
+     una firma — y una firma no se pulsa.
+     Lo que se encoge es el logotipo, que sí aguanta. */
+  .aprende-btn { padding: 3px 8px; }
+  .aprende-eyebrow { font-size: 0.46rem; letter-spacing: 0.08em; }
 }
 /* Por debajo de 420 px —iPhone SE y similares— sí hay que elegir, y gana el
    logotipo: es la señal que el punto 7 pide y la que no se puede deducir de
@@ -2446,6 +2489,6 @@ body.con-banner-cookies .asis-panel { bottom: 186px; max-height: calc(100vh - 26
   .cuenta-marca { gap: 4px; }
   .marca-nombre { display: none; }
   .marca-sep, .cuenta-marca .ic { display: none; }
-  .marca-ag { height: 18px; }
+  .marca-ag { height: 13px; }
   .marca-radar { height: 24px; }
 }

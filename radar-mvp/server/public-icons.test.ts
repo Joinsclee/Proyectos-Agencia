@@ -56,3 +56,54 @@ test('el botón de comunidad no se pinta si no hay comunidad a la que ir', async
   // Los dos logotipos llevan al inicio.
   assert.match(html, /<a class="cuenta-marca" href="\/"/, 'pulsar el logotipo tiene que llevar al inicio');
 });
+
+test('los acuerdos de la reunión que se pierden sin hacer ruido', async () => {
+  const [html, css, app] = await Promise.all([
+    readProjectFile('server/public/index.html'),
+    readProjectFile('server/public/styles.css'),
+    readProjectFile('server/public/app.js'),
+  ]);
+
+  // ── El sello de beta ──
+  // «Es importante porque eso nos valida los posibles detalles que surjan.» Un
+  // fallo bajo un sello de beta es algo esperado; el mismo fallo sin él es una
+  // decepción, y quien se decepciona se va callado en vez de reportarlo.
+  assert.match(html, /class="sello-beta"/, 'el sello de beta se pidió en la reunión');
+  assert.ok(
+    html.indexOf('sello-beta') > html.indexOf('cuenta-marca'),
+    'va pegado al nombre del producto, no flotando en una esquina',
+  );
+
+  // ── «Aprende con Andrés Giraldo» ──
+  // El logotipo del socio hace de botón, y por eso tuvo que salir de la esquina
+  // superior izquierda: ahí todo el mundo espera que un clic devuelva al inicio.
+  assert.match(html, /id="aprende-btn"/);
+  assert.ok(
+    html.indexOf('aprende-btn') > html.indexOf('id="nav-right"'),
+    'el logotipo del socio va en la barra derecha; la esquina izquierda es del producto',
+  );
+  assert.match(html, /class="aprende-eyebrow"/, '«Aprende con» es lo que convierte una firma en una invitación');
+  assert.doesNotMatch(
+    css,
+    /\.aprende-eyebrow\s*\{\s*display:\s*none/,
+    'sin el rótulo el botón dice solo «Andrés Giraldo», que no se lee como algo que se pulsa',
+  );
+  // Y la regla que hace que «oculto» signifique oculto: `.menu-cuenta` declara
+  // `position: relative` con display por defecto, pero el botón entero nace
+  // `hidden` hasta que haya un destino. Es el mismo caso de `.auth-icono[hidden]`
+  // y `.asis-btn[hidden]`, que ya mordió dos veces.
+  assert.match(css, /\.menu-cuenta\[hidden\]\s*\{\s*display:\s*none/);
+  assert.match(app, /montarMenuDeFormacion/, 'lo enciende /api/config, no el HTML');
+
+  // ── El copy que Andrés pidió cambiar ──
+  // «Mediana» es palabra de estadístico, y es la cifra contra la que se mide
+  // todo: si esa no se entiende, no se entiende ni el porcentaje ni las
+  // estrellas. La mediana se sigue calculando; cambia cómo se llama en pantalla.
+  const visibles = app
+    .split('\n')
+    .filter((l) => !l.trim().startsWith('//') && !l.trim().startsWith('*'))
+    .join('\n');
+  assert.doesNotMatch(visibles, /[Mm]ediana/, 'no puede quedar ninguna «mediana» a la vista del usuario');
+  assert.match(app, /Precio por m² de este inmueble/, '«Este inmueble» no decía de qué cifra hablaba');
+  assert.match(app, /Precio medio de comparables/);
+});
