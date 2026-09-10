@@ -621,10 +621,22 @@ function montarMenuDeFormacion(config) {
   const btn = $('aprende-btn');
   if (!wrap || !panel || !btn) return;
 
+  // Los nombres son los que usan las propias landings, y el pie dice el FORMATO,
+  // que es lo único que de verdad separa a las tres.
+  //
+  // «3 a 1» NO es una mentoría en grupo, que fue lo que supuse. Son TRES sesiones
+  // privadas de 90 minutos, una a una — el 3 son las sesiones, no las personas.
+  // Lo dice la propia landing: «Tres (3) Sesiones Privadas de 90 Minutos En vivo,
+  // 1 a 1». El nombre invita a leerlo como «tres personas con un mentor», así que
+  // el pie tiene que desmentirlo, no repetirlo.
+  //
+  // Y la de «1 a 1» tampoco era exacta: se llama Sesión de Despegue y es UNA
+  // sesión. Decir «con Andrés, a solas» no la distinguía de la otra, que también
+  // es a solas. Lo que las separa es cuántas sesiones son.
   const opciones = [
-    ['kitUrl', 'compass', 'Kit de inicio', 'Empieza por tu cuenta'],
-    ['mentoria1a1Url', 'user', 'Mentoría 1 a 1', 'Con Andrés, a solas'],
-    ['mentoria3a1Url', 'users', 'Mentoría 3 a 1', 'En grupo pequeño'],
+    ['kitUrl', 'compass', 'Kit de inicio', 'El método, por tu cuenta'],
+    ['mentoria1a1Url', 'user', 'Sesión de Despegue', 'Una sesión 1 a 1 con Andrés'],
+    ['mentoria3a1Url', 'users', 'Mentoría de Transformación', 'Tres sesiones 1 a 1 de 90 minutos'],
   ].filter(([clave]) => typeof config[clave] === 'string' && config[clave]);
 
   // Sin destinos, la marca se queda como marca: visible, sin menú y sin

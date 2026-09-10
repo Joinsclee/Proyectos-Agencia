@@ -59,6 +59,12 @@ const EnvSchema = z.object({
   // ninguno: un menú que se abre y no ofrece nada es peor que no tener menú.
   // Van por variable y no escritos en el código porque son landings de campaña —
   // cambian de URL cada lanzamiento, y no debería hacer falta desplegar por eso.
+  //
+  // Las dos de mentoría están publicadas y comprobadas (200 el 2026-09-09):
+  //   RADAR_FORMACION_1A1_URL = https://sistemacrece.com/1_a_1   (Sesión de Despegue)
+  //   RADAR_FORMACION_3A1_URL = https://sistemacrece.com/3_a_1   (Mentoría de Transformación)
+  // La del kit —el low ticket de $89.000— no tiene ruta propia en ese dominio;
+  // hay que pedirla antes de encenderla.
   RADAR_FORMACION_KIT_URL: z.string().url().optional(),
   RADAR_FORMACION_1A1_URL: z.string().url().optional(),
   RADAR_FORMACION_3A1_URL: z.string().url().optional(),
