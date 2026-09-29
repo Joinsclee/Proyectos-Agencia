@@ -479,8 +479,25 @@ async function serveStatic(
 const server = createServer(async (req, res) => {
   const requestId = createRequestId();
   applySecurityHeaders(res, requestId);
-  const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
-  const path = url.pathname;
+  // `new URL` va DENTRO del try, y no puede salir de aquí.
+  //
+  // Estaba fuera, y eso bastaba para tumbar el contenedor con una sola petición:
+  // `GET //[` hace que `new URL` lance `ERR_INVALID_URL`, y al estar en el cuerpo
+  // de una función `async` sin try, el error se convierte en un rechazo sin
+  // capturar. Node 20 los trata como fatales por omisión, así que el proceso se
+  // muere y con él el Radar de todo el mundo. Reproducido: proceso terminado con
+  // código 1 en la primera petición.
+  //
+  // Una ruta que Node acepta pero `URL` no es una petición mal formada, no una
+  // avería nuestra: se responde 400 y se sigue sirviendo.
+  let url: URL;
+  let path: string;
+  try {
+    url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
+    path = url.pathname;
+  } catch {
+    return sendJSON(res, 400, { error: 'Petición mal formada', requestId });
+  }
   try {
     // Health check de la plataforma (EasyPanel/Railway). Debe ser barato y NO tocar
     // la base: si Supabase va lento, el contenedor no debe darse por muerto.
@@ -1382,3 +1399,27 @@ function shutdown(signal: NodeJS.Signals) {
 
 process.once('SIGTERM', () => shutdown('SIGTERM'));
 process.once('SIGINT', () => shutdown('SIGINT'));
+
+// Red de seguridad del proceso.
+//
+// El servidor lanza promesas que nadie espera: el precalentamiento del arranque,
+// el refresco en segundo plano de los baseline de comparables, el registro de
+// consumos. Cualquiera de ellas que rechace sin `catch` mata el proceso, porque
+// Node 20 trata los rechazos sin capturar como fatales. Y un fallo en una tarea
+// de fondo —una consulta que agota su tiempo mientras se refresca una caché— no
+// es motivo para dejar sin Radar a quien está usándolo.
+//
+// Se registra en el log con toda la traza, que es lo que hace falta para
+// arreglarlo, y el servidor sigue atendiendo. NO es un lugar para esconder
+// errores: si esto aparece en el log, hay un `catch` que falta donde se originó.
+process.on('unhandledRejection', (razon) => {
+  const msg = razon instanceof Error ? (razon.stack ?? razon.message) : String(razon);
+  log.error(`Promesa rechazada sin capturar (el servidor sigue en pie): ${msg}`);
+});
+// Una excepción síncrona sin capturar sí deja el proceso en estado dudoso, así
+// que aquí no se sigue: se registra y se cierra ordenadamente para que EasyPanel
+// levante un contenedor limpio en vez de quedarse uno a medias.
+process.on('uncaughtException', (error) => {
+  log.error(`Excepción sin capturar; cerrando para reiniciar limpio: ${error.stack ?? error.message}`);
+  shutdown('SIGTERM');
+});
