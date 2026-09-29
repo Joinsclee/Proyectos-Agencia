@@ -234,6 +234,27 @@ const AVISO_SIN_ANALISIS = 'No pudimos verificar el análisis con IA de este inm
   + 'no mostrarlo. El análisis de mercado de esta misma ficha —comparables, precio medio y posición frente '
   + 'a la zona— sí está calculado y es el que sostiene la valoración.';
 
+/**
+ * Lo que se le cuenta al usuario cuando la IA no responde. El texto del proveedor
+ * NO sale de aquí.
+ *
+ * Antes salía tal cual: la ficha llegó a mostrar, en producción y a cualquiera
+ * que pulsara el botón, el cuerpo del error 429 de OpenAI entero —incluido
+ * «You have no credits remaining» y el enlace a la página de facturación de la
+ * cuenta—. Al usuario no le dice nada que pueda usar, y de paso publica cómo está
+ * montado el servicio y en qué estado está su factura.
+ *
+ * El error real se registra en el log del servidor, que es donde hace falta para
+ * arreglarlo.
+ */
+function avisoDeFalloIA(e: unknown, donde: string): string {
+  const real = e instanceof Error ? e.message : String(e);
+  console.error(`[analysis] ${donde}: la IA no respondió — ${real}`);
+  return 'El análisis con IA no está disponible en este momento. El análisis de mercado de esta '
+    + 'ficha —comparables, precio medio y posición frente a la zona— sí está calculado y es el '
+    + 'que sostiene la valoración.';
+}
+
 async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult> {
   const { data, error } = await supabase
     .from('inmuebles')
@@ -289,7 +310,10 @@ async function analyzeBanco(id: string, refresh: boolean): Promise<AnalyzeResult
       await persistDescarte('inmuebles', id, data.features, e.message);
       return { ok: false, cached: false, market, bank_verdict: verdict, recommendations, sin_verificar: true, error: AVISO_SIN_ANALISIS };
     }
-    return { ok: false, cached: false, market, bank_verdict: verdict, recommendations, error: e instanceof Error ? e.message : String(e) };
+    return {
+      ok: false, cached: false, market, bank_verdict: verdict, recommendations,
+      error: avisoDeFalloIA(e, `inmueble ${id}`),
+    };
   }
 }
 
@@ -344,6 +368,9 @@ async function analyzeRemate(id: string, refresh: boolean): Promise<AnalyzeResul
       await persistDescarte('remates', id, safeData.features, e.message);
       return { ok: false, cached: false, market, recommendations, sin_verificar: true, error: AVISO_SIN_ANALISIS };
     }
-    return { ok: false, cached: false, market, recommendations, error: e instanceof Error ? e.message : String(e) };
+    return {
+      ok: false, cached: false, market, recommendations,
+      error: avisoDeFalloIA(e, `remate ${id}`),
+    };
   }
 }
