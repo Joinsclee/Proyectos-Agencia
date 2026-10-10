@@ -66,6 +66,27 @@ export async function registerUser(input: unknown): Promise<AuthResult> {
   return { ok: true, user: { id: data.user!.id, email, name } };
 }
 
+/**
+ * ¿Este fallo es del servicio o de las credenciales?
+ *
+ * Supabase marca las credenciales malas con 400 y un código propio
+ * (`invalid_credentials`, `invalid_grant`, `email_not_confirmed`). Todo lo
+ * demás —402 por cuota, 429, cualquier 5xx, o un error sin estado, que es lo
+ * que deja un corte de red— es el servicio, no la persona.
+ *
+ * Se decide por lo que SÍ sabemos que es credencial, no por lista de fallos:
+ * un código nuevo de Supabase se trataría como fallo de servicio, que es el
+ * lado seguro —el usuario reintenta— en vez de acusarle de equivocarse.
+ */
+function esFalloDeServicio(error: { status?: number; code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  const codigo = String(error.code ?? '').toLowerCase();
+  if (codigo.includes('credential') || codigo.includes('grant') || codigo.includes('not_confirmed')) return false;
+  const estado = error.status;
+  if (estado === 400 || estado === 401 || estado === 403) return false;
+  return true;
+}
+
 export async function loginUser(input: unknown): Promise<AuthResult> {
   const parsed = LoginSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' };
@@ -75,6 +96,25 @@ export async function loginUser(input: unknown): Promise<AuthResult> {
   // cliente; en el compartido contaminaría todas las consultas (RLS → 0 filas).
   const { data, error } = await authClient.auth.signInWithPassword({ email, password });
   if (error || !data.session) {
+    // Un servicio caído NO es una contraseña mal puesta.
+    //
+    // Antes todo error salía como «Correo o contraseña incorrectos», y el día
+    // que Supabase restringió el proyecto por cuota (HTTP 402) la app se pasó
+    // horas diciéndole a gente con la contraseña correcta que la tenía mal.
+    // Eso no solo confunde: les hace cambiarla, reintentar y marcharse creyendo
+    // que el fallo es suyo.
+    //
+    // El mensaje genérico tiene un motivo que sigue valiendo —no decir si un
+    // correo existe— pero ese motivo solo cubre el fallo de CREDENCIALES. Un 402,
+    // un 5xx o un corte de red son otra cosa y hay que decirlo.
+    if (esFalloDeServicio(error)) {
+      log.error(`login: el servicio de autenticación no responde — ${error?.status ?? '?'} ${error?.message ?? ''}`);
+      return {
+        ok: false,
+        error: 'No pudimos verificar tu acceso porque el servicio no está respondiendo. '
+          + 'No es tu contraseña. Inténtalo en unos minutos.',
+      };
+    }
     return { ok: false, error: 'Correo o contraseña incorrectos.' };
   }
   return {
