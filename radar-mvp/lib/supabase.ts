@@ -146,6 +146,34 @@ export async function upsertInmuebles(items: unknown[]): Promise<{
  * validación son deliberadamente distintas de `inmuebles`: mezclar ambos
  * precios contaminaría tanto el precio/m² de venta como el índice CRECE.
  */
+/**
+ * Las ÚNICAS claves de `features` que alguien llega a leer en un arriendo.
+ *
+ * El parser de FincaRaíz construye un `features` de 28 claves y lo mismo sirve
+ * para un inmueble en venta —donde la ficha enseña la descripción, las fotos y
+ * las amenidades— que para un arriendo, donde NO se enseña nada: un arriendo
+ * solo existe para calcular la mediana del canon de la zona. El motor lee seis
+ * claves (`engine/rental-comparables.ts`, la proyección `COLS`) y nadie más
+ * toca esa columna.
+ *
+ * Las otras 22 —`description`, `images`, `amenities`, `title`, el bloque del
+ * portal— se guardaban igual, y el 10 de octubre de 2026 pasaron la factura:
+ * `rental_listings` ocupaba 362 MB, de los que 229 MB eran TOAST (el JSONB
+ * fuera de línea) de datos que nunca se leen. Con la base entera en 1,31 GB,
+ * eso era el 17 % del total tirado.
+ *
+ * Se recorta aquí, al escribir, y no al leer: el coste está en el disco.
+ */
+const CLAVES_DE_ARRIENDO = ['lat', 'lng', 'bedrooms', 'garages', 'neighborhood', 'is_project'] as const;
+
+function soloLoQueUsaElArriendo(features: Record<string, unknown>): Record<string, unknown> {
+  const recortado: Record<string, unknown> = {};
+  for (const clave of CLAVES_DE_ARRIENDO) {
+    if (features[clave] !== undefined && features[clave] !== null) recortado[clave] = features[clave];
+  }
+  return recortado;
+}
+
 export async function upsertRentalListings(items: unknown[]): Promise<{
   inserted: number;
   updated: number;
@@ -175,6 +203,7 @@ export async function upsertRentalListings(items: unknown[]): Promise<{
   const nowISO = new Date().toISOString();
   const enriched = [...deduped.values()].map((item) => ({
     ...item,
+    features: soloLoQueUsaElArriendo(item.features),
     last_seen_at: nowISO,
     times_missed: 0,
     is_active: true,
