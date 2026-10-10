@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070A13" />
+  <title>Propuesta estratégica para Con.Ciencia · JoinsClee</title>
+  <meta name="description" content="Estructura de crecimiento para escalar sin perder cercanía. Producto, Comunicación y Sistema de ventas." />
+  <link rel="icon" type="image/png" href="https://vibe.filesafe.space/1779853814963839930/attachments/5498cf53-d1d5-4dc8-ae73-977545f788d3.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <style>
+/* =========================================================================
+   JOINSCLEE — Sistema de diseño para documentos (Propuesta / Aclaraciones)
+   Themeable: html.dark / html.light. Marca real go.joinsclee.com
+   Fuentes: Instrument Sans (display) · Instrument Serif italic (acentos) ·
+            Plus Jakarta Sans (cuerpo)
+   ========================================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+/* ---------- Tokens de tema ---------- */
+html.dark {
+  --bg: #070A13;
+  --bg-soft: #0B1120;
+  --fg: #F8FAFC;
+  --fg-soft: rgba(248,250,252,0.80);
+  --muted: #94A3B8;
+  --muted-2: rgba(148,163,184,0.62);
+  --card: linear-gradient(180deg, rgba(14,20,36,0.72), rgba(14,20,36,0.34));
+  --card-solid: #0E1424;
+  --card-strong: linear-gradient(180deg, rgba(14,20,36,0.96), rgba(7,10,19,0.96));
+  --border: rgba(30,41,59,0.62);
+  --border-2: rgba(30,41,59,1);
+  --hairline: rgba(148,163,184,0.14);
+  --primary: #0070F3;
+  --primary-2: #60A5FA;
+  --primary-ink: #cfe4ff;
+  --primary-soft: rgba(0,112,243,0.12);
+  --primary-soft-2: rgba(0,112,243,0.05);
+  --primary-border: rgba(0,112,243,0.42);
+  --grid-dot: rgba(0,112,243,0.05);
+  --grid-glow: rgba(0,112,243,0.18);
+  --card-shadow: 0 16px 40px -12px rgba(0,112,243,0.22);
+  --hl-grad: linear-gradient(180deg, #60A5FA 0%, #0070F3 100%);
+  --divider-glow: 0 0 24px rgba(0,112,243,0.8);
+  --danger: #F87171;
+  --danger-bg: linear-gradient(180deg, rgba(220,38,38,0.16), rgba(220,38,38,0.04));
+  --danger-border: rgba(220,38,38,0.42);
+  --ok: #34D399;
+  --tag-bg: linear-gradient(180deg, rgba(0,112,243,0.14), rgba(0,112,243,0.05));
+}
+html.light {
+  --bg: #F4F7FC;
+  --bg-soft: #FFFFFF;
+  --fg: #0A1120;
+  --fg-soft: #3A4658;
+  --muted: #64748B;
+  --muted-2: #94A3B8;
+  --card: #FFFFFF;
+  --card-solid: #FFFFFF;
+  --card-strong: linear-gradient(180deg, #FFFFFF, #F7FAFF);
+  --border: #E3EAF4;
+  --border-2: #D5DFED;
+  --hairline: #E7EDF6;
+  --primary: #0070F3;
+  --primary-2: #2563EB;
+  --primary-ink: #0b4fa8;
+  --primary-soft: rgba(0,112,243,0.07);
+  --primary-soft-2: rgba(0,112,243,0.035);
+  --primary-border: rgba(0,112,243,0.30);
+  --grid-dot: rgba(0,112,243,0.055);
+  --grid-glow: rgba(0,112,243,0.10);
+  --card-shadow: 0 18px 40px -22px rgba(6,26,66,0.22);
+  --hl-grad: linear-gradient(180deg, #1f6fe0 0%, #0a53c2 100%);
+  --divider-glow: 0 0 18px rgba(0,112,243,0.35);
+  --danger: #DC2626;
+  --danger-bg: linear-gradient(180deg, rgba(220,38,38,0.07), rgba(220,38,38,0.02));
+  --danger-border: rgba(220,38,38,0.24);
+  --ok: #059669;
+  --tag-bg: linear-gradient(180deg, rgba(0,112,243,0.10), rgba(0,112,243,0.03));
+}
+
+/* ---------- Contraste AA en tema claro ---------- */
+html.light .eyebrow,
+html.light .sec-kicker,
+html.light .callout .lbl,
+html.light .doc-tag { color: var(--primary-2); }
+html.light .eyebrow::before, html.light .eyebrow::after {
+  background: linear-gradient(to right, transparent, var(--primary-2), transparent);
+}
+html.light .doc-footer p { color: var(--muted); }
+html.light .tl-item .phase small,
+html.light .price-block .plabel,
+html.light .meta-row .k { color: var(--primary-2); }
+/* Texto en gradiente -> color sólido en claro (evita recuadro al rasterizar PDF) */
+html.light .hl,
+html.light .price-block .price,
+html.light .pilar .pnum,
+html.light .stat-number {
+  background: none !important;
+  -webkit-text-fill-color: #0a53c2;
+  color: #0a53c2;
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--fg);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 16.5px;
+  line-height: 1.72;
+  background:
+    radial-gradient(ellipse 72% 52% at 50% -6%, var(--grid-glow), transparent 62%),
+    radial-gradient(circle at 1px 1px, var(--grid-dot) 1px, transparent 0),
+    var(--bg);
+  background-size: auto, 30px 30px, auto;
+  background-attachment: fixed, fixed, fixed;
+}
+::selection { background: rgba(0,112,243,0.28); color: #fff; }
+
+.font-display { font-family: 'Instrument Sans', 'Inter', system-ui, sans-serif; }
+.serif { font-family: 'Instrument Serif', 'Times New Roman', Georgia, serif; }
+
+/* Acento editorial: palabra clave en serif itálica con gradiente azul */
+.hl {
+  font-family: 'Instrument Serif', 'Times New Roman', Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--primary-2);
+  background: var(--hl-grad);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ---------- Topbar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  padding: 15px clamp(18px, 5vw, 40px);
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--hairline);
+}
+.wordmark { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--fg); }
+.wordmark .mark {
+  width: 30px; height: 30px; border-radius: 8px; flex: none;
+  display: grid; place-items: center;
+  background: linear-gradient(160deg, #0a63d8, #0070F3 55%, #4f9dff);
+  box-shadow: 0 4px 14px rgba(0,112,243,0.4), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.wordmark .mark svg { width: 17px; height: 17px; display: block; }
+.wordmark .mark-img { width: 32px; height: 32px; border-radius: 8px; flex: none; display: block; box-shadow: 0 4px 14px rgba(0,112,243,0.32); }
+.wordmark .name {
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 500; font-size: 1.18rem; letter-spacing: 0.22em;
+}
+.doc-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 0.66rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--primary-2);
+  padding: 7px 14px; border-radius: 999px;
+  background: var(--tag-bg); border: 1px solid var(--primary-border);
+  white-space: nowrap;
+}
+.doc-tag::before { content:''; width:6px; height:6px; border-radius:50%; background: var(--primary); box-shadow: 0 0 8px var(--primary); }
+
+/* ---------- Layout ---------- */
+.doc { max-width: 760px; margin: 0 auto; padding: clamp(30px, 6vw, 66px) clamp(18px, 5vw, 40px) 40px; }
+
+/* ---------- Masthead ---------- */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 13px;
+  font-family: 'Instrument Sans', sans-serif;
+  text-transform: uppercase; letter-spacing: 0.3em;
+  font-size: 0.68rem; font-weight: 600; color: var(--primary);
+}
+.eyebrow::before, .eyebrow::after {
+  content: ''; width: 30px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--primary), transparent);
+}
+.eyebrow.solo::before { display:none; }
+
+.masthead { margin-top: 26px; }
+.doc-title {
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 600; letter-spacing: -0.02em; line-height: 1.06;
+  font-size: clamp(2.15rem, 6vw, 3.35rem);
+  margin: 20px 0 0;
+}
+.doc-sub {
+  margin: 20px 0 0; max-width: 56ch;
+  font-size: clamp(1.02rem, 2.4vw, 1.16rem); color: var(--fg-soft); font-weight: 400;
+}
+.meta-row {
+  margin-top: 30px; display: flex; flex-wrap: wrap; gap: 10px 26px;
+  font-size: 0.8rem; color: var(--muted);
+}
+.meta-row .k {
+  font-family: 'Instrument Sans', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.16em; font-size: 0.62rem; color: var(--primary-2); font-weight: 600;
+  display:block; margin-bottom: 2px;
+}
+.meta-row .v { font-weight: 600; color: var(--fg); }
+.cover-brand {
+  margin-top: 34px; display: inline-flex; align-items: center; gap: 11px;
+  font-family: 'Instrument Sans', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.2em; font-size: 0.62rem; font-weight: 600; color: var(--muted);
+}
+.cover-brand::before { content: ''; width: 24px; height: 1px; background: var(--primary); }
+
+/* ---------- Glow divider ---------- */
+.glow-divider {
+  height: 1px; border: 0; margin: 42px 0;
+  background: linear-gradient(to right, transparent, var(--primary) 50%, transparent);
+  box-shadow: var(--divider-glow);
+}
+.glow-divider.tight { margin: 30px 0; }
+
+/* ---------- Secciones ---------- */
+.section { margin-top: 48px; }
+.sec-head { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px; }
+.sec-num {
+  flex: none; width: 46px; height: 46px; border-radius: 13px;
+  display: grid; place-items: center;
+  background: var(--primary-soft); border: 1px solid var(--primary-border);
+  box-shadow: 0 0 20px var(--primary-soft), inset 0 1px 0 rgba(255,255,255,0.06);
+  font-family: 'Instrument Serif', serif; font-style: italic;
+  font-size: 1.5rem; line-height: 1;
+  color: var(--primary-2);
+  background-clip: padding-box;
+}
+.sec-head .htext { padding-top: 1px; }
+.sec-kicker {
+  font-family: 'Instrument Sans', sans-serif; text-transform: uppercase;
+  letter-spacing: 0.22em; font-size: 0.6rem; font-weight: 600; color: var(--primary);
+  display: block; margin-bottom: 6px;
+}
+h2.sec-title {
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 600; letter-spacing: -0.01em; line-height: 1.14;
+  font-size: clamp(1.42rem, 3.6vw, 1.9rem); margin: 0;
+}
+h3.sub-title {
+  font-family: 'Instrument Sans', sans-serif;
+  font-weight: 600; font-size: 1.12rem; letter-spacing: -0.01em;
+  margin: 30px 0 10px; color: var(--fg);
+}
+h4.mini-title {
+  font-family: 'Instrument Sans', sans-serif;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  font-size: 0.72rem; font-weight: 700; color: var(--primary-2);
+  margin: 22px 0 8px;
+}
+
+p { margin: 0 0 14px; color: var(--fg-soft); }
+p.lead { font-size: 1.12rem; color: var(--fg); }
+strong, b { color: var(--fg); font-weight: 700; }
+em { font-style: italic; }
+a { color: var(--primary-2); text-decoration: none; }
+
+/* ---------- Listas ---------- */
+.arrow-list { list-style: none; margin: 6px 0 14px; padding: 0; }
+.arrow-list > li {
+  position: relative; padding: 4px 0 4px 30px; color: var(--fg-soft);
+}
+.arrow-list > li::before {
+  content: ''; position: absolute; left: 4px; top: 0.82em;
+  width: 7px; height: 7px; border-right: 2px solid var(--primary);
+  border-bottom: 2px solid var(--primary); transform: rotate(-45deg);
+}
+.arrow-list ul, ul.sub-list {
+  list-style: none; margin: 6px 0 4px; padding: 0 0 0 4px;
+}
+.arrow-list ul > li, ul.sub-list > li {
+  position: relative; padding: 2px 0 2px 22px; font-size: 0.94em; color: var(--muted);
+}
+.arrow-list ul > li::before, ul.sub-list > li::before {
+  content: ''; position: absolute; left: 2px; top: 0.86em;
+  width: 6px; height: 1px; background: var(--primary); opacity: 0.75;
+}
+
+/* check / cross list dentro de cards */
+.io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+.io-card { padding: 24px 22px; }
+.io-card h4 { display:flex; align-items:center; gap:10px; margin:0 0 14px; }
+.check-list, .cross-list { list-style: none; margin: 0; padding: 0; }
+.check-list > li, .cross-list > li {
+  position: relative; padding: 7px 0 7px 32px; color: var(--fg-soft); line-height: 1.5;
+  border-top: 1px solid var(--hairline);
+}
+.check-list > li:first-child, .cross-list > li:first-child { border-top: 0; }
+.check-list > li::before {
+  content: ''; position: absolute; left: 2px; top: 0.72em;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--primary-soft); border: 1px solid var(--primary-border);
+}
+.check-list > li::after {
+  content: ''; position: absolute; left: 7px; top: 0.86em;
+  width: 4px; height: 8px; border-right: 2px solid var(--primary-2);
+  border-bottom: 2px solid var(--primary-2); transform: rotate(45deg);
+}
+.cross-list > li::before {
+  content: ''; position: absolute; left: 2px; top: 0.72em;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--danger-bg); border: 1px solid var(--danger-border);
+}
+.cross-list > li::after {
+  content: '\00d7'; position: absolute; left: 5.5px; top: 0.5em;
+  font-size: 13px; line-height: 1; color: var(--danger); font-weight: 700;
+}
+
+/* ---------- Cards ---------- */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; position: relative; overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(to right, transparent, var(--primary-border), transparent);
+}
+.grid-2 { display:grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid-3 { display:grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+/* Pilares numerados */
+.pilar { padding: 26px 24px; }
+.pilar .pnum {
+  font-family: 'Instrument Serif', serif; font-style: italic;
+  font-size: 2.4rem; line-height: 1;
+  background: var(--hl-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  color: var(--primary-2);
+}
+.pilar h4 { font-family:'Instrument Sans',sans-serif; font-size: 1.16rem; font-weight:600; margin: 12px 0 6px; }
+.pilar p { margin: 0; font-size: 0.95rem; }
+
+/* Deseo (lista numerada tipo card) */
+.wish { padding: 20px 22px; display:flex; gap: 16px; align-items:flex-start; }
+.wish .wnum {
+  flex:none; font-family:'Instrument Serif',serif; font-style:italic; font-size: 1.7rem; line-height:1;
+  color: var(--primary-2); min-width: 30px;
+}
+.wish h4 { font-family:'Instrument Sans',sans-serif; font-size: 1.04rem; font-weight:600; margin:0 0 5px; }
+.wish p { margin:0; font-size: 0.94rem; }
+
+/* ---------- Callout / pull ---------- */
+.callout {
+  margin: 22px 0; padding: 22px 26px; border-radius: 14px;
+  background: linear-gradient(120deg, var(--primary-soft), var(--primary-soft-2));
+  border: 1px solid var(--primary-border); border-left-width: 3px;
+  position: relative;
+}
+.callout p { margin: 0; color: var(--fg); }
+.callout p + p { margin-top: 10px; }
+.callout.big p { font-size: 1.18rem; font-weight: 600; line-height: 1.5; }
+.callout.serif p {
+  font-family: 'Instrument Serif', serif; font-style: italic;
+  font-size: 1.42rem; line-height: 1.34; color: var(--fg);
+}
+.callout .lbl {
+  font-family:'Instrument Sans',sans-serif; text-transform:uppercase; letter-spacing:0.18em;
+  font-size:0.6rem; font-weight:700; color: var(--primary); display:block; margin-bottom: 8px;
+}
+
+/* note aside */
+.note {
+  margin: 16px 0; padding: 13px 18px; border-radius: 11px;
+  background: var(--primary-soft-2); border: 1px dashed var(--primary-border);
+  font-size: 0.92rem; color: var(--fg-soft);
+}
+.note strong { color: var(--fg); }
+
+/* ---------- Bloque de inversión ---------- */
+.price-block {
+  margin: 24px 0; padding: 30px 28px; border-radius: 18px;
+  background: var(--card-strong); border: 1px solid var(--primary-border);
+  box-shadow: 0 0 70px var(--primary-soft), var(--card-shadow);
+  text-align: center; position: relative; overflow:hidden;
+}
+.price-block::before {
+  content:''; position:absolute; top:-1px; left:28%; right:28%; height:2px;
+  background: linear-gradient(to right, transparent, var(--primary), transparent);
+  filter: blur(1px);
+}
+.price-block .plabel {
+  font-family:'Instrument Sans',sans-serif; text-transform:uppercase; letter-spacing:0.2em;
+  font-size:0.64rem; font-weight:600; color: var(--primary-2);
+}
+.price-block .price {
+  font-family:'Instrument Serif',serif; font-style: italic; letter-spacing:-0.02em;
+  font-size: clamp(2.6rem, 8vw, 3.6rem); line-height: 1.05; margin: 8px 0 2px;
+  background: var(--hl-grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  color: var(--primary-2);
+}
+.price-block .pterm { font-size: 0.98rem; color: var(--fg); font-weight:600; }
+.price-block .pfine { font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+
+/* ---------- Tabla comparativa ---------- */
+.cmp-wrap { margin: 12px 0 6px; overflow-x: auto; border-radius: 14px; border: 1px solid var(--border); }
+table.cmp { width: 100%; border-collapse: collapse; min-width: 620px; font-size: 0.9rem; table-layout: fixed; }
+table.cmp col.c-area { width: 17%; }
+table.cmp col.c-hoy { width: 27%; }
+table.cmp col.c-impl { width: 29%; }
+table.cmp col.c-man { width: 27%; }
+table.cmp thead th {
+  text-align: left; font-family:'Instrument Sans',sans-serif; font-weight:600;
+  font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.13em;
+  padding: 12px 16px; color: var(--muted); background: var(--primary-soft-2);
+  border-bottom: 1px solid var(--border);
+}
+table.cmp thead th.hi { color: var(--primary-2); }
+table.cmp td {
+  padding: 12px 16px; vertical-align: top; color: var(--fg-soft);
+  border-bottom: 1px solid var(--hairline); word-wrap: break-word; overflow-wrap: break-word;
+}
+table.cmp tbody tr:last-child td { border-bottom: 0; }
+table.cmp td.area {
+  font-family:'Instrument Sans',sans-serif; font-weight:600; color: var(--fg);
+  overflow-wrap: normal; word-break: normal; hyphens: none;
+}
+table.cmp td.manana { color: var(--fg); }
+table.cmp td.impl {
+  background: var(--primary-soft-2);
+  border-left: 1px solid var(--primary-border); border-right: 1px solid var(--primary-border);
+}
+
+/* ---------- Timeline / fases ---------- */
+.timeline { position: relative; margin: 10px 0 0; padding-left: 8px; }
+.tl-item { position: relative; padding: 0 0 26px 34px; }
+.tl-item::before {
+  content:''; position:absolute; left: 6px; top: 22px; bottom: -4px; width: 2px;
+  background: linear-gradient(to bottom, var(--primary), var(--primary-soft));
+}
+.tl-item:last-child::before { display:none; }
+.tl-item .dot {
+  position:absolute; left: 0; top: 4px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--hl-grad);
+  box-shadow: 0 0 0 4px var(--primary-soft), 0 0 16px var(--primary);
+}
+.tl-item .phase {
+  font-family:'Instrument Sans',sans-serif; font-weight:600; font-size: 1.06rem; margin: 0 0 2px;
+}
+.tl-item .phase small {
+  display:inline-block; margin-left: 8px; font-size: 0.62rem; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--primary-2); font-weight: 600; vertical-align: middle;
+}
+.tl-item p { margin: 4px 0 0; font-size: 0.95rem; }
+.tl-item .deliverable {
+  margin-top: 8px; font-size: 0.9rem; color: var(--muted); padding-left: 14px;
+  border-left: 2px solid var(--primary-border);
+}
+.tl-item .deliverable b { color: var(--primary-2); font-weight: 600; }
+
+/* fase-card (mes 1/2/3) */
+.phase-card { padding: 22px 22px; }
+.phase-card .phdr { display:flex; align-items:center; gap: 12px; margin-bottom: 6px; }
+.phase-card .ptag {
+  font-family:'Instrument Sans',sans-serif; font-size:0.6rem; font-weight:700; letter-spacing:0.16em;
+  text-transform:uppercase; color:#fff; background: linear-gradient(180deg,var(--primary),#0057B3);
+  padding: 4px 11px; border-radius: 999px; box-shadow: 0 3px 12px var(--primary-soft);
+  white-space: nowrap; flex: none; align-self: flex-start; margin-top: 2px;
+}
+.phase-card h4 { font-family:'Instrument Sans',sans-serif; font-size:1.1rem; font-weight:600; margin:0; }
+.phase-card .obj { font-size: 0.94rem; color: var(--fg-soft); margin: 4px 0 12px; }
+
+/* two-col helper */
+.cols-2 { columns: 2; column-gap: 34px; }
+.cols-2 > li { break-inside: avoid; }
+
+/* ---------- Footer ---------- */
+.doc-footer {
+  margin-top: 60px; border-top: 1px solid var(--hairline);
+  padding: 26px clamp(18px,5vw,40px) 46px; text-align:center;
+}
+.doc-footer .fmark {
+  font-family:'Instrument Sans',sans-serif; letter-spacing: 0.2em; font-weight:500; font-size: 0.86rem;
+}
+.doc-footer p { font-size: 0.74rem; color: var(--muted-2); margin: 8px 0 0; letter-spacing: 0.02em; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .io-grid, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .cols-2 { columns: 1; }
+  .sec-num { width: 40px; height: 40px; font-size: 1.3rem; }
+}
+
+/* ---------- Print / PDF ----------
+   Fondo sólido (sin rejilla) = PDF liviano y rápido.
+   Márgenes verticales @page = inset seguro; el color de las bandas de margen
+   se pinta con header/footer en render.mjs (full-bleed sin franjas blancas). */
+/* Motor de PDF: paged.js (Paged Media real). Margen simétrico; el fondo full-bleed
+   lo pinta .pagedjs_sheet y la numeración va en @bottom-* (inyectado en el ensamblado). */
+@page { size: A4; margin: 16mm 15mm 17mm; }
+@media print {
+  html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html.dark body { background: #070A13 !important; background-image: none !important; }
+  html.light body { background: #F4F7FC !important; background-image: none !important; }
+
+  .topbar { position: static; -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom: 0; padding: 0; }
+  .doc { max-width: 100%; padding: 0; }
+  .doc-footer { margin-top: 6px; padding: 4mm 0 0; border-top-color: var(--hairline); break-inside: avoid; }
+  .section { margin-top: 26px; }
+
+  /* Portada dedicada. OJO: NUNCA usar break-before:avoid en el footer -> paged.js entra en loop */
+  .masthead { padding-top: 46mm; break-after: page; }
+  .glow-divider.first { display: none; }
+  .cover-brand { margin-top: 40px; }
+  .io-grid { break-inside: avoid; }
+
+  /* Paginación */
+  .section { break-inside: auto; margin-top: 30px; }
+  .sec-keep { break-inside: avoid; }
+  .sec-head { break-after: avoid; break-inside: avoid; }
+  h2.sec-title, h3.sub-title, h4.mini-title { break-after: avoid; }
+  p { orphans: 2; widows: 2; }
+  li { break-inside: avoid; }
+  .card, .io-card, .pilar, .wish, .callout, .price-block, .phase-card,
+  .tl-item, .note, .glow-divider { break-inside: avoid; }
+  table.cmp tr { break-inside: avoid; }
+  table.cmp thead { display: table-header-group; }
+  .cmp-wrap { overflow: visible; break-inside: avoid; }
+  /* Tabla compacta para que la sección 7 (atómica) quepa holgada en una página */
+  table.cmp { font-size: 0.78rem; }
+  table.cmp td, table.cmp thead th { padding: 7px 11px; }
+  table.cmp td { line-height: 1.38; }
+  .grid-3.phases { grid-template-columns: 1fr !important; }
+  ul.cols-2 { columns: 2; }
+  a { color: var(--primary-2); }
+
+  /* PDF liviano: evitar sombras/filtros/gradientes rasterizados por página */
+  * { box-shadow: none !important; filter: none !important; }
+  .card, .io-card, .pilar, .wish, .phase-card, .price-block { background: var(--card-solid) !important; }
+  .callout { background: var(--primary-soft) !important; }
+  .cta-button { background: linear-gradient(180deg, #0F172A, #0070F3) !important; }
+  /* Texto en gradiente -> sólido en PDF (evita recuadro al rasterizar) */
+  .hl, .pilar .pnum, .price-block .price, .stat-number {
+    background: none !important; -webkit-text-fill-color: currentColor !important;
+  }
+  .hl, .pilar .pnum, .price-block .price, .stat-number { color: var(--primary-2) !important; }
+}
+
+
+    /* === paged.js: full-bleed + numeración === */
+    .pagedjs_sheet, .pagedjs_pagebox { background: #070A13 !important; }
+    @page {
+      @bottom-left {
+        content: "JOINSCLEE · PROPUESTA ESTRATÉGICA · CON.CIENCIA";
+        font-family: 'Instrument Sans', sans-serif; font-size: 7pt;
+        letter-spacing: 0.12em; color: #8A97AD;
+        margin-bottom: 7mm;
+      }
+      @bottom-right {
+        content: "Pág " counter(page) " / " counter(pages);
+        font-family: 'Instrument Sans', sans-serif; font-size: 7pt;
+        letter-spacing: 0.12em; color: #8A97AD;
+        margin-bottom: 7mm;
+      }
+    }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <a class="wordmark" href="#" aria-label="JoinsClee">
+    <img class="mark-img" src="https://vibe.filesafe.space/1779853814963839930/attachments/5498cf53-d1d5-4dc8-ae73-977545f788d3.png" alt="JoinsClee" />
+    <span class="name">JOINSCLEE</span>
+  </a>
+  <span class="doc-tag">Propuesta estratégica</span>
+</header>
+
+<main class="doc">
+  <div class="masthead">
+    <span class="eyebrow">Con.Ciencia &times; JoinsClee</span>
+    <h1 class="doc-title">Propuesta estratégica<br>para <span class="hl">Con.Ciencia</span></h1>
+    <p class="doc-sub">Estructura de crecimiento para escalar sin perder <span class="hl">cercanía</span></p>
+    <div class="meta-row">
+      <div><span class="k">Preparado para</span><span class="v">Andrea · Con.Ciencia</span></div>
+      <div><span class="k">Pilares</span><span class="v">Producto · Comunicación · Sistema de ventas</span></div>
+      <div><span class="k">Primera etapa</span><span class="v">90 días</span></div>
+    </div>
+    <div class="cover-brand">JoinsClee · Funnels Automatizados y CRM de Ventas</div>
+  </div>
+
+  <hr class="glow-divider first">
+
+  <!-- 1 -->
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">1</div>
+      <div class="htext"><h2 class="sec-title">¿Dónde está Andrea hoy?</h2></div>
+    </div>
+    <p class="lead"><strong>Con.Ciencia ya funciona.</strong> Ya tiene autoridad, confianza, productos validados, comunidad, experiencia real con familias y una voz que conecta.</p>
+    <p>Pero el crecimiento actual depende mucho de Andrea y no hay suficiente claridad sobre cómo accionar para crecer con más estructura.</p>
+    <p>El siguiente paso no es cambiar lo que has construido.</p>
+    <p>El siguiente paso es <strong>formalizarlo, ordenarlo y sistematizarlo para que puedas crecer, sin incrementar la carga operativa, con más claridad, más estabilidad y sin perder la cercanía humana que hace especial a Con.Ciencia.</strong></p>
+
+    <div class="io-grid">
+      <div class="card io-card">
+        <h4 class="mini-title">Hoy Con.Ciencia tiene:</h4>
+        <ul class="check-list">
+          <li>Cursos validados.</li>
+          <li>Asesorías con agenda llena en los espacios que Andrea habilita.</li>
+          <li>Talleres puntuales con buena rentabilidad por hora.</li>
+          <li>Grupos de WhatsApp con comunidad real.</li>
+          <li>Una página web con el ecosistema completo.</li>
+          <li>Instagram como principal canal de comunicación y venta.</li>
+          <li>Recomendación boca a boca.</li>
+          <li>Experiencia directa con familias que valida su metodología.</li>
+          <li>Una visión futura interesante: adolescentes, comunidad más robusta y diplomado profesional.</li>
+        </ul>
+      </div>
+      <div class="card io-card">
+        <h4 class="mini-title">Pero también existen retos importantes:</h4>
+        <ul class="arrow-list">
+          <li>Las ventas dependen mucho de stories, publicaciones e impulsos orgánicos.</li>
+          <li>La comunicación depende de la energía e inspiración de Andrea.</li>
+          <li>Cada curso no tiene una página o recorrido específico diseñado para convertir.</li>
+          <li>Hay mucho seguimiento manual por WhatsApp.</li>
+          <li>Los recordatorios, confirmaciones y grupos dependen de operación manual.</li>
+          <li>La base de datos existe, pero no está siendo aprovechada como activo comercial.</li>
+          <li>Hay clientes que podrían avanzar de un curso a otro, pero falta un sistema claro de seguimiento.</li>
+          <li>Hay oportunidad de crecer fuera de Guatemala, pero el sistema de pagos y venta debe facilitarlo.</li>
+          <li>Andrea quiere crecer, pero le preocupa perder cercanía, calidad o control.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout big">
+      <span class="lbl">En resumen:</span>
+      <p>Con.Ciencia ha crecido gracias al conocimiento, intuición y conexión de Andrea con las familias. Pero para seguir creciendo sin más desgaste, necesita una estructura que no dependa únicamente de ella.</p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">2</div>
+      <div class="htext"><h2 class="sec-title">¿Cuáles son los principales deseos de Andrea?</h2></div>
+    </div>
+    <p>A partir de la conversación, identificamos estos deseos principales:</p>
+    <div class="grid-2">
+      <div class="card wish"><div class="wnum">1</div><div><h4>Crecer sin perder cercanía</h4><p>Que más familias sean parte de Con.Ciencia, pero sin que la experiencia se vuelva fría, masiva o impersonal. Andrea quiere mantener un espacio seguro, humano y cercano para padres.</p></div></div>
+      <div class="card wish"><div class="wnum">2</div><div><h4>Reducir dependencia de su tiempo y energía</h4><p>Que el negocio no dependa tanto de su operación manual, su inspiración diaria o su disponibilidad semanal. No se trata de sacar a Andrea del negocio. Se trata de construir una estructura alrededor de ella.</p></div></div>
+      <div class="card wish"><div class="wnum">3</div><div><h4>Tener más orden, estructura y estabilidad</h4><p>Andrea ha construido mucho de forma autodidacta, con ensayo y error. Ahora necesita una estructura que le dé más claridad sobre qué vender, cuándo venderlo, cómo comunicarlo y cómo hacer seguimiento.</p></div></div>
+      <div class="card wish"><div class="wnum">4</div><div><h4>Aumentar alumnos en los cursos online</h4><p>Quiere llenar mejor sus cohortes, capturar más alumnos online y crecer más allá del límite actual.</p></div></div>
+      <div class="card wish"><div class="wnum">5</div><div><h4>Mantener su voz y esencia</h4><p>Ya vivió malas experiencias con servicios de marketing que no entendieron su tono. Es clave que cualquier estrategia respete su voz, su sensibilidad profesional y su forma de conectar con las familias.</p></div></div>
+      <div class="card wish"><div class="wnum">6</div><div><h4>Expandir Con.Ciencia más allá de Guatemala</h4><p>Existe una oportunidad clara de crecer online y llegar a familias fuera del mercado local. Pero para eso se necesita mejorar la infraestructura de venta, pagos, seguimiento y experiencia digital.</p></div></div>
+      <div class="card wish"><div class="wnum">7</div><div><h4>Construir una escalera de valor más clara</h4><p>Ya tiene productos por edades y temas, pero puede ordenar mejor la ruta del cliente:</p><ul class="sub-list"><li>primeros talleres</li><li>cursos principales</li><li>asesorías</li><li>comunidad</li><li>adolescentes</li><li>productos profesionales</li><li>diplomado futuro</li></ul></div></div>
+      <div class="card wish"><div class="wnum">8</div><div><h4>Preparar la siguiente etapa: adolescentes y diplomado profesional</h4><p>Tiene una visión más grande: completar la ruta de crianza con adolescentes y eventualmente crear una formación más robusta para profesionales.</p></div></div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">3</div>
+      <div class="htext"><h2 class="sec-title">¿Qué proponemos?</h2></div>
+    </div>
+    <p>Proponemos acompañarte en la construcción de la estructura de crecimiento de Con.Ciencia como empresa educativa.</p>
+    <p><strong>Nuestro rol</strong> no sería actuar como una agencia tradicional de marketing, sino <strong>ayudarte a ordenar los tres pilares que sostienen el crecimiento del negocio:</strong></p>
+    <div class="grid-3">
+      <div class="card pilar"><div class="pnum">1</div><h4>Producto</h4></div>
+      <div class="card pilar"><div class="pnum">2</div><h4>Comunicación</h4></div>
+      <div class="card pilar"><div class="pnum">3</div><h4>Sistema de ventas</h4></div>
+    </div>
+    <p style="margin-top:20px">El objetivo es que Con.Ciencia pueda vender mejor sus cursos, acompañar mejor a su comunidad, aprovechar mejor su base de clientes y preparar la siguiente etapa de crecimiento sin que todo dependa de tu energía, intuición o disponibilidad semanal.</p>
+  </section>
+
+  <!-- 4 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">4</div>
+      <div class="htext"><h2 class="sec-title">La idea central</h2></div>
+    </div>
+    <p>Convertir lo que hoy funciona por intuición en un sistema más claro, repetible y escalable. La propuesta es simple:</p>
+    <div class="grid-2">
+      <div class="card pilar"><h4><span class="hl serif">Ordenar</span> lo que ya existe.</h4></div>
+      <div class="card pilar"><h4><span class="hl serif">Potenciar</span> lo que ya vende.</h4></div>
+      <div class="card pilar"><h4><span class="hl serif">Sistematizar</span> principalmente aquello que hoy depende demasiado de ti.</h4></div>
+      <div class="card pilar"><h4><span class="hl serif">Crecer</span> sin perder cercanía.</h4></div>
+    </div>
+    <p style="margin-top:20px">La ganancia no será únicamente vender mejor un curso. Será tener más claridad, menos carga mental, más capacidad de delegar y un sistema que permita repetir lo que funcione sin empezar desde cero cada vez.</p>
+  </section>
+
+  <!-- 5 -->
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">5</div>
+      <div class="htext"><h2 class="sec-title">¿Cómo resolvemos esto?</h2></div>
+    </div>
+    <p>Nuestro objetivo no es cambiar todo de golpe. Recomendamos empezar con una implementación técnica y estratégica progresiva.</p>
+    <p>La primera etapa debe enfocarse en crear estructura, ordenar prioridades y generar una primera victoria comercial. Luego, replicar lo aprendido en el resto del plan anual.</p>
+    <h4 class="mini-title">Nuestra ruta de trabajo</h4>
+    <div class="timeline">
+      <div class="tl-item"><span class="dot"></span><div class="phase">Primero: ordenar</div><p>Análisis y diagnóstico del negocio y la marca personal. Clarificar productos, escalera de valor, prioridades, calendario comercial, segmentos de audiencia y oportunidades de enfoque.</p></div>
+      <div class="tl-item"><span class="dot"></span><div class="phase">Segundo: potenciar</div><p>Implementar mejoras sobre lo que ya funciona. Tomar un curso validado y construirle un mejor recorrido de comunicación, venta y seguimiento.</p></div>
+      <div class="tl-item"><span class="dot"></span><div class="phase">Tercero: sistematizar</div><p>Instalar procesos, herramientas y automatizaciones simples para que el crecimiento no dependa tanto del trabajo manual.</p></div>
+      <div class="tl-item"><span class="dot"></span><div class="phase">Cuarto: validar</div><p>Revisar, analizar, estandarizar y optimizar lo implementado.</p></div>
+      <div class="tl-item"><span class="dot"></span><div class="phase">Quinto: preparar la expansión</div><p>Dejar las bases del negocio actual listas para poner foco en adolescentes, comunidad más robusta, contenido largo y diplomado profesional.</p></div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">6</div>
+      <div class="htext"><h2 class="sec-title">¿Dónde llevaremos a Con.Ciencia mañana?</h2></div>
+    </div>
+    <p>Queremos llevar a Con.Ciencia de un negocio que funciona por intuición, esfuerzo personal y comunicación manual, a un ecosistema educativo más claro, ordenado y escalable.</p>
+    <h4 class="mini-title">Mañana Con.Ciencia debería tener:</h4>
+    <ul class="arrow-list cols-2">
+      <li>Una escalera de productos más clara.</li>
+      <li>Un calendario comercial anual con planes definidos por temporada.</li>
+      <li>Campañas mejor planificadas.</li>
+      <li>Cada curso importante con su propio recorrido de venta.</li>
+      <li>Contenido conectado con los productos que se van a vender.</li>
+      <li>WhatsApp integrado al proceso comercial.</li>
+      <li>Comunidad más ordenada.</li>
+      <li>Base de datos segmentada.</li>
+      <li>Seguimientos más simples.</li>
+      <li>Recordatorios automatizados.</li>
+      <li>Más claridad sobre qué funciona, qué debe mejorarse y qué conviene descartar.</li>
+      <li>Menos incertidumbre antes de cada curso.</li>
+      <li>Más capacidad de crecer sin que Andrea tenga que hacerlo todo.</li>
+    </ul>
+  </section>
+
+  <!-- 7 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">7</div>
+      <div class="htext"><h2 class="sec-title">Diagrama claro: hoy vs mañana</h2></div>
+    </div>
+    <div class="cmp-wrap">
+      <table class="cmp">
+        <colgroup><col class="c-area"><col class="c-hoy"><col class="c-impl"><col class="c-man"></colgroup>
+        <thead><tr><th>Área</th><th>Hoy</th><th class="hi">Qué implementamos</th><th>Mañana</th></tr></thead>
+        <tbody>
+          <tr><td class="area">Modelo general</td><td>Con.Ciencia funciona, pero depende mucho de Andrea, su intuición y su energía.</td><td class="impl">Estructura de crecimiento, prioridades claras y procesos repetibles.</td><td class="manana">Con.Ciencia opera con más orden, claridad y estabilidad.</td></tr>
+          <tr><td class="area">Producto</td><td>Cursos validados, asesorías activas y talleres puntuales, pero con escalera de valor poco formalizada.</td><td class="impl">Mapa de productos, roles por producto, calendario comercial y ruta de valor.</td><td class="manana">Escalera clara, productos priorizados y visión hacia adolescentes/diplomado.</td></tr>
+          <tr><td class="area">Comunicación</td><td>Instagram vende gracias a la voz de Andrea, pero depende de inspiración, disponibilidad y publicaciones orgánicas.</td><td class="impl">Sistema de contenido conectado a campañas, productos y temporadas.</td><td class="manana">Comunicación más planificada, consistente y estratégica, sin perder la voz de Andrea.</td></tr>
+          <tr><td class="area">Sistema de ventas</td><td>Web general, WhatsApp manual, recordatorios manuales y poca segmentación activa.</td><td class="impl">Landings por curso, CRM, flujos de seguimiento y automatizaciones esenciales.</td><td class="manana">Proceso comercial más ordenado, medible y repetible.</td></tr>
+          <tr><td class="area">Comunidad</td><td>Grupos de WhatsApp valiosos, pero difíciles de ordenar y escalar.</td><td class="impl">Definición del rol de WhatsApp y evaluación de comunidad/plataforma complementaria.</td><td class="manana">WhatsApp como canal de acceso y comunicación rápida, con opción de ordenar preguntas, casos y materiales en una plataforma.</td></tr>
+          <tr><td class="area">Datos</td><td>Decisiones basadas principalmente en intuición, experiencia y señales rápidas.</td><td class="impl">Medición de campañas, comportamiento de clientes, encuestas y resultados.</td><td class="manana">Decisiones más claras sobre qué potenciar, qué mejorar y qué descartar.</td></tr>
+          <tr><td class="area">Operación</td><td>Mucha carga mental y manual sobre Andrea o su asistente.</td><td class="impl">Procesos documentados, tareas delegables y automatizaciones.</td><td class="manana">Menos carga operativa y mayor capacidad de delegar.</td></tr>
+          <tr><td class="area">Crecimiento</td><td>Potencial alto, pero con miedo a perder control o cercanía.</td><td class="impl">Crecimiento progresivo, controlado y humano.</td><td class="manana">Más capacidad de crecer sin sacrificar calidad, cercanía ni control.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">8</div>
+      <div class="htext"><h2 class="sec-title">Acciones por área</h2></div>
+    </div>
+
+    <h3 class="sub-title">A. Producto</h3>
+    <h4 class="mini-title">Situación actual</h4>
+    <p>Andrea tiene productos validados, especialmente sus cursos principales.</p>
+    <p>Los cursos son el activo más escalable porque permiten impactar a más familias en menos tiempo que las asesorías 1 a 1.</p>
+    <p>También existen asesorías, talleres puntuales, productos, comunidad y una visión futura hacia adolescentes y diplomado profesional.</p>
+    <h4 class="mini-title">Oportunidad</h4>
+    <p>Ordenar la escalera de valor para que cada producto tenga un rol claro dentro del negocio.</p>
+    <p>No todos los productos deben venderse igual. No todos deben tener la misma prioridad. Y no todos deben medirse con la misma expectativa.</p>
+    <h4 class="mini-title">Acciones recomendadas</h4>
+    <ul class="arrow-list">
+      <li>Mapear todos los productos actuales.</li>
+      <li>Definir el rol de cada producto:<ul><li>entrada</li><li>curso principal</li><li>continuidad</li><li>profundización</li><li>asesoría</li><li>comunidad</li><li>producto premium futuro</li></ul></li>
+      <li>Identificar el 80/20 del negocio:<ul><li>qué productos generan más ingresos</li><li>cuáles son más rentables por hora</li><li>cuáles generan más recurrencia</li><li>cuáles alimentan mejor la autoridad de Andrea</li></ul></li>
+      <li>Construir una escalera de valor clara:<ul><li>talleres puntuales</li><li>cursos por etapa</li><li>asesorías</li><li>comunidad</li><li>adolescentes</li><li>diplomado profesional</li></ul></li>
+      <li>Definir el calendario comercial anual:<ul><li>qué se vende en cada trimestre</li><li>qué cursos se lanzan</li><li>qué talleres apoyan cada campaña</li><li>qué contenidos preparan cada venta</li></ul></li>
+      <li>Elegir un curso validado para la primera campaña optimizada.</li>
+      <li>Revisar productos que tal vez no fallaron por falta de demanda, sino por falta de comunicación, campaña o recorrido de venta.</li>
+      <li>Preparar la ruta futura hacia adolescentes.</li>
+      <li>Dejar planteada la visión del diplomado profesional como siguiente gran escalón.</li>
+    </ul>
+    <div class="note"><strong>Resultado esperado:</strong> Andrea tendrá más claridad sobre qué vender, cuándo venderlo, cómo conectarlo con otros productos y cómo aumentar el valor de cada cliente dentro del ecosistema Con.Ciencia.</div>
+
+    <h3 class="sub-title">B. Comunicación</h3>
+    <h4 class="mini-title">Situación actual</h4>
+    <p>La comunicación de Andrea funciona porque tiene una voz propia, cercana, profesional y humana.</p>
+    <p>Las ventas vienen principalmente de Instagram, stories, publicaciones, preguntas, recomendaciones y grupos de WhatsApp.</p>
+    <p>Pero esa comunicación depende mucho de su inspiración, tiempo y disponibilidad.</p>
+    <h4 class="mini-title">Oportunidad</h4>
+    <p>Convertir la voz de Andrea en un sistema de comunicación más planificado, sin volverla genérica ni artificial.</p>
+    <p>No se trata de publicar más por publicar. Se trata de comunicar con intención.</p>
+    <h4 class="mini-title">Acciones recomendadas</h4>
+    <ul class="arrow-list">
+      <li>Definir los pilares de comunicación de Con.Ciencia.</li>
+      <li>Mapear los mensajes centrales por producto.</li>
+      <li>Crear ángulos de venta para cada curso.</li>
+      <li>Conectar el contenido mensual con el producto que se quiere vender.</li>
+      <li>Diseñar secuencias de contenido para campañas:<ul><li>conciencia del problema</li><li>educación</li><li>historias/casos</li><li>objeciones</li><li>invitación</li><li>cierre</li></ul></li>
+      <li>Crear guiones base para videos cortos.</li>
+      <li>Crear estructuras de stories para lanzamiento.</li>
+      <li>Crear mensajes para WhatsApp y correo.</li>
+      <li>Reutilizar una misma idea en varios formatos.</li>
+      <li>Evitar contenido genérico o hecho con IA sin criterio estratégico.</li>
+      <li>Proteger la voz de Andrea mediante revisión de tono, ejemplos reales y lenguaje propio.</li>
+      <li>Explorar contenido largo, YouTube o newsletter en una etapa posterior, no como primera prioridad.</li>
+    </ul>
+    <div class="note"><strong>Resultado esperado:</strong> Andrea no dependerá tanto de la inspiración diaria. Tendrá una comunicación más conectada con sus campañas, más clara para su audiencia y más eficiente para vender, manteniendo su voz y sensibilidad.</div>
+
+    <h3 class="sub-title">C. Sistema de ventas</h3>
+    <h4 class="mini-title">Situación actual</h4>
+    <p>El sistema actual tiene varias piezas funcionando:</p>
+    <ul class="arrow-list"><li>página web</li><li>calendario</li><li>pagos</li><li>WhatsApp</li><li>grupos</li><li>correos</li><li>cursos cargados</li><li>Instagram</li><li>atención manual</li></ul>
+    <p>Pero esas piezas no necesariamente trabajan como un sistema integrado.</p>
+    <p>Hay seguimiento manual, recordatorios manuales, poca segmentación activa y una base de datos con potencial desaprovechado.</p>
+    <h4 class="mini-title">Oportunidad</h4>
+    <p>Crear un sistema comercial mínimo viable que ordene el recorrido del cliente desde que se interesa hasta que compra, asiste, recibe seguimiento y avanza a otro producto.</p>
+    <h4 class="mini-title">Acciones recomendadas</h4>
+    <ul class="arrow-list">
+      <li>Diseñar el recorrido ideal del cliente:<ul><li>descubre</li><li>se interesa</li><li>visita landing</li><li>compra o pregunta</li><li>recibe confirmación</li><li>entra al grupo</li><li>recibe recordatorios</li><li>asiste</li><li>recibe seguimiento</li><li>avanza al siguiente producto</li></ul></li>
+      <li>Crear landing específica para el curso elegido.</li>
+      <li>Usar la web como ecosistema general, pero las landings como páginas de conversión.</li>
+      <li>Mejorar el flujo de inscripción y pago.</li>
+      <li>Revisar alternativas para pagos internacionales.</li>
+      <li>Implementar o estructurar un CRM mínimo viable.</li>
+      <li>Segmentar la base de datos por:<ul><li>etapa de edad</li><li>producto comprado</li><li>interés</li><li>asistencia</li><li>recurrencia</li><li>potencial de asesoría</li><li>potencial de diplomado</li></ul></li>
+      <li>Crear automatizaciones esenciales:<ul><li>confirmación de compra</li><li>recordatorio de clase</li><li>acceso al grupo</li><li>seguimiento post-curso</li><li>no comprador</li><li>no asistente</li><li>invitación al siguiente producto</li></ul></li>
+      <li>Definir el rol de WhatsApp:<ul><li>comunicación rápida</li><li>recordatorios</li><li>acceso inmediato</li></ul></li>
+      <li>Evaluar comunidad/plataforma como complemento:<ul><li>preguntas</li><li>casos</li><li>materiales</li><li>grabaciones</li><li>interacción ordenada</li></ul></li>
+      <li>Documentar procesos para que una futura asistente pueda operar mejor.</li>
+      <li>Crear reportes simples para que Andrea no tenga que vivir dentro de una herramienta compleja.</li>
+    </ul>
+    <div class="note"><strong>Resultado esperado:</strong> Con.Ciencia tendrá un proceso más ordenado, medible y repetible. Andrea no tendrá que depender tanto de memoria, seguimiento manual o improvisación. Los clientes vivirán una experiencia más clara y fluida.</div>
+  </section>
+
+  <!-- 9 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">9</div>
+      <div class="htext"><h2 class="sec-title">Rol de WhatsApp, comunidad y CRM</h2></div>
+    </div>
+    <p>Para evitar confusión, proponemos distinguir claramente el rol de cada canal.</p>
+    <div class="grid-3">
+      <div class="card io-card"><h4 class="mini-title">WhatsApp</h4><p style="font-size:.92rem">Debe seguir siendo un canal importante porque ya funciona para la audiencia de Andrea. Su rol principal:</p><ul class="arrow-list"><li>comunicación rápida</li><li>recordatorios</li><li>avisos</li><li>acceso inmediato</li><li>cercanía</li></ul></div>
+      <div class="card io-card"><h4 class="mini-title">Comunidad o plataforma</h4><p style="font-size:.92rem">No recomendamos migrar todo de golpe. Pero sí puede evaluarse como complemento para ordenar:</p><ul class="arrow-list"><li>preguntas</li><li>casos</li><li>materiales</li><li>grabaciones</li><li>interacción</li><li>historial de respuestas</li><li>acceso a cursos</li></ul></div>
+      <div class="card io-card"><h4 class="mini-title">CRM</h4><p style="font-size:.92rem">El CRM debe trabajar detrás del negocio. Su rol no es darle más trabajo a Andrea. Su rol es:</p><ul class="arrow-list"><li>ordenar contactos</li><li>segmentar clientes</li><li>activar seguimientos</li><li>automatizar recordatorios</li><li>registrar intereses</li><li>facilitar recompra</li><li>dar visibilidad del negocio</li></ul></div>
+    </div>
+    <div class="callout"><p>El sistema debe quitar carga, no agregarla.</p></div>
+  </section>
+
+  <!-- 10 -->
+  <section class="section">
+    <div class="sec-head">
+      <div class="sec-num">10</div>
+      <div class="htext"><h2 class="sec-title">Primera etapa de trabajo</h2></div>
+    </div>
+    <p>Recomendamos iniciar con una primera etapa de 90 días.</p>
+    <p>Esta etapa no busca implementar todo el ecosistema final. Busca construir la base estratégica, ordenar prioridades y generar las primeras mejoras de alto impacto.</p>
+
+    <div class="grid-3 phases">
+      <div class="card phase-card">
+        <div class="phdr"><span class="ptag">Mes 1</span><h4>Orden estratégico</h4></div>
+        <p class="obj"><strong>Objetivo:</strong> entender con claridad qué tiene Con.Ciencia hoy, qué funciona mejor, qué debe ordenarse y qué oportunidades deben priorizarse.</p>
+        <h4 class="mini-title">Acciones principales:</h4>
+        <ul class="arrow-list">
+          <li>Revisión del ecosistema actual.</li>
+          <li>Mapa de productos.</li>
+          <li>Análisis de escalera de valor.</li>
+          <li>Revisión de cursos principales.</li>
+          <li>Revisión del recorrido actual del cliente.</li>
+          <li>Análisis de comunicación.</li>
+          <li>Revisión de base de datos.</li>
+          <li>Revisión de herramientas actuales.</li>
+          <li>Identificación de fricciones.</li>
+          <li>Análisis de referentes o competencia.</li>
+          <li>Definición de segmentos principales.</li>
+          <li>Priorización de oportunidades.</li>
+          <li>Calendario comercial inicial.</li>
+        </ul>
+        <div class="tl-item" style="padding:0"><div class="deliverable"><b>Entregable:</b> Una hoja de ruta clara y priorizada para saber qué haremos primero, qué dejaremos para después y cómo avanzaremos sin sobrecargar a Andrea.</div></div>
+      </div>
+      <div class="card phase-card">
+        <div class="phdr"><span class="ptag">Mes 2</span><h4>Primera campaña optimizada</h4></div>
+        <p class="obj"><strong>Objetivo:</strong> tomar un curso validado y construir un recorrido más claro para venderlo mejor.</p>
+        <h4 class="mini-title">Acciones principales:</h4>
+        <ul class="arrow-list">
+          <li>Selección del curso.</li>
+          <li>Definición de promesa.</li>
+          <li>Mensaje principal.</li>
+          <li>Objeciones principales.</li>
+          <li>Preguntas frecuentes.</li>
+          <li>Landing page.</li>
+          <li>Secuencia de contenido.</li>
+          <li>Secuencia de WhatsApp/correo.</li>
+          <li>Flujo de inscripción.</li>
+          <li>Flujo de confirmación.</li>
+          <li>Flujo de recordatorios.</li>
+          <li>Seguimiento post-curso.</li>
+        </ul>
+        <div class="tl-item" style="padding:0"><div class="deliverable"><b>Entregable:</b> Una campaña más clara, más ordenada y más fácil de repetir para futuros cursos.</div></div>
+      </div>
+      <div class="card phase-card">
+        <div class="phdr"><span class="ptag">Mes 3</span><h4>Sistema mínimo y validación</h4></div>
+        <p class="obj"><strong>Objetivo:</strong> crear una base de sistema que permita ordenar contactos, compradores, seguimiento y recompra.</p>
+        <h4 class="mini-title">Acciones principales:</h4>
+        <ul class="arrow-list">
+          <li>CRM mínimo viable.</li>
+          <li>Etiquetas principales.</li>
+          <li>Segmentación inicial.</li>
+          <li>Pipeline simple.</li>
+          <li>Automatizaciones esenciales.</li>
+          <li>Reportes simples.</li>
+          <li>Procesos documentados.</li>
+          <li>Recomendaciones para asistente futura.</li>
+          <li>Revisión de pagos internacionales.</li>
+          <li>Plan de siguientes automatizaciones.</li>
+          <li>Medición de resultados.</li>
+          <li>Ajustes y optimización.</li>
+          <li>Hoja de ruta para los siguientes meses.</li>
+        </ul>
+        <div class="tl-item" style="padding:0"><div class="deliverable"><b>Entregable:</b> Una estructura base para que Con.Ciencia no dependa tanto de procesos manuales y pueda crecer con más orden.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">11</div>
+      <div class="htext"><h2 class="sec-title">Resultado esperado de la primera etapa</h2></div>
+    </div>
+    <p>Al finalizar esta primera etapa, Con.Ciencia debería tener:</p>
+    <div class="card io-card">
+      <ul class="check-list cols-2">
+        <li>Más claridad estratégica.</li>
+        <li>Una escalera de productos mejor ordenada.</li>
+        <li>Un calendario comercial inicial.</li>
+        <li>Un curso con recorrido de venta optimizado.</li>
+        <li>Una landing específica para convertir.</li>
+        <li>Una comunicación más conectada con la venta.</li>
+        <li>WhatsApp mejor integrado.</li>
+        <li>Base de datos mejor segmentada.</li>
+        <li>Primeras automatizaciones.</li>
+        <li>Procesos más delegables.</li>
+        <li>Menos improvisación.</li>
+        <li>Más tranquilidad antes de cada curso.</li>
+        <li>Una hoja de ruta clara para adolescentes, comunidad y diplomado.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 12 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">12</div>
+      <div class="htext"><h2 class="sec-title">Propuesta de valor resumida</h2></div>
+    </div>
+    <p>Andrea, nuestro objetivo es ayudarte a implementar la estructura y los sistemas necesarios para captar más alumnos online, enfocar mejor tu escalera de valor y preparar el camino hacia productos de mayor impacto, como adolescentes y un futuro diplomado profesional, sin que tengas que contratar un equipo grande ni quemar más horas de tu semana.</p>
+    <p>Con.Ciencia ya tiene el conocimiento, la autoridad y la comunidad.</p>
+    <div class="callout big"><p>Ahora necesita la estructura para crecer mejor.</p></div>
+  </section>
+
+  <!-- 13 -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num">13</div>
+      <div class="htext"><h2 class="sec-title">Cierre</h2></div>
+    </div>
+    <p>Andrea, lo que has construido hasta hoy demuestra que hay una metodología, una voz y una demanda real que han crecido de forma orgánica.</p>
+    <p>Nuestro trabajo sería ayudarte a formalizar ese sistema.</p>
+    <p>Queremos proteger la esencia de Con.Ciencia y darle una estructura que permita que llegue a más familias.</p>
+    <p>La visión es clara:</p>
+    <ul class="arrow-list">
+      <li>Que Con.Ciencia venda mejor sus cursos.</li>
+      <li>Que Andrea dependa menos de la improvisación.</li>
+      <li>Que la experiencia siga siendo cercana y humana.</li>
+      <li>Que el negocio tenga más orden y estabilidad.</li>
+      <li>Que el proyecto quede preparado para su siguiente etapa de crecimiento.</li>
+    </ul>
+    <div class="callout serif"><p>Con.Ciencia ya funciona. Ahora vamos a ordenarlo para que pueda crecer.</p></div>
+  </section>
+
+  <hr class="glow-divider">
+
+  <!-- Anexo -->
+  <section class="section sec-keep">
+    <div class="sec-head">
+      <div class="sec-num" style="font-family:'Instrument Sans',sans-serif;font-style:normal;font-size:.72rem;font-weight:700;letter-spacing:.12em">ANX</div>
+      <div class="htext"><h2 class="sec-title">Anexo</h2></div>
+    </div>
+    <div class="io-grid">
+      <div class="card io-card">
+        <h4 class="mini-title" style="color:var(--danger)">Qué no recomendamos hacer de inmediato</h4>
+        <p style="font-size:.9rem">Para cuidar el ritmo de Andrea y no sobrecargar el proyecto, no recomendamos empezar con:</p>
+        <ul class="cross-list">
+          <li>migración completa de comunidad;</li>
+          <li>reconstrucción total de la página web;</li>
+          <li>estrategia pesada de YouTube;</li>
+          <li>creación inmediata del diplomado;</li>
+          <li>automatizaciones excesivas;</li>
+          <li>múltiples campañas al mismo tiempo;</li>
+          <li>manejo de redes genérico;</li>
+          <li>contenido producido sin respetar la voz de Andrea;</li>
+          <li>implementación técnica demasiado compleja desde el primer mes.</li>
+        </ul>
+        <p class="note" style="margin-top:14px;margin-bottom:0">Primero debemos ordenar, priorizar y construir una primera base sólida.</p>
+      </div>
+      <div class="card io-card">
+        <h4 class="mini-title">Qué sí recomendamos hacer ahora</h4>
+        <p style="font-size:.9rem">Recomendamos empezar con acciones simples, concretas y de alto impacto:</p>
+        <ul class="check-list">
+          <li>Ordenar productos.</li>
+          <li>Definir calendario comercial.</li>
+          <li>Elegir un curso validado.</li>
+          <li>Crear una landing específica.</li>
+          <li>Construir campaña para ese curso.</li>
+          <li>Mejorar seguimiento por WhatsApp.</li>
+          <li>Segmentar base de datos.</li>
+          <li>Implementar CRM mínimo viable.</li>
+          <li>Automatizar recordatorios esenciales.</li>
+          <li>Documentar procesos.</li>
+          <li>Medir resultados.</li>
+          <li>Preparar la siguiente etapa de crecimiento.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="doc-footer">
+  <div class="fmark font-display">JOINSCLEE</div>
+  <p>Documento confidencial preparado para Con.Ciencia · Funnels Automatizados y CRM de Ventas</p>
+  <p>© 2026 JoinsClee · hola@joinsclee.com</p>
+</footer>
+
+</body>
+</html>

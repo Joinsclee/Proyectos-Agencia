@@ -1,7 +1,9 @@
 <!--
-  Mis Pliegues — Build autocontenido para embed en GoHighLevel
-  Generado automáticamente por build-ghl.sh
-  No editar este archivo directamente. Edita los archivos en /app/ y vuelve a ejecutar el build.
+  Mi Barco — Build autocontenido para GoHighLevel (Custom HTML)
+  Generado por build-ghl.sh. No editar a mano: edita index.html / assets/ y
+  vuelve a ejecutar el build.
+  Todo el CSS, las fuentes y los scripts van DENTRO del cuerpo a proposito:
+  el widget Custom HTML de GHL descarta la cabecera del documento.
   -->
 <!DOCTYPE html>
 <html lang="es">
@@ -11,13 +13,13 @@
   <title>Mi Barco | Paulina Valencia</title>
   <meta name="description" content="Diagnostica con la Rueda de la Vida. Comprende tu cerebro con los Neuropliegues. Construye tu identidad con el Tracker de Hábitos." />
 
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Asap:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet" />
-
-  <style>
+  <!-- Supabase (auth + base de datos). Debe cargar ANTES de app.js -->
+</head>
+<body>
+<!-- Recursos aqui y no en la cabecera: GHL la descarta (ver build-ghl.sh) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Asap:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap');
 /* ========================================
    Mi Barco - Sistema de hábitos de Paulina Valencia
    Identidad visual: Asap + navy #08315C + gold #F4C94A
@@ -50,7 +52,9 @@
   --pv-font-sans: 'Asap', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-html, body {
+html, body { overflow-x: hidden; }
+
+.pv-root {
   font-family: var(--pv-font-sans);
   background: var(--pv-cream);
   color: var(--pv-ink);
@@ -549,7 +553,7 @@ input[type="range"].pv-slider::-moz-range-thumb {
   border-radius: 14px;
   padding: 0.375rem;
   width: 100%;
-  max-width: 560px;
+  max-width: 680px;   /* 6 pestañas con texto (antes 5 en 560px) */
   margin: 0 auto 2rem;
   box-shadow: 0 2px 8px -4px rgba(8, 49, 92, 0.06);
 }
@@ -590,6 +594,14 @@ input[type="range"].pv-slider::-moz-range-thumb {
 .pv-tab .pv-tab-icon {
   font-size: 1rem;
   line-height: 1;
+  flex-shrink: 0;   /* sin esto, la pestaña más larga aplasta su icono a un punto */
+}
+
+/* Con la sexta pestaña (Matriz) los textos ya no caben por debajo de ~640px:
+   ahí quedan solo los iconos, como ya pasaba en móvil. */
+@media (max-width: 640px) {
+  .pv-tab .pv-tab-label-full { display: none; }
+  .pv-tab .pv-tab-icon { font-size: 1.15rem; }
 }
 
 @media (max-width: 480px) {
@@ -788,6 +800,23 @@ input[type="range"].pv-slider::-moz-range-thumb {
 }
 .rueda-snapshot:hover { background: #edf1f7; }
 
+/* Ruedas pasadas desplegables: la fila es un botón y abre la rueda de ese mes */
+.rueda-snapshot-item + .rueda-snapshot-item { margin-top: 0.5rem; }
+button.rueda-snapshot { width: 100%; gap: 0.75rem; border: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+button.rueda-snapshot:focus-visible { outline: 2px solid var(--pv-navy); outline-offset: 2px; }
+.rueda-snapshot-chevron { display: inline-flex; width: 1rem; height: 1rem; color: var(--pv-ink-soft); transition: transform .2s ease; }
+.rueda-snapshot-chevron.abierto { transform: rotate(90deg); }
+.rueda-snapshot-detalle { padding: 1rem 0.25rem 0.5rem; }
+.rueda-snapshot-svg { max-width: 260px; margin: 0 auto; }
+.rueda-snapshot-aviso { font-size: 0.8rem; color: var(--pv-ink-soft); background: var(--pv-paper); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.75rem; }
+.rueda-snapshot-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; font-size: 0.82rem; }
+.rueda-snapshot-lista li { display: grid; grid-template-columns: minmax(0, 1fr) 60px 1.5rem; align-items: center; gap: 0.5rem; }
+.rueda-snapshot-nombre { line-height: 1.3; }  /* parte en dos líneas antes que cortar «Ambiente y organización» */
+.rueda-snapshot-barra { height: 6px; border-radius: 3px; background: var(--pv-line); overflow: hidden; }
+.rueda-snapshot-barra i { display: block; height: 100%; background: var(--pv-gold); }
+.rueda-snapshot-lista strong { text-align: right; color: var(--pv-navy); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .rueda-snapshot-chevron { transition: none; } }
+
 /* ========================================
    FOOTER — premium con ornamento dorado
    ======================================== */
@@ -943,6 +972,234 @@ input[type="range"].pv-slider::-moz-range-thumb {
   background-size: 18px 18px;
 }
 
+/* ========================================
+   ONBOARDING — modal de bienvenida con slides
+   ======================================== */
+.onb-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background:
+    radial-gradient(900px 420px at 75% -10%, rgba(244, 201, 74, 0.18), transparent 60%),
+    radial-gradient(700px 380px at -5% 110%, rgba(13, 65, 120, 0.55), transparent 55%),
+    rgba(8, 49, 92, 0.92);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  animation: pv-fade-in 0.3s ease both;
+}
+
+.onb-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 24px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 92vh;
+  overflow: hidden;
+  box-shadow:
+    0 32px 64px -16px rgba(8, 49, 92, 0.45),
+    0 0 0 1px rgba(8, 49, 92, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Línea dorada superior decorativa */
+.onb-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.5rem;
+  right: 1.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pv-gold) 50%, transparent);
+  opacity: 0.7;
+}
+
+.onb-skip {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--pv-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  z-index: 2;
+}
+.onb-skip:hover {
+  color: var(--pv-navy);
+  background: var(--pv-paper);
+}
+
+.onb-body {
+  padding: 3rem 2rem 1.5rem;
+  text-align: center;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.onb-icon {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 1.5rem;
+  border-radius: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  position: relative;
+  background: linear-gradient(135deg, var(--pv-gold-glow), rgba(8, 49, 92, 0.05));
+  border: 1px solid rgba(244, 201, 74, 0.4);
+}
+.onb-icon svg {
+  width: 44px;
+  height: 44px;
+  stroke-width: 1.5;
+}
+
+.onb-eyebrow {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  color: var(--pv-gold);
+  margin-bottom: 0.5rem;
+}
+
+.onb-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--pv-navy);
+  letter-spacing: -0.025em;
+  margin-bottom: 0.85rem;
+  line-height: 1.15;
+}
+
+.onb-text {
+  color: var(--pv-ink-soft);
+  font-size: 1rem;
+  line-height: 1.65;
+  max-width: 38ch;
+  margin: 0 auto;
+}
+
+.onb-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem auto 0;
+  max-width: 32ch;
+  text-align: left;
+  font-size: 0.92rem;
+}
+.onb-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.4rem 0;
+  color: var(--pv-ink);
+}
+.onb-bullets li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pv-gold);
+  margin-top: 0.55rem;
+  box-shadow: 0 0 0 3px rgba(244, 201, 74, 0.2);
+}
+
+.onb-footer {
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+/* Indicadores de puntos */
+.onb-dots {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.onb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pv-line);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+.onb-dot:hover {
+  background: var(--pv-ink-soft);
+}
+.onb-dot.active {
+  width: 32px;
+  border-radius: 999px;
+  background: var(--pv-gold);
+  box-shadow: 0 2px 8px -2px rgba(244, 201, 74, 0.5);
+}
+
+.onb-nav {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 22rem;
+}
+.onb-nav .pv-btn { flex: 1; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .onb-body { padding: 2.5rem 1.5rem 1rem; }
+  .onb-footer { padding: 1rem 1.5rem 1.5rem; }
+  .onb-title { font-size: 1.55rem; }
+  .onb-icon { width: 72px; height: 72px; }
+  .onb-icon svg { width: 36px; height: 36px; }
+}
+
+/* Animación slide */
+.onb-slide-enter { animation: onb-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes onb-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-slide-enter, .onb-backdrop { animation: none !important; }
+}
+
+/* Botón "Ver tour" pequeño en Mi Plan */
+.onb-replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1px dashed var(--pv-line);
+  color: var(--pv-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.onb-replay-btn:hover {
+  border-color: var(--pv-gold);
+  color: var(--pv-navy);
+  background: var(--pv-gold-glow);
+}
+
 /* ========================================================================
    LOGIN / REGISTRO + CUENTA  (branding Paulina: navy #08315C + gold #F4C94A)
    Adaptado del dashboard de Lina, con tipografía Asap.
@@ -957,6 +1214,156 @@ input[type="range"].pv-slider::-moz-range-thumb {
   margin-left: -50vw;
   margin-right: -50vw;
 }
+
+/* ========================================
+   VIEW BLOCKED — usuario sin plan Premium/VIP
+   ======================================== */
+.blocked-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(900px 420px at 75% -10%, rgba(244, 201, 74, 0.18), transparent 60%),
+    radial-gradient(700px 380px at -5% 110%, rgba(13, 65, 120, 0.55), transparent 55%),
+    var(--pv-navy);
+}
+.blocked-card {
+  background: #fff;
+  border-radius: 24px;
+  max-width: 560px;
+  width: 100%;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+.blocked-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 1.5rem; right: 1.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pv-gold) 50%, transparent);
+}
+.blocked-logo {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 18px rgba(244, 201, 74, 0.35));
+}
+.blocked-logo img { width: 100%; height: 100%; object-fit: contain; }
+.blocked-eyebrow {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  color: var(--pv-coral);
+  margin-bottom: 0.5rem;
+}
+.blocked-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--pv-navy);
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  line-height: 1.15;
+}
+.blocked-text {
+  color: var(--pv-ink-soft);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  max-width: 40ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+.blocked-text strong { color: var(--pv-navy); }
+.blocked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--pv-paper);
+  color: var(--pv-navy);
+  border: 1px solid var(--pv-line);
+  margin: 1rem 0 1.5rem;
+}
+.blocked-pill .level { color: var(--pv-coral); }
+.blocked-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(180deg, var(--pv-gold-soft) 0%, var(--pv-gold) 100%);
+  color: var(--pv-navy);
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 0.95rem 1.75rem;
+  border-radius: 14px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    0 10px 24px -10px rgba(244, 201, 74, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  max-width: 320px;
+}
+.blocked-cta:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 28px -10px rgba(244, 201, 74, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.blocked-secondary {
+  margin-top: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--pv-ink-soft);
+}
+.blocked-secondary a,
+.blocked-link {
+  color: var(--pv-navy);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+}
+.blocked-link:hover { color: var(--pv-coral); }
+.blocked-link:focus-visible {
+  outline: 2px solid var(--pv-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.blocked-status {
+  margin-top: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--pv-ink-soft);
+  font-style: italic;
+}
+.blocked-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--pv-line);
+  border-top-color: var(--pv-navy);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+@keyframes spinner-rotate { to { transform: rotate(360deg); } }
 
 /* ---- Overlay de carga ---- */
 .pv-boot {
@@ -1079,18 +1486,14 @@ input[type="range"].pv-slider::-moz-range-thumb {
 .auth-form-inner { width: 100%; max-width: 430px; }
 .auth-form-header { margin-bottom: 2rem; text-align: center; }
 .auth-form-logo {
-  width: 88px;
-  height: 88px;
-  border-radius: 22px;
-  background: #fff;
-  border: 1px solid var(--pv-line);
+  width: 130px;
+  height: 130px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  padding: 13px;
-  margin: 0 auto 1.2rem;
-  box-shadow: 0 10px 30px -14px rgba(8, 49, 92, .25);
+  margin: 0 auto 1.4rem;
+  /* Glow dorado sutil detrás del isotipo, sin fondo blanco */
+  filter: drop-shadow(0 4px 18px rgba(244, 201, 74, 0.35));
 }
 .auth-form-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .auth-form-title {
@@ -1338,13 +1741,245 @@ input[type="range"].pv-slider::-moz-range-thumb {
   .auth-card h2 { font-size: 1.6rem; }
 }
 
+
+/* ========================================
+   MATRIZ DE URGENCIA E IMPORTANCIA (pestaña «Matriz»)
+   Portada de matriz-urgencia-importancia.html con prefijo mz- : Mi Barco ya
+   define .pv-btn, .pv-chip, .pv-pill… con otro aspecto, y compartir nombres
+   rompía las dos. Los tokens --pv-* son los mismos de :root.
+   ======================================== */
+.mz { --pv-gold-text: #8a6a12; color: var(--pv-ink); }
+.mz-ico { width: 1.05em; height: 1.05em; flex-shrink: 0; }
+
+.mz-eyebrow { font-size: .8rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--pv-gold-text); }
+.mz-eyebrow.light { color: var(--pv-gold); }
+.mz-hl { color: var(--pv-gold); }
+
+.mz-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+  background: linear-gradient(180deg, var(--pv-gold-soft), var(--pv-gold));
+  color: var(--pv-navy);
+  font-weight: 800; font-size: 1rem; letter-spacing: .01em;
+  padding: .9rem 1.7rem; border-radius: 14px;
+  border: none; cursor: pointer; text-decoration: none;
+  box-shadow: 0 14px 30px -10px rgba(244, 201, 74, 0.6);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  line-height: 1.2; text-align: center;
+}
+.mz-btn:hover { filter: brightness(1.03); transform: translateY(-2px); }
+.mz-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.mz-btn-ghost {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: rgba(244,201,74,.14); color: var(--pv-gold);
+  border: 1px solid rgba(244,201,74,.4);
+  font-weight: 700; font-size: .85rem; padding: .55rem 1rem; border-radius: 11px;
+  text-decoration: none; cursor: pointer; transition: background .15s ease;
+}
+.mz-btn-ghost:hover { background: rgba(244,201,74,.24); }
+
+.mz-btn-outline-navy {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: #fff; color: var(--pv-navy);
+  border: 1.5px solid var(--pv-line);
+  font-weight: 700; font-size: .85rem; padding: .5rem .95rem; border-radius: 11px;
+  cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+.mz-btn-outline-navy:hover { border-color: var(--pv-navy); background: var(--pv-paper); }
+
+
+/* ================= Brain dump ================= */
+.mz-dump-card {
+  background: #fff; border: 1px solid var(--pv-line); border-radius: 20px;
+  padding: 1.5rem; box-shadow: 0 20px 45px -30px rgba(8,49,92,.35);
+}
+.mz-dump-input {
+  flex: 1; border: 1.5px solid var(--pv-line); border-radius: 12px;
+  padding: .85rem 1rem; font-size: 1rem; font-family: inherit; color: var(--pv-ink);
+  outline: none; transition: border-color .15s ease;
+}
+.mz-dump-input:focus { border-color: var(--pv-gold); }
+
+.mz-chip {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: var(--pv-paper); border: 1.5px solid var(--pv-line);
+  border-radius: 999px; padding: .5rem .5rem .5rem 1rem;
+  font-size: .92rem; font-weight: 600; color: var(--pv-ink);
+  cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  max-width: 100%;
+}
+.mz-chip:hover { border-color: var(--pv-gold); }
+.mz-chip.is-selected {
+  background: rgba(244,201,74,.16); border-color: var(--pv-gold);
+  box-shadow: 0 0 0 3px rgba(244,201,74,.22);
+}
+.mz-chip__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mz-chip__del {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--pv-ink-soft); background: rgba(0,0,0,.05);
+  border: none; cursor: pointer; font-size: .8rem; line-height: 1;
+}
+.mz-chip__del:hover { background: rgba(217,69,52,.15); color: var(--pv-coral); }
+
+/* ================= Cuadrantes (explicación) ================= */
+.mz-legend-card {
+  border-radius: 16px; padding: 1.1rem 1.2rem; border: 1.5px solid var(--pv-line);
+  background: #fff;
+}
+.mz-legend-card .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* ================= Matriz interactiva ================= */
+.mz-matrix-shell {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr;
+  grid-template-areas: ". axis-x" "axis-y quad"; gap: .5rem;
+}
+.mz-axis-y {
+  grid-area: axis-y;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--pv-ink-soft); padding: .25rem 0;
+}
+.mz-axis-x {
+  grid-area: axis-x; display: flex; justify-content: space-between;
+  font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--pv-ink-soft); padding: .25rem .5rem;
+}
+.mz-quad-grid { grid-area: quad; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .9rem; min-height: 460px; }
+
+.mz-quad {
+  border-radius: 18px; padding: 1rem; border: 1.5px dashed var(--pv-line);
+  background: #fff; display: flex; flex-direction: column; min-height: 200px;
+  transition: border-color .15s ease, background .15s ease;
+}
+.mz-quad.is-target { border-color: var(--pv-gold); background: rgba(244,201,74,.08); }
+.mz-quad-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+.mz-quad-title { font-weight: 800; font-size: .95rem; }
+.mz-quad-action {
+  font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  padding: .2rem .55rem; border-radius: 999px; color: #fff;
+}
+.mz-quad-empty { font-size: .82rem; color: var(--pv-ink-soft); font-style: italic; padding: .5rem 0; }
+.mz-quad-list { display: flex; flex-direction: column; gap: .5rem; flex: 1; }
+
+.mz-quad--q1 { border-top: 4px solid var(--pv-coral); }
+.mz-quad--q2 { border-top: 4px solid var(--pv-gold); }
+.mz-quad--q3 { border-top: 4px solid var(--pv-amber); }
+.mz-quad--q4 { border-top: 4px solid var(--pv-ink-soft); }
+.mz-badge--q1 { background: var(--pv-coral); }
+.mz-badge--q2 { background: var(--pv-gold-text); }
+.mz-badge--q3 { background: var(--pv-amber); }
+.mz-badge--q4 { background: var(--pv-ink-soft); }
+
+.mz-task-in-quad {
+  display: flex; align-items: flex-start; gap: .5rem;
+  background: var(--pv-paper); border: 1px solid var(--pv-line); border-radius: 10px;
+  padding: .5rem .6rem; font-size: .88rem; line-height: 1.35;
+}
+/* :not(.mz-check) es obligatorio: esta regla es más específica que .mz-check
+   y le borraba el borde, el fondo y el color, dejando el ✓ de "marcar como
+   hecha" idéntico al botón de quitar. Nadie distinguía uno del otro. */
+.mz-task-in-quad button:not(.mz-check) {
+  flex-shrink: 0; border: none; background: transparent; color: var(--pv-ink-soft);
+  cursor: pointer; font-size: .75rem; padding: 0; margin-top: .1rem;
+}
+.mz-task-in-quad button:not(.mz-check):hover { color: var(--pv-navy); }
+
+/* ================= Diagnóstico ================= */
+.mz-diag-card {
+  border-radius: 20px; padding: 1.5rem; background: var(--pv-navy); color: #fff;
+  box-shadow: 0 24px 55px -30px rgba(8,49,92,.55);
+}
+.mz-diag-stat { text-align: center; }
+.mz-diag-num { font-size: 1.8rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.mz-diag-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.6); margin-top: .25rem; }
+
+/* ================= Asistente de criterio (Paso 3) ================= */
+.mz-wizard { margin-top: 1.15rem; border-top: 1px solid var(--pv-line); padding-top: 1.15rem; }
+.mz-wizard__head { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
+.mz-wizard__task { font-weight: 800; font-size: 1rem; line-height: 1.3; color: var(--pv-navy); }
+.mz-wizard__eyebrow { display: block; font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--pv-ink-soft); margin-bottom: .2rem; }
+.mz-wizard__close { flex-shrink: 0; border: none; background: transparent; color: var(--pv-ink-soft); cursor: pointer; font-size: .85rem; padding: .15rem .35rem; }
+.mz-wizard__close:hover { color: var(--pv-coral); }
+.mz-wizard__q { margin-bottom: 1.05rem; }
+.mz-wizard__qtitle { font-size: .92rem; font-weight: 700; line-height: 1.3; }
+.mz-wizard__qhint { font-size: .78rem; color: var(--pv-ink-soft); margin: .15rem 0 .55rem; }
+.mz-wizard__opts { display: flex; flex-wrap: wrap; gap: .45rem; }
+.mz-opt {
+  border: 1.5px solid var(--pv-line); background: #fff; border-radius: 10px;
+  padding: .45rem .85rem; font-size: .85rem; font-weight: 600; color: var(--pv-ink);
+  font-family: inherit; text-align: left; cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.mz-opt:hover { border-color: var(--pv-gold); }
+.mz-opt.is-on { background: rgba(244,201,74,.16); border-color: var(--pv-gold); box-shadow: 0 0 0 3px rgba(244,201,74,.2); }
+.mz-wizard__pending { font-size: .85rem; font-style: italic; color: var(--pv-ink-soft); }
+.mz-wizard__result { background: var(--pv-paper); border: 1px solid var(--pv-line); border-radius: 14px; padding: 1rem; }
+.mz-wizard__verdict { font-size: 1rem; font-weight: 800; color: var(--pv-navy); margin: .55rem 0 0; }
+.mz-wizard__why { font-size: .88rem; line-height: 1.55; color: var(--pv-ink-soft); margin: .3rem 0 .95rem; }
+.mz-wizard__cta { display: flex; flex-wrap: wrap; gap: .6rem; }
+.mz-wizard__cta .mz-btn { font-size: .9rem; padding: .7rem 1.2rem; }
+.mz-manual-hint {
+  margin-top: .9rem; background: rgba(244,201,74,.14); border: 1px solid rgba(244,201,74,.4);
+  border-radius: 12px; padding: .7rem .9rem; font-size: .85rem; line-height: 1.45; color: var(--pv-gold-text);
+}
+
+/* ================= Completar tareas ================= */
+/* El ✓ tiene que verse SIEMPRE: antes solo aparecía en :hover y en móvil,
+   donde no hay hover, quedaba un cuadrito mudo. Nadie encontraba cómo
+   marcar una tarea como hecha. */
+.mz-check {
+  flex-shrink: 0; width: 22px; height: 22px; margin-top: .04rem; padding: 0;
+  border: 1.5px solid var(--pv-mint); border-radius: 7px; background: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--pv-mint); cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.mz-check svg { width: 13px; height: 13px; }
+.mz-check:hover, .mz-check:focus-visible { background: var(--pv-mint); color: #fff; }
+.mz-done-toggle {
+  margin-top: .7rem; border: none; background: transparent; padding: .2rem 0;
+  font-family: inherit; font-size: .8rem; font-weight: 700; color: var(--pv-navy);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+.mz-done-toggle:hover { color: var(--pv-gold-text); }
+.mz-task-suggest { display: block; font-size: .72rem; font-weight: 700; color: var(--pv-gold-text); margin-top: .15rem; }
+
+.mz-done-row { display: flex; align-items: flex-start; gap: .6rem; padding: .6rem 0; border-bottom: 1px solid var(--pv-line); }
+.mz-done-row:last-child { border-bottom: none; }
+.mz-done-mark {
+  flex-shrink: 0; width: 18px; height: 18px; margin-top: .12rem; border-radius: 6px;
+  background: var(--pv-mint); color: #fff; display: inline-flex; align-items: center; justify-content: center;
+}
+.mz-done-row__body { flex: 1; min-width: 0; }
+.mz-done-row__text { font-size: .88rem; line-height: 1.35; color: var(--pv-ink-soft); text-decoration: line-through; }
+.mz-done-row__meta { display: block; font-size: .72rem; letter-spacing: .02em; color: var(--pv-ink-soft); margin-top: .15rem; }
+.mz-done-row__btn { flex-shrink: 0; border: none; background: transparent; color: var(--pv-ink-soft); cursor: pointer; font-size: .75rem; padding: .1rem .3rem; }
+.mz-done-row__btn:hover { color: var(--pv-navy); }
+
+/* ================= Diagnóstico ================= */
+.mz-diag-alert {
+  margin-top: 1rem; background: rgba(244,201,74,.16); border: 1px solid rgba(244,201,74,.42);
+  border-radius: 12px; padding: .85rem 1rem; font-size: .88rem; line-height: 1.55; color: #fff;
+}
+.mz-diag-alert strong { color: var(--pv-gold); }
+
+@media (max-width: 860px) {
+  .mz-axis-y, .mz-axis-x { display: none; }
+  .mz-matrix-shell { grid-template-columns: 1fr; grid-template-areas: "quad"; }
+  .mz-quad-grid { grid-template-columns: 1fr; grid-template-rows: none; min-height: 0; }
+}
+
+.mz-import-note {
+  margin-bottom: 1rem; background: rgba(47,158,111,.08); border: 1px solid rgba(47,158,111,.3);
+  border-radius: 12px; padding: .7rem .9rem; font-size: .85rem; line-height: 1.45; color: var(--pv-ink);
+}
+
 </style>
-
-  <!-- Supabase (auth + base de datos). Debe cargar ANTES de app.js -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
 /* ========================================
    Mi Barco — Lógica + sincronización con Supabase
    Sistema de hábitos de Paulina Valencia
@@ -1363,16 +1998,23 @@ input[type="range"].pv-slider::-moz-range-thumb {
    3) (Opcional) Pega la URL del video .mp4 del login tras subirlo a GHL.
    Vuelve a ejecutar build-ghl.sh después de editar este archivo. */
 window.MI_BARCO_CONFIG = {
-  SUPABASE_URL: 'https://TU-PROYECTO.supabase.co',
-  SUPABASE_ANON_KEY: 'TU_ANON_KEY_PUBLICA',
-  VIDEO_URL: '' // URL del .mp4 del hero del login. Vacío = fondo gradiente navy/gold.
+  SUPABASE_URL: 'https://octilxlxwewlfbaoeihr.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jdGlseGx4d2V3bGZiYW9laWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMzY1MDUsImV4cCI6MjA5NjYxMjUwNX0.IciEMKNMKznyAsq4GtM9TINtnm7bSpgSf15rQi9CK0A',
+  // Video Mi Barco (Remotion) — subido a la biblioteca de medios de GHL.
+  VIDEO_URL: 'https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a28d9ed77feef7e78d36de8.mp4',
+  // Niveles permitidos (case-insensitive). Si un profile.skool_level no coincide
+  // con ninguno de estos, se muestra view-blocked con CTA a UPGRADE_URL.
+  ALLOWED_LEVELS: ['premium', 'vip'],
+  // URL a donde redirigir el botón "Adquirir Premium o VIP" del bloqueo.
+  // Es la página de planes de la comunidad Skool de Paulina.
+  UPGRADE_URL: 'https://www.skool.com/barco-de-papel-6471/plans'
 };
 
 (function (global) {
   'use strict';
 
   // ----- Estado EN MEMORIA (la única fuente de verdad vive en Supabase) -----
-  const _store = { name: '', rueda: null, tracker: null, plan: null };
+  const _store = { name: '', rueda: null, tracker: null, plan: null, matriz: null };
   let _userId = null;
 
   const _hasContent = (v) => v && typeof v === 'object' && Object.keys(v).length > 0;
@@ -1383,6 +2025,7 @@ window.MI_BARCO_CONFIG = {
     _store.rueda = _hasContent(row && row.rueda) ? row.rueda : null;
     _store.tracker = _hasContent(row && row.tracker) ? row.tracker : null;
     _store.plan = _hasContent(row && row.plan) ? row.plan : null;
+    _store.matriz = _hasContent(row && row.matriz) ? row.matriz : null;
   }
 
   function setUserId(id) { _userId = id; }
@@ -1393,7 +2036,8 @@ window.MI_BARCO_CONFIG = {
     return {
       rueda: _store.rueda || {},
       tracker: _store.tracker || {},
-      plan: _store.plan || {}
+      plan: _store.plan || {},
+      matriz: _store.matriz || {}
     };
   }
 
@@ -1403,6 +2047,7 @@ window.MI_BARCO_CONFIG = {
     _store.rueda = null;
     _store.tracker = null;
     _store.plan = null;
+    _store.matriz = null;
     _userId = null;
   }
 
@@ -1471,7 +2116,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'accion', label: '¿Qué acción vas a aplicar contando 5-4-3-2-1?', placeholder: 'Ej: Levantarme de la cama cuando suene la alarma', tipo: 'textarea' },
               { id: 'momento', label: '¿Cuándo aparecerá esa acción?', placeholder: 'Ej: Todas las mañanas a las 6:00 a.m.', tipo: 'text' }
             ],
-            habitoSugerido: 'Cuenta 5-4-3-2-1 antes de [acción]'
+            habitoSugerido: 'Cuenta 5-4-3-2-1 antes de {accion}'
           }
         },
         {
@@ -1488,7 +2133,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'cuando', label: 'Cuando ocurra...', placeholder: 'Ej: Termine de cepillarme los dientes', tipo: 'text' },
               { id: 'entonces', label: '...entonces haré', placeholder: 'Ej: Leer una página de mi libro', tipo: 'text' }
             ],
-            habitoSugerido: '[Acción] después de [contexto]'
+            habitoSugerido: '{entonces} cuando {cuando}'
           }
         },
         {
@@ -1506,7 +2151,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'cuando', label: '¿Cuándo lo harás?', placeholder: 'Ej: Lunes, miércoles y viernes a las 6:00 a.m.', tipo: 'text' },
               { id: 'donde', label: '¿Dónde lo harás?', placeholder: 'Ej: En el gimnasio del barrio', tipo: 'text' }
             ],
-            habitoSugerido: '[Qué] – [Cuándo]'
+            habitoSugerido: '{que} — {cuando}'
           }
         }
       ]
@@ -1535,7 +2180,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'objeto', label: 'Objeto que lo represente', placeholder: 'Ej: Mi ropa de entrenamiento', tipo: 'text' },
               { id: 'lugar', label: '¿Dónde lo pondrás para que estorbe?', placeholder: 'Ej: Sobre la silla donde me siento al despertar', tipo: 'text' }
             ],
-            habitoSugerido: '[Hábito] (señal: [objeto] en [lugar])'
+            habitoSugerido: '{habito} (señal: {objeto} en {lugar})'
           }
         },
         {
@@ -1552,7 +2197,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'habito_viejo', label: 'Después de... (hábito ya establecido)', placeholder: 'Ej: Servir mi café de la mañana', tipo: 'text' },
               { id: 'habito_nuevo', label: '...haré (nuevo hábito)', placeholder: 'Ej: Escribir tres líneas en mi diario', tipo: 'text' }
             ],
-            habitoSugerido: '[Hábito nuevo] después de [hábito viejo]'
+            habitoSugerido: '{habito_nuevo} después de {habito_viejo}'
           }
         },
         {
@@ -1569,7 +2214,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'partner', label: '¿Quién será tu partner in crime?', placeholder: 'Ej: María, mi mejor amiga', tipo: 'text' },
               { id: 'compromiso', label: '¿Cuál será tu compromiso con él/ella?', placeholder: 'Ej: Enviarle una foto cada día después de entrenar', tipo: 'textarea' }
             ],
-            habitoSugerido: 'Compromiso con [partner]: [compromiso]'
+            habitoSugerido: 'Compromiso con {partner}: {compromiso}'
           }
         }
       ]
@@ -1597,7 +2242,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'habito_original', label: 'Hábito original (cómo lo pensabas)', placeholder: 'Ej: Leer 20 páginas al día', tipo: 'text' },
               { id: 'version_absurda', label: 'Versión ridículamente fácil', placeholder: 'Ej: Leer una sola línea al día', tipo: 'text' }
             ],
-            habitoSugerido: '[Versión absurda]'
+            habitoSugerido: '{version_absurda}'
           }
         },
         {
@@ -1614,7 +2259,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'habito', label: '¿Qué hábito vas a sostener?', placeholder: 'Ej: Leer al menos una página antes de dormir', tipo: 'text' },
               { id: 'meta_dias', label: 'Meta de días consecutivos (opcional)', placeholder: 'Ej: 30 días', tipo: 'text' }
             ],
-            habitoSugerido: '[Hábito]'
+            habitoSugerido: '{habito}'
           }
         },
         {
@@ -1631,7 +2276,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'habito_100', label: 'Hábito al 100% (tu versión ideal)', placeholder: 'Ej: Correr 30 minutos cada mañana', tipo: 'text' },
               { id: 'habito_50', label: 'Versión al 50% (la que puedes cumplir hasta en un día difícil)', placeholder: 'Ej: Correr 15 minutos cada mañana', tipo: 'text' }
             ],
-            habitoSugerido: '[Habito 50%]'
+            habitoSugerido: '{habito_50}'
           }
         }
       ]
@@ -1652,14 +2297,14 @@ window.MI_BARCO_CONFIG = {
           explicacion: 'Cada vez que realizas una acción, le envías información a tu cerebro sobre quién eres. No te conviertes en una persona disciplinada porque lo afirmes, sino porque actúas como tal. Cada hábito completado es un voto a favor de la identidad que quieres construir.',
           fundamentoCientifico: 'Tu cerebro construye la identidad a partir de la evidencia que acumula sobre ti mismo. Cada acción repetida fortalece la percepción de quién eres y genera coherencia entre tus comportamientos y tu autoconcepto. Cuando actúas consistentemente con una identidad, tu cerebro comienza a considerarla parte de ti.',
           comoAplicarlo: 'Pregúntate: ¿qué identidad quiero construir? Y luego: ¿qué acción pequeña sería un voto a favor de esa identidad hoy? No busques perfección, busca acumular votos.',
-          ejemploPractico: 'Quieres convertirte en una buena lectora. Leer una página no te convierte inmediatamente en lectora, pero sí representa un voto a favor de esa identidad.',
+          ejemploPractico: 'Quieres convertirte en alguien que lee a diario. Leer una página no te convierte inmediatamente en ese tipo de persona, pero sí representa un voto a favor de esa identidad.',
           formularioAplicacion: {
             descripcion: 'Define tu identidad y el voto de hoy:',
             campos: [
               { id: 'identidad', label: '¿Qué identidad quieres construir?', placeholder: 'Ej: Una persona consistente con el ejercicio', tipo: 'text' },
               { id: 'voto', label: '¿Qué acción pequeña será un voto a favor de esa identidad?', placeholder: 'Ej: Salir a caminar 10 min cada mañana', tipo: 'text' }
             ],
-            habitoSugerido: '[Voto] (voto por: [identidad])'
+            habitoSugerido: '{voto} (voto por: {identidad})'
           }
         },
         {
@@ -1676,7 +2321,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'narrativa_vieja', label: 'Hasta hoy me he contado que soy...', placeholder: 'Ej: Una persona inconstante', tipo: 'textarea' },
               { id: 'narrativa_nueva', label: 'A partir de ahora elijo contarme que soy...', placeholder: 'Ej: Una persona que está aprendiendo a ser consistente', tipo: 'textarea' }
             ],
-            habitoSugerido: 'Repetir narrativa nueva diariamente: "[Narrativa nueva]"'
+            habitoSugerido: 'Repetir diariamente: "{narrativa_nueva}"'
           }
         },
         {
@@ -1686,7 +2331,7 @@ window.MI_BARCO_CONFIG = {
           explicacion: 'Cuando no sabes qué hacer, puedes apoyarte en alguien que ya representa la persona que quieres ser. Un referente funciona como una brújula. Ante una situación difícil, pregúntate: ¿qué haría mi referente si estuviera en mi lugar?',
           fundamentoCientifico: 'Basada en el aprendizaje observacional de Albert Bandura. Los seres humanos aprendemos observando comportamientos, estrategias y modelos que admiramos. Tener un referente facilita la adopción de nuevas conductas porque le proporciona al cerebro un ejemplo concreto.',
           comoAplicarlo: 'Elige una persona que represente la identidad que quieres construir. Puede ser alguien cercano, una figura pública o incluso un personaje histórico. Ante una decisión importante, pregúntate: ¿qué haría esta persona en mi lugar? Actúa de acuerdo con la respuesta.',
-          ejemploPractico: 'Quieres ser más disciplinada con el ejercicio. Cuando aparezca la tentación de saltártelo: ¿qué haría mi referente? Actúa desde esa identidad, no desde la emoción del momento.',
+          ejemploPractico: 'Quieres ser más constante con el ejercicio. Cuando aparezca la tentación de saltártelo: ¿qué haría mi referente? Actúa desde esa identidad, no desde la emoción del momento.',
           formularioAplicacion: {
             descripcion: 'Elige tu referente y la pregunta clave:',
             campos: [
@@ -1694,7 +2339,7 @@ window.MI_BARCO_CONFIG = {
               { id: 'por_que', label: '¿Por qué la elegiste? ¿Qué representa?', placeholder: 'Ej: Consistencia y disciplina sin perder la calma', tipo: 'textarea' },
               { id: 'pregunta', label: 'Pregunta clave que te harás en momentos difíciles', placeholder: 'Ej: ¿Qué haría María si estuviera en mi lugar?', tipo: 'text' }
             ],
-            habitoSugerido: 'Preguntarme: "[Pregunta clave]"'
+            habitoSugerido: 'Preguntarme: "{pregunta}"'
           }
         }
       ]
@@ -1741,7 +2386,10 @@ window.MI_BARCO_CONFIG = {
       mes: ruedaAnterior.mesAsignado,
       fecha: ruedaAnterior.ultimaActualizacion || new Date().toISOString(),
       valores: ruedaAnterior.pilares.map(p => ({ id: p.id, nombre: p.nombre, valor: p.valor })),
-      promedio: ruedaAnterior.pilares.reduce((acc, p) => acc + p.valor, 0) / ruedaAnterior.pilares.length
+      promedio: ruedaAnterior.pilares.reduce((acc, p) => acc + p.valor, 0) / ruedaAnterior.pilares.length,
+      // Cada mes la rueda arranca con todo en 5. Si nadie la tocó, ese 5 no es
+      // una respuesta: se marca para que el historial no lo presente como tal.
+      calificada: !!ruedaAnterior.ultimaActualizacion
     };
     const nueva = crearRuedaNueva();
     nueva.historial = [snapshot, ...(ruedaAnterior.historial || [])].slice(0, 24);
@@ -1807,6 +2455,16 @@ window.MI_BARCO_CONFIG = {
     Object.keys(tracker.registros).forEach(mes => {
       if (tracker.registros[mes][habitoId]) delete tracker.registros[mes][habitoId];
     });
+  }
+
+  // Editar un hábito existente (nombre y pilar) SIN perder su historial:
+  // conserva el mismo id, color y todos los registros ya marcados.
+  function editarHabito(tracker, habitoId, nombre, pilarId) {
+    const h = tracker.habitos.find(x => x.id === habitoId);
+    if (!h) return false;
+    h.nombre = nombre;
+    h.pilarId = pilarId || null;
+    return true;
   }
 
   function marcarDia(tracker, habitoId, mes, dia, estado) {
@@ -1889,6 +2547,80 @@ window.MI_BARCO_CONFIG = {
     );
   }
 
+  // ============================================================
+  // ONBOARDING — slides de bienvenida (primera vez)
+  // ============================================================
+  const ONBOARDING_SLIDES = [
+    {
+      icono: 'sailboat',
+      eyebrow: 'Te damos la bienvenida',
+      titulo: 'Llegaste a Mi Barco',
+      texto: 'Esta es tu bitácora de hábitos. Aquí vas a construir tu identidad un pliegue a la vez. En 5 pasos te mostramos cómo funciona.',
+      bullets: null
+    },
+    {
+      icono: 'target',
+      eyebrow: 'Paso 1 · Diagnóstico',
+      titulo: 'Diagnostica tu realidad',
+      texto: 'Califica del 1 al 10 los 10 pilares de tu vida. La Rueda te muestra dónde un nuevo hábito haría más diferencia.',
+      bullets: [
+        'Toca un pilar para calificarlo',
+        'Tu pilar más bajo es por donde empezar',
+        'Se resetea cada mes para que vuelvas a evaluarte'
+      ]
+    },
+    {
+      icono: 'brain',
+      eyebrow: 'Paso 2 · Implementación',
+      titulo: 'Comprende tu cerebro',
+      texto: 'Los Neuropliegues son herramientas basadas en neurociencia para superar la barrera específica que te está bloqueando.',
+      bullets: [
+        'Elige según lo que más te cuesta',
+        '4 pilares · 12 herramientas',
+        'Aplícalas con un formulario guiado'
+      ]
+    },
+    {
+      icono: 'calendar',
+      eyebrow: 'Paso 3 · Identidad',
+      titulo: 'Construye tu identidad',
+      texto: 'Marca cada día en el anillo circular del Tracker. Cada hábito cumplido es un voto a favor de quién estás siendo.',
+      bullets: [
+        'Verde = cumplí · Coral = no pude',
+        'Anota metas y notas mensuales',
+        'Observa cómo crece tu constancia anual'
+      ]
+    },
+    {
+      icono: 'clipboard',
+      eyebrow: 'Tu caja de herramientas',
+      titulo: 'Mi Plan',
+      texto: 'Las herramientas que aplicas viven aquí, con tus respuestas guardadas. Edítalas cuando quieras y regístralas como hábitos en el Tracker.',
+      bullets: null
+    },
+    {
+      icono: 'sparkles',
+      eyebrow: 'Todo listo para empezar',
+      titulo: 'Tu primer pliegue empieza aquí',
+      texto: 'Empieza por la Rueda para descubrir tu pilar más bajo. Ahí está tu primer paso. Pequeño no es débil — es estratégico.',
+      bullets: null,
+      ctaLabel: 'Comenzar mi diagnóstico'
+    }
+  ];
+
+  // Helpers del onboarding (persistencia en plan.meta)
+  function getOnboardingCompletado(plan) {
+    return !!(plan && plan.meta && plan.meta.onboardingCompletado);
+  }
+  function marcarOnboardingCompletado(plan) {
+    if (!plan.meta) plan.meta = {};
+    plan.meta.onboardingCompletado = true;
+    plan.meta.onboardingFecha = new Date().toISOString();
+  }
+  function resetOnboarding(plan) {
+    if (plan.meta) delete plan.meta.onboardingCompletado;
+  }
+
   // ----- Mapeo obstáculo → Neuropliegue (Quiz inicial) -----
   const OBSTACULOS = [
     { id: 'tiempo', label: 'No tengo tiempo / Me cuesta empezar', neuropliegueId: 'reducir_friccion' },
@@ -1908,6 +2640,7 @@ window.MI_BARCO_CONFIG = {
     brain: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>',
     calendar: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>',
     clipboard: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg>',
+    grid: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg>',
     zap: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
     layout: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="7" rx="1"/><rect x="3" y="14" width="9" height="7" rx="1"/><rect x="16" y="14" width="5" height="7" rx="1"/></svg>',
     sprout: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5 8-6 8-10a3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 1.5-.5 3-2 4"/><path d="M12 20c-4-2-7-4-7-9a3 3 0 0 1 3-3 3 3 0 0 1 3 3c0 .5.1 1 .2 1.5"/></svg>',
@@ -1923,6 +2656,7 @@ window.MI_BARCO_CONFIG = {
     bookmarkCheck: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" fill="currentColor" fill-opacity="0.12"/><path d="m9 10 2 2 4-4"/></svg>',
     plus: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
     trash: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    edit: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
     sailboat: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 18H2a4 4 0 0 0 4 4h12a4 4 0 0 0 4-4Z"/><path d="M21 14 10 2 3 14h18Z"/><path d="M10 2v16"/></svg>',
     sparkle: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 6.5L20 11l-6.1 1.5L12 19l-1.9-6.5L4 11l6.1-1.5z"/></svg>',
     book: '<svg class="pv-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
@@ -1939,10 +2673,12 @@ window.MI_BARCO_CONFIG = {
   global.MisPliegues = {
     getUserId, getUserName, setUserName,
     hydrate, setUserId, getState, resetState,
+    load, save,   // acceso genérico por scope (lo usa la Matriz: 'matriz')
     PILARES_DEFAULT, NEUROPLIEGUES, OBSTACULOS, ICONS, icon,
+    ONBOARDING_SLIDES, getOnboardingCompletado, marcarOnboardingCompletado, resetOnboarding,
     getRueda, saveRueda, getPilarMasBajo, getPromedioRueda,
     getTracker, saveTracker, getMesActual, getDiasDelMes, getDiaActual,
-    agregarHabito, eliminarHabito, marcarDia, getEstadoDia, getResumenMes,
+    agregarHabito, editarHabito, eliminarHabito, marcarDia, getEstadoDia, getResumenMes,
     getPlan, savePlan, agregarHerramientaAlPlan, quitarHerramientaDelPlan, estaEnPlan,
     findNeuropliegue, findHerramienta
   };
@@ -1966,6 +2702,8 @@ window.MI_BARCO_CONFIG = {
   const SUPABASE_URL = CFG.SUPABASE_URL || '';
   const SUPABASE_ANON_KEY = CFG.SUPABASE_ANON_KEY || '';
   const VIDEO_URL = CFG.VIDEO_URL || '';
+  const ALLOWED_LEVELS = (CFG.ALLOWED_LEVELS || ['premium', 'vip']).map((s) => String(s).toLowerCase());
+  const UPGRADE_URL = CFG.UPGRADE_URL || 'https://www.skool.com/';
 
   const isConfigured = () =>
     !!SUPABASE_URL && !!SUPABASE_ANON_KEY &&
@@ -2034,6 +2772,16 @@ window.MI_BARCO_CONFIG = {
   let _pushTimer = null;
   let _pushing = false;
   let _pendingPush = false;
+  // La columna `matriz` llegó después (migración 20261006000001). Si la app
+  // se publica antes que la migración, se trabaja sin ella: la Matriz guarda
+  // en el navegador y el resto de la app sigue sincronizando como siempre.
+  let _hasMatriz = true;
+  // Si la lectura inicial falla, NO se escribe: el upsert mandaría el estado
+  // vacío y pisaría en la nube todo el progreso real de la usuaria.
+  let _readFailed = false;
+
+  const _faltaColumnaMatriz = (err) => !!err &&
+    (err.code === '42703' || err.code === 'PGRST204') && /matriz/.test(err.message || '');
 
   async function hydrate(session) {
     const user = session.user;
@@ -2041,30 +2789,35 @@ window.MI_BARCO_CONFIG = {
       (user.email || '').split('@')[0] || '';
     MisPliegues.setUserId(user.id);
     let row = null;
+    _readFailed = false;
+    const leer = (cols) => sb.from('mi_barco_state').select(cols).eq('user_id', user.id).maybeSingle();
     try {
-      const { data, error } = await sb
-        .from('mi_barco_state')
-        .select('rueda,tracker,plan')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (error) throw error;
-      row = data;
+      let res = await leer('rueda,tracker,plan,matriz');
+      if (_faltaColumnaMatriz(res.error)) {
+        _hasMatriz = false;
+        res = await leer('rueda,tracker,plan');
+      }
+      if (res.error) throw res.error;
+      row = res.data;
     } catch (e) {
       console.warn('No se pudo leer el estado de la nube:', e);
+      _readFailed = true;
+      notifyToast('No pudimos cargar tu progreso. Recarga la página antes de seguir para no perder cambios.');
     }
     MisPliegues.hydrate(row || {}, name);
     _ready = true;
     MiBarcoCloud.ready = true;
+    MiBarcoCloud.hasMatriz = _hasMatriz;
   }
 
   function schedulePush() {
-    if (!sb || !_ready) return;
+    if (!sb || !_ready || _readFailed) return;
     if (_pushTimer) clearTimeout(_pushTimer);
     _pushTimer = setTimeout(flushPush, 600);
   }
 
   async function flushPush() {
-    if (!sb || !_ready) return;
+    if (!sb || !_ready || _readFailed) return;
     if (_pushing) { _pendingPush = true; return; }
     const userId = MisPliegues.getUserId();
     if (!userId) return;
@@ -2074,7 +2827,14 @@ window.MI_BARCO_CONFIG = {
         { user_id: userId, updated_at: new Date().toISOString() },
         MisPliegues.getState()
       );
-      const { error } = await sb.from('mi_barco_state').upsert(payload, { onConflict: 'user_id' });
+      if (!_hasMatriz) delete payload.matriz;
+      let { error } = await sb.from('mi_barco_state').upsert(payload, { onConflict: 'user_id' });
+      if (_faltaColumnaMatriz(error)) {
+        _hasMatriz = false;
+        MiBarcoCloud.hasMatriz = false;
+        delete payload.matriz;
+        ({ error } = await sb.from('mi_barco_state').upsert(payload, { onConflict: 'user_id' }));
+      }
       if (error) throw error;
     } catch (e) {
       console.error('Error guardando en Supabase:', e);
@@ -2169,6 +2929,169 @@ window.MI_BARCO_CONFIG = {
     location.reload();
   }
 
+  // ---------- Gating Skool (Premium / VIP) ----------
+  // Lee public.profiles.skool_level. Si está vacío y la usuaria acaba de
+  // registrarse, hace polling con backoff (el trigger handle_new_user dispara
+  // sync dirigido async; demora ~1-4s sin cold start, hasta ~12s con cold start).
+  //
+  // Estados que distingue:
+  //   'access'    → level válido (en ALLOWED_LEVELS)
+  //   'invalid'   → level presente pero no permitido (downgrade explícito)
+  //   'pending'   → aún no sincronizado (polling no llegó a synced=true)
+  //   'no_member' → sincronizado y NO está en la comunidad
+  //   'auth'      → sin sesión válida (token expirado, etc.)
+  //   'error'     → red caída u otro fallo
+  async function fetchProfileLevel(userId) {
+    // Sin fallback a anon: si no hay token de sesión válido, devolver 'auth'
+    // para forzar relogueo, no enmascarar como 'sin plan'.
+    let session;
+    try {
+      const sess = await sb.auth.getSession();
+      session = sess?.data?.session;
+    } catch (e) {
+      return { state: 'error', level: null, synced: false };
+    }
+    if (!session || !session.access_token) {
+      return { state: 'auth', level: null, synced: false };
+    }
+    try {
+      const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?select=skool_level,skool_synced_at,is_admin&user_id=eq.${userId}&limit=1`,
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+      if (r.status === 401 || r.status === 403) {
+        return { state: 'auth', level: null, synced: false };
+      }
+      if (!r.ok) {
+        return { state: 'error', level: null, synced: false };
+      }
+      const rows = await r.json();
+      const row = rows[0] || {};
+      const level = row.skool_level || null;
+      const synced = !!row.skool_synced_at;
+      const isAdmin = !!row.is_admin;
+
+      // Admins entran inmediatamente, sin esperar sync de Skool ni tener plan.
+      if (isAdmin) return { state: 'access', level: level || 'admin', synced: true, isAdmin: true };
+
+      if (!synced) return { state: 'pending', level: null, synced: false };
+      if (!level)  return { state: 'no_member', level: null, synced: true };
+      if (hasAccess(level)) return { state: 'access', level, synced: true };
+      return { state: 'invalid', level, synced: true };
+    } catch (e) {
+      console.warn('fetchProfileLevel error:', e);
+      return { state: 'error', level: null, synced: false };
+    }
+  }
+
+  function hasAccess(level) {
+    if (!level) return false;
+    return ALLOWED_LEVELS.includes(String(level).toLowerCase());
+  }
+
+  // Polling con backoff. Budget total ~12s para tolerar cold starts.
+  // Termina EARLY si el estado es terminal (access, invalid, no_member, auth).
+  // Solo sigue polling mientras esté en 'pending' o 'error' transitorio.
+  async function resolveLevelWithRetry(userId) {
+    const steps = [
+      { wait: 0,    label: 'Verificando tu acceso…' },
+      { wait: 1200, label: 'Sincronizando con la comunidad…' },
+      { wait: 1800, label: 'Sincronizando con la comunidad…' },
+      { wait: 2400, label: 'Casi listo…' },
+      { wait: 3000, label: 'Último intento…' },
+      { wait: 3500, label: 'Último intento…' },
+    ];
+    let last = { state: 'pending', level: null, synced: false };
+    for (const s of steps) {
+      if (s.wait) await new Promise((r) => setTimeout(r, s.wait));
+      setBlockedStatus(s.label);
+      last = await fetchProfileLevel(userId);
+      if (last.state === 'access' || last.state === 'invalid' || last.state === 'no_member' || last.state === 'auth') {
+        return last;
+      }
+      // 'pending' o 'error' → seguir intentando
+    }
+    return last; // mejor esfuerzo
+  }
+
+  function setBlockedStatus(text) {
+    const el = document.getElementById('blockedStatus');
+    if (!el) return;
+    el.innerHTML = text ? `<span class="blocked-spinner" aria-hidden="true"></span> ${text}` : '';
+  }
+
+  // Wire global de retry/logout. Lo hacemos UNA sola vez al cargar la página
+  // para evitar fugas si el usuario hace logout-login y showBlocked corre 2+ veces.
+  let _blockedWired = false;
+  function wireBlockedHandlers() {
+    if (_blockedWired) return;
+    _blockedWired = true;
+    const retry = document.getElementById('blockedRetry');
+    const logout = document.getElementById('blockedLogout');
+    if (retry) retry.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const sess = await sb.auth.getSession();
+      const user = sess?.data?.session?.user;
+      if (!user) return doLogout(); // sin sesión, mandar al login
+      setBlockedStatus('Reintentando sincronización…');
+      const res = await resolveLevelWithRetry(user.id);
+      if (res.state === 'access') {
+        await enterApp(sess.data.session);
+      } else {
+        showBlocked(user, res);
+      }
+    });
+    if (logout) logout.addEventListener('click', (e) => {
+      e.preventDefault();
+      doLogout();
+    });
+  }
+
+  function showBlocked(user, result) {
+    // result = { state, level, synced }
+    const auth = document.getElementById('view-auth');
+    const app = document.getElementById('view-app');
+    const blocked = document.getElementById('view-blocked');
+    if (auth) auth.style.display = 'none';
+    if (app) app.style.display = 'none';
+    if (blocked) blocked.style.display = '';
+    // Re-mostrar contenido del card (puede estar oculto por showBlockedShell)
+    const card = blocked?.querySelector('.blocked-card');
+    if (card) {
+      card.querySelectorAll('.blocked-title, .blocked-text, .blocked-pill, .blocked-cta, .blocked-secondary')
+        .forEach((el) => { el.style.visibility = ''; });
+    }
+
+    const name = (user?.user_metadata?.full_name) || (user?.email || '').split('@')[0] || 'amiga';
+    const elName = document.getElementById('blockedName');
+    if (elName) elName.textContent = name.split(' ')[0];
+
+    const pill = document.getElementById('blockedLevelPill');
+    const elLevel = document.getElementById('blockedLevel');
+    if (result?.level) {
+      if (pill) pill.style.display = '';
+      if (elLevel) elLevel.textContent = result.level;
+    } else {
+      if (pill) pill.style.display = 'none';
+    }
+    const cta = document.getElementById('blockedCta');
+    if (cta) cta.href = UPGRADE_URL;
+
+    // Status según estado
+    let status = '';
+    if (result?.state === 'auth') status = 'Sesión expirada — vuelve a iniciar sesión.';
+    else if (result?.state === 'error') status = 'No pudimos verificar tu acceso. Revisa tu conexión.';
+    else if (result?.state === 'pending') status = 'Aún sincronizando con la comunidad…';
+    setBlockedStatus(status);
+
+    wireBlockedHandlers();
+  }
+
   // ---------- Cambio de vista ----------
   async function enterApp(session) {
     const user = session.user;
@@ -2179,13 +3102,61 @@ window.MI_BARCO_CONFIG = {
     if (elName) elName.textContent = name || 'Mi cuenta';
     if (elAvatar) elAvatar.textContent = initials(name, user.email);
 
+    // ───── Gate: verificar plan Skool antes de mostrar la app ─────
+    showBlockedShell();
+    const res = await resolveLevelWithRetry(user.id);
+    if (res.state !== 'access') {
+      showBlocked(user, res);
+      return;
+    }
+
     const auth = document.getElementById('view-auth');
     const app = document.getElementById('view-app');
+    const blocked = document.getElementById('view-blocked');
     if (auth) auth.style.display = 'none';
+    if (blocked) blocked.style.display = 'none';
     if (app) app.style.display = '';
 
     await hydrate(session);
     window.dispatchEvent(new CustomEvent('mibarco:ready'));
+
+    // Re-check al volver del background. Si Paulina cancela el plan de una
+    // usuaria y el cron de las 6h lo detecta, en el próximo focus la usuaria
+    // ve bloqueo sin esperar al siguiente reload. Lo hacemos una sola vez
+    // por sesión (idempotente con visibilityChange).
+    if (!_visibilityCheckWired) {
+      _visibilityCheckWired = true;
+      let lastCheck = Date.now();
+      document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState !== 'visible') return;
+        // Throttle: no re-checkear más de cada 30s
+        if (Date.now() - lastCheck < 30_000) return;
+        lastCheck = Date.now();
+        const r = await fetchProfileLevel(user.id);
+        if (r.state === 'access') return; // sigue OK
+        if (r.state === 'pending' || r.state === 'error') return; // tolerar
+        // Perdió acceso → mostrar bloqueo
+        showBlocked(user, r);
+      });
+    }
+  }
+
+  let _visibilityCheckWired = false;
+
+  // Muestra solo el shell del view-blocked (sin contenido) con loader visible
+  // mientras corremos el polling. Si pasa el gate, lo ocultamos sin parpadeo.
+  function showBlockedShell() {
+    const auth = document.getElementById('view-auth');
+    const blocked = document.getElementById('view-blocked');
+    if (auth) auth.style.display = 'none';
+    if (blocked) blocked.style.display = '';
+    // Ocultar contenido excepto status mientras verificamos
+    const card = blocked?.querySelector('.blocked-card');
+    if (card) {
+      card.querySelectorAll('.blocked-title, .blocked-text, .blocked-pill, .blocked-cta, .blocked-secondary')
+        .forEach((el) => { el.style.visibility = 'hidden'; });
+    }
+    setBlockedStatus('Verificando tu acceso…');
   }
 
   // ---------- Video del hero (login) ----------
@@ -2214,6 +3185,7 @@ window.MI_BARCO_CONFIG = {
   // ---------- API pública ----------
   const MiBarcoCloud = {
     ready: false,
+    hasMatriz: true,
     schedulePush,
     flushPush,
     hydrate,
@@ -2290,9 +3262,663 @@ window.MI_BARCO_CONFIG = {
   });
 })(window);
 
+
+/* ============================================================
+   Matriz de Urgencia e Importancia dentro de Mi Barco
+   - Misma lógica que la página pública matriz-urgencia-importancia.html
+     (criterio del Paso 3 incluido). Si se recalibra allá, se copia aquí.
+   - Clases y ids con prefijo mz- para no chocar con los pv- de Mi Barco.
+   - Guarda en mi_barco_state.matriz vía MisPliegues.save('matriz').
+   ============================================================ */
+(function (global) {
+  'use strict';
+  var STORAGE_KEY = 'pv_matriz_urgencia_v2';
+  var LEGACY_KEY  = 'pv_matriz_urgencia_v1';
+
+  /**
+   * @type {{id:string, text:string, quad:'q1'|'q2'|'q3'|'q4'|null,
+   *         answers:{due:string, cost:string, align:string}|null,
+   *         done:boolean, doneAt:number|null}[]}
+   */
+  var tasks = [];
+  var root = null;          // contenedor .mz dentro de Mi Barco
+  var guardado = '';        // última versión escrita (evita upserts sin cambios)
+  var importadas = 0;       // tareas traídas de la página pública en esta carga
+  var selectedId = null;   // tarea en modo "la ubico yo a mano"
+  var wizardId   = null;   // tarea abierta en el asistente de criterio
+  var doneExpanded = false; // lista de completadas desplegada
+  var DONE_PREVIEW = 5;     // cuántas completadas se ven antes de plegar el resto
+
+  var QUAD_LABEL = { q1: 'Hazlo ahora', q2: 'Prográmalo', q3: 'Delégalo', q4: 'Elimínalo' };
+  var QUAD_TAG   = {
+    q1: 'Urgente · Importante', q2: 'No urgente · Importante',
+    q3: 'Urgente · No importante', q4: 'No urgente · No importante'
+  };
+
+  /* ==========================================================================
+     CRITERIOS DE SUGERENCIA — PROVISIONALES
+     --------------------------------------------------------------------------
+     Este es el ÚNICO bloque con lógica de criterio. Cuando Paulina nos pase su
+     metodología, se recalibra la herramienta entera cambiando aquí: los textos
+     de las preguntas, las opciones, sus puntajes y los dos umbrales. Nada de
+     esto está repartido por el resto del archivo, a propósito.
+     ========================================================================== */
+  var QUESTIONS = [
+    {
+      key: 'due',
+      title: '¿Para cuándo tiene que estar lista?',
+      hint: 'La fecha real, no la que te gustaría.',
+      options: [
+        { v: 'hoy',    label: 'Hoy o mañana',   score: 3 },
+        { v: 'semana', label: 'Esta semana',    score: 2 },
+        { v: 'mes',    label: 'Este mes',       score: 1 },
+        { v: 'nunca',  label: 'No tiene fecha', score: 0 }
+      ]
+    },
+    {
+      key: 'cost',
+      title: 'Si no la haces tú, ¿qué pasa de verdad?',
+      hint: 'La consecuencia concreta, no la culpa que sentirías.',
+      options: [
+        { v: 'alta',  label: 'Hay un costo real: dinero, salud o alguien que cuenta conmigo', score: 3 },
+        { v: 'media', label: 'Se complica un poco, pero se resuelve',                          score: 1.5 },
+        { v: 'otro',  label: 'Alguien más lo puede hacer, no depende de mí',                   score: 1.5 },
+        { v: 'baja',  label: 'La verdad, no pasa nada',                                        score: 0 }
+      ]
+    },
+    {
+      key: 'align',
+      title: '¿Esto te acerca a la vida que quieres construir?',
+      hint: 'Aquí no importa el reloj: importa hacia dónde te mueve.',
+      options: [
+        { v: 'mucho', label: 'Sí, es de lo que más me mueve hacia allá', score: 3 },
+        { v: 'algo',  label: 'Un poco: ayuda, pero no es clave',         score: 1.5 },
+        { v: 'nada',  label: 'No, esto es de la agenda de alguien más',  score: 0 }
+      ]
+    }
+  ];
+
+  var URGENT_MIN    = 2;   // desde qué puntaje de plazo se considera urgente
+  var IMPORTANT_MIN = 2;   // desde qué puntaje se considera importante
+
+  function scoreOf(key, value) {
+    var q = QUESTIONS.filter(function (x) { return x.key === key; })[0];
+    if (!q) return 0;
+    var opt = q.options.filter(function (o) { return o.v === value; })[0];
+    return opt ? opt.score : 0;
+  }
+
+  // Importancia = el mayor de los dos ejes, no su promedio: pagar impuestos no
+  // te acerca a la vida que quieres y aun así es importante (tiene costo real),
+  // y meditar no tiene costo si no lo haces y aun así construye.
+  function importanceOf(a) {
+    var cost = scoreOf('cost', a.cost), align = scoreOf('align', a.align);
+    // El eje fuerte manda (pagar impuestos importa aunque no te acerque a nada),
+    // pero el otro suma un poco: dos respuestas medias no pueden acabar en
+    // "Elimínalo", que es el consejo más difícil de deshacer.
+    return Math.max(cost, align) + Math.min(cost, align) * 0.4;
+  }
+
+  function isComplete(a) {
+    return !!(a && a.due && a.cost && a.align);
+  }
+
+  // "Delégalo" solo tiene sentido si la tarea PUEDE salir de tus manos. Antes,
+  // todo lo urgente y poco importante caía ahí — incluso lo que depende 100% de
+  // ti, que es indelegable por definición. Ahora hace falta decirlo de forma
+  // explícita en la pregunta 2, y lo indelegable se programa en vez de delegarse.
+  function isDelegable(a) { return a.cost === 'otro'; }
+
+  function suggestQuad(a) {
+    var urgent    = scoreOf('due', a.due) >= URGENT_MIN;
+    var important = importanceOf(a) >= IMPORTANT_MIN;
+
+    // Marcar "alguien más puede hacerlo" ya afirma que la tarea hay que hacerla.
+    // Solo se descarta si además no aporta nada y no corre el reloj.
+    if (isDelegable(a)) return (urgent || a.align !== 'nada') ? 'q3' : 'q4';
+
+    if (urgent && important) return 'q1';
+    if (important)           return 'q2';
+    return urgent ? 'q2' : 'q4';   // urgente pero solo tú: se agenda, no se delega
+  }
+
+  function suggestWhy(quad, a) {
+    // Caso propio: corre el reloj, no es de lo importante, y solo tú puedes hacerla.
+    if (quad === 'q2' && scoreOf('due', a.due) >= URGENT_MIN) {
+      return 'Corre el reloj y solo tú puedes hacerla, así que delegarla no es una opción. Dale un hueco concreto en la agenda y sácala de en medio, sin que desplace lo importante.';
+    }
+
+    var base = {
+      q1: 'Tiene una fecha real encima y un costo concreto si no pasa. Es de las pocas cosas que sí van hoy.',
+      q2: 'El reloj no te está apretando, pero esto es de lo que construye la vida que quieres. Si no le pones fecha tú, tarde o temprano se te vuelve urgencia.',
+      q3: 'Marcaste que alguien más puede hacerla, y ese es justo el criterio de este cuadrante: puede importar, pero no tiene que salir de tus manos.',
+      q4: 'Ni corre el reloj ni cambia nada si desaparece de la lista. Puedes soltarla sin culpa.'
+    }[quad];
+
+    var extra = '';
+    if (quad === 'q1' && a.align === 'nada') {
+      extra = ' Ojo: dijiste que no te acerca a donde vas. Hazla porque hay un costo real, no porque te la pidieron.';
+    } else if (quad === 'q2' && a.due === 'nunca') {
+      extra = ' Como no tiene fecha, ponle una tú ahora mismo: sin fecha, esto no se hace nunca.';
+    } else if (quad === 'q3' && a.align === 'mucho') {
+      extra = ' Y aunque te acerque a donde vas, soltarla es lo que te deja tiempo para la parte que sí depende de ti.';
+    } else if (quad === 'q4' && a.due !== 'nunca') {
+      extra = ' Tiene fecha, pero nada cambia si no pasa. Esa fecha te la pusiste tú.';
+    }
+    return base + extra;
+  }
+
+  /* ========================== Persistencia ========================== */
+  function normalize(t) {
+    return {
+      id: t.id,
+      text: t.text,
+      quad: t.quad || null,
+      answers: t.answers || null,
+      done: !!t.done,
+      doneAt: t.doneAt || null
+    };
+  }
+
+  // Lo que la página pública de la Matriz guardó en ESTE navegador (mismo
+  // dominio, así que su localStorage es visible desde aquí).
+  function leerLocal() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) raw = localStorage.getItem(LEGACY_KEY); // migración desde v1
+      return raw ? JSON.parse(raw).map(normalize) : [];
+    } catch (e) { return []; }
+  }
+  function sinColumnaEnLaNube() {
+    return !!(global.MiBarcoCloud && global.MiBarcoCloud.hasMatriz === false);
+  }
+
+  // Dentro de Mi Barco las tareas viven en la cuenta (mi_barco_state.matriz).
+  // La primera vez que se abre, si la cuenta aún no tiene Matriz, se traen las
+  // tareas que la persona ya tenía en la página pública. No se borran de allá:
+  // la página pública sigue siendo una herramienta aparte.
+  function load() {
+    importadas = 0;
+    if (sinColumnaEnLaNube()) { tasks = leerLocal(); guardado = JSON.stringify(tasks); return; }
+    var nube = MisPliegues.load('matriz', null);
+    if (nube && Array.isArray(nube.tasks)) {
+      tasks = nube.tasks.map(normalize);
+      guardado = JSON.stringify(tasks);
+      return;
+    }
+    tasks = leerLocal();
+    importadas = tasks.length;
+    guardado = importadas ? '' : JSON.stringify(tasks);   // si trajo algo, se sube
+  }
+  // render() llama a save() siempre; solo se escribe cuando las tareas cambian,
+  // para no mandar un upsert a Supabase por abrir un desplegable.
+  function save() {
+    var json = JSON.stringify(tasks);
+    if (json === guardado) return;
+    guardado = json;
+    if (sinColumnaEnLaNube()) {
+      try { localStorage.setItem(STORAGE_KEY, json); } catch (e) {}
+      return;
+    }
+    MisPliegues.save('matriz', { tasks: tasks });
+  }
+  function uid() { return 't' + Math.random().toString(36).slice(2, 10); }
+  function byId(id) { return tasks.filter(function (t) { return t.id === id; })[0]; }
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, function (c) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+    });
+  }
+  function agoLabel(ts) {
+    if (!ts) return '';
+    var days = Math.floor((Date.now() - ts) / 86400000);
+    if (days <= 0) return 'hoy';
+    if (days === 1) return 'ayer';
+    if (days < 7) return 'hace ' + days + ' días';
+    if (days < 14) return 'hace una semana';
+    if (days < 31) return 'hace ' + Math.floor(days / 7) + ' semanas';
+    return 'hace más de un mes';
+  }
+
+  /* ========================== Render ========================== */
+  function render() {
+    renderDump();
+    renderUnsorted();
+    renderWizard();
+    renderQuadrants();
+    renderDone();
+    renderDiagnostic();
+    renderImportNote();
+    save();
+  }
+
+  function renderImportNote() {
+    var note = document.getElementById('mzImportNote');
+    if (!note) return;
+    if (importadas > 0) {
+      note.style.display = 'block';
+      note.textContent = importadas === 1
+        ? 'Trajimos la tarea que tenías en la Matriz de este navegador. Desde ahora se guarda en tu cuenta.'
+        : 'Trajimos las ' + importadas + ' tareas que tenías en la Matriz de este navegador. Desde ahora se guardan en tu cuenta.';
+    } else {
+      note.style.display = 'none';
+    }
+  }
+
+  // ---- Paso 1: lista de lo que sigue abierto (las completadas viven abajo) ----
+  function renderDump() {
+    var list  = document.getElementById('mzDumpList');
+    var empty = document.getElementById('mzDumpEmpty');
+    var open  = tasks.filter(function (t) { return !t.done; });
+    list.innerHTML = '';
+    if (open.length === 0) {
+      empty.style.display = 'block';
+      empty.textContent = tasks.length
+        ? 'Vaciaste la lista: todo lo que agregaste ya está en Completadas.'
+        : 'Todavía no has agregado nada. Empieza escribiendo arriba y no te detengas a pensar si es importante o no.';
+      return;
+    }
+    empty.style.display = 'none';
+    open.forEach(function (t) {
+      var chip = document.createElement('span');
+      chip.className = 'mz-chip';
+      chip.style.cursor = 'default';
+      var tag = t.quad ? ' · ' + QUAD_LABEL[t.quad] : '';
+      chip.innerHTML =
+        '<span class="mz-chip__label">' + escapeHtml(t.text) +
+        '<span style="color:var(--pv-ink-soft);font-weight:600;">' + tag + '</span></span>' +
+        '<button type="button" class="mz-chip__del" data-del="' + t.id + '" aria-label="Eliminar tarea">✕</button>';
+      list.appendChild(chip);
+    });
+  }
+
+  // ---- Paso 3: bandeja de sin-clasificar ----
+  function renderUnsorted() {
+    var list  = document.getElementById('mzUnsortedList');
+    var empty = document.getElementById('mzUnsortedEmpty');
+    var label = document.getElementById('mzUnsortedLabel');
+    var open     = tasks.filter(function (t) { return !t.done; });
+    var unsorted = open.filter(function (t) { return !t.quad; });
+
+    list.innerHTML = '';
+    if (open.length === 0) {
+      empty.style.display = 'block';
+      empty.textContent = 'Agrega tareas en el Paso 1 para empezar a ubicarlas aquí.';
+      label.style.display = 'none';
+      return;
+    }
+    label.style.display = 'block';
+    if (unsorted.length === 0) {
+      empty.style.display = 'block';
+      empty.textContent = '¡Ya ubicaste todas tus tareas! Revisa el diagnóstico más abajo.';
+      return;
+    }
+    empty.style.display = 'none';
+    unsorted.forEach(function (t) {
+      var chip = document.createElement('span');
+      var on = (t.id === selectedId || t.id === wizardId);
+      chip.className = 'mz-chip' + (on ? ' is-selected' : '');
+      chip.setAttribute('data-select', t.id);
+      chip.setAttribute('role', 'button');
+      chip.setAttribute('tabindex', '0');
+      chip.innerHTML = '<span class="mz-chip__label">' + escapeHtml(t.text) + '</span>';
+      list.appendChild(chip);
+    });
+  }
+
+  // ---- Paso 3: asistente de criterio ----
+  function renderWizard() {
+    var box  = document.getElementById('mzWizard');
+    var hint = document.getElementById('mzManualHint');
+    var t = wizardId ? byId(wizardId) : null;
+
+    hint.style.display = (selectedId && !wizardId) ? 'block' : 'none';
+
+    if (!t || t.done || t.quad) { box.style.display = 'none'; box.innerHTML = ''; wizardId = null; return; }
+    box.style.display = 'block';
+
+    var a = t.answers || {};
+    var html =
+      '<div class="mz-wizard__head">' +
+        '<span>' +
+          '<span class="mz-wizard__eyebrow">Ayúdame a ubicarla</span>' +
+          '<span class="mz-wizard__task">' + escapeHtml(t.text) + '</span>' +
+        '</span>' +
+        '<button type="button" class="mz-wizard__close" data-wizard-close aria-label="Cerrar">✕</button>' +
+      '</div>';
+
+    QUESTIONS.forEach(function (q, i) {
+      html +=
+        '<div class="mz-wizard__q">' +
+          '<p class="mz-wizard__qtitle">' + (i + 1) + ' · ' + q.title + '</p>' +
+          '<p class="mz-wizard__qhint">' + q.hint + '</p>' +
+          '<div class="mz-wizard__opts">' +
+            q.options.map(function (o) {
+              return '<button type="button" class="mz-opt' + (a[q.key] === o.v ? ' is-on' : '') +
+                     '" data-q="' + q.key + '" data-v="' + o.v + '">' + o.label + '</button>';
+            }).join('') +
+          '</div>' +
+        '</div>';
+    });
+
+    if (isComplete(a)) {
+      var quad = suggestQuad(a);
+      html +=
+        '<div class="mz-wizard__result">' +
+          '<span class="mz-quad-action mz-badge--' + quad + '">' + QUAD_TAG[quad] + '</span>' +
+          '<p class="mz-wizard__verdict">Va en «' + QUAD_LABEL[quad] + '»</p>' +
+          '<p class="mz-wizard__why">' + suggestWhy(quad, a) + '</p>' +
+          '<div class="mz-wizard__cta">' +
+            '<button type="button" class="mz-btn" data-accept="' + quad + '">Ubicarla ahí</button>' +
+            '<button type="button" class="mz-btn-outline-navy" data-manual>Prefiero elegir yo</button>' +
+          '</div>' +
+        '</div>';
+    } else {
+      html += '<p class="mz-wizard__pending">Responde las tres y te digo en qué cuadrante va y por qué.</p>';
+    }
+
+    box.innerHTML = html;
+  }
+
+  // ---- Paso 3: cuadrantes ----
+  function renderQuadrants() {
+    ['q1', 'q2', 'q3', 'q4'].forEach(function (q) {
+      var listEl  = root.querySelector('[data-list="' + q + '"]');
+      var emptyEl = root.querySelector('[data-empty="' + q + '"]');
+      var items = tasks.filter(function (t) { return t.quad === q && !t.done; });
+      listEl.innerHTML = '';
+      emptyEl.style.display = items.length ? 'none' : 'block';
+      items.forEach(function (t) {
+        var note = '';
+        if (isComplete(t.answers)) {
+          var sug = suggestQuad(t.answers);
+          if (sug !== t.quad) {
+            note = '<span class="mz-task-suggest">Por tus respuestas iría en «' + QUAD_LABEL[sug] + '»</span>';
+          }
+        }
+        var row = document.createElement('div');
+        row.className = 'mz-task-in-quad';
+        row.innerHTML =
+          '<button type="button" class="mz-check" data-done="' + t.id + '" title="Marcar como hecha" aria-label="Marcar como hecha">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' +
+          '</button>' +
+          '<span style="flex:1;">' + escapeHtml(t.text) + note + '</span>' +
+          '<button type="button" data-unassign="' + t.id + '" title="Quitar de este cuadrante">↩</button>';
+        listEl.appendChild(row);
+      });
+    });
+  }
+
+  // ---- Completadas ----
+  function renderDone() {
+    var section = document.getElementById('mzDoneSection');
+    var list    = document.getElementById('mzDoneList');
+    var count   = document.getElementById('mzDoneCount');
+    var done = tasks.filter(function (t) { return t.done; })
+                    .sort(function (x, y) { return (y.doneAt || 0) - (x.doneAt || 0); });
+
+    if (done.length === 0) { section.style.display = 'none'; doneExpanded = false; return; }
+    section.style.display = 'block';
+    count.textContent = done.length === 1 ? '1 tarea cerrada' : done.length + ' tareas cerradas';
+
+    // No se borra nada solo: si son muchas, se pliegan. Ver el avance es parte
+    // del método; perderlo sin pedirlo, no.
+    var hidden = 0;
+    var visible = done;
+    if (!doneExpanded && done.length > DONE_PREVIEW) {
+      visible = done.slice(0, DONE_PREVIEW);
+      hidden = done.length - DONE_PREVIEW;
+    }
+
+    list.innerHTML = '';
+    visible.forEach(function (t) {
+      var meta = [t.quad ? QUAD_LABEL[t.quad] : 'Sin clasificar', agoLabel(t.doneAt)]
+                 .filter(Boolean).join(' · ');
+      var row = document.createElement('div');
+      row.className = 'mz-done-row';
+      row.innerHTML =
+        '<span class="mz-done-mark"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>' +
+        '<span class="mz-done-row__body">' +
+          '<span class="mz-done-row__text">' + escapeHtml(t.text) + '</span>' +
+          '<span class="mz-done-row__meta">' + meta + '</span>' +
+        '</span>' +
+        '<button type="button" class="mz-done-row__btn" data-undone="' + t.id + '" title="Devolver a la matriz">↩</button>' +
+        '<button type="button" class="mz-done-row__btn" data-del-done="' + t.id + '" title="Eliminar definitivamente">✕</button>';
+      list.appendChild(row);
+    });
+
+    if (hidden > 0 || doneExpanded) {
+      var toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'mz-done-toggle';
+      toggle.setAttribute('data-done-toggle', '');
+      toggle.textContent = doneExpanded
+        ? 'Ver menos'
+        : 'Ver las ' + hidden + (hidden === 1 ? ' anterior' : ' anteriores');
+      list.appendChild(toggle);
+    }
+  }
+
+  // ---- Diagnóstico ----
+  function renderDiagnostic() {
+    var section = document.getElementById('mzDiagSection');
+    var alertEl = document.getElementById('mzDiagAlert');
+    var placed = tasks.filter(function (t) { return t.quad && !t.done; });
+    if (placed.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+
+    var counts = { q1: 0, q2: 0, q3: 0, q4: 0 };
+    placed.forEach(function (t) { counts[t.quad]++; });
+    document.getElementById('mzCountQ1').textContent = counts.q1;
+    document.getElementById('mzCountQ2').textContent = counts.q2;
+    document.getElementById('mzCountQ3').textContent = counts.q3;
+    document.getElementById('mzCountQ4').textContent = counts.q4;
+
+    var msg;
+    if (counts.q1 > 0) {
+      msg = 'Tienes ' + counts.q1 + (counts.q1 === 1 ? ' tarea urgente e importante' : ' tareas urgentes e importantes') +
+            '. Empieza por ahí: es lo que no puede esperar.';
+    } else if (counts.q2 > 0) {
+      msg = 'No tienes urgencias activas ahora mismo. Aprovecha para agendar tus ' + counts.q2 +
+            (counts.q2 === 1 ? ' tarea de "Prográmalo"' : ' tareas de "Prográmalo"') +
+            '. Ahí es donde se construye lo importante, antes de que se vuelva urgente.';
+    } else if (counts.q3 + counts.q4 > 0) {
+      msg = 'Lo que has ubicado hasta ahora no es ni urgente ni clave para tus objetivos. Antes de ejecutarlo, pregúntate qué se puede delegar o soltar.';
+    } else {
+      msg = 'Sigue ubicando tus tareas para ver el diagnóstico completo.';
+    }
+    document.getElementById('mzDiagMessage').textContent = msg;
+
+    // Dos señales, una a la vez para no hacer ruido. La saturación de "Hazlo
+    // ahora" manda, porque es el error que trae a la gente a la matriz; si no
+    // está, revisamos el cuadrante donde vive lo que la persona quiere construir.
+    if (placed.length >= 4 && counts.q1 / placed.length >= 0.5) {
+      alertEl.style.display = 'block';
+      alertEl.innerHTML =
+        'Marcaste <strong>' + counts.q1 + ' de ' + placed.length + '</strong> como urgente e importante. ' +
+        'Cuando casi todo cae en el mismo cuadrante, rara vez es que todo sea urgente: es que la urgencia se está midiendo ' +
+        'con la sensación y no con la consecuencia. Vuelve sobre esas tareas y quédate solo con las que tienen una fecha que no te pusiste tú.';
+    } else if (placed.length >= 4 && counts.q2 === 0) {
+      alertEl.style.display = 'block';
+      alertEl.innerHTML =
+        'De las ' + placed.length + ' tareas que ubicaste, <strong>ninguna quedó en «Prográmalo»</strong>. ' +
+        'Ese es el cuadrante donde vive lo que quieres construir. Si está vacío, tu semana entera es responder a lo urgente ' +
+        'y a la agenda de otros. Busca una, solo una, que sea tuya.';
+    } else {
+      alertEl.style.display = 'none';
+    }
+  }
+
+  /* ========================== Acciones ========================== */
+  function assign(id, quad) {
+    var t = byId(id);
+    if (!t) return;
+    t.quad = quad;
+    selectedId = null;
+    wizardId = null;
+    render();
+  }
+  function markDone(id) {
+    var t = byId(id);
+    if (!t) return;
+    t.done = true;
+    t.doneAt = Date.now();
+    if (selectedId === id) selectedId = null;
+    if (wizardId === id) wizardId = null;
+    render();
+  }
+
+  /* ========================== Eventos ========================== */
+  function bindEvents() {
+    document.getElementById('mzDumpForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = document.getElementById('mzDumpInput');
+      var val = input.value.trim();
+      if (!val) return;
+      tasks.push({ id: uid(), text: val, quad: null, answers: null, done: false, doneAt: null });
+      input.value = '';
+      render();
+      input.focus();
+    });
+
+    document.getElementById('mzDumpList').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-del]');
+      if (!btn) return;
+      var id = btn.getAttribute('data-del');
+      tasks = tasks.filter(function (t) { return t.id !== id; });
+      if (selectedId === id) selectedId = null;
+      if (wizardId === id) wizardId = null;
+      render();
+    });
+
+    // Tocar una tarea sin clasificar abre el asistente de criterio.
+    document.getElementById('mzUnsortedList').addEventListener('click', function (e) {
+      var chip = e.target.closest('[data-select]');
+      if (!chip) return;
+      var id = chip.getAttribute('data-select');
+      wizardId = (wizardId === id) ? null : id;
+      selectedId = null;
+      render();
+    });
+
+    document.getElementById('mzWizard').addEventListener('click', function (e) {
+      var t = wizardId ? byId(wizardId) : null;
+      if (!t) return;
+
+      if (e.target.closest('[data-wizard-close]')) { wizardId = null; render(); return; }
+
+      var opt = e.target.closest('[data-q]');
+      if (opt) {
+        t.answers = t.answers || {};
+        t.answers[opt.getAttribute('data-q')] = opt.getAttribute('data-v');
+        render();
+        return;
+      }
+
+      var accept = e.target.closest('[data-accept]');
+      if (accept) { assign(t.id, accept.getAttribute('data-accept')); return; }
+
+      if (e.target.closest('[data-manual]')) {
+        selectedId = t.id;
+        wizardId = null;
+        render();
+      }
+    });
+
+    root.querySelectorAll('.mz-quad').forEach(function (quadEl) {
+      quadEl.addEventListener('click', function (e) {
+        var doneBtn = e.target.closest('[data-done]');
+        if (doneBtn) { markDone(doneBtn.getAttribute('data-done')); return; }
+
+        var unBtn = e.target.closest('[data-unassign]');
+        if (unBtn) {
+          var t = byId(unBtn.getAttribute('data-unassign'));
+          if (t) t.quad = null;
+          render();
+          return;
+        }
+
+        if (!selectedId) {
+          quadEl.classList.add('is-target');
+          setTimeout(function () { quadEl.classList.remove('is-target'); }, 260);
+          return;
+        }
+        assign(selectedId, quadEl.getAttribute('data-quad'));
+      });
+    });
+
+    document.getElementById('mzDoneList').addEventListener('click', function (e) {
+      var undo = e.target.closest('[data-undone]');
+      if (undo) {
+        var t = byId(undo.getAttribute('data-undone'));
+        if (t) { t.done = false; t.doneAt = null; }
+        render();
+        return;
+      }
+      if (e.target.closest('[data-done-toggle]')) {
+        doneExpanded = !doneExpanded;
+        render();
+        return;
+      }
+      var del = e.target.closest('[data-del-done]');
+      if (del) {
+        var id = del.getAttribute('data-del-done');
+        tasks = tasks.filter(function (x) { return x.id !== id; });
+        render();
+      }
+    });
+
+    document.getElementById('mzClearDoneBtn').addEventListener('click', function () {
+      var done = tasks.filter(function (t) { return t.done; });
+      if (done.length === 0) return;
+      if (!confirm('¿Borrar definitivamente las ' + done.length + ' tareas completadas? Lo que sigue abierto no se toca.')) return;
+      tasks = tasks.filter(function (t) { return !t.done; });
+      render();
+    });
+
+    document.getElementById('mzResetBtn').addEventListener('click', function () {
+      if (tasks.length === 0) return;
+      if (!confirm('Esto borra TODO: las tareas abiertas y también las completadas. Si solo quieres sacarte de encima lo ya hecho, usa «Limpiar completadas». ¿Reiniciar de todos modos?')) return;
+      tasks = [];
+      selectedId = null;
+      wizardId = null;
+      doneExpanded = false;
+      render();
+    });
+  }
+
+  /* ========================== Arranque ========================== */
+  var listo = false;
+  function init() {
+    root = document.getElementById('mz-root');
+    if (!root || listo) return;
+    listo = true;
+    bindEvents();
+  }
+
+  // Se recarga desde la cuenta cada vez que la nube termina de hidratar.
+  var pintado = false;
+  function sync() {
+    init();
+    if (!root) return;
+    pintado = true;
+    selectedId = null;
+    wizardId = null;
+    load();
+    render();
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  global.addEventListener('mibarco:ready', sync);
+
+  global.MatrizMiBarco = {
+    // Al entrar a la pestaña: si la nube ya hidrató pero aún no se pintó, pinta.
+    open: function () { if (!pintado && global.MiBarcoCloud && global.MiBarcoCloud.ready) sync(); }
+  };
+})(window);
+
 </script>
-</head>
-<body>
+
 
 <!-- ===================== OVERLAY DE CARGA ===================== -->
 <div class="pv-boot" id="boot">
@@ -2301,22 +3927,10 @@ window.MI_BARCO_CONFIG = {
 
 <!-- ===================== LOGIN / REGISTRO ===================== -->
 <div class="auth-shell full-bleed" id="view-auth">
-  <!-- Hero con video (fallback: gradiente navy/gold) -->
+  <!-- Hero con video (fallback: gradiente navy/gold). El video ya trae el branding
+       y el copy del lado izquierdo, por eso no se superpone texto encima. -->
   <aside class="auth-hero">
     <video class="auth-hero-video" id="heroVideo" autoplay loop muted playsinline preload="auto"></video>
-    <div class="auth-hero-overlay"></div>
-    <div class="auth-hero-content">
-      <div class="auth-hero-logo">
-        <span class="logo-img">
-          <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
-               alt="Paulina Valencia" />
-        </span>
-        <span class="logo-name">Paulina Valencia</span>
-      </div>
-      <h1>Construye tu identidad,<br/><em>un pliegue a la vez</em>.</h1>
-      <p class="lead">Diagnostica con la Rueda, comprende tu cerebro con los Neuropliegues y sostén tus hábitos con el Tracker.</p>
-    </div>
-    <div class="auth-hero-foot">Mi Barco · Mini-app del ecosistema de Paulina Valencia</div>
   </aside>
 
   <!-- Formularios -->
@@ -2332,7 +3946,7 @@ window.MI_BARCO_CONFIG = {
 
       <!-- LOGIN -->
       <div class="auth-card" id="card-login">
-        <div class="eyebrow">Bienvenida de vuelta</div>
+        <div class="eyebrow">Te damos la bienvenida de vuelta</div>
         <h2>Ingresa a Mi Barco</h2>
         <p class="sub">Accede con el correo que usaste al registrarte.</p>
         <div class="alert" id="alert-login"></div>
@@ -2453,8 +4067,40 @@ window.MI_BARCO_CONFIG = {
   </section>
 </div><!-- /view-auth -->
 
+<!-- ===================== BLOQUEADA — no es Premium/VIP ===================== -->
+<div id="view-blocked" class="full-bleed" style="display:none">
+  <div class="blocked-shell">
+    <div class="blocked-card">
+      <div class="blocked-logo">
+        <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
+             alt="Mi Barco · Paulina Valencia" />
+      </div>
+      <p class="blocked-eyebrow">Acceso exclusivo</p>
+      <h1 class="blocked-title">Hola <span id="blockedName">·</span>, esta app es exclusiva para <span style="color: var(--pv-gold);">Premium y VIP</span></h1>
+      <p class="blocked-text">
+        Mi Barco es una herramienta del ecosistema de Paulina Valencia diseñada para quienes están en los planes
+        <strong>Premium</strong> o <strong>VIP</strong> de la comunidad.
+      </p>
+      <div class="blocked-pill" id="blockedLevelPill" style="display:none">
+        Tu plan actual: <strong class="level" id="blockedLevel">—</strong>
+      </div>
+      <a id="blockedCta" href="#" target="_blank" rel="noopener" class="blocked-cta">
+        Adquirir Premium o VIP →
+      </a>
+      <p class="blocked-secondary">
+        ¿Ya eres Premium o VIP y ves este mensaje?
+        <button type="button" id="blockedRetry" class="blocked-link">Sincronizar de nuevo</button>
+      </p>
+      <p class="blocked-secondary">
+        <button type="button" id="blockedLogout" class="blocked-link">Cerrar sesión</button>
+      </p>
+      <p class="blocked-status" id="blockedStatus" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== APP (visible tras iniciar sesión) ===================== -->
-<div id="view-app" style="display:none">
+<div id="view-app" class="full-bleed" style="display:none">
 
 <!-- Barra de cuenta -->
 <div class="pv-account-bar">
@@ -2504,7 +4150,7 @@ window.MI_BARCO_CONFIG = {
         <strong style="color: var(--pv-gold);">Neuropliegues</strong>. Construye tu identidad con el <strong>Tracker</strong>.
       </p>
       <p x-show="userName" x-cloak class="text-sm italic mt-4 text-white/85">
-        Bienvenida, <span class="font-semibold" x-text="userName"></span>.
+        Hola, <span class="font-semibold" x-text="userName"></span>.
       </p>
     </header>
 
@@ -2529,6 +4175,10 @@ window.MI_BARCO_CONFIG = {
       <button class="pv-tab" :class="vista === 'plan' ? 'active' : ''" @click="cambiarVista('plan')" role="tab">
         <span class="pv-tab-icon" x-html="icon('clipboard')"></span>
         <span class="pv-tab-label-full">Mi Plan</span>
+      </button>
+      <button class="pv-tab" :class="vista === 'matriz' ? 'active' : ''" @click="cambiarVista('matriz')" role="tab">
+        <span class="pv-tab-icon" x-html="icon('grid')"></span>
+        <span class="pv-tab-label-full">Matriz</span>
       </button>
     </nav>
 
@@ -2630,6 +4280,20 @@ window.MI_BARCO_CONFIG = {
         </button>
       </div>
 
+      <!-- Herramienta semanal: Matriz -->
+      <button @click="cambiarVista('matriz')" class="pv-card p-5 md:p-6 text-left w-full mt-4 md:mt-5 flex flex-col md:flex-row md:items-center gap-4">
+        <span class="np-icon" style="background: rgba(8,49,92,0.08); color: var(--pv-navy); margin-bottom:0; width:44px; height:44px; font-size:1.3rem; flex-shrink:0;" x-html="icon('grid')"></span>
+        <span class="block flex-1">
+          <span class="block text-[0.65rem] uppercase tracking-widest font-bold mb-1" style="color: #8a6a12;">Cada semana</span>
+          <span class="block text-xl font-extrabold mb-1" style="color: var(--pv-navy); letter-spacing: -0.01em;">Matriz de Urgencia e Importancia</span>
+          <span class="block text-sm" style="color: var(--pv-ink-soft); line-height: 1.6;">Vacía tu mente, ubica cada tarea en su cuadrante y descubre por dónde empezar.</span>
+        </span>
+        <span style="color: var(--pv-navy);" class="font-bold inline-flex items-center gap-1 text-xs flex-shrink-0">
+          Abrir la Matriz
+          <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+        </span>
+      </button>
+
       <!-- Cómo se hablan las 3 herramientas -->
       <section class="mt-14">
         <div class="pv-ornament"><span class="pv-ornament-dot"></span></div>
@@ -2676,7 +4340,7 @@ window.MI_BARCO_CONFIG = {
           Diagnostica tu realidad
         </h2>
         <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
-          La Rueda de la Vida — toca un pilar y califícalo del 1 al 10.
+          La Rueda de la Vida: toca un pilar y califícalo del 1 al 10.
         </p>
         <p x-show="rueda.mesAsignado" x-cloak class="text-xs mt-2 italic" style="color: var(--pv-ink-soft);">
           Esta rueda es de <strong x-text="nombreMes(rueda.mesAsignado)"></strong>.
@@ -2769,12 +4433,46 @@ window.MI_BARCO_CONFIG = {
           <!-- Histórico de ruedas pasadas -->
           <div class="pv-card p-5 md:p-6" x-show="rueda.historial && rueda.historial.length > 0" x-cloak>
             <h3 class="font-serif text-lg font-semibold mb-3">Ruedas pasadas</h3>
+            <p class="text-xs mb-3" style="color: var(--pv-ink-soft);">Toca un mes para ver cómo calificaste cada pilar.</p>
             <template x-for="snap in rueda.historial" :key="snap.mes">
-              <div class="rueda-snapshot">
-                <span x-text="nombreMes(snap.mes)"></span>
-                <span class="font-semibold" style="color: var(--pv-navy);">
-                  Promedio: <span x-text="snap.promedio.toFixed(1)"></span>/10
-                </span>
+              <div class="rueda-snapshot-item">
+                <button type="button" class="rueda-snapshot"
+                        @click="snapAbierto = (snapAbierto === snap.mes ? null : snap.mes)"
+                        :aria-expanded="snapAbierto === snap.mes ? 'true' : 'false'">
+                  <span class="flex-1 text-left" x-text="nombreMes(snap.mes)"></span>
+                  <span class="font-semibold" style="color: var(--pv-navy);">
+                    Promedio: <span x-text="snap.promedio.toFixed(1)"></span>/10
+                  </span>
+                  <span class="rueda-snapshot-chevron" :class="snapAbierto === snap.mes && 'abierto'" x-html="icon('chevronRight')"></span>
+                </button>
+
+                <!-- La rueda de ese mes: forma y calificación de cada pilar -->
+                <div class="rueda-snapshot-detalle" x-show="snapAbierto === snap.mes" x-cloak>
+                  <p class="rueda-snapshot-aviso" x-show="snapSinCalificar(snap)">
+                    Ese mes la rueda quedó con los valores de inicio (todo en 5): es probable que no se llegara a calificar.
+                  </p>
+                  <div class="grid sm:grid-cols-2 gap-4 items-center">
+                    <svg viewBox="-50 -50 500 500" class="wheel-svg rueda-snapshot-svg" preserveAspectRatio="xMidYMid meet" role="img"
+                         :aria-label="'Rueda de ' + nombreMes(snap.mes)">
+                      <circle cx="200" cy="200" r="36" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="72" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="108" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="144" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="180" class="wheel-ring" />
+                      <path :d="ejesSnap(snap)" class="wheel-axis" />
+                      <polygon :points="puntosSnap(snap)" class="wheel-value-line" />
+                    </svg>
+                    <ul class="rueda-snapshot-lista">
+                      <template x-for="v in snap.valores" :key="v.id">
+                        <li>
+                          <span class="rueda-snapshot-nombre" x-text="v.nombre"></span>
+                          <span class="rueda-snapshot-barra"><i :style="'width:' + (v.valor * 10) + '%'"></i></span>
+                          <strong x-text="v.valor"></strong>
+                        </li>
+                      </template>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </template>
           </div>
@@ -2846,7 +4544,7 @@ window.MI_BARCO_CONFIG = {
                 </span>
                 <span class="np-pill-tool" x-show="np.proximamente" x-cloak
                       style="background: rgba(232,169,78,0.15); color: var(--pv-amber);">Próximamente</span>
-                <span x-show="!np.proximamente" x-cloak class="text-xs font-bold inline-flex items-center gap-1" :style="`color: ${np.color}`">
+                <span x-show="!np.proximamente" x-cloak class="text-xs font-bold inline-flex items-center gap-1" :style="`color: ${colorTexto(np.color)}`">
                   Abrir <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
                 </span>
               </div>
@@ -2867,7 +4565,7 @@ window.MI_BARCO_CONFIG = {
             <span class="np-icon" :style="`background: ${neuropliegueActivoData?.color}1a; color: ${neuropliegueActivoData?.color}; margin-bottom: 0;`"
                   x-html="icon(neuropliegueActivoData?.icono)"></span>
             <div>
-              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${neuropliegueActivoData?.color}`">Neuropliegue</p>
+              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${colorTexto(neuropliegueActivoData?.color)}`">Neuropliegue</p>
               <h2 class="text-2xl md:text-3xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.02em;" x-text="neuropliegueActivoData?.nombre"></h2>
             </div>
           </div>
@@ -2918,7 +4616,7 @@ window.MI_BARCO_CONFIG = {
           <div class="flex items-center gap-3 mb-3">
             <span class="np-icon" :style="`background: ${neuropliegueActivoData?.color}1a; color: ${neuropliegueActivoData?.color}; margin-bottom: 0; width: 36px; height: 36px; font-size: 1.2rem;`"
                   x-html="icon(neuropliegueActivoData?.icono)"></span>
-            <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${neuropliegueActivoData?.color}`"
+            <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${colorTexto(neuropliegueActivoData?.color)}`"
                x-text="neuropliegueActivoData?.nombre"></p>
           </div>
           <h2 class="text-3xl md:text-4xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.02em;"
@@ -2964,7 +4662,7 @@ window.MI_BARCO_CONFIG = {
               </span>
               <span x-show="estaEnPlanLocal(neuropliegueActivo, herramientaActivaData?.id)" x-cloak class="inline-flex items-center gap-2">
                 <span x-html="icon('bookmarkCheck')" class="pv-icon-sm"></span>
-                En mi plan — quitar
+                En mi plan · Quitar
               </span>
             </button>
           </div>
@@ -3026,6 +4724,9 @@ window.MI_BARCO_CONFIG = {
                   <span class="flex-1 text-sm font-medium" x-text="habito.nombre"></span>
                   <span class="text-xs pv-num-tabular" style="color: var(--pv-ink-soft);"
                         x-text="`${contarDias(habito.id, 'done')}/${diasMes}`"></span>
+                  <button @click.stop="abrirEditarHabito(habito.id)"
+                          class="opacity-40 hover:opacity-100 hover:text-[var(--pv-navy)] transition" title="Editar nombre"
+                          x-html="icon('edit')"></button>
                   <button @click.stop="eliminarHabito(habito.id)"
                           class="opacity-40 hover:opacity-100 hover:text-[var(--pv-coral)] transition" title="Eliminar"
                           x-html="icon('trash')"></button>
@@ -3169,6 +4870,10 @@ window.MI_BARCO_CONFIG = {
         <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
           Las herramientas que has elegido aplicar. Tu caja de herramientas conductuales personal.
         </p>
+        <button @click="abrirOnboarding()" class="onb-replay-btn mt-3" title="Volver a ver el tour de bienvenida">
+          <span x-html="icon('sparkles')" class="pv-icon-sm"></span>
+          Ver tour de bienvenida otra vez
+        </button>
       </div>
 
       <div x-show="plan.herramientas.length === 0" x-cloak class="pv-card pv-card-accent-top p-8 text-center max-w-2xl mx-auto">
@@ -3193,7 +4898,7 @@ window.MI_BARCO_CONFIG = {
                     x-html="icon(findNeuropliegueById(item.neuropliegueId)?.icono)"></span>
               <div class="flex-1 min-w-0">
                 <p class="text-[0.65rem] uppercase tracking-widest font-bold"
-                   :style="`color: ${findNeuropliegueById(item.neuropliegueId)?.color}`"
+                   :style="`color: ${colorTexto(findNeuropliegueById(item.neuropliegueId)?.color)}`"
                    x-text="findNeuropliegueById(item.neuropliegueId)?.nombre"></p>
                 <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;"
                     x-text="findHerramientaById(item.neuropliegueId, item.herramientaId)?.nombre"></h3>
@@ -3238,6 +4943,195 @@ window.MI_BARCO_CONFIG = {
       </div>
     </section>
 
+    <!-- ===================== MATRIZ ===================== -->
+    <!-- Portada de matriz-urgencia-importancia.html (la página pública sigue
+         existiendo aparte). El contenido de #mz-root lo pinta MatrizMiBarco
+         (app.js) con JS normal, sin Alpine: no añadir directivas x- dentro. -->
+    <section x-show="vista === 'matriz'" x-cloak class="pv-view" role="tabpanel">
+      <div class="text-center mb-8">
+        <p class="pv-pill mb-2">Cada semana</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-semibold" style="color: var(--pv-navy);">Matriz de Urgencia e Importancia</h2>
+        <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
+          Vacía tu mente y descubre por dónde empezar, en el trabajo y en tu vida personal. Lo que anotes aquí queda guardado en tu cuenta.
+        </p>
+      </div>
+
+      <div id="mz-root" class="mz max-w-3xl mx-auto">
+        <div id="mzImportNote" class="mz-import-note" style="display:none;"></div>
+      <!-- ===================== PASO 1 · VACÍA TU MENTE ===================== -->
+      <section class="mb-12">
+        <div class="mb-5">
+          <span class="mz-eyebrow">Paso 1</span>
+          <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Vacía tu mente</h2>
+          <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+            Escribe todo lo que quieres o necesitas hacer, sin pensar todavía en orden ni prioridad.
+            Trabajo, casa, tú: todo lo que tengas dando vueltas en la cabeza.
+          </p>
+        </div>
+
+        <div class="mz-dump-card">
+          <form id="mzDumpForm" class="flex flex-col sm:flex-row gap-3 mb-5">
+            <input id="mzDumpInput" class="mz-dump-input" type="text" maxlength="140"
+                   placeholder="Ej: Llamar al contador, ordenar el clóset, terminar la propuesta…" autocomplete="off" />
+            <button type="submit" class="mz-btn">
+              <svg class="mz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Agregar
+            </button>
+          </form>
+
+          <div id="mzDumpEmpty" class="text-sm" style="color: var(--pv-ink-soft);">
+            Todavía no has agregado nada. Empieza escribiendo arriba y no te detengas a pensar si es importante o no.
+          </div>
+          <div id="mzDumpList" class="flex flex-wrap gap-2.5"></div>
+        </div>
+      </section>
+
+      <!-- ===================== PASO 2 · LOS 4 CUADRANTES ===================== -->
+      <section class="mb-12">
+        <div class="mb-5">
+          <span class="mz-eyebrow">Paso 2</span>
+          <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Entiende los 4 cuadrantes</h2>
+          <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+            Cada tarea se mueve por dos preguntas: ¿es urgente? ¿es importante para la vida que quiero construir?
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3.5">
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-coral);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">Urgente + Importante · Hazlo ahora</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Crisis, entregas con fecha límite real, lo que no puede esperar sin costo.</p>
+          </div>
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-gold-text);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">No urgente + Importante · Prográmalo</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Lo que construye la vida que quieres a mediano plazo: salud, hábitos, relaciones, proyectos propios.</p>
+          </div>
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-amber);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">Urgente + No importante · Delégalo</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Interrupciones y pedidos de otros que se sienten urgentes pero no mueven tu propia prioridad. <strong style="color: var(--pv-ink);">Tareas que alguien más puede hacer.</strong></p>
+          </div>
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-ink-soft);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">No urgente + No importante · Elimínalo</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Distracciones. Si desaparece de la lista, tu vida no cambia.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== PASO 3 · CLASIFICA ===================== -->
+      <section class="mb-12">
+        <div class="mb-5 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <span class="mz-eyebrow">Paso 3</span>
+            <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Ubica cada tarea</h2>
+            <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+              Toca una tarea y te hago tres preguntas cortas: con tus respuestas te digo en qué cuadrante va y por qué.
+              Si prefieres ubicarla tú, también puedes. Nada queda fijo: puedes moverla después.
+              Cuando termines una tarea, marca el <strong style="color: var(--pv-mint);">✓</strong> de la izquierda y sale del cuadrante.
+            </p>
+          </div>
+          <button id="mzResetBtn" type="button" class="mz-btn-outline-navy">
+            <svg class="mz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/></svg>
+            Reiniciar todo
+          </button>
+        </div>
+
+        <!-- Bandeja de tareas sin clasificar -->
+        <div class="mz-dump-card mb-5">
+          <div id="mzUnsortedLabel" class="text-xs font-extrabold uppercase tracking-wide mb-3" style="color: var(--pv-ink-soft);">Sin clasificar</div>
+          <div id="mzUnsortedEmpty" class="text-sm" style="color: var(--pv-ink-soft);">
+            Agrega tareas en el Paso 1 para empezar a ubicarlas aquí.
+          </div>
+          <div id="mzUnsortedList" class="flex flex-wrap gap-2.5"></div>
+
+          <!-- Asistente de criterio: se llena por JS al tocar una tarea -->
+          <div id="mzWizard" class="mz-wizard" style="display:none;"></div>
+
+          <div id="mzManualHint" class="mz-manual-hint" style="display:none;">
+            Listo. Ahora toca el cuadrante donde quieres ubicarla.
+          </div>
+        </div>
+
+        <!-- Matriz -->
+        <div class="mz-matrix-shell">
+          <div class="mz-axis-y"><span>No urgente</span><span>Urgente</span></div>
+          <div class="mz-axis-x"><span>Importante</span><span>No importante</span></div>
+          <div class="mz-quad-grid">
+            <div class="mz-quad mz-quad--q1" data-quad="q1">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Hazlo ahora</span>
+                <span class="mz-quad-action mz-badge--q1">Urgente · Importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q1"></div>
+              <div class="mz-quad-empty" data-empty="q1">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+            <div class="mz-quad mz-quad--q3" data-quad="q3">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Delégalo</span>
+                <span class="mz-quad-action mz-badge--q3">Urgente · No importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q3"></div>
+              <div class="mz-quad-empty" data-empty="q3">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+            <div class="mz-quad mz-quad--q2" data-quad="q2">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Prográmalo</span>
+                <span class="mz-quad-action mz-badge--q2">No urgente · Importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q2"></div>
+              <div class="mz-quad-empty" data-empty="q2">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+            <div class="mz-quad mz-quad--q4" data-quad="q4">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Elimínalo</span>
+                <span class="mz-quad-action mz-badge--q4">No urgente · No importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q4"></div>
+              <div class="mz-quad-empty" data-empty="q4">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== COMPLETADAS ===================== -->
+      <section id="mzDoneSection" class="mb-12" style="display:none;">
+        <div class="mb-5 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <span class="mz-eyebrow">Ya está</span>
+            <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Completadas</h2>
+            <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+              Lo que ya soltaste. Se queda aquí para que veas el avance, no para que te estorbe arriba.
+            </p>
+          </div>
+          <button id="mzClearDoneBtn" type="button" class="mz-btn-outline-navy">
+            <svg class="mz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+            Limpiar completadas
+          </button>
+        </div>
+
+        <div class="mz-dump-card">
+          <div id="mzDoneCount" class="text-xs font-extrabold uppercase tracking-wide mb-3" style="color: var(--pv-ink-soft);"></div>
+          <div id="mzDoneList"></div>
+        </div>
+      </section>
+
+      <!-- ===================== DIAGNÓSTICO ===================== -->
+      <section id="mzDiagSection" class="mb-6" style="display:none;">
+        <span class="mz-eyebrow">Diagnóstico</span>
+        <h2 class="text-2xl font-extrabold mt-1 mb-4" style="color: var(--pv-navy);">Por dónde empezar</h2>
+
+        <div class="mz-diag-card">
+          <div class="grid grid-cols-4 gap-2 mb-5">
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ1">0</div><div class="mz-diag-label">Hazlo ahora</div></div>
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ2">0</div><div class="mz-diag-label">Prográmalo</div></div>
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ3">0</div><div class="mz-diag-label">Delégalo</div></div>
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ4">0</div><div class="mz-diag-label">Elimínalo</div></div>
+          </div>
+          <p id="mzDiagMessage" class="text-[.95rem] leading-relaxed text-white/90"></p>
+          <div id="mzDiagAlert" class="mz-diag-alert" style="display:none;"></div>
+        </div>
+      </section>
+      </div>
+    </section>
+
     <!-- ===================== MODAL: APLICAR HERRAMIENTA ===================== -->
     <div x-show="modalAplicacion" x-cloak class="pv-modal-backdrop" @click.self="cerrarModalAplicacion()">
       <div class="pv-modal pv-card-accent-top pv-fade-in" style="max-width: 32rem; max-height: 92vh; overflow-y: auto;">
@@ -3247,7 +5141,7 @@ window.MI_BARCO_CONFIG = {
             <span class="np-icon" :style="`background: ${aplicacionNeuropliegueData?.color}1a; color: ${aplicacionNeuropliegueData?.color}; margin-bottom: 0; width: 40px; height: 40px; font-size: 1.2rem;`"
                   x-html="icon(aplicacionNeuropliegueData?.icono)"></span>
             <div>
-              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${aplicacionNeuropliegueData?.color}`"
+              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${colorTexto(aplicacionNeuropliegueData?.color)}`"
                  x-text="aplicacionNeuropliegueData?.nombre"></p>
               <h3 class="text-xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;"
                   x-text="aplicacionHerramientaData?.nombre"></h3>
@@ -3303,14 +5197,17 @@ window.MI_BARCO_CONFIG = {
     </div>
 
     <!-- ===================== MODAL NUEVO HÁBITO ===================== -->
-    <div x-show="modalNuevoHabito" x-cloak class="pv-modal-backdrop" @click.self="modalNuevoHabito = false">
+    <div x-show="modalNuevoHabito" x-cloak class="pv-modal-backdrop" @click.self="cerrarNuevoHabito()">
       <div class="pv-modal pv-card-accent-top pv-fade-in">
         <div class="flex items-center gap-3 mb-3">
-          <span class="np-icon" style="background: rgba(244,201,74,0.15); color: var(--pv-gold); margin-bottom: 0; width: 40px; height: 40px;" x-html="icon('plus')"></span>
-          <h3 class="text-2xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Nuevo hábito</h3>
+          <span class="np-icon" style="background: rgba(244,201,74,0.15); color: var(--pv-gold); margin-bottom: 0; width: 40px; height: 40px;" x-html="icon(habitoEditando ? 'edit' : 'plus')"></span>
+          <h3 class="text-2xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;" x-text="habitoEditando ? 'Editar hábito' : 'Nuevo hábito'"></h3>
         </div>
-        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);">
+        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);" x-show="!habitoEditando">
           Pequeño. Específico. Sostenible. Encuentra tu versión <em>imposible de fallar</em>.
+        </p>
+        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);" x-show="habitoEditando" x-cloak>
+          Cambia el nombre o el pilar. <strong style="color: var(--pv-navy);">Tu historial de días marcados se conserva.</strong>
         </p>
         <label class="text-[0.7rem] uppercase tracking-widest font-bold block mb-2" style="color: var(--pv-navy);">Nombre del hábito</label>
         <input type="text" class="pv-input mb-4" x-model="nuevoHabitoNombre"
@@ -3324,12 +5221,59 @@ window.MI_BARCO_CONFIG = {
           </template>
         </select>
         <div class="flex gap-2 justify-end">
-          <button @click="modalNuevoHabito = false" class="pv-btn pv-btn-ghost">Cancelar</button>
+          <button @click="cerrarNuevoHabito()" class="pv-btn pv-btn-ghost">Cancelar</button>
           <button @click="confirmarNuevoHabito()" class="pv-btn pv-btn-primary"
                   :disabled="!nuevoHabitoNombre.trim()">
-            <span x-html="icon('plus')" class="pv-icon-sm"></span>
-            Crear hábito
+            <span x-html="icon(habitoEditando ? 'save' : 'plus')" class="pv-icon-sm"></span>
+            <span x-text="habitoEditando ? 'Guardar cambios' : 'Crear hábito'"></span>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MODAL: ONBOARDING (primera vez) ===================== -->
+    <div x-show="onboardingVisible" x-cloak class="onb-backdrop" @click.self="cerrarOnboarding(false)">
+      <div class="onb-modal">
+        <button class="onb-skip" @click="cerrarOnboarding(true)" x-show="!esUltimoSlide" x-cloak>
+          Saltar tour
+        </button>
+
+        <div class="onb-body" :key="onboardingSlide">
+          <div class="onb-slide-enter">
+            <div class="onb-icon" :style="`color: var(--pv-navy);`">
+              <span x-html="icon(slideActivoData?.icono)"></span>
+            </div>
+            <p class="onb-eyebrow" x-text="slideActivoData?.eyebrow"></p>
+            <h2 class="onb-title" x-text="slideActivoData?.titulo"></h2>
+            <p class="onb-text" x-text="slideActivoData?.texto"></p>
+            <ul x-show="slideActivoData?.bullets" x-cloak class="onb-bullets">
+              <template x-for="b in slideActivoData?.bullets || []">
+                <li x-text="b"></li>
+              </template>
+            </ul>
+          </div>
+        </div>
+
+        <div class="onb-footer">
+          <div class="onb-dots">
+            <template x-for="(s, i) in slidesOnboarding" :key="i">
+              <button class="onb-dot" :class="i === onboardingSlide ? 'active' : ''"
+                      @click="onboardingSlide = i"
+                      :aria-label="`Ir al paso ${i + 1}`"></button>
+            </template>
+          </div>
+          <div class="onb-nav">
+            <button class="pv-btn pv-btn-ghost" x-show="onboardingSlide > 0" x-cloak
+                    @click="onboardingSlide--">
+              <span x-html="icon('chevronLeft')" class="pv-icon-sm"></span>
+              Atrás
+            </button>
+            <button class="pv-btn pv-btn-primary"
+                    @click="siguienteSlide()">
+              <span x-text="esUltimoSlide ? (slideActivoData?.ctaLabel || 'Empezar') : 'Siguiente'"></span>
+              <span x-html="icon(esUltimoSlide ? 'sparkle' : 'arrowRight')" class="pv-icon-sm"></span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -3370,6 +5314,7 @@ function miBarcoApp() {
     // ----- Rueda -----
     rueda: { pilares: [], historial: [] },
     ruedaSelectedIndex: 0,
+    snapAbierto: null,
 
     // ----- Neuropliegues -----
     neuropliegueActivo: null,
@@ -3389,6 +5334,7 @@ function miBarcoApp() {
     modalNuevoHabito: false,
     nuevoHabitoNombre: '',
     nuevoHabitoPilar: '',
+    habitoEditando: null,
 
     // ----- Modal aplicación de herramienta -----
     modalAplicacion: false,
@@ -3396,6 +5342,11 @@ function miBarcoApp() {
     aplicacionHerramientaId: null,
     aplicacionFormData: {},
     aplicacionExitosa: false,
+
+    // ----- Onboarding (modal de bienvenida primera vez) -----
+    onboardingVisible: false,
+    onboardingSlide: 0,
+    slidesOnboarding: window.MisPliegues?.ONBOARDING_SLIDES || [],
 
     // ----- Toast -----
     toastVisible: false,
@@ -3415,10 +5366,10 @@ function miBarcoApp() {
       });
 
       const hash = window.location.hash.replace('#', '');
-      if (['home','rueda','neuropliegues','tracker','plan'].includes(hash)) this.vista = hash;
+      if (['home','rueda','neuropliegues','tracker','plan','matriz'].includes(hash)) this.vista = hash;
       window.addEventListener('hashchange', () => {
         const h = window.location.hash.replace('#', '');
-        if (['home','rueda','neuropliegues','tracker','plan'].includes(h)) this.vista = h;
+        if (['home','rueda','neuropliegues','tracker','plan','matriz'].includes(h)) this.vista = h;
       });
     },
 
@@ -3437,6 +5388,12 @@ function miBarcoApp() {
         this.vista = 'tracker';
         setTimeout(() => this.abrirNuevoHabito(), 200);
       }
+
+      // Onboarding: si es la primera vez que entra (no ha completado el tour), mostrarlo
+      if (!MisPliegues.getOnboardingCompletado(this.plan)) {
+        // Pequeño delay para que la app renderice antes
+        setTimeout(() => { this.abrirOnboarding(); }, 600);
+      }
     },
 
     logout() {
@@ -3450,6 +5407,7 @@ function miBarcoApp() {
         this.neuropliegueActivo = null;
         this.herramientaActiva = null;
       }
+      if (v === 'matriz' && window.MatrizMiBarco) window.MatrizMiBarco.open();
       history.replaceState(null, '', '#' + v);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -3458,6 +5416,42 @@ function miBarcoApp() {
       this.nuevoHabitoPilar = pilarId || '';
       this.cambiarVista('tracker');
       setTimeout(() => this.abrirNuevoHabito(), 250);
+    },
+
+    // ====================================================
+    // ONBOARDING
+    // ====================================================
+    get slideActivoData() {
+      return this.slidesOnboarding[this.onboardingSlide] || {};
+    },
+    get esUltimoSlide() {
+      return this.onboardingSlide === this.slidesOnboarding.length - 1;
+    },
+
+    abrirOnboarding() {
+      this.onboardingSlide = 0;
+      this.onboardingVisible = true;
+    },
+
+    siguienteSlide() {
+      if (this.esUltimoSlide) {
+        this.cerrarOnboarding(true);
+        // CTA del último slide: llevar a la Rueda para empezar
+        this.cambiarVista('rueda');
+      } else {
+        this.onboardingSlide++;
+      }
+    },
+
+    cerrarOnboarding(marcarComoVisto) {
+      this.onboardingVisible = false;
+      if (marcarComoVisto) {
+        // Persistir en Supabase que ya vio el tour
+        const clon = JSON.parse(JSON.stringify(this.plan));
+        MisPliegues.marcarOnboardingCompletado(clon);
+        this.plan = clon;
+        MisPliegues.savePlan(clon);
+      }
     },
 
     // ====================================================
@@ -3475,6 +5469,19 @@ function miBarcoApp() {
     },
 
     toRad(deg) { return (deg * Math.PI) / 180; },
+    // Ruedas pasadas: mismo dibujo que la rueda actual, con los valores archivados
+    puntosSnap(snap) {
+      return (snap.valores || []).map((v, i) => `${this.pointX(i, v.valor)},${this.pointY(i, v.valor)}`).join(' ');
+    },
+    ejesSnap(snap) {
+      return (snap.valores || []).map((v, i) =>
+        `M 200 200 L ${this.pointX(i, 10)} ${this.pointY(i, 10)}`).join(' ');
+    },
+    snapSinCalificar(snap) {
+      if (snap.calificada === false) return true;
+      // Ruedas archivadas antes de guardar la marca: todo en 5 es el valor de inicio
+      return snap.calificada === undefined && (snap.valores || []).length > 0 && snap.valores.every(v => v.valor === 5);
+    },
     anguloPilarCentro(i) {
       const total = this.rueda.pilares.length || 10;
       return -90 + (i * 360 / total);
@@ -3581,6 +5588,28 @@ function miBarcoApp() {
     },
 
     findNeuropliegueById(id) { return this.neuropliegues.find(n => n.id === id); },
+
+    // Los colores de marca son vivos y funcionan como icono o como fondo, pero
+    // sobre blanco y a 10px no se leen: el dorado da 1.58:1 y el mínimo legible
+    // es 4.5:1. Esto los oscurece SOLO para texto pequeño, conservando el matiz.
+    colorTexto(hex) {
+      const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+      if (!m) return 'var(--pv-ink)';
+      const n = parseInt(m[1], 16);
+      const r0 = (n >> 16) & 255, g0 = (n >> 8) & 255, b0 = n & 255;
+      const lum = (r, g, b) => {
+        const c = [r, g, b].map(v => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      };
+      for (let f = 1; f >= 0; f -= 0.04) {
+        const r = Math.round(r0 * f), g = Math.round(g0 * f), b = Math.round(b0 * f);
+        if (1.05 / (lum(r, g, b) + 0.05) >= 4.5) return `rgb(${r},${g},${b})`;
+      }
+      return 'var(--pv-ink)';
+    },
     findHerramientaById(neuropliegueId, herramientaId) {
       const np = this.findNeuropliegueById(neuropliegueId);
       return np ? np.herramientas.find(h => h.id === herramientaId) : null;
@@ -3618,47 +5647,21 @@ function miBarcoApp() {
       return !!(this.aplicacionFormData[campos[0].id] || '').trim();
     },
     get habitoSugeridoGenerado() {
+      // Las plantillas usan tokens {id_campo}. Reemplazamos cada {id} por el
+      // valor que la usuaria escribió. Si un campo está vacío, mostramos el
+      // label del campo entre paréntesis y en minúsculas para que sea claro
+      // qué falta llenar (en lugar de dejar el token visible).
       const tpl = this.aplicacionHerramientaData?.formularioAplicacion?.habitoSugerido || '';
       const campos = this.aplicacionHerramientaData?.formularioAplicacion?.campos || [];
+      if (!tpl) return '';
+
       let resultado = tpl;
       campos.forEach(c => {
         const valor = (this.aplicacionFormData[c.id] || '').trim();
-        // Reemplaza [Label original] y [id] por valor
-        resultado = resultado.replace(`[${c.label}]`, valor || `[${c.label}]`);
-      });
-      // Reemplazos simbólicos comunes
-      campos.forEach(c => {
-        const valor = (this.aplicacionFormData[c.id] || '').trim();
-        const tokens = {
-          'accion': 'acción',
-          'cuando': 'Cuándo',
-          'entonces': 'Entonces',
-          'que': 'Qué',
-          'donde': 'Dónde',
-          'habito': 'Hábito',
-          'objeto': 'objeto',
-          'lugar': 'lugar',
-          'habito_viejo': 'hábito viejo',
-          'habito_nuevo': 'hábito nuevo',
-          'partner': 'partner',
-          'compromiso': 'compromiso',
-          'habito_original': 'Hábito original',
-          'version_absurda': 'Versión absurda',
-          'meta_dias': 'Meta días',
-          'habito_100': 'Habito 100%',
-          'habito_50': 'Habito 50%',
-          'identidad': 'identidad',
-          'voto': 'Voto',
-          'narrativa_vieja': 'Narrativa vieja',
-          'narrativa_nueva': 'Narrativa nueva',
-          'referente': 'referente',
-          'por_que': 'Por qué',
-          'pregunta': 'Pregunta clave'
-        };
-        const placeholder = tokens[c.id];
-        if (placeholder) {
-          resultado = resultado.split(`[${placeholder}]`).join(valor || `[${placeholder}]`);
-        }
+        const fallback = `(${(c.label || c.id).toLowerCase()})`;
+        const replacement = valor || fallback;
+        // Reemplazar TODAS las ocurrencias de {id} (no solo la primera)
+        resultado = resultado.split(`{${c.id}}`).join(replacement);
       });
       return resultado;
     },
@@ -3895,21 +5898,44 @@ function miBarcoApp() {
     },
 
     abrirNuevoHabito() {
+      this.habitoEditando = null;
       this.modalNuevoHabito = true;
       this.nuevoHabitoNombre = '';
       this.$nextTick(() => this.$refs.nuevoHabitoInput?.focus());
     },
+    abrirEditarHabito(id) {
+      const h = this.tracker.habitos.find(x => x.id === id);
+      if (!h) return;
+      this.habitoEditando = id;
+      this.nuevoHabitoNombre = h.nombre;
+      this.nuevoHabitoPilar = h.pilarId || '';
+      this.modalNuevoHabito = true;
+      this.$nextTick(() => this.$refs.nuevoHabitoInput?.focus());
+    },
+    cerrarNuevoHabito() {
+      this.modalNuevoHabito = false;
+      this.habitoEditando = null;
+      this.nuevoHabitoNombre = '';
+      this.nuevoHabitoPilar = '';
+    },
     confirmarNuevoHabito() {
       if (!this.nuevoHabitoNombre.trim()) return;
       const clon = JSON.parse(JSON.stringify(this.tracker));
-      const id = MisPliegues.agregarHabito(clon, this.nuevoHabitoNombre.trim(), this.nuevoHabitoPilar);
-      this.tracker = clon;
-      this.guardarTracker();
-      this.habitoActivo = id;
-      this.modalNuevoHabito = false;
-      this.nuevoHabitoNombre = '';
-      this.nuevoHabitoPilar = '';
-      this.showToast('✓ Hábito creado', 'var(--pv-mint)');
+      if (this.habitoEditando) {
+        // Editar: conserva id, color e historial de días marcados
+        MisPliegues.editarHabito(clon, this.habitoEditando, this.nuevoHabitoNombre.trim(), this.nuevoHabitoPilar);
+        this.tracker = clon;
+        this.guardarTracker();
+        this.habitoActivo = this.habitoEditando;
+        this.showToast('✓ Hábito actualizado', 'var(--pv-mint)');
+      } else {
+        const id = MisPliegues.agregarHabito(clon, this.nuevoHabitoNombre.trim(), this.nuevoHabitoPilar);
+        this.tracker = clon;
+        this.guardarTracker();
+        this.habitoActivo = id;
+        this.showToast('✓ Hábito creado', 'var(--pv-mint)');
+      }
+      this.cerrarNuevoHabito();
     },
     eliminarHabito(id) {
       if (!confirm('¿Eliminar este hábito y todo su historial?')) return;

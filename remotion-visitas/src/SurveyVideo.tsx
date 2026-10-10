@@ -523,7 +523,7 @@ export const SurveyVideo: React.FC = () => {
   return (
     <AbsoluteFill>
       <Background />
-      <Sequence from={0} durationInFrames={INTRO}>
+      <Sequence  durationInFrames={INTRO}>
         <IntroScene duration={INTRO} />
       </Sequence>
       {QUESTIONS.map((q, i) => (

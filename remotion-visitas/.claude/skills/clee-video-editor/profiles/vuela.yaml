@@ -1,0 +1,65 @@
+# =============================================================================
+# vuela.yaml — brand-edit-profile de VUELA
+# =============================================================================
+# MARCA: VUELA. Punto INTERMEDIO. IMPORTANTE: sus piezas suelen ser FACELESS /
+#   EXPLICADOR (sin talking-head). Considerar la ruta HYPERFRAMES
+#   faceless-explainer para captions + motion graphics (ver
+#   references/engine-decision.md y references/motion-graphics.md).
+#
+# Craft universal en references/craft-rules.md (las 18 reglas aplican igual).
+# Aquí solo se PARAMETRIZAN los diales. Colores EXACTOS -> brand kit.
+# =============================================================================
+
+cliente: "VUELA"
+
+# TODO calibrar contra 3-5 piezas aprobadas y tomar color del brand kit del cliente.
+extends_brand_kit: "../../../brand-kits/vuela/brand-kit.yaml"
+
+# --- Ritmo: intermedio -------------------------------------------------------
+ritmo:
+  cut_rate_seg: [3, 5]      # Dinámico, apto para explicador.
+  interrupt_cadence_seg: 4  # Interruptor cada ~4s.
+  zoom_max_pct: 112         # Push-in moderado (rango intermedio 110-115).
+
+# --- Captions: word, ritmo medio ---------------------------------------------
+captions:
+  mode: word                # Palabra por palabra.
+  switch_ms: 600            # ~600ms por palabra.
+  text_color: "#FFFFFF"    # Blanco base.
+  highlight_color: "#FFFFFF" # TODO calibrar contra 3-5 piezas aprobadas y tomar color del brand kit del cliente.
+  outline_px: 3             # Contorno medio.
+  ruta: remotion            # Por defecto remotion/motion. Como es faceless/explainer,
+                            # CONSIDERAR hyperframes faceless-explainer. Decidir en
+                            # references/engine-decision.md; captions en
+                            # references/captions.md; ffsub como opción barata.
+
+# --- Audio: medio ------------------------------------------------------------
+audio:
+  sfx_density: med          # SFX en reveals/transiciones clave.
+  music_bpm: [100, 120]     # Tempo medio.
+  music_energy: mid         # Energía media. Ver references/audio.md.
+
+# --- B-roll ------------------------------------------------------------------
+broll:
+  style: flash-fast         # Inserts ágiles (capturas, UI, motion graphics de datos).
+
+# --- Transcripción -----------------------------------------------------------
+transcripcion:
+  whisper_model: medium     # Balance fidelidad/velocidad.
+  vad: false                # Flujo continuo. Ver references/pipeline.md.
+
+# --- Formato -----------------------------------------------------------------
+formato_default: 916        # Vertical 9:16. Respeta references/safe-zones.md.
+
+# --- Tipos de edición preferidos ---------------------------------------------
+tipos_edicion_preferidos:
+  - educativa               # Explicador, data/motion graphics, faceless friendly.
+  - persuasiva
+
+notas: |
+  VUELA = intermedio + FACELESS/EXPLICADOR frecuente. Preferir plantilla
+  hyperframes faceless-explainer cuando no haya talking-head; motion graphics
+  de datos protagonistas (ver references/motion-graphics.md).
+  Diales base desde plantilla intermedia; CALIBRAR con 3-5 piezas aprobadas.
+  highlight_color y extends_brand_kit marcados TODO: tomar el color exacto del
+  brand kit visual del cliente. QA final contra references/qa.md.

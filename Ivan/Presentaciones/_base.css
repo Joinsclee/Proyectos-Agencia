@@ -1,0 +1,187 @@
+/* ══════════════════════════════════════════════════════════════════════
+   LA HUERTA LAB · Sistema visual de las clases en directo
+   Lienzo 1920×1080. Se proyecta en un directo de YouTube, así que manda
+   la legibilidad a tamaño pequeño: nadie lee un cuerpo de 20 px en un
+   móvil con la señal regular.
+
+   Reglas que vienen de eso:
+     · Cuerpo nunca por debajo de 34 px; titulares de 90 px para arriba.
+     · Poco texto por diapositiva. Lo demás lo dice Iván.
+     · Contraste alto siempre: crema sobre verde bosque, o al revés.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root{
+  --bosque:#082E27;        /* el fondo de casi todo */
+  --bosque-2:#0d3d33;      /* superficies elevadas sobre el bosque */
+  --bosque-3:#061f1d;      /* el más profundo, para viñetear */
+  --lima:#C9DE3F;          /* el acento. Se usa poco y se nota */
+  --lima-2:#a8bd2a;
+  --coral:#E87B58;         /* la alarma, el dato incómodo */
+  --crema:#F6F4EA;         /* el papel */
+  --crema-2:#e4e0cf;
+  --tinta:#14261f;         /* texto sobre crema */
+  --suave:rgba(246,244,234,.62);
+  --linea:rgba(246,244,234,.16);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bosque-3);overflow-x:hidden}
+/* `deck-stage` va nombrado a propósito: el motor declara su propia tipografía
+   en :host y esa le gana a la herencia desde <body>. Sin esto, en local todo
+   salía en la fuente del sistema y en GHL en Archivo, con saltos de línea
+   distintos: se maquetaba contra una fuente que el público no veía. */
+body,deck-stage{font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+deck-stage>section{
+  background:var(--bosque);
+  color:var(--crema);
+  overflow:hidden;
+}
+deck-stage>section>.d{position:absolute;inset:0;width:100%;height:100%}
+
+/* La caja donde vive el contenido. 130 px de margen: en un directo, el
+   reproductor recorta los bordes más de lo que uno cree. */
+.pad{position:absolute;inset:0;padding:110px 130px;display:flex;flex-direction:column;justify-content:center}
+.pad.top{justify-content:flex-start}
+/* Bloque de contenido pegado a la derecha. El texto de dentro sigue
+   alineado a la izquierda: un titular de 132 px en bandera derecha se
+   lee fatal. */
+/* Con align-items basta: cada hijo se encoge a su contenido y se pega a la
+   derecha. Forzarles width:100% reventaba la marca, que está posicionada en
+   absoluto y se iba 130 px fuera del lienzo. */
+.pad.der{align-items:flex-end}
+
+/* Espeja la foto. Los fondos son 16:9 exactos, así que «cover» no deja
+   margen para reencuadrar: si el sujeto cae debajo del titular, la única
+   forma de moverlo al otro tercio sin perder resolución es voltear. */
+.foto.espejo{transform:scaleX(-1)}
+
+/* ── Tipografía ───────────────────────────────────────────────────── */
+.eyebrow{
+  font-size:26px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--lima);margin-bottom:34px;
+}
+.eyebrow.coral{color:var(--coral)}
+
+h1{font-size:132px;font-weight:800;line-height:.96;letter-spacing:-.035em;text-wrap:balance}
+h2{font-size:96px;font-weight:800;line-height:1.02;letter-spacing:-.03em;text-wrap:balance}
+h3{font-size:62px;font-weight:700;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+
+h1 em,h2 em,h3 em{
+  font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:600;
+  color:var(--lima);
+}
+
+.lead{font-size:42px;line-height:1.42;color:var(--suave);max-width:24ch;margin-top:38px}
+.lead.ancho{max-width:34ch}
+p.dato{font-size:36px;line-height:1.45;color:var(--suave)}
+
+.fuente{
+  position:absolute;left:130px;bottom:58px;right:130px;
+  font-size:22px;line-height:1.4;color:rgba(246,244,234,.42);
+}
+
+/* Un dato sin fuente no se proyecta. Lo que Iván no ha cerrado va así. */
+.pend{
+  display:inline-block;padding:2px 12px;border-radius:6px;
+  background:#ffe08a;color:#7a2d00;font-weight:800;font-size:.82em;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+}
+
+/* ── Fondo: las curvas de nivel de la finca ───────────────────────── */
+.curvas{position:absolute;inset:0;opacity:.14;pointer-events:none}
+.curvas svg{width:100%;height:100%}
+
+.viñeta{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 42%,transparent 40%,rgba(6,31,29,.72))}
+
+/* ── Foto de fondo ────────────────────────────────────────────────── */
+.foto{position:absolute;inset:0;background-size:cover;background-position:center}
+.foto.der{background-position:right center}
+.velo{position:absolute;inset:0}
+.velo.izq{background:linear-gradient(100deg,rgba(8,46,39,.97) 34%,rgba(8,46,39,.72) 58%,rgba(8,46,39,.2))}
+/* El espejo de la anterior: la foto se ve por la izquierda y el texto va
+   a la derecha. Hace falta cuando el sujeto de la foto cae justo debajo
+   del titular y queda tapado. */
+.velo.der{background:linear-gradient(260deg,rgba(8,46,39,.97) 34%,rgba(8,46,39,.72) 58%,rgba(8,46,39,.2))}
+.velo.abajo{background:linear-gradient(180deg,rgba(8,46,39,.18) 30%,rgba(8,46,39,.88))}
+.velo.full{background:rgba(8,46,39,.82)}
+
+/* ── Marca ────────────────────────────────────────────────────────── */
+.marca{position:absolute;left:130px;top:62px;display:flex;align-items:center;gap:20px;z-index:5}
+.marca img{height:74px;width:auto;filter:brightness(0) invert(1)}
+.marca span{font-size:22px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--suave)}
+
+.paso{position:absolute;right:130px;top:66px;z-index:5;
+  font-size:22px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(246,244,234,.4)}
+
+/* ── Piezas de datos ──────────────────────────────────────────────── */
+.cifra{font-size:190px;font-weight:800;line-height:.88;letter-spacing:-.05em;color:var(--lima)}
+.cifra.coral{color:var(--coral)}
+.cifra small{display:block;font-size:32px;font-weight:600;letter-spacing:0;color:var(--suave);margin-top:18px;line-height:1.35}
+
+.tarjetas{display:grid;gap:26px;margin-top:52px}
+.tarjetas.tres{grid-template-columns:repeat(3,1fr)}
+.tarjetas.dos{grid-template-columns:repeat(2,1fr)}
+.tarjetas.cuatro{grid-template-columns:repeat(4,1fr);gap:20px}
+.tarjetas.cuatro .tarjeta{padding:32px 28px}
+.tarjetas.cuatro .tarjeta b{font-size:36px;margin-bottom:12px}
+.tarjetas.cuatro .tarjeta span{font-size:26px;line-height:1.4}
+.tarjeta{padding:40px;border:1px solid var(--linea);border-radius:20px;background:rgba(246,244,234,.05)}
+.tarjeta b{display:block;font-size:46px;font-weight:800;color:var(--lima);margin-bottom:16px;line-height:1.05}
+.tarjeta span{font-size:30px;line-height:1.42;color:var(--suave)}
+
+.lista{display:grid;gap:26px;margin-top:46px}
+.lista li{list-style:none;display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start;
+  font-size:40px;line-height:1.36}
+.lista li i{width:14px;height:14px;border-radius:50%;background:var(--lima);margin-top:16px;flex:none}
+
+/* ── Animación al entrar en la diapositiva ────────────────────────────
+   deck-stage pone data-deck-active en la sección activa y lo quita al
+   salir. Colgar de ahí hace que la animación se reproduzca de nuevo
+   cada vez que se vuelve a la diapositiva, no solo la primera. */
+[data-anim]{opacity:0}
+/* «traza» solo anima stroke-dashoffset: si además se le aplica el opacity:0
+   de arriba, el trazo nunca aparece. Tiene que quedar visible desde el
+   principio y dejar que sea el guion el que lo dibuje. */
+[data-anim="dibuja-x"],[data-anim="dibuja-y"],[data-anim="revela"],
+[data-anim="traza"]{opacity:1}
+[data-anim="dibuja-x"]{transform:scaleX(0);transform-origin:left center}
+[data-anim="dibuja-y"]{transform:scaleY(0);transform-origin:bottom center}
+
+@keyframes lh-sube  {from{opacity:0;transform:translateY(34px)} to{opacity:1;transform:none}}
+@keyframes lh-baja  {from{opacity:0;transform:translateY(-28px)}to{opacity:1;transform:none}}
+@keyframes lh-izq   {from{opacity:0;transform:translateX(-56px)}to{opacity:1;transform:none}}
+@keyframes lh-der   {from{opacity:0;transform:translateX(56px)} to{opacity:1;transform:none}}
+@keyframes lh-zoom  {from{opacity:0;transform:scale(.93)}       to{opacity:1;transform:none}}
+@keyframes lh-revela{from{clip-path:inset(0 100% 0 0)}          to{clip-path:inset(0 0 0 0)}}
+@keyframes lh-dib-x {from{transform:scaleX(0)}                  to{transform:scaleX(1)}}
+@keyframes lh-dib-y {from{transform:scaleY(0)}                  to{transform:scaleY(1)}}
+@keyframes lh-traza {to{stroke-dashoffset:0}}
+
+[data-deck-active] [data-anim="sube"]     {animation:lh-sube   900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="baja"]     {animation:lh-baja   900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="izq"]      {animation:lh-izq    900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="der"]      {animation:lh-der    900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="zoom"]     {animation:lh-zoom  1100ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="revela"]   {animation:lh-revela 1200ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="dibuja-x"] {animation:lh-dib-x  1000ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="dibuja-y"] {animation:lh-dib-y  1100ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+[data-deck-active] [data-anim="traza"]    {animation:lh-traza  1600ms cubic-bezier(.6,0,.3,1) var(--d,0ms) both}
+
+/* Los latidos decorativos van siempre: dan sensación de directo vivo. */
+@keyframes lh-latido{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.45);opacity:.5}}
+@keyframes lh-onda  {0%{transform:scale(1);opacity:.7}100%{transform:scale(2.6);opacity:0}}
+@keyframes lh-flota {0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* Dentro de un SVG el origen de transformación es la esquina del viewBox,
+   así que un «zoom» se lanza desde ahí en lugar de crecer en su sitio. */
+svg [data-anim="zoom"],svg [data-anim="sube"],svg [data-anim="izq"],svg [data-anim="der"]{
+  transform-box:fill-box;transform-origin:center;
+}
+
+.punto{position:relative;display:inline-block;width:14px;height:14px;border-radius:50%;
+  background:var(--coral);animation:lh-latido 2s ease-in-out infinite}
+.punto::after{content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:2px solid var(--coral);animation:lh-onda 2s ease-out infinite}
+.flota{animation:lh-flota 5s ease-in-out infinite}

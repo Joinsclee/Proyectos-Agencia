@@ -1267,9 +1267,9 @@
           <span style="font-size:1.1rem;">⚖️</span>
           <span style="font-family:'Outfit',sans-serif;font-weight:700;font-size:.9rem;color:var(--negro);">Reescalar Tamaño del Lote</span>
         </div>
-        <p style="font-size:.78rem;color:var(--texto-suave);margin-bottom:10px;">Cambia el peso total de aceites y todos los ingredientes se ajustarán proporcionalmente.</p>
+        <p style="font-size:.78rem;color:var(--texto-suave);margin-bottom:10px;">Indica el peso total del <strong>jabón terminado</strong> (aceites + lejía + agua + aditivos) y todos los ingredientes se ajustarán proporcionalmente.</p>
         <div class="rescale-input-row" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-          <span class="rescale-label" style="font-size:.85rem;color:var(--texto);">Nuevo peso total de aceites:</span>
+          <span class="rescale-label" style="font-size:.85rem;color:var(--texto);">Peso del jabón terminado:</span>
           <div class="rescale-field" style="display:flex;align-items:center;gap:4px;">
             <input type="number" id="rescale-target" placeholder="500" min="1" step="1" style="width:100px;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.95rem;color:var(--negro);background:var(--blanco);">
             <span style="font-size:.85rem;font-weight:700;color:var(--negro);">g</span>
@@ -1285,7 +1285,7 @@
           <button onclick="rescalarPreset(3000)" class="rescale-preset-btn">3 kg</button>
           <button onclick="rescalarPreset(5000)" class="rescale-preset-btn">5 kg</button>
         </div>
-        <div id="rescale-alert" class="alert alert-ok" style="display:none;margin-top:10px;"></div>
+        <div id="rescale-alert" class="alert alert-ok" style="display:none;margin-top:10px;" data-nolang></div>
       </div>
     </div>
 
@@ -1339,6 +1339,76 @@
       <button class="btn-add no-print" onclick="addOilRow()">+ Agregar Aceite</button>
     </div>
 
+    <!-- PROPIEDADES DEL JABÓN (pronóstico) — movido aquí, debajo de los aceites -->
+    <div class="card">
+      <div class="card-title">Propiedades del Jabón</div>
+      <div id="props-placeholder" class="alert alert-warn">Agrega aceites para ver las propiedades.</div>
+
+      <div id="props-content" style="display:none;">
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Dureza <span id="st-dureza" class="prop-status" data-nolang></span></span>
+            <span class="prop-val" id="val-dureza">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:29%;width:25%"></div>
+            <div class="prop-fill" id="bar-dureza" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 29–54%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Burbujas <span id="st-burbujas" class="prop-status" data-nolang></span></span>
+            <span class="prop-val" id="val-burbujas">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:14%;width:32%"></div>
+            <div class="prop-fill" id="bar-burbujas" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 14–46%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Cremosidad <span id="st-cremo" class="prop-status" data-nolang></span></span>
+            <span class="prop-val" id="val-cremo">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:16%;width:32%"></div>
+            <div class="prop-fill" id="bar-cremo" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 16–48%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Limpieza <span id="st-limpieza" class="prop-status" data-nolang></span></span>
+            <span class="prop-val" id="val-limpieza">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:12%;width:10%"></div>
+            <div class="prop-fill" id="bar-limpieza" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 12–22%</div>
+        </div>
+        <div class="prop-bar-wrap">
+          <div class="prop-bar-header">
+            <span class="prop-name">Emoliencia <span id="st-emol" class="prop-status" data-nolang></span></span>
+            <span class="prop-val" id="val-emol">0%</span>
+          </div>
+          <div class="prop-track">
+            <div class="prop-range" style="left:44%;width:25%"></div>
+            <div class="prop-fill" id="bar-emol" style="width:0%"></div>
+          </div>
+          <div class="prop-hint">Ideal: 44–69%</div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <div class="sec-label">Índice de Yodo</div>
+          <span style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:700;" id="iodine-val">0</span>
+          <span id="iodine-badge" class="iodine-badge iodine-media" data-nolang>—</span>
+        </div>
+      </div>
+    </div>
+
     <!-- LEJÍA NaOH -->
     <div class="card">
       <div class="card-title">Cálculo de Lejía (NaOH)</div>
@@ -1376,7 +1446,7 @@
       <div class="results-row">
         <div class="result-box">
           <div class="result-val" id="res-naoh">0</div>
-          <div class="result-label" id="res-naoh-label">NaOH (99%)</div>
+          <div class="result-label" id="res-naoh-label" data-nolang>NaOH (99%)</div>
         </div>
         <div class="result-box">
           <div class="result-val" id="res-agua">0</div>
@@ -1403,8 +1473,8 @@
         <div class="result-label">PESO TOTAL RECETA (g)</div>
       </div>
 
-      <div id="conc-alert" class="alert" style="display:none;margin-top:12px;"></div>
-      <div id="naoh-extra-alert" class="alert alert-ok" style="display:none;margin-top:8px;"></div>
+      <div id="conc-alert" class="alert" style="display:none;margin-top:12px;" data-nolang></div>
+      <div id="naoh-extra-alert" class="alert alert-ok" style="display:none;margin-top:8px;" data-nolang></div>
     </div>
 
     <!-- ADITIVOS ESPECIALES -->
@@ -1476,75 +1546,7 @@
       </div>
     </div>
 
-    <!-- PORCENTAJES GRASOS -->
-    <div class="card">
-      <div class="card-title">Propiedades del Jabón</div>
-      <div id="props-placeholder" class="alert alert-warn">Agrega aceites para ver las propiedades.</div>
-
-      <div id="props-content" style="display:none;">
-        <div class="prop-bar-wrap">
-          <div class="prop-bar-header">
-            <span class="prop-name">Dureza <span id="st-dureza" class="prop-status"></span></span>
-            <span class="prop-val" id="val-dureza">0%</span>
-          </div>
-          <div class="prop-track">
-            <div class="prop-range" style="left:29%;width:25%"></div>
-            <div class="prop-fill" id="bar-dureza" style="width:0%"></div>
-          </div>
-          <div class="prop-hint">Ideal: 29–54%</div>
-        </div>
-        <div class="prop-bar-wrap">
-          <div class="prop-bar-header">
-            <span class="prop-name">Burbujas <span id="st-burbujas" class="prop-status"></span></span>
-            <span class="prop-val" id="val-burbujas">0%</span>
-          </div>
-          <div class="prop-track">
-            <div class="prop-range" style="left:14%;width:32%"></div>
-            <div class="prop-fill" id="bar-burbujas" style="width:0%"></div>
-          </div>
-          <div class="prop-hint">Ideal: 14–46%</div>
-        </div>
-        <div class="prop-bar-wrap">
-          <div class="prop-bar-header">
-            <span class="prop-name">Cremosidad <span id="st-cremo" class="prop-status"></span></span>
-            <span class="prop-val" id="val-cremo">0%</span>
-          </div>
-          <div class="prop-track">
-            <div class="prop-range" style="left:16%;width:32%"></div>
-            <div class="prop-fill" id="bar-cremo" style="width:0%"></div>
-          </div>
-          <div class="prop-hint">Ideal: 16–48%</div>
-        </div>
-        <div class="prop-bar-wrap">
-          <div class="prop-bar-header">
-            <span class="prop-name">Limpieza <span id="st-limpieza" class="prop-status"></span></span>
-            <span class="prop-val" id="val-limpieza">0%</span>
-          </div>
-          <div class="prop-track">
-            <div class="prop-range" style="left:12%;width:10%"></div>
-            <div class="prop-fill" id="bar-limpieza" style="width:0%"></div>
-          </div>
-          <div class="prop-hint">Ideal: 12–22%</div>
-        </div>
-        <div class="prop-bar-wrap">
-          <div class="prop-bar-header">
-            <span class="prop-name">Emoliencia <span id="st-emol" class="prop-status"></span></span>
-            <span class="prop-val" id="val-emol">0%</span>
-          </div>
-          <div class="prop-track">
-            <div class="prop-range" style="left:44%;width:25%"></div>
-            <div class="prop-fill" id="bar-emol" style="width:0%"></div>
-          </div>
-          <div class="prop-hint">Ideal: 44–69%</div>
-        </div>
-
-        <div style="margin-top:16px;">
-          <div class="sec-label">Índice de Yodo</div>
-          <span style="font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:700;" id="iodine-val">0</span>
-          <span id="iodine-badge" class="iodine-badge iodine-media">—</span>
-        </div>
-      </div>
-    </div>
+    <!-- (Propiedades del Jabón: movida arriba, debajo de la tabla de aceites) -->
 
     <!-- ÁCIDOS GRASOS -->
     <div class="card">
@@ -1592,7 +1594,7 @@
         </table>
       </div>
       <button class="btn-add no-print" onclick="addSERow()" style="margin-top:10px;">+ Designar aceite SE</button>
-      <div id="se-alert" class="alert" style="margin-top:8px;display:none;"></div>
+      <div id="se-alert" class="alert" style="margin-top:8px;display:none;" data-nolang></div>
     </div>
 
     <!-- GLICERINA -->
@@ -1676,6 +1678,9 @@
   </div>
 
   <script>
+    // Helper de traducción seguro (usa el runtime i18n del pie si ya cargó).
+    function T(s){ return (typeof window !== 'undefined' && window.__t) ? window.__t(s) : s; }
+
     // ═══════════════════════════════════════════════
     // BASE DE DATOS DE ACEITES
     // ═══════════════════════════════════════════════
@@ -1712,6 +1717,8 @@
       'Aceite de albaricoque': { sap: .135, iodine: 100, lauric: 0, miristic: 0, palmitic: 6, stearic: 1, ricin: 0, oleic: 64, linoleic: 28, linolenic: 0 },
       'Manteca de cupuaçu': { sap: .137, iodine: 47, lauric: 0, miristic: 0, palmitic: 8, stearic: 33, ricin: 0, oleic: 43, linoleic: 5, linolenic: 0 },
       'Manteca de murumuru': { sap: .190, iodine: 14, lauric: 48, miristic: 27, palmitic: 6, stearic: 2, ricin: 0, oleic: 10, linoleic: 1, linolenic: 0 },
+      'Mantequilla clarificada (ghee)': { sap: .162, iodine: 32, lauric: 3, miristic: 11, palmitic: 28, stearic: 12, ricin: 0, oleic: 27, linoleic: 2, linolenic: 1 },
+      'Aceite de mamey': { sap: .134, iodine: 72, lauric: 0, miristic: 0, palmitic: 9, stearic: 21, ricin: 0, oleic: 52, linoleic: 13, linolenic: 0 },
       '— Personalizado —': { sap: 0, iodine: 0, lauric: 0, miristic: 0, palmitic: 0, stearic: 0, ricin: 0, oleic: 0, linoleic: 0, linolenic: 0 },
     };
 
@@ -1918,17 +1925,26 @@
       const targetInput = document.getElementById('rescale-target');
       const target = parseFloat(targetInput.value);
       if (!target || target <= 0) {
-        alert('Ingresa un peso objetivo válido.');
+        alert(T('Ingresa un peso objetivo válido.'));
         return;
       }
 
-      const currentTotal = getTotalOilG();
-      if (currentTotal <= 0) {
-        alert('Agrega aceites a la receta antes de reescalar.');
+      const currentOils = getTotalOilG();
+      if (currentOils <= 0) {
+        alert(T('Agrega aceites a la receta antes de reescalar.'));
         return;
       }
 
-      const ratio = target / currentTotal;
+      // Base del reescalado: PESO TOTAL DEL JABÓN terminado (aceites + lejía +
+      // agua + aditivos), no solo los aceites. Aseguramos que esté al día.
+      calcular();
+      const currentSoap = parseFloat((document.getElementById('res-total-receta').textContent || '').replace(/[^\d.]/g, '')) || 0;
+      if (currentSoap <= 0) {
+        alert(T('Agrega aceites a la receta antes de reescalar.'));
+        return;
+      }
+
+      const ratio = target / currentSoap;
 
       // Reescalar aceites
       document.querySelectorAll('#oils-tbody tr').forEach(tr => {
@@ -1964,8 +1980,9 @@
         if (g > 0) gEl.value = Math.round(g * ratio * 10) / 10;
       });
 
-      // Actualizar campo "Peso Total de Aceites"
-      document.getElementById('total-oils').value = Math.round(target);
+      // Actualizar campo "Peso Total de Aceites" con el nuevo total de aceites
+      const newOils = currentOils * ratio;
+      document.getElementById('total-oils').value = Math.round(newOils);
 
       // Recalcular
       calcular();
@@ -1973,8 +1990,7 @@
 
       // Mostrar alerta de confirmación
       const alertEl = document.getElementById('rescale-alert');
-      const factorPct = (ratio * 100).toFixed(0);
-      alertEl.textContent = `✓ Receta reescalada: ${currentTotal.toFixed(0)} g → ${target.toFixed(0)} g de aceites (factor: ${factorPct}%)`;
+      alertEl.textContent = `${T('✓ Receta reescalada a')} ${target.toFixed(0)} ${T('g de jabón terminado (≈')} ${Math.round(newOils)} ${T('g de aceites).')}`;
       alertEl.style.display = 'block';
       setTimeout(() => { alertEl.style.display = 'none'; }, 5000);
     }
@@ -1992,7 +2008,7 @@
       const alert = document.getElementById('se-alert');
       if (seUsed > 0 && seUsed > seGrams + 0.5) {
         alert.className = 'alert alert-warn';
-        alert.textContent = `Los gramos de SE designados (${seUsed.toFixed(1)} g) superan el SF disponible (${seGrams.toFixed(1)} g). Ajusta los valores.`;
+        alert.textContent = `${T('Los gramos de SE designados (')}${seUsed.toFixed(1)}${T(' g) superan el SF disponible (')}${seGrams.toFixed(1)}${T(' g). Ajusta los valores.')}`;
         alert.style.display = 'block';
       } else {
         alert.style.display = 'none';
@@ -2112,10 +2128,10 @@
 
       if (naohMode === 'solida') {
         document.getElementById('res-naoh').textContent = Math.round(naohFinalSol) + ' g';
-        document.getElementById('res-naoh-label').textContent = `NaOH (${purity}% pureza)`;
+        document.getElementById('res-naoh-label').textContent = `NaOH (${purity}% ${T('pureza')})`;
       } else {
         document.getElementById('res-naoh').textContent = Math.round(naohFinalPuro) + ' g';
-        document.getElementById('res-naoh-label').textContent = 'NaOH puro';
+        document.getElementById('res-naoh-label').textContent = T('NaOH puro');
         document.getElementById('res-naoh-sol').textContent = Math.round(naohFinalPuro / (naohLiqConc / 100)) + ' g';
         document.getElementById('res-agua-extra').textContent = Math.round(Math.max(0, aguaFinal - (naohFinalPuro / (naohLiqConc / 100) - naohFinalPuro))) + ' g';
       }
@@ -2129,15 +2145,15 @@
       const naohExtraAlert = document.getElementById('naoh-extra-alert');
       if (naohExtra > 0) {
         naohExtraAlert.style.display = 'block';
-        naohExtraAlert.textContent = `✓ Ácido cítrico detectado: se añaden ${naohExtra.toFixed(1)} g extra de NaOH automáticamente para mantener el % de sobreengrasado.`;
+        naohExtraAlert.textContent = `${T('✓ Ácido cítrico detectado: se añaden')} ${naohExtra.toFixed(1)} ${T('g extra de NaOH automáticamente para mantener el % de sobreengrasado.')}`;
       } else {
         naohExtraAlert.style.display = 'none';
       }
 
       // Alerta concentración
       const concAlert = document.getElementById('conc-alert');
-      if (conc < 25) { concAlert.className = 'alert alert-warn'; concAlert.textContent = 'Concentración muy baja. Puede causar trazas lentas.'; concAlert.style.display = 'block'; }
-      else if (conc > 45) { concAlert.className = 'alert alert-warn'; concAlert.textContent = 'Concentración muy alta. Mayor riesgo de aceleración de traza.'; concAlert.style.display = 'block'; }
+      if (conc < 25) { concAlert.className = 'alert alert-warn'; concAlert.textContent = T('Concentración muy baja. Puede causar trazas lentas.'); concAlert.style.display = 'block'; }
+      else if (conc > 45) { concAlert.className = 'alert alert-warn'; concAlert.textContent = T('Concentración muy alta. Mayor riesgo de aceleración de traza.'); concAlert.style.display = 'block'; }
       else { concAlert.style.display = 'none'; }
 
       // Tabla de aceites — celdas calculadas
@@ -2634,7 +2650,7 @@ ${seRows.length ? `
       document.body.appendChild(iframe);
       const doc = iframe.contentDocument || iframe.contentWindow.document;
       doc.open();
-      doc.write(html);
+      doc.write((window.__trHTML ? window.__trHTML(html) : html));
       doc.close();
       iframe.onload = function() {
         iframe.contentWindow.focus();
@@ -2692,6 +2708,563 @@ ${seRows.length ? `
     // ═══════════════════════════════════════════════
     init();
     checkScrollHint();
+  </script>
+
+  <!-- ═══════════════════════════════════════════════
+       MULTI-IDIOMA (ES · EN · PT-BR) — runtime genérico
+       ═══════════════════════════════════════════════ -->
+  <style>
+    #lang-switch{position:fixed;top:10px;right:10px;z-index:99999;display:flex;gap:3px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:3px;box-shadow:0 2px 12px rgba(0,0,0,.12);font-family:system-ui,sans-serif;}
+    #lang-switch .lang-btn{border:none;background:transparent;color:#777;font-weight:700;font-size:12px;letter-spacing:.04em;padding:5px 10px;border-radius:999px;cursor:pointer;}
+    #lang-switch .lang-btn:hover{color:#333;}
+    #lang-switch .lang-btn.active{background:#9caf88;color:#fff;}
+    @media print{#lang-switch{display:none!important;}}
+  </style>
+  <div id="lang-switch" class="no-print">
+    <button type="button" data-lang="es" class="lang-btn">ES</button>
+    <button type="button" data-lang="en" class="lang-btn">EN</button>
+    <button type="button" data-lang="pt" class="lang-btn">PT</button>
+  </div>
+  <script>
+  (function(){
+    var DICT = {
+      en: {
+        // ─── Top bar / header ───
+        "Calculadora de Saponificación": "Saponification Calculator",
+        "Jabonería & Cosmética Artesanal": "Artisan Soapmaking & Cosmetics",
+        "Jabonería &amp; Cosmética Artesanal": "Artisan Soapmaking &amp; Cosmetics",
+        "Versión profesional · ": "Professional version · ",
+        "Generar Informe PDF": "Generate PDF Report",
+        // ─── Datos de la receta ───
+        "Datos de la Receta": "Recipe Data",
+        "Nombre del Jabón": "Soap Name",
+        "Ej: Jabón de Castilla con Lavanda": "E.g.: Castile Soap with Lavender",
+        "Fecha de Elaboración": "Production Date",
+        "Fecha de Curado": "Curing Date",
+        "Temperatura de Elaboración (°C)": "Production Temperature (°C)",
+        "Peso Total de Aceites (g) · Escala": "Total Oil Weight (g) · Scale",
+        // ─── Reescalar ───
+        "Reescalar Tamaño del Lote": "Rescale Batch Size",
+        "Indica el peso total del ": "Enter the total weight of the ",
+        "jabón terminado": "finished soap",
+        " (aceites + lejía + agua + aditivos) y todos los ingredientes se ajustarán proporcionalmente.": " (oils + lye + water + additives) and all ingredients will be adjusted proportionally.",
+        "Peso del jabón terminado:": "Finished soap weight:",
+        "⚖️ Reescalar": "⚖️ Rescale",
+        // ─── Tabla de aceites ───
+        "Aceites, Grasas, Ceras y Mantecas": "Oils, Fats, Waxes and Butters",
+        "← Desliza la tabla para ver todas las columnas →": "← Swipe the table to see all columns →",
+        "Aceite / Grasa": "Oil / Fat",
+        "Gramos": "Grams",
+        "% Fórmula": "% Formula",
+        "Para aceites personalizados, ingresa el valor SAP manualmente": "For custom oils, enter the SAP value manually",
+        "NaOH Neto (g)": "Net NaOH (g)",
+        "Índice Yodo": "Iodine Value",
+        "Láurico": "Lauric",
+        "Mirístico": "Myristic",
+        "Palmítico": "Palmitic",
+        "Esteárico": "Stearic",
+        "Ricinoleico": "Ricinoleic",
+        "Oléico": "Oleic",
+        "Linoléico": "Linoleic",
+        "Linolénico": "Linolenic",
+        "TOTAL": "TOTAL",
+        "+ Agregar Aceite": "+ Add Oil",
+        "Nombre del aceite (ej: Maracuyá)": "Oil name (e.g.: Passion fruit)",
+        "Aceite personalizado": "Custom oil",
+        // ─── Propiedades ───
+        "Propiedades del Jabón": "Soap Properties",
+        "Agrega aceites para ver las propiedades.": "Add oils to see the properties.",
+        "Dureza": "Hardness",
+        "Burbujas": "Bubbles",
+        "Cremosidad": "Creaminess",
+        "Limpieza": "Cleansing",
+        "Emoliencia": "Conditioning",
+        "Ideal: 29–54%": "Ideal: 29–54%",
+        "Ideal: 14–46%": "Ideal: 14–46%",
+        "Ideal: 16–48%": "Ideal: 16–48%",
+        "Ideal: 12–22%": "Ideal: 12–22%",
+        "Ideal: 44–69%": "Ideal: 44–69%",
+        "Índice de Yodo": "Iodine Value",
+        // status labels
+        "Bajo": "Low",
+        "Alto": "High",
+        "Ideal": "Ideal",
+        // iodine badges
+        "Muy Blanda": "Very Soft",
+        "Blanda": "Soft",
+        "Media": "Medium",
+        "Dura": "Hard",
+        "Muy Dura": "Very Hard",
+        // ─── Lejía NaOH ───
+        "Cálculo de Lejía (NaOH)": "Lye Calculation (NaOH)",
+        "NaOH Sólida": "Solid NaOH",
+        "NaOH Líquida": "Liquid NaOH",
+        "Pureza del NaOH (%)": "NaOH Purity (%)",
+        "Concentración de la Solución NaOH (%)": "NaOH Solution Concentration (%)",
+        "Sobreengrasado SF (%)": "Superfat SF (%)",
+        "Concentración de Lejía — CONC (%)": "Lye Concentration — CONC (%)",
+        "Recomendado 30–38%. A mayor CONC, menos agua.": "Recommended 30–38%. The higher the CONC, the less water.",
+        "NaOH (99%)": "NaOH (99%)",
+        "Agua Lejía (g)": "Lye Water (g)",
+        "Total Lejía (g)": "Total Lye (g)",
+        "Solución NaOH (g)": "NaOH Solution (g)",
+        "Agua adicional (g)": "Additional water (g)",
+        "PESO TOTAL RECETA (g)": "TOTAL RECIPE WEIGHT (g)",
+        "NaOH puro": "Pure NaOH",
+        // ─── Aditivos especiales ───
+        "Aditivos que Influyen en Propiedades": "Additives That Affect Properties",
+        "Los marcados con ": "Those marked with ",
+        "↓ agua": "↓ water",
+        " descuentan del agua de la lejía. Los marcados con ": " are deducted from the lye water. Those marked with ",
+        "↑ NaOH": "↑ NaOH",
+        " ajustan la soda automáticamente.": " adjust the caustic soda automatically.",
+        // SPECIAL_ADDS names + desc
+        "Arcillas": "Clays",
+        "Cacao en polvo": "Cocoa powder",
+        "Sal": "Salt",
+        "Sodio lactato": "Sodium lactate",
+        "Azúcar / Miel": "Sugar / Honey",
+        "Propilenglicol": "Propylene glycol",
+        "Gel Aloe Vera": "Aloe Vera Gel",
+        "Leche líquida": "Liquid milk",
+        "Yogur griego": "Greek yogurt",
+        "Yogur natural": "Plain yogurt",
+        "Ácido cítrico": "Citric acid",
+        "Citrato de sodio": "Sodium citrate",
+        "Vitamina E": "Vitamin E",
+        "Ext. semilla pomelo": "Grapefruit seed ext.",
+        "Ext. de romero": "Rosemary ext.",
+        "Dureza +": "Hardness +",
+        "Cremosidad +": "Creaminess +",
+        "Burbujas +  ·  descuenta agua lejía": "Bubbles +  ·  deducts lye water",
+        "Descuenta agua lejía": "Deducts lye water",
+        "Cremosidad +  ·  descuenta agua lejía": "Creaminess +  ·  deducts lye water",
+        "Quelante  ·  ajusta NaOH automáticamente": "Chelator  ·  adjusts NaOH automatically",
+        "Quelante": "Chelator",
+        "Antioxidante": "Antioxidant",
+        "≤5% aceites": "≤5% oils",
+        "≤3% aceites": "≤3% oils",
+        "1–2% aceites": "1–2% oils",
+        "1–3% grasas": "1–3% fats",
+        "0.1–0.2% aceites": "0.1–0.2% oils",
+        "0.1–1%": "0.1–1%",
+        "0.1–0.4%": "0.1–0.4%",
+        "≤5%": "≤5%",
+        "libre": "free",
+        // ─── Aditivos personalizados ───
+        "Quelantes, Antioxidantes, Endurecedores y Activos": "Chelators, Antioxidants, Hardeners and Actives",
+        "Selecciona de la lista o elige ": "Select from the list or choose ",
+        "Personalizado": "Custom",
+        " para ingresar cualquier activo o aditivo.": " to enter any active or additive.",
+        "+ Agregar Activo / Aditivo": "+ Add Active / Additive",
+        "— Seleccionar ingrediente —": "— Select ingredient —",
+        "— Personalizado —": "— Custom —",
+        "Nombre personalizado": "Custom name",
+        // ADDITIVE_OPTS groups + hints
+        "Quelantes": "Chelators",
+        "Antioxidantes": "Antioxidants",
+        "Endurecedores": "Hardeners",
+        "Ext. de romero (ROE)": "Rosemary ext. (ROE)",
+        "Lactato de sodio (60–80%)": "Sodium lactate (60–80%)",
+        "Cloruro de sodio (sal)": "Sodium chloride (salt)",
+        "Ext. semilla de pomelo": "Grapefruit seed ext.",
+        "1–2% aceites · ⚠ añadir 6g NaOH por cada 10g": "1–2% oils · ⚠ add 6g NaOH per 10g",
+        "1–3% grasas (rec. 1.5%) · en lejía": "1–3% fats (rec. 1.5%) · in lye",
+        "0.1–1% del jabón · en traza": "0.1–1% of soap · at trace",
+        "0.1–0.4% del jabón · en traza": "0.1–0.4% of soap · at trace",
+        "1–5% · en lejía fría": "1–5% · in cold lye",
+        "1–2% aceites · disuelto en agua lejía": "1–2% oils · dissolved in lye water",
+        // ─── Calculadoras de porcentajes ───
+        "Calculadoras de Porcentajes": "Percentage Calculators",
+        "Conoces el porcentaje de un ingrediente y quieres saber cuántos gramos necesitas para tu lote.": "You know an ingredient's percentage and want to know how many grams you need for your batch.",
+        "¿Cuánto es": "How much is",
+        "de": "of",
+        "Resultado": "Result",
+        "Tienes una cantidad en gramos y quieres saber qué porcentaje representa sobre el total del lote.": "You have an amount in grams and want to know what percentage it represents of the batch total.",
+        "es qué % de": "is what % of",
+        // ─── Perfil de ácidos grasos ───
+        "Perfil de Ácidos Grasos": "Fatty Acid Profile",
+        "Grasas Saturadas": "Saturated Fats",
+        "Grasas Insaturadas": "Unsaturated Fats",
+        // ─── Sobreengrasado ───
+        "Sobreengrasado (SE)": "Superfat (SF)",
+        "✓ Activo por defecto": "✓ Active by default",
+        "El SF de ": "The SF of ",
+        " ya está descontado del NaOH automáticamente — ": " is already deducted from the NaOH automatically — ",
+        " de aceites quedan sin saponificar distribuidos entre todos los aceites de la receta.": " of oils remain unsaponified, distributed among all the oils in the recipe.",
+        "Opcional:": "Optional:",
+        " si quieres designar un aceite específico para el SE (ej. karité, ricino), añádelo aquí. El NaOH ya está reducido arriba.": " if you want to designate a specific oil for the SF (e.g. shea, castor), add it here. The NaOH is already reduced above.",
+        "Aceite para SE": "Oil for SF",
+        "Agregar en": "Add at",
+        "En traza": "At trace",
+        "En lejía": "In lye",
+        "+ Designar aceite SE": "+ Designate SF oil",
+        // ─── Glicerina ───
+        "Glicerina Generada": "Generated Glycerin",
+        "La saponificación genera glicerina naturalmente. Estimación según aceites:": "Saponification generates glycerin naturally. Estimate based on oils:",
+        "Gramos de Glicerina Estimados": "Estimated Glycerin Grams",
+        "Factor estimado: ~10.4% del peso de NaOH puro utilizado.": "Estimated factor: ~10.4% of the weight of pure NaOH used.",
+        // ─── Referencias ───
+        "Referencia: Antioxidantes": "Reference: Antioxidants",
+        "Vitamina E:": "Vitamin E:",
+        " 0.1–0.2% de aceites. Agregar en aceites base o SE.": " 0.1–0.2% of oils. Add to base oils or SF.",
+        "Extracto semilla de pomelo:": "Grapefruit seed extract:",
+        " 0.1–1% del peso del jabón. En traza.": " 0.1–1% of soap weight. At trace.",
+        "Extracto de romero:": "Rosemary extract:",
+        " 0.1–0.4% del peso del jabón. En traza.": " 0.1–0.4% of soap weight. At trace.",
+        "Referencia: Quelantes": "Reference: Chelators",
+        "Citrato de sodio:": "Sodium citrate:",
+        " 1–3% del peso de grasas (recomendado 1.5%). Agregar en lejía.": " 1–3% of fat weight (recommended 1.5%). Add to lye.",
+        "Ácido cítrico:": "Citric acid:",
+        " 1–2% del peso total de aceites. Agregar en lejía.": " 1–2% of total oil weight. Add to lye.",
+        "⚠ Por cada 10 g de ácido cítrico añadir 6 g extra de NaOH para no alterar el % de sobreengrasado.": "⚠ For every 10 g of citric acid add 6 g extra NaOH so as not to alter the superfat %.",
+        "Referencia: Endurecedores de Barra": "Reference: Bar Hardeners",
+        "Lactato de sodio (60–80%):": "Sodium lactate (60–80%):",
+        " Dureza 1–5%. Antioxidante 1–3%. Humectante 1–3%. Agregar en lejía fría.": " Hardness 1–5%. Antioxidant 1–3%. Humectant 1–3%. Add to cold lye.",
+        "Cloruro de sodio (sal):": "Sodium chloride (salt):",
+        " 1–2% del peso de los aceites. Agregar disuelto en el agua de lejía.": " 1–2% of oil weight. Add dissolved in the lye water.",
+        "Referencia: Fragancias y Otros Aditivos": "Reference: Fragrances and Other Additives",
+        "Fragancias:": "Fragrances:",
+        " ≤ 5% peso del jabón (recomendado 0.5–1%).": " ≤ 5% soap weight (recommended 0.5–1%).",
+        "Aceites esenciales (AAEE):": "Essential oils (EOs):",
+        "Máx. 2%": "Max. 2%",
+        " del peso del jabón (recomendado 0.5–2%). La mayoría de calculadoras indican 5%, pero el límite seguro real es 2%.": " of soap weight (recommended 0.5–2%). Most calculators say 5%, but the real safe limit is 2%.",
+        "Avena y cereales:": "Oats and cereals:",
+        " ≤ 10% peso del jabón (recomendado 5%).": " ≤ 10% soap weight (recommended 5%).",
+        "Arcillas:": "Clays:",
+        " ≤ 5% del jabón. Hidratar 1:1 con agua + glicerina.": " ≤ 5% of soap. Hydrate 1:1 with water + glycerin.",
+        "Leche / zumos / infusiones:": "Milk / juices / infusions:",
+        " Usar congelados en lejía para conservar propiedades.": " Use frozen in lye to preserve properties.",
+        // ─── Notas ───
+        "Notas de la Receta": "Recipe Notes",
+        "Observaciones, proceso, temperatura de traza, colorantes usados, resultado final…": "Observations, process, trace temperature, colorants used, final result…",
+        // ─── Alertas / mensajes dinámicos JS ───
+        "Ingresa un peso objetivo válido.": "Enter a valid target weight.",
+        "Agrega aceites a la receta antes de reescalar.": "Add oils to the recipe before rescaling.",
+        "Concentración muy baja. Puede causar trazas lentas.": "Concentration too low. May cause slow trace.",
+        "Concentración muy alta. Mayor riesgo de aceleración de traza.": "Concentration too high. Higher risk of trace acceleration.",
+        // fragmentos interpolados (claves recortadas para el helper T())
+        "pureza": "purity",
+        "✓ Receta reescalada a": "✓ Recipe rescaled to",
+        "g de jabón terminado (≈": "g of finished soap (≈",
+        "g de aceites).": "g of oils).",
+        "Los gramos de SE designados (": "The designated SF grams (",
+        "g) superan el SF disponible (": "g) exceed the available SF (",
+        "g). Ajusta los valores.": "g). Adjust the values.",
+        "✓ Ácido cítrico detectado: se añaden": "✓ Citric acid detected: adding",
+        "g extra de NaOH automáticamente para mantener el % de sobreengrasado.": "g extra NaOH automatically to keep the superfat %.",
+        // ─── PDF / informe imprimible ───
+        "Informe · ": "Report · ",
+        "Calculadora de Saponificación · Lina Toro — Jabonería &amp; Cosmética Artesanal": "Saponification Calculator · Lina Toro — Artisan Soapmaking &amp; Cosmetics",
+        "Calculadora de Saponificación · Lina Toro — Jabonería & Cosmética Artesanal": "Saponification Calculator · Lina Toro — Artisan Soapmaking & Cosmetics",
+        "Elaboración:": "Production:",
+        "Curado:": "Curing:",
+        "Temperatura:": "Temperature:",
+        "Sobreengrasado (SF):": "Superfat (SF):",
+        "Concentración Lejía:": "Lye Concentration:",
+        "Generado: ": "Generated: ",
+        "Cálculo de Lejía": "Lye Calculation",
+        "Agua": "Water",
+        "Aditivos y Activos": "Additives and Actives",
+        "Nombre": "Name",
+        "Descripción": "Description",
+        "Sobreengrasado (SE) — SF: ": "Superfat (SF) — SF: ",
+        "Sin notas.": "No notes.",
+        "Índice de Yodo:": "Iodine Value:",
+        "Sin aceites configurados.": "No oils configured.",
+        "Sin aceites SE configurados": "No SF oils configured",
+        "Sin aditivos configurados": "No additives configured",
+        "Solución NaOH": "NaOH Solution",
+        "Agua Adicional": "Additional Water"
+      },
+      pt: {
+        // ─── Top bar / header ───
+        "Calculadora de Saponificación": "Calculadora de Saponificação",
+        "Jabonería & Cosmética Artesanal": "Saboaria & Cosmética Artesanal",
+        "Jabonería &amp; Cosmética Artesanal": "Saboaria &amp; Cosmética Artesanal",
+        "Versión profesional · ": "Versão profissional · ",
+        "Generar Informe PDF": "Gerar Relatório PDF",
+        // ─── Datos de la receta ───
+        "Datos de la Receta": "Dados da Receita",
+        "Nombre del Jabón": "Nome do Sabão",
+        "Ej: Jabón de Castilla con Lavanda": "Ex: Sabão de Castela com Lavanda",
+        "Fecha de Elaboración": "Data de Produção",
+        "Fecha de Curado": "Data de Cura",
+        "Temperatura de Elaboración (°C)": "Temperatura de Produção (°C)",
+        "Peso Total de Aceites (g) · Escala": "Peso Total de Óleos (g) · Escala",
+        // ─── Reescalar ───
+        "Reescalar Tamaño del Lote": "Reescalonar Tamanho do Lote",
+        "Indica el peso total del ": "Informe o peso total do ",
+        "jabón terminado": "sabão pronto",
+        " (aceites + lejía + agua + aditivos) y todos los ingredientes se ajustarán proporcionalmente.": " (óleos + lixívia + água + aditivos) e todos os ingredientes serão ajustados proporcionalmente.",
+        "Peso del jabón terminado:": "Peso do sabão pronto:",
+        "⚖️ Reescalar": "⚖️ Reescalonar",
+        // ─── Tabla de aceites ───
+        "Aceites, Grasas, Ceras y Mantecas": "Óleos, Gorduras, Ceras e Manteigas",
+        "← Desliza la tabla para ver todas las columnas →": "← Deslize a tabela para ver todas as colunas →",
+        "Aceite / Grasa": "Óleo / Gordura",
+        "Gramos": "Gramas",
+        "% Fórmula": "% Fórmula",
+        "Para aceites personalizados, ingresa el valor SAP manualmente": "Para óleos personalizados, insira o valor SAP manualmente",
+        "NaOH Neto (g)": "NaOH Líquido (g)",
+        "Índice Yodo": "Índice de Iodo",
+        "Láurico": "Láurico",
+        "Mirístico": "Mirístico",
+        "Palmítico": "Palmítico",
+        "Esteárico": "Esteárico",
+        "Ricinoleico": "Ricinoleico",
+        "Oléico": "Oleico",
+        "Linoléico": "Linoleico",
+        "Linolénico": "Linolênico",
+        "TOTAL": "TOTAL",
+        "+ Agregar Aceite": "+ Adicionar Óleo",
+        "Nombre del aceite (ej: Maracuyá)": "Nome do óleo (ex: Maracujá)",
+        "Aceite personalizado": "Óleo personalizado",
+        // ─── Propiedades ───
+        "Propiedades del Jabón": "Propriedades do Sabão",
+        "Agrega aceites para ver las propiedades.": "Adicione óleos para ver as propriedades.",
+        "Dureza": "Dureza",
+        "Burbujas": "Bolhas",
+        "Cremosidad": "Cremosidade",
+        "Limpieza": "Limpeza",
+        "Emoliencia": "Emoliência",
+        "Ideal: 29–54%": "Ideal: 29–54%",
+        "Ideal: 14–46%": "Ideal: 14–46%",
+        "Ideal: 16–48%": "Ideal: 16–48%",
+        "Ideal: 12–22%": "Ideal: 12–22%",
+        "Ideal: 44–69%": "Ideal: 44–69%",
+        "Índice de Yodo": "Índice de Iodo",
+        // status labels
+        "Bajo": "Baixo",
+        "Alto": "Alto",
+        "Ideal": "Ideal",
+        // iodine badges
+        "Muy Blanda": "Muito Mole",
+        "Blanda": "Mole",
+        "Media": "Média",
+        "Dura": "Dura",
+        "Muy Dura": "Muito Dura",
+        // ─── Lejía NaOH ───
+        "Cálculo de Lejía (NaOH)": "Cálculo da Lixívia (NaOH)",
+        "NaOH Sólida": "NaOH Sólida",
+        "NaOH Líquida": "NaOH Líquida",
+        "Pureza del NaOH (%)": "Pureza do NaOH (%)",
+        "Concentración de la Solución NaOH (%)": "Concentração da Solução NaOH (%)",
+        "Sobreengrasado SF (%)": "Superfat SF (%)",
+        "Concentración de Lejía — CONC (%)": "Concentração da Lixívia — CONC (%)",
+        "Recomendado 30–38%. A mayor CONC, menos agua.": "Recomendado 30–38%. Quanto maior a CONC, menos água.",
+        "NaOH (99%)": "NaOH (99%)",
+        "Agua Lejía (g)": "Água da Lixívia (g)",
+        "Total Lejía (g)": "Total da Lixívia (g)",
+        "Solución NaOH (g)": "Solução NaOH (g)",
+        "Agua adicional (g)": "Água adicional (g)",
+        "PESO TOTAL RECETA (g)": "PESO TOTAL DA RECEITA (g)",
+        "NaOH puro": "NaOH puro",
+        // ─── Aditivos especiales ───
+        "Aditivos que Influyen en Propiedades": "Aditivos que Influenciam as Propriedades",
+        "Los marcados con ": "Os marcados com ",
+        "↓ agua": "↓ água",
+        " descuentan del agua de la lejía. Los marcados con ": " são descontados da água da lixívia. Os marcados com ",
+        "↑ NaOH": "↑ NaOH",
+        " ajustan la soda automáticamente.": " ajustam a soda automaticamente.",
+        // SPECIAL_ADDS names + desc
+        "Arcillas": "Argilas",
+        "Cacao en polvo": "Cacau em pó",
+        "Sal": "Sal",
+        "Sodio lactato": "Lactato de sódio",
+        "Azúcar / Miel": "Açúcar / Mel",
+        "Propilenglicol": "Propilenoglicol",
+        "Gel Aloe Vera": "Gel de Aloe Vera",
+        "Leche líquida": "Leite líquido",
+        "Yogur griego": "Iogurte grego",
+        "Yogur natural": "Iogurte natural",
+        "Ácido cítrico": "Ácido cítrico",
+        "Citrato de sodio": "Citrato de sódio",
+        "Vitamina E": "Vitamina E",
+        "Ext. semilla pomelo": "Ext. semente de toranja",
+        "Ext. de romero": "Ext. de alecrim",
+        "Dureza +": "Dureza +",
+        "Cremosidad +": "Cremosidade +",
+        "Burbujas +  ·  descuenta agua lejía": "Bolhas +  ·  desconta água da lixívia",
+        "Descuenta agua lejía": "Desconta água da lixívia",
+        "Cremosidad +  ·  descuenta agua lejía": "Cremosidade +  ·  desconta água da lixívia",
+        "Quelante  ·  ajusta NaOH automáticamente": "Quelante  ·  ajusta NaOH automaticamente",
+        "Quelante": "Quelante",
+        "Antioxidante": "Antioxidante",
+        "≤5% aceites": "≤5% óleos",
+        "≤3% aceites": "≤3% óleos",
+        "1–2% aceites": "1–2% óleos",
+        "1–3% grasas": "1–3% gorduras",
+        "0.1–0.2% aceites": "0.1–0.2% óleos",
+        "0.1–1%": "0.1–1%",
+        "0.1–0.4%": "0.1–0.4%",
+        "≤5%": "≤5%",
+        "libre": "livre",
+        // ─── Aditivos personalizados ───
+        "Quelantes, Antioxidantes, Endurecedores y Activos": "Quelantes, Antioxidantes, Endurecedores e Ativos",
+        "Selecciona de la lista o elige ": "Selecione da lista ou escolha ",
+        "Personalizado": "Personalizado",
+        " para ingresar cualquier activo o aditivo.": " para inserir qualquer ativo ou aditivo.",
+        "+ Agregar Activo / Aditivo": "+ Adicionar Ativo / Aditivo",
+        "— Seleccionar ingrediente —": "— Selecionar ingrediente —",
+        "— Personalizado —": "— Personalizado —",
+        "Nombre personalizado": "Nome personalizado",
+        // ADDITIVE_OPTS groups + hints
+        "Quelantes": "Quelantes",
+        "Antioxidantes": "Antioxidantes",
+        "Endurecedores": "Endurecedores",
+        "Ext. de romero (ROE)": "Ext. de alecrim (ROE)",
+        "Lactato de sodio (60–80%)": "Lactato de sódio (60–80%)",
+        "Cloruro de sodio (sal)": "Cloreto de sódio (sal)",
+        "Ext. semilla de pomelo": "Ext. semente de toranja",
+        "1–2% aceites · ⚠ añadir 6g NaOH por cada 10g": "1–2% óleos · ⚠ adicionar 6g NaOH a cada 10g",
+        "1–3% grasas (rec. 1.5%) · en lejía": "1–3% gorduras (rec. 1.5%) · na lixívia",
+        "0.1–1% del jabón · en traza": "0.1–1% do sabão · no traço",
+        "0.1–0.4% del jabón · en traza": "0.1–0.4% do sabão · no traço",
+        "1–5% · en lejía fría": "1–5% · na lixívia fria",
+        "1–2% aceites · disuelto en agua lejía": "1–2% óleos · dissolvido na água da lixívia",
+        // ─── Calculadoras de porcentajes ───
+        "Calculadoras de Porcentajes": "Calculadoras de Porcentagens",
+        "Conoces el porcentaje de un ingrediente y quieres saber cuántos gramos necesitas para tu lote.": "Você conhece a porcentagem de um ingrediente e quer saber quantas gramas precisa para o seu lote.",
+        "¿Cuánto es": "Quanto é",
+        "de": "de",
+        "Resultado": "Resultado",
+        "Tienes una cantidad en gramos y quieres saber qué porcentaje representa sobre el total del lote.": "Você tem uma quantidade em gramas e quer saber qual porcentagem representa sobre o total do lote.",
+        "es qué % de": "é quantos % de",
+        // ─── Perfil de ácidos grasos ───
+        "Perfil de Ácidos Grasos": "Perfil de Ácidos Graxos",
+        "Grasas Saturadas": "Gorduras Saturadas",
+        "Grasas Insaturadas": "Gorduras Insaturadas",
+        // ─── Sobreengrasado ───
+        "Sobreengrasado (SE)": "Superfat (SF)",
+        "✓ Activo por defecto": "✓ Ativo por padrão",
+        "El SF de ": "O SF de ",
+        " ya está descontado del NaOH automáticamente — ": " já está descontado do NaOH automaticamente — ",
+        " de aceites quedan sin saponificar distribuidos entre todos los aceites de la receta.": " de óleos ficam sem saponificar, distribuídos entre todos os óleos da receita.",
+        "Opcional:": "Opcional:",
+        " si quieres designar un aceite específico para el SE (ej. karité, ricino), añádelo aquí. El NaOH ya está reducido arriba.": " se quiser designar um óleo específico para o SF (ex. karité, mamona), adicione-o aqui. O NaOH já está reduzido acima.",
+        "Aceite para SE": "Óleo para SF",
+        "Agregar en": "Adicionar em",
+        "En traza": "No traço",
+        "En lejía": "Na lixívia",
+        "+ Designar aceite SE": "+ Designar óleo SF",
+        // ─── Glicerina ───
+        "Glicerina Generada": "Glicerina Gerada",
+        "La saponificación genera glicerina naturalmente. Estimación según aceites:": "A saponificação gera glicerina naturalmente. Estimativa conforme os óleos:",
+        "Gramos de Glicerina Estimados": "Gramas de Glicerina Estimadas",
+        "Factor estimado: ~10.4% del peso de NaOH puro utilizado.": "Fator estimado: ~10.4% do peso de NaOH puro utilizado.",
+        // ─── Referencias ───
+        "Referencia: Antioxidantes": "Referência: Antioxidantes",
+        "Vitamina E:": "Vitamina E:",
+        " 0.1–0.2% de aceites. Agregar en aceites base o SE.": " 0.1–0.2% dos óleos. Adicionar nos óleos base ou SF.",
+        "Extracto semilla de pomelo:": "Extrato de semente de toranja:",
+        " 0.1–1% del peso del jabón. En traza.": " 0.1–1% do peso do sabão. No traço.",
+        "Extracto de romero:": "Extrato de alecrim:",
+        " 0.1–0.4% del peso del jabón. En traza.": " 0.1–0.4% do peso do sabão. No traço.",
+        "Referencia: Quelantes": "Referência: Quelantes",
+        "Citrato de sodio:": "Citrato de sódio:",
+        " 1–3% del peso de grasas (recomendado 1.5%). Agregar en lejía.": " 1–3% do peso de gorduras (recomendado 1.5%). Adicionar na lixívia.",
+        "Ácido cítrico:": "Ácido cítrico:",
+        " 1–2% del peso total de aceites. Agregar en lejía.": " 1–2% do peso total de óleos. Adicionar na lixívia.",
+        "⚠ Por cada 10 g de ácido cítrico añadir 6 g extra de NaOH para no alterar el % de sobreengrasado.": "⚠ A cada 10 g de ácido cítrico adicionar 6 g extra de NaOH para não alterar o % de superfat.",
+        "Referencia: Endurecedores de Barra": "Referência: Endurecedores de Barra",
+        "Lactato de sodio (60–80%):": "Lactato de sódio (60–80%):",
+        " Dureza 1–5%. Antioxidante 1–3%. Humectante 1–3%. Agregar en lejía fría.": " Dureza 1–5%. Antioxidante 1–3%. Umectante 1–3%. Adicionar na lixívia fria.",
+        "Cloruro de sodio (sal):": "Cloreto de sódio (sal):",
+        " 1–2% del peso de los aceites. Agregar disuelto en el agua de lejía.": " 1–2% do peso dos óleos. Adicionar dissolvido na água da lixívia.",
+        "Referencia: Fragancias y Otros Aditivos": "Referência: Fragrâncias e Outros Aditivos",
+        "Fragancias:": "Fragrâncias:",
+        " ≤ 5% peso del jabón (recomendado 0.5–1%).": " ≤ 5% peso do sabão (recomendado 0.5–1%).",
+        "Aceites esenciales (AAEE):": "Óleos essenciais (OE):",
+        "Máx. 2%": "Máx. 2%",
+        " del peso del jabón (recomendado 0.5–2%). La mayoría de calculadoras indican 5%, pero el límite seguro real es 2%.": " do peso do sabão (recomendado 0.5–2%). A maioria das calculadoras indica 5%, mas o limite seguro real é 2%.",
+        "Avena y cereales:": "Aveia e cereais:",
+        " ≤ 10% peso del jabón (recomendado 5%).": " ≤ 10% peso do sabão (recomendado 5%).",
+        "Arcillas:": "Argilas:",
+        " ≤ 5% del jabón. Hidratar 1:1 con agua + glicerina.": " ≤ 5% do sabão. Hidratar 1:1 com água + glicerina.",
+        "Leche / zumos / infusiones:": "Leite / sucos / infusões:",
+        " Usar congelados en lejía para conservar propiedades.": " Usar congelados na lixívia para conservar propriedades.",
+        // ─── Notas ───
+        "Notas de la Receta": "Notas da Receita",
+        "Observaciones, proceso, temperatura de traza, colorantes usados, resultado final…": "Observações, processo, temperatura do traço, corantes usados, resultado final…",
+        // ─── Alertas / mensajes dinámicos JS ───
+        "pureza": "pureza",
+        "✓ Receta reescalada a": "✓ Receita reescalonada para",
+        "g de jabón terminado (≈": "g de sabão pronto (≈",
+        "g de aceites).": "g de óleos).",
+        "Los gramos de SE designados (": "As gramas de SF designadas (",
+        "g) superan el SF disponible (": "g) superam o SF disponível (",
+        "g). Ajusta los valores.": "g). Ajuste os valores.",
+        "✓ Ácido cítrico detectado: se añaden": "✓ Ácido cítrico detectado: adicionam-se",
+        "g extra de NaOH automáticamente para mantener el % de sobreengrasado.": "g extra de NaOH automaticamente para manter o % de superfat.",
+        "Ingresa un peso objetivo válido.": "Insira um peso alvo válido.",
+        "Agrega aceites a la receta antes de reescalar.": "Adicione óleos à receita antes de reescalonar.",
+        "Concentración muy baja. Puede causar trazas lentas.": "Concentração muito baixa. Pode causar traços lentos.",
+        "Concentración muy alta. Mayor riesgo de aceleración de traza.": "Concentração muito alta. Maior risco de aceleração do traço.",
+        // ─── PDF / informe imprimible ───
+        "Informe · ": "Relatório · ",
+        "Calculadora de Saponificación · Lina Toro — Jabonería &amp; Cosmética Artesanal": "Calculadora de Saponificação · Lina Toro — Saboaria &amp; Cosmética Artesanal",
+        "Calculadora de Saponificación · Lina Toro — Jabonería & Cosmética Artesanal": "Calculadora de Saponificação · Lina Toro — Saboaria & Cosmética Artesanal",
+        "Elaboración:": "Produção:",
+        "Curado:": "Cura:",
+        "Temperatura:": "Temperatura:",
+        "Sobreengrasado (SF):": "Superfat (SF):",
+        "Concentración Lejía:": "Concentração da Lixívia:",
+        "Generado: ": "Gerado: ",
+        "Cálculo de Lejía": "Cálculo da Lixívia",
+        "Agua": "Água",
+        "Aditivos y Activos": "Aditivos e Ativos",
+        "Nombre": "Nome",
+        "Descripción": "Descrição",
+        "Sobreengrasado (SE) — SF: ": "Superfat (SF) — SF: ",
+        "Sin notas.": "Sem notas.",
+        "Índice de Yodo:": "Índice de Iodo:",
+        "Sin aceites configurados.": "Sem óleos configurados.",
+        "Sin aceites SE configurados": "Sem óleos SF configurados",
+        "Sin aditivos configurados": "Sem aditivos configurados",
+        "Solución NaOH": "Solução NaOH",
+        "Agua Adicional": "Água Adicional"
+      }
+    };
+    var STORE_KEY='savias_lang';
+    var LANG=localStorage.getItem(STORE_KEY)||'es';
+    var orig=new WeakMap(), mo=null, scheduled=false;
+    // Mapa normalizado (espacios colapsados) por idioma → tolera saltos de línea/sangría en los nodos de texto.
+    var NORM={};
+    function buildNorm(lang){ if(NORM[lang])return NORM[lang]; var d=DICT[lang]||{}, m={}; Object.keys(d).forEach(function(k){ m[k.trim().replace(/\s+/g,' ')]=d[k]; }); NORM[lang]=m; return m; }
+    function tr(s){
+      if(LANG==='es'||s==null) return s;
+      var d=DICT[LANG]; if(!d) return s;
+      var str=String(s);
+      // 1) Coincidencia exacta del texto recortado.
+      var k=str.trim(); if(d[k]!=null) return str.replace(k,d[k]);
+      // 2) Coincidencia tolerante a espacios internos (saltos de línea/sangría).
+      var coreNorm=k.replace(/\s+/g,' ');
+      var nm=buildNorm(LANG);
+      if(nm[coreNorm]!=null){
+        // Conserva los espacios alrededor del núcleo original.
+        var lead=str.match(/^\s*/)[0], trail=str.match(/\s*$/)[0];
+        return lead+nm[coreNorm]+trail;
+      }
+      return s;
+    }
+    window.__t=tr; window.__lang=function(){return LANG;};
+    // Traductor de STRING HTML (para el PDF que se abre en otro documento).
+    function trHTML(str){ if(LANG==='es'||str==null) return str; var d=DICT[LANG]||{}; Object.keys(d).sort(function(a,b){return b.length-a.length;}).forEach(function(k){ str=str.split(k).join(d[k]); }); return str; }
+    window.__trHTML=trHTML;
+    function walkText(root){
+      var tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(!p)return NodeFilter.FILTER_REJECT;var t=p.nodeName;if(t==='SCRIPT'||t==='STYLE'||t==='NOSCRIPT'||t==='OPTION'||t==='TEXTAREA')return NodeFilter.FILTER_REJECT;
+        /* Saltar contenido manejado por el JS de la calculadora (lo traduce vía T()). */
+        if(p.closest&&p.closest('[data-nolang]'))return NodeFilter.FILTER_REJECT;
+        if(!n.nodeValue||!n.nodeValue.trim())return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});
+      var n; while(n=tw.nextNode()){ if(!orig.has(n))orig.set(n,n.nodeValue); var o=orig.get(n); var nv=(LANG==='es')?o:tr(o); if(n.nodeValue!==nv)n.nodeValue=nv; }
+    }
+    function walkAttrs(root){ root.querySelectorAll('[placeholder]').forEach(function(el){ if(el.__ph==null)el.__ph=el.getAttribute('placeholder'); el.setAttribute('placeholder', LANG==='es'?el.__ph:tr(el.__ph)); }); }
+    function applyLang(){ if(mo)mo.disconnect(); walkText(document.body); walkAttrs(document.body); document.documentElement.setAttribute('lang',LANG); document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-lang')===LANG);}); if(mo)mo.observe(document.body,{childList:true,subtree:true,characterData:true}); }
+    function setLang(l){ LANG=l; localStorage.setItem(STORE_KEY,l); applyLang(); /* Re-renderiza etiquetas/alertas dinámicas en el nuevo idioma. */ try{ if(typeof window.calcular==='function')window.calcular(); }catch(e){} }
+    function init(){ document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){b.addEventListener('click',function(){setLang(b.getAttribute('data-lang'));});}); mo=new MutationObserver(function(){ if(scheduled)return; scheduled=true; (window.requestAnimationFrame||setTimeout)(function(){scheduled=false;applyLang();},0); }); applyLang(); }
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+  })();
   </script>
 </body>
 

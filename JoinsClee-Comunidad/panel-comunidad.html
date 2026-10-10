@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Comunidad JoinsClee · Control de accesos GHL</title>
+<style>
+  /* ── Tokens ─────────────────────────────────────────────────────────── */
+  :root{
+    --bg:#0e1014; --surface:#151920; --surface-2:#1b212a; --line:#252d38;
+    --ink:#e8ecf2; --ink-2:#9aa6b6; --ink-3:#66717f;
+    --accent:#5b9dff; --danger:#e2564d; --warn:#e0a030; --ok:#3fa45b;
+    --r:10px; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+    padding:28px 20px 80px;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+
+  /* ── Cabecera ───────────────────────────────────────────────────────── */
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+  h1{font-size:20px;font-weight:650;letter-spacing:-.01em}
+  .sub{color:var(--ink-3);font-size:13px}
+  .bar{display:flex;gap:8px;align-items:center;margin:18px 0 26px;flex-wrap:wrap}
+
+  /* ── Controles ──────────────────────────────────────────────────────── */
+  button,.btn{
+    font:inherit;font-size:13px;font-weight:520;cursor:pointer;
+    background:var(--surface-2); color:var(--ink); border:1px solid var(--line);
+    border-radius:8px; padding:7px 13px; transition:background .12s,border-color .12s;
+  }
+  button:hover:not(:disabled){background:#232b36;border-color:#33404f}
+  button:disabled{opacity:.42;cursor:not-allowed}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#08111f}
+  button.primary:hover:not(:disabled){background:#74acff}
+  button.danger{background:transparent;border-color:#54302e;color:#ff8a82}
+  button.danger:hover:not(:disabled){background:#2a1917;border-color:var(--danger)}
+  button.sm{padding:5px 10px;font-size:12px}
+  input[type=password],input[type=text]{
+    font:inherit;font-size:13px;background:var(--surface);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:8px 11px;min-width:230px;
+  }
+  input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  label.toggle{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--ink-2);cursor:pointer;user-select:none}
+
+  /* ── Métricas ───────────────────────────────────────────────────────── */
+  .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;margin-bottom:26px}
+  .metric{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px}
+  .metric .n{font-size:24px;font-weight:640;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .metric .l{font-size:11.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.055em;margin-top:3px}
+  .metric.alert .n{color:var(--danger)}
+  .metric.warn  .n{color:var(--warn)}
+  .metric.good  .n{color:var(--ok)}
+
+  /* ── Secciones ──────────────────────────────────────────────────────── */
+  section{margin-bottom:30px}
+  h2{font-size:14px;font-weight:600;letter-spacing:.01em;margin-bottom:4px;display:flex;align-items:center;gap:9px}
+  h2 .count{
+    font-size:11px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--ink-2);border-radius:20px;padding:1px 8px;font-variant-numeric:tabular-nums;
+  }
+  h2.urgent .count{background:#2a1917;border-color:#54302e;color:#ff8a82}
+  .hint{color:var(--ink-3);font-size:12.5px;margin-bottom:12px;max-width:68ch}
+
+  /* ── Tarjetas de persona ────────────────────────────────────────────── */
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    padding:14px 16px;margin-bottom:9px;
+    display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+  }
+  .card.urgent{border-left:3px solid var(--danger)}
+  .card .who{flex:1 1 260px;min-width:0}
+  .card .nm{font-weight:560;font-size:14.5px}
+  .card .em{font-family:var(--mono);font-size:12px;color:var(--ink-2);word-break:break-all}
+  .card .meta{font-size:12px;color:var(--ink-3);margin-top:3px}
+  .card .acts{display:flex;gap:7px;flex-wrap:wrap}
+  .tag{
+    display:inline-block;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;
+    padding:2px 7px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);
+  }
+  .tag.churned,.tag.banned,.tag.missing{background:#2a1917;border-color:#54302e;color:#ff8a82}
+  .tag.cancelling,.tag.declined{background:#2b2314;border-color:#5a4720;color:#f0c46a}
+  .tag.active{background:#14251b;border-color:#255238;color:#7fd39b}
+  .tag.revoked{background:var(--surface-2);color:var(--ink-3)}
+  .warn-inline{color:var(--warn);font-size:12px}
+
+  /* ── Tabla ──────────────────────────────────────────────────────────── */
+  .scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+  th{
+    text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.055em;
+    color:var(--ink-3);padding:10px 13px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  td{padding:9px 13px;border-bottom:1px solid #1c2129;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+
+  /* ── Consola ────────────────────────────────────────────────────────── */
+  #log{
+    background:#0a0c10;border:1px solid var(--line);border-radius:var(--r);
+    padding:13px 15px;font-family:var(--mono);font-size:11.5px;line-height:1.65;
+    max-height:280px;overflow:auto;white-space:pre-wrap;word-break:break-word;color:var(--ink-2);
+  }
+  #log .e{color:#ff8a82} #log .o{color:#7fd39b} #log .w{color:#f0c46a} #log .t{color:var(--ink-3)}
+
+  .empty{color:var(--ink-3);font-size:13px;padding:16px 0;font-style:italic}
+  .banner{
+    border-radius:var(--r);padding:11px 15px;margin-bottom:18px;font-size:13px;
+    border:1px solid var(--line);background:var(--surface);
+  }
+  .banner.warn{background:#2b2314;border-color:#5a4720;color:#f0c46a}
+  .banner.err{background:#2a1917;border-color:#54302e;color:#ff8a82}
+  .gate{max-width:400px;margin:14vh auto 0;text-align:center}
+  .gate h1{margin-bottom:8px}
+  .gate p{color:var(--ink-3);font-size:13px;margin-bottom:22px}
+  .gate input{width:100%;margin-bottom:10px;min-width:0}
+  .gate button{width:100%;padding:10px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- ── Puerta ──────────────────────────────────────────────────────────── -->
+<div class="wrap gate" id="gate">
+  <h1>Comunidad JoinsClee</h1>
+  <p>Control de accesos de GoHighLevel</p>
+  <input type="text"     id="gUrl"   placeholder="https://xxxx.supabase.co" autocomplete="off">
+  <input type="password" id="gAnon"  placeholder="anon key" autocomplete="off">
+  <input type="password" id="gToken" placeholder="admin token" autocomplete="off">
+  <button class="primary" id="gGo">Entrar</button>
+  <p style="margin-top:14px;font-size:12px">Se guarda solo en este navegador. Nunca viaja en la URL.</p>
+</div>
+
+<!-- ── Panel ───────────────────────────────────────────────────────────── -->
+<div class="wrap" id="app" hidden>
+  <header>
+    <h1>Comunidad JoinsClee</h1>
+    <span class="sub">Skool → GoHighLevel · control de accesos</span>
+  </header>
+
+  <div class="bar">
+    <button class="primary" id="bRefresh">Actualizar</button>
+    <button id="bSync">Correr sync ahora</button>
+    <label class="toggle"><input type="checkbox" id="cDry" checked> Modo simulación</label>
+    <span style="flex:1"></span>
+    <button class="sm" id="bOut">Salir</button>
+  </div>
+
+  <div id="banners"></div>
+  <div class="metrics" id="metrics"></div>
+
+  <section>
+    <h2 id="hRevoke" class="urgent">Por revocar <span class="count" id="cRevoke">0</span></h2>
+    <p class="hint">
+      Ya perdieron el acceso a la comunidad. Revocar borra <em>todos</em> los usuarios de su
+      sub-cuenta de GHL — no solo el que se creó al darles el bono, porque si son admin pudieron
+      haber creado otros. La sub-cuenta en sí no se borra: queda sin acceso y sin costo.
+    </p>
+    <div id="lRevoke"></div>
+  </section>
+
+  <section>
+    <h2>Sin cuenta de GHL <span class="count" id="cProv">0</span></h2>
+    <p class="hint">
+      Miembros activos a los que todavía no se les entregó el bono. Aprovisionar crea su sub-cuenta
+      desde el snapshot y guarda el vínculo — ese vínculo es lo que después permite revocar.
+    </p>
+    <div id="lProv"></div>
+  </section>
+
+  <section>
+    <h2>Miembros <span class="count" id="cMem">0</span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th>Persona</th><th>Estado</th><th>Plan</th><th>Corte</th><th>Sub-cuenta GHL</th><th></th>
+        </tr></thead>
+        <tbody id="tMem"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Últimas corridas</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th>Cuándo</th><th>Estado</th><th>Activos</th><th>Cancelando</th><th>Baja</th><th>Encoladas</th><th>Detalle</th>
+        </tr></thead>
+        <tbody id="tRuns"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Consola</h2>
+    <div id="log"><span class="t">Listo.</span></div>
+  </section>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const K = 'jc_panel_cfg';
+  let cfg = null, data = null;
+
+  // ── Consola ───────────────────────────────────────────────────────────
+  const log = (msg, kind = '') => {
+    const el = $('log');
+    const t = new Date().toLocaleTimeString('es-CO', { hour12: false });
+    const line = document.createElement('div');
+    line.innerHTML = `<span class="t">${t}</span> <span class="${kind}"></span>`;
+    line.lastElementChild.textContent = msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  };
+
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+
+  // Intl mete "de" entre las partes ("24 de ago de 26"), que dentro de una
+  // frase se lee mal. Se arma a mano: "24 ago 2026".
+  const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const fecha = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+  };
+  const fechaHora = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${d.getDate()} ${MESES[d.getMonth()]} · ${hh}:${mm}`;
+  };
+  const nombre = (m) => [m.first_name, m.last_name].filter(Boolean).join(' ').trim() || m.skool_email || '—';
+
+  // ── API ───────────────────────────────────────────────────────────────
+  async function api(fn, body) {
+    const r = await fetch(`${cfg.url}/functions/v1/${fn}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: cfg.anon,
+        Authorization: `Bearer ${cfg.anon}`,
+        'x-admin-token': cfg.token,
+      },
+      body: JSON.stringify(body || {}),
+    });
+    const j = await r.json().catch(() => ({ ok: false, reason: 'respuesta_no_json' }));
+    if (r.status === 401) { log('Token de admin rechazado.', 'e'); salir(); throw new Error('401'); }
+    return j;
+  }
+
+  // ── Puerta ────────────────────────────────────────────────────────────
+  function entrar() {
+    const url = $('gUrl').value.trim().replace(/\/+$/, '');
+    const anon = $('gAnon').value.trim();
+    const token = $('gToken').value.trim();
+    if (!url || !anon || !token) { alert('Faltan datos.'); return; }
+    cfg = { url, anon, token };
+    localStorage.setItem(K, JSON.stringify(cfg));
+    $('gate').hidden = true; $('app').hidden = false;
+    cargar();
+  }
+  function salir() {
+    localStorage.removeItem(K); cfg = null;
+    $('app').hidden = true; $('gate').hidden = false;
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────
+  function banners() {
+    const b = $('banners'); b.innerHTML = '';
+    const h = data?.health || {};
+    const add = (cls, html) => { const d = document.createElement('div'); d.className = 'banner ' + cls; d.innerHTML = html; b.appendChild(d); };
+
+    if (data?.config?.dry_run_default) {
+      add('warn', '<strong>Modo simulación activo en el servidor.</strong> Nada se borra en GHL hasta poner <code>DRY_RUN=false</code> en los secrets.');
+    }
+    if (!data?.config?.ghl_configurado) {
+      add('err', '<strong>GHL no está configurado.</strong> Faltan <code>GHL_AGENCY_PIT</code> o <code>GHL_COMPANY_ID</code>: no se puede revocar ni aprovisionar.');
+    }
+    if (h.hubo_abort_48h) {
+      add('err', '<strong>El sync abortó en las últimas 48 h.</strong> Revisa las alertas antes de fiarte de estos datos.');
+    }
+    if (h.ultimo_sync_ok) {
+      const horas = (Date.now() - new Date(h.ultimo_sync_ok)) / 3.6e6;
+      if (horas > 30) add('warn', `<strong>El último sync correcto fue hace ${Math.round(horas)} horas.</strong> El cron debería correr a diario.`);
+    } else {
+      add('warn', '<strong>Nunca ha corrido un sync correcto.</strong> Dispara uno con «Correr sync ahora».');
+    }
+    (data?.alertas || []).slice(0, 2).forEach((a) => {
+      if (new Date(a.created_at) > Date.now() - 48 * 3.6e6) {
+        add(a.severity === 'error' ? 'err' : 'warn', `<strong>${esc(a.kind)}</strong> · ${esc(a.message)}`);
+      }
+    });
+  }
+
+  function metrics() {
+    const h = data?.health || {};
+    const cells = [
+      ['Activos', h.activos ?? 0, 'good'],
+      ['Cancelando', h.cancelando ?? 0, (h.cancelando > 0 ? 'warn' : '')],
+      ['Dados de baja', h.dados_de_baja ?? 0, (h.dados_de_baja > 0 ? 'alert' : '')],
+      ['Sin cuenta GHL', h.sin_cuenta_ghl ?? 0, (h.sin_cuenta_ghl > 0 ? 'warn' : '')],
+      ['Por revocar', h.revocaciones_pendientes ?? 0, (h.revocaciones_pendientes > 0 ? 'alert' : '')],
+    ];
+    $('metrics').innerHTML = cells.map(([l, n, c]) =>
+      `<div class="metric ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+  }
+
+  const MOTIVO = {
+    churned: 'Se dio de baja en Skool',
+    banned: 'Expulsado de la comunidad',
+  };
+
+  function revocaciones() {
+    const list = data?.pendientes || [];
+    $('cRevoke').textContent = list.length;
+    $('hRevoke').classList.toggle('urgent', list.length > 0);
+    const box = $('lRevoke');
+
+    if (!list.length) { box.innerHTML = '<p class="empty">Nadie pendiente. Todos los que están fuera ya fueron revocados.</p>'; return; }
+
+    box.innerHTML = list.map((p) => {
+      const motivo = MOTIVO[p.reason] || `Desapareció de Skool en ${p.missing_streak} barridos seguidos`;
+      const sinLoc = !p.ghl_location_id;
+      return `<div class="card urgent" data-rev="${p.revocation_id}">
+        <div class="who">
+          <div class="nm">${esc(nombre(p))} <span class="tag ${esc(p.member_status)}">${esc(p.member_status)}</span></div>
+          <div class="em">${esc(p.skool_email)}</div>
+          <div class="meta">${esc(motivo)} · detectado ${fecha(p.detected_at)}${p.churned_at ? ` · baja ${fecha(p.churned_at)}` : ''}</div>
+          ${sinLoc
+            ? '<div class="meta warn-inline">⚠ Sin sub-cuenta vinculada — hay que vincularla antes de poder revocar.</div>'
+            : `<div class="meta">Sub-cuenta <code>${esc(p.ghl_location_id)}</code></div>`}
+        </div>
+        <div class="acts">
+          ${sinLoc
+            ? `<button class="sm" data-a="link" data-m="${p.member_id}">Vincular sub-cuenta</button>`
+            : `<button class="sm" data-a="preview" data-loc="${esc(p.ghl_location_id)}">Ver qué se borra</button>
+               <button class="sm danger" data-a="revoke" data-rev="${p.revocation_id}">Revocar</button>`}
+          <button class="sm" data-a="dismiss" data-rev="${p.revocation_id}">Descartar</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function aprovisionar() {
+    const list = (data?.miembros || []).filter((m) => m.status === 'active' && !m.ghl_location_id);
+    $('cProv').textContent = list.length;
+    const box = $('lProv');
+    if (!list.length) { box.innerHTML = '<p class="empty">Todos los activos ya tienen su cuenta.</p>'; return; }
+
+    box.innerHTML = list.map((m) => `<div class="card">
+      <div class="who">
+        <div class="nm">${esc(nombre(m))}</div>
+        <div class="em">${esc(m.skool_email)}</div>
+        <div class="meta">${m.tier ? esc(m.tier) : 'sin plan'}</div>
+      </div>
+      <div class="acts">
+        <button class="sm primary" data-a="provision" data-m="${m.id}">Crear su cuenta</button>
+        <button class="sm" data-a="link" data-m="${m.id}">Ya la tiene · vincular</button>
+      </div>
+    </div>`).join('');
+  }
+
+  function miembros() {
+    const list = data?.miembros || [];
+    $('cMem').textContent = list.length;
+    $('tMem').innerHTML = list.map((m) => `<tr>
+      <td><div style="font-weight:540">${esc(nombre(m))}</div><div class="mono">${esc(m.skool_email)}</div></td>
+      <td><span class="tag ${esc(m.status)}">${esc(m.status)}</span></td>
+      <td>${m.tier ? esc(m.tier) : '—'}</td>
+      <td>${fecha(m.churn_at || m.churned_at)}</td>
+      <td class="mono">${m.ghl_location_id ? esc(m.ghl_location_id) : '<span style="color:var(--warn)">sin vincular</span>'}</td>
+      <td><button class="sm" data-a="link" data-m="${m.id}">${m.ghl_location_id ? 'Cambiar' : 'Vincular'}</button></td>
+    </tr>`).join('') || '<tr><td colspan="6" class="empty">Sin datos. Corre un sync.</td></tr>';
+  }
+
+  function corridas() {
+    const list = data?.corridas || [];
+    $('tRuns').innerHTML = list.map((r) => {
+      const estado = r.aborted ? '<span style="color:var(--danger)">abortado</span>'
+        : r.ok ? '<span style="color:var(--ok)">ok</span>'
+        : '<span style="color:var(--warn)">incompleto</span>';
+      return `<tr>
+        <td>${fechaHora(r.started_at)}${r.dry_run ? ' <span class="tag">sim</span>' : ''}</td>
+        <td>${estado}</td>
+        <td>${r.active_count ?? '—'}</td>
+        <td>${r.cancelling_count ?? '—'}</td>
+        <td>${r.churned_count ?? '—'}</td>
+        <td>${r.queued_revokes ?? 0}</td>
+        <td class="mono">${esc(r.abort_reason || '')}</td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="7" class="empty">Todavía no ha corrido.</td></tr>';
+  }
+
+  function render() { banners(); metrics(); revocaciones(); aprovisionar(); miembros(); corridas(); }
+
+  // ── Acciones ──────────────────────────────────────────────────────────
+  async function cargar() {
+    log('Cargando…');
+    try {
+      data = await api('ghl-revoke', { action: 'list' });
+      if (!data.ok) { log('No se pudo cargar: ' + (data.reason || '?'), 'e'); return; }
+      render();
+      log(`${data.miembros?.length || 0} miembros · ${data.pendientes?.length || 0} por revocar`, 'o');
+    } catch (e) { log('Error: ' + e.message, 'e'); }
+  }
+
+  async function correrSync() {
+    const dry = $('cDry').checked;
+    log(`Disparando sync${dry ? ' (simulación)' : ''}… puede tardar un minuto.`, 'w');
+    $('bSync').disabled = true;
+    try {
+      const r = await fetch(`${cfg.url}/functions/v1/skool-ghl-sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: cfg.anon, Authorization: `Bearer ${cfg.anon}` },
+        body: JSON.stringify({ dry_run: dry, source: 'panel' }),
+      });
+      const j = await r.json().catch(() => null);
+      if (!j) { log('El sync no devolvió JSON. Revisa los logs de la Edge Function.', 'e'); }
+      else if (j.aborted) { log(`ABORTÓ (${j.reason}): ${j.message}`, 'e'); }
+      else if (j.ok) {
+        log(`Sync ok · activos ${j.counts?.active ?? '?'} · nuevos ${j.nuevos} · encoladas ${j.revocaciones_encoladas}`, 'o');
+      } else { log('Sync falló: ' + JSON.stringify(j).slice(0, 300), 'e'); }
+      await cargar();
+    } catch (e) {
+      log('Error al disparar el sync: ' + e.message + '  (¿la función exige JWT? despliégala con --no-verify-jwt)', 'e');
+    } finally { $('bSync').disabled = false; }
+  }
+
+  async function onClick(ev) {
+    const btn = ev.target.closest('button[data-a]');
+    if (!btn) return;
+    const a = btn.dataset.a;
+    btn.disabled = true;
+    try {
+      if (a === 'preview') {
+        const r = await api('ghl-revoke', { action: 'preview', ghl_location_id: btn.dataset.loc });
+        if (!r.ok) { log('No se pudo consultar GHL: ' + JSON.stringify(r).slice(0, 250), 'e'); return; }
+        log(`Se borrarían ${r.usuarios.length} usuario(s):`, 'w');
+        r.usuarios.forEach((u) => log(`   · ${u.email || '(sin email)'} — ${u.nombre || ''} ${u.rol ? '[' + u.rol + ']' : ''}`));
+      }
+
+      if (a === 'revoke') {
+        const dry = $('cDry').checked;
+        if (!dry && !confirm('Esto BORRA todos los usuarios de esa sub-cuenta en GoHighLevel.\n\nNo hay endpoint de deshacer. ¿Continuar?')) return;
+        const by = localStorage.getItem('jc_panel_by') || prompt('¿Quién confirma esta revocación?') || 'panel';
+        localStorage.setItem('jc_panel_by', by);
+        const r = await api('ghl-revoke', { action: 'revoke', revocation_id: Number(btn.dataset.rev), by, dry_run: dry });
+        log(r.ok ? `${dry ? '[simulación] ' : ''}Revocado ${r.email} · ${r.usuarios_borrados}/${r.usuarios_encontrados} usuario(s)` : `Falló: ${r.reason || ''} ${(r.errores || []).join(' | ')}`, r.ok ? 'o' : 'e');
+        if (r.location_action) log('   ' + r.location_action, 'w');
+        await cargar();
+      }
+
+      if (a === 'dismiss') {
+        const note = prompt('¿Por qué se descarta? (queda en la auditoría)');
+        if (note === null) return;
+        const by = localStorage.getItem('jc_panel_by') || 'panel';
+        const r = await api('ghl-revoke', { action: 'dismiss', revocation_id: Number(btn.dataset.rev), by, note });
+        log(r.ok ? 'Descartada. El miembro vuelve a activo.' : 'No se pudo descartar.', r.ok ? 'o' : 'e');
+        await cargar();
+      }
+
+      if (a === 'link') {
+        const loc = prompt('locationId de la sub-cuenta en GHL:');
+        if (!loc) return;
+        const email = prompt('Email con el que se creó el usuario en GHL (opcional, se detecta solo si se deja vacío):') || '';
+        const r = await api('ghl-revoke', { action: 'link', member_id: Number(btn.dataset.m), ghl_location_id: loc.trim(), ghl_email: email.trim() });
+        log(r.ok ? `Vinculado · ${r.usuarios_encontrados} usuario(s) en esa sub-cuenta` : 'No se pudo vincular.', r.ok ? 'o' : 'e');
+        await cargar();
+      }
+
+      if (a === 'provision') {
+        const dry = $('cDry').checked;
+        if (!dry && !confirm('Se creará una sub-cuenta real en GoHighLevel. ¿Continuar?')) return;
+        const r = await api('ghl-provision', { action: 'provision', member_id: Number(btn.dataset.m), dry_run: dry });
+        const res = r.resultado || {};
+        log(r.ok ? `${dry ? '[simulación] ' : ''}${res.email} → ${res.ghl_location_id || res.error || 'ok'}` : `Falló: ${res.error || r.reason}`, r.ok ? 'o' : 'e');
+        await cargar();
+      }
+    } catch (e) {
+      log('Error: ' + e.message, 'e');
+    } finally { btn.disabled = false; }
+  }
+
+  // ── Arranque ──────────────────────────────────────────────────────────
+  $('gGo').onclick = entrar;
+  ['gUrl', 'gAnon', 'gToken'].forEach((id) =>
+    $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') entrar(); }));
+  $('bRefresh').onclick = cargar;
+  $('bSync').onclick = correrSync;
+  $('bOut').onclick = salir;
+  document.addEventListener('click', onClick);
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(K) || 'null');
+    if (saved?.url && saved?.anon && saved?.token) {
+      cfg = saved; $('gate').hidden = true; $('app').hidden = false; cargar();
+    }
+  } catch { /* sin sesión guardada */ }
+})();
+</script>
+</body>
+</html>

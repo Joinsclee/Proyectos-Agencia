@@ -1066,7 +1066,7 @@
                     <p style="font-size:0.72rem;color:#888;margin-top:6px;line-height:1.4;">💡 <strong>Recomendación:</strong> usa como mínimo el valor hora del salario mínimo de tu país para asegurarte de no trabajar por debajo del costo mínimo.</p>
                 </div>
                 <div class="input-group" style="margin-top: 1rem;">
-                    <label id="label-labor-time">Tiempo por Lote</label>
+                    <label id="label-labor-time">Tiempo</label>
                     <div style="display:flex; gap:0.5rem; align-items:center;">
                         <input type="number" id="labor-time" value="1" oninput="calc()" style="flex:1;">
                         <select id="labor-time-unit" onchange="onLaborTimeUnitChange()" style="padding:0.8rem 0.5rem; border:1px solid var(--border-color); border-radius:8px; font-family:'Inter',sans-serif; font-size:0.95rem; background:#fafafa; cursor:pointer;">
@@ -1140,7 +1140,7 @@
                     <span>Margen de ganancia</span>
                     <span class="margin-slider-value" id="margin-slider-display">50%</span>
                 </div>
-                <input type="range" class="margin-slider" id="margin-slider" min="0" max="99" value="50" oninput="onMarginSlider()" style="background: linear-gradient(to right, #e07c5a 0%, #f0c040 25%, #9caf88 50%, #2d7a2d 100%);">
+                <input type="range" class="margin-slider" id="margin-slider" min="0" max="500" value="50" oninput="onMarginSlider()" style="background: linear-gradient(to right, #e07c5a 0%, #f0c040 5%, #9caf88 10%, #2d7a2d 20%, #2d7a2d 100%);">
             </div>
 
             <!-- PVP GRANDE DESTACADO -->
@@ -1276,7 +1276,7 @@
                 btnAddActives.textContent = 'AÑADIR ADITIVO';
                 if (effHelp) effHelp.textContent = 'Considera mermas de curado y desperdicio en utensilios. Típico 80-85%.';
                 if (labelPvpSec) labelPvpSec.textContent = 'PVP por Kg';
-                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo por Kg';
+                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo';
             } else {
                 oilsTitle.innerHTML = '<span class="dot"></span> Ingredientes y Materias Primas';
                 activesTitle.innerHTML = '<span class="dot"></span> Activos Cosméticos · Conservantes · Fragancias / AAEE';
@@ -1284,7 +1284,7 @@
                 btnAddActives.textContent = 'AÑADIR ACTIVO';
                 if (effHelp) effHelp.textContent = 'Considera mermas por transferencia y desperdicio. Típico 90-95%.';
                 if (labelPvpSec) labelPvpSec.textContent = 'Costo Total/Unidad';
-                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo por Lote';
+                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo';
             }
             calc();
         }
@@ -1466,6 +1466,9 @@
                 // ── jsPDF setup ──────────────────────────────────────────────
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                // i18n del PDF: T() traduce fragmentos; el parche traduce textos exactos pasados a pdf.text().
+                const T = window.__t || function (s) { return s; };
+                { const _pt = pdf.text.bind(pdf); pdf.text = function (s) { const a = [].slice.call(arguments); if (typeof s === 'string') a[0] = T(s); return _pt.apply(pdf, a); }; }
                 const W  = 210;
                 const ML = 14;
                 const MR = 14;
@@ -1505,7 +1508,7 @@
                         pdf.setTextColor(...FGRAY);
                         pdf.setFontSize(7);
                         pdf.setFont('helvetica', 'normal');
-                        pdf.text(`${nameDisplay}  —  continuacion`, ML + 2, 6.5);
+                        pdf.text(`${nameDisplay}  —  ${T('continuacion')}`, ML + 2, 6.5);
                         pdf.setTextColor(...WHITE);
                         pdf.setFontSize(6.5);
                         pdf.text('Lina Toro | Calculadora de Precios', W - MR, 6.5, { align: 'right' });
@@ -1532,7 +1535,7 @@
                 pdf.setFontSize(8.5);
                 pdf.setFont('helvetica', 'normal');
                 pdf.setTextColor(...FGRAY);
-                pdf.text(`Lina Toro  |  Recetas de ${productTypeLabel}`, ML, 31);
+                pdf.text(`Lina Toro  |  ${T('Recetas de')} ${T(productTypeLabel)}`, ML, 31);
 
                 pdf.setFontSize(7.5);
                 pdf.text(dateStr, W - MR, 11, { align: 'right' });
@@ -1542,7 +1545,7 @@
                 pdf.setTextColor(...WHITE);
                 pdf.setFontSize(6);
                 pdf.setFont('helvetica', 'bold');
-                pdf.text(productTypeLabel.toUpperCase(), W - MR - 13, 18.2, { align: 'center' });
+                pdf.text(T(productTypeLabel).toUpperCase(), W - MR - 13, 18.2, { align: 'center' });
 
                 Y = 42;
 
@@ -1599,7 +1602,7 @@
                         pdf.setFillColor(...DARK); pdf.rect(0, 0, W, 10, 'F');
                         pdf.setFillColor(...GREEN); pdf.rect(0, 0, 3, 10, 'F');
                         pdf.setTextColor(...FGRAY); pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
-                        pdf.text(`${nameDisplay}  —  continuacion`, ML + 2, 6.5);
+                        pdf.text(`${nameDisplay}  —  ${T('continuacion')}`, ML + 2, 6.5);
                         rowY = 16;
                         Y = rowY;
                     }
@@ -1654,7 +1657,7 @@
                     pdf.setTextColor(...GREEN);
                     pdf.setFontSize(7);
                     pdf.setFont('helvetica', 'bold');
-                    pdf.text(`${sec.label.toUpperCase()}  —  ${sPct}% del lote`, ML + 2, ry + 3.8);
+                    pdf.text(`${T(sec.label.toUpperCase())}  —  ${sPct}% ${T('del lote')}`, ML + 2, ry + 3.8);
                     pdf.setDrawColor(200, 220, 190);
                     pdf.setLineWidth(0.1);
                     pdf.line(ML, ry + 5.5, ML + CW, ry + 5.5);
@@ -1704,7 +1707,7 @@
                 const laborTimeDisplay = laborTimeUnitPDF === 'minutos' ? `${laborTimeRaw} min` : `${laborTime.toFixed(1)} hr`;
                 const moRows = [
                     { l: 'Valor por hora', v: `${f(laborRate)}/hr`, shade: true },
-                    { l: isJaboneria ? 'Tiempo por kg' : 'Tiempo por lote',  v: laborTimeDisplay,  shade: false },
+                    { l: 'Tiempo',  v: laborTimeDisplay,  shade: false },
                 ];
                 let moY = moStartY;
                 moRows.forEach(r => {
@@ -1755,7 +1758,7 @@
                 Y = Math.max(moY, gaY) + 8;
 
                 // ── COSTOS POR UNIDAD ────────────────────────────────────────
-                sectionTitle(`Costos por Unidad (${d.unitSize} g)`);
+                sectionTitle(`${T('Costos por Unidad')} (${d.unitSize} g)`);
                 Y = tableRow(['Packaging individual', f(unitPkg)], [half, -half], Y, LGRAY);
                 Y = tableRow(['Otros costos unitarios', f(unitExtra)], [half, -half], Y);
                 Y += 8;
@@ -1858,7 +1861,7 @@
                 const badgeText = currentMarginPct >= 50 ? 'Excelente rentabilidad' : currentMarginPct >= 30 ? 'Buena rentabilidad' : currentMarginPct > 0 ? 'Rentabilidad ajustada' : 'Sin margen';
                 pdf.setTextColor(180, 200, 170);
                 pdf.setFontSize(6.5); pdf.setFont('helvetica', 'normal');
-                pdf.text(`margen ${currentMarginPct}%  ·  ${badgeText}`, ML + CW / 2, Y + 21, { align: 'center' });
+                pdf.text(`${T('margen')} ${currentMarginPct}%  ·  ${T(badgeText)}`, ML + CW / 2, Y + 21, { align: 'center' });
                 Y += 28;
 
                 const cardW = CW / 5 - 1.5;
@@ -1927,10 +1930,10 @@
                 // ── ANÁLISIS DE RENTABILIDAD ──────────────────────────────────
                 checkPage(20);
                 const profitCfg = d.margen >= 50
-                    ? { barColor: [60, 140, 60],   bgColor: [235, 250, 235], label: 'EXCELENTE RENTABILIDAD',         text: `De cada unidad vendida, el ${d.margen}% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.` }
+                    ? { barColor: [60, 140, 60],   bgColor: [235, 250, 235], label: 'EXCELENTE RENTABILIDAD',         text: T('De cada unidad vendida, el ') + d.margen + T('% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.') }
                     : d.margen >= 30
-                    ? { barColor: [180, 120, 20],  bgColor: [255, 248, 230], label: 'MARGEN ACEPTABLE - PUEDE MEJORAR', text: `De cada unidad vendida, el ${d.margen}% es ganancia. Evalua subir el precio o reducir costos.` }
-                    : { barColor: [180, 50, 50],   bgColor: [255, 240, 240], label: 'MARGEN BAJO',                    text: `Solo el ${d.margen}% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.` };
+                    ? { barColor: [180, 120, 20],  bgColor: [255, 248, 230], label: 'MARGEN ACEPTABLE - PUEDE MEJORAR', text: T('De cada unidad vendida, el ') + d.margen + T('% es ganancia. Evalua subir el precio o reducir costos.') }
+                    : { barColor: [180, 50, 50],   bgColor: [255, 240, 240], label: 'MARGEN BAJO',                    text: T('Solo el ') + d.margen + T('% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.') };
 
                 pdf.setFillColor(...profitCfg.bgColor);
                 pdf.rect(ML, Y, CW, 16, 'F');
@@ -1938,7 +1941,7 @@
                 pdf.rect(ML, Y, 3, 16, 'F');
                 pdf.setTextColor(...profitCfg.barColor);
                 pdf.setFontSize(8.5); pdf.setFont('helvetica', 'bold');
-                pdf.text(`${d.margen}%  —  ${profitCfg.label}`, ML + 6, Y + 6.5);
+                pdf.text(`${d.margen}%  —  ${T(profitCfg.label)}`, ML + 6, Y + 6.5);
                 pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
                 pdf.text(profitCfg.text, ML + 6, Y + 12);
                 Y += 20;
@@ -1958,10 +1961,10 @@
                 pdf.text('Lina Toro', ML, Y + 5.5);
                 pdf.setTextColor(...DGRAY);
                 pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
-                pdf.text(`Recetas de ${productTypeLabel}`, ML, Y + 10);
+                pdf.text(`${T('Recetas de')} ${T(productTypeLabel)}`, ML, Y + 10);
                 pdf.setTextColor(...FGRAY);
                 pdf.setFontSize(6.5);
-                pdf.text(`Informe generado el ${dateStr}`, W / 2, Y + 5.5, { align: 'center' });
+                pdf.text(`${T('Informe generado el')} ${dateStr}`, W / 2, Y + 5.5, { align: 'center' });
                 pdf.text('Documento confidencial — uso interno', W / 2, Y + 10, { align: 'center' });
                 pdf.setTextColor(...GREEN);
                 pdf.setFontSize(7);
@@ -2010,6 +2013,194 @@
             if (document.readyState !== 'loading') applyFullBleed();
         })();
     </script>
+
+<!-- ════════ i18n · selector de idioma (ES / EN / PT) ════════ -->
+<style>
+  #lang-switch{position:fixed;top:10px;right:10px;z-index:99999;display:flex;gap:3px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:3px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-family:'Inter',system-ui,sans-serif;}
+  #lang-switch .lang-btn{border:none;background:transparent;color:#777;font-weight:700;font-size:12px;letter-spacing:.04em;padding:5px 10px;border-radius:999px;cursor:pointer;transition:all .15s;}
+  #lang-switch .lang-btn:hover{color:#333;}
+  #lang-switch .lang-btn.active{background:#9caf88;color:#fff;}
+  @media print{#lang-switch{display:none!important;}}
+</style>
+<div id="lang-switch" class="no-print" aria-label="Idioma / Language">
+  <button type="button" data-lang="es" class="lang-btn">ES</button>
+  <button type="button" data-lang="en" class="lang-btn">EN</button>
+  <button type="button" data-lang="pt" class="lang-btn">PT</button>
+</div>
+<script>
+(function(){
+  // Diccionario por idioma, indexado por el texto fuente en español.
+  // Español = original (no se traduce). Solo EN y PT.
+  var DICT = {
+    en: {
+      "Calculadora de Precios":"Pricing Calculator",
+      "Configuración del Lote":"Batch Setup",
+      "Jabonería":"Soapmaking","Cosmética":"Cosmetics",
+      "Ingredientes y Materias Primas":"Ingredients & Raw Materials",
+      "Activos Cosméticos · Conservantes · Fragancias / AAEE":"Cosmetic Actives · Preservatives · Fragrances / EOs",
+      "AÑADIR INGREDIENTE":"ADD INGREDIENT","AÑADIR ACTIVO":"ADD ACTIVE","AÑADIR ACEITE":"ADD OIL","AÑADIR ADITIVO":"ADD ADDITIVE","AÑADIR GASTO":"ADD EXPENSE",
+      "Ingrediente":"Ingredient","Cant. comprada":"Qty purchased","Unidad comprada":"Unit purchased","Precio total pagado":"Total price paid",
+      "Gramos de la receta (Lote total)":"Recipe grams (Total batch)","Costo receta":"Recipe cost","Gramos receta":"Recipe grams",
+      "Valor":"Value","Concepto":"Item","Totales":"Totals","Valor Hora":"Hourly Rate",
+      "Eficiencia de Proceso (%)":"Process Efficiency (%)",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80%.":"Account for curing loss and waste on tools. Typical 80%.",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80-85%.":"Account for curing loss and waste on tools. Typical 80-85%.",
+      "Considera mermas por transferencia y desperdicio. Típico 90-95%.":"Account for transfer loss and waste. Typical 90-95%.",
+      "Peso por Unidad (g)":"Weight per Unit (g)","Unidades producidas por lote":"Units produced per batch",
+      "¿Cuántas unidades salieron de este lote? Si lo dejas en 0, se calculará automáticamente con el peso por unidad.":"How many units came out of this batch? If you leave it at 0, it's auto-calculated from the weight per unit.",
+      "Si dejas 0, se calcula automáticamente: (Lote × Eficiencia) ÷ Peso unidad":"If you leave 0, it's auto-calculated: (Batch × Efficiency) ÷ Unit weight",
+      "Mano de Obra":"Labor","Recomendación:":"Recommendation:",
+      "usa como mínimo el valor hora del salario mínimo de tu país para asegurarte de no trabajar por debajo del costo mínimo.":"use at least your country's minimum hourly wage so you never work below the minimum cost.",
+      "Tiempo":"Time","Horas":"Hours","Minutos":"Minutes",
+      "Otros Gastos Directos":"Other Direct Expenses","Detalle por Unidad":"Per-Unit Detail",
+      "Packaging Individual":"Individual Packaging","Otros Costos Unitarios":"Other Unit Costs",
+      "Costos del Lote":"Batch Costs","Costo Total del Lote":"Total Batch Cost","Costo por Unidad":"Cost per Unit","Unidades del Lote":"Batch Units",
+      "Margen y Precio de Venta":"Margin & Selling Price","Margen de ganancia":"Profit margin",
+      "Precio de Venta Sugerido por Unidad (PVP)":"Suggested Selling Price per Unit (SRP)",
+      "Precio Mín/Unidad (30%)":"Min Price/Unit (30%)","PVP por Kg":"SRP per Kg","Costo Total/Unidad":"Total Cost/Unit",
+      "Ganancia Neta / Unidad":"Net Profit / Unit","Ganancia Total del Lote":"Total Batch Profit",
+      "DESCARGAR INFORME TÉCNICO PDF":"DOWNLOAD TECHNICAL REPORT PDF",
+      "Gramos":"Grams","Libra":"Pound","Onzas":"Ounces","Litro":"Liter","Mililitros":"Milliliters","Galón":"Gallon",
+      "Desglose de Ingredientes":"Ingredient Breakdown","Costo/Unidad":"Cost/Unit","Costo Total/Unidad":"Total Cost/Unit",
+      "Estructura de Costos por Kilo Producido":"Cost Structure per Kilo Produced","Estructura de Costos por Unidad":"Cost Structure per Unit",
+      "Ganancia / Lote":"Profit / Batch","Ganancia / Unidad":"Profit / Unit","Ganancia Total Lote":"Total Batch Profit","Ganancia del Lote":"Batch Profit",
+      "Gastos Operativos por unidad":"Operating Expenses per unit","Ingredientes por unidad":"Ingredients per unit",
+      "Mano de Obra Directa":"Direct Labor","Mano de Obra por unidad":"Labor per unit","Precio Min/Unidad":"Min Price/Unit",
+      "Sin margen de ganancia":"No profit margin","Total Mano de Obra":"Total Labor","Total por Kilo":"Total per Kilo","Valor por hora":"Hourly value",
+      "Composicion del lote con porcentajes y costos individuales por ingrediente.":"Batch composition with percentages and individual costs per ingredient.",
+      "del lote":"of the batch","Recetas de":"Recipes —","continuacion":"continued","Costos por Unidad":"Costs per Unit",
+      "Jaboneria":"Soapmaking","Cosmetica":"Cosmetics",
+      "INFORME TECNICO DE COSTEO":"TECHNICAL COSTING REPORT","COSTO TOTAL POR UNIDAD":"TOTAL COST PER UNIT",
+      "COSTE DE FABRICACION / KILO":"MANUFACTURING COST / KILO","GASTOS OPERATIVOS":"OPERATING EXPENSES","TOTAL INGREDIENTES":"TOTAL INGREDIENTS",
+      "CONCEPTO":"ITEM","VALOR":"VALUE","% S/FAB.":"% OF MFG.","% LOTE":"% BATCH","PESO UNIDAD":"UNIT WEIGHT","UNIDADES LOTE":"BATCH UNITS","LOTE TOTAL":"TOTAL BATCH",
+      "PRECIO":"PRICE","COSTO":"COST","MANO DE OBRA":"LABOR","PRECIO DE VENTA SUGERIDO POR UNIDAD (PVP)":"SUGGESTED SELLING PRICE PER UNIT (SRP)",
+      "Documento confidencial — uso interno":"Confidential document — internal use","Total Gastos":"Total Expenses",
+      "Informe generado el":"Report generated on","margen":"margin",
+      "Excelente rentabilidad":"Excellent profitability","Buena rentabilidad":"Good profitability","Rentabilidad ajustada":"Tight profitability","Sin margen":"No margin",
+      "EXCELENTE RENTABILIDAD":"EXCELLENT PROFITABILITY","MARGEN ACEPTABLE - PUEDE MEJORAR":"ACCEPTABLE MARGIN - CAN IMPROVE","MARGEN BAJO":"LOW MARGIN",
+      "De cada unidad vendida, el ":"Of each unit sold, ","% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.":"% is net profit. Your product has very healthy profitability.","% es ganancia. Evalua subir el precio o reducir costos.":"% is profit. Consider raising the price or cutting costs.","Solo el ":"Only ","% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.":"% of the selling price is profit. Review your cost structure or raise the price.",
+      "Cant.":"Qty","Concepto de gasto...":"Expense item...","Nombre de tu receta artesanal...":"Name your artisan recipe...","Nuevo ingrediente...":"New ingredient...","Precio":"Price"
+    },
+    pt: {
+      "Calculadora de Precios":"Calculadora de Preços",
+      "Configuración del Lote":"Configuração do Lote",
+      "Jabonería":"Saboaria","Cosmética":"Cosmética",
+      "Ingredientes y Materias Primas":"Ingredientes e Matérias-Primas",
+      "Activos Cosméticos · Conservantes · Fragancias / AAEE":"Ativos Cosméticos · Conservantes · Fragrâncias / OEs",
+      "AÑADIR INGREDIENTE":"ADICIONAR INGREDIENTE","AÑADIR ACTIVO":"ADICIONAR ATIVO","AÑADIR ACEITE":"ADICIONAR ÓLEO","AÑADIR ADITIVO":"ADICIONAR ADITIVO","AÑADIR GASTO":"ADICIONAR DESPESA",
+      "Ingrediente":"Ingrediente","Cant. comprada":"Qtd. comprada","Unidad comprada":"Unidade comprada","Precio total pagado":"Preço total pago",
+      "Gramos de la receta (Lote total)":"Gramas da receita (Lote total)","Costo receta":"Custo receita","Gramos receta":"Gramas receita",
+      "Valor":"Valor","Concepto":"Item","Totales":"Totais","Valor Hora":"Valor Hora",
+      "Eficiencia de Proceso (%)":"Eficiência do Processo (%)",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80%.":"Considere perdas de cura e desperdício nos utensílios. Típico 80%.",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80-85%.":"Considere perdas de cura e desperdício nos utensílios. Típico 80-85%.",
+      "Considera mermas por transferencia y desperdicio. Típico 90-95%.":"Considere perdas por transferência e desperdício. Típico 90-95%.",
+      "Peso por Unidad (g)":"Peso por Unidade (g)","Unidades producidas por lote":"Unidades produzidas por lote",
+      "¿Cuántas unidades salieron de este lote? Si lo dejas en 0, se calculará automáticamente con el peso por unidad.":"Quantas unidades saíram deste lote? Se deixar em 0, será calculado automaticamente pelo peso por unidade.",
+      "Si dejas 0, se calcula automáticamente: (Lote × Eficiencia) ÷ Peso unidad":"Se deixar 0, calcula-se automaticamente: (Lote × Eficiência) ÷ Peso unidade",
+      "Mano de Obra":"Mão de Obra","Recomendación:":"Recomendação:",
+      "usa como mínimo el valor hora del salario mínimo de tu país para asegurarte de no trabajar por debajo del costo mínimo.":"use no mínimo o valor-hora do salário mínimo do seu país para não trabalhar abaixo do custo mínimo.",
+      "Tiempo":"Tempo","Horas":"Horas","Minutos":"Minutos",
+      "Otros Gastos Directos":"Outras Despesas Diretas","Detalle por Unidad":"Detalhe por Unidade",
+      "Packaging Individual":"Embalagem Individual","Otros Costos Unitarios":"Outros Custos Unitários",
+      "Costos del Lote":"Custos do Lote","Costo Total del Lote":"Custo Total do Lote","Costo por Unidad":"Custo por Unidade","Unidades del Lote":"Unidades do Lote",
+      "Margen y Precio de Venta":"Margem e Preço de Venda","Margen de ganancia":"Margem de lucro",
+      "Precio de Venta Sugerido por Unidad (PVP)":"Preço de Venda Sugerido por Unidade (PVP)",
+      "Precio Mín/Unidad (30%)":"Preço Mín/Unidade (30%)","PVP por Kg":"PVP por Kg","Costo Total/Unidad":"Custo Total/Unidade",
+      "Ganancia Neta / Unidad":"Lucro Líquido / Unidade","Ganancia Total del Lote":"Lucro Total do Lote",
+      "DESCARGAR INFORME TÉCNICO PDF":"BAIXAR RELATÓRIO TÉCNICO PDF",
+      "Gramos":"Gramas","Libra":"Libra","Onzas":"Onças","Litro":"Litro","Mililitros":"Mililitros","Galón":"Galão",
+      "Desglose de Ingredientes":"Detalhamento de Ingredientes","Costo/Unidad":"Custo/Unidade",
+      "Estructura de Costos por Kilo Producido":"Estrutura de Custos por Quilo Produzido","Estructura de Costos por Unidad":"Estrutura de Custos por Unidade",
+      "Ganancia / Lote":"Lucro / Lote","Ganancia / Unidad":"Lucro / Unidade","Ganancia Total Lote":"Lucro Total Lote","Ganancia del Lote":"Lucro do Lote",
+      "Gastos Operativos por unidad":"Despesas Operacionais por unidade","Ingredientes por unidad":"Ingredientes por unidade",
+      "Mano de Obra Directa":"Mão de Obra Direta","Mano de Obra por unidad":"Mão de Obra por unidade","Precio Min/Unidad":"Preço Mín/Unidade",
+      "Sin margen de ganancia":"Sem margem de lucro","Total Mano de Obra":"Total Mão de Obra","Total por Kilo":"Total por Quilo","Valor por hora":"Valor por hora",
+      "Composicion del lote con porcentajes y costos individuales por ingrediente.":"Composição do lote com percentuais e custos individuais por ingrediente.",
+      "del lote":"do lote","Recetas de":"Receitas —","continuacion":"continuação","Costos por Unidad":"Custos por Unidade",
+      "Jaboneria":"Saboaria","Cosmetica":"Cosmética",
+      "INFORME TECNICO DE COSTEO":"RELATÓRIO TÉCNICO DE CUSTEIO","COSTO TOTAL POR UNIDAD":"CUSTO TOTAL POR UNIDADE",
+      "COSTE DE FABRICACION / KILO":"CUSTO DE FABRICAÇÃO / QUILO","GASTOS OPERATIVOS":"DESPESAS OPERACIONAIS","TOTAL INGREDIENTES":"TOTAL INGREDIENTES",
+      "CONCEPTO":"ITEM","VALOR":"VALOR","% S/FAB.":"% S/FAB.","% LOTE":"% LOTE","PESO UNIDAD":"PESO UNIDADE","UNIDADES LOTE":"UNIDADES LOTE","LOTE TOTAL":"LOTE TOTAL",
+      "PRECIO":"PREÇO","COSTO":"CUSTO","MANO DE OBRA":"MÃO DE OBRA","PRECIO DE VENTA SUGERIDO POR UNIDAD (PVP)":"PREÇO DE VENDA SUGERIDO POR UNIDADE (PVP)",
+      "Documento confidencial — uso interno":"Documento confidencial — uso interno","Total Gastos":"Total Despesas",
+      "Informe generado el":"Relatório gerado em","margen":"margem",
+      "Excelente rentabilidad":"Excelente rentabilidade","Buena rentabilidad":"Boa rentabilidade","Rentabilidad ajustada":"Rentabilidade ajustada","Sin margen":"Sem margem",
+      "EXCELENTE RENTABILIDAD":"EXCELENTE RENTABILIDADE","MARGEN ACEPTABLE - PUEDE MEJORAR":"MARGEM ACEITÁVEL - PODE MELHORAR","MARGEN BAJO":"MARGEM BAIXA",
+      "De cada unidad vendida, el ":"De cada unidade vendida, ","% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.":"% é lucro líquido. Seu produto tem uma rentabilidade muito saudável.","% es ganancia. Evalua subir el precio o reducir costos.":"% é lucro. Avalie subir o preço ou reduzir custos.","Solo el ":"Apenas ","% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.":"% do preço de venda é lucro. Revise sua estrutura de custos ou aumente o preço.",
+      "Cant.":"Qtd","Concepto de gasto...":"Item de despesa...","Nombre de tu receta artesanal...":"Nome da sua receita artesanal...","Nuevo ingrediente...":"Novo ingrediente...","Precio":"Preço"
+    }
+  };
+
+  var STORE_KEY = 'savias_lang';
+  var LANG = localStorage.getItem(STORE_KEY) || 'es';
+  var orig = new WeakMap();
+
+  function tr(s){
+    if(LANG === 'es' || s == null) return s;
+    var d = DICT[LANG]; if(!d) return s;
+    var k = String(s).trim();
+    var v = d[k];
+    return v == null ? s : String(s).replace(k, v);
+  }
+  // expuesto para JS/PDF
+  window.__t = tr;
+  window.__lang = function(){ return LANG; };
+
+  function walkText(root){
+    var tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode:function(n){
+        var p = n.parentNode; if(!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if(tag==='SCRIPT'||tag==='STYLE'||tag==='NOSCRIPT'||tag==='OPTION') return NodeFilter.FILTER_REJECT;
+        if(!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var n;
+    while(n = tw.nextNode()){
+      if(!orig.has(n)) orig.set(n, n.nodeValue);
+      var o = orig.get(n);
+      var nv = (LANG==='es') ? o : tr(o);
+      if(n.nodeValue !== nv) n.nodeValue = nv;
+    }
+  }
+  function walkAttrs(root){
+    var els = root.querySelectorAll('[placeholder]');
+    els.forEach(function(el){
+      if(el.__phOrig == null) el.__phOrig = el.getAttribute('placeholder');
+      var o = el.__phOrig;
+      el.setAttribute('placeholder', LANG==='es' ? o : tr(o));
+    });
+  }
+  function applyLang(){
+    walkText(document.body);
+    walkAttrs(document.body);
+    document.documentElement.setAttribute('lang', LANG);
+    var btns = document.querySelectorAll('#lang-switch .lang-btn');
+    btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-lang')===LANG); });
+  }
+  function setLang(l){
+    LANG = l; localStorage.setItem(STORE_KEY, l);
+    applyLang();
+    if(typeof window.calc === 'function') window.calc();
+  }
+
+  function init(){
+    document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ setLang(b.getAttribute('data-lang')); });
+    });
+    // re-traducir tras cada recálculo (los resultados se renderizan dinámicamente)
+    if(typeof window.calc === 'function'){
+      var _calc = window.calc;
+      window.calc = function(){ var r = _calc.apply(this, arguments); applyLang(); return r; };
+    }
+    applyLang();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
 
 </body>
 </html>

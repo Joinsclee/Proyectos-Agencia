@@ -27,7 +27,7 @@ export const SistemaCreceVideo = () => {
       <Background />
       <Particles />
 
-      <Sequence from={0} durationInFrames={60}>
+      <Sequence  durationInFrames={60}>
         <Scene1Intro />
       </Sequence>
 

@@ -1,0 +1,125 @@
+# =============================================================================
+# _schema.yaml — Schema del brand-edit-profile (Máquina de Edición CLEE)
+# =============================================================================
+# Este archivo NO es un perfil de cliente: es el CONTRATO de campos que todo
+# brand-edit-profile debe cumplir. Cópialo como plantilla al onboardear un
+# cliente nuevo y rellena/calibra los diales.
+#
+# PRINCIPIO CLAVE (ver references/craft-rules.md):
+#   Las 18 reglas de craft son UNIVERSALES y no viven aquí. Lo que cambia por
+#   cliente son los DIALES de este perfil (ritmo, captions, audio, b-roll...).
+#   Un perfil nunca reescribe una regla de craft: solo la parametriza.
+#
+# CADENA DE CONSUMO:
+#   - El motor de decisión (references/engine-decision.md) lee `captions.ruta`
+#     y `tipos_edicion_preferidos` para elegir FFSUB vs Remotion vs Hyperframes.
+#   - El pipeline (references/pipeline.md) lee `transcripcion.*` para Whisper.
+#   - Los binarios FFmpeg son fijos: $FF (sistema, SIN libass) y $FFSUB (CON
+#     libass para quemar .ass). NO se declaran aquí; se respetan en las recetas.
+#   - Ningún comando FFmpeg se inventa: se cita por número desde
+#     references/ffmpeg-recipes.md (p.ej. "receta 14" para quemar subtítulos).
+# =============================================================================
+
+# --- Identidad ---------------------------------------------------------------
+cliente: "STRING"                 # Nombre de la marca. Requerido. Ej: "SAVIAS".
+
+extends_brand_kit: "RUTA_YAML"    # Ruta al YAML visual generado por
+                                  # brand-kit-builder-clee. De ahí salen los
+                                  # colores EXACTOS, tipografías y mood. Los
+                                  # highlight/text_color de este perfil son
+                                  # semilla; el brand kit manda. Ver
+                                  # references/color.md y references/captions.md.
+
+# --- Ritmo (velocidad de corte y estímulo) -----------------------------------
+# Traduce la regla universal de ritmo/EMN de craft a números por marca.
+# Cruza con references/semantic-cut.md (dónde cortar) y references/craft-rules.md.
+ritmo:
+  cut_rate_seg: [MIN, MAX]        # Duración objetivo de cada plano/segmento en
+                                  # segundos [min, max]. Premium ≈ [5,8];
+                                  # hipercinético ≈ [1.5,3]; intermedio ≈ [3,5].
+  interrupt_cadence_seg: INT      # Cada cuántos seg introducir un "interruptor"
+                                  # (zoom, corte, b-roll, SFX, texto) para
+                                  # sostener retención. Menor = más agresivo.
+  zoom_max_pct: INT               # Zoom/push-in máximo permitido en %. 105 =
+                                  # sutil premium; 125 = punchy. Respeta
+                                  # references/safe-zones.md al escalar.
+
+# --- Captions (subtítulos kinéticos) -----------------------------------------
+# Ver references/captions.md. La ruta condiciona el motor (engine-decision.md).
+captions:
+  mode: word|phrase               # word = palabra por palabra (karaoke duro);
+                                  # phrase = frases cortas (más legible/premium).
+  switch_ms: INT                  # Milisegundos que cada unidad (palabra/frase)
+                                  # permanece antes de conmutar. word ≈ 300-400;
+                                  # phrase ≈ 1200-1600.
+  text_color: "#HEX"             # Color base del texto. Semilla; el brand kit
+                                  # puede sobrescribir. Típico "#FFFFFF".
+  highlight_color: "#HEX"        # Color de resaltado de la palabra activa.
+                                  # Debe salir del brand kit del cliente.
+  outline_px: INT                 # Grosor del contorno/stroke en px para
+                                  # legibilidad sobre cualquier fondo (2-4).
+  ruta: ffsub|remotion|hyperframes
+                                  # Motor de render de los captions:
+                                  #   ffsub       -> .ass quemado con $FFSUB
+                                  #                  (receta de captions en
+                                  #                  references/ffmpeg-recipes.md).
+                                  #   remotion    -> componente React/Remotion
+                                  #                  (captions data-driven premium).
+                                  #   hyperframes -> plantilla Hyperframes
+                                  #                  (faceless/explainer, motion).
+
+# --- Audio (SFX + música) ----------------------------------------------------
+# Ver references/audio.md para ducking, LUFS y colocación de SFX.
+audio:
+  sfx_density: low|med|high       # Densidad de efectos de sonido. low = premium
+                                  # sobrio; high = cada corte/aparición suena.
+  music_bpm: [MIN, MAX]           # Rango de tempo musical en BPM [min, max].
+                                  # Guía el ritmo de corte junto a `ritmo`.
+  music_energy: ambient|mid|high  # Carácter energético del lecho musical.
+
+# --- B-roll ------------------------------------------------------------------
+broll:
+  style: cinematic-slow|flash-fast
+                                  # cinematic-slow = planos largos, cámara lenta,
+                                  # respirados (premium). flash-fast = ráfagas
+                                  # cortas sincronizadas al beat (cinético).
+                                  # Ver references/motion-graphics.md para
+                                  # inserciones y references/semantic-cut.md.
+
+# --- Transcripción (Whisper) -------------------------------------------------
+# Ver references/pipeline.md. Alimenta captions y semantic-cut.
+transcripcion:
+  whisper_model: small|medium|large-v3
+                                  # small = rápido/borrador; medium = balance;
+                                  # large-v3 = máxima fidelidad (terminología,
+                                  # nombres propios, es-LATAM difícil).
+  vad: BOOL                       # Voice Activity Detection. true = recorta
+                                  # silencios/relleno para timestamps más limpios
+                                  # (útil en talking-head pausado). false = deja
+                                  # el flujo continuo (ritmo hipercinético).
+
+# --- Formato de salida -------------------------------------------------------
+formato_default: 916|11|169       # Relación de aspecto por defecto:
+                                  #   916 = 9:16 vertical (Reels/TikTok/Shorts)
+                                  #   11  = 1:1 cuadrado (feed)
+                                  #   169 = 16:9 horizontal (YouTube largo)
+                                  # Todo respeta references/safe-zones.md.
+
+# --- Tipos de edición preferidos ---------------------------------------------
+# Sublista de los 5 tipos de edición CLEE. El motor usa esto para elegir
+# recursos y plantillas. Ver references/engine-decision.md.
+tipos_edicion_preferidos:
+  # Valores posibles (elige los que aplican a la marca):
+  #   - veloz        # cortes rápidos, word-by-word, alto SFX
+  #   - persuasiva   # orientada a venta/CTA, énfasis en beneficios
+  #   - inmersiva    # sensorial, respirada, texturas y ambiente
+  #   - cinemática   # look de cine, planos compuestos, color grading fuerte
+  #   - educativa    # explicador, data/motion graphics, faceless friendly
+  - TIPO
+  - TIPO
+
+# --- Notas -------------------------------------------------------------------
+notas: |
+  Texto libre: contexto de marca, do/don't de edición, tics del fundador,
+  frases prohibidas, referencias visuales, decisiones de calibración.
+  Documenta AQUÍ cualquier excepción de craft acordada con el cliente.

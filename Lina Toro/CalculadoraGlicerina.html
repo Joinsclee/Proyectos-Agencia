@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Aditivos · Jabón de Glicerina · Lina Toro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --verde: #9caf88;
+            --verde-hover: #8a9d76;
+            --verde-deep: #6f8159;
+            --verde-claro: #f4f6f2;
+            --negro: #1a1a1a;
+            --texto: #444;
+            --texto-suave: #888;
+            --border: #e8eae6;
+            --blanco: #fff;
+            --oro: #b8943e;
+            --alerta: #c0492f;
+            --alerta-bg: #fbeeea;
+            --ok: #5e7d4f;
+            --radius: 14px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, .06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #fafaf8;
+            color: var(--texto);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            font-size: 16.5px
+        }
+
+        .wrap {
+            max-width: 880px;
+            margin: 0 auto;
+            padding: 26px 18px 60px
+        }
+
+        /* header */
+        .head {
+            text-align: center;
+            margin-bottom: 26px
+        }
+
+        .head .eyebrow {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: .22em;
+            text-transform: uppercase;
+            color: var(--verde-deep)
+        }
+
+        .head h1 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: clamp(1.7rem, 4.5vw, 2.5rem);
+            color: var(--negro);
+            line-height: 1.12;
+            margin: 8px 0 6px
+        }
+
+        .head p {
+            color: var(--texto-suave);
+            font-size: 15px;
+            max-width: 52ch;
+            margin: 0 auto
+        }
+
+        /* card */
+        .card {
+            background: var(--blanco);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px 22px;
+            margin-bottom: 18px
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.12rem;
+            color: var(--negro);
+            margin-bottom: 4px
+        }
+
+        .step-n {
+            flex: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--verde);
+            color: #fff;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700
+        }
+
+        .card-sub {
+            color: var(--texto-suave);
+            font-size: 14px;
+            margin-bottom: 16px
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--negro);
+            margin-bottom: 6px
+        }
+
+        input[type=number],
+        input[type=text],
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            color: var(--negro);
+            background: #fff;
+            transition: border-color .2s, box-shadow .2s
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--verde);
+            box-shadow: 0 0 0 3px rgba(156, 175, 136, .25)
+        }
+
+        /* base + límite */
+        .base-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            align-items: end
+        }
+
+        .budget {
+            background: var(--verde-claro);
+            border: 1px solid #dfe6d6;
+            border-radius: 12px;
+            padding: 14px 16px;
+            text-align: center
+        }
+
+        .budget .b-lbl {
+            font-size: 13px;
+            color: var(--verde-deep);
+            font-weight: 600
+        }
+
+        .budget .b-val {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.7rem;
+            color: var(--negro);
+            line-height: 1.1
+        }
+
+        .budget .b-val small {
+            font-size: .9rem;
+            font-weight: 600;
+            color: var(--texto-suave)
+        }
+
+        /* aditivos */
+        .additives {
+            display: flex;
+            flex-direction: column;
+            gap: 14px
+        }
+
+        .add-row {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            background: #fcfcfb;
+            display: grid;
+            grid-template-columns: 1.4fr 1.4fr .9fr .9fr auto;
+            gap: 12px;
+            align-items: end
+        }
+
+        .add-row .field {
+            min-width: 0
+        }
+
+        .add-row .field .mini {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--texto-suave);
+            margin-bottom: 5px
+        }
+
+        .add-row .grams {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.18rem;
+            color: var(--verde-deep);
+            padding: 10px 0;
+            white-space: nowrap
+        }
+
+        .add-row .grams small {
+            font-size: .72rem;
+            color: var(--texto-suave);
+            font-weight: 600
+        }
+
+        .add-row .pct-hint {
+            display: block;
+            font-size: 11px;
+            color: var(--texto-suave);
+            margin-top: 4px
+        }
+
+        .add-row.out-range input.pct {
+            border-color: var(--oro)
+        }
+
+        .add-row .pct-hint.warn {
+            color: var(--oro);
+            font-weight: 600
+        }
+
+        .row-del {
+            border: none;
+            background: #f1f0ec;
+            color: var(--texto-suave);
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            transition: background .2s, color .2s
+        }
+
+        .row-del:hover {
+            background: var(--alerta-bg);
+            color: var(--alerta)
+        }
+
+        .dissolve {
+            grid-column: 1 / -1;
+            font-size: 12.5px;
+            color: var(--texto);
+            background: var(--verde-claro);
+            border-radius: 8px;
+            padding: 8px 11px;
+            display: none
+        }
+
+        .dissolve.show {
+            display: block
+        }
+
+        .dissolve b {
+            color: var(--verde-deep)
+        }
+
+        .btn {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 20px;
+            cursor: pointer;
+            transition: background .2s, transform .15s
+        }
+
+        .btn-add {
+            background: var(--verde-claro);
+            color: var(--verde-deep);
+            border: 1.5px dashed var(--verde);
+            width: 100%;
+            margin-top: 14px
+        }
+
+        .btn-add:hover {
+            background: #eaf0e3
+        }
+
+        /* resumen */
+        .summary {
+            background: var(--negro);
+            color: #fff
+        }
+
+        .summary .card-title {
+            color: #fff
+        }
+
+        .bar {
+            height: 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .14);
+            overflow: hidden;
+            margin: 8px 0 6px
+        }
+
+        .bar .fill {
+            display: block;
+            height: 100%;
+            width: 0;
+            background: var(--verde);
+            border-radius: 999px;
+            transition: width .35s ease, background .3s
+        }
+
+        .bar .fill.over {
+            background: var(--alerta)
+        }
+
+        .sum-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 16px
+        }
+
+        .sum-item {
+            background: rgba(255, 255, 255, .06);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center
+        }
+
+        .sum-item .s-val {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.35rem;
+            color: #fff
+        }
+
+        .sum-item .s-lbl {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, .65);
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-top: 2px
+        }
+
+        .sum-msg {
+            margin-top: 16px;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 14.5px;
+            font-weight: 500;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start
+        }
+
+        .sum-msg.ok {
+            background: rgba(156, 175, 136, .18);
+            color: #dfe9d3
+        }
+
+        .sum-msg.over {
+            background: rgba(192, 73, 47, .2);
+            color: #ffd9cf
+        }
+
+        /* guía */
+        .guide details {
+            border-top: 1px solid var(--border);
+            padding: 4px 0
+        }
+
+        .guide details:first-of-type {
+            border-top: none
+        }
+
+        .guide summary {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 2px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1.02rem;
+            color: var(--negro)
+        }
+
+        .guide summary::-webkit-details-marker {
+            display: none
+        }
+
+        .guide summary .ind {
+            flex: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--verde-claro);
+            color: var(--verde-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: transform .25s
+        }
+
+        .guide details[open] summary .ind {
+            transform: rotate(45deg)
+        }
+
+        .guide .g-body {
+            padding: 0 2px 16px;
+            font-size: 14.5px;
+            color: var(--texto)
+        }
+
+        .pill-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px
+        }
+
+        .pill-box {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px
+        }
+
+        .pill-box h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 14px;
+            color: var(--verde-deep);
+            margin-bottom: 4px
+        }
+
+        .pill-box p {
+            font-size: 13.5px;
+            color: var(--texto)
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px
+        }
+
+        .tag {
+            background: var(--verde-claro);
+            color: var(--verde-deep);
+            border-radius: 999px;
+            padding: 4px 11px;
+            font-size: 12.5px;
+            font-weight: 600
+        }
+
+        .note {
+            font-size: 13px;
+            color: var(--texto-suave);
+            margin-top: 8px;
+            line-height: 1.5
+        }
+
+        .foot {
+            text-align: center;
+            color: var(--texto-suave);
+            font-size: 12.5px;
+            margin-top: 24px
+        }
+
+        @media(max-width:680px) {
+            .base-row {
+                grid-template-columns: 1fr
+            }
+
+            .add-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px
+            }
+
+            .add-row .grams {
+                grid-column: 1 / 2;
+                align-self: center
+            }
+
+            .row-del {
+                grid-column: 2 / 3;
+                justify-self: end
+            }
+
+            .pill-grid {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <div class="head">
+            <p class="eyebrow">Jabonería artesanal · Lina Toro</p>
+            <h1>Calculadora de aditivos<br>para jabón de glicerina</h1>
+            <p>Tu base de glicerina ya está hecha, así que solo puedes añadir un poco. Dime cuánta base vas a fundir y
+                te digo cuántos gramos de cada aditivo poner, sin pasarte del límite.</p>
+        </div>
+
+        <!-- PASO 1 -->
+        <div class="card">
+            <div class="card-title"><span class="step-n">1</span> Tu base de glicerina</div>
+            <p class="card-sub">Escribe cuántos gramos de base vas a fundir.</p>
+            <div class="base-row">
+                <div>
+                    <label for="base">Base a fundir (gramos)</label>
+                    <input type="number" id="base" min="0" step="10" value="500" inputmode="decimal">
+                </div>
+                <div class="budget">
+                    <div class="b-lbl">Tu máximo de aditivos (5%)</div>
+                    <div class="b-val" id="budget">25 <small>g</small></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PASO 2 -->
+        <div class="card">
+            <div class="card-title"><span class="step-n">2</span> Tus aditivos</div>
+            <p class="card-sub">Elige el tipo, escribe el porcentaje que quieres (dentro de lo recomendado) y te muestro
+                los gramos. Ejemplo: para un jabón de caléndula con extracto hidroglicerinado, elige ese tipo y pon
+                entre 2% y 3%.</p>
+            <div class="additives" id="additives"></div>
+            <button class="btn btn-add" id="add-btn" type="button">+ Añadir aditivo</button>
+        </div>
+
+        <!-- RESUMEN -->
+        <div class="card summary">
+            <div class="card-title">Resumen</div>
+            <div class="bar"><span class="fill" id="bar-fill"></span></div>
+            <div class="sum-grid">
+                <div class="sum-item"><div class="s-val" id="sum-pct">0%</div><div class="s-lbl">Usado del 5%</div></div>
+                <div class="sum-item"><div class="s-val" id="sum-g">0 g</div><div class="s-lbl">Aditivos (gramos)</div></div>
+                <div class="sum-item"><div class="s-val" id="sum-left">25 g</div><div class="s-lbl">Te queda</div></div>
+            </div>
+            <div class="sum-msg ok" id="sum-msg">Vas bien. Puedes seguir añadiendo aditivos sin pasarte del 5%.</div>
+            <div class="sum-msg over" id="liquid-msg" style="display:none;margin-top:10px"></div>
+        </div>
+
+        <!-- GUÍA -->
+        <div class="card guide">
+            <div class="card-title">Guía rápida (de Lina)</div>
+            <p class="card-sub">Lo esencial para que tus aditivos se vean y funcionen bien.</p>
+
+            <details open>
+                <summary>El arte de disolver <span class="ind">+</span></summary>
+                <div class="g-body">
+                    <div class="pill-grid">
+                        <div class="pill-box">
+                            <h4>Minerales → en alcohol</h4>
+                            <p>Carbón, micas y pigmentos minerales se disuelven en un poco de alcohol antes de añadir.</p>
+                        </div>
+                        <div class="pill-box">
+                            <h4>Arcillosos / densos → en agua</h4>
+                            <p>Arcillas, polvo de frutas y especias se disuelven en un poco de agua.</p>
+                        </div>
+                    </div>
+                    <p class="note">Disolver primero evita grumos y manchas. Ten cuidado especial con el porcentaje de
+                        los pigmentos.</p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Ventajas de los aditivos en polvo <span class="ind">+</span></summary>
+                <div class="g-body">
+                    <div class="tag-list">
+                        <span class="tag">No alteran la dureza</span>
+                        <span class="tag">Permiten mayor concentración</span>
+                        <span class="tag">Efectos visuales</span>
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Respeta la naturaleza de la base <span class="ind">+</span></summary>
+                <div class="g-body">
+                    <p>Tu base ya está formulada. Por eso el límite del 5%:</p>
+                    <div class="pill-grid">
+                        <div class="pill-box">
+                            <h4>Exceso de agua</h4>
+                            <p>Ablanda el jabón.</p>
+                        </div>
+                        <div class="pill-box">
+                            <h4>Exceso de aceite</h4>
+                            <p>Puede separarse.</p>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary>La selección: ¿qué quieres lograr? <span class="ind">+</span></summary>
+                <div class="g-body">
+                    <div class="pill-box" style="margin-bottom:10px">
+                        <h4>Cuidado</h4>
+                        <p>Miel, aloe, leches, carbón.</p>
+                    </div>
+                    <div class="pill-box" style="margin-bottom:10px">
+                        <h4>Textura</h4>
+                        <p>Avena, arcillas, amapola, café.</p>
+                    </div>
+                    <div class="pill-box">
+                        <h4>Personalidad</h4>
+                        <p>Cúrcuma, espirulina, micas, fragancia.</p>
+                    </div>
+                </div>
+            </details>
+
+            <details>
+                <summary>Porcentajes recomendados por tipo <span class="ind">+</span></summary>
+                <div class="g-body">
+                    <div class="tag-list">
+                        <span class="tag">Total (todos los aditivos): máx. 5%</span>
+                        <span class="tag">Líquidos sumados (miel/aloe/infusión + extractos): máx. 3%</span>
+                        <span class="tag">Aceites vegetales: 0.5–1%</span>
+                        <span class="tag">Líquidos (miel/aloe/infusión): 1–2%</span>
+                        <span class="tag">Polvos: 1–3%</span>
+                        <span class="tag">Aceites esenciales: 0.5–2%</span>
+                        <span class="tag">Extractos hidroglicerinados: 2–3%</span>
+                    </div>
+                    <p class="note">Recuerda: cada tipo tiene su rango, pero la suma de TODOS no puede pasar del 5% del
+                        peso de la base a fundir. Además, <b>los líquidos juntos (miel, aloe, infusión y extractos) no
+                            deben pasar del 3%</b>: más puede dañar la textura y ponerse gelatinoso.</p>
+                </div>
+            </details>
+        </div>
+
+        <p class="foot">Lina Toro · Jabonería y cosmética artesanal — Ruta Jabonera</p>
+    </div>
+
+    <script>
+        (function () {
+            var GLOBAL_MAX = 5; // % máximo total sobre la base a fundir
+            var LIQUID_MAX = 3; // % máximo de LÍQUIDOS sumados (más puede ponerse gelatinoso)
+
+            var TYPES = {
+                aceite: { label: 'Aceites vegetales', min: 0.5, max: 1 },
+                liquido: { label: 'Líquidos (miel, aloe, infusión)', min: 1, max: 2, liquid: true },
+                polvo: { label: 'Polvos (arcillas, café, cúrcuma, micas…)', min: 1, max: 3, dissolve: '<b>Disuelve primero:</b> minerales (carbón, micas) en alcohol; arcillosos/densos (arcillas, frutas, especias) en agua.' },
+                aaee: { label: 'Aceites esenciales (AAEE)', min: 0.5, max: 2 },
+                extracto: { label: 'Extractos hidroglicerinados', min: 2, max: 3, liquid: true }
+            };
+
+            var baseEl = document.getElementById('base');
+            var budgetEl = document.getElementById('budget');
+            var listEl = document.getElementById('additives');
+            var sumPct = document.getElementById('sum-pct');
+            var sumG = document.getElementById('sum-g');
+            var sumLeft = document.getElementById('sum-left');
+            var barFill = document.getElementById('bar-fill');
+            var sumMsg = document.getElementById('sum-msg');
+            var liquidMsg = document.getElementById('liquid-msg');
+            var rowId = 0;
+
+            function base() { var v = parseFloat(baseEl.value); return (isFinite(v) && v > 0) ? v : 0; }
+            function round1(n) { return Math.round(n * 10) / 10; }
+
+            function typeOptions(sel) {
+                var html = '';
+                for (var k in TYPES) {
+                    html += '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + TYPES[k].label + '</option>';
+                }
+                return html;
+            }
+
+            function addRow(typeKey) {
+                rowId++;
+                var key = typeKey || 'extracto';
+                var t = TYPES[key];
+                var row = document.createElement('div');
+                row.className = 'add-row';
+                row.dataset.id = rowId;
+                row.innerHTML =
+                    '<div class="field"><span class="mini">Tipo de aditivo</span>'
+                    + '<select class="type">' + typeOptions(key) + '</select></div>'
+                    + '<div class="field"><span class="mini">Nombre (opcional)</span>'
+                    + '<input type="text" class="name" placeholder="Ej.: extracto de caléndula"></div>'
+                    + '<div class="field"><span class="mini">Porcentaje (%)</span>'
+                    + '<input type="number" class="pct" min="0" step="0.1" inputmode="decimal" placeholder="' + t.min + '–' + t.max + '">'
+                    + '<span class="pct-hint"></span></div>'
+                    + '<div class="grams"><span class="g">0</span> <small>g</small></div>'
+                    + '<button class="row-del" type="button" title="Quitar" aria-label="Quitar aditivo">×</button>'
+                    + '<div class="dissolve"></div>';
+                listEl.appendChild(row);
+                row.querySelector('.type').addEventListener('change', function () { onTypeChange(row); calc(); });
+                row.querySelector('.pct').addEventListener('input', calc);
+                row.querySelector('.row-del').addEventListener('click', function () { row.remove(); calc(); });
+                onTypeChange(row);
+                calc();
+            }
+
+            function onTypeChange(row) {
+                var key = row.querySelector('.type').value;
+                var t = TYPES[key];
+                var pct = row.querySelector('.pct');
+                // el campo queda vacío; solo mostramos el rango recomendado como guía
+                pct.placeholder = t.min + '–' + t.max;
+                var diss = row.querySelector('.dissolve');
+                if (t.dissolve) { diss.innerHTML = t.dissolve; diss.classList.add('show'); }
+                else { diss.classList.remove('show'); diss.innerHTML = ''; }
+            }
+
+            function calc() {
+                var b = base();
+                var budget = b * GLOBAL_MAX / 100;
+                budgetEl.innerHTML = round1(budget) + ' <small>g</small>';
+
+                var totalPct = 0;
+                var liquidPct = 0;
+                listEl.querySelectorAll('.add-row').forEach(function (row) {
+                    var key = row.querySelector('.type').value;
+                    var t = TYPES[key];
+                    var pct = parseFloat(row.querySelector('.pct').value) || 0;
+                    var grams = b * pct / 100;
+                    totalPct += pct;
+                    if (t.liquid) liquidPct += pct;
+                    row.querySelector('.g').textContent = round1(grams);
+                    // aviso de rango por tipo
+                    var hint = row.querySelector('.pct-hint');
+                    var out = pct > 0 && (pct < t.min || pct > t.max);
+                    row.classList.toggle('out-range', out);
+                    hint.textContent = out
+                        ? 'Recomendado: ' + t.min + '–' + t.max + '%'
+                        : 'Recomendado: ' + t.min + '–' + t.max + '%';
+                    hint.classList.toggle('warn', out);
+                });
+
+                var totalG = b * totalPct / 100;
+                var pctOfMax = GLOBAL_MAX > 0 ? (totalPct / GLOBAL_MAX) * 100 : 0;
+                var over = totalPct > GLOBAL_MAX + 1e-9;
+
+                sumPct.textContent = round1(totalPct) + '%';
+                sumG.textContent = round1(totalG) + ' g';
+                sumLeft.textContent = round1(Math.max(0, budget - totalG)) + ' g';
+
+                barFill.style.width = Math.min(100, pctOfMax) + '%';
+                barFill.classList.toggle('over', over);
+
+                if (over) {
+                    sumMsg.className = 'sum-msg over';
+                    sumMsg.innerHTML = '⚠️ Te pasaste del 5% total (vas en ' + round1(totalPct)
+                        + '%). Reduce algún aditivo: recuerda que no puedes pasar del 5% del peso de la base.';
+                } else {
+                    sumMsg.className = 'sum-msg ok';
+                    sumMsg.innerHTML = totalPct === 0
+                        ? 'Añade tus aditivos y te muestro los gramos sin pasarte del 5%.'
+                        : 'Vas bien (' + round1(totalPct) + '% de 5%). Te quedan ' + round1(Math.max(0, budget - totalG)) + ' g de margen.';
+                }
+
+                // Alerta de LÍQUIDOS: la suma de líquidos (miel, aloe, infusión, extractos) no debe pasar el 3%
+                var liquidOver = liquidPct > LIQUID_MAX + 1e-9;
+                if (liquidOver) {
+                    liquidMsg.style.display = '';
+                    liquidMsg.className = 'sum-msg over';
+                    liquidMsg.innerHTML = '⚠️ Tus líquidos suman <b>' + round1(liquidPct) + '%</b> (máximo 3%). '
+                        + 'Más de 3% de líquidos (miel, aloe, infusión, extractos) puede dañar la textura: el jabón se pone gelatinoso. '
+                        + 'Baja la cantidad hasta dejar los líquidos en 3% o menos.';
+                } else {
+                    liquidMsg.style.display = 'none';
+                    liquidMsg.innerHTML = '';
+                }
+            }
+
+            baseEl.addEventListener('input', calc);
+            document.getElementById('add-btn').addEventListener('click', function () { addRow(); });
+
+            // arranca con un aditivo de ejemplo (extracto, como el caso caléndula)
+            addRow('extracto');
+        })();
+    </script>
+
+    <style>
+      #lang-switch{position:fixed;top:10px;right:10px;z-index:99999;display:flex;gap:3px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:3px;box-shadow:0 2px 12px rgba(0,0,0,.12);font-family:system-ui,sans-serif;}
+      #lang-switch .lang-btn{border:none;background:transparent;color:#777;font-weight:700;font-size:12px;letter-spacing:.04em;padding:5px 10px;border-radius:999px;cursor:pointer;}
+      #lang-switch .lang-btn:hover{color:#333;}
+      #lang-switch .lang-btn.active{background:#9caf88;color:#fff;}
+      @media print{#lang-switch{display:none!important;}}
+    </style>
+    <div id="lang-switch" class="no-print">
+      <button type="button" data-lang="es" class="lang-btn">ES</button>
+      <button type="button" data-lang="en" class="lang-btn">EN</button>
+    </div>
+    <script>
+    (function(){
+      var DICT = { en: {
+        // <head> / title
+        "Calculadora de Aditivos · Jabón de Glicerina · Lina Toro": "Additive Calculator · Glycerin Soap · Lina Toro",
+        // header
+        "Jabonería artesanal · Lina Toro": "Artisan soapmaking · Lina Toro",
+        "Calculadora de aditivos": "Additive calculator",
+        "para jabón de glicerina": "for glycerin soap",
+        "Tu base de glicerina ya está hecha, así que solo puedes añadir un poco. Dime cuánta base vas a fundir y\n                te digo cuántos gramos de cada aditivo poner, sin pasarte del límite.": "Your glycerin base is already made, so you can only add a little. Tell me how much base you're going to melt and\n                I'll tell you how many grams of each additive to add, without exceeding the limit.",
+        // step 1
+        "Tu base de glicerina": "Your glycerin base",
+        "Escribe cuántos gramos de base vas a fundir.": "Enter how many grams of base you're going to melt.",
+        "Base a fundir (gramos)": "Base to melt (grams)",
+        "Tu máximo de aditivos (5%)": "Your additive maximum (5%)",
+        // step 2
+        "Tus aditivos": "Your additives",
+        "Elige el tipo, escribe el porcentaje que quieres (dentro de lo recomendado) y te muestro\n                los gramos. Ejemplo: para un jabón de caléndula con extracto hidroglicerinado, elige ese tipo y pon\n                entre 2% y 3%.": "Choose the type, enter the percentage you want (within the recommended range) and I'll show you\n                the grams. Example: for a calendula soap with hydroglycerinated extract, choose that type and enter\n                between 2% and 3%.",
+        "+ Añadir aditivo": "+ Add additive",
+        // summary
+        "Resumen": "Summary",
+        "0%": "0%",
+        "Usado del 5%": "Used of 5%",
+        "0 g": "0 g",
+        "Aditivos (gramos)": "Additives (grams)",
+        "25 g": "25 g",
+        "Te queda": "Remaining",
+        "Vas bien. Puedes seguir añadiendo aditivos sin pasarte del 5%.": "You're doing well. You can keep adding additives without exceeding 5%.",
+        // guide
+        "Guía rápida (de Lina)": "Quick guide (from Lina)",
+        "Lo esencial para que tus aditivos se vean y funcionen bien.": "The essentials so your additives look and work well.",
+        "El arte de disolver": "The art of dissolving",
+        "Minerales → en alcohol": "Minerals → in alcohol",
+        "Carbón, micas y pigmentos minerales se disuelven en un poco de alcohol antes de añadir.": "Charcoal, micas and mineral pigments dissolve in a little alcohol before adding.",
+        "Arcillosos / densos → en agua": "Clay-based / dense → in water",
+        "Arcillas, polvo de frutas y especias se disuelven en un poco de agua.": "Clays, fruit powders and spices dissolve in a little water.",
+        "Disolver primero evita grumos y manchas. Ten cuidado especial con el porcentaje de\n                        los pigmentos.": "Dissolving first prevents lumps and stains. Be especially careful with the percentage of\n                        the pigments.",
+        "Ventajas de los aditivos en polvo": "Advantages of powdered additives",
+        "No alteran la dureza": "They don't alter hardness",
+        "Permiten mayor concentración": "They allow higher concentration",
+        "Efectos visuales": "Visual effects",
+        "Respeta la naturaleza de la base": "Respect the nature of the base",
+        "Tu base ya está formulada. Por eso el límite del 5%:": "Your base is already formulated. That's why the 5% limit:",
+        "Exceso de agua": "Excess water",
+        "Ablanda el jabón.": "Softens the soap.",
+        "Exceso de aceite": "Excess oil",
+        "Puede separarse.": "It can separate.",
+        "La selección: ¿qué quieres lograr?": "The selection: what do you want to achieve?",
+        "Cuidado": "Care",
+        "Miel, aloe, leches, carbón.": "Honey, aloe, milks, charcoal.",
+        "Textura": "Texture",
+        "Avena, arcillas, amapola, café.": "Oats, clays, poppy, coffee.",
+        "Personalidad": "Personality",
+        "Cúrcuma, espirulina, micas, fragancia.": "Turmeric, spirulina, micas, fragrance.",
+        "Porcentajes recomendados por tipo": "Recommended percentages by type",
+        "Total (todos los aditivos): máx. 5%": "Total (all additives): max. 5%",
+        "Líquidos sumados (miel/aloe/infusión + extractos): máx. 3%": "Liquids combined (honey/aloe/infusion + extracts): max. 3%",
+        "Aceites vegetales: 0.5–1%": "Vegetable oils: 0.5–1%",
+        "Líquidos (miel/aloe/infusión): 1–2%": "Liquids (honey/aloe/infusion): 1–2%",
+        "Polvos: 1–3%": "Powders: 1–3%",
+        "Aceites esenciales: 0.5–2%": "Essential oils: 0.5–2%",
+        "Extractos hidroglicerinados: 2–3%": "Hydroglycerinated extracts: 2–3%",
+        "Recuerda: cada tipo tiene su rango, pero la suma de TODOS no puede pasar del 5% del\n                        peso de la base a fundir. Además,": "Remember: each type has its range, but the sum of ALL of them cannot exceed 5% of the\n                        weight of the base to melt. Also,",
+        "los líquidos juntos (miel, aloe, infusión y extractos) no\n                            deben pasar del 3%": "the liquids together (honey, aloe, infusion and extracts) must not\n                            exceed 3%",
+        ": más puede dañar la textura y ponerse gelatinoso.": ": more can damage the texture and become gelatinous.",
+        // footer
+        "Lina Toro · Jabonería y cosmética artesanal — Ruta Jabonera": "Lina Toro · Artisan soapmaking and cosmetics — Ruta Jabonera",
+        // dynamic JS — type labels (option text)
+        "Aceites vegetales": "Vegetable oils",
+        "Líquidos (miel, aloe, infusión)": "Liquids (honey, aloe, infusion)",
+        "Polvos (arcillas, café, cúrcuma, micas…)": "Powders (clays, coffee, turmeric, micas…)",
+        "Aceites esenciales (AAEE)": "Essential oils (EOs)",
+        "Extractos hidroglicerinados": "Hydroglycerinated extracts",
+        // dynamic JS — row labels / placeholders
+        "Tipo de aditivo": "Additive type",
+        "Nombre (opcional)": "Name (optional)",
+        "Ej.: extracto de caléndula": "E.g.: calendula extract",
+        "Porcentaje (%)": "Percentage (%)",
+        "Quitar": "Remove",
+        "Quitar aditivo": "Remove additive",
+        // dynamic JS — dissolve hint (innerHTML, splits into text nodes around <b>)
+        "<b>Disuelve primero:</b> minerales (carbón, micas) en alcohol; arcillosos/densos (arcillas, frutas, especias) en agua.": "<b>Dissolve first:</b> minerals (charcoal, micas) in alcohol; clay-based/dense (clays, fruits, spices) in water.",
+        "Disuelve primero:": "Dissolve first:",
+        "minerales (carbón, micas) en alcohol; arcillosos/densos (arcillas, frutas, especias) en agua.": "minerals (charcoal, micas) in alcohol; clay-based/dense (clays, fruits, spices) in water.",
+        // dynamic JS — recommended hint
+        "Recomendado: ": "Recommended: ",
+        // dynamic JS — summary messages
+        "Añade tus aditivos y te muestro los gramos sin pasarte del 5%.": "Add your additives and I'll show you the grams without exceeding 5%.",
+        "Vas bien (": "You're doing well (",
+        "% de 5%). Te quedan ": "% of 5%). You have ",
+        " g de margen.": " g of margin left.",
+        "⚠️ Te pasaste del 5% total (vas en ": "⚠️ You've exceeded the 5% total (you're at ",
+        "%). Reduce algún aditivo: recuerda que no puedes pasar del 5% del peso de la base.": "%). Reduce one of the additives: remember you can't exceed 5% of the base weight.",
+        // dynamic JS — liquids alert (innerHTML, splits into text nodes around <b>)
+        "⚠️ Tus líquidos suman <b>": "⚠️ Your liquids add up to <b>",
+        "⚠️ Tus líquidos suman": "⚠️ Your liquids add up to",
+        "(máximo 3%). Más de 3% de líquidos (miel, aloe, infusión, extractos) puede dañar la textura: el jabón se pone gelatinoso. Baja la cantidad hasta dejar los líquidos en 3% o menos.": "(maximum 3%). More than 3% of liquids (honey, aloe, infusion, extracts) can damage the texture: the soap becomes gelatinous. Lower the amount until the liquids are at 3% or less.",
+        "</b> (máximo 3%). Más de 3% de líquidos (miel, aloe, infusión, extractos) puede dañar la textura: el jabón se pone gelatinoso. Baja la cantidad hasta dejar los líquidos en 3% o menos.": "</b> (maximum 3%). More than 3% of liquids (honey, aloe, infusion, extracts) can damage the texture: the soap becomes gelatinous. Lower the amount until the liquids are at 3% or less."
+      } };
+      var STORE_KEY='savias_lang';
+      var LANG=localStorage.getItem(STORE_KEY)||'es';
+      if(LANG!=='es'&&LANG!=='en') LANG='es'; // esta calc solo ES/EN
+      var orig=new WeakMap(), mo=null, scheduled=false;
+      var _keys=null;
+      function sortedKeys(d){ if(_keys)return _keys; _keys=Object.keys(d).sort(function(a,b){return b.length-a.length;}); return _keys; }
+      function tr(s){ if(LANG==='es'||s==null) return s; var d=DICT[LANG]; if(!d) return s; var k=String(s).trim(); var v=d[k]; if(v!=null) return String(s).replace(k,v); // exact (whitespace-preserving) match first
+        // fallback: composed strings with embedded numbers (e.g. "Recomendado: 2–3%", "Vas bien (...)")
+        var out=String(s), changed=false; sortedKeys(d).forEach(function(key){ if(out.indexOf(key)!==-1){ out=out.split(key).join(d[key]); changed=true; } }); return changed?out:s; }
+      function trHTML(s){ if(LANG==='es'||s==null) return s; var d=DICT[LANG]; if(!d) return s; var out=String(s); sortedKeys(d).forEach(function(k){ if(out.indexOf(k)!==-1){ out=out.split(k).join(d[k]); } }); return out; }
+      window.__t=tr; window.__tHTML=trHTML; window.__lang=function(){return LANG;};
+      function walkText(root){
+        var tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(!p)return NodeFilter.FILTER_REJECT;var t=p.nodeName;if(t==='SCRIPT'||t==='STYLE'||t==='NOSCRIPT'||t==='TEXTAREA')return NodeFilter.FILTER_REJECT;if(!n.nodeValue||!n.nodeValue.trim())return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});
+        var n; while(n=tw.nextNode()){ if(!orig.has(n))orig.set(n,n.nodeValue); var o=orig.get(n); var nv=(LANG==='es')?o:tr(o); if(n.nodeValue!==nv)n.nodeValue=nv; }
+      }
+      function walkAttrs(root){ root.querySelectorAll('[placeholder]').forEach(function(el){ if(el.__ph==null)el.__ph=el.getAttribute('placeholder'); el.setAttribute('placeholder', LANG==='es'?el.__ph:tr(el.__ph)); }); root.querySelectorAll('[title]').forEach(function(el){ if(el.__ti==null)el.__ti=el.getAttribute('title'); el.setAttribute('title', LANG==='es'?el.__ti:tr(el.__ti)); }); root.querySelectorAll('[aria-label]').forEach(function(el){ if(el.__al==null)el.__al=el.getAttribute('aria-label'); el.setAttribute('aria-label', LANG==='es'?el.__al:tr(el.__al)); }); }
+      function applyLang(){ if(mo)mo.disconnect(); walkText(document.body); walkAttrs(document.body); document.documentElement.setAttribute('lang',LANG); document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-lang')===LANG);}); if(mo)mo.observe(document.body,{childList:true,subtree:true,characterData:true}); }
+      function setLang(l){ LANG=l; localStorage.setItem(STORE_KEY,l); applyLang(); }
+      function init(){ document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){b.addEventListener('click',function(){setLang(b.getAttribute('data-lang'));});}); mo=new MutationObserver(function(){ if(scheduled)return; scheduled=true; (window.requestAnimationFrame||setTimeout)(function(){scheduled=false;applyLang();},0); }); applyLang(); }
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+    })();
+    </script>
+</body>
+
+</html>

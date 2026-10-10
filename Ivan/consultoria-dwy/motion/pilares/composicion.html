@@ -1,0 +1,131 @@
+<!doctype html>
+<!-- Los 5 pilares de una finca sin improvisar · La Huerta LAB · 9:16 · 17,5 s · 96 BPM. Ver brief.md y estados.md. -->
+<html><head><meta charset="utf-8">
+<link rel="stylesheet" href="marca/fuentes.css"><link rel="stylesheet" href="marca/marca.css">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1080px;height:1920px;overflow:hidden;background:var(--deep)}
+  body{font-family:'Source Sans 3',sans-serif;color:#fff}
+  .abs{position:absolute}
+  /* intro */
+  #intro{left:90px;right:90px;top:640px}
+  .eti{font-weight:700;font-size:30px;letter-spacing:.22em;text-transform:uppercase;color:var(--lime)}
+  .regla{height:5px;width:320px;background:var(--lime);transform-origin:left;margin:22px 0 40px}
+  .h{font-family:'Zilla Slab',Georgia,serif;font-weight:700;letter-spacing:-.035em;line-height:.98}
+  .h em{font-style:italic;color:var(--lime);font-weight:500}
+  .linea{display:block;overflow:hidden;padding-bottom:.08em;margin-bottom:-.08em}
+  .linea>span{display:inline-block}
+  #intro .h{font-size:124px}
+  /* fotos */
+  .foto{left:0;top:0;width:1080px;height:1180px;overflow:hidden}
+  .foto img{width:100%;height:100%;object-fit:cover;transform-origin:50% 60%}
+  .foto::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,31,29,.25) 0%,rgba(6,31,29,0) 30%,rgba(6,31,29,0) 62%,rgba(6,31,29,.92) 100%)}
+  /* número rodillo */
+  #numero{left:72px;top:960px;height:250px;overflow:hidden;z-index:20}
+  #rodillo>div{font-family:'Zilla Slab',Georgia,serif;font-weight:700;font-size:250px;line-height:250px;letter-spacing:-.04em;color:var(--lime)}
+  /* textos de pilar */
+  .pilar{left:90px;right:90px;top:1250px;z-index:20}
+  .pilar .h{font-size:88px}
+  .pilar .sub{margin-top:26px;font-size:46px;font-weight:600;line-height:1.2;color:rgba(248,245,237,.95)}
+  /* progreso */
+  #progreso{left:90px;top:1206px;display:flex;gap:10px;z-index:20}
+  #progreso i{display:block;width:52px;height:6px;border-radius:3px;background:rgba(248,245,237,.22);overflow:hidden}
+  #progreso i b{display:block;height:100%;width:100%;background:var(--lime);transform-origin:left;transform:scaleX(0)}
+  /* cierre */
+  #telon{inset:0;background:var(--deep);z-index:40}
+  #cierre{left:90px;right:90px;top:700px;z-index:41}
+  #cierre .h{font-size:120px}
+  #uvp{left:90px;right:90px;top:1020px;z-index:41}
+  #uvp .regla{margin:0 0 30px}
+  #uvp p{font-size:48px;font-weight:600;line-height:1.2;color:rgba(248,245,237,.95)}
+  #firma{left:90px;top:1330px;z-index:41;display:flex;align-items:center;gap:22px}
+  #firma img{width:120px;height:120px}
+  #firma span{font-weight:700;font-size:30px;letter-spacing:.22em;text-transform:uppercase;color:var(--lime)}
+</style></head>
+<body>
+  <div id="intro" class="abs">
+    <div class="eti linea"><span id="i0">La Huerta LAB</span></div>
+    <div class="regla" id="regla"></div>
+    <div class="h"><span class="linea"><span id="i1">Los 5 pilares</span></span><span class="linea"><span id="i2">de una finca</span></span><span class="linea"><span id="i3"><em>sin improvisar.</em></span></span></div>
+  </div>
+  <div id="fotos"></div>
+  <div id="numero" class="abs"><div id="rodillo"></div></div>
+  <div id="progreso" class="abs"></div>
+  <div id="textos"></div>
+  <div id="telon" class="abs"></div>
+  <div id="cierre" class="abs"><div class="h"><span class="linea"><span id="c1">Todo se diseña</span></span><span class="linea"><span id="c2"><em>antes de sembrar.</em></span></span></div></div>
+  <div id="uvp" class="abs"><div class="regla" id="regla2"></div><p class="linea"><span id="u1">Aprende a diseñar una finca productiva.</span></p></div>
+  <div id="firma" class="abs"><img src="marca/logo-blanco.png" alt=""><span>La Huerta LAB</span></div>
+<script src="motion-kit.js"></script>
+<script>
+  window.COMPOSICION = { ancho: 1080, alto: 1920, fps: 30, duracion: 17.5, bpm: 96 };
+  const { anima, escalon, ease, tramo, pon, beat, clamp } = MK, B = (k) => beat(k, COMPOSICION.bpm);
+  const P = [
+    { f: 'fotos/01-venta.jpg',      t: ['Vende antes', 'de sembrar'],  s: 'La cadena corta empieza en tu mesa.' },
+    { f: 'fotos/02-policultivo.jpg', t: ['Siembra en', 'policultivo'], s: 'Más cultivos, menos riesgo.' },
+    { f: 'fotos/03-animales.jpg',   t: ['Integra', 'los animales'],    s: 'Proteína y algo que vender todo el año.' },
+    { f: 'fotos/04-insumos.jpg',    t: ['Produce tus', 'insumos'],     s: 'Del estiércol, tu abono. Sin químicos.' },
+    { f: 'fotos/05-agua.jpg',       t: ['Cuida', 'cada gota'],         s: 'Que la lluvia se quede en tu lote.' },
+  ];
+  const INI = [4, 8, 12, 16, 20].map(B), FIN = [8, 12, 16, 20, 24].map(B), CIERRE = B(24);
+  // construir el DOM una vez (el estado lo pone frame(t))
+  document.getElementById('fotos').innerHTML = P.map((p, i) => `<div class="foto abs" id="f${i}" style="z-index:${i + 1}"><img id="fi${i}" src="${p.f}"></div>`).join('');
+  document.getElementById('rodillo').innerHTML = P.map((_, i) => `<div>0${i + 1}</div>`).join('');
+  document.getElementById('progreso').innerHTML = P.map((_, i) => `<i><b id="pg${i}"></b></i>`).join('');
+  document.getElementById('textos').innerHTML = P.map((p, i) => `<div class="pilar abs" id="p${i}"><div class="h">${p.t.map((l, k) => `<span class="linea"><span id="p${i}l${k}">${l}</span></span>`).join('')}</div><div class="sub linea"><span id="p${i}s">${p.s}</span></div></div>`).join('');
+
+  window.frame = (t) => {
+    // 1 · intro: regla, eyebrow y titular por líneas; sale hacia arriba antes del primer pilar
+    const sale = ease.entradaSalida(tramo(t, B(3.4), B(4.1)));
+    pon('regla', { transform: `scaleX(${anima(t, B(0), B(1.2), 0, 1, ease.salidaFuerte) * (1 - sale)})` });
+    ['i0', 'i1', 'i2', 'i3'].forEach((id, k) => {
+      const p = escalon(t, k, 4, B(0.3), B(1.5), B(1.1), ease.salidaFuerte);
+      pon(id, { transform: `translateY(${(1 - p) * 112 - sale * 112}%)` });
+    });
+    // 2-6 · pilares
+    P.forEach((p, i) => {
+      const a = INI[i], b = FIN[i];
+      const rev = ease.salidaFuerte(tramo(t, a, a + B(1)));
+      pon('f' + i, { clipPath: `inset(${(1 - rev) * 100}% 0 0 0)`, visibility: t >= a ? 'visible' : 'hidden' });
+      pon('fi' + i, { transform: `scale(${1.1 - 0.08 * ease.salida(tramo(t, a, b + B(1)))}) translateY(${-2 * tramo(t, a, b)}%)` });
+      const fuera = ease.entradaSalida(tramo(t, b - B(0.15), b + B(0.4)));
+      p.t.forEach((_, k) => {
+        const e = escalon(t, k, p.t.length, a + B(0.35), B(0.5), B(0.9), ease.salidaFuerte);
+        pon(`p${i}l${k}`, { transform: `translateY(${(1 - e) * 112 - fuera * 112}%)` });
+      });
+      const es = ease.salidaFuerte(tramo(t, a + B(0.8), a + B(1.6)));
+      pon(`p${i}s`, { transform: `translateY(${(1 - es) * 110 - fuera * 110}%)` });
+      pon('pg' + i, { transform: `scaleX(${ease.salida(tramo(t, a, a + B(0.8)))})` });
+    });
+    // número rodillo: sube un paso por pilar
+    let paso = 0; INI.forEach((a, i) => { paso += i ? ease.salidaFuerte(tramo(t, a, a + B(0.8))) : 0; });
+    const entraN = ease.salidaFuerte(tramo(t, INI[0], INI[0] + B(0.9)));
+    pon('rodillo', { transform: `translateY(${-paso * 250 + (1 - entraN) * 250}px)` });
+    const visiblesP = t >= INI[0] - 0.01;
+    pon('numero', { visibility: visiblesP ? 'visible' : 'hidden' });
+    pon('progreso', { opacity: tramo(t, INI[0], INI[0] + B(0.6)) * (1 - tramo(t, CIERRE - B(0.3), CIERRE)) });
+    // 7 · cierre: telón deep desde abajo, titular, logo
+    const tel = ease.entradaSalida(tramo(t, CIERRE - B(0.2), CIERRE + B(0.7)));
+    pon('telon', { clipPath: `inset(${(1 - tel) * 100}% 0 0 0)` });
+    ['c1', 'c2'].forEach((id, k) => { const e = escalon(t, k, 2, CIERRE + B(0.4), B(0.5), B(1), ease.salidaFuerte); pon(id, { transform: `translateY(${(1 - e) * 112}%)` }); });
+    pon('regla2', { transform: `scaleX(${anima(t, CIERRE + B(1), B(1), 0, 1, ease.salidaFuerte)})` });
+    pon('u1', { transform: `translateY(${(1 - ease.salidaFuerte(tramo(t, CIERRE + B(1.2), CIERRE + B(2)))) * 112}%)` });
+    const lg = ease.salida(tramo(t, CIERRE + B(1.6), CIERRE + B(2.4)));
+    pon('firma', { opacity: lg, transform: `translateY(${(1 - lg) * 24}px)` });
+  };
+
+  window.audio = (ctx, C) => {
+    const m = MK.maestro(ctx), S = MK.sinte, n = MK.nota;
+    S.pad(ctx, m, 0, CIERRE + 0.2, [n(45), n(52), n(57), n(60)], 0.045);          // La menor, cálido
+    S.pad(ctx, m, CIERRE - 0.1, C.duracion - CIERRE + 0.1, [n(48), n(55), n(60), n(64)], 0.05); // resuelve a Do
+    [0, 2].forEach((k) => S.bombo(ctx, m, B(k), k ? 0.4 : 0.6));
+    const notas = [57, 60, 62, 64, 67];
+    INI.forEach((a, i) => { S.bombo(ctx, m, a, 0.65); S.pulsacion(ctx, m, a, n(notas[i]), 0.16, 0.9); S.pulsacion(ctx, m, a + B(0.5), n(notas[i] + 12), 0.06, 0.6); });
+    for (let k = 4; k < 24; k++) S.hat(ctx, m, B(k + 0.5), 0.07);
+    S.barrido(ctx, m, CIERRE - B(1.2), B(1.2), 0.09, true);
+    S.bombo(ctx, m, CIERRE, 0.75);
+    S.pulsacion(ctx, m, CIERRE + B(1.1), n(72), 0.1, 1.6);
+  };
+  window.__listo = true;
+</script>
+</body></html>

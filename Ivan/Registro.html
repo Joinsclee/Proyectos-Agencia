@@ -1,0 +1,603 @@
+<!-- BLOQUE GHL · Pegar completo dentro de un elemento “HTML/Javascript personalizado”. -->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap');
+    #fp-registro{
+      --forest:#082f2b;--deep:#061f1d;--green:#0f4640;--leaf:#87a942;
+      --lime:#c8db52;--coral:#ef7854;--ivory:#f8f5ed;--paper:#fffdf8;
+      --ink:#14322f;--muted:#61746e;--line:rgba(20,50,47,.14);
+      --shadow:0 28px 80px rgba(6,31,29,.16);
+    }
+    #fp-registro,#fp-registro *{box-sizing:border-box}#fp-registro{margin:0;background:var(--ivory);color:var(--ink);font-family:Inter,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+    :where(#fp-registro) :where(img){display:block;max-width:100%}:where(#fp-registro) :where(a){color:inherit;text-decoration:none}:where(#fp-registro) :where(button,input){font:inherit}.ghl-wrap{width:min(1440px,calc(100% - 80px));margin-inline:auto}
+    .ghl-hero{position:relative;min-height:100svh;overflow:hidden;isolation:isolate;background:var(--deep);color:#fff}
+    .ghl-hero::before{content:"";position:absolute;inset:0;z-index:-3;background:url("https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a72abe62a97cf2a2a1.jpg") center/cover no-repeat;transform:scale(1.005)}
+    .ghl-hero::after{content:"";position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,rgba(6,31,29,.98) 0%,rgba(6,31,29,.91) 42%,rgba(6,31,29,.56) 67%,rgba(6,31,29,.35) 100%),linear-gradient(0deg,rgba(6,31,29,.74),transparent 48%)}
+    .ghl-grain{position:absolute;inset:0;z-index:-1;opacity:.15;mix-blend-mode:soft-light;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E")}
+    .ghl-topbar{min-height:92px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.18)}
+    .ghl-logo{width:146px}.ghl-top-cta{padding:13px 20px;border:0;border-radius:999px;background:var(--lime);box-shadow:0 4px 12px rgba(6,31,29,.20);color:var(--deep);font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;transition:.25s}
+    .ghl-top-cta:hover{background:#fff;border-color:#fff;transform:translateY(-1px)}
+    .ghl-hero-grid{min-height:calc(100svh - 92px);padding:58px 0 70px;display:grid;grid-template-columns:minmax(0,1.14fr) minmax(360px,.62fr);gap:clamp(44px,6vw,100px);align-items:center}
+    .ghl-eyebrow{display:inline-flex;align-items:center;gap:10px;margin:0 0 22px;color:var(--lime);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.ghl-eyebrow::before{content:"";width:28px;height:2px;background:currentColor}
+    #fp-registro h1{max-width:920px;margin:0;font-size:clamp(48px,5.5vw,86px);line-height:.98;letter-spacing:-.06em;font-weight:780;text-wrap:balance}
+    h1 em{display:block;margin-top:8px;color:var(--lime);font-family:"Playfair Display",Georgia,serif;font-weight:600;letter-spacing:-.04em}
+    .ghl-hero-lead{max-width:780px;margin:27px 0 0;color:rgba(255,255,255,.84);font-size:clamp(17px,1.4vw,21px);line-height:1.57}
+    .ghl-event-strip{max-width:800px;margin-top:34px;display:grid;grid-template-columns:1.15fr 1fr 1fr;border:1px solid rgba(255,255,255,.18);border-radius:18px;background:rgba(6,31,29,.53);backdrop-filter:blur(12px)}
+    .ghl-event-item{padding:17px 19px}.ghl-event-item+.ghl-event-item{border-left:1px solid rgba(255,255,255,.15)}.ghl-event-item span{display:block;color:rgba(255,255,255,.56);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.ghl-event-item strong{display:block;margin-top:5px;font-size:14px;line-height:1.35}
+    .ghl-form-card{padding:clamp(28px,3vw,42px);border:0;border-radius:16px;background:rgba(255,253,248,.97);box-shadow:0 18px 48px rgba(0,0,0,.34);color:var(--ink);backdrop-filter:blur(16px)}
+    .ghl-step{color:var(--coral);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.ghl-form-card h2{margin:10px 0 9px;font-size:31px;line-height:1.06;letter-spacing:-.045em}.ghl-form-card>p{margin:0 0 23px;color:var(--muted);font-size:14px;line-height:1.55}
+    .ghl-countdown-label{display:block;margin-bottom:10px;color:var(--green);font-size:10px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}.ghl-hero-countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.ghl-hero-time{padding:14px 5px 12px;border:1px solid var(--line);border-radius:13px;background:#fff;text-align:center}.ghl-hero-time b{display:block;color:var(--deep);font-size:27px;line-height:1;letter-spacing:-.045em}.ghl-hero-time small{display:block;margin-top:6px;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+    .ghl-button{display:inline-flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;margin-top:17px;padding:16px 22px;border:0;border-radius:14px;background:var(--coral);box-shadow:0 12px 28px rgba(239,120,84,.28);color:#fff;cursor:pointer;font-size:14px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;transition:.2s}.ghl-button:hover{transform:translateY(-2px);box-shadow:0 17px 36px rgba(239,120,84,.36)}.ghl-micro{margin:14px 0 0!important;color:var(--muted)!important;font-size:12.5px!important;line-height:1.5;text-align:center}
+    .ghl-trustline{background:var(--deep);color:rgba(255,255,255,.74);border-top:1px solid rgba(255,255,255,.1)}.ghl-trustline-inner{min-height:76px;display:flex;align-items:center;justify-content:center;gap:16px;text-align:center;font-size:13px}.ghl-dot{width:5px;height:5px;border-radius:50%;background:var(--lime)}
+    #fp-registro section{padding:112px 0}.ghl-section-tag{margin:0 0 15px;color:var(--coral);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.ghl-section-title{max-width:900px;margin:0;font-size:clamp(38px,4.5vw,66px);line-height:1.02;letter-spacing:-.055em}.ghl-section-title em{font-family:"Playfair Display",Georgia,serif;color:var(--green);font-weight:600}.ghl-section-intro{max-width:760px;margin:22px 0 0;color:var(--muted);font-size:18px;line-height:1.65}
+    .ghl-avatar-grid{margin-top:52px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.ghl-avatar-card{position:relative;min-height:275px;padding:34px;border:1px solid var(--line);border-radius:16px;background:var(--paper);overflow:hidden}.ghl-avatar-card::after{content:"";position:absolute;width:180px;height:180px;right:-60px;bottom:-70px;border-radius:50%;background:rgba(200,219,82,.16)}.ghl-avatar-n{color:var(--green);font-size:13.5px;font-weight:600}.ghl-avatar-card h3{max-width:520px;margin:40px 0 10px;font-size:28px;line-height:1.13;letter-spacing:-.035em}.ghl-avatar-card p{max-width:570px;margin:0;color:var(--muted);line-height:1.6}
+    .ghl-problem{background:var(--paper)}.ghl-problem-grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:70px;align-items:end}.ghl-quote{margin:0;padding-left:25px;border-left:3px solid var(--lime);font-family:"Playfair Display",Georgia,serif;font-size:27px;font-style:italic;line-height:1.4;color:var(--green)}
+    .ghl-pillars{margin-top:64px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.ghl-pillar{padding:34px;border-radius:16px;background:var(--deep);color:#fff}.ghl-pillar h3{margin:0 0 11px;font-size:26px;letter-spacing:-.035em}.ghl-pillar p{margin:0;color:rgba(255,255,255,.68);line-height:1.62}.ghl-pillar small{display:block;margin-top:26px;color:var(--lime);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+    .ghl-outcomes-grid{display:grid;grid-template-columns:.92fr 1.08fr;gap:80px;align-items:center}.ghl-photo-card{position:relative;min-height:610px;border-radius:16px;overflow:hidden;background:url("https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/67df2d8f-98f4-45da-9c02-f3b35ac3f6f8.jpg") center/cover}.ghl-photo-card::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(6,31,29,.78),transparent 52%)}.ghl-photo-caption{position:absolute;z-index:1;left:30px;right:30px;bottom:28px;color:#fff}.ghl-photo-caption span{color:var(--lime);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em}.ghl-photo-caption strong{display:block;max-width:470px;margin-top:8px;font-size:26px;line-height:1.2}
+    .ghl-checklist{display:grid;gap:13px;margin-top:38px}.ghl-check{display:grid;grid-template-columns:30px 1fr;gap:13px;align-items:start;padding:17px 0;border-bottom:1px solid var(--line)}.ghl-check i{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:rgba(135,169,66,.17);color:var(--green);font-style:normal;font-weight:900}.ghl-check strong{display:block;margin-bottom:4px}.ghl-check p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+    .ghl-real-proof{padding-top:0}.ghl-real-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);align-items:start;gap:56px;margin-bottom:38px}.ghl-real-head .ghl-section-title{max-width:640px;font-size:clamp(34px,3.6vw,52px)}.ghl-real-head p:last-child{margin:0;padding-top:14px;color:var(--muted);line-height:1.65;border-top:1px solid var(--line)}.ghl-real-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.ghl-real-card{position:relative;min-height:330px;margin:0;overflow:hidden;border-radius:16px;background:var(--deep)}.ghl-real-card img{width:100%;height:100%;object-fit:cover;transition:transform .55s ease}.ghl-real-card:hover img{transform:scale(1.035)}.ghl-real-card::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(6,31,29,.76),transparent 55%)}.ghl-real-card figcaption{position:absolute;z-index:1;left:22px;right:22px;bottom:20px;color:#fff}.ghl-real-card figcaption strong{display:block;font-size:16px}.ghl-real-card figcaption span{display:block;margin-top:5px;color:rgba(255,255,255,.65);font-size:11px}
+    .ghl-authority{background:var(--deep);color:#fff}.ghl-authority-grid{display:grid;grid-template-columns:1fr .88fr;gap:80px;align-items:center}.ghl-authority .ghl-section-tag{color:var(--lime)}.ghl-authority .ghl-section-title em{color:var(--lime)}.ghl-bio{margin-top:28px;color:rgba(255,255,255,.73);font-size:17px;line-height:1.72}.ghl-portrait{margin:0;aspect-ratio:544/471;border-radius:18px;overflow:hidden;box-shadow:0 20px 52px rgba(0,0,0,.38)}.ghl-portrait img{width:100%;height:100%;object-fit:cover;object-position:64% center;display:block}
+    .ghl-logo-panel{margin-top:70px;padding:30px 34px;border:1px solid rgba(255,255,255,.16);border-radius:16px;background:rgba(255,255,255,.06)}.ghl-logo-panel>p{margin:0 0 22px;color:rgba(255,255,255,.55);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.ghl-logos{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.ghl-logo-card{min-height:125px;padding:18px;display:flex;align-items:center;gap:18px;border-radius:17px;background:#fff;color:var(--ink)}.ghl-logo-card img{width:76px;height:76px;object-fit:contain}.ghl-logo-card strong{display:block;font-size:14px}.ghl-logo-card span{display:block;margin-top:5px;color:var(--muted);font-size:12px;line-height:1.4}
+    .ghl-faq-list{max-width:900px;margin:52px auto 0}.ghl-faq-list details{border-bottom:1px solid var(--line);padding:23px 0}.ghl-faq-list summary{display:flex;align-items:center;justify-content:space-between;gap:25px;cursor:pointer;list-style:none;font-size:18px;font-weight:700}.ghl-faq-list summary::-webkit-details-marker{display:none}.ghl-faq-list summary::after{content:"+";color:var(--coral);font-size:27px;font-weight:400}.ghl-faq-list details[open] summary::after{content:"−"}.ghl-faq-list details p{max-width:760px;margin:14px 0 0;color:var(--muted);line-height:1.65}
+    .ghl-final{padding:100px 0;background:var(--lime)}.ghl-final-card{display:grid;grid-template-columns:1.25fr .75fr;gap:60px;align-items:center}.ghl-final h2{margin:0;font-size:clamp(39px,4.7vw,70px);line-height:1;letter-spacing:-.055em}.ghl-final h2 em{font-family:"Playfair Display",Georgia,serif;font-weight:600}.ghl-final .ghl-button{max-width:380px;margin:0;background:var(--deep)}
+    #fp-registro footer{padding:34px 0;background:#041715;color:rgba(255,255,255,.52)}.ghl-footer-grid{display:grid;grid-template-columns:auto 1fr;gap:45px;align-items:start}.ghl-footer-grid img{width:112px}.ghl-legal{margin:0;font-size:10px;line-height:1.65}.ghl-mobile-sticky{display:none}
+
+    /* --- Ancho completo dentro de GoHighLevel -------------------------------
+       El widget vive en una columna centrada y estrecha, así que sin esto el
+       hero y las bandas de color quedan recortados con franjas a los lados.
+       Solo márgenes (sin left/right): así funciona igual en static, relative y
+       sticky. ajustarAnchoCompleto() lo remide en runtime por si la columna de
+       GHL no está centrada (padding asimétrico, barra lateral). */
+    #fp-registro{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);max-width:100vw}
+
+
+    /* ── Modal de registro ────────────────────────────────────────────────
+       El botón «Registrarme» apuntaba a #registro y vivía DENTRO de #registro:
+       se anclaba a sí mismo, y de ahí el salto raro al pulsarlo. Ahora abre
+       este modal con el formulario real de GHL embebido. */
+    /* Las variables van repetidas aquí a propósito: el modal se mueve al
+       <body> al arrancar y deja de colgar de #fp-registro, así que pierde las
+       custom properties heredadas. Sin esto, var(--paper) queda vacío, el
+       fondo se transparenta y el título cae a negro sobre la foto del hero. */
+    .ghl-modal{
+      --deep:#061f1d;--green:#0f4640;--leaf:#87a942;--lime:#c8db52;
+      --coral:#ef7854;--ivory:#f8f5ed;--paper:#fffdf8;--ink:#14322f;
+      --muted:#61746e;--line:rgba(20,50,47,.14);
+      font-family:Inter,"Helvetica Neue",Arial,sans-serif;color:var(--ink);
+      position:fixed;inset:0;z-index:2147480060;display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+    .ghl-modal.ghl-abierto{display:flex}
+    .ghl-modal-fondo{position:fixed;inset:0;background:rgba(6,31,29,.72);backdrop-filter:blur(3px);opacity:0;transition:opacity .22s ease}
+    .ghl-modal.ghl-abierto .ghl-modal-fondo{opacity:1}
+    .ghl-modal-caja{
+      position:relative;width:min(560px,100%);
+      /* auto arriba y abajo: centra si cabe y ancla arriba si no, para que el
+         formulario largo se pueda scrollear entero en móvil apaisado. */
+      margin:auto;background:var(--paper);border-radius:16px;
+      box-shadow:0 30px 90px rgba(6,31,29,.45);
+      opacity:0;transform:translateY(14px) scale(.985);
+      transition:opacity .26s cubic-bezier(.16,1,.3,1),transform .26s cubic-bezier(.16,1,.3,1);
+    }
+    .ghl-modal.ghl-abierto .ghl-modal-caja{opacity:1;transform:none}
+    .ghl-modal-cab{padding:26px 28px 0}
+    .ghl-modal-cab h2{margin:0 0 7px;font-size:25px;line-height:1.15;letter-spacing:-.035em}
+    .ghl-modal-cab p{margin:0;color:var(--muted);font-size:14.5px;line-height:1.6}
+    .ghl-modal-cuerpo{padding:14px 20px 20px;min-height:420px}
+    .ghl-modal-cuerpo iframe{width:100%;min-height:420px;border:0;display:block;background:transparent}
+    .ghl-modal-cargando{display:flex;align-items:center;justify-content:center;gap:10px;min-height:420px;color:var(--muted);font-size:14px}
+    .ghl-modal-cargando span{width:9px;height:9px;border-radius:50%;background:var(--leaf);animation:ghlPunto 1.1s ease-in-out infinite}
+    .ghl-modal-cargando span:nth-child(2){animation-delay:.14s}
+    .ghl-modal-cargando span:nth-child(3){animation-delay:.28s}
+    @keyframes ghlPunto{0%,70%,100%{opacity:.28;transform:translateY(0)}35%{opacity:1;transform:translateY(-5px)}}
+    .ghl-modal-cerrar{
+      position:absolute;top:12px;right:12px;width:38px;height:38px;border:0;border-radius:10px;
+      background:rgba(20,50,47,.07);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;
+      display:grid;place-items:center;transition:background .18s ease;
+    }
+    .ghl-modal-cerrar:hover{background:rgba(20,50,47,.14)}
+    @media(max-width:650px){
+      .ghl-modal{padding:12px}
+      .ghl-modal-cab{padding:22px 20px 0}
+      .ghl-modal-cab h2{font-size:22px}
+      .ghl-modal-cuerpo{padding:12px 12px 16px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      .ghl-modal-fondo,.ghl-modal-caja{transition:none}
+      .ghl-modal-cargando span{animation:none}
+    }
+
+    /* ── Movimiento ───────────────────────────────────────────────────────
+       Solo se animan transform y opacity: son las dos propiedades que el
+       navegador compone sin repintar, así que van a 60fps hasta en un móvil
+       modesto. Duraciones cortas (200-600ms) y curvas de salida: una entrada
+       lenta se lee como lentitud de la página, no como elegancia. */
+    .ghl-reveal{opacity:0;transform:translateY(22px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1);transition-delay:var(--d,0ms);will-change:opacity,transform}
+    .ghl-reveal.ghl-visible{opacity:1;transform:none}
+
+    /* El fondo del hero se desplaza más despacio que el contenido. El valor
+       lo escribe el JS en --py; el navegador solo compone. */
+    .ghl-hero::before{transform:scale(1.08) translate3d(0,var(--py,0px),0);will-change:transform}
+
+    /* Barrido de luz sobre la tarjeta del formulario: da el aire «tecnológico»
+       sin ruido, y solo se ve una vez al entrar. */
+    .ghl-form-card{position:relative;overflow:hidden}
+    .ghl-form-card::after{content:"";position:absolute;top:0;left:-60%;width:45%;height:100%;pointer-events:none;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(0);animation:ghlBarrido 2.6s cubic-bezier(.4,0,.2,1) .5s 1 both}
+    @keyframes ghlBarrido{to{transform:translateX(360%)}}
+
+    /* Los dígitos de la cuenta atrás cambian con un giro corto en lugar de
+       saltar. tabular-nums evita que el bloque se ensanche con cada cifra. */
+    .ghl-hero-time b{font-variant-numeric:tabular-nums}
+    .ghl-hero-time b.ghl-tick{animation:ghlTick .42s cubic-bezier(.2,.8,.2,1)}
+    @keyframes ghlTick{0%{transform:translateY(-42%);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+
+    /* Sin retícula de fondo: una grilla decorativa de dos ejes es uno de los
+       tells más reconocibles de página generada. La profundidad la dan el
+       material y el hairline, no un patrón encima. */
+
+    /* Estados de contacto: elevación corta y contenida. */
+    .ghl-avatar-card,.ghl-pillar,.ghl-logo-card{transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease,border-color .28s ease}
+    .ghl-avatar-card:hover{transform:translateY(-4px);border-color:rgba(135,169,66,.5);box-shadow:0 22px 48px rgba(6,31,29,.10)}
+    .ghl-pillar:hover{transform:translateY(-4px);box-shadow:0 26px 56px rgba(6,31,29,.30)}
+    .ghl-logo-card:hover{transform:translateY(-3px)}
+    .ghl-real-card{transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s ease}
+    .ghl-real-card:hover{transform:translateY(-6px);box-shadow:0 30px 64px rgba(6,31,29,.26)}
+    .ghl-check i{transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s ease}
+    .ghl-check:hover i{transform:scale(1.14);background:rgba(135,169,66,.3)}
+
+    /* La regla del eyebrow se dibuja al entrar en pantalla. */
+    .ghl-eyebrow::before{transform:scaleX(0);transform-origin:left;transition:transform .55s cubic-bezier(.16,1,.3,1) .15s}
+    .ghl-visible .ghl-eyebrow::before,.ghl-eyebrow.ghl-visible::before{transform:scaleX(1)}
+
+    /* Las respuestas del FAQ se despliegan en vez de aparecer de golpe. */
+    .ghl-faq-list details[open] p{animation:ghlAbrir .34s cubic-bezier(.16,1,.3,1)}
+    @keyframes ghlAbrir{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+    /* En táctil no hay hover: los estados de arriba no llegan nunca, y el
+       barrido molesta más que aporta cuando se repite en cada carga. */
+    @media(hover:none){.ghl-form-card::after{display:none}}
+    @media(max-width:1000px){.ghl-wrap{width:min(100% - 40px,760px)}.ghl-hero-grid,.ghl-problem-grid,.ghl-outcomes-grid,.ghl-authority-grid,.ghl-final-card{grid-template-columns:1fr}.ghl-hero-grid{min-height:auto;padding-top:72px}.ghl-hero::after{background:linear-gradient(90deg,rgba(6,31,29,.94),rgba(6,31,29,.67)),linear-gradient(0deg,rgba(6,31,29,.88),transparent 48%)}.ghl-form-card{max-width:620px}.ghl-pillars{grid-template-columns:1fr}.ghl-problem-grid,.ghl-outcomes-grid,.ghl-authority-grid{gap:48px}.ghl-photo-card{min-height:520px}.ghl-real-head{display:block}.ghl-real-head p:last-child{margin-top:18px}.ghl-real-grid{grid-template-columns:1fr 1fr}.ghl-real-card:first-child{grid-column:1/-1}.ghl-portrait{max-width:620px}.ghl-final .ghl-button{margin-top:10px}}
+    @media(max-width:650px){#fp-registro{padding-bottom:78px}.ghl-wrap{width:min(100% - 28px,540px)}.ghl-topbar{min-height:76px}.ghl-logo{width:126px}.ghl-top-cta{display:none}.ghl-hero-grid{padding:45px 0 42px;gap:36px}#fp-registro h1{font-size:clamp(42px,13vw,58px)}.ghl-hero-lead{font-size:16px}.ghl-event-strip{grid-template-columns:1fr}.ghl-event-item+.ghl-event-item{border-top:1px solid rgba(255,255,255,.15);border-left:0}.ghl-form-card{padding:25px 20px;border-radius:16px}.ghl-hero-time b{font-size:23px}.ghl-avatar-grid,.ghl-logos{grid-template-columns:1fr}.ghl-avatar-card{min-height:240px;padding:27px}.ghl-avatar-card h3{margin-top:28px;font-size:24px}#fp-registro section{padding:80px 0}.ghl-pillars{margin-top:42px}.ghl-photo-card{min-height:460px}.ghl-real-grid{grid-template-columns:1fr}.ghl-real-card:first-child{grid-column:auto}.ghl-real-card{min-height:260px}.ghl-logo-card{min-height:110px}.ghl-footer-grid{grid-template-columns:1fr}.ghl-final{padding:76px 0}.ghl-mobile-sticky{position:fixed;z-index:50;display:block;left:10px;right:10px;bottom:10px;padding:16px 18px;border-radius:14px;background:var(--coral);box-shadow:0 14px 34px rgba(6,31,29,.38);color:#fff;font-size:13px;font-weight:800;letter-spacing:.04em;text-align:center;text-transform:uppercase}}
+    @media(prefers-reduced-motion:reduce){.ghl-reveal{opacity:1;transform:none;transition:none}.ghl-eyebrow::before{transform:scaleX(1)}.ghl-form-card::after{display:none}.ghl-hero::before{transform:scale(1.005)}#fp-registro *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+    /* ── VSL ──────────────────────────────────────────────────────────────
+       Carátula propia en vez de los controles nativos: así lo primero que se
+       ve es un fotograma elegido y no el rectángulo negro del reproductor. */
+    .ghl-vsl{background:var(--deep);color:#fff;padding-top:96px}
+    .ghl-vsl .ghl-section-tag{color:var(--lime)}
+    .ghl-vsl .ghl-section-title{max-width:900px;color:#fff}
+    .ghl-vsl .ghl-section-title em{color:var(--lime)}
+    .ghl-vsl-marco{position:relative;margin:44px 0 0;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#04100f;box-shadow:0 34px 90px rgba(0,0,0,.5)}
+    .ghl-vsl-marco video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#04100f}.ghl-vsl-marco video[hidden]{display:none}.ghl-vsl-yt{position:absolute;inset:0}.ghl-vsl-yt[hidden]{display:none}.ghl-vsl-yt iframe{width:100%;height:100%;border:0;display:block}.ghl-vsl-fondo{pointer-events:none}@media(prefers-reduced-motion:reduce){.ghl-vsl-fondo{display:none}}
+    .ghl-vsl-play{position:absolute;inset:0;width:100%;border:0;padding:0;background:transparent;color:#fff;font:inherit;cursor:pointer;display:grid;place-items:center}
+    .ghl-vsl-play[hidden]{display:none}
+    .ghl-vsl-play::before{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(6,31,29,.70),rgba(6,31,29,.30) 56%,rgba(6,31,29,.16)),radial-gradient(56% 44% at 50% 55%,rgba(6,31,29,.55),rgba(6,31,29,0) 72%)}
+    .ghl-vsl-play>span{position:relative;display:grid;place-items:center;gap:14px;padding:0 18px;text-align:center}
+    .ghl-vsl-disco{display:grid;place-items:center;width:82px;height:82px;border:1px solid rgba(255,255,255,.42);border-radius:50%;background:rgba(255,255,255,.13);backdrop-filter:blur(6px);font-size:26px;transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s ease}
+    .ghl-vsl-play:hover .ghl-vsl-disco{transform:scale(1.07);background:rgba(255,255,255,.24)}
+    .ghl-vsl-play strong{display:block;font-size:19px;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(4,16,15,.85)}
+    .ghl-vsl-play small{display:block;margin-top:5px;color:rgba(255,255,255,.82);font-size:12.5px;text-shadow:0 2px 10px rgba(4,16,15,.9)}
+    .ghl-vsl-pie{margin-top:30px;display:grid;grid-template-columns:1fr auto;gap:34px;align-items:center}
+    .ghl-vsl-pie p{margin:0;max-width:620px;color:rgba(255,255,255,.72);font-size:15.5px;line-height:1.62}
+    .ghl-vsl-pie .ghl-button{width:auto;min-width:290px;margin:0}
+    @media(max-width:1000px){.ghl-vsl{padding-top:80px}.ghl-vsl-pie{grid-template-columns:1fr;gap:22px}.ghl-vsl-pie .ghl-button{width:100%}}
+    @media(max-width:650px){.ghl-vsl-marco{margin-top:32px;border-radius:14px}.ghl-vsl-disco{width:60px;height:60px;font-size:20px}.ghl-vsl-play>span{gap:10px}.ghl-vsl-play strong{font-size:15.5px}.ghl-vsl-play small{font-size:11.5px}}
+
+  </style>
+<div id="fp-registro">
+  <!-- Recursos visuales alojados en la biblioteca multimedia de GHL. -->
+  <header class="ghl-hero">
+    <div class="ghl-grain" aria-hidden="true"></div>
+    <div class="ghl-wrap ghl-topbar">
+      <img class="ghl-logo" src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a670fc5d91f5b0a65e.png" alt="La Huerta Hotel">
+      <button type="button" class="ghl-top-cta" data-abre-registro>Reservar mi lugar</button>
+    </div>
+    <div class="ghl-wrap ghl-hero-grid">
+      <div>
+        <p class="ghl-eyebrow">Masterclass gratuita · Finca sin improvisar</p>
+        <h1>Antes de comprar, sembrar o invertir más,<em>descubre qué debes resolver primero.</em></h1>
+        <p class="ghl-hero-lead">En 90 minutos, descubre qué debes resolver antes de comprar, sembrar o invertir más para que una finca pueda empezar a producir sin perder tiempo y dinero desde el inicio.</p>
+        <div class="ghl-event-strip">
+          <div class="ghl-event-item"><span>Fecha</span><strong>Jueves 17 de septiembre de 2026</strong></div>
+          <div class="ghl-event-item"><span>Hora</span><strong>6:00 p. m. · Colombia</strong></div>
+          <div class="ghl-event-item"><span>Modalidad</span><strong>YouTube Live · Gratis</strong></div>
+        </div>
+      </div>
+      <aside class="ghl-form-card" id="registro">
+        <h2>Reserva tu lugar gratuito</h2>
+        <p>Falta este tiempo para abrir las puertas de la masterclass.</p>
+        <span class="ghl-countdown-label">Comenzamos en</span>
+        <div class="ghl-hero-countdown" aria-live="polite">
+          <div class="ghl-hero-time"><b id="heroDays">00</b><small>Días</small></div>
+          <div class="ghl-hero-time"><b id="heroHours">00</b><small>Horas</small></div>
+          <div class="ghl-hero-time"><b id="heroMinutes">00</b><small>Minutos</small></div>
+          <div class="ghl-hero-time"><b id="heroSeconds">00</b><small>Segundos</small></div>
+        </div>
+        <!-- GHL: conecta este botón al popup, formulario o siguiente paso de registro. No se solicita WhatsApp aquí. -->
+        <button type="button" class="ghl-button" data-abre-registro>Registrarme gratis <span aria-hidden="true">→</span></button>
+        <p class="ghl-micro">Registro gratuito · WhatsApp se solicita en el paso siguiente</p>
+      </aside>
+    </div>
+  </header>
+
+  <div class="ghl-trustline"><div class="ghl-wrap ghl-trustline-inner"><span class="ghl-dot"></span><span>Una clase para tomar mejores decisiones sobre tu tierra, antes de seguir gastando por intuición.</span><span class="ghl-dot"></span></div></div>
+
+  <main>
+
+    <section class="ghl-vsl">
+      <div class="ghl-wrap">
+        <p class="ghl-section-tag ghl-reveal">La masterclass en cuatro minutos</p>
+        <h2 class="ghl-section-title ghl-reveal">Iván te cuenta <em>qué vas a ver el 17 de septiembre.</em></h2>
+        <figure class="ghl-vsl-marco ghl-reveal">
+          <!-- Capa de fondo: los primeros 11 s en bucle, mudo y a 720p (1,2 MB).
+               Da la sensación de que el vídeo ya está corriendo sin cargar el
+               reproductor de YouTube a todo el que pasa por la página. -->
+          <video class="ghl-vsl-fondo" id="vslRegistroFondo" muted loop playsinline autoplay
+                 preload="metadata" tabindex="-1" aria-hidden="true"
+                 poster="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/06e55ae1-c06b-4c4a-89ae-64ef5f638dca.jpg">
+            <source src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/fc889dc8-7a27-4ba1-b9c7-fe31166ca7de.mp4" type="video/mp4">
+          </video>
+          <!-- El iframe de YouTube no está aquí: lo inyecta el JS al pulsar.
+               Así la página no carga el reproductor de YouTube (ni sus cookies)
+               a quien solo pasa de largo, y el clic cuenta como gesto del
+               usuario, que es lo que permite arrancar con sonido. -->
+          <div class="ghl-vsl-yt" id="vslRegistroYT" hidden></div>
+          <button type="button" class="ghl-vsl-play" id="vslRegistroPlay" aria-label="Reproducir la presentación de la masterclass">
+            <span>
+              <span class="ghl-vsl-disco" aria-hidden="true">▶</span>
+              <strong>Los cinco pilares, explicados por él</strong>
+              <small>3 min 46 s · con sonido, desde el principio</small>
+            </span>
+          </button>
+        </figure>
+        <div class="ghl-vsl-pie ghl-reveal">
+          <p>Si prefieres leer, sigue bajando: debajo está lo mismo por escrito. El registro es gratuito y el enlace de la clase se envía en la comunidad de WhatsApp.</p>
+          <button type="button" class="ghl-button" data-abre-registro>Reservar mi lugar gratis <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </section>
+    <section>
+      <div class="ghl-wrap">
+        <h2 class="ghl-section-title ghl-reveal">No importa si la finca todavía es un sueño o ya está en tus manos. <em>El riesgo es decidir sin un mapa.</em></h2>
+        <div class="ghl-avatar-grid">
+          <article class="ghl-avatar-card ghl-reveal"><span class="ghl-avatar-n">Antes de comprar</span><h3>Quieres comprar una finca, pero temes elegir una tierra bonita y difícil de sostener.</h3><p>No quieres descubrir demasiado tarde que invertiste tus ahorros en un lugar que no encaja con lo que quieres producir ni con la vida que imaginas.</p></article>
+          <article class="ghl-avatar-card ghl-reveal"><span class="ghl-avatar-n">Después de comprar</span><h3>Ya tienes una finca, pero consume dinero, está subutilizada o depende de decisiones improvisadas.</h3><p>Quieres ponerla a trabajar con criterio, sin seguir acumulando proyectos aislados que compiten por tiempo, espacio y recursos.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="ghl-problem">
+      <div class="ghl-wrap">
+        <div class="ghl-problem-grid">
+          <div><h2 class="ghl-section-title ghl-reveal">Una finca falla cuando las decisiones <em>no funcionan como un sistema.</em></h2></div>
+          <blockquote class="ghl-quote ghl-reveal">Sembrar, construir o comprar animales puede parecer avance. Pero si cada decisión va por su lado, también puede convertirse en más gasto y más trabajo.</blockquote>
+        </div>
+        <div class="ghl-pillars">
+          <article class="ghl-pillar ghl-reveal"><h3>Diseño</h3><p>Aprende a leer la finca antes de intervenirla: recursos, limitaciones, relaciones y prioridades.</p><small>Leer antes de ejecutar</small></article>
+          <article class="ghl-pillar ghl-reveal"><h3>Ciclos</h3><p>Detecta qué depende de qué para evitar que cada nuevo proyecto aumente tus costos y tu carga operativa.</p><small>Conectar antes de gastar</small></article>
+          <article class="ghl-pillar ghl-reveal"><h3>Destino</h3><p>Define qué debe producir la finca y para quién, para que cada decisión responda al mismo propósito.</p><small>Decidir antes de invertir</small></article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="ghl-wrap ghl-outcomes-grid">
+        <div class="ghl-photo-card ghl-reveal"><div class="ghl-photo-caption"><span>La finca como sistema</span><strong>La productividad comienza mucho antes de la cosecha.</strong></div></div>
+        <div>
+          <p class="ghl-section-tag ghl-reveal">Lo que te llevas</p>
+          <h2 class="ghl-section-title ghl-reveal">No saldrás con una receta universal. Saldrás <em>sabiendo qué resolver primero.</em></h2>
+          <p class="ghl-section-intro ghl-reveal">Al terminar la masterclass vas a entender los cinco pilares que deciden si una finca es rentable o se vuelve un gasto, y en qué orden pensarlos antes de sembrar.</p>
+          <div class="ghl-checklist">
+            <div class="ghl-check ghl-reveal"><i>✓</i><div><strong>Los cinco pilares de una finca que sí produce</strong><p>Qué decide que una finca sea rentable o se vuelva un gasto, y en qué orden pensarlos antes de sembrar.</p></div></div>
+            <div class="ghl-check ghl-reveal"><i>✓</i><div><strong>Un criterio para mirar tu propia finca</strong><p>Para reconocer en qué punto está hoy la tuya, o qué revisar antes de comprar.</p></div></div>
+            <div class="ghl-check ghl-reveal"><i>✓</i><div><strong>El Kit «Finca sin improvisar»</strong><p>Un recurso práctico para aplicar ese criterio cuando termine la clase.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ghl-real-proof">
+      <div class="ghl-wrap">
+        <div class="ghl-real-head">
+          <div><p class="ghl-section-tag ghl-reveal">La Huerta en acción</p><h2 class="ghl-section-title ghl-reveal">Así trabaja La Huerta hoy. <em>Casi el 70% de lo que se consume en el restaurante sale de esta tierra.</em></h2></div>
+          <p class="ghl-reveal">Imágenes reales de La Huerta Hotel: cultivos conectados, trabajo en campo y experiencias que nacen del mismo ecosistema.</p>
+        </div>
+        <div class="ghl-real-grid">
+          <figure class="ghl-real-card ghl-reveal"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/13965c7a-636a-46d1-85d4-6b5efee4b3e7.jpg" alt="Agrónomo de La Huerta Hotel revisando el cultivo en campo" loading="lazy"><figcaption><strong>Producción en campo</strong><span>Decisiones coordinadas dentro de un mismo sistema</span></figcaption></figure>
+          <figure class="ghl-real-card ghl-reveal"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/72c7c763-b916-46af-98e0-8a2516f6df07.jpg" alt="Mano sosteniendo microorganismos de montaña producidos en la finca" loading="lazy"><figcaption><strong>Insumos hechos en la finca</strong><span>Lo que antes se compraba, ahora sale del propio sistema</span></figcaption></figure>
+          <figure class="ghl-real-card ghl-reveal"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/e21b5cb2-39d9-4123-b9bf-fe97639e9828.jpg" alt="Vista aérea de La Huerta Hotel: cultivos, bosque y construcciones en un mismo sistema" loading="lazy"><figcaption><strong>Ecosistema integrado</strong><span>Cultivo, bosque y hospedaje en un mismo terreno</span></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="ghl-authority">
+      <div class="ghl-wrap ghl-authority-grid">
+        <div>
+          <h2 class="ghl-section-title ghl-reveal">Iván Castrillón convirtió una finca familiar en <em>un ecosistema productivo real.</em></h2>
+          <p class="ghl-bio ghl-reveal">Iván es ingeniero agrónomo y cofundador de La Huerta Hotel. Tras más de 20 años en la industria agroquímica y roles de liderazgo en distintos países, profundizó en agroecología y llevó ese conocimiento al terreno: producción, restaurante, hotel, educación e investigación conviven hoy dentro de un mismo sistema.</p>
+          <div class="ghl-logo-panel ghl-reveal">
+            <p>Reconocimiento y referenciación institucional</p>
+            <div class="ghl-logos">
+              <div class="ghl-logo-card"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a502832ae861789f1e.png" alt="Sello Negocios Verdes CVC"><div><strong>Negocio Verde verificado</strong><span>Corporación Autónoma Regional del Valle del Cauca</span></div></div>
+              <div class="ghl-logo-card"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a5d931dc075142221f.png" alt="ProColombia"><div><strong>Referente farm to table</strong><span>Modelo destacado por ProColombia</span></div></div>
+            </div>
+          </div>
+        </div>
+        <figure class="ghl-portrait ghl-reveal">
+          <img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a96a986f22eac14d9d0a997.jpg" alt="Iván Castrillón dando clase en el Campo Escuela de La Huerta Hotel" loading="lazy">
+        </figure>
+      </div>
+    </section>
+
+    <section>
+      <div class="ghl-wrap">
+        <h2 class="ghl-section-title" style="max-width:800px;margin-inline:auto;text-align:center">Lo importante, <em>antes de registrarte.</em></h2>
+        <div class="ghl-faq-list">
+          <details><summary>¿Necesito tener una finca?</summary><p>No. La clase sirve tanto para quien está evaluando una compra como para quien ya tiene tierra y quiere dejar de improvisar.</p></details>
+          <details><summary>¿Necesito ser agrónomo o tener experiencia?</summary><p>No. Iván explicará los criterios en lenguaje claro para propietarios, futuros compradores y personas que quieren volver al campo.</p></details>
+          <details><summary>¿La masterclass es gratuita y en vivo?</summary><p>Sí. Será una transmisión gratuita por YouTube Live el jueves 17 de septiembre de 2026 a las 6:00 p. m., hora Colombia.</p></details>
+          <details><summary>¿Voy a recibir el enlace de acceso?</summary><p>Sí. Después de registrarte verás el paso para entrar a la comunidad segura de WhatsApp, donde se compartirá el enlace y los recursos adicionales.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="ghl-final">
+      <div class="ghl-wrap ghl-final-card">
+        <h2>Antes de invertir un peso más, <em>aprende a decidir con criterio.</em></h2>
+        <button type="button" class="ghl-button" data-abre-registro>Reservar mi lugar gratis <span aria-hidden="true">→</span></button>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="ghl-wrap ghl-footer-grid">
+      <img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a670fc5d91f5b0a65e.png" alt="La Huerta Hotel">
+      <p class="ghl-legal">Esta página no forma parte de Facebook™ o Meta Platforms, Inc. ni está respaldada por Facebook™. Facebook™ es una marca registrada de Meta Platforms, Inc. Los resultados productivos o económicos dependen del contexto, las decisiones y la ejecución de cada persona; no se garantizan resultados específicos. Al registrarte aceptas recibir información relacionada con la masterclass y puedes darte de baja en cualquier momento.</p>
+    </div>
+  </footer>
+  <div class="ghl-modal" id="modalRegistro" role="dialog" aria-modal="true" aria-labelledby="modalRegistroTitulo">
+    <div class="ghl-modal-fondo" data-cerrar-modal></div>
+    <div class="ghl-modal-caja">
+      <button type="button" class="ghl-modal-cerrar" data-cerrar-modal aria-label="Cerrar">&times;</button>
+      <div class="ghl-modal-cab">
+        <h2 id="modalRegistroTitulo">Reserva tu lugar</h2>
+        <p>Es gratis. Después te indicamos el paso 2 para recibir el enlace de la clase.</p>
+      </div>
+      <div class="ghl-modal-cuerpo">
+        <div class="ghl-modal-cargando" id="modalRegistroCargando"><span></span><span></span><span></span></div>
+        <!-- El src se asigna al abrir: así el formulario (83 KB) no se descarga
+             en cada visita, solo cuando alguien va a registrarse. -->
+        <iframe id="inline-7dD9mzYB8L3OAPcNe4El"
+                data-src="https://api.leadconnectorhq.com/widget/form/7dD9mzYB8L3OAPcNe4El"
+                data-layout='{"id":"INLINE"}'
+                data-form-id="7dD9mzYB8L3OAPcNe4El"
+                data-height="480"
+                title="Formulario de registro" style="display:none"
+                scrolling="no"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="ghl-mobile-sticky" data-abre-registro>Reservar mi lugar gratis <span aria-hidden="true">→</span></button>
+</div>
+<script>
+  (function(){
+    function iniciarFincaProductiva(){
+      var root=document.getElementById('fp-registro');
+      if(!root||root.getAttribute('data-ready')==='true') return;
+      root.setAttribute('data-ready','true');
+
+      /* Detrás de la carátula corre un bucle mudo de los primeros segundos. Al
+         pulsar entra el reproductor de YouTube, desde el principio y con
+         sonido: el clic es el gesto de usuario que lo permite.
+
+         Se usa la API de YouTube y no un <iframe> suelto por una razón
+         concreta: el vídeo ya lleva los subtítulos quemados, y YouTube encima
+         pone los suyos automáticos. `cc_load_policy=0` NO los quita (está
+         comprobado), y quedan dos capas de texto. `unloadModule('captions')`
+         sí. La API se carga al pulsar, no antes, para no traer YouTube ni sus
+         cookies a quien solo pasa por la página. */
+      var vslFondo = root.querySelector('#vslRegistroFondo'),
+          vslYT = root.querySelector('#vslRegistroYT'),
+          vslBtn = root.querySelector('#vslRegistroPlay');
+      if (vslYT && vslBtn) {
+        if (vslFondo) {
+          /* GHL inserta el widget después de cargar la página y ahí algunos
+             navegadores ignoran el atributo autoplay. */
+          var arrancaVsl = vslFondo.play();
+          if (arrancaVsl && arrancaVsl.catch) arrancaVsl.catch(function(){});
+        }
+        function apagarSubs(pl){
+          function off(){
+            try { pl.unloadModule('captions'); } catch(e){}
+            try { pl.unloadModule('cc'); } catch(e){}
+            try { pl.setOption('captions', 'track', {}); } catch(e){}
+            try { pl.setOption('cc', 'track', {}); } catch(e){}
+          }
+          off();
+          window.setTimeout(off, 400);
+          window.setTimeout(off, 1200);
+          window.setTimeout(off, 2500);
+        }
+        function montarVsl(){
+          vslYT.innerHTML = '<div id="vslRegistroYT-p"></div>';
+          new window.YT.Player('vslRegistroYT-p', {
+            videoId: 'LsA8J7ezTf8',
+            playerVars: { autoplay:1, rel:0, modestbranding:1, playsinline:1,
+                          iv_load_policy:3, cc_load_policy:0 },
+            events: {
+              onReady: function(e){ apagarSubs(e.target); e.target.playVideo(); },
+              /* El módulo de subtítulos se vuelve a cargar cuando arranca la
+                 reproducción, así que apagarlo solo en onReady no sirve: hay
+                 que insistir al pasar a PLAYING y un par de veces después. */
+              onStateChange: function(e){ if (e.data === 1) apagarSubs(e.target); }
+            }
+          });
+          vslYT.hidden = false;
+        }
+        vslBtn.addEventListener('click', function(){
+          if (vslFondo) { vslFondo.pause(); vslFondo.hidden = true; }
+          vslBtn.hidden = true;
+          if (window.YT && window.YT.Player) { montarVsl(); return; }
+          var previo = window.onYouTubeIframeAPIReady;
+          window.onYouTubeIframeAPIReady = function(){
+            if (typeof previo === 'function') previo();
+            montarVsl();
+          };
+          if (!document.querySelector('script[src*="iframe_api"]')) {
+            var sc = document.createElement('script');
+            sc.src = 'https://www.youtube.com/iframe_api';
+            document.head.appendChild(sc);
+          }
+        });
+      }
+
+
+      /* ── Modal de registro ──────────────────────────────────────────────
+         El formulario de GHL se carga la primera vez que alguien abre el
+         modal, no en cada visita: son 83 KB que la mayoría no llega a usar. */
+      var modal=document.getElementById('modalRegistro');
+      if(modal){
+        /* Fuera del contenedor: `position:fixed` deja de referirse al viewport
+           si un ancestro tiene transform, y las secciones de GHL lo usan. */
+        if(modal.parentNode!==document.body) document.body.appendChild(modal);
+
+        var marco=modal.querySelector('iframe');
+        var cargando=document.getElementById('modalRegistroCargando');
+        var ultimoFoco=null, cargado=false;
+
+        function cargarFormulario(){
+          if(cargado||!marco) return;
+          cargado=true;
+          marco.addEventListener('load',function(){
+            if(cargando) cargando.style.display='none';
+            marco.style.display='block';
+          },{once:true});
+          marco.src=marco.getAttribute('data-src');
+          // El script de GHL ajusta el alto del iframe por postMessage.
+          if(!document.getElementById('ghl-form-embed')){
+            var sc=document.createElement('script');
+            sc.id='ghl-form-embed';
+            sc.src='https://link.msgsndr.com/js/form_embed.js';
+            document.body.appendChild(sc);
+          }
+        }
+
+        function abrirModal(){
+          ultimoFoco=document.activeElement;
+          modal.classList.add('ghl-abierto');
+          document.body.style.overflow='hidden';
+          cargarFormulario();
+          var cerrar=modal.querySelector('.ghl-modal-cerrar');
+          if(cerrar) window.setTimeout(function(){cerrar.focus();},60);
+        }
+        function cerrarModal(){
+          modal.classList.remove('ghl-abierto');
+          document.body.style.overflow='';
+          if(ultimoFoco&&ultimoFoco.focus) ultimoFoco.focus();
+        }
+
+        root.addEventListener('click',function(e){
+          var b=e.target.closest('[data-abre-registro]');
+          if(b){e.preventDefault();abrirModal();}
+        });
+        // Los CTA que quedan fuera del contenedor tras reparentar el modal.
+        document.addEventListener('click',function(e){
+          if(e.target.closest('[data-cerrar-modal]')) cerrarModal();
+        });
+        document.addEventListener('keydown',function(e){
+          if(e.key==='Escape'&&modal.classList.contains('ghl-abierto')) cerrarModal();
+          /* El foco no debe escaparse del modal mientras está abierto: sin
+             esto, tabulando se llega a la página de detrás. */
+          if(e.key==='Tab'&&modal.classList.contains('ghl-abierto')){
+            var f=modal.querySelectorAll('button, [href], iframe, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if(!f.length) return;
+            var primero=f[0], ultimo=f[f.length-1];
+            if(e.shiftKey&&document.activeElement===primero){e.preventDefault();ultimo.focus();}
+            else if(!e.shiftKey&&document.activeElement===ultimo){e.preventDefault();primero.focus();}
+          }
+        });
+      }
+
+      /* Ancho completo: se mide el desfase real en vez de confiar en que la
+         columna de GHL esté centrada. Hay que neutralizar el margen del CSS
+         con estilo inline ANTES de medir; si no, se mide la posición ya
+         corregida y el desfase se aplica dos veces. */
+      function ajustarAnchoCompleto(){
+        var vw=document.documentElement.clientWidth||window.innerWidth;
+        root.style.marginLeft='0px';root.style.marginRight='0px';root.style.width='auto';
+        var caja=root.getBoundingClientRect();
+        if(caja.width===0&&caja.height===0){
+          root.style.marginLeft='';root.style.marginRight='';root.style.width='';
+          return;
+        }
+        root.style.marginLeft=(-caja.left)+'px';
+        root.style.marginRight='0px';
+        root.style.width=vw+'px';
+      }
+      ajustarAnchoCompleto();
+      var temporizadorAncho=null;
+      function reajustarAncho(){clearTimeout(temporizadorAncho);temporizadorAncho=setTimeout(ajustarAnchoCompleto,90);}
+      window.addEventListener('resize',reajustarAncho);
+      window.addEventListener('orientationchange',reajustarAncho);
+      if(window.ResizeObserver){try{new ResizeObserver(reajustarAncho).observe(document.body);}catch(e){}}
+      /* Entrada escalonada: los elementos que asoman juntos se encadenan con
+         70ms entre ellos en vez de aparecer todos a la vez, que es lo que
+         hace que una página parezca "hecha con plantilla". El tope de 5 evita
+         que el último de una fila larga tarde medio segundo en llegar. */
+      var observer=new IntersectionObserver(function(entries){
+        var visibles=entries.filter(function(e){return e.isIntersecting;});
+        visibles.forEach(function(entry,i){
+          entry.target.style.setProperty('--d',(Math.min(i,5)*70)+'ms');
+          entry.target.classList.add('ghl-visible');
+          observer.unobserve(entry.target);
+        });
+      },{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+      root.querySelectorAll('.ghl-reveal').forEach(function(el){observer.observe(el);});
+
+      /* Parallax del hero. Se calcula dentro de requestAnimationFrame y solo
+         escribe una variable CSS: el scroll no hace layout. */
+      var hero=root.querySelector('.ghl-hero');
+      var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(hero&&!reduce){
+        var pendiente=false;
+        var moverFondo=function(){
+          pendiente=false;
+          var caja=hero.getBoundingClientRect();
+          if(caja.bottom<0||caja.top>window.innerHeight) return;
+          /* Recorrido corto: el fondo va un 6% del scroll, lo justo para dar
+             profundidad sin que se despegue del contenido. */
+          hero.style.setProperty('--py',Math.round(-caja.top*0.06)+'px');
+        };
+        window.addEventListener('scroll',function(){
+          if(!pendiente){pendiente=true;window.requestAnimationFrame(moverFondo);}
+        },{passive:true});
+        moverFondo();
+      }
+      var eventTime=new Date('2026-09-17T18:00:00-05:00').getTime();
+      var reduceCuenta=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var twoDigits=function(value){return String(Math.max(0,value)).padStart(2,'0');};
+      function updateHeroCountdown(){
+        var remaining=eventTime-Date.now();
+        var values=remaining<=0?[0,0,0,0]:[
+          Math.floor(remaining/86400000),
+          Math.floor(remaining/3600000)%24,
+          Math.floor(remaining/60000)%60,
+          Math.floor(remaining/1000)%60
+        ];
+        ['heroDays','heroHours','heroMinutes','heroSeconds'].forEach(function(id,index){
+          var element=root.querySelector('#'+id);
+          if(!element) return;
+          var nuevo=twoDigits(values[index]);
+          if(element.textContent===nuevo) return;   // solo se anima lo que cambia
+          element.textContent=nuevo;
+          if(reduceCuenta) return;
+          element.classList.remove('ghl-tick');
+          void element.offsetWidth;                  // reinicia la animación
+          element.classList.add('ghl-tick');
+        });
+      }
+      updateHeroCountdown();
+      window.setInterval(updateHeroCountdown,1000);
+    }
+    if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',iniciarFincaProductiva);}
+    else{iniciarFincaProductiva();}
+    document.addEventListener('hydrationDone',iniciarFincaProductiva);
+  })();
+</script>

@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agente de IA para tu WhatsApp · The Betts AI</title></head>
+<body>
+
+<!-- ============ ENLACES PENDIENTES DE CONFIRMAR ============
+     Sustituir en este bloque y en los href/action correspondientes.
+     WHATSAPP   https://wa.me/XXXXXXXXXXX
+     FORMULARIO 03-Formulario.html            (o la URL de GHL)
+     CALENDARIO embed del calendario de GHL
+     YOUTUBE    video "cómo montarlo tú mismo"
+     SKOOL      comunidad
+     WEBHOOK    Inbound Webhook de GHL para el submit del formulario
+     =========================================================
+     En ESTA página solo se usan dos: el embed del VSL (marcado abajo con
+     "HUECO DE ASSET") y FORMULARIO, en el href del botón (#TODO-FORMULARIO).
+     ========================================================= -->
+
+<style id="tb-core">
+/* Fuentes variables con rango. Pedir pesos sueltos (600;700;800) hace que
+   Google sirva instancias estáticas y el eje óptico 'opsz' deja de existir,
+   con lo que font-variation-settings queda inerte. Con rangos sí llega la
+   variable font: un archivo por familia en vez de tres, y opsz operativo. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400..700&display=swap');
+
+:root{
+  /* superficies */
+  --bg:#0B1220;
+  --surface:#101A2E;
+  --surface-2:#16213C;
+  /* tinta */
+  --ink:#E8EEF9;
+  --muted:#9FB0CC;
+  /* acento (un solo hue, dos tonos) */
+  --accent:#19C37D;
+  --accent-deep:#12A468;
+  --mint:#7FF0D2;
+  /* hairlines */
+  --line:rgba(232,238,249,.10);
+  --line-strong:rgba(232,238,249,.20);
+  /* escala de espaciado 4px, usada con ritmo variado */
+  --s1:4px;  --s2:8px;   --s3:12px; --s4:16px; --s5:24px;
+  --s6:32px; --s7:48px;  --s8:64px; --s9:88px; --s10:120px;
+  /* radios: tope 14px en cards, pill solo en tags */
+  --r-sm:8px; --r:12px; --r-lg:14px; --r-pill:999px;
+  /* motion */
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-soft:cubic-bezier(.32,.72,0,1);
+  /* medidas, en px a propósito.
+     En ch no funcionan: 1ch escala con el tamaño de fuente del elemento, así
+     que el mismo "66ch" da 628px en un párrafo de 17px y 813px en un lead de
+     22px, y "20ch" en un h2 de 40px da 514px. Resultado: elementos de la misma
+     columna con anchos que no casan, y titulares más estrechos que el texto
+     que llevan debajo. En px todos comparten columna y el ojo la lee recta.
+     640px son unos 68 caracteres a 17px, dentro de la medida de lectura. */
+  --measure:640px;       /* cuerpo y entradillas */
+  --measure-head:760px;  /* titulares: nunca por debajo de --measure */
+  --wide:1180px;
+  --narrow:760px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+html,body{overflow-x:hidden}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  font-size:17px;
+  line-height:1.7;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+img,video{max-width:100%;height:auto;display:block}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- breakout de la columna de GHL ---------- */
+/* .band  -> secciones normales (relative/static) */
+.band{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw}
+/* .fullbleed -> sticky, overlays, cualquier cosa donde `left` no desplace */
+.fullbleed{width:100vw;margin-left:calc(50% - 50vw)}
+
+.wrap{width:min(100% - 40px,var(--wide));margin-inline:auto}
+.wrap-narrow{width:min(100% - 40px,var(--narrow));margin-inline:auto}
+@media (max-width:600px){ .wrap,.wrap-narrow{width:calc(100% - 32px)} }
+
+section{padding-block:clamp(56px,8.5vw,116px)}
+.sec-tight{padding-block:clamp(40px,6vw,72px)}
+
+/* ---------- tipografía ----------
+   escala modular ~1.30: 13 / 17 / 22 / 30 / 40 / display
+   display con techo 76px, tracking -0.03em (piso duro -0.04em)          */
+.display,h1{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:800;
+  font-size:clamp(38px,5.6vw,72px);
+  line-height:1.04;
+  letter-spacing:-.03em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 72;
+}
+/* El titular del hero tiene 28 palabras. A tamaño display serían 5 líneas y
+   un h1 largo inflado es un tell. Se trata como titular editorial: más
+   pequeño, con las tres acciones del Método RCA destacadas en color para
+   dar jerarquía dentro de la frase sin cambiar una sola palabra. */
+.h1-editorial{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(29px,4vw,46px);
+  line-height:1.14;
+  letter-spacing:-.025em;
+  margin:0;
+  /* El ancho lo pone --measure-head, más abajo. No volver a ponerlo en ch:
+     medido, 15ch parecen 690px y en realidad son 440px, que parten este
+     titular de 28 palabras en ocho líneas. */
+  text-wrap:balance;
+  font-variation-settings:'opsz' 46;
+}
+/* .hl pesa 600 y los titulares 700: sin esto, las palabras destacadas salen
+   MÁS ligeras que el resto de la frase, justo al revés de lo que se busca. */
+.h1-editorial .hl,h1 .hl,h2 .hl,h3 .hl{font-weight:inherit}
+
+h2{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(28px,3.6vw,40px);
+  line-height:1.12;
+  letter-spacing:-.025em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 40;
+}
+h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(21px,2.2vw,26px);
+  line-height:1.2;
+  letter-spacing:-.02em;
+  margin:0;
+  text-wrap:balance;
+}
+p{margin:0 0 var(--s5);max-width:var(--measure);text-wrap:pretty}
+p:last-child{margin-bottom:0}
+
+/* Los titulares comparten columna con el cuerpo y nunca quedan por debajo de
+   él: un titular más estrecho que su propio párrafo de apoyo se lee como un
+   fallo de composición, no como jerarquía. */
+h1,h2,.h1-editorial{max-width:var(--measure-head)}
+.lead{font-size:clamp(18px,2vw,22px);line-height:1.55;color:var(--muted);max-width:var(--measure)}
+.small{font-size:14px;line-height:1.6}
+.micro{font-size:13px;line-height:1.55;color:var(--muted)}
+
+.hl{color:var(--accent);font-weight:600}
+.ink-strong{color:var(--ink);font-weight:600}
+em.note{color:var(--muted);font-style:italic}
+
+/* eyebrow: presupuesto de 3 en toda la página, nunca sobre el h1 del hero */
+.eyebrow{
+  font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mint);margin:0 0 var(--s4);
+}
+
+/* ---------- botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 30px;border-radius:var(--r);border:0;
+  background:var(--accent);color:#0B1220;
+  font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:17px;
+  line-height:1.2;letter-spacing:-.01em;text-decoration:none;cursor:pointer;
+  transition:transform .18s var(--ease-out),background-color .18s var(--ease-out);
+}
+.btn:hover{background:var(--mint);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{
+  background:transparent;color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+}
+.btn-ghost:hover{background:var(--surface-2);color:var(--ink);transform:translateY(-1px)}
+.btn-lg{padding:20px 36px;font-size:18px}
+.btn-block{display:flex;width:100%}
+
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline:2px solid var(--mint);outline-offset:3px;border-radius:6px;
+}
+
+.cta-note{margin-top:var(--s4);font-size:14px;color:var(--muted);max-width:52ch}
+
+/* ---------- superficies y hairlines ---------- */
+.panel{background:var(--surface);border-radius:var(--r-lg);box-shadow:inset 0 0 0 1px var(--line);padding:clamp(20px,3vw,32px)}
+.panel-2{background:var(--surface-2)}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ---------- reproductor de video (hueco del VSL) ---------- */
+.video-slot{
+  position:relative;aspect-ratio:16/9;width:100%;
+  background:var(--surface-2);border-radius:var(--r-lg);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+  display:grid;place-content:center;gap:var(--s3);justify-items:center;
+  text-align:center;padding:var(--s5);overflow:hidden;
+}
+.video-slot iframe,.video-slot video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-slot .play{
+  width:64px;height:64px;border-radius:var(--r-pill);background:var(--accent);
+  display:grid;place-content:center;
+}
+.video-slot .play svg{width:22px;height:22px;fill:#0B1220;margin-left:3px}
+.video-cap{margin-top:var(--s3);font-size:13px;color:var(--muted);text-align:center}
+
+/* ---------- animación de entrada ----------
+   El contenido es visible por defecto. Solo se oculta si el JS corrió. */
+.js-anim .anim{opacity:0;transform:translateY(14px)}
+.js-anim .anim.in{opacity:1;transform:none;transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+@media (prefers-reduced-motion:reduce){
+  .js-anim .anim{opacity:1;transform:none}
+  .js-anim .anim.in{transition:opacity .01s linear}
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+/* ---------- pie legal ---------- */
+.legal{font-size:12.5px;line-height:1.6;color:var(--muted);opacity:.85;max-width:70ch}
+</style>
+
+<style id="page">
+/* =========================================================================
+   01 · LANDING CORTA (variante A del test A/B)
+   Una sola familia de layout en toda la página: hero centrado a una columna.
+   Nada debajo del video salvo el botón, su nota y el pie legal.
+   Objetivo de composición: en un móvil de 360px el botón cae DENTRO de la
+   primera pantalla, con el video como centro visual del recorrido.
+   ========================================================================= */
+
+.hero{
+  /* degradado tonal del mismo navy, no glow de color: levanta el borde
+     superior y hace que el video quede en la zona más oscura, que es
+     donde queremos el ojo. */
+  background:linear-gradient(180deg,var(--surface) 0%,var(--bg) 58%);
+  padding-block:clamp(24px,5vw,48px) clamp(44px,7vw,96px);
+}
+.hero-inner{text-align:center}
+.hero-inner > *{margin-inline:auto}
+.hero-inner p{margin-bottom:0}
+
+/* El titular es de 28 palabras: en una columna centrada la medida de 15ch
+   del core lo parte en 7 líneas. Aquí se abre hasta la medida útil de la
+   columna para que caiga en 4 líneas en escritorio y 5 en móvil. */
+.hero .h1-editorial{max-width:min(100%,26ch)}
+/* .hl es 600 y el titular es 700: sin esto las tres acciones del RCA se
+   verían MÁS ligeras que el resto de la frase, no más fuertes. */
+.hero .h1-editorial .hl{font-weight:inherit}
+
+.hero .sub{margin-top:clamp(14px,2.4vw,18px);max-width:46ch}
+.hero .watch{margin-top:clamp(18px,3vw,24px);max-width:44ch;color:var(--muted)}
+.hero .stage{margin-top:clamp(16px,2.6vw,22px)}
+.hero .cta{margin-top:clamp(20px,3.4vw,30px)}
+.hero .cta-note{max-width:50ch}
+
+/* En escritorio el reproductor ocupa la columna entera y el titular se queda
+   23ch, unos 45px por lado por dentro del borde del video. Esa diferencia es
+   la que hace que el video lea como el elemento dominante: si los dos anchos
+   quedan casi iguales, parece un desalineado y no una jerarquía. 23ch es
+   además la medida más estrecha que mantiene el titular en 4 líneas. */
+@media (min-width:900px){
+  .hero .h1-editorial{max-width:23ch}
+}
+
+.hero .legal-wrap{
+  margin-top:clamp(40px,7vw,80px);
+  padding-top:var(--s5);
+  border-top:1px solid var(--line);
+  max-width:64ch;
+}
+
+/* Móvil: el titular baja un punto y aprieta el interlineado para que el
+   botón entre en la primera pantalla de un 360x640. */
+@media (max-width:420px){
+  .hero .h1-editorial{font-size:27px;line-height:1.1}
+}
+/* De tablet hacia arriba el botón deja de ser de ancho completo y se
+   centra en la columna. */
+@media (min-width:600px){
+  .hero .cta{display:inline-flex;width:auto}
+}
+</style>
+
+<main>
+  <section class="hero band">
+    <div class="wrap-narrow hero-inner">
+
+      <h1 class="h1-editorial anim">Te instalamos un agente de IA en tu WhatsApp que <span class="hl">responde</span> en menos de 60 segundos, <span class="hl">califica</span> a quien escribe y <span class="hl">agenda</span> solo.</h1>
+
+      <p class="lead sub anim">Operativo en 14 días con el Método RCA. En tu mismo número, sin tocar tus procesos.</p>
+
+      <p class="small watch anim"><b class="ink-strong">Mira el video.</b> En 7 minutos ves el agente funcionando y sabes si esto encaja con tu negocio.</p>
+
+      <div class="stage anim">
+        <!-- HUECO DE ASSET · VSL de la landing (7 min, guion en el doc).
+             Sustituir el bloque .video-slot completo por el embed real, o
+             pegar el iframe dentro de él. El contenedor ya reserva el 16:9,
+             así que el embed no provoca salto de layout:
+             <iframe src="https://www.youtube.com/embed/ID_DEL_VIDEO?rel=0"
+                     title="Agente de IA para WhatsApp"
+                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                     allowfullscreen></iframe>
+             Sin pantallazos ni imágenes de relleno mientras tanto. -->
+        <div class="video-slot">
+          <div class="play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></div>
+        </div>
+      </div>
+
+      <a class="btn btn-lg btn-block cta anim" href="#TODO-FORMULARIO">Quiero mi diagnóstico gratis</a>
+
+      <p class="cta-note anim">Diagnóstico de fuga de conversaciones, sin costo. Responde unas preguntas rápidas (2 minutos) para ver si tu negocio califica.</p>
+
+      <div class="legal-wrap anim">
+        <p class="legal">Este sitio no forma parte de Meta Platforms, Inc. ni está avalado por ella. WhatsApp es una marca registrada de Meta Platforms, Inc.</p>
+      </div>
+
+    </div>
+  </section>
+</main>
+
+<script id="tb-core-js">
+(function(){
+  document.documentElement.classList.add('js-anim');
+  var els = document.querySelectorAll('.anim');
+  if(!('IntersectionObserver' in window)){
+    els.forEach(function(e){e.classList.add('in')});
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  },{rootMargin:'0px 0px -8% 0px',threshold:.05});
+  els.forEach(function(e,i){ e.style.transitionDelay = Math.min(i%4,3)*60 + 'ms'; io.observe(e); });
+})();
+</script>
+
+</body>
+</html>

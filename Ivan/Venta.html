@@ -1,0 +1,1895 @@
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600&display=swap');
+
+#lh-sale{
+  --green:#061f1d;
+  --green2:#0b302b;
+  --lime:#c8db52;
+  --coral:#ef7854;
+  --paper:#f7f6ef;
+  --ink:#14322f;
+  --muted:#61746e;
+  --line:rgba(20,50,47,.14);
+  width:100vw;
+  max-width:100vw;
+  margin-left:calc(50% - 50vw);
+  margin-right:calc(50% - 50vw);
+  overflow:hidden;
+  color:var(--ink);
+  background:var(--paper);
+  font:16px/1.55 Inter,Arial,sans-serif;
+}
+
+#lh-sale,#lh-sale *{box-sizing:border-box}
+#lh-sale img{display:block;max-width:100%}
+#lh-sale a{color:inherit}
+
+.lhs-wrap{
+  width:min(1160px,calc(100% - 40px));
+  margin:auto;
+}
+
+.lhs-eye{
+  margin:0 0 12px;
+  color:#78901d;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+}
+
+.lhs-title{
+  margin:0;
+  font-size:clamp(35px,5vw,65px);
+  letter-spacing:-.05em;
+  line-height:1;
+}
+
+.lhs-title em{
+  color:var(--lime);
+  font-family:'Playfair Display',serif;
+  font-weight:600;
+}
+
+.lhs-lead{
+  max-width:760px;
+  margin:18px auto 0;
+  color:var(--muted);
+  font-size:clamp(17px,2vw,21px);
+}
+
+/* El archivo del logo es negro sobre transparente y aquí va sobre verde
+   oscuro: el filtro lo pasa a blanco puro sin tocar el recorte. El día que
+   llegue una versión en blanco, se quita el filter y listo. */
+.lhs-brand{
+  display:inline-flex;
+  flex:none;
+  text-decoration:none;
+}
+
+.lhs-brand img{
+  width:auto;
+  /* El logo es cuadrado y lleva el nombre dentro, en la franja inferior.
+     Por debajo de 70 px ese texto deja de leerse. */
+  height:84px;
+  filter:brightness(0) invert(1);
+}
+
+.lhs-footer .lhs-brand img{height:88px}
+
+@media(max-width:600px){
+  .lhs-brand img{height:62px}
+  .lhs-footer .lhs-brand img{height:72px}
+}
+
+.lhs-btn{
+  display:inline-flex;
+  min-height:56px;
+  align-items:center;
+  justify-content:center;
+  padding:15px 23px;
+  border:0;
+  border-radius:14px;
+  color:#fff!important;
+  background:var(--coral);
+  box-shadow:0 14px 30px rgba(239,120,84,.25);
+  cursor:pointer;
+  font-weight:800;
+  text-align:center;
+  text-decoration:none;
+  text-transform:uppercase;
+}
+
+.lhs-btn.lime{
+  color:var(--green)!important;
+  background:var(--lime);
+}
+
+.lhs-btn.ghost{
+  border:1px solid rgba(255,255,255,.35);
+  background:rgba(6,31,29,.28);
+  box-shadow:none;
+}
+
+.lhs-btn[aria-disabled="true"]{
+  opacity:.75;
+  cursor:not-allowed;
+}
+
+.lhs-hero{
+  position:relative;
+  min-height:700px;
+  display:grid;
+  align-items:center;
+  color:#fff;
+  background:
+    linear-gradient(90deg,rgba(6,31,29,.97),rgba(6,31,29,.93) 42%,rgba(6,31,29,.74) 62%,rgba(6,31,29,.28)),
+    url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a72abe62a97cf2a2a1.jpg') center/cover;
+}
+
+.lhs-nav{
+  position:absolute;
+  top:0;
+  right:0;
+  left:0;
+}
+
+.lhs-navin{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:24px 0;
+  border-bottom:1px solid rgba(255,255,255,.16);
+}
+
+.lhs-navin>a:last-child{
+  padding:10px 19px;
+  border-radius:999px;
+  color:var(--green);
+  background:var(--lime);
+  font-size:12px;
+  font-weight:800;
+  text-decoration:none;
+  text-transform:uppercase;
+}
+
+/* .lhs-heroin lleva también .lhs-wrap, que ya es min(1160px, 100% - 40px)
+   centrado. Ponerle aquí un max-width encogía ese contenedor y lo volvía a
+   centrar, así que el titular arrancaba 150 px más adentro que el logo de la
+   barra y todo el hero se veía apretado contra el eje. La columna de texto se
+   limita ahora por dentro, para que su borde izquierdo sea el mismo del logo. */
+.lhs-heroin{
+  padding:168px 0 0;
+}
+
+.lhs-heroin>.lhs-eye,
+.lhs-heroin>h1,
+.lhs-heroin>p,
+.lhs-heroin>.lhs-actions{
+  max-width:min(780px,100%);
+}
+
+.lhs-heroin h1{
+  margin:0;
+  font-size:clamp(43px,6.4vw,79px);
+  letter-spacing:-.06em;
+  line-height:.98;
+  /* Sin esto el corte cae en «…improvisar con / tu finca.» y deja huérfano
+     el arranque de la cursiva. Balance reparte las dos líneas y el titular
+     se parte por donde se lee: «Deja de improvisar / con tu finca.» */
+  text-wrap:balance;
+}
+
+.lhs-heroin h1 em{
+  color:var(--lime);
+  font-family:'Playfair Display',serif;
+}
+
+.lhs-heroin>p:not(.lhs-eye){
+  max-width:min(620px,100%);
+  margin:24px 0;
+  color:rgba(255,255,255,.83);
+  font-size:clamp(18px,2vw,22px);
+}
+
+.lhs-pills,.lhs-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+/* Las tres garantías ya no van apiladas dentro de la columna de texto: bajan
+   al pie del hero como una franja que llega al borde derecho del contenedor.
+   Es lo que abre el bloque y evita que todo quede amontonado en el eje. */
+.lhs-heroin>.lhs-pills{
+  margin-top:54px;
+  padding:26px 0 62px;
+  gap:12px;
+  border-top:1px solid rgba(255,255,255,.16);
+}
+
+.lhs-pills span{
+  padding:9px 13px;
+  border:1px solid rgba(255,255,255,.2);
+  border-radius:999px;
+  background:rgba(6,31,29,.35);
+  font-size:13px;
+}
+
+.lhs-actions{margin-top:28px}
+
+.lhs-program{
+  padding:86px 0;
+  background:#eef0df;
+}
+
+.lhs-head{
+  max-width:900px;
+  margin:0 auto 38px;
+  text-align:center;
+}
+
+.lhs-modules{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+}
+
+/* Los días 2 y 4 traen un solo principio: sin esto quedaba media rejilla
+   vacía al lado. */
+.lhs-modules:has(> .lhs-module:only-child){
+  grid-template-columns:minmax(0,1fr);
+}
+
+.lhs-module{
+  display:grid;
+  grid-template-columns:190px 1fr;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 12px 32px rgba(6,31,29,.07);
+}
+
+.lhs-module img{
+  width:100%;
+  height:100%;
+  min-height:190px;
+  object-fit:cover;
+}
+
+.lhs-module div{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:23px;
+}
+
+.lhs-module small{
+  width:max-content;
+  padding:6px 10px;
+  border-radius:999px;
+  color:var(--green);
+  background:var(--lime);
+  font-size:10px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+
+.lhs-module h3{
+  margin:11px 0 0;
+  font-size:clamp(22px,2.2vw,31px);
+  letter-spacing:-.04em;
+  line-height:1.05;
+}
+
+.lhs-module p{
+  margin:9px 0 0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.lhs-experience{
+  display:grid;
+  grid-template-columns:.9fr 1.1fr;
+  margin-top:24px;
+  overflow:hidden;
+  border-radius:26px;
+  color:#fff;
+  background:var(--green);
+  box-shadow:0 22px 60px rgba(6,31,29,.16);
+}
+
+.lhs-experience>img{
+  width:100%;
+  height:100%;
+  min-height:430px;
+  object-fit:cover;
+}
+
+.lhs-expbody{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:clamp(28px,5vw,58px);
+}
+
+.lhs-expbody h3{
+  margin:0;
+  font-size:clamp(30px,4vw,48px);
+  letter-spacing:-.045em;
+  line-height:1.04;
+}
+
+.lhs-checks{
+  display:grid;
+  gap:10px;
+  margin:20px 0;
+  padding:0;
+  list-style:none;
+}
+
+.lhs-checks li{
+  position:relative;
+  padding-left:27px;
+}
+
+.lhs-checks li:before{
+  position:absolute;
+  left:0;
+  color:var(--lime);
+  content:'✓';
+  font-weight:900;
+}
+
+.lhs-expbody .lhs-btn{
+  align-self:flex-start;
+  margin-top:8px;
+}
+
+.lhs-fit{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:16px;
+  margin-top:24px;
+}
+
+.lhs-box{
+  padding:clamp(26px,4vw,42px);
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:#fff;
+}
+
+.lhs-box.dark{
+  color:#fff;
+  background:var(--green2);
+}
+
+.lhs-box h3{
+  margin:0;
+  font-size:clamp(27px,3vw,38px);
+  letter-spacing:-.04em;
+  line-height:1.08;
+}
+
+.lhs-box .lhs-checks li{
+  color:var(--muted);
+  font-size:14px;
+}
+
+.lhs-box.dark .lhs-checks li{
+  color:rgba(255,255,255,.82);
+}
+
+.lhs-note{
+  margin:22px 0 0;
+  padding-top:18px;
+  border-top:1px solid var(--line);
+  font-weight:800;
+}
+
+.lhs-box.dark .lhs-note{
+  color:var(--lime);
+  border-color:rgba(255,255,255,.15);
+}
+
+.lhs-offers{padding:84px 0}
+
+.lhs-offerintro{
+  margin-bottom:34px;
+  text-align:center;
+}
+
+.lhs-offergrid{
+  display:grid;
+  /* Una encima de la otra: apiladas, cada tarjeta se lee entera antes de
+     pasar a la siguiente, y el presencial (que va primero en el HTML y es
+     el que tiene cupos contados) se lleva la primera mirada. A 1160 px de
+     ancho el texto no se sostiene, por eso el tope. */
+  grid-template-columns:minmax(0,1fr);
+  gap:20px;
+  max-width:660px;
+  margin-inline:auto;
+}
+
+.lhs-card{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:28px;
+  background:#fff;
+  box-shadow:0 24px 65px rgba(6,31,29,.14);
+}
+
+.lhs-card.featured{
+  color:#fff;
+  border-color:rgba(200,219,82,.45);
+  background:var(--green);
+}
+
+.lhs-cardpic{
+  position:relative;
+  height:230px;
+}
+
+.lhs-cardpic img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.lhs-badge{
+  position:absolute;
+  top:17px;
+  left:17px;
+  padding:8px 11px;
+  border-radius:999px;
+  color:var(--green);
+  background:var(--lime);
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+}
+
+.lhs-cardbody{
+  display:flex;
+  height:100%;
+  flex-direction:column;
+  padding:29px;
+}
+
+.lhs-kicker{
+  margin:0 0 7px;
+  color:#78901d;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+
+.featured .lhs-kicker{color:var(--lime)}
+
+.lhs-card h3{
+  margin:0;
+  font-size:clamp(29px,3vw,40px);
+  letter-spacing:-.04em;
+  line-height:1.05;
+}
+
+.lhs-promise{
+  margin:13px 0;
+  color:var(--muted);
+}
+
+.featured .lhs-promise{
+  color:rgba(255,255,255,.75);
+}
+
+.lhs-stock{
+  margin:18px 0 2px;
+  padding:16px;
+  border:1px solid rgba(200,219,82,.3);
+  border-radius:15px;
+  background:rgba(200,219,82,.08);
+}
+
+.lhs-stocktop{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  font-size:13px;
+}
+
+.lhs-stocktop strong{color:var(--lime)}
+
+.lhs-meter{
+  height:8px;
+  margin-top:11px;
+  overflow:hidden;
+  border-radius:99px;
+  background:rgba(255,255,255,.14);
+}
+
+.lhs-meter span{
+  display:block;
+  width:82.5%;
+  height:100%;
+  background:var(--lime);
+}
+
+.lhs-soldout{
+  display:none;
+  margin:18px 0;
+  padding:16px;
+  border:1px solid rgba(239,120,84,.4);
+  border-radius:15px;
+  background:rgba(239,120,84,.1);
+}
+
+.lhs-soldout strong{color:#ff9c7f}
+
+.lhs-stack{
+  display:grid;
+  gap:11px;
+  margin:22px 0;
+  padding:0;
+  list-style:none;
+}
+
+.lhs-stack li{
+  position:relative;
+  padding-left:28px;
+}
+
+.lhs-stack li:before{
+  position:absolute;
+  left:0;
+  color:var(--lime);
+  content:'✓';
+  font-weight:900;
+}
+
+.lhs-card:not(.featured) .lhs-stack li{
+  color:var(--ink);
+}
+
+.lhs-rooms{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin-bottom:20px;
+}
+
+.lhs-rooms div{
+  padding:9px 5px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:11px;
+  text-align:center;
+}
+
+.lhs-rooms small,.lhs-rooms strong{display:block}
+
+.lhs-rooms small{
+  color:rgba(255,255,255,.58);
+  font-size:10px;
+  text-transform:uppercase;
+}
+
+.lhs-price{
+  display:flex;
+  align-items:end;
+  gap:8px;
+  margin-top:auto;
+}
+
+.lhs-price strong{
+  font-size:clamp(38px,4vw,52px);
+  letter-spacing:-.05em;
+  line-height:1;
+}
+
+.lhs-price span{
+  padding-bottom:4px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.featured .lhs-price span{
+  color:rgba(255,255,255,.62);
+}
+
+.lhs-card .lhs-btn{
+  width:100%;
+  margin-top:19px;
+}
+
+.lhs-micro{
+  margin:9px 0 0;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center;
+}
+
+.featured .lhs-micro{
+  color:rgba(255,255,255,.58);
+}
+
+/* ── Pendiente de confirmar ─────────────────────────────────────────
+   Todo dato que Iván no ha cerrado va marcado así, imposible de pasar
+   por alto. Si algo de esto llega a producción, se ve a gritos. */
+.lhs-pend{
+  padding:1px 7px;
+  border-radius:5px;
+  color:#7a2d00;
+  background:#ffe08a;
+  box-shadow:inset 0 0 0 1px rgba(122,45,0,.35);
+  font-weight:800;
+  font-size:.92em;
+  /* Sin nowrap: dentro de una tarjeta estrecha se salía de la caja.
+     box-decoration-break reparte el fondo y el padding en las dos líneas
+     cuando el marcador se parte; sin él, la segunda línea queda sin caja. */
+  overflow-wrap:anywhere;
+  -webkit-box-decoration-break:clone;
+  box-decoration-break:clone;
+}
+
+/* ── Puente con la masterclass ──────────────────────────────────── */
+.lhs-bridge{
+  padding:54px 0;
+  background:#e6ebd8;
+}
+
+.lhs-bridgein{
+  max-width:820px;
+  margin:auto;
+  text-align:center;
+}
+
+.lhs-bridgein p{
+  margin:0 0 12px;
+  font-size:clamp(17px,2vw,20px);
+}
+
+.lhs-bridgein p:last-child{
+  margin-bottom:0;
+  color:var(--muted);
+}
+
+.lhs-bridgein b{color:var(--ink)}
+
+/* ── Los 7 principios, agrupados por día ────────────────────────── */
+.lhs-day{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  margin:34px 0 14px;
+}
+
+.lhs-day:first-of-type{margin-top:24px}
+
+.lhs-day span{
+  padding:7px 13px;
+  border-radius:999px;
+  color:#fff;
+  background:var(--green);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.lhs-day i{
+  flex:1;
+  height:1px;
+  background:var(--line);
+}
+
+/* ── Prueba medida ──────────────────────────────────────────────── */
+.lhs-measured{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-top:28px;
+}
+
+.lhs-measured div{
+  padding:24px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:18px;
+  background:rgba(255,255,255,.04);
+}
+
+.lhs-measured strong{
+  display:block;
+  margin-bottom:9px;
+  color:var(--lime);
+  font-size:clamp(22px,2.4vw,29px);
+  letter-spacing:-.03em;
+  line-height:1.1;
+}
+
+.lhs-measured span{
+  color:rgba(255,255,255,.74);
+  font-size:14px;
+}
+
+.lhs-source{
+  margin:22px 0 0;
+  color:rgba(255,255,255,.5);
+  font-size:11.5px;
+  line-height:1.55;
+}
+
+/* ── Testimonios ────────────────────────────────────────────────── */
+.lhs-voices{padding:80px 0;background:#eef0df}
+
+.lhs-voicegrid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:16px;
+  margin-top:32px;
+}
+
+.lhs-voice{
+  display:flex;
+  flex-direction:column;
+  padding:26px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:#fff;
+}
+
+.lhs-voice blockquote{
+  margin:0 0 18px;
+  font-size:16px;
+}
+
+.lhs-voice footer{
+  margin-top:auto;
+  padding-top:16px;
+  border-top:1px solid var(--line);
+  color:var(--muted);
+  font-size:13px;
+}
+
+.lhs-voice footer b{
+  display:block;
+  color:var(--ink);
+  font-size:15px;
+}
+
+.lhs-proof{
+  padding:76px 0;
+  color:#fff;
+  background:var(--green2);
+}
+
+.lhs-proofgrid{
+  display:grid;
+  grid-template-columns:.9fr 1.1fr;
+  align-items:center;
+  gap:48px;
+}
+
+.lhs-proofgrid>img{
+  width:100%;
+  height:480px;
+  object-fit:cover;
+  border-radius:27px;
+}
+
+.lhs-proof p{
+  color:rgba(255,255,255,.74);
+  font-size:18px;
+}
+
+.lhs-stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:11px;
+  margin-top:25px;
+}
+
+.lhs-stats div{
+  padding:17px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:15px;
+}
+
+.lhs-stats strong,.lhs-stats span{display:block}
+
+.lhs-stats strong{
+  color:var(--lime);
+  font-size:22px;
+}
+
+.lhs-stats span{
+  color:rgba(255,255,255,.68);
+  font-size:13px;
+}
+
+.lhs-guide{padding:82px 0}
+
+.lhs-guidegrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:center;
+  gap:48px;
+}
+
+.lhs-guidegrid>img{
+  width:100%;
+  height:450px;
+  object-fit:cover;
+  border-radius:27px;
+}
+
+.lhs-guide p{
+  color:var(--muted);
+  font-size:17px;
+}
+
+.lhs-faq{
+  padding:82px 0;
+  background:#eef0df;
+}
+
+.lhs-faqgrid{
+  display:grid;
+  grid-template-columns:.8fr 1.2fr;
+  gap:48px;
+}
+
+.lhs-faq details{
+  margin-bottom:10px;
+  border:1px solid var(--line);
+  border-radius:15px;
+  background:#fff;
+}
+
+.lhs-faq summary{
+  padding:18px;
+  cursor:pointer;
+  font-weight:800;
+}
+
+.lhs-faq details p{
+  margin:0;
+  padding:0 18px 18px;
+  color:var(--muted);
+}
+
+.lhs-footer{
+  padding:38px 0 90px;
+  color:rgba(255,255,255,.62);
+  background:var(--green);
+  font-size:12px;
+}
+
+.lhs-footerin{
+  display:flex;
+  align-items:flex-start;
+  gap:28px;
+}
+
+.lhs-wa{
+  position:fixed;
+  z-index:999;
+  right:20px;
+  bottom:20px;
+  padding:14px 18px;
+  border-radius:999px;
+  color:#fff!important;
+  background:#198754;
+  box-shadow:0 12px 35px rgba(0,0,0,.25);
+  font-size:13px;
+  font-weight:800;
+  text-decoration:none;
+}
+
+.lhs-toast{
+  position:fixed;
+  z-index:1000;
+  right:20px;
+  bottom:85px;
+  max-width:350px;
+  padding:13px 16px;
+  border-radius:12px;
+  color:#fff;
+  background:var(--green);
+  opacity:0;
+  pointer-events:none;
+  transition:.2s;
+}
+
+.lhs-toast.show{opacity:1}
+
+@media(max-width:880px){
+  .lhs-modules,.lhs-experience,.lhs-fit,
+  .lhs-proofgrid,.lhs-guidegrid,.lhs-faqgrid{
+    grid-template-columns:1fr;
+  }
+
+  .lhs-module{grid-template-columns:220px 1fr}
+
+  .lhs-offergrid{max-width:none}
+  .lhs-measured,.lhs-voicegrid{grid-template-columns:1fr}
+}
+
+@media(max-width:600px){
+  .lhs-wrap{width:calc(100% - 28px)}
+
+  .lhs-hero{
+    min-height:730px;
+    background:
+      linear-gradient(rgba(6,31,29,.78),rgba(6,31,29,.97)),
+      url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a72abe62a97cf2a2a1.jpg') center/cover;
+  }
+
+  .lhs-navin>a:last-child{display:none}
+  .lhs-actions,.lhs-actions .lhs-btn{width:100%}
+
+  .lhs-module{grid-template-columns:1fr}
+
+  .lhs-module img{height:220px}
+  .lhs-rooms,.lhs-stats{grid-template-columns:1fr}
+  .lhs-footerin{flex-direction:column}
+
+  .lhs-wa{
+    right:14px;
+    bottom:14px;
+    left:14px;
+    text-align:center;
+  }
+
+  .lhs-toast{
+    right:14px;
+    bottom:80px;
+    left:14px;
+    max-width:none;
+  }
+}
+</style>
+
+<div id="lh-sale">
+
+<header class="lhs-hero">
+  <nav class="lhs-nav">
+    <div class="lhs-wrap lhs-navin">
+      <a class="lhs-brand" href="#lhs-offers">
+        <img
+          src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6aa46253f4e2fd8aa0ffbddd.png"
+          alt="La Huerta LAB"
+          width="128"
+          height="128"
+        >
+      </a>
+      <a href="#lhs-offers">Ver modalidades</a>
+    </div>
+  </nav>
+
+  <div class="lhs-wrap lhs-heroin">
+    <p class="lhs-eye">Curso Fincas Productivas · La Huerta LAB</p>
+
+    <h1>Deja de improvisar <em>con tu finca.</em></h1>
+
+    <p>
+      Tienes la tierra, o la plata para comprarla, y no sabes por dónde
+      empezar. En cuatro días en La Huerta aprendes qué decidir, en qué
+      orden y cómo hacerlo sin agroquímicos. Antes de meterle más plata.
+    </p>
+
+    <div class="lhs-actions">
+      <a class="lhs-btn" href="#lhs-offers">Ver modalidades y precios →</a>
+      <a class="lhs-btn ghost" href="#lhs-program">Ver el programa día a día</a>
+    </div>
+
+    <div class="lhs-pills">
+      <span>✓ Para el que va a comprar y el que ya compró</span>
+      <span>✓ Presencial en Lago Calima u online</span>
+      <span>✓ Con Iván Castrillón</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- La gente llega de la masterclass con los 5 pilares en la cabeza. Sin
+     esto, la página les enseña otro marco sin explicar la relación. -->
+<section class="lhs-bridge">
+  <div class="lhs-wrap lhs-bridgein">
+    <p>
+      En la masterclass viste <b>los 5 pilares de una finca sin
+      improvisar</b>: venta directa, policultivo, animales integrados,
+      abonos hechos con su estiércol y manejo del agua. Eso es el qué y
+      el orden.
+    </p>
+
+    <p>
+      El cómo se aprende en campo, con <b>los 7 principios de inmunidad
+      del bosque</b>. Eso es este curso.
+    </p>
+  </div>
+</section>
+
+<section class="lhs-program" id="lhs-program">
+  <div class="lhs-wrap">
+
+    <div class="lhs-head">
+      <p class="lhs-eye">Lo que veremos durante el curso</p>
+
+      <h2 class="lhs-title">
+        Un bosque no se fumiga ni se abona. Y no se enferma
+        <em>ni se seca.</em>
+      </h2>
+
+      <p class="lhs-lead">
+        En cuatro días aprendes los 7 principios de inmunidad del bosque
+        y cómo copiarlos en tu finca. Aula, recorrido por la finca y
+        práctica con las manos.
+      </p>
+    </div>
+
+    <div class="lhs-day">
+      <span>Día 1 · El bosque como modelo</span>
+      <i></i>
+    </div>
+
+    <div class="lhs-modules">
+      <article class="lhs-module">
+        <img
+          src="https://lahuertahotel.com.co/wp-content/uploads/2026/03/BIOMASA.jpg"
+          referrerpolicy="no-referrer"
+          alt="Microclima"
+        >
+        <div>
+          <small>Principio 1 · Microclima</small>
+          <h3>Siembra tu propio clima</h3>
+          <p>La agricultura industrial calienta el planeta: suelo pelado, comida ultraprocesada que viaja miles de kilómetros. Aquí aprendes lo contrario: árboles y vegetación en varios pisos que refrescan tu finca, y venderle directo a gente cerca de ti.</p>
+        </div>
+      </article>
+      <article class="lhs-module">
+        <img
+          src="https://lahuertahotel.com.co/wp-content/uploads/2026/03/MICROORGANISMOS.jpg"
+          referrerpolicy="no-referrer"
+          alt="Microorganismos"
+        >
+        <div>
+          <small>Principio 2 · Microorganismos</small>
+          <h3>El bosque es el donante</h3>
+          <p>Un suelo fumigado queda sin defensas y los patógenos llegan primero. Vas al bosque, recoges el mantillo y reproduces sus microorganismos por millones. Con tus manos.</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="lhs-day">
+      <span>Día 2 · Manos a la obra</span>
+      <i></i>
+    </div>
+
+    <div class="lhs-modules">
+      <article class="lhs-module">
+        <img
+          src="https://lahuertahotel.com.co/wp-content/uploads/2026/03/RECICLAJE.jpg"
+          referrerpolicy="no-referrer"
+          alt="Reciclaje de nutrientes"
+        >
+        <div>
+          <small>Principio 3 · Reciclaje de nutrientes</small>
+          <h3>No nutrimos plantas: nutrimos suelo</h3>
+          <p>Compost, biochar y bocashi en la biofábrica, con el estiércol y los residuos que hoy se pierden. Y aprendes a leer tu suelo con una pala. La planta pide, el suelo entrega.</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="lhs-day">
+      <span>Día 3 · Diversidad, agua y energía</span>
+      <i></i>
+    </div>
+
+    <div class="lhs-modules">
+      <article class="lhs-module">
+        <img
+          src="https://lahuertahotel.com.co/wp-content/uploads/2026/03/DIVERSIDAD.jpg"
+          referrerpolicy="no-referrer"
+          alt="Diversidad"
+        >
+        <div>
+          <small>Principio 4 · Diversidad</small>
+          <h3>Qué sembrar, cuánto y cada cuándo</h3>
+          <p>Asociaciones, familias botánicas y rotación. Te llevas la calculadora de siembra: cuántos metros sembrar cada semana para tu familia o para tus clientes.</p>
+        </div>
+      </article>
+      <article class="lhs-module">
+        <img
+          src="https://lahuertahotel.com.co/wp-content/uploads/2026/03/AGUA.jpg"
+          referrerpolicy="no-referrer"
+          alt="Manejo del agua"
+        >
+        <div>
+          <small>Principio 5 · Agua</small>
+          <h3>Las plantas beben, no comen</h3>
+          <p>Infiltración, curvas de nivel, terrazas y zanjas. Por dónde empezar para que la lluvia se quede en tu tierra y te alcance en la época seca.</p>
+        </div>
+      </article>
+      <article class="lhs-module">
+        <img
+          src="https://lahuertahotel.com.co/wp-content/uploads/2026/03/ENERGIA.jpg"
+          referrerpolicy="no-referrer"
+          alt="Energía"
+        >
+        <div>
+          <small>Principio 6 · Energía</small>
+          <h3>Cada vuelta que da la energía es plata que no sale</h3>
+          <p>Agua tratada, pasto, cordero, estiércol, bocashi, cultivo. Cada ciclo que cierras dentro de la finca es un insumo que dejas de comprar.</p>
+        </div>
+      </article>
+    </div>
+
+    <div class="lhs-day">
+      <span>Día 4 · Descanso y cierre</span>
+      <i></i>
+    </div>
+
+    <div class="lhs-modules">
+      <article class="lhs-module">
+        <img
+          src="https://lahuertahotel.com.co/wp-content/uploads/2026/03/DESCANSO.jpg"
+          referrerpolicy="no-referrer"
+          alt="Descanso"
+        >
+        <div>
+          <small>Principio 7 · Descanso</small>
+          <h3>Parar a tiempo también es producir</h3>
+          <p>Va contra lo que nos enseñaron: producir sin parar. En los potreros de La Huerta medimos el rebrote y calculamos descanso y carga con Pastoreo Racional Voisin.</p>
+        </div>
+      </article>
+    </div>
+
+    <div style="margin-top:30px;text-align:center">
+      <!-- PENDIENTE: el PDF del programa día a día. Cuando exista, poner
+           el href real y quitar data-pendiente. -->
+      <a class="lhs-btn" href="#" data-pendiente="programa-pdf">
+        Descargar el programa día a día
+      </a>
+    </div>
+
+    <div class="lhs-experience">
+      <img
+        src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a96a986f22eac14d9d0a997.jpg"
+        alt="Iván dando clase"
+      >
+
+      <div class="lhs-expbody">
+        <p class="lhs-eye">Aprendizaje en contexto real</p>
+
+        <h3>No vas a oír cómo se hace. Lo vas a hacer.</h3>
+
+        <ul class="lhs-checks">
+          <li>Recorres una finca que alimenta un hotel de 23 habitaciones.</li>
+          <li>Preparas microorganismos de montaña, compost, biochar y bocashi con tus manos.</li>
+          <li>Entras al potrero y mides el rebrote antes de decidir cuándo vuelven los animales.</li>
+          <li>Preguntas sobre el terreno, no sobre una diapositiva.</li>
+          <li>Ves por qué cada cosa está donde está, para decidir dónde va en tu finca.</li>
+        </ul>
+
+        <a class="lhs-btn lime" href="#lhs-offers">
+          Ver modalidades y precios →
+        </a>
+      </div>
+    </div>
+
+    <div class="lhs-fit">
+
+      <article class="lhs-box">
+        <h3>Este curso es para ti si…</h3>
+
+        <ul class="lhs-checks">
+          <li>Llevas meses mirando predios y no quieres comprar mal.</li>
+          <li>Ya compraste, la tierra está quieta y te da miedo meterle plata sin saber a qué.</li>
+          <li>Quieres comida sana para tu familia y que la finca deje de ser un gasto.</li>
+          <li>En tu zona nadie cree que se pueda sin químicos. A veces ni quien te trabaja la tierra.</li>
+          <li>Quieres ver funcionando lo que te han dicho que no funciona.</li>
+        </ul>
+
+        <p style="margin:18px 0 0;color:var(--muted);font-size:14px;font-style:italic">
+          No es para ti si buscas hacerte rico rápido o la receta de un
+          producto milagroso.
+        </p>
+
+        <p class="lhs-note">
+          No necesitas ser agricultor. Necesitas saber qué decidir primero.
+        </p>
+      </article>
+
+      <article class="lhs-box dark">
+        <h3>Tu inscripción presencial incluye</h3>
+
+        <ul class="lhs-checks">
+          <li>Cuatro días y tres noches en La Huerta Hotel, con alimentación completa del restaurante de la finca.</li>
+          <li>Práctica con tus manos: microorganismos de montaña, compost, biochar y bocashi.</li>
+          <li>Pastoreo Racional Voisin en potrero real.</li>
+          <li>Memorias del curso: recetas, dosis, precauciones y ruta de 90 días para empezar en tu finca.</li>
+          <li>Calculadora de siembra en Excel para tu familia o tus clientes.</li>
+          <li>Certificado de asistencia. <span class="lhs-pend">CONFIRMAR</span></li>
+          <li><span class="lhs-pend">[X meses]</span> de acceso a la comunidad La Huerta LAB en Skool. <span class="lhs-pend">CONFIRMAR duración</span></li>
+          <li>Cuatro días con gente que está en lo mismo que tú.</li>
+        </ul>
+
+        <p class="lhs-note">
+          Todo lo listado existió en la cohorte de julio, salvo lo marcado.
+        </p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section class="lhs-offers" id="lhs-offers">
+  <div class="lhs-wrap">
+
+    <div class="lhs-offerintro">
+      <p class="lhs-eye">Una formación · dos caminos distintos</p>
+
+      <h2 class="lhs-title">
+        Dos formas de aprenderlo. <em>No son la misma.</em>
+      </h2>
+
+      <p class="lhs-lead">
+        El presencial es para ver, tocar y hacer en una finca que ya
+        funciona. El online es para entender el método y aplicarlo desde
+        donde estés, con sesiones en vivo para resolver tus decisiones.
+      </p>
+    </div>
+
+    <div class="lhs-offergrid">
+
+      <article class="lhs-card featured">
+
+        <div class="lhs-cardpic">
+          <img
+            src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a72abe62a97cf2a2a1.jpg"
+            alt="La Huerta Hotel"
+          >
+          <span class="lhs-badge">En Lago Calima</span>
+        </div>
+
+        <div class="lhs-cardbody">
+          <p class="lhs-kicker" id="lhs-pk">
+            1 al 4 de octubre · Lago Calima, Valle del Cauca
+          </p>
+
+          <h3 id="lhs-pt">Campo Escuela presencial</h3>
+
+          <p class="lhs-promise">
+            Cuatro días y tres noches dentro de La Huerta para aprender
+            los 7 principios de inmunidad del bosque haciendo, no oyendo.
+          </p>
+
+          <div class="lhs-stock" id="lhs-stock">
+            <div class="lhs-stocktop">
+              <span>
+                <b id="lhs-reserved">7</b> cupos ocupados de 40
+              </span>
+
+              <strong>
+                <b id="lhs-available">33</b> disponibles
+              </strong>
+            </div>
+
+            <div class="lhs-meter">
+              <span id="lhs-meter"></span>
+            </div>
+          </div>
+
+          <!-- Un solo estado a la vez: el JS enseña este y esconde
+               #lhs-stock, nunca los dos juntos. -->
+          <div class="lhs-soldout" id="lhs-soldout">
+            <strong>Octubre está completo</strong>
+            <div>Abre la cohorte del 3 al 6 de diciembre.</div>
+          </div>
+
+          <ul class="lhs-stack">
+            <li>Recorrido por bosque, agua, cultivos, animales, biofábrica y restaurante.</li>
+            <li>Práctica de bioinsumos y pastoreo en campo.</li>
+            <li>Memorias, calculadora de siembra y ruta de 90 días.</li>
+            <li>Hospedaje, alimentación y materiales incluidos.</li>
+            <li>Clínicas de preguntas con Iván en cada bloque. <span class="lhs-pend">CONFIRMAR formato</span></li>
+          </ul>
+
+          <div class="lhs-rooms">
+            <div>
+              <small>Triple</small>
+              <strong>650 USD</strong>
+            </div>
+
+            <div>
+              <small>Doble</small>
+              <strong>750 USD</strong>
+            </div>
+
+            <div>
+              <small>Individual</small>
+              <strong>850 USD</strong>
+            </div>
+          </div>
+
+          <p style="margin:0 0 4px;font-size:12px">
+            <span class="lhs-pend">CONFIRMAR los tres precios</span>
+          </p>
+
+          <p style="margin:0 0 14px;color:rgba(255,255,255,.62);font-size:12px">
+            Inscripciones para octubre hasta el
+            <span class="lhs-pend">[FECHA DE CIERRE]</span>
+          </p>
+
+          <div class="lhs-price">
+            <strong>Desde 650 USD</strong>
+            <span>por persona</span>
+          </div>
+
+          <a
+            class="lhs-btn lime"
+            id="lhs-presencial"
+            role="button"
+            tabindex="0"
+          >
+            Quiero ir a La Huerta en octubre →
+          </a>
+
+          <p class="lhs-micro" id="lhs-pmicro">
+            Pago seguro en el checkout de La Huerta Hotel.
+          </p>
+        </div>
+      </article>
+
+      <article class="lhs-card">
+
+        <div class="lhs-cardpic">
+          <img
+            src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a96a986f22eac14d9d0a997.jpg"
+            alt="Iván enseñando"
+          >
+          <span class="lhs-badge">Desde cualquier país</span>
+        </div>
+
+        <div class="lhs-cardbody">
+          <p class="lhs-kicker">
+            Desde cualquier país · empieza el
+            <span class="lhs-pend">[FECHA]</span>
+          </p>
+
+          <h3>Programa online</h3>
+
+          <p class="lhs-promise">
+            El mismo método, para entenderlo y aplicarlo a tu finca sin
+            viajar. Con sesiones en vivo con Iván para resolver tus
+            decisiones.
+          </p>
+
+          <ul class="lhs-stack">
+            <li>8 sesiones en vivo con Iván, <span class="lhs-pend">[día y hora]</span>. Quedan grabadas.</li>
+            <li>Lecciones grabadas para avanzar a tu ritmo.</li>
+            <li>Cuaderno y plantillas de aplicación. <span class="lhs-pend">CONFIRMAR que existen</span></li>
+            <li>Ruta de 90 días para tu finca.</li>
+            <li>12 meses de comunidad La Huerta LAB en Skool.</li>
+          </ul>
+
+          <div class="lhs-price">
+            <strong>370 USD</strong>
+            <span>pago único · <span class="lhs-pend">CONFIRMAR</span></span>
+          </div>
+
+          <a
+            class="lhs-btn"
+            id="lhs-online"
+            role="button"
+            tabindex="0"
+          >
+            Quiero hacerlo online →
+          </a>
+
+          <p class="lhs-micro">
+            Pago y acceso mediante Skool.
+          </p>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section class="lhs-proof">
+  <div class="lhs-wrap lhs-proofgrid">
+
+    <img
+      src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/e21b5cb2-39d9-4123-b9bf-fe97639e9828.jpg"
+      alt="Ecosistema La Huerta"
+    >
+
+    <div>
+      <p class="lhs-eye">Lo que medimos en esta finca</p>
+
+      <h2 class="lhs-title">
+        Esto no es teoría. Lo medimos en la misma finca
+        <em>donde vas a estar.</em>
+      </h2>
+
+      <p>
+        La Huerta integra producción, restaurante, hotel, bosque y
+        educación. Aquí aprendes a leer tu propia finca.
+      </p>
+
+      <div class="lhs-measured">
+        <div>
+          <strong>9 contra 1</strong>
+          <span>
+            Grupos de macrofauna del suelo en el bosque frente a un suelo
+            vecino con manejo convencional.
+          </span>
+        </div>
+
+        <div>
+          <strong>El potrero casi iguala al bosque</strong>
+          <span>
+            Calidad de suelo de 0,859 en los potreros con pastoreo
+            rotacional frente a 0,884 en el bosque que nunca hemos tocado.
+          </span>
+        </div>
+
+        <div>
+          <strong>11 toneladas al año</strong>
+          <span>
+            De fertilizantes y pesticidas químicos que esta finca dejó de
+            comprar. <span class="lhs-pend">CONFIRMAR año y base</span>
+          </span>
+        </div>
+      </div>
+
+      <p class="lhs-source">
+        Índice General de Calidad del Suelo (IGCS), método TSBF. Tesis de
+        maestría en Ciencias Agrarias, en revisión, Universidad Nacional
+        de Colombia, 2026. Bosque, terrazas y potreros del predio frente a
+        un suelo vecino con manejo convencional, cinco réplicas por sistema.
+        Los valores del índice comparan estos sistemas entre sí; no son
+        transferibles a otras fincas.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     PENDIENTE · TESTIMONIOS
+     Hay grabaciones de la cohorte de julio, pero sin cortar: casi todas
+     arrancan con la persona preguntando si ya puede hablar. Alejandro
+     las recorta.
+     Cuando lleguen, por cada tarjeta:
+       · Vídeo de 30 a 60 s, o la frase transcrita TAL CUAL del vídeo.
+         No se redacta: se transcribe.
+       · Nombre, ciudad o país, y «Cohorte julio 2026».
+       · Iván confirma que cada persona autorizó el uso.
+     Descartado: el de Andrés Castrillón (repite la frase de arranque).
+     ══════════════════════════════════════════════════════════════════ -->
+<section class="lhs-voices">
+  <div class="lhs-wrap">
+    <div class="lhs-head">
+      <p class="lhs-eye">Cohorte julio 2026</p>
+      <h2 class="lhs-title">Lo que dice la gente <em>que ya vino.</em></h2>
+    </div>
+
+    <div class="lhs-voicegrid">
+      <article class="lhs-voice">
+        <blockquote><span class="lhs-pend">[Testimonio 1 · transcrito del vídeo]</span></blockquote>
+        <footer>
+          <b><span class="lhs-pend">[Nombre]</span></b>
+          <span class="lhs-pend">[Ciudad o país]</span> · Cohorte julio 2026
+        </footer>
+      </article>
+
+      <article class="lhs-voice">
+        <blockquote><span class="lhs-pend">[Testimonio 2 · transcrito del vídeo]</span></blockquote>
+        <footer>
+          <b><span class="lhs-pend">[Nombre]</span></b>
+          <span class="lhs-pend">[Ciudad o país]</span> · Cohorte julio 2026
+        </footer>
+      </article>
+
+      <article class="lhs-voice">
+        <blockquote><span class="lhs-pend">[Testimonio 3 · transcrito del vídeo]</span></blockquote>
+        <footer>
+          <b><span class="lhs-pend">[Nombre]</span></b>
+          <span class="lhs-pend">[Ciudad o país]</span> · Cohorte julio 2026
+        </footer>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="lhs-guide">
+  <div class="lhs-wrap lhs-guidegrid">
+
+    <div>
+      <p class="lhs-eye">Quién enseña</p>
+
+      <h2 class="lhs-title">
+        Yo también vendí <em>agroquímicos.</em>
+      </h2>
+
+      <p>
+        Pasé <span class="lhs-pend">[X]</span> años en la industria de
+        agroquímicos y llegué a gerente de BASF en Ecuador. Cuando me vine
+        a la finca decidido a producir sin veneno, los primeros cultivos
+        se me arruinaron. Hoy soy profesor universitario, mi tesis de
+        maestría en la Universidad Nacional mide lo que le pasa al suelo
+        cuando lo dejas de fumigar, y esta finca alimenta un hotel de 23
+        habitaciones.
+      </p>
+
+      <p>
+        Lo que enseño no lo leí. Lo aprendí equivocándome en mi propia
+        tierra. Para que tú no te equivoques caro en la tuya.
+      </p>
+
+      <p style="margin-top:18px;color:var(--muted);font-size:14px;font-style:italic">
+        Iván Castrillón · Ingeniero agrónomo · Cofundador de La Huerta
+        Hotel · La Huerta LAB
+      </p>
+    </div>
+
+    <img
+      src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a96a986f22eac14d9d0a997.jpg"
+      alt="Iván Castrillón dando clase"
+    >
+
+  </div>
+</section>
+
+<section class="lhs-faq">
+  <div class="lhs-wrap lhs-faqgrid">
+
+    <div>
+      <p class="lhs-eye">Antes de elegir</p>
+
+      <h2 class="lhs-title">
+        Preguntas para decidir
+        <em>con criterio.</em>
+      </h2>
+    </div>
+
+    <div>
+      <details>
+        <summary>¿Qué incluye el presencial?</summary>
+        <p>
+          Cuatro días y tres noches en La Huerta Hotel, alimentación
+          completa, memorias, calculadora de siembra, práctica en campo y
+          <span class="lhs-pend">[X meses]</span> de comunidad en Skool.
+        </p>
+      </details>
+
+      <details>
+        <summary>¿Qué pasa cuando se llena octubre?</summary>
+        <p>
+          La página cambia sola a la cohorte del 3 al 6 de diciembre, con
+          los mismos contenidos.
+        </p>
+      </details>
+
+      <details>
+        <summary>¿El online incluye la comunidad?</summary>
+        <p>
+          Sí, doce meses. Y las sesiones en vivo quedan grabadas por si no
+          puedes asistir a alguna.
+        </p>
+      </details>
+
+      <details>
+        <summary>¿Necesito tener finca ya?</summary>
+        <p>
+          No. Si estás mirando predios, este curso te da los criterios para
+          no comprar mal. Si ya tienes tierra, te da el orden para empezar.
+        </p>
+      </details>
+
+      <details>
+        <summary>¿Cómo llego a La Huerta?</summary>
+        <p>
+          Estamos entre la Reserva Natural de Yotoco y el Lago Calima, a 20
+          minutos de Buga y 90 minutos de Cali.
+          <span class="lhs-pend">Transporte desde Cali: CONFIRMAR si se ofrece</span>
+        </p>
+      </details>
+
+      <details>
+        <summary>¿Qué pasa si no puedo asistir?</summary>
+        <p>
+          <span class="lhs-pend">Política de reagendamiento: CONFIRMAR</span>
+        </p>
+      </details>
+
+      <details>
+        <summary>¿Cuándo empieza el online y cuántas sesiones tiene?</summary>
+        <p>
+          Empieza el <span class="lhs-pend">[FECHA]</span> y tiene 8
+          sesiones en vivo, los <span class="lhs-pend">[día]</span> a las
+          <span class="lhs-pend">[hora]</span>.
+        </p>
+      </details>
+
+      <details>
+        <summary>¿Cómo está La Huerta después del sismo de agosto?</summary>
+        <p>
+          Bien. La estructura del hotel es sismorresistente, quedó intacta
+          y fue verificada por un ingeniero especialista desde el primer
+          día. El curso de octubre se hace con normalidad.
+        </p>
+      </details>
+
+      <details>
+        <summary>¿Qué hago si falla el pago?</summary>
+        <p>
+          Escríbenos por el botón de WhatsApp y te ayudamos a completar la
+          inscripción.
+        </p>
+      </details>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer class="lhs-footer">
+  <div class="lhs-wrap lhs-footerin">
+
+    <a class="lhs-brand" href="#lhs-offers">
+      <img
+        src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6aa46253f4e2fd8aa0ffbddd.png"
+        alt="La Huerta LAB"
+        width="128"
+        height="128"
+      >
+    </a>
+
+    <p>
+      Los resultados dependen de tu terreno, tu mercado, tu inversión y
+      tu ejecución. El curso entrega método, criterio y una ruta para
+      empezar; no garantiza resultados económicos.
+    </p>
+
+  </div>
+</footer>
+
+<a
+  class="lhs-wa"
+  id="lhs-wa"
+  target="_blank"
+  rel="noopener"
+>
+  ¿Problemas con el pago? WhatsApp
+</a>
+
+<div class="lhs-toast" id="lhs-toast" role="status"></div>
+
+</div>
+
+<script>
+(() => {
+  const CONFIG = {
+    totalOctoberSeats: 40,
+    octoberAvailable: 33,
+    decemberAvailable: 40,
+
+    /* Endpoint que deberá devolver:
+       { "octoberAvailable": 32 }
+    */
+    availabilityEndpoint: "",
+
+    /* PEGA AQUÍ LOS ENLACES REALES */
+    octoberCheckoutUrl: "",
+    decemberCheckoutUrl: "",
+    onlineSkoolCheckoutUrl: "",
+
+    whatsappNumber: "573158505012",
+    pollEveryMs: 30000
+  };
+
+  let started = false;
+  let currentAvailability = CONFIG.octoberAvailable;
+  let availabilityTimer;
+
+  const get = id => document.getElementById(id);
+
+  function clampSeats(value) {
+    const number = Number(value) || 0;
+    return Math.max(
+      0,
+      Math.min(CONFIG.totalOctoberSeats, number)
+    );
+  }
+
+  function showToast(message) {
+    const toast = get("lhs-toast");
+
+    if (!toast) return;
+
+    toast.textContent = message;
+    toast.classList.add("show");
+
+    clearTimeout(toast.timer);
+
+    toast.timer = setTimeout(() => {
+      toast.classList.remove("show");
+    }, 3000);
+  }
+
+  function configureButton(element, url, message) {
+    if (!element) return;
+
+    element.dataset.url = url || "";
+    element.setAttribute(
+      "aria-disabled",
+      url ? "false" : "true"
+    );
+
+    if (element.dataset.ready === "true") return;
+
+    element.dataset.ready = "true";
+
+    function openRoute(event) {
+      event.preventDefault();
+
+      if (element.dataset.url) {
+        window.location.href = element.dataset.url;
+        return;
+      }
+
+      showToast(message);
+    }
+
+    element.addEventListener("click", openRoute);
+
+    element.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        openRoute(event);
+      }
+    });
+  }
+
+  function renderAvailability(available) {
+    currentAvailability = clampSeats(available);
+
+    const soldOut = currentAvailability === 0;
+    const reserved = CONFIG.totalOctoberSeats - currentAvailability;
+
+    get("lhs-available").textContent = currentAvailability;
+    get("lhs-reserved").textContent = reserved;
+
+    get("lhs-meter").style.width =
+      `${(currentAvailability / CONFIG.totalOctoberSeats) * 100}%`;
+
+    get("lhs-stock").style.display =
+      soldOut ? "none" : "block";
+
+    get("lhs-soldout").style.display =
+      soldOut ? "block" : "none";
+
+    if (soldOut) {
+      get("lhs-pk").textContent =
+        "3 al 6 de diciembre · Lago Calima, Valle del Cauca";
+
+      get("lhs-pt").textContent =
+        "Campo Escuela presencial · Diciembre";
+
+      get("lhs-presencial").textContent =
+        "Quiero ir en diciembre →";
+
+      get("lhs-pmicro").textContent =
+        "Pago seguro en el checkout de La Huerta Hotel.";
+
+      configureButton(
+        get("lhs-presencial"),
+        CONFIG.decemberCheckoutUrl,
+        "Añade en CONFIG el checkout de diciembre."
+      );
+
+      return;
+    }
+
+    get("lhs-pk").textContent =
+      "1 al 4 de octubre · Lago Calima, Valle del Cauca";
+
+    get("lhs-pt").textContent =
+      "Campo Escuela presencial";
+
+    get("lhs-presencial").textContent =
+      "Quiero ir a La Huerta en octubre →";
+
+    get("lhs-pmicro").textContent =
+      "Pago seguro en el checkout de La Huerta Hotel.";
+
+    configureButton(
+      get("lhs-presencial"),
+      CONFIG.octoberCheckoutUrl,
+      "Añade en CONFIG el checkout de octubre."
+    );
+  }
+
+  async function refreshAvailability() {
+    if (!CONFIG.availabilityEndpoint) {
+      renderAvailability(CONFIG.octoberAvailable);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        CONFIG.availabilityEndpoint,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json"
+          },
+          cache: "no-store"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("No se pudo consultar el inventario");
+      }
+
+      const data = await response.json();
+
+      renderAvailability(data.octoberAvailable);
+    } catch (error) {
+      renderAvailability(currentAvailability);
+    }
+  }
+
+  function initializePage() {
+    if (started || !get("lh-sale")) return;
+
+    started = true;
+
+    configureButton(
+      get("lhs-online"),
+      CONFIG.onlineSkoolCheckoutUrl,
+      "Añade en CONFIG el checkout Online de Skool."
+    );
+
+    const whatsappMessage =
+      "Hola, necesito ayuda para completar el pago de La Huerta LAB.";
+
+    get("lhs-wa").href =
+      `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+
+    refreshAvailability();
+
+    clearInterval(availabilityTimer);
+
+    availabilityTimer = setInterval(
+      refreshAvailability,
+      CONFIG.pollEveryMs
+    );
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      initializePage,
+      { once: true }
+    );
+  } else {
+    initializePage();
+  }
+
+  document.addEventListener(
+    "hydrationDone",
+    initializePage,
+    { once: true }
+  );
+})();
+</script>

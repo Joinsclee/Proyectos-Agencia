@@ -1,0 +1,2036 @@
+<!-- BLOQUE GHL · SimuladorLanzamiento.html · generado con simulador-lanzamiento/construir.py. No editar a mano.
+     Pegar completo dentro de un elemento «HTML/Javascript personalizado». -->
+<!-- ══════════════════════════════════════════════════════════════════════
+     LA HUERTA LAB · SIMULADOR FINANCIERO PARA EL EMBUDO DE LANZAMIENTO
+     Plantilla. NO se pega esta: se pega SimuladorLanzamiento.html, que sale
+     de aquí con `python3 construir.py`. El simulador va insertado tal cual
+     desde ../SimuladorFincanciero.html en el marcador de abajo.
+
+     Tres piezas, en este orden:
+       1. La guía de bienvenida (cinco pantallas, fotos reales de la finca).
+       2. El simulador, que aparece al terminar o saltar la guía.
+       3. El botón flotante a las dos páginas de venta.
+
+     Va en el paso propio del «Embudo Lanzamiento» de GHL, que es donde
+     está instalado el píxel. Sin login: lo abre cualquiera.
+     ══════════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Paleta de las herramientas de Iván (la misma del simulador) para la guía,
+   y la del lanzamiento (verde profundo + lima) solo para el botón de venta,
+   que así se distingue de todo lo demás sin salirse de la marca. */
+.simz{
+  --bosque:#12452c;--hondo:#0d3320;--acento:#1f6b45;--borde:#2f7a53;--borde-2:#1c5637;
+  --claro:#cfe3d6;--claro-2:#a9d9bd;--claro-3:#8fbfa4;--oro:#d9b458;--oro-2:#e8c877;
+  --fondo:#f4f6f2;--tinta:#13251c;--azul:#0b4fb0;--azul-f:#f2f7fd;--azul-b:#cfe0f5;
+  --lz-hondo:#061f1d;--lz-verde:#0f4640;--lz-lima:#c8db52;--lz-papel:#f7f6ef;
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--tinta);background:var(--fondo);
+  -webkit-font-smoothing:antialiased;
+  /* Hueco para que el botón flotante nunca tape el final del simulador. */
+  padding-bottom:150px;
+}
+.simz *{box-sizing:border-box}
+.simz button{font-family:inherit;cursor:pointer}
+.simz :focus-visible{outline:3px solid var(--oro);outline-offset:2px}
+.simz-guard{display:none}
+
+/* ── 0 · Puerta con la palabra de la clase ──────────────────────────────
+   El simulador se entrega en el directo: hasta que no se escribe la palabra
+   que dice Iván, la guía, el simulador y el botón de cursos no se muestran.
+   Es un candado de clase en vivo, no de seguridad: todo el contenido viaja
+   en el bloque, así que quien sepa mirar el código lo puede saltar. */
+.simz.bloqueado .simz-guia,
+.simz.bloqueado .simz-app{display:none!important}
+.simz-llave{padding:26px 18px 10px}
+.simz-llave-caja{
+  max-width:720px;margin:0 auto;border-radius:22px;overflow:clip;
+  background:linear-gradient(135deg,var(--bosque) 0%,var(--acento) 100%);
+  color:#fff;box-shadow:0 18px 44px rgba(6,31,29,.18);padding:34px 30px 30px;text-align:center;
+}
+.simz-llave-eyebrow{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--claro-2)}
+.simz-llave h2{margin:0 0 10px;font-size:clamp(23px,4.4vw,31px);line-height:1.2;font-weight:800;letter-spacing:-.4px}
+.simz-llave p{margin:0 auto;max-width:44ch;font-size:16px;line-height:1.55;color:var(--claro)}
+.simz-llave-form{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
+.simz-llave-form input{
+  flex:1 1 280px;min-width:0;max-width:360px;font:inherit;font-size:17px;font-weight:700;
+  color:var(--tinta);background:#fff;border:2px solid var(--borde);border-radius:12px;padding:13px 16px;text-align:center;
+}
+.simz-llave-form button{
+  flex:0 0 auto;border:0;border-radius:12px;padding:13px 26px;font-size:16px;font-weight:800;
+  color:var(--bosque);background:var(--oro-2);
+}
+.simz-llave-form button:hover{background:var(--oro)}
+.simz-llave-aviso{min-height:22px;margin-top:14px;font-size:15px;font-weight:700;color:var(--oro-2)}
+.simz-llave-pie{margin-top:16px;font-size:14px;color:var(--claro-3)}
+@media(max-width:560px){
+  .simz-llave{padding:16px 12px 6px}
+  .simz-llave-caja{padding:26px 18px 24px}
+  .simz-llave-form input{flex:1 1 100%;max-width:none}
+  .simz-llave-form button{flex:1 1 100%}
+}
+
+/* ── 1 · Guía de bienvenida ─────────────────────────────────────────── */
+.simz-guia{padding:18px 18px 8px}
+.simz-onb{
+  max-width:1120px;margin:0 auto;border-radius:22px;
+  /* clip y no hidden: hidden la convierte en contenedor de scroll y anula el
+     sticky de la barra en el teléfono. hidden queda de respaldo. */
+  overflow:hidden;overflow:clip;
+  background:var(--bosque);color:#fff;
+  display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  box-shadow:0 24px 60px rgba(13,51,32,.22);
+}
+.simz-onb[hidden]{display:none!important}
+.simz-onb-txt{display:flex;flex-direction:column;min-height:560px}
+.simz-onb-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:26px 40px 0}
+.simz-cuenta{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--claro-3);font-variant-numeric:tabular-nums}
+.simz-saltar{background:none;border:0;color:var(--claro-3);font-size:15px;font-weight:600;padding:6px 2px;text-decoration:underline;text-underline-offset:3px}
+.simz-saltar:hover{color:#fff}
+/* Botón «Moneda»: lleva al selector de moneda del simulador (abre el
+   simulador si hace falta). Hay uno en la guía y otro en la barra del
+   simulador; nunca se ven los dos a la vez. */
+.simz-onb-top{flex-wrap:wrap;row-gap:8px}
+.simz-onb-top .simz-moneda{margin-left:auto}
+.simz-moneda{display:inline-flex;align-items:center;gap:5px;min-height:38px;border-radius:999px;padding:7px 14px;
+  font-size:15px;font-weight:700;line-height:1;white-space:nowrap;
+  background:rgba(217,180,88,.14);border:1.5px solid var(--oro);color:#fff;transition:background .2s ease}
+.simz-moneda b{color:var(--oro-2);letter-spacing:.04em}
+.simz-moneda:hover{background:rgba(217,180,88,.28)}
+
+.simz-pasos{flex:1;padding:22px 40px 26px;display:grid}
+/* Las cinco pantallas se apilan en la misma celda: la tarjeta mide lo que
+   la más larga y no salta al pasar de una a otra. */
+.simz-paso{grid-area:1/1;visibility:hidden}
+.simz-paso.on{visibility:visible;animation:simzEntra .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes simzEntra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.simz-eyebrow{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--oro);margin:0 0 12px}
+.simz-onb h2{font-family:"Zilla Slab",Georgia,serif;font-weight:700;font-size:clamp(28px,3.1vw,38px);line-height:1.14;letter-spacing:-.01em;color:#fff;margin:0 0 16px;text-wrap:balance}
+.simz-onb p{font-size:18px;line-height:1.55;color:var(--claro);margin:0 0 14px;max-width:52ch}
+.simz-onb strong{color:#fff}
+.simz-nota{font-size:15px!important;color:var(--claro-3)!important}
+
+/* paso 1 · las tres preguntas */
+.simz-tres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:6px 0 18px}
+.simz-tres div{background:var(--hondo);border:1px solid var(--borde-2);border-radius:14px;padding:16px 16px 18px}
+.simz-tres b{display:block;font-family:"Zilla Slab",Georgia,serif;font-size:21px;line-height:1.2;color:#fff}
+.simz-tres span{display:block;margin-top:8px;font-size:14.5px;line-height:1.4;color:var(--claro-2)}
+
+/* paso 2 · los cinco negocios */
+.simz-lineas{list-style:none;margin:4px 0 16px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px}
+.simz-lineas li{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:#fff}
+.simz-lineas li::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--oro)}
+
+/* paso 3 · la regla de los colores, con el aspecto real del simulador */
+.simz-regla{background:#fff;border-radius:16px;padding:18px 18px 16px;color:var(--tinta);margin:4px 0 16px;display:grid;gap:12px}
+.simz-regla-fila{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}
+.simz-caja{display:inline-block;font-weight:700;font-size:20px;color:var(--azul);background:var(--azul-f);border:1px solid var(--azul-b);border-radius:8px;padding:6px 14px;text-align:right;font-variant-numeric:tabular-nums}
+.simz-negro{font-weight:700;font-size:20px;color:var(--tinta);font-variant-numeric:tabular-nums;white-space:nowrap}
+.simz-regla-fila span{font-size:15.5px;line-height:1.4;color:#40524a}
+.simz-practica{background:var(--hondo);border:1px solid var(--borde);border-radius:16px;padding:16px 18px}
+.simz-practica label{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;font-weight:700;color:var(--claro)}
+.simz-practica label output{font-size:22px;color:#fff;font-variant-numeric:tabular-nums}
+.simz-practica input[type=range]{width:100%;accent-color:var(--oro);height:28px;margin:6px 0 10px}
+.simz-practica-res{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.simz-practica-res div{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--claro-3)}
+.simz-practica-res output{display:block;margin-top:2px;font-size:22px;letter-spacing:0;text-transform:none;color:#fff;font-variant-numeric:tabular-nums}
+.simz-practica small{display:block;margin-top:10px;font-size:13.5px;color:var(--claro-3)}
+
+/* paso 4 · los seis números */
+.simz-seis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 14px}
+.simz-seis div{background:var(--hondo);border:1px solid var(--borde-2);border-radius:12px;padding:12px 13px 13px}
+.simz-seis i{display:block;font-style:normal;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--claro-3)}
+.simz-seis b{display:block;margin:4px 0 4px;font-size:24px;line-height:1.1;color:#fff;font-variant-numeric:tabular-nums}
+.simz-seis .dest b{color:var(--oro)}
+.simz-seis span{display:block;font-size:13.5px;line-height:1.35;color:var(--claro-2)}
+
+/* paso 5 · las reglas */
+.simz-reglas{list-style:none;margin:4px 0 16px;padding:0;display:grid;gap:10px}
+.simz-reglas li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:18px;line-height:1.45;color:var(--claro)}
+.simz-reglas li::before{content:"";width:12px;height:12px;margin-top:7px;border-radius:3px;background:var(--oro)}
+.simz-reglas b{color:#fff}
+
+/* navegación */
+.simz-nav{display:flex;align-items:center;gap:12px;background:var(--hondo);border-top:1px solid var(--borde);padding:16px 40px}
+.simz-puntos{display:flex;gap:7px;flex:1}
+.simz-punto{width:10px;height:10px;border-radius:99px;border:0;padding:0;background:var(--borde);transition:width .25s ease,background .25s ease}
+.simz-punto.on{width:28px;background:var(--oro)}
+.simz-btn{border-radius:10px;font-size:16px;font-weight:700;padding:11px 18px;border:1px solid #4a9370;background:transparent;color:var(--claro);transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
+.simz-btn:hover{border-color:var(--claro-2);color:#fff}
+.simz-btn.ir{background:var(--oro);border-color:var(--oro);color:var(--bosque)}
+.simz-btn.ir:hover{background:var(--oro-2);border-color:var(--oro-2);color:var(--bosque);transform:translateY(-1px)}
+.simz-btn[hidden]{display:none}
+
+/* fotos: una por paso, en fundido */
+.simz-onb-foto{position:relative;min-height:560px;background:var(--hondo);overflow:hidden}
+.simz-foto{position:absolute;inset:0;opacity:0;transition:opacity .5s ease}
+.simz-foto.on{opacity:1}
+.simz-foto img{width:100%;height:100%;object-fit:cover;display:block}
+.simz-foto::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,69,44,.35),transparent 30%)}
+.simz-mosaico{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;background:var(--hondo)}
+.simz-mosaico figure{position:relative;margin:0;overflow:hidden}
+.simz-mosaico img{width:100%;height:100%;object-fit:cover;display:block}
+.simz-mosaico figcaption{position:absolute;left:10px;bottom:10px;font-size:13px;font-weight:700;letter-spacing:.06em;color:#fff;background:rgba(13,51,32,.82);padding:5px 10px;border-radius:99px}
+
+/* ── 2 · El simulador ──────────────────────────────────────────────── */
+.simz-app[hidden]{display:none!important}
+.simz-volver{max-width:none;margin:0;padding:14px 18px 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.simz-volver button{background:#fff;border:1px solid #d7e0d5;color:var(--acento);font-size:15px;font-weight:700;border-radius:99px;padding:8px 16px}
+.simz-volver button:hover{background:#eef4ee}
+.simz-volver .simz-moneda{border:1.5px solid #c8a12b;color:var(--acento);padding:8px 16px}
+.simz-volver .simz-moneda b{color:var(--bosque)}
+
+@media (max-width:900px){
+  .simz-onb{grid-template-columns:minmax(0,1fr)}
+  /* En el teléfono cada pantalla mide lo suyo: apiladas, la más larga dejaba
+     el botón «Siguiente» a un palmo de scroll de las cortas. Al cambiar de
+     pantalla, el script sube la tarjeta a la vista. */
+  .simz-pasos{display:block}
+  .simz-paso{display:none;visibility:visible}
+  .simz-paso.on{display:block}
+  .simz-onb-foto{order:-1;min-height:0;aspect-ratio:16/9}
+  .simz-onb-txt{min-height:0}
+  .simz-onb-top,.simz-pasos{padding-left:22px;padding-right:22px}
+  /* En el teléfono la barra se queda a la vista, justo encima del botón
+     flotante (ver pegarBarra en el script). */
+  .simz-nav{padding:12px 22px;position:relative;z-index:2;will-change:transform}
+  .simz-tres,.simz-seis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .simz-tres div:last-child{grid-column:1/-1}
+}
+@media (max-width:520px){
+  .simz-guia{padding:10px 10px 6px}
+  /* La fila de arriba no cabe entera: «Saltar» baja a su propia línea. */
+  .simz-onb-top .simz-saltar{margin-left:auto}
+  .simz-volver{padding:10px 10px 0}
+  .simz-onb{border-radius:18px}
+  .simz-onb p{font-size:17px}
+  .simz-tres{grid-template-columns:minmax(0,1fr);gap:8px}
+  .simz-tres div{padding:12px 14px}
+  .simz-tres b{font-size:18px}
+  .simz-tres span{margin-top:4px}
+  .simz-seis b{font-size:21px}
+  .simz-seis span{font-size:12.5px}
+  .simz-lineas{grid-template-columns:minmax(0,1fr)}
+  .simz-regla-fila{grid-template-columns:minmax(0,1fr);gap:6px}
+  .simz-btn{padding:10px 14px;font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){
+  .simz-paso.on{animation:none}
+  .simz-foto,.simz-punto,.simz-btn,.simz-moneda{transition:none}
+}
+</style>
+
+<div class="simz" id="simz">
+<div class="simz-guard"></div>
+
+<!-- ══ 0 · Puerta con la palabra de la clase ═══════════════════════════ -->
+<section class="simz-llave" id="simz-llave" aria-label="Palabra de acceso" hidden>
+  <div class="simz-llave-caja">
+    <p class="simz-llave-eyebrow">Simulador financiero · La Huerta LAB</p>
+    <h2>Esto se abre con la palabra de la clase</h2>
+    <p>Iván la dice en la masterclass en vivo. Escríbela aquí y el simulador
+       se queda abierto en este dispositivo.</p>
+    <form class="simz-llave-form" id="simz-llave-form" autocomplete="off">
+      <input type="text" id="simz-llave-campo" name="palabra" placeholder="Escribe la palabra"
+             aria-label="Palabra de acceso" spellcheck="false" autocapitalize="none">
+      <button type="submit">Abrir el simulador</button>
+    </form>
+    <p class="simz-llave-aviso" id="simz-llave-aviso" role="status" aria-live="polite"></p>
+    <p class="simz-llave-pie">¿Te perdiste la clase? Escríbenos por WhatsApp y te contamos
+       cuándo volvemos a abrirlo.</p>
+  </div>
+</section>
+
+<!-- ══ 1 · Guía de bienvenida ══════════════════════════════════════════ -->
+<section class="simz-guia" aria-label="Guía del simulador">
+  <div class="simz-onb" id="simz-onb">
+    <div class="simz-onb-txt">
+      <div class="simz-onb-top">
+        <span class="simz-cuenta" id="simz-cuenta">1 de 5</span>
+        <button type="button" class="simz-moneda" data-simz-moneda title="Cambiar la moneda del simulador">Moneda: <b>COP</b></button>
+        <button type="button" class="simz-saltar" id="simz-saltar">Saltar e ir al simulador</button>
+      </div>
+
+      <div class="simz-pasos" aria-live="polite">
+        <div class="simz-paso on" data-paso="0">
+          <p class="simz-eyebrow">Simulador financiero · La Huerta LAB</p>
+          <h2>Haz las cuentas de una finca de 2 hectáreas antes de poner un peso.</h2>
+          <p>Tú le dices cuántos animales hay y a qué precio vendes. La página hace todas las cuentas y te responde tres preguntas:</p>
+          <div class="simz-tres">
+            <div><b>¿Cuánto pongo para arrancar?</b><span>La inversión, antes de vender nada.</span></div>
+            <div><b>¿Cuánto entra cada año?</b><span>Todo lo que vende la finca.</span></div>
+            <div><b>¿Cuánto me sobra?</b><span>Lo que queda después de pagar.</span></div>
+          </div>
+          <p class="simz-nota">Son cinco pantallas cortas. Si ya lo conoces, puedes saltarlas.</p>
+        </div>
+
+        <div class="simz-paso" data-paso="1">
+          <p class="simz-eyebrow">Qué hay dentro</p>
+          <h2>Cinco negocios en la misma tierra.</h2>
+          <p>El modelo junta animales y cultivos, porque en una finca bien diseñada lo que sale de uno alimenta al otro: el estiércol vuelve al suelo como abono.</p>
+          <ul class="simz-lineas">
+            <li>Gallinas de huevo azul</li>
+            <li>Pollos de engorde</li>
+            <li>Corderos Dorper</li>
+            <li>Cerdos en cama profunda</li>
+            <li>Hortalizas y frutas en terrazas</li>
+          </ul>
+          <p class="simz-nota">Cada uno tiene su pestaña con sus cantidades y sus precios.</p>
+        </div>
+
+        <div class="simz-paso" data-paso="2">
+          <p class="simz-eyebrow">La única regla</p>
+          <h2>Lo azul lo cambias tú. Lo negro lo calcula la página.</h2>
+          <div class="simz-regla">
+            <div class="simz-regla-fila"><span class="simz-caja">150</span><span>Número azul en su cajita: haz clic, borra y escribe el tuyo.</span></div>
+            <div class="simz-regla-fila"><span class="simz-negro">$ 95.819.610</span><span>Número negro: se recalcula solo cada vez que cambias uno azul.</span></div>
+          </div>
+          <div class="simz-practica">
+            <label for="simz-rango">Pruébalo: número de gallinas <output id="simz-g">150</output></label>
+            <input type="range" id="simz-rango" min="50" max="400" step="10" value="150">
+            <div class="simz-practica-res">
+              <div>Huevos al año <output id="simz-h">39.600</output></div>
+              <div>Dinero al año <output id="simz-d">$ 29.700.000</output></div>
+            </div>
+            <small>Es solo para practicar: no cambia nada del simulador.</small>
+          </div>
+        </div>
+
+        <div class="simz-paso" data-paso="3">
+          <p class="simz-eyebrow">Dónde mirar</p>
+          <h2>Seis números te dicen si la finca da.</h2>
+          <div class="simz-seis">
+            <div><i>Inversión inicial</i><b>$ 95,8 M</b><span>Se pone una sola vez, antes de vender.</span></div>
+            <div><i>Entra al año</i><b>$ 184,6 M</b><span>Todo lo que vendes. Aún no es ganancia.</span></div>
+            <div><i>Se va en costos</i><b>$ 119,6 M</b><span>Sueldos, concentrado, semillas, luz.</span></div>
+            <div class="dest"><i>Sobra al año</i><b>$ 65,0 M</b><span>Lo que entra menos lo que sale (EBITDA).</span></div>
+            <div><i>Margen</i><b>35,2 %</b><span>De cada 100 pesos que entran, sobran 35.</span></div>
+            <div class="dest"><i>Recuperas lo invertido</i><b>17,7 meses</b><span>Un año y medio, más o menos.</span></div>
+          </div>
+          <p class="simz-nota">Son los valores con los que abre el modelo, en pesos colombianos. Cuando cambias un número azul, cambian solos. Si usas otra moneda, cámbiala con el botón «Moneda» de arriba.</p>
+        </div>
+
+        <div class="simz-paso" data-paso="4">
+          <p class="simz-eyebrow">Antes de empezar</p>
+          <h2>Tres reglas y ya puedes jugar con los números.</h2>
+          <ul class="simz-reglas">
+            <li><span><b>Cambia una cosa a la vez.</b> Así sabes qué movió el resultado.</span></li>
+            <li><span><b>Se guarda solo</b>, en tu teléfono o tu computador. Nadie más ve tus cambios.</span></li>
+            <li><span><b>Si te pierdes</b>, el botón «Restaurar valores originales» lo devuelve todo a como estaba.</span></li>
+          </ul>
+          <p class="simz-nota">En el teléfono, desliza las tablas hacia la izquierda para ver todas las columnas.</p>
+        </div>
+      </div>
+
+      <div class="simz-nav">
+        <div class="simz-puntos" id="simz-puntos"></div>
+        <button type="button" class="simz-btn" id="simz-atras" hidden>Atrás</button>
+        <button type="button" class="simz-btn ir" id="simz-sig">Siguiente</button>
+      </div>
+    </div>
+
+    <div class="simz-onb-foto" aria-hidden="true">
+      <div class="simz-foto on" data-foto="0"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/a90bb69c-110d-410a-b19c-41cc1e5639e1.jpg" alt=""></div>
+      <div class="simz-foto" data-foto="1">
+        <div class="simz-mosaico">
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/c386a32a-1961-42ef-a3d0-64fac683929f.jpg" alt="" loading="lazy"><figcaption>Gallinas y pollos</figcaption></figure>
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/892335cd-fca2-41b9-ad0f-c7794bd34cb5.jpg" alt="" loading="lazy"><figcaption>Corderos</figcaption></figure>
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6645b1d9-7c5b-40bf-a487-3f8bef75595e.jpg" alt="" loading="lazy"><figcaption>Cerdos</figcaption></figure>
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/05596c67-5cc9-4b9e-9497-a49759644fb0.jpg" alt="" loading="lazy"><figcaption>Terrazas</figcaption></figure>
+        </div>
+      </div>
+      <div class="simz-foto" data-foto="2"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/36226a85-e443-48ac-b36f-9cf73a85b86d.jpg" alt="" loading="lazy"></div>
+      <div class="simz-foto" data-foto="3"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/81594db8-18c8-43b2-be72-365dcc191048.jpg" alt="" loading="lazy"></div>
+      <div class="simz-foto" data-foto="4"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/31ea5432-6fd7-423c-84f0-1791a20c118c.jpg" alt="" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 2 · El simulador ═══════════════════════════════════════════════ -->
+<section class="simz-app" id="simz-app" aria-label="Simulador financiero" hidden>
+  <div class="simz-volver">
+    <button type="button" class="simz-moneda" data-simz-moneda title="Cambiar la moneda del simulador">Moneda: <b>COP</b></button>
+    <button type="button" id="simz-reguia">Ver la guía otra vez</button>
+  </div>
+<style>
+.hlab-guard{display:none}
+.hlab *{box-sizing:border-box;margin:0;padding:0}
+.hlab{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#16211a;background:#f4f6f2;padding:18px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.hlab .wrap{max-width:none;margin:0 auto}
+.hlab .hd{background:#12452c;background:linear-gradient(135deg,#12452c 0%,#1f6b45 100%);color:#ffffff;border-radius:14px;padding:22px 24px;margin-bottom:16px}
+.hlab .hd h1{font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+.hlab .hd p{font-size:13px;color:#cfe3d6}
+.hlab .hd .badge{display:inline-block;margin-top:10px;background:#0d3320;border:1px solid #2f7a53;color:#a9d9bd;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;padding:5px 10px;border-radius:999px}
+
+.hlab .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#ffffff;border:1px solid #dfe5dc;border-radius:12px;padding:10px 12px;margin-bottom:14px}
+.hlab .toolbar label{font-size:12px;font-weight:700;color:#5d6b60;margin-right:4px}
+.hlab .toolbar input[type=text],.hlab .toolbar input[type=number]{width:110px}
+.hlab .btn{border:1px solid #cbd6c9;background:#ffffff;color:#1f6b45;font-size:12px;font-weight:700;padding:7px 12px;border-radius:8px;cursor:pointer}
+.hlab .btn:hover{background:#eef4ee}
+.hlab .btn.primary{background:#1f6b45;border-color:#1f6b45;color:#ffffff}
+.hlab .btn.primary:hover{background:#175236}
+.hlab .btn.warn{color:#b3402c;border-color:#e4c3bc}
+.hlab .spacer{flex:1}
+
+/* Selector de moneda. El modelo guarda siempre pesos colombianos: esto solo
+   cambia en qué moneda se leen y se escriben los campos de dinero. */
+.hlab .moneda{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;background:#fffdf5;border:1px solid #e6dcbc;border-left:5px solid #c8a12b;border-radius:12px;padding:12px 16px;margin-bottom:14px}
+.hlab .moneda [hidden]{display:none!important}
+.hlab .moneda-fila{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;min-width:0;max-width:100%}
+.hlab .moneda-lbl{font-size:15px;font-weight:800;color:#12452c}
+.hlab .moneda select{font-family:inherit;font-size:15px;font-weight:700;color:#12452c;background:#ffffff;border:2px solid #1f6b45;border-radius:9px;padding:8px 10px;min-height:42px;max-width:100%;cursor:pointer}
+.hlab .moneda select:focus{outline:3px solid #c8a12b;outline-offset:2px}
+.hlab .moneda-otra{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#5d6b60}
+.hlab .moneda-otra input[type=text]{width:78px;min-height:40px;font-size:15px;text-align:center;text-transform:uppercase}
+.hlab .moneda-tasa{font-size:14px;font-weight:700;color:#16211a}
+.hlab .moneda-tasa input[type=number]{width:120px;min-height:40px;font-size:15px}
+.hlab .moneda-notas{flex-basis:100%;font-size:12.5px;line-height:1.45;color:#5d6b60}
+.hlab .moneda-notas b{color:#0b4fb0}
+.hlab .moneda.resalta{animation:hlabResalta 1.8s ease-out}
+@keyframes hlabResalta{0%,35%{box-shadow:0 0 0 4px rgba(200,161,43,.55)}100%{box-shadow:0 0 0 0 rgba(200,161,43,0)}}
+@media(prefers-reduced-motion:reduce){.hlab .moneda.resalta{animation:none;box-shadow:0 0 0 3px rgba(200,161,43,.55)}}
+
+.hlab .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.hlab .tab{border:1px solid #dfe5dc;background:#ffffff;color:#5d6b60;font-size:13px;font-weight:700;padding:9px 14px;border-radius:9px;cursor:pointer}
+.hlab .tab:hover{color:#1f6b45}
+.hlab .tab.on{background:#1f6b45;border-color:#1f6b45;color:#ffffff}
+
+.hlab .panel{display:none}
+.hlab .panel.on{display:block}
+
+.hlab .card{background:#ffffff;border:1px solid #dfe5dc;border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.hlab .card h2{font-size:13px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:#1f6b45;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #eaefe8}
+.hlab .card h3{font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#5d6b60;margin:16px 0 8px}
+.hlab .note{font-size:12px;color:#5d6b60}
+
+.hlab .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:14px}
+.hlab .kpi{background:#ffffff;border:1px solid #dfe5dc;border-left:4px solid #1f6b45;border-radius:12px;padding:14px 16px}
+.hlab .kpi .k{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#5d6b60;margin-bottom:6px}
+.hlab .kpi .v{font-size:21px;font-weight:800;letter-spacing:-.5px;color:#16211a}
+.hlab .kpi .s{font-size:12px;color:#5d6b60;margin-top:3px}
+.hlab .kpi.gold{border-left-color:#c8a12b}
+.hlab .kpi.dark{background:#12452c;border-color:#12452c;border-left-color:#c8a12b}
+.hlab .kpi.dark .k{color:#a9d9bd}
+.hlab .kpi.dark .v{color:#ffffff}
+.hlab .kpi.dark .s{color:#cfe3d6}
+.hlab .kpi.red{border-left-color:#b3402c}
+
+.hlab table{width:100%;border-collapse:collapse;font-size:13px}
+.hlab th{text-align:left;font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#5d6b60;padding:8px 8px;border-bottom:2px solid #eaefe8;white-space:nowrap}
+.hlab td{padding:6px 8px;border-bottom:1px solid #f0f3ee;vertical-align:middle}
+.hlab tr.grp td{background:#eef4ee;font-weight:800;color:#12452c;font-size:11px;letter-spacing:.6px;text-transform:uppercase;padding:8px}
+.hlab tr.sub td{background:#fafbf9;font-weight:800;color:#16211a}
+.hlab tr.tot td{background:#12452c;color:#ffffff;font-weight:800;font-size:14px}
+.hlab tr.tot td.n{color:#ffffff}
+.hlab td.n,.hlab th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hlab td.c{text-align:center}
+.hlab .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.hlab #tblInv{min-width:900px}
+.hlab #tblProd{min-width:900px}
+.hlab #tblCost{min-width:780px}
+.hlab #tblResIng,.hlab #tblResEscala{min-width:560px}
+.hlab .muted{color:#5d6b60;font-size:12px}
+.hlab .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:2px 6px;border-radius:5px;background:#eef4ee;color:#1f6b45;border:1px solid #d5e5d9}
+.hlab .tag.f{background:#f3f0e4;color:#8a6d12;border-color:#e6dcbc}
+
+.hlab input[type=number],.hlab input[type=text]{font-family:inherit;font-size:13px;color:#0b4fb0;font-weight:700;background:#f2f7fd;border:1px solid #cfe0f5;border-radius:7px;padding:6px 8px;width:120px;text-align:right;font-variant-numeric:tabular-nums}
+.hlab input[type=number]:focus,.hlab input[type=text]:focus{outline:none;border-color:#0b4fb0;background:#ffffff}
+.hlab input.w-sm{width:82px}
+.hlab input.w-xs{width:66px}
+.hlab .ro{display:inline-block;min-width:82px;text-align:right;font-weight:700;color:#16211a;font-variant-numeric:tabular-nums}
+
+.hlab .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:#5d6b60;margin-top:6px}
+.hlab .legend b{color:#0b4fb0}
+.hlab .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* Sin esto, cada columna hereda min-width:auto y no puede encogerse por
+   debajo de su contenido: el overflow-x de las tablas nunca se activa y
+   desborda la herramienta entera en pantallas estrechas. */
+.hlab .split>*{min-width:0}
+.hlab .bars{margin-top:6px}
+.hlab .bar{margin-bottom:9px}
+.hlab .bar .lbl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.hlab .bar .lbl b{font-variant-numeric:tabular-nums}
+.hlab .bar .track{height:9px;background:#eef1ec;border-radius:99px;overflow:hidden}
+.hlab .bar .fill{height:100%;background:#1f6b45;border-radius:99px}
+.hlab .bar .fill.g{background:#c8a12b}
+.hlab .bar .fill.r{background:#b3402c}
+.hlab .warnbox{background:#fdf6ec;border:1px solid #eddfbf;border-left:4px solid #c8a12b;border-radius:10px;padding:11px 14px;font-size:12.5px;color:#6b5410;margin-bottom:12px}
+.hlab .foot{text-align:center;font-size:11.5px;color:#8a978c;padding:14px 0 4px}
+@media(max-width:760px){.hlab{padding:10px}.hlab .split{grid-template-columns:1fr}.hlab .hd h1{font-size:18px}.hlab input[type=number],.hlab input[type=text]{width:96px}
+  .hlab .moneda{padding:12px 12px;gap:10px}
+  .hlab .moneda-fila{width:100%}
+  .hlab .moneda select{flex:1 1 180px}
+  .hlab .moneda-tasa input[type=number]{width:110px}}
+</style>
+<div class="hlab">
+<div class="hlab-guard"></div>
+<div class="wrap">
+
+  <div class="hd">
+    <h1>Simulador Financiero: Finca Productiva 2 Hectáreas</h1>
+    <p>La Huerta Hotel · Iván · Huerta LAB · modelo completo: inversión, producción, costos y rentabilidad</p>
+    <span class="badge">Todos los supuestos editables · cálculo en vivo</span>
+  </div>
+
+  <div class="moneda" id="monedaBox" role="group" aria-labelledby="monedaTit">
+    <div class="moneda-fila">
+      <label class="moneda-lbl" for="curSel" id="monedaTit">Moneda:</label>
+      <select id="curSel">
+        <option value="COP">Peso colombiano (COP)</option>
+        <option value="USD">Dólar estadounidense (USD)</option>
+        <option value="MXN">Peso mexicano (MXN)</option>
+        <option value="EUR">Euro (EUR)</option>
+        <option value="PEN">Sol peruano (PEN)</option>
+        <option value="CLP">Peso chileno (CLP)</option>
+        <option value="ARS">Peso argentino (ARS)</option>
+        <option value="CRC">Colón costarricense (CRC)</option>
+        <option value="GTQ">Quetzal guatemalteco (GTQ)</option>
+        <option value="DOP">Peso dominicano (DOP)</option>
+        <option value="BOB">Boliviano (BOB)</option>
+        <option value="UYU">Peso uruguayo (UYU)</option>
+        <option value="PYG">Guaraní paraguayo (PYG)</option>
+        <option value="HNL">Lempira hondureño (HNL)</option>
+        <option value="CAD">Dólar canadiense (CAD)</option>
+        <option value="BRL">Real brasileño (BRL)</option>
+        <option value="OTRA">Otra moneda…</option>
+      </select>
+      <span class="moneda-otra" id="otraBox" hidden>
+        <label for="curCode">Código de 3 letras</label>
+        <input type="text" id="curCode" maxlength="3" placeholder="VES" autocomplete="off" spellcheck="false">
+      </span>
+    </div>
+    <div class="moneda-fila moneda-tasa" id="tasaBox" hidden>
+      <label for="in_trm">1 <span id="tasaCod">USD</span> =</label>
+      <input type="number" id="in_trm" step="any" min="0">
+      <span>pesos colombianos (COP)</span>
+    </div>
+    <p class="moneda-notas" aria-live="polite"><span id="notaTasa"></span> <span id="notaCampos"></span></p>
+  </div>
+
+  <div class="toolbar">
+    <span class="spacer"></span>
+    <button class="btn" id="btnCsv">Exportar CSV</button>
+    <button class="btn" id="btnPrint">Imprimir / PDF</button>
+    <button class="btn warn" id="btnReset">Restaurar valores originales</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-tab="resumen">Resumen</button>
+    <button class="tab" data-tab="supuestos">Supuestos</button>
+    <button class="tab" data-tab="laboral">Costo laboral</button>
+    <button class="tab" data-tab="inversion">Inversión inicial</button>
+    <button class="tab" data-tab="produccion">Producción e ingresos</button>
+    <button class="tab" data-tab="costos">Costos y rentabilidad</button>
+  </div>
+
+  <!-- ============ RESUMEN ============ -->
+  <div class="panel on" id="p-resumen">
+    <div class="kpis">
+      <div class="kpi dark"><div class="k">Inversión total inicial</div><div class="v" data-out="inv_total"></div><div class="s" data-out="inv_total_loc"></div></div>
+      <div class="kpi"><div class="k">Ingreso bruto anual</div><div class="v" data-out="ing_anual"></div><div class="s" data-out="ing_anual_loc"></div></div>
+      <div class="kpi red"><div class="k">Costos operativos anuales</div><div class="v" data-out="cost_anual"></div><div class="s" data-out="cost_anual_loc"></div></div>
+      <div class="kpi gold"><div class="k">EBITDA anual</div><div class="v" data-out="ebitda_anual"></div><div class="s" data-out="ebitda_anual_loc"></div></div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="k">Ingreso bruto mensual</div><div class="v" data-out="ing_mes"></div><div class="s" data-out="ing_mes_loc"></div></div>
+      <div class="kpi"><div class="k">Costos operativos mensuales</div><div class="v" data-out="cost_mes"></div><div class="s" data-out="cost_mes_loc"></div></div>
+      <div class="kpi gold"><div class="k">EBITDA mensual</div><div class="v" data-out="ebitda_mes"></div><div class="s" data-out="ebitda_mes_loc"></div></div>
+      <div class="kpi"><div class="k">Margen EBITDA</div><div class="v" data-out="margen"></div><div class="s">sobre ingreso bruto</div></div>
+      <div class="kpi dark"><div class="k">Retorno de inversión</div><div class="v" data-out="payback"></div><div class="s" data-out="payback_anos"></div></div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h2>Composición del ingreso anual</h2>
+        <div class="bars" id="barsIngreso"></div>
+      </div>
+      <div class="card">
+        <h2>Composición de la inversión inicial</h2>
+        <div class="bars" id="barsInversion"></div>
+      </div>
+    </div>
+
+    <div class="split">
+      <div class="card">
+        <h2>Ingreso anual por línea productiva</h2>
+        <div class="tw"><table id="tblResIng"></table></div>
+      </div>
+      <div class="card">
+        <h2>Beneficios del sistema circular</h2>
+        <div class="tw"><table id="tblResCirc"></table></div>
+        <p class="note" style="margin-top:10px">Estos valores no se suman al EBITDA: son ahorro y valor generado internamente por el sistema (botón de oro + abono propio).</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Escala del proyecto</h2>
+      <div class="tw"><table id="tblResEscala"></table></div>
+    </div>
+  </div>
+
+  <!-- ============ SUPUESTOS ============ -->
+  <div class="panel" id="p-supuestos">
+    <div class="card">
+      <h2>Supuestos generales</h2>
+      <div class="tw"><table id="tblSupGen"></table></div>
+      <div class="legend"><span><b>Azul</b> = editable</span><span><span class="tag f">fórmula</span> = calculado automáticamente</span></div>
+    </div>
+    <div class="split">
+      <div class="card"><h2>Gallinas ponedoras de huevo azul</h2><div class="tw"><table id="tblSupGall"></table></div></div>
+      <div class="card"><h2>Corderos Dorper</h2><div class="tw"><table id="tblSupCord"></table></div></div>
+    </div>
+    <div class="split">
+      <div class="card"><h2>Cerdos en cama profunda</h2><div class="tw"><table id="tblSupCerd"></table></div></div>
+      <div class="card"><h2>Pollos de engorde</h2><div class="tw"><table id="tblSupPoll"></table></div></div>
+    </div>
+    <div class="card">
+      <h2>Terrazas en curvas de nivel</h2>
+      <div class="tw"><table id="tblSupTerr"></table></div>
+    </div>
+  </div>
+
+  <!-- ============ COSTO LABORAL ============ -->
+  <div class="panel" id="p-laboral">
+    <div class="card">
+      <h2>Costo laboral: 1 trabajador con prestaciones</h2>
+      <p class="note" style="margin-bottom:10px">Ajusta aquí el salario y las cargas de tu país. El total alimenta la nómina de 2 trabajadores permanentes del modelo.</p>
+      <div class="tw"><table id="tblLab"></table></div>
+    </div>
+  </div>
+
+  <!-- ============ INVERSIÓN ============ -->
+  <div class="panel" id="p-inversion">
+    <div class="card">
+      <h2>Presupuesto de inversión inicial: finca productiva 2 Ha</h2>
+      <p class="note" style="margin-bottom:10px">Cantidades y valores unitarios editables. Las filas marcadas con <span class="tag f">supuestos</span> se alimentan de la pestaña Supuestos.</p>
+      <div class="tw"><table id="tblInv"></table></div>
+    </div>
+  </div>
+
+  <!-- ============ PRODUCCIÓN ============ -->
+  <div class="panel" id="p-produccion">
+    <div class="card">
+      <h2>Producción anual e ingresos: 25 familias usuario final</h2>
+      <div class="tw"><table id="tblProd"></table></div>
+    </div>
+  </div>
+
+  <!-- ============ COSTOS ============ -->
+  <div class="panel" id="p-costos">
+    <div class="card">
+      <h2>Costos operativos mensuales</h2>
+      <div class="tw"><table id="tblCost"></table></div>
+    </div>
+    <div class="split">
+      <div class="card"><h2>Rentabilidad</h2><div class="tw"><table id="tblRent"></table></div></div>
+      <div class="card">
+        <h2>Ahorro botón de oro + valor del abono propio</h2>
+        <div class="tw"><table id="tblCirc"></table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Modelo financiero Huerta LAB · réplica exacta del libro de cálculo · los resultados dependen de los supuestos que introduzcas</div>
+</div>
+</div>
+<script>
+(function(){
+"use strict";
+var ROOT = document.currentScript ? document.currentScript.previousElementSibling : null;
+if(!ROOT || !ROOT.classList || !ROOT.classList.contains('hlab')){
+  var all = document.getElementsByClassName('hlab'); ROOT = all[all.length-1];
+}
+var $ = function(sel){ return ROOT.querySelector(sel); };
+var $$ = function(sel){ return Array.prototype.slice.call(ROOT.querySelectorAll(sel)); };
+
+/* ================== DEFAULTS (réplica exacta del libro de cálculo) ================== */
+var DEF = {
+  view: 'COP',
+  cur: 'USD',
+  sup: {
+    trm: 3500, familias: 25, personasFam: 3.5, jornal: 112000, imprevistosSup: 0.14,
+    gall_n: 150, gall_precio: 30000, gall_meses: 1, gall_huevosDia: 120,
+    gall_pFinal: 750, gall_pMayor: 450, gall_dias: 330,
+    cor_hembras: 20, cor_pHembra: 1250000, cor_pMacho: 3000000, cor_machos: 1,
+    cor_prolif: 1.5, cor_partos: 1.5, cor_peso: 45, cor_rend: 0.5,
+    cor_pFinal: 40000, cor_pMayor: 18000, cor_potreros: 20, cor_area: 10000,
+    cer_ciclo: 5, cer_ciclos: 5, cer_lechon: 230000, cer_bultosSin: 5.5,
+    cer_factor: 0.8, cer_pBulto: 85000, cer_peso: 95, cer_rend: 0.72, cer_pCanal: 13300,
+    pol_lote: 25, pol_lotes: 6.7, pol_pollito: 5500, pol_mort: 0.05,
+    pol_bultos: 4.6, pol_pBulto: 90000, pol_pesoCanal: 2.7, pol_pCanal: 18200,
+    ter_ancho: 1.0, ter_espacio: 0.5, ter_porJornal: 4, ter_longTrab: 50,
+    ter_longVideo: 100, ter_num: 60, ter_extra: 30
+  },
+  lab: {
+    salario: 1750905, eps: 148827, pension: 210109, caja: 70036, arl: 9139,
+    transporte: 249095, vacaciones: 72993, prima: 145769, cesantias: 145769,
+    intCes: 17509, dotacion: 100000, trabajadores: 2
+  },
+  cost: {
+    gc_kgDia: 0.08, gc_dias: 30, gc_precioKg: 2700,
+    med: 400000, semillas: 350000, biof: 200000, mant: 300000, serv: 150000,
+    vet: 230000, agro: 250000, suscUsd: 3, suscTasa: 4000, impPct: 0.05
+  },
+  circ: { camaCerdos: 4000, gallinazaPollos: 1800, kgGallinaDia: 0.1, precioBultoAbono: 40000 },
+  invImpPct: 0.15,
+  inv: {},
+  hort: [
+    {n:'Tomate chonto', kg:1600, p:6000, k:'Producción 8 Kg/m². Siembra 50 m² c/3 meses'},
+    {n:'Tomate cherry', kg:600, p:19900, k:''},
+    {n:'Cebolla larga', kg:345, p:9960, k:''},
+    {n:'Pimentón / ají', kg:202, p:9770, k:''},
+    {n:'Zanahoria', kg:272, p:4580, k:''},
+    {n:'Lechuga / hojas', kg:606, p:20000, k:''},
+    {n:'Acelga', kg:223, p:6980, k:''},
+    {n:'Aromáticas (cilantro, etc.)', kg:100, p:8000, k:''},
+    {n:'Calabacín', kg:258, p:3480, k:''},
+    {n:'Zapallo', kg:701, p:13480, k:''},
+    {n:'Otras hortalizas', kg:2418, p:3000, k:''}
+  ],
+  fruta: [
+    {n:'Tomate árbol', kg:250, p:5000, k:'5 plantas'},
+    {n:'Aguacate', kg:800, p:5500, k:'5 plantas'},
+    {n:'Limón', kg:600, p:4500, k:'5 plantas'},
+    {n:'Papaya', kg:700, p:3000, k:'10 plantas'},
+    {n:'Banano', kg:900, p:3000, k:'30 plantas'},
+    {n:'Plátano', kg:750, p:5000, k:'30 plantas'}
+  ]
+};
+
+/* ================== ESTRUCTURA INVERSIÓN INICIAL ================== */
+var INV_GROUPS = [
+  { id:'terr', t:'1 · Terrazas en curvas de nivel', items:[
+    {id:'t1', c:'1.', d:'Terrazas: mano de obra (60 terrazas × 2 jornales)', q:90, u:112000, g:'Dato real: 4 terrazas 50m/día · 2 personas', link:'jornales'}
+  ], sub:'Subtotal terrazas', subNote:'Estimado campo'},
+
+  { id:'cerc', t:'2 · Cercas y pastoreo rotacional', items:[
+    {id:'c1', c:'2.', d:'Postes guadua rolliza 6m (cercas potreros)', q:120, u:8000, g:'Material finca o comprado'},
+    {id:'c2', c:'2b.', d:'Postes guadua 3m (intermedios)', q:320, u:5000, g:'Material finca'},
+    {id:'c3', c:'2c.', d:'Hilo eléctrico galvanizado cal.14 (rollos 500m)', q:5, u:180000, g:'Comprar'},
+    {id:'c4', c:'2d.', d:'Energizador solar 5–8 joules', q:1, u:650000, g:'Sin costo energía mensual'},
+    {id:'c5', c:'2e.', d:'Aisladores, conectores, tierra', q:1, u:280000, g:'Kit completo'},
+    {id:'c6', c:'2f.', d:'Puertas potreros (guadua + cadena)', q:20, u:35000, g:'1 por potrero'},
+    {id:'c7', c:'2g.', d:'Jornales (3 personas · 4 días)', q:12, u:112000, g:''}
+  ], sub:'Subtotal cercas', subNote:'~4 días × 3 personas'},
+
+  { id:'past', t:'3 · Pastos y botón de oro', items:[
+    {id:'p1', c:'3.', d:'Semilla pasto estrella', q:11, u:50000, g:'12 kg/Ha × 0.9 Ha'},
+    {id:'p2', c:'3b.', d:'Preparación suelo + siembra pasto', q:1, u:700000, g:'Combustible + jornales'},
+    {id:'p3', c:'3c.', d:'Fertilización establecimiento pasto', q:1, u:360000, g:'2 bultos/Ha'},
+    {id:'p4', c:'3d.', d:'Estacas / material botón de oro (1.000 m²)', q:1000, u:300, g:'Costo de propagación por estaca'},
+    {id:'p5', c:'3e.', d:'Jornales (2 personas)', q:2, u:112000, g:''}
+  ], sub:'Subtotal pastos', subNote:'2 jornales + compost'},
+
+  { id:'gall', t:'4 · Galpón gallinas ponedoras', items:[
+    {id:'g1', c:'4.', d:'Galpón gallinas ponedoras: materiales guadua (20 m²)', q:1, u:2564000, g:'Guadua finca + malla'},
+    {id:'g2', c:'4b.', d:'Comederos (4 kg)', q:5, u:21300, g:'Mercado libre'},
+    {id:'g3', c:'4c.', d:'Bebederos (3 L)', q:4, u:18900, g:'Mercado libre'},
+    {id:'g4', c:'4d.', d:'Jornales', q:10, u:112000, g:''}
+  ], sub:'Subtotal galpón gallinas', area:20},
+
+  { id:'poll', t:'5 · Galpón pollos de engorde', items:[
+    {id:'pl1', c:'5.', d:'Galpón pollos engorde: guadua (m lineal)', q:156, u:7500, g:'Precio×m ref: guadua y bambú®'},
+    {id:'pl2', c:'5b.', d:'Arandelas y tuercas (5/16)', q:200, u:200, g:''},
+    {id:'pl3', c:'5c.', d:'Tornillo 1m (5/16)', q:20, u:1999.9973, g:'1.680,67 + IVA'},
+    {id:'pl4', c:'5d.', d:'Lámina zinc', q:6, u:14000, g:''},
+    {id:'pl5', c:'5e.', d:'Comederos (4 kg)', q:2, u:21300, g:''},
+    {id:'pl6', c:'5f.', d:'Bebederos (3 L)', q:2, u:18900, g:''},
+    {id:'pl7', c:'5g.', d:'Jornales (2 días, 2 personas)', q:4, u:112000, g:'Precio con guadua en finca'}
+  ], sub:'Subtotal galpón pollos', area:6},
+
+  { id:'apri', t:'6 · Aprisco corderos', items:[
+    {id:'a1', c:'6.', d:'Aprisco corderos: materiales guadua (30 m²)', q:1, u:0, g:'Guadua inmunizada: pendiente cotizar'},
+    {id:'a2', c:'6b.', d:'Esterilla de guadua (unidad)', q:10, u:0, g:'Esterilla inmunizada: pendiente cotizar'},
+    {id:'a3', c:'6c.', d:'Pasto Vetiver', q:1, u:0, g:'Termoacústico: pendiente cotizar'},
+    {id:'a4', c:'6d.', d:'Bolsas de plástico para cimentación', q:10, u:1500, g:'Bolsas de basura'},
+    {id:'a5', c:'6e.', d:'Teja zinc (2.1×0.8 m)', q:42, u:14000, g:'La más económica del mercado'},
+    {id:'a6', c:'6f.', d:'Amarras para techo', q:300, u:300, g:'Para amarrar las tejas de zinc'},
+    {id:'a7', c:'6g.', d:'Alambre galvanizado calibre 12', q:9, u:13000, g:'Alambre dulce'},
+    {id:'a8', c:'6h.', d:'Bisagras y herrajes para puerta', q:3, u:50000, g:'Varilla de media pulgada soldada'},
+    {id:'a9', c:'6i.', d:'Varilla roscada, tornillos y arandelas', q:600, u:400, g:'Varilla de 5/16'},
+    {id:'a10', c:'6j.', d:'Caja de puntillas', q:2, u:4500, g:'De pulgada'},
+    {id:'a11', c:'6k.', d:'Ácido bórico + Bórax', q:6, u:27000, g:'3 kg Bórax + 3 kg ácido bórico'},
+    {id:'a12', c:'6l.', d:'Mano de obra (jornales, 4 días, 2 personas)', q:8, u:112000, g:'Jornales incluyen prestaciones'}
+  ], sub:'Subtotal aprisco', area:30},
+
+  { id:'cerd', t:'7 · Estación cerdos cama profunda', items:[
+    {id:'cd1', c:'7.', d:'Estación cerdos cama profunda: materiales (12 m²)', q:1, u:2001000, g:'Malla + guadua + cascarilla + EM'},
+    {id:'cd2', c:'7b.', d:'Jornales', q:10, u:112000, g:''},
+    {id:'cd3', c:'7c.', d:'Bebederos', q:5, u:5280, g:'Mercado libre'},
+    {id:'cd4', c:'7d.', d:'Ángulo para comedero', q:2, u:86900, g:'Precio Homecenter'},
+    {id:'cd5', c:'7e.', d:'Lámina de platina', q:2, u:105000, g:'Precio Homecenter'},
+    {id:'cd6', c:'7f.', d:'Jornal para comedero', q:2, u:112000, g:'Se necesitan 2 personas'},
+    {id:'cd7', c:'7g.', d:'Bulto de cemento', q:5, u:32900, g:''},
+    {id:'cd8', c:'7h.', d:'Ladrillos', q:50, u:800, g:'Homecenter'}
+  ], sub:'Subtotal cerdos', area:12, subNote:'Altura 3m: más complejo'},
+
+  { id:'biof', t:'8 · Biofábrica + bodega', items:[
+    {id:'b1', c:'8.', d:'Biofábrica + bodega: materiales (100 m²)', q:0, u:2160000, g:'Guadua + techo vetiver + mesas'},
+    {id:'b2', c:'', d:'Guadua (m lineal)', q:138, u:7500, g:''},
+    {id:'b3', c:'8b.', d:'Jornales', q:20, u:112000, g:''}
+  ], sub:'Subtotal biofábrica', subNote:'Incluye zona bodega herramientas'},
+
+  { id:'anim', t:'9 · Animales e insumos de arranque', items:[
+    {id:'an1', c:'9.', d:'Hembras Dorper reproductoras', q:20, u:1250000, g:'Precio confirmado por Iván', link:'cor_hembras', ulink:'cor_pHembra'},
+    {id:'an2', c:'9b.', d:'Macho reproductor Dorper', q:1, u:3000000, g:'Precio confirmado por Iván', link:'cor_machos', ulink:'cor_pMacho'},
+    {id:'an3', c:'9c.', d:'Minerales + vitaminas + antiparasitarios (1er trimestre)', q:1, u:630000, g:'Sales minerales, ADE, ivermectina'},
+    {id:'an4', c:'9d.', d:'Gallinas ponedoras huevo azul', q:150, u:30000, g:'Precio confirmado por Iván', link:'gall_n', ulink:'gall_precio'},
+    {id:'an5', c:'9e.', d:'Concentrado + vacunas gallinas (1er trimestre)', q:1, u:1750000, g:'Arranque 3 meses'},
+    {id:'an6', c:'9f.', d:'Lechones destetos primer ciclo', q:5, u:230000, g:'Precio confirmado por Iván', link:'cer_ciclo', ulink:'cer_lechon'},
+    {id:'an7', c:'9g.', d:'Cisco', q:50, u:8500, g:''},
+    {id:'an8', c:'9h.', d:'Concentrado cerdos primer ciclo (con botón de oro)', q:22, u:85000, g:'Bultos reducidos 20% por botón de oro', link:'bultosCicloCerdos', ulink:'cer_pBulto'},
+    {id:'an9', c:'9i.', d:'Cama profunda: cascarilla + EM + melaza', q:1, u:436000, g:'Activación del sistema'},
+    {id:'an10', c:'9j.', d:'Vacunas + medicamentos cerdos', q:1, u:150000, g:'Fiebre porcina clásica'},
+    {id:'an11', c:'9k.', d:'Pollitos primer lote (28 und con margen mortalidad)', q:28, u:8500, g:'5% mortalidad extra'}
+  ], sub:'Subtotal animales'},
+
+  { id:'herr', t:'10 · Herramientas y equipos', items:[
+    {id:'h1', c:'10a', d:'Azadones', q:2, u:99900, g:'Homecenter'},
+    {id:'h2', c:'10b', d:'Palas', q:2, u:39900, g:'Homecenter'},
+    {id:'h3', c:'10c', d:'Machetes', q:2, u:31900, g:'Homecenter'},
+    {id:'h4', c:'10d', d:'Escarda de alambre', q:2, u:90000, g:'Ver vídeo La Huerta Hotel'},
+    {id:'h5', c:'10e', d:'Par de botas', q:2, u:39900, g:'Homecenter'},
+    {id:'h6', c:'10f', d:'Regaderas 8 L', q:2, u:32900, g:'Homecenter'},
+    {id:'h7', c:'10g', d:'Fumigadora 20 L', q:1, u:129900, g:'Homecenter'},
+    {id:'h8', c:'10h', d:'Fumigadora manual 1,5 L', q:1, u:24900, g:'Homecenter'},
+    {id:'h9', c:'10i', d:'Tanque 1000 L', q:1, u:433900, g:'Homecenter'},
+    {id:'h10', c:'10j', d:'Manguera jardín 100 metros', q:1, u:127000, g:'Mercado libre'},
+    {id:'h11', c:'10k', d:'Tanque / tambor 200 L', q:5, u:265900, g:'Mercado libre'},
+    {id:'h12', c:'10l', d:'Guadaña', q:1, u:1559900, g:'Homecenter'},
+    {id:'h13', c:'10m', d:'Bidón gasolina 5 galones', q:1, u:289900, g:'Homecenter'},
+    {id:'h14', c:'10n', d:'Palín', q:2, u:49900, g:'Homecenter'},
+    {id:'h15', c:'10o', d:'Martillo', q:1, u:19900, g:'Homecenter'},
+    {id:'h16', c:'10p', d:'Serrucho 18"', q:1, u:43900, g:'Homecenter'},
+    {id:'h17', c:'10q', d:'Segueta', q:1, u:42900, g:'Homecenter'},
+    {id:'h18', c:'10r', d:'Set destornilladores 4 piezas', q:1, u:24900, g:'Homecenter'},
+    {id:'h19', c:'10s', d:'Alicate', q:1, u:14900, g:'Homecenter'},
+    {id:'h20', c:'10t', d:'Tijera de poda', q:2, u:35900, g:'Homecenter'},
+    {id:'h21', c:'10u', d:'Lima', q:1, u:13900, g:'Homecenter'},
+    {id:'h22', c:'10v', d:'Bugui 169 L', q:1, u:324900, g:'Homecenter'},
+    {id:'h23', c:'10w', d:'Alicate hombresolo', q:1, u:37900, g:'Homecenter'},
+    {id:'h24', c:'10x', d:'Balanza 5 kilos', q:1, u:24900, g:'Homecenter'},
+    {id:'h25', c:'10y', d:'Báscula dinamómetro 300 kg digital', q:1, u:120000, g:'Mercado libre'},
+    {id:'h26', c:'10z', d:'Colador', q:1, u:5000, g:'Chatarrería'},
+    {id:'h27', c:'10aa', d:'Garrafa 20 L', q:2, u:29000, g:''},
+    {id:'h28', c:'10ab', d:'Otros', q:1, u:500000, g:'Jeringas, guantes, puntillas, etc.'}
+  ], sub:'Subtotal herramientas'},
+
+  { id:'inve', t:'11 · Invernadero plantulador', items:[
+    {id:'iv1', c:'11.', d:'Estructura invernadero plantulador: guadua (10×4 m)', q:1, u:185000, g:'8 arcos + correas + guadua finca'},
+    {id:'iv2', c:'11b.', d:'Plástico cal. 6: 8 m ancho × 11 m', q:11, u:9500, g:'MercadoLibre Colombia 2025'},
+    {id:'iv3', c:'11c.', d:'Malla antitrips (laterales + puertas ~30 m²)', q:30, u:5500, g:'Polimprecol Colombia 2025'},
+    {id:'iv4', c:'11d.', d:'Puertas + pasadores + accesorios', q:1, u:66000, g:'Guadua + bisagras'},
+    {id:'iv5', c:'11e.', d:'Mesas con guaya galvanizada (3 mesas 1×3 m)', q:1, u:208000, g:'Guaya 1/8" + tensores'},
+    {id:'iv6', c:'11f.', d:'Sistema riego micro-aspersión completo', q:1, u:400000, g:'Precio confirmado por Iván'},
+    {id:'iv7', c:'11g.', d:'Bandejas germinación 128 celdas (30 und)', q:30, u:8800, g:'Termoformados Antioquia'},
+    {id:'iv8', c:'11h.', d:'Bandejas germinación 200 celdas (15 und)', q:15, u:9000, g:'MercadoLibre Colombia'},
+    {id:'iv9', c:'11i.', d:'Sustrato (lombricompost + cascarilla)', q:1, u:100000, g:'Bocashi de biofábrica propia = $0'}
+  ], sub:'Subtotal invernadero', subNote:'Estructura simple'},
+
+  { id:'semi', t:'12 · Semillas y material vegetal', items:[
+    {id:'s1', c:'12.', d:'Semillas hortalizas primer ciclo (tomate, pimentón, etc.)', q:1, u:1500000, g:'Semillas certificadas'},
+    {id:'s2', c:'12b.', d:'Frutales', q:1, u:1200000, g:'~100 plantas'}
+  ], sub:'Subtotal semillas'}
+];
+INV_GROUPS.forEach(function(gr){ gr.items.forEach(function(it){ DEF.inv[it.id] = {q:it.q, u:it.u}; }); });
+
+/* ================== TASAS DE REFERENCIA ==================
+   Van antes del ESTADO porque la restauración del guardado las usa. */
+var MONEDAS = [
+  ['USD','dólares estadounidenses',3115], ['MXN','pesos mexicanos',181.8], ['EUR','euros',3597],
+  ['PEN','soles peruanos',927.6], ['CLP','pesos chilenos',3.26], ['ARS','pesos argentinos',2.06],
+  ['CRC','colones costarricenses',6.96], ['GTQ','quetzales',407.8], ['DOP','pesos dominicanos',52.77],
+  ['BOB','bolivianos',275.4], ['UYU','pesos uruguayos',77.42], ['PYG','guaraníes',0.52],
+  ['HNL','lempiras',115.9], ['CAD','dólares canadienses',2237], ['BRL','reales brasileños',605]
+];
+var FECHA_REF = '17 sep 2026';   /* open.er-api.com, pesos colombianos por 1 unidad */
+var REF = {}, NOMBRE = {};
+MONEDAS.forEach(function(m){ NOMBRE[m[0]] = m[1]; REF[m[0]] = m[2]; });
+
+/* ================== ESTADO ================== */
+var LSKEY = 'hlab_finca_v1';
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+/* S.tasas recuerda la tasa que cada persona escribió para cada moneda, para
+   no pisarla con la de referencia si vuelve a elegir esa moneda. */
+function estadoInicial(){ var e = clone(DEF); e.tasas = {}; return e; }
+function codigoValido(c){ return typeof c === 'string' && /^[A-Z]{3}$/.test(c); }
+function tasaValida(t){ return typeof t === 'number' && isFinite(t) && t > 0; }
+var S = estadoInicial();
+try{
+  var raw = window.localStorage ? window.localStorage.getItem(LSKEY) : null;
+  if(raw){
+    var sv = JSON.parse(raw);
+    ['sup','lab','cost','circ'].forEach(function(sec){
+      if(sv[sec]) for(var k in DEF[sec]) if(typeof sv[sec][k] === 'number') S[sec][k] = sv[sec][k];
+    });
+    if(typeof sv.invImpPct === 'number') S.invImpPct = sv.invImpPct;
+    if(sv.inv) for(var id in DEF.inv){ if(sv.inv[id]){ S.inv[id].q = num(sv.inv[id].q, DEF.inv[id].q); S.inv[id].u = num(sv.inv[id].u, DEF.inv[id].u); } }
+    ['hort','fruta'].forEach(function(sec){
+      if(sv[sec] && sv[sec].length === DEF[sec].length) sv[sec].forEach(function(r,i){ S[sec][i].kg = num(r.kg, DEF[sec][i].kg); S[sec][i].p = num(r.p, DEF[sec][i].p); });
+    });
+    if(codigoValido(sv.cur)) S.cur = sv.cur;
+    if(sv.view === 'COP' || sv.view === 'LOC') S.view = sv.view;
+    if(S.view === 'LOC' && !codigoValido(sv.cur)) S.view = 'COP';
+    var formatoNuevo = !!(sv.tasas && typeof sv.tasas === 'object');
+    if(formatoNuevo){
+      for(var tc in sv.tasas) if(codigoValido(tc) && tasaValida(sv.tasas[tc])) S.tasas[tc] = sv.tasas[tc];
+    }else if(codigoValido(sv.cur) && tasaValida(S.sup.trm) && (S.view === 'LOC' || S.sup.trm !== DEF.sup.trm)){
+      /* Guardado de antes de este selector: allí la moneda y la tasa se
+         escribían juntas. Se respetan si la persona ya veía esa moneda (aunque
+         fuera con la tasa de fábrica) o si cambió la tasa. La tasa de fábrica
+         sin haber pasado nunca a moneda local no es suya: no se guarda. */
+      S.tasas[S.cur] = S.sup.trm;
+    }
+  }
+}catch(e){}
+sanearTasa();
+/* La tasa en uso tiene que ser de la moneda que dice ser: la que escribió la
+   persona para ella, la de referencia o la pareja de fábrica. Si no (tasa 0,
+   vacía, o heredada de otra moneda), se usa la de esa moneda y, si no hay
+   ninguna, se vuelve a pesos con la moneda de fábrica. Así S.sup.trm, lo que
+   se ve arriba y la tasa con la que se divide son siempre el mismo número. */
+function sanearTasa(){
+  var t = S.sup.trm, c = S.cur;
+  var propia = codigoValido(c) ? S.tasas[c] : undefined;
+  var ref = codigoValido(c) ? REF[c] : undefined;
+  var deFabrica = c === DEF.cur && t === DEF.sup.trm;
+  if(codigoValido(c) && tasaValida(t) && (t === propia || t === ref || deFabrica)) return;
+  if(codigoValido(c) && (propia || ref)){ S.sup.trm = propia || ref; return; }
+  S.view = 'COP';
+  S.cur = DEF.cur;
+  S.sup.trm = S.tasas[DEF.cur] || DEF.sup.trm;
+}
+function num(v, d){ return (typeof v === 'number' && isFinite(v)) ? v : d; }
+function save(){ try{ if(window.localStorage) window.localStorage.setItem(LSKEY, JSON.stringify(S)); }catch(e){} }
+
+/* ================== FORMATO ================== */
+function nf(v, dec){
+  if(!isFinite(v)) v = 0;
+  var neg = v < 0; v = Math.abs(v);
+  var s = v.toFixed(dec);
+  var parts = s.split('.');
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (neg ? '-' : '') + parts.join(',');
+}
+/* ================== MONEDA (capa de presentación) ==================
+   El modelo guarda y calcula SIEMPRE en pesos colombianos. En vista LOC los
+   campos de dinero se muestran divididos por la tasa y lo que se teclea se
+   multiplica por ella antes de guardarlo. */
+/* (las tasas de referencia están arriba, antes del ESTADO) */
+
+var DINERO_SUP = ['jornal','gall_precio','gall_pFinal','gall_pMayor','cor_pHembra','cor_pMacho','cor_pFinal','cor_pMayor',
+                  'cer_lechon','cer_pBulto','cer_pCanal','pol_pollito','pol_pBulto','pol_pCanal'];
+/* suscTasa son pesos por 1 USD: es un importe y se convierte igual. */
+var DINERO_COST = ['gc_precioKg','med','semillas','biof','mant','serv','vet','agro','suscTasa'];
+function isMoney(path){
+  var p = String(path).split('.');
+  switch(p[0]){
+    case 'sup':   return DINERO_SUP.indexOf(p[1]) >= 0;
+    case 'lab':   return p.length === 2 && p[1] !== 'trabajadores';
+    case 'inv':   return p.length === 3 && p[2] === 'u';
+    case 'hort':
+    case 'fruta': return p.length === 3 && p[2] === 'p';
+    case 'cost':  return DINERO_COST.indexOf(p[1]) >= 0;
+    case 'circ':  return p[1] === 'precioBultoAbono';
+  }
+  return false;
+}
+function tasa(){ var t = S.sup.trm; return (typeof t === 'number' && isFinite(t) && t > 0) ? t : 1; }
+function enLocal(){ return S.view === 'LOC'; }
+/* 2 decimales; por debajo de 10, hasta 4. Number() quita los ceros sobrantes. */
+function redondeo(x){ if(!isFinite(x)) return 0; var r = Number(x.toFixed(Math.abs(x) < 10 ? 4 : 2)); return r === 0 ? 0 : r; }
+function aVista(path, cop){ return (enLocal() && isMoney(path) && typeof cop === 'number') ? redondeo(cop / tasa()) : cop; }
+function desdeVista(path, v){ return (enLocal() && isMoney(path)) ? v * tasa() : v; }
+function simbolo(){ return enLocal() ? S.cur : '$'; }
+
+function money(v){
+  if(S.view === 'COP') return '$ ' + nf(v, 0);
+  return nf(v / tasa(), 2) + ' ' + S.cur;
+}
+/* Línea gris bajo cada resultado: en moneda local recuerda el valor en pesos.
+   En pesos no se pone nada (la tasa ni siquiera está a la vista). */
+function moneyAlt(v){
+  if(S.view === 'COP') return '';
+  return '$ ' + nf(v, 0) + ' COP';
+}
+function fmt(val, type){
+  switch(type){
+    case 'cur': return money(val);
+    case 'alt': return moneyAlt(val);
+    case 'n0': return nf(val, 0);
+    case 'n1': return nf(val, 1);
+    case 'n2': return nf(val, 2);
+    case 'pct': return nf(val * 100, 1) + ' %';
+    case 'txt': return String(val);
+    default: return nf(val, 0);
+  }
+}
+
+/* ================== CÁLCULO ================== */
+var C = {};   /* valores calculados */
+var OUT = {}; /* clave -> [valor, tipo] */
+function out(k, v, t){ OUT[k] = [v, t || 'cur']; }
+
+function compute(){
+  OUT = {};
+  var s = S.sup, l = S.lab, ct = S.cost, ci = S.circ;
+
+  /* --- costo laboral --- */
+  var labItems = ['salario','eps','pension','caja','arl','transporte','vacaciones','prima','cesantias','intCes','dotacion'];
+  var labTotal = 0; labItems.forEach(function(k){ labTotal += l[k]; });
+  C.labTotal = labTotal;
+  C.nomina = labTotal * l.trabajadores;
+  out('lab.total', labTotal, 'cur');
+  out('lab.nomina', C.nomina, 'cur');
+
+  /* --- supuestos derivados --- */
+  C.bultosCon = s.cer_bultosSin * s.cer_factor;
+  C.paso = s.ter_ancho + s.ter_espacio;
+  C.jornales = ((s.ter_porJornal * s.ter_num) / (2 * 2)) + s.ter_extra;
+  C.areaCult = s.ter_num * s.ter_longVideo * s.ter_ancho;
+  C.bultosCicloCerdos = s.cer_ciclo * C.bultosCon;
+  out('sup.nomina', C.nomina, 'cur');
+  out('sup.bultosCon', C.bultosCon, 'n2');
+  out('sup.paso', C.paso, 'n1');
+  out('sup.jornales', C.jornales, 'n0');
+  out('sup.areaCult', C.areaCult, 'n0');
+  out('sup.personas', s.familias * s.personasFam, 'n0');
+
+  /* --- producción e ingresos --- */
+  var P = [];
+  var huevos = s.gall_huevosDia * s.gall_dias;
+  P.push({ id:'p_huevo', grp:'GALLINAS: HUEVO AZUL (MVP)', n:'Huevos azules (producción anual)', q:huevos, uni:'unidades', pr:s.gall_pFinal, qt:'n0' });
+  var corderos = s.cor_hembras * s.cor_prolif * s.cor_partos;
+  var kgCord = corderos * s.cor_peso * s.cor_rend;
+  P.push({ id:'p_cordN', grp:'CORDEROS DORPER', n:'Corderos producidos al año', q:corderos, uni:'corderos', pr:null, qt:'n1' });
+  P.push({ id:'p_cord', n:'Carne en canal (kg/año)', q:kgCord, uni:'kg canal', pr:s.cor_pFinal, qt:'n1' });
+  var cerdos = s.cer_ciclo * s.cer_ciclos;
+  var kgCerd = cerdos * s.cer_peso * s.cer_rend;
+  P.push({ id:'p_cerdN', grp:'CERDOS: CAMA PROFUNDA', n:'Cerdos vendidos al año', q:cerdos, uni:'cerdos', pr:null, qt:'n0' });
+  P.push({ id:'p_cerd', n:'Carne cerdo en canal (kg/año)', q:kgCerd, uni:'kg canal', pr:s.cer_pCanal, qt:'n1' });
+  var pollos = s.pol_lote * s.pol_lotes * (1 - s.pol_mort) * 2 - (s.pol_lote * 0.95);
+  var kgPoll = pollos * s.pol_pesoCanal;
+  P.push({ id:'p_pollN', grp:'POLLOS DE ENGORDE', n:'Pollos vendidos al año', q:pollos, uni:'pollos', pr:null, qt:'n1' });
+  P.push({ id:'p_poll', n:'Carne pollo canal (kg/año)', q:kgPoll, uni:'kg canal', pr:s.pol_pCanal, qt:'n2' });
+  C.prodRows = P;
+
+  var ingHuevo = huevos * s.gall_pFinal;
+  var ingCord = kgCord * s.cor_pFinal;
+  var ingCerd = kgCerd * s.cer_pCanal;
+  var ingPoll = kgPoll * s.pol_pCanal;
+  var ingHort = 0; S.hort.forEach(function(r,i){ var t = r.kg * r.p; ingHort += t; out('hort.'+i+'.total', t, 'cur'); out('hort.'+i+'.mes', t/12, 'cur'); });
+  var ingFrut = 0; S.fruta.forEach(function(r,i){ var t = r.kg * r.p; ingFrut += t; out('fruta.'+i+'.total', t, 'cur'); out('fruta.'+i+'.mes', t/12, 'cur'); });
+
+  out('prod.p_huevo.q', huevos, 'n0'); out('prod.p_huevo.total', ingHuevo, 'cur'); out('prod.p_huevo.mes', ingHuevo/12, 'cur');
+  out('prod.p_cordN.q', corderos, 'n1');
+  out('prod.p_cord.q', kgCord, 'n1'); out('prod.p_cord.total', ingCord, 'cur'); out('prod.p_cord.mes', ingCord/12, 'cur');
+  out('prod.p_cerdN.q', cerdos, 'n0');
+  out('prod.p_cerd.q', kgCerd, 'n1'); out('prod.p_cerd.total', ingCerd, 'cur'); out('prod.p_cerd.mes', ingCerd/12, 'cur');
+  out('prod.p_pollN.q', pollos, 'n1');
+  out('prod.p_poll.q', kgPoll, 'n2'); out('prod.p_poll.total', ingPoll, 'cur'); out('prod.p_poll.mes', ingPoll/12, 'cur');
+  out('prod.hort.total', ingHort, 'cur'); out('prod.hort.mes', ingHort/12, 'cur');
+  out('prod.fruta.total', ingFrut, 'cur'); out('prod.fruta.mes', ingFrut/12, 'cur');
+
+  var ingAnual = ingHuevo + ingCord + ingCerd + ingPoll + ingHort + ingFrut;
+  C.ing = { huevo:ingHuevo, cordero:ingCord, cerdo:ingCerd, pollo:ingPoll, hort:ingHort, fruta:ingFrut, total:ingAnual };
+  out('prod.total', ingAnual, 'cur'); out('prod.totalMes', ingAnual/12, 'cur');
+
+  /* --- inversión inicial --- */
+  var linkVals = { jornales:C.jornales, bultosCicloCerdos:C.bultosCicloCerdos };
+  var subtotalAll = 0;
+  C.invSubs = {};
+  INV_GROUPS.forEach(function(gr){
+    var st = 0;
+    gr.items.forEach(function(it){
+      var q = it.link ? (linkVals[it.link] !== undefined ? linkVals[it.link] : s[it.link]) : S.inv[it.id].q;
+      var u = it.ulink ? s[it.ulink] : S.inv[it.id].u;
+      var t = q * u;
+      st += t;
+      if(it.link) out('inv.'+it.id+'.q', q, 'n2');
+      if(it.ulink) out('inv.'+it.id+'.u', u, 'cur');
+      out('inv.'+it.id+'.total', t, 'cur');
+    });
+    C.invSubs[gr.id] = st;
+    subtotalAll += st;
+    out('inv.sub.'+gr.id, st, 'cur');
+    if(gr.area) out('inv.m2.'+gr.id, st / gr.area, 'cur');
+  });
+  var imprev = subtotalAll * S.invImpPct;
+  C.invSubtotal = subtotalAll; C.invImprev = imprev; C.invTotal = subtotalAll + imprev;
+  out('inv.subtotal', subtotalAll, 'cur');
+  out('inv.imprev', imprev, 'cur');
+  out('inv.total', C.invTotal, 'cur');
+
+  /* --- costos operativos mensuales --- */
+  var cCerdos = (s.cer_ciclo * C.bultosCon * s.cer_pBulto) / s.cer_ciclos;
+  var cGall = s.gall_n * ct.gc_kgDia * ct.gc_dias * ct.gc_precioKg;
+  var cPoll = s.pol_bultos * s.pol_pBulto;
+  var susc = ct.suscUsd * ct.suscTasa;
+  var base = C.nomina + cCerdos + cGall + cPoll + ct.med + ct.semillas + ct.biof + ct.mant + ct.serv + ct.vet + ct.agro;
+  var impOp = base * ct.impPct;
+  var totalMes = base + susc + impOp;
+  C.cost = { nomina:C.nomina, cerdos:cCerdos, gallinas:cGall, pollos:cPoll, susc:susc, base:base, imprev:impOp, totalMes:totalMes };
+  var CK = [['c_nomina',C.nomina],['c_cerdos',cCerdos],['c_gallinas',cGall],['c_pollos',cPoll],['c_med',ct.med],['c_semillas',ct.semillas],['c_biof',ct.biof],['c_mant',ct.mant],['c_serv',ct.serv],['c_vet',ct.vet],['c_agro',ct.agro],['c_susc',susc],['c_imprev',impOp]];
+  CK.forEach(function(p){ out('cost.'+p[0]+'.mes', p[1], 'cur'); out('cost.'+p[0]+'.ano', p[1]*12, 'cur'); });
+  out('cost.total.mes', totalMes, 'cur'); out('cost.total.ano', totalMes*12, 'cur');
+
+  /* --- rentabilidad --- */
+  var ingMes = ingAnual / 12;
+  var ebitdaMes = ingMes - totalMes;
+  var ebitdaAno = ebitdaMes * 12;
+  var margen = ingMes !== 0 ? ebitdaMes / ingMes : 0;
+  var payback = ebitdaMes > 0 ? C.invTotal / ebitdaMes : 0;
+  C.r = { ingMes:ingMes, ingAno:ingAnual, costMes:totalMes, costAno:totalMes*12, ebitdaMes:ebitdaMes, ebitdaAno:ebitdaAno, margen:margen, payback:payback };
+
+  out('r.ingMes', ingMes, 'cur'); out('r.costMes', totalMes, 'cur'); out('r.ebitdaMes', ebitdaMes, 'cur');
+  out('r.ingAno', ingAnual, 'cur'); out('r.costAno', totalMes*12, 'cur'); out('r.ebitdaAno', ebitdaAno, 'cur');
+  out('r.margen', margen, 'pct'); out('r.inv', C.invTotal, 'cur');
+  out('r.payback', payback, 'n1');
+  out('r.paybackAnos', payback/12, 'n1');
+
+  /* --- ahorro botón de oro + abono --- */
+  var bultosSinAno = s.cer_ciclo * s.cer_bultosSin * s.cer_ciclos;
+  var bultosConAno = s.cer_ciclo * C.bultosCon * s.cer_ciclos;
+  var ahorroBultos = bultosSinAno - bultosConAno;
+  var ahorroCop = ahorroBultos * s.cer_pBulto;
+  var estCord = s.cor_hembras * 365;
+  var gallinaza = s.gall_n * ci.kgGallinaDia * 365;
+  var totalOrg = estCord + gallinaza + ci.camaCerdos + ci.gallinazaPollos;
+  var valorAbono = (totalOrg / 40) * ci.precioBultoAbono;
+  C.circ = { bultosSinAno:bultosSinAno, bultosConAno:bultosConAno, ahorroBultos:ahorroBultos, ahorroCop:ahorroCop,
+             estCord:estCord, gallinaza:gallinaza, totalOrg:totalOrg, valorAbono:valorAbono };
+  out('ci.bultosSin', bultosSinAno, 'n1'); out('ci.bultosCon', bultosConAno, 'n1'); out('ci.ahorroBultos', ahorroBultos, 'n1');
+  out('ci.ahorroCop', ahorroCop, 'cur');
+  out('ci.estCord', estCord, 'n0'); out('ci.gallinaza', gallinaza, 'n0'); out('ci.totalOrg', totalOrg, 'n0');
+  out('ci.valorAbono', valorAbono, 'cur');
+
+  /* --- KPIs resumen --- */
+  out('inv_total', C.invTotal, 'cur'); out('inv_total_loc', C.invTotal, 'alt');
+  out('ing_anual', ingAnual, 'cur'); out('ing_anual_loc', ingAnual, 'alt');
+  out('cost_anual', totalMes*12, 'cur'); out('cost_anual_loc', totalMes*12, 'alt');
+  out('ebitda_anual', ebitdaAno, 'cur'); out('ebitda_anual_loc', ebitdaAno, 'alt');
+  out('ing_mes', ingMes, 'cur'); out('ing_mes_loc', ingMes, 'alt');
+  out('cost_mes', totalMes, 'cur'); out('cost_mes_loc', totalMes, 'alt');
+  out('ebitda_mes', ebitdaMes, 'cur'); out('ebitda_mes_loc', ebitdaMes, 'alt');
+  out('margen', margen, 'pct');
+  OUT['payback'] = [payback, 'txt2'];
+  OUT['payback_anos'] = [payback, 'txt3'];
+}
+
+/* ================== HELPERS DE RENDER ================== */
+function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* val llega en pesos (lo que guarda S); el campo lo muestra en la moneda activa. */
+function inp(path, val, step, cls){
+  var dinero = isMoney(path);
+  return '<input type="number" step="' + (dinero ? 'any' : (step || 'any')) + '" class="' + (cls || '') + '" data-path="' + path + '" value="' + aVista(path, val) + '">';
+}
+function o(key){ return '<span data-out="' + key + '"></span>'; }
+/* Etiqueta escapada. {$} = moneda activa ($ o el código) y {COD} = código de
+   la moneda local; los dos son <span> que refresh() mantiene al día. */
+function lbl(t){
+  return esc(t).replace(/\{\$\}/g, '<span class="hl-mon">' + esc(simbolo()) + '</span>')
+               .replace(/\{COD\}/g, '<span class="hl-cod">' + esc(S.cur) + '</span>');
+}
+function pintarEtiquetas(){
+  var m = simbolo();
+  $$('.hl-mon').forEach(function(el){ if(el.textContent !== m) el.textContent = m; });
+  $$('.hl-cod').forEach(function(el){ if(el.textContent !== S.cur) el.textContent = S.cur; });
+  /* Con dólares activos, «USD × USD/USD» no dice nada: la suscripción se lee
+     como «3 USD al mes» y se explica la tasa con la que el modelo la pasa a
+     pesos (el cálculo en pesos no cambia). */
+  var soloUsd = enLocal() && S.cur === 'USD';
+  $$('.hl-susc-tasa').forEach(function(el){ el.hidden = soloUsd; });
+  $$('.hl-susc-usd').forEach(function(el){ el.hidden = !soloUsd; });
+  var cop = nf(S.cost.suscTasa, 0);
+  $$('.hl-susc-cop').forEach(function(el){ if(el.textContent !== cop) el.textContent = cop; });
+}
+
+function rowSup(label, path, val, note, step, cls){
+  return '<tr><td>' + lbl(label) + '</td><td class="n">' + inp(path, val, step, cls) + '</td><td class="muted">' + esc(note || '') + '</td></tr>';
+}
+function rowSupF(label, key, note){
+  return '<tr><td>' + lbl(label) + ' <span class="tag f">fórmula</span></td><td class="n"><span class="ro">' + o(key) + '</span></td><td class="muted">' + esc(note || '') + '</td></tr>';
+}
+var THS = '<thead><tr><th>Concepto</th><th class="n">Valor</th><th>Nota</th></tr></thead>';
+
+function buildSupuestos(){
+  var s = S.sup;
+  $('#tblSupGen').innerHTML = THS + '<tbody>' +
+    rowSup('Tasa de cambio (TRM): pesos colombianos por 1 {COD}', 'sup.trm', s.trm, 'Es la misma tasa de arriba, junto a la moneda') +
+    rowSup('Familias clientes (usuario final)', 'sup.familias', s.familias, '') +
+    rowSup('Personas por familia (promedio)', 'sup.personasFam', s.personasFam, '') +
+    rowSupF('Personas atendidas', 'sup.personas', 'familias × personas por familia') +
+    rowSup('Jornal diario (mano de obra)', 'sup.jornal', s.jornal, 'Ref: salario mínimo 2026') +
+    rowSupF('Nómina 2 trabajadores permanentes (con prestaciones)', 'sup.nomina', 'Se ajusta en la pestaña Costo laboral') +
+    rowSup('Imprevistos sobre subtotal (%): referencia', 'sup.imprevistosSup', s.imprevistosSup, 'Referencia. El presupuesto usa su propio % editable', '0.01') +
+    '</tbody>';
+
+  $('#tblSupGall').innerHTML = THS + '<tbody>' +
+    rowSup('Número de gallinas', 'sup.gall_n', s.gall_n, 'Confirmado') +
+    rowSup('Precio por gallina (huevo azul)', 'sup.gall_precio', s.gall_precio, 'Confirmado por Iván') +
+    rowSup('Meses para producción desde llegada', 'sup.gall_meses', s.gall_meses, 'Confirmado por Iván') +
+    rowSup('Huevos por día (% postura 80%)', 'sup.gall_huevosDia', s.gall_huevosDia, '150 × 80%') +
+    rowSup('Precio huevo azul (usuario final)', 'sup.gall_pFinal', s.gall_pFinal, 'Confirmado por Iván') +
+    rowSup('Precio huevo azul (mayorista)', 'sup.gall_pMayor', s.gall_pMayor, 'Referencia mercado: no entra en el ingreso') +
+    rowSup('Días productivos al año', 'sup.gall_dias', s.gall_dias, 'Descuenta muda y descanso') +
+    '</tbody>';
+
+  $('#tblSupCord').innerHTML = THS + '<tbody>' +
+    rowSup('Hembras reproductoras', 'sup.cor_hembras', s.cor_hembras, 'Confirmado por Iván') +
+    rowSup('Precio hembra White Dorper', 'sup.cor_pHembra', s.cor_pHembra, 'Confirmado por Iván') +
+    rowSup('Precio macho reproductor', 'sup.cor_pMacho', s.cor_pMacho, 'Confirmado por Iván') +
+    rowSup('Machos reproductores', 'sup.cor_machos', s.cor_machos, '1 macho c/25 hembras') +
+    rowSup('Prolificidad (corderos/parto)', 'sup.cor_prolif', s.cor_prolif, 'Promedio Dorper', '0.1') +
+    rowSup('Partos por hembra por año', 'sup.cor_partos', s.cor_partos, 'Conservador', '0.1') +
+    rowSup('Peso vivo venta (kg)', 'sup.cor_peso', s.cor_peso, '7 meses') +
+    rowSup('Rendimiento canal (%)', 'sup.cor_rend', s.cor_rend, '50% promedio Dorper', '0.01') +
+    rowSup('Precio canal usuario final ({$}/kg)', 'sup.cor_pFinal', s.cor_pFinal, 'Mercado premium') +
+    rowSup('Precio canal mayorista ({$}/kg)', 'sup.cor_pMayor', s.cor_pMayor, 'Referencia: no entra en el ingreso') +
+    rowSup('Potreros pastoreo rotacional', 'sup.cor_potreros', s.cor_potreros, 'Confirmado por Iván') +
+    rowSup('Área total pastoreo (m²)', 'sup.cor_area', s.cor_area, '1 hectárea completa') +
+    '</tbody>';
+
+  $('#tblSupCerd').innerHTML = THS + '<tbody>' +
+    rowSup('Cerdos por ciclo', 'sup.cer_ciclo', s.cer_ciclo, 'Confirmado por Iván') +
+    rowSup('Ciclos por año', 'sup.cer_ciclos', s.cer_ciclos, 'Ciclo de 4 meses') +
+    rowSup('Precio lechón desteto (~20 kg)', 'sup.cer_lechon', s.cer_lechon, 'Confirmado por Iván') +
+    rowSup('Bultos concentrado sin botón de oro', 'sup.cer_bultosSin', s.cer_bultosSin, 'Referencia sin suplemento', '0.1') +
+    rowSup('Factor reducción con botón de oro', 'sup.cer_factor', s.cer_factor, '0,8 = 20% menos concentrado', '0.05') +
+    rowSupF('Bultos concentrado por cerdo (con botón de oro)', 'sup.bultosCon', 'sin botón de oro × factor') +
+    rowSup('Precio bulto concentrado (40 kg)', 'sup.cer_pBulto', s.cer_pBulto, 'Referencia mercado 2025') +
+    rowSup('Peso vivo venta (kg)', 'sup.cer_peso', s.cer_peso, 'Promedio engorde') +
+    rowSup('Rendimiento canal (%)', 'sup.cer_rend', s.cer_rend, '72% porcino', '0.01') +
+    rowSup('Precio canal cerdo usuario final ({$}/kg)', 'sup.cer_pCanal', s.cer_pCanal, 'Referencia mercado') +
+    '</tbody>';
+
+  $('#tblSupPoll').innerHTML = THS + '<tbody>' +
+    rowSup('Pollos por lote', 'sup.pol_lote', s.pol_lote, 'Capacidad 50/galpón. 2 lotes.') +
+    rowSup('Lotes por año', 'sup.pol_lotes', s.pol_lotes, '1,8 meses/ciclo', '0.1') +
+    rowSup('Precio pollito día (und)', 'sup.pol_pollito', s.pol_pollito, '12-15 días') +
+    rowSup('Mortalidad estimada (%)', 'sup.pol_mort', s.pol_mort, '5% estándar', '0.01') +
+    rowSup('Bultos concentrado por lote', 'sup.pol_bultos', s.pol_bultos, '~7,4 kg/pollo', '0.1') +
+    rowSup('Precio bulto concentrado pollos', 'sup.pol_pBulto', s.pol_pBulto, 'Inicio + engorde') +
+    rowSup('Peso canal promedio (kg)', 'sup.pol_pesoCanal', s.pol_pesoCanal, 'Rendimiento 70%', '0.1') +
+    rowSup('Precio canal pollo usuario final ({$}/kg)', 'sup.pol_pCanal', s.pol_pCanal, 'Referencia Mac pollo (abril 2026)') +
+    '</tbody>';
+
+  $('#tblSupTerr').innerHTML = THS + '<tbody>' +
+    rowSup('Ancho terraza (m)', 'sup.ter_ancho', s.ter_ancho, '1,2 m: 20 cm para caminar', '0.1') +
+    rowSup('Espacio entre terrazas (m)', 'sup.ter_espacio', s.ter_espacio, 'Máximo: confirmado', '0.1') +
+    rowSupF('Paso total por terraza (m)', 'sup.paso', 'ancho + espacio') +
+    rowSup('Terrazas de 50 m por jornal (2 personas)', 'sup.ter_porJornal', s.ter_porJornal, 'Dato real de campo: Iván') +
+    rowSup('Longitud terraza trabajo (m)', 'sup.ter_longTrab', s.ter_longTrab, 'Unidad base confirmada') +
+    rowSup('Longitud terraza referencia (m)', 'sup.ter_longVideo', s.ter_longVideo, '2 jornales por terraza de 100 m') +
+    rowSup('Número de terrazas en 1 Ha', 'sup.ter_num', s.ter_num, 'Calculado: 102 m / 1,7 m de paso') +
+    rowSup('Jornales adicionales (sinergia)', 'sup.ter_extra', s.ter_extra, 'Se suman al cálculo de jornales') +
+    rowSupF('Jornales totales (1 Ha, 2 personas)', 'sup.jornales', '((terrazas/jornal × nº terrazas) / 4) + adicionales') +
+    rowSupF('Área cultivable neta (m²)', 'sup.areaCult', 'nº terrazas × longitud × ancho') +
+    '</tbody>';
+}
+
+function buildLaboral(){
+  var l = S.lab;
+  var items = [
+    ['Salario mínimo', 'salario'], ['EPS (8,5%)', 'eps'], ['Fondo de pensiones (12%)', 'pension'],
+    ['Caja de Compensación Familiar (4%)', 'caja'], ['ARL', 'arl'], ['Auxilio de transporte', 'transporte'],
+    ['Vacaciones (4,17%)', 'vacaciones'], ['Prima de servicios (8,33%)', 'prima'],
+    ['Cesantías (8,33%)', 'cesantias'], ['Intereses de cesantías (1%)', 'intCes'], ['Dotación y otros', 'dotacion']
+  ];
+  var h = '<thead><tr><th>Concepto</th><th class="n">Valor mensual (' + lbl('{$}') + ')</th><th class="n">Anual</th></tr></thead><tbody>';
+  items.forEach(function(it){
+    h += '<tr><td>' + esc(it[0]) + '</td><td class="n">' + inp('lab.' + it[1], l[it[1]]) + '</td><td class="n muted">' + esc('') + '</td></tr>';
+  });
+  h += '<tr class="sub"><td>Total costo mensual de 1 trabajador</td><td class="n">' + o('lab.total') + '</td><td class="n"></td></tr>';
+  h += '<tr><td>Número de trabajadores permanentes</td><td class="n">' + inp('lab.trabajadores', l.trabajadores) + '</td><td class="n"></td></tr>';
+  h += '<tr class="tot"><td>NÓMINA TOTAL MENSUAL</td><td class="n">' + o('lab.nomina') + '</td><td class="n"></td></tr>';
+  h += '</tbody>';
+  $('#tblLab').innerHTML = h;
+}
+
+function buildInversion(){
+  var h = '<thead><tr><th>#</th><th>Descripción</th><th class="n">Cantidad</th><th class="n">Valor unitario (' + lbl('{$}') + ')</th><th class="n">Total</th><th>Notas / fuente</th></tr></thead><tbody>';
+  INV_GROUPS.forEach(function(gr){
+    h += '<tr class="grp"><td colspan="6">' + esc(gr.t) + '</td></tr>';
+    gr.items.forEach(function(it){
+      var qCell = it.link ? '<span class="ro">' + o('inv.' + it.id + '.q') + '</span> <span class="tag f">supuestos</span>' : inp('inv.' + it.id + '.q', S.inv[it.id].q, 'any', 'w-sm');
+      var uCell = it.ulink ? '<span class="ro">' + o('inv.' + it.id + '.u') + '</span> <span class="tag f">supuestos</span>' : inp('inv.' + it.id + '.u', S.inv[it.id].u);
+      h += '<tr><td class="muted">' + esc(it.c) + '</td><td>' + esc(it.d) + '</td><td class="n">' + qCell + '</td><td class="n">' + uCell + '</td><td class="n">' + o('inv.' + it.id + '.total') + '</td><td class="muted">' + esc(it.g) + '</td></tr>';
+    });
+    var extra = gr.area ? 'Costo por m² (' + gr.area + ' m²): ' + o('inv.m2.' + gr.id) : esc(gr.subNote || '');
+    h += '<tr class="sub"><td></td><td>' + esc(gr.sub) + '</td><td></td><td></td><td class="n">' + o('inv.sub.' + gr.id) + '</td><td class="muted">' + extra + '</td></tr>';
+  });
+  h += '<tr class="sub"><td></td><td>SUBTOTAL antes de imprevistos</td><td></td><td></td><td class="n">' + o('inv.subtotal') + '</td><td></td></tr>';
+  h += '<tr><td></td><td>Imprevistos (% sobre subtotal)</td><td class="n">' + inp('invImpPct', S.invImpPct, '0.01', 'w-sm') + '</td><td></td><td class="n">' + o('inv.imprev') + '</td><td class="muted">Porcentaje editable</td></tr>';
+  h += '<tr class="tot"><td></td><td>INVERSIÓN TOTAL INICIAL</td><td></td><td></td><td class="n">' + o('inv.total') + '</td><td></td></tr>';
+  h += '</tbody>';
+  $('#tblInv').innerHTML = h;
+}
+
+function buildProduccion(){
+  var h = '<thead><tr><th>Producto</th><th class="n">Producción/año</th><th>Unidad</th><th class="n">Precio usuario final (' + lbl('{$}') + ')</th><th class="n">Ingreso anual</th><th class="n">Ingreso mensual</th><th>Notas</th></tr></thead><tbody>';
+  function line(grp, label, qKey, uni, priceInput, totKey, mesKey, note){
+    var r = '';
+    if(grp) r += '<tr class="grp"><td colspan="7">' + esc(grp) + '</td></tr>';
+    r += '<tr><td>' + esc(label) + '</td><td class="n"><span class="ro">' + o(qKey) + '</span></td><td class="muted">' + esc(uni) + '</td>' +
+         '<td class="n">' + (priceInput || '<span class="muted">—</span>') + '</td>' +
+         '<td class="n">' + (totKey ? o(totKey) : '') + '</td><td class="n">' + (mesKey ? o(mesKey) : '') + '</td><td class="muted">' + esc(note || '') + '</td></tr>';
+    return r;
+  }
+  var s = S.sup;
+  h += line('Gallinas: huevo azul (MVP)', 'Huevos azules (producción anual)', 'prod.p_huevo.q', 'unidades', inp('sup.gall_pFinal', s.gall_pFinal), 'prod.p_huevo.total', 'prod.p_huevo.mes', 'huevos/día × días productivos');
+  h += line('Corderos Dorper', 'Corderos producidos al año', 'prod.p_cordN.q', 'corderos', null, null, null, 'hembras × prolificidad × partos');
+  h += line(null, 'Carne en canal (kg/año)', 'prod.p_cord.q', 'kg canal', inp('sup.cor_pFinal', s.cor_pFinal), 'prod.p_cord.total', 'prod.p_cord.mes', 'corderos × peso vivo × rendimiento');
+  h += line('Cerdos: cama profunda', 'Cerdos vendidos al año', 'prod.p_cerdN.q', 'cerdos', null, null, null, 'cerdos por ciclo × ciclos');
+  h += line(null, 'Carne cerdo en canal (kg/año)', 'prod.p_cerd.q', 'kg canal', inp('sup.cer_pCanal', s.cer_pCanal), 'prod.p_cerd.total', 'prod.p_cerd.mes', 'cerdos × peso vivo × rendimiento');
+  h += line('Pollos de engorde', 'Pollos vendidos al año', 'prod.p_pollN.q', 'pollos', null, null, null, 'lote × lotes × (1-mortalidad) × 2 − lote inicial');
+  h += line(null, 'Carne pollo canal (kg/año)', 'prod.p_poll.q', 'kg canal', inp('sup.pol_pCanal', s.pol_pCanal), 'prod.p_poll.total', 'prod.p_poll.mes', 'pollos × peso canal');
+
+  h += '<tr class="grp"><td colspan="7">Hortalizas: 6.000 m² en terrazas (área cultivable)</td></tr>';
+  S.hort.forEach(function(r, i){
+    h += '<tr><td>' + esc(r.n) + '</td><td class="n">' + inp('hort.' + i + '.kg', r.kg, 'any', 'w-sm') + '</td><td class="muted">kg</td><td class="n">' + inp('hort.' + i + '.p', r.p) + '</td><td class="n">' + o('hort.' + i + '.total') + '</td><td class="n">' + o('hort.' + i + '.mes') + '</td><td class="muted">' + esc(r.k) + '</td></tr>';
+  });
+  h += '<tr class="sub"><td>Subtotal hortalizas</td><td></td><td></td><td></td><td class="n">' + o('prod.hort.total') + '</td><td class="n">' + o('prod.hort.mes') + '</td><td></td></tr>';
+
+  h += '<tr class="grp"><td colspan="7">Frutas: ciclo corto</td></tr>';
+  S.fruta.forEach(function(r, i){
+    h += '<tr><td>' + esc(r.n) + '</td><td class="n">' + inp('fruta.' + i + '.kg', r.kg, 'any', 'w-sm') + '</td><td class="muted">kg</td><td class="n">' + inp('fruta.' + i + '.p', r.p) + '</td><td class="n">' + o('fruta.' + i + '.total') + '</td><td class="n">' + o('fruta.' + i + '.mes') + '</td><td class="muted">' + esc(r.k) + '</td></tr>';
+  });
+  h += '<tr class="sub"><td>Subtotal frutas</td><td></td><td></td><td></td><td class="n">' + o('prod.fruta.total') + '</td><td class="n">' + o('prod.fruta.mes') + '</td><td></td></tr>';
+
+  h += '<tr class="tot"><td>INGRESO BRUTO TOTAL ANUAL</td><td></td><td></td><td></td><td class="n">' + o('prod.total') + '</td><td class="n">' + o('prod.totalMes') + '</td><td></td></tr>';
+  h += '</tbody>';
+  $('#tblProd').innerHTML = h;
+}
+
+function buildCostos(){
+  var ct = S.cost;
+  var h = '<thead><tr><th>Concepto</th><th class="n">Mensual</th><th class="n">Anual</th><th>Notas</th></tr></thead><tbody>';
+  function fx(label, key, note){
+    return '<tr><td>' + esc(label) + ' <span class="tag f">fórmula</span></td><td class="n">' + o('cost.' + key + '.mes') + '</td><td class="n">' + o('cost.' + key + '.ano') + '</td><td class="muted">' + note + '</td></tr>';
+  }
+  function ed(label, path, val, key, note){
+    return '<tr><td>' + esc(label) + '</td><td class="n">' + inp(path, val) + '</td><td class="n">' + o('cost.' + key + '.ano') + '</td><td class="muted">' + esc(note || '') + '</td></tr>';
+  }
+  h += fx('Nómina trabajadores (con prestaciones)', 'c_nomina', '⚠ Costo más importante: se edita en Costo laboral');
+  h += fx('Concentrado cerdos (reducido 20%: botón de oro)', 'c_cerdos', 'cerdos × bultos con botón de oro × precio / ciclos');
+  h += '<tr><td>Concentrado gallinas <span class="tag f">fórmula</span></td><td class="n">' + o('cost.c_gallinas.mes') + '</td><td class="n">' + o('cost.c_gallinas.ano') + '</td><td class="muted">' + inp('cost.gc_kgDia', ct.gc_kgDia, '0.01', 'w-xs') + ' kg/gallina/día × ' + inp('cost.gc_dias', ct.gc_dias, '1', 'w-xs') + ' días × ' + inp('cost.gc_precioKg', ct.gc_precioKg, '1', 'w-sm') + ' ' + lbl('{$}/kg') + '</td></tr>';
+  h += fx('Concentrado pollos (promedio mensual)', 'c_pollos', 'bultos por lote × precio bulto');
+  h += ed('Medicamentos, insumos biológicos, veterinaria', 'cost.med', ct.med, 'c_med', 'Vacunas, antiparasitarios, bacillus');
+  h += ed('Semillas y material plantulador', 'cost.semillas', ct.semillas, 'c_semillas', 'Reposición mensual');
+  h += ed('Insumos biofábrica (EM, melaza, cascarilla)', 'cost.biof', ct.biof, 'c_biof', 'Mantenimiento sistema');
+  h += ed('Mantenimiento infraestructura', 'cost.mant', ct.mant, 'c_mant', 'Reparaciones menores, herramientas');
+  h += ed('Servicios (agua, energía energizador)', 'cost.serv', ct.serv, 'c_serv', 'Energizador solar reduce costo eléctrico');
+  h += ed('Visita veterinario', 'cost.vet', ct.vet, 'c_vet', '');
+  h += ed('Visita agrónomo', 'cost.agro', ct.agro, 'c_agro', '');
+  h += '<tr><td>Suscripción Huerta LAB <span class="tag f">fórmula</span></td><td class="n">' + o('cost.c_susc.mes') + '</td><td class="n">' + o('cost.c_susc.ano') + '</td><td class="muted">' + inp('cost.suscUsd', ct.suscUsd, '1', 'w-xs') + ' USD' +
+       '<span class="hl-susc-tasa"> × ' + inp('cost.suscTasa', ct.suscTasa, '1', 'w-sm') + ' ' + lbl('{$}/USD') + '</span>' +
+       '<span class="hl-susc-usd" hidden> al mes · el modelo los cuenta a <span class="hl-susc-cop"></span> pesos por dólar</span></td></tr>';
+  h += '<tr><td>Imprevistos operativos <span class="tag f">fórmula</span></td><td class="n">' + o('cost.c_imprev.mes') + '</td><td class="n">' + o('cost.c_imprev.ano') + '</td><td class="muted">' + inp('cost.impPct', ct.impPct, '0.01', 'w-xs') + ' sobre el subtotal operativo (sin suscripción)</td></tr>';
+  h += '<tr class="tot"><td>TOTAL COSTOS OPERATIVOS</td><td class="n">' + o('cost.total.mes') + '</td><td class="n">' + o('cost.total.ano') + '</td><td></td></tr>';
+  h += '</tbody>';
+  $('#tblCost').innerHTML = h;
+
+  var r = '<thead><tr><th>Concepto</th><th class="n">Valor</th></tr></thead><tbody>';
+  r += '<tr class="grp"><td colspan="2">Rentabilidad mensual</td></tr>';
+  r += '<tr><td>Ingreso bruto mensual</td><td class="n">' + o('r.ingMes') + '</td></tr>';
+  r += '<tr><td>Costos operativos mensuales</td><td class="n">' + o('r.costMes') + '</td></tr>';
+  r += '<tr class="sub"><td>EBITDA mensual</td><td class="n">' + o('r.ebitdaMes') + '</td></tr>';
+  r += '<tr class="grp"><td colspan="2">Rentabilidad anual</td></tr>';
+  r += '<tr><td>Ingreso bruto anual</td><td class="n">' + o('r.ingAno') + '</td></tr>';
+  r += '<tr><td>Costos operativos anuales</td><td class="n">' + o('r.costAno') + '</td></tr>';
+  r += '<tr class="sub"><td>EBITDA anual</td><td class="n">' + o('r.ebitdaAno') + '</td></tr>';
+  r += '<tr><td>Margen EBITDA</td><td class="n">' + o('r.margen') + '</td></tr>';
+  r += '<tr><td>Inversión total inicial</td><td class="n">' + o('r.inv') + '</td></tr>';
+  r += '<tr class="tot"><td>MESES PARA RECUPERAR LA INVERSIÓN</td><td class="n">' + o('r.payback') + '</td></tr>';
+  r += '</tbody>';
+  $('#tblRent').innerHTML = r;
+
+  var ci = S.circ;
+  var b = '<thead><tr><th>Concepto</th><th class="n">Valor</th></tr></thead><tbody>';
+  b += '<tr class="grp"><td colspan="2">Ahorro anual: botón de oro (reducción 20% concentrado)</td></tr>';
+  b += '<tr><td>Bultos concentrado cerdos SIN botón de oro (año)</td><td class="n">' + o('ci.bultosSin') + '</td></tr>';
+  b += '<tr><td>Bultos concentrado cerdos CON botón de oro (año)</td><td class="n">' + o('ci.bultosCon') + '</td></tr>';
+  b += '<tr><td>Ahorro en bultos de concentrado (año)</td><td class="n">' + o('ci.ahorroBultos') + '</td></tr>';
+  b += '<tr class="sub"><td>💚 Ahorro total anual en concentrado</td><td class="n">' + o('ci.ahorroCop') + '</td></tr>';
+  b += '<tr class="grp"><td colspan="2">Valor abono propio: sistema circular</td></tr>';
+  b += '<tr><td>Estiércol corderos (kg/año) <span class="tag f">fórmula</span></td><td class="n">' + o('ci.estCord') + '</td></tr>';
+  b += '<tr><td>Gallinaza gallinas: ' + inp('circ.kgGallinaDia', ci.kgGallinaDia, '0.01', 'w-xs') + ' kg/día</td><td class="n">' + o('ci.gallinaza') + '</td></tr>';
+  b += '<tr><td>Cama profunda cerdos (kg compost/año)</td><td class="n">' + inp('circ.camaCerdos', ci.camaCerdos, '1', 'w-sm') + '</td></tr>';
+  b += '<tr><td>Gallinaza pollos (kg/año)</td><td class="n">' + inp('circ.gallinazaPollos', ci.gallinazaPollos, '1', 'w-sm') + '</td></tr>';
+  b += '<tr class="sub"><td>Total material orgánico (kg/año)</td><td class="n">' + o('ci.totalOrg') + '</td></tr>';
+  b += '<tr><td>' + lbl('Precio equivalente fertilizante orgánico ({$}/bulto 40 kg)') + '</td><td class="n">' + inp('circ.precioBultoAbono', ci.precioBultoAbono) + '</td></tr>';
+  b += '<tr class="tot"><td>💚 VALOR ABONO PROPIO ANUAL</td><td class="n">' + o('ci.valorAbono') + '</td></tr>';
+  b += '</tbody>';
+  $('#tblCirc').innerHTML = b;
+}
+
+/* ================== RESUMEN DINÁMICO ================== */
+function bars(el, rows, total, cls){
+  var h = '';
+  rows.forEach(function(r){
+    var pct = total > 0 ? (r.v / total) * 100 : 0;
+    h += '<div class="bar"><div class="lbl"><span>' + esc(r.n) + '</span><b>' + money(r.v) + ' · ' + nf(pct, 1) + '%</b></div>' +
+         '<div class="track"><div class="fill ' + (cls || '') + '" style="width:' + Math.max(0, Math.min(100, pct)) + '%"></div></div></div>';
+  });
+  el.innerHTML = h;
+}
+
+function renderResumen(){
+  var ing = C.ing;
+  var rowsI = [
+    {n:'Corderos Dorper', v:ing.cordero}, {n:'Hortalizas', v:ing.hort}, {n:'Huevo azul', v:ing.huevo},
+    {n:'Cerdos', v:ing.cerdo}, {n:'Frutas', v:ing.fruta}, {n:'Pollos', v:ing.pollo}
+  ].sort(function(a,b){ return b.v - a.v; });
+  bars($('#barsIngreso'), rowsI, ing.total);
+
+  var rowsV = INV_GROUPS.map(function(gr){ return {n:gr.t.replace(/^\d+ · /,''), v:C.invSubs[gr.id]}; });
+  rowsV.push({n:'Imprevistos', v:C.invImprev});
+  rowsV.sort(function(a,b){ return b.v - a.v; });
+  bars($('#barsInversion'), rowsV.slice(0,8), C.invTotal, 'g');
+
+  var t = '<thead><tr><th>Línea productiva</th><th class="n">Ingreso anual</th><th class="n">Ingreso mensual</th><th class="n">% del total</th></tr></thead><tbody>';
+  rowsI.forEach(function(r){
+    t += '<tr><td>' + esc(r.n) + '</td><td class="n">' + money(r.v) + '</td><td class="n">' + money(r.v/12) + '</td><td class="n">' + nf(ing.total > 0 ? r.v/ing.total*100 : 0, 1) + ' %</td></tr>';
+  });
+  t += '<tr class="tot"><td>TOTAL</td><td class="n">' + money(ing.total) + '</td><td class="n">' + money(ing.total/12) + '</td><td class="n">100,0 %</td></tr></tbody>';
+  $('#tblResIng').innerHTML = t;
+
+  var c = '<thead><tr><th>Concepto</th><th class="n">Valor anual</th></tr></thead><tbody>';
+  c += '<tr><td>Ahorro en concentrado por botón de oro</td><td class="n">' + money(C.circ.ahorroCop) + '</td></tr>';
+  c += '<tr><td>Valor del abono propio producido (' + nf(C.circ.totalOrg, 0) + ' kg)</td><td class="n">' + money(C.circ.valorAbono) + '</td></tr>';
+  c += '<tr class="sub"><td>Valor total generado por el sistema circular</td><td class="n">' + money(C.circ.ahorroCop + C.circ.valorAbono) + '</td></tr>';
+  c += '<tr><td>EBITDA anual + valor circular</td><td class="n">' + money(C.r.ebitdaAno + C.circ.ahorroCop + C.circ.valorAbono) + '</td></tr>';
+  c += '</tbody>';
+  $('#tblResCirc').innerHTML = c;
+
+  var s = S.sup;
+  var e = '<thead><tr><th>Indicador</th><th class="n">Valor</th><th>Detalle</th></tr></thead><tbody>';
+  function er(a, b, d){ e += '<tr><td>' + esc(a) + '</td><td class="n">' + b + '</td><td class="muted">' + esc(d) + '</td></tr>'; }
+  er('Familias atendidas', nf(s.familias, 0), nf(s.familias * s.personasFam, 0) + ' personas aproximadamente');
+  er('Área cultivable en terrazas', nf(C.areaCult, 0) + ' m²', nf(s.ter_num, 0) + ' terrazas de ' + nf(s.ter_longVideo, 0) + ' m × ' + nf(s.ter_ancho, 1) + ' m');
+  er('Jornales para construir las terrazas', nf(C.jornales, 0), 'a ' + money(s.jornal) + ' por jornal');
+  er('Huevos producidos al año', nf(s.gall_huevosDia * s.gall_dias, 0), nf(s.gall_n, 0) + ' gallinas · ' + nf(s.gall_dias, 0) + ' días productivos');
+  er('Carne producida al año', nf(C.prodRows[2].q + C.prodRows[4].q + C.prodRows[6].q, 0) + ' kg canal', 'cordero + cerdo + pollo');
+  er('Hortalizas y frutas al año', nf(S.hort.reduce(function(a,r){return a+r.kg;},0) + S.fruta.reduce(function(a,r){return a+r.kg;},0), 0) + ' kg', 'producción de las terrazas');
+  er('Inversión por familia atendida', money(s.familias > 0 ? C.invTotal / s.familias : 0), 'inversión total / familias');
+  er('Ingreso anual por familia', money(s.familias > 0 ? C.ing.total / s.familias : 0), 'ingreso bruto anual / familias');
+  e += '</tbody>';
+  $('#tblResEscala').innerHTML = e;
+}
+
+/* ================== REFRESCO ================== */
+function refresh(){
+  compute();
+  $$('[data-out]').forEach(function(el){
+    var k = el.getAttribute('data-out');
+    var p = OUT[k];
+    if(!p){ el.textContent = ''; return; }
+    if(p[1] === 'txt2'){ el.textContent = nf(p[0], 1) + ' meses'; return; }
+    if(p[1] === 'txt3'){ el.textContent = '≈ ' + nf(p[0] / 12, 1) + ' años'; return; }
+    el.textContent = fmt(p[0], p[1]);
+  });
+  renderResumen();
+  pintarEtiquetas();
+  save();
+}
+
+/* ================== SELECTOR DE MONEDA ================== */
+function getPath(path){
+  var parts = path.split('.'), ref = S;
+  for(var i = 0; i < parts.length; i++){ if(ref === null || ref === undefined) return undefined; ref = ref[parts[i]]; }
+  return ref;
+}
+/* Rellena cada campo con el valor de S en la moneda activa, sin reconstruir
+   las tablas. `origen` es el campo en el que se está escribiendo (la tasa):
+   ese no se toca. Al cambiar de moneda con el selector se actualizan todos,
+   también uno que se hubiera quedado con el foco, que si no seguiría
+   mostrando la moneda anterior. */
+/* Código escrito en «Otra moneda…» que todavía no tiene tasa. Mientras tanto
+   no se convierte nada (todo sigue en pesos) y no se guarda ninguna tasa: la
+   que está en uso es de otra moneda y no se le puede atribuir. */
+var otraPendiente = '';
+function syncInputs(origen){
+  var act = origen ? document.activeElement : null;
+  $$('input[data-path]').forEach(function(el){
+    if(el === origen || el === act) return;
+    var p = el.getAttribute('data-path');
+    var v = getPath(p);
+    if(typeof v !== 'number') return;
+    var nuevo = String(aVista(p, v));
+    if(el.value !== nuevo) el.value = nuevo;
+  });
+  var t = $('#in_trm');
+  if(t && t !== origen && t !== act) t.value = otraPendiente ? '' : S.sup.trm;
+}
+function valorSelect(){
+  if(otraPendiente) return 'OTRA';
+  if(!enLocal()) return 'COP';
+  return REF[S.cur] ? S.cur : 'OTRA';
+}
+function fmtTasa(t){ return nf(t, t < 1 ? 4 : 2).replace(/0+$/, '').replace(/,$/, ''); }
+function pintarMoneda(){
+  var sel = $('#curSel');
+  var otra = sel.value === 'OTRA';
+  $('#otraBox').hidden = !otra;
+  $('#tasaBox').hidden = !(enLocal() || otraPendiente);
+  $('#tasaCod').textContent = otraPendiente || S.cur;
+  $('#in_trm').placeholder = otraPendiente ? 'Tasa' : '';
+  var nT = $('#notaTasa'), nC = $('#notaCampos');
+  if(!enLocal()){
+    if(otraPendiente){
+      nT.textContent = 'Escribe cuántos pesos colombianos vale 1 ' + otraPendiente + '.';
+      nC.textContent = 'Mientras no pongas la tasa, todo sigue en pesos colombianos.';
+    }else if(otra){
+      nT.textContent = 'Escribe las 3 letras de tu moneda (por ejemplo VES o NIO) y luego cuántos pesos colombianos vale 1 unidad.';
+      nC.textContent = 'Mientras tanto, todo sigue en pesos colombianos.';
+    }else{
+      nT.textContent = 'Todo está en pesos colombianos.';
+      nC.textContent = 'Si vives en otro país, elige tu moneda: los campos azules y los resultados pasan a esa moneda.';
+    }
+  }else{
+    var t = tasa(), ref = REF[S.cur];
+    if(ref && t === ref) nT.textContent = 'Tasa de referencia del ' + FECHA_REF + '. Pon la de hoy.';
+    else if(ref) nT.textContent = 'Tasa puesta por ti. La de referencia del ' + FECHA_REF + ' es ' + fmtTasa(ref) + '.';
+    else nT.textContent = 'Tasa puesta por ti.';   /* sin referencia solo se llega aquí con una tasa escrita (ver sanearTasa) */
+    var nombre = NOMBRE[S.cur] ? NOMBRE[S.cur] + ' (' + S.cur + ')' : S.cur;
+    nC.innerHTML = 'Los <b>campos azules</b> se escriben en ' + esc(nombre) + ' y los resultados salen en ' + esc(S.cur) + '.';
+  }
+  pintarEtiquetas();
+  var cod = enLocal() ? S.cur : 'COP';
+  if(ROOT.getAttribute('data-moneda') !== cod){
+    ROOT.setAttribute('data-moneda', cod);
+    /* La guía del lanzamiento escucha esto para su botón «Moneda». */
+    try{ window.dispatchEvent(new CustomEvent('hlab-moneda', { detail: { codigo: cod } })); }catch(e){}
+  }
+}
+function ponerMoneda(c){
+  S.cur = c;
+  S.view = 'LOC';
+  var t = S.tasas[c] || REF[c];
+  if(t) S.sup.trm = t;
+}
+/* «Otra moneda…»: solo pasa a esa moneda si ya tiene tasa (una escrita antes
+   o la de referencia). Si no, queda pendiente y todo sigue en pesos. */
+function elegirOtra(txt){
+  var c = String(txt).toUpperCase();
+  otraPendiente = '';
+  if(!codigoValido(c) || c === 'COP'){ S.view = 'COP'; return; }
+  var t = S.tasas[c] || REF[c];
+  if(t){ S.cur = c; S.view = 'LOC'; S.sup.trm = t; }
+  else { S.view = 'COP'; otraPendiente = c; }
+}
+function elegirMoneda(v){
+  otraPendiente = '';
+  if(v === 'COP') S.view = 'COP';
+  else if(v === 'OTRA') elegirOtra($('#curCode').value);
+  else if(REF[v]) ponerMoneda(v);
+  pintarMoneda(); syncInputs(); refresh();
+}
+function monedaOtra(txt){
+  elegirOtra(txt);
+  pintarMoneda(); syncInputs(); refresh();
+}
+/* Tasa vacía o 0 mientras se escribe: se sigue usando la anterior y al salir
+   del campo vuelve a verse la que está en uso. Con una moneda de «Otra»
+   pendiente, la primera tasa válida escrita arriba es la que la activa. */
+function cambiarTasa(t, origen){
+  if(!tasaValida(t)) return;
+  if(otraPendiente && origen && origen.id === 'in_trm'){
+    S.cur = otraPendiente; S.view = 'LOC'; otraPendiente = '';
+  }
+  S.sup.trm = t;
+  if(codigoValido(S.cur)) S.tasas[S.cur] = t;
+  syncInputs(origen); pintarMoneda(); refresh();
+}
+
+/* ================== EVENTOS ================== */
+function setPath(path, val){
+  var parts = path.split('.');
+  var ref = S;
+  for(var i = 0; i < parts.length - 1; i++) ref = ref[parts[i]];
+  ref[parts[parts.length - 1]] = val;
+}
+ROOT.addEventListener('input', function(ev){
+  var el = ev.target;
+  if(el.tagName !== 'INPUT') return;
+  var path = el.getAttribute('data-path');
+  if(path){
+    var v = parseFloat(String(el.value).replace(',', '.'));
+    if(path === 'sup.trm'){ cambiarTasa(v, el); return; }
+    if(!isFinite(v)) v = 0;
+    setPath(path, desdeVista(path, v));
+    $$('input[data-path="' + path + '"]').forEach(function(other){ if(other !== el) other.value = el.value; });
+    refresh();
+    return;
+  }
+  if(el.id === 'curCode'){ monedaOtra(el.value); return; }
+  if(el.id === 'in_trm'){ cambiarTasa(parseFloat(String(el.value).replace(',', '.')), el); return; }
+});
+ROOT.addEventListener('focusout', function(ev){
+  var el = ev.target;
+  if(el.id === 'in_trm' || (el.getAttribute && el.getAttribute('data-path') === 'sup.trm')){
+    var t = parseFloat(String(el.value).replace(',', '.'));
+    if(!tasaValida(t)) el.value = (el.id === 'in_trm' && otraPendiente) ? '' : S.sup.trm;
+  }
+});
+$('#curSel').addEventListener('change', function(){
+  elegirMoneda(this.value);
+  if(this.value === 'OTRA'){
+    if(otraPendiente) $('#in_trm').focus();
+    else if(!enLocal()) $('#curCode').focus();
+  }
+});
+
+$$('.tab').forEach(function(b){
+  b.addEventListener('click', function(){
+    $$('.tab').forEach(function(x){ x.classList.remove('on'); });
+    $$('.panel').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    var pan = ROOT.querySelector('#p-' + b.getAttribute('data-tab'));
+    if(pan) pan.classList.add('on');
+  });
+});
+
+$('#btnPrint').addEventListener('click', function(){ window.print(); });
+$('#btnReset').addEventListener('click', function(){
+  if(!window.confirm('¿Restaurar todos los valores originales del modelo?')) return;
+  try{ if(window.localStorage) window.localStorage.removeItem(LSKEY); }catch(e){}
+  S = estadoInicial();
+  otraPendiente = '';
+  buildAll(); refresh();
+});
+$('#btnCsv').addEventListener('click', function(){
+  var L = [];
+  function add(a, b, c){ L.push([a, b === undefined ? '' : b, c === undefined ? '' : c].map(function(x){ return '"' + String(x).replace(/"/g, '""') + '"'; }).join(';')); }
+  add('MODELO FINANCIERO. FINCA PRODUCTIVA 2 HA'); add('');
+  var trm = tasa();
+  add('Tasa de cambio usada', '1 ' + S.cur + ' = ' + trm + ' COP');
+  add('');
+  /* Toda fila de dinero lleva pesos y su valor en la moneda elegida. */
+  function din(label, v){ add(label, Math.round(v), (v / trm).toFixed(2)); }
+  add('RESUMEN', 'COP', S.cur);
+  [['Inversión total inicial', C.invTotal], ['Ingreso bruto anual', C.ing.total], ['Costos operativos anuales', C.r.costAno],
+   ['EBITDA anual', C.r.ebitdaAno], ['Ingreso bruto mensual', C.r.ingMes], ['Costos operativos mensuales', C.r.costMes],
+   ['EBITDA mensual', C.r.ebitdaMes]].forEach(function(p){ din(p[0], p[1]); });
+  add('Margen EBITDA', (C.r.margen*100).toFixed(2) + '%');
+  add('Meses para recuperar inversión', C.r.payback.toFixed(1));
+  add('');
+  add('INGRESO ANUAL POR LÍNEA', 'COP', S.cur);
+  [['Huevo azul', C.ing.huevo], ['Corderos', C.ing.cordero], ['Cerdos', C.ing.cerdo], ['Pollos', C.ing.pollo],
+   ['Hortalizas', C.ing.hort], ['Frutas', C.ing.fruta]].forEach(function(p){ din(p[0], p[1]); });
+  add('');
+  add('INVERSIÓN POR CAPÍTULO', 'COP', S.cur);
+  INV_GROUPS.forEach(function(gr){ din(gr.t, C.invSubs[gr.id]); });
+  din('Imprevistos', C.invImprev);
+  din('INVERSIÓN TOTAL', C.invTotal);
+  add('');
+  add('COSTOS OPERATIVOS MENSUALES', 'COP', S.cur);
+  din('Nómina', C.cost.nomina); din('Concentrado cerdos', C.cost.cerdos);
+  din('Concentrado gallinas', C.cost.gallinas); din('Concentrado pollos', C.cost.pollos);
+  din('Otros costos fijos', S.cost.med + S.cost.semillas + S.cost.biof + S.cost.mant + S.cost.serv + S.cost.vet + S.cost.agro);
+  din('Suscripción Huerta LAB', C.cost.susc); din('Imprevistos operativos', C.cost.imprev);
+  din('TOTAL MENSUAL', C.cost.totalMes);
+  add('');
+  add('SISTEMA CIRCULAR', 'COP', S.cur);
+  din('Ahorro anual concentrado (botón de oro)', C.circ.ahorroCop);
+  din('Valor abono propio anual', C.circ.valorAbono);
+
+  var csv = '﻿' + L.join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'modelo-financiero-finca.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* ================== INIT ================== */
+function buildAll(){
+  buildSupuestos(); buildLaboral(); buildInversion(); buildProduccion(); buildCostos();
+  var sv = valorSelect();
+  $('#curSel').value = sv;
+  $('#curCode').value = sv === 'OTRA' ? S.cur : '';
+  $('#in_trm').value = S.sup.trm;
+  pintarMoneda();
+}
+buildAll();
+refresh();
+})();
+</script>
+
+<script>
+/* Ancho completo dentro de GoHighLevel: la fila del constructor trae un
+   max-width de 1170px que recorta el bloque. Esto lo neutraliza solo en los
+   contenedores que envuelven a este bloque, sin tocar el resto de la pagina. */
+(function(){
+  var all = document.getElementsByClassName('hlab');
+  var R = all[all.length - 1];
+  if(!R) return;
+  function full(){
+    var el = R.parentElement;
+    while(el && el !== document.body && el !== document.documentElement){
+      var cs = window.getComputedStyle(el);
+      if(cs.maxWidth !== 'none') el.style.setProperty('max-width','none','important');
+      if(parseFloat(cs.marginLeft) > 0)  el.style.setProperty('margin-left','0','important');
+      if(parseFloat(cs.marginRight) > 0) el.style.setProperty('margin-right','0','important');
+      el = el.parentElement;
+    }
+  }
+  full();
+  window.addEventListener('resize', full);
+  setTimeout(full, 400);
+  setTimeout(full, 1500);
+})();
+</script>
+</section>
+
+<!-- ══ 3 · Botón flotante a las páginas de venta ═══════════════════════ -->
+<style>
+/* El muelle puede acabar colgado del <body> (ver el script), así que no
+   hereda nada de .simz: colores y tipografía van escritos aquí. Los colores
+   son los del lanzamiento: verde profundo y lima. */
+.simz-muelle{
+  position:fixed;right:18px;bottom:18px;z-index:2147482500;
+  width:min(440px,calc(100vw - 36px));
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:#061f1d;color:#f7f6ef;border:1px solid rgba(200,219,82,.35);border-radius:18px;
+  box-shadow:0 18px 44px rgba(6,31,29,.35);padding:14px 14px 14px;
+  animation:simzMuelle .45s cubic-bezier(.2,.8,.2,1) .6s both;
+  -webkit-font-smoothing:antialiased;text-align:left;
+}
+.simz-muelle[hidden]{display:none!important}
+@keyframes simzMuelle{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.simz-muelle *{box-sizing:border-box}
+.simz-muelle-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px}
+.simz-muelle-cab p{margin:0;font-size:16px;font-weight:700;line-height:1.25;color:#f7f6ef;letter-spacing:0}
+.simz-muelle-cab p em{font-style:normal;color:#c8db52}
+.simz-muelle-min{flex:none;width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(247,246,239,.1);color:#f7f6ef;font:700 18px/30px -apple-system,Arial,sans-serif;text-align:center}
+.simz-muelle-min:hover{background:rgba(247,246,239,.2)}
+.simz-muelle-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.simz-curso{display:block;text-decoration:none!important;border-radius:12px;padding:11px 12px 12px;
+  border:1.5px solid #c8db52;color:#f7f6ef;transition:transform .2s ease,background .2s ease}
+.simz-curso b{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:16px;font-weight:700;line-height:1.2;color:inherit}
+.simz-curso b::after{content:"→";font-weight:700}
+.simz-curso span{display:block;margin-top:3px;font-size:13px;font-weight:600;line-height:1.3;opacity:.78;color:inherit}
+.simz-curso:hover{transform:translateY(-2px);background:rgba(200,219,82,.12)}
+.simz-curso.lleno{background:#c8db52;color:#061f1d}
+.simz-curso.lleno:hover{background:#d6e674}
+.simz-muelle :focus-visible,.simz-pastilla:focus-visible{outline:3px solid #c8db52;outline-offset:2px}
+.simz-pastilla{position:fixed;right:18px;bottom:18px;z-index:2147482500;cursor:pointer;
+  font:700 15px/1 "Source Sans 3",-apple-system,Arial,sans-serif;color:#061f1d;background:#c8db52;
+  border:0;border-radius:999px;padding:13px 18px;box-shadow:0 12px 30px rgba(6,31,29,.3)}
+.simz-pastilla::after{content:" ↑"}
+.simz-pastilla[hidden]{display:none!important}
+@media (max-width:600px){
+  .simz-muelle{left:8px;right:8px;bottom:8px;width:auto;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));border-radius:16px}
+  .simz-muelle-cab{margin-bottom:8px}
+  .simz-muelle-cab p{font-size:14.5px}
+  .simz-curso{padding:10px 10px}
+  .simz-curso b{font-size:15px}
+  .simz-curso span{display:none}
+  .simz-pastilla{right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-reduced-motion:reduce){.simz-muelle{animation:none}.simz-curso{transition:none}}
+</style>
+
+<aside class="simz-muelle" id="simz-muelle" aria-label="Cursos con Iván">
+  <div class="simz-muelle-cab">
+    <p>¿Quieres montarla <em>con Iván</em>?</p>
+    <button type="button" class="simz-muelle-min" id="simz-min" aria-label="Ocultar los cursos">−</button>
+  </div>
+  <div class="simz-muelle-btns">
+    <a class="simz-curso lleno" href="https://lahuertalab.com/curso-presencial" data-modalidad="presencial">
+      <b>Curso presencial</b><span>Cuatro días en la finca</span>
+    </a>
+    <a class="simz-curso" href="https://lahuertalab.com/curso-online" data-modalidad="online">
+      <b>Curso online</b><span>8 sesiones en vivo</span>
+    </a>
+  </div>
+</aside>
+<button type="button" class="simz-pastilla" id="simz-pastilla" hidden>Cursos con Iván</button>
+
+<script>
+/* Muelle de venta. Dos cosas que en GHL fallan en silencio si no se cuidan:
+   · un ancestro con transform convierte el position:fixed en relativo a esa
+     caja, y el muelle aparecería metido en la columna. Se cuelga del <body>.
+   · el píxel lo instala la página (código de cabecera del embudo); aquí solo
+     se avisa del clic, y solo si el píxel existe. */
+(function(){
+  var muelle = document.getElementById('simz-muelle');
+  var pastilla = document.getElementById('simz-pastilla');
+  if (!muelle || !pastilla) return;
+  var CLAVE = 'hl-sim-muelle';
+
+  function estorba(el){
+    for (var e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+      var c = getComputedStyle(e);
+      if ((c.transform && c.transform !== 'none') || (c.perspective && c.perspective !== 'none') ||
+          (c.filter && c.filter !== 'none') || (c.backdropFilter && c.backdropFilter !== 'none') ||
+          (c.contain && /paint|layout|strict|content/.test(c.contain))) return true;
+    }
+    return false;
+  }
+  function colgar(){
+    if (!document.body) return;
+    if (muelle.parentElement !== document.body && estorba(muelle)) {
+      document.body.appendChild(muelle);
+      document.body.appendChild(pastilla);
+    }
+  }
+  colgar();
+  window.addEventListener('load', colgar);
+  setTimeout(colgar, 1500);
+
+  function leer(){ try { return localStorage.getItem(CLAVE); } catch(e){ return null; } }
+  function guardar(v){ try { localStorage.setItem(CLAVE, v); } catch(e){} }
+  /* La guía necesita saber cuánto ocupa el muelle para no quedar debajo. */
+  function medir(){
+    var raiz = document.getElementById('simz');
+    if (!raiz) return;
+    var fijo = getComputedStyle(muelle).left !== 'auto' && window.innerWidth <= 600;
+    var h = 0;
+    if (fijo) h = muelle.hidden ? pastilla.getBoundingClientRect().height + 16
+                                : muelle.getBoundingClientRect().height + 8;
+    raiz.style.setProperty('--simz-alto-muelle', Math.round(h) + 'px');
+    try { window.dispatchEvent(new Event('simz-muelle')); } catch(e){}
+  }
+  function plegar(){ muelle.hidden = true; pastilla.hidden = false; guardar('plegado'); medir(); }
+  function desplegar(){ muelle.hidden = false; pastilla.hidden = true; guardar('abierto'); medir(); }
+  window.addEventListener('resize', medir);
+  setTimeout(medir, 1200);
+  document.getElementById('simz-min').addEventListener('click', plegar);
+  pastilla.addEventListener('click', desplegar);
+  if (leer() === 'plegado') { muelle.hidden = true; pastilla.hidden = false; }
+  medir();
+
+  [].forEach.call(muelle.querySelectorAll('[data-modalidad]'), function(a){
+    a.addEventListener('click', function(){
+      try {
+        if (typeof window.fbq === 'function')
+          window.fbq('trackCustom', 'ClicCursoDesdeSimulador', { modalidad: a.getAttribute('data-modalidad') });
+      } catch(e){}
+    });
+  });
+})();
+</script>
+
+<script>
+/* Guía de bienvenida. Recuerda en este navegador si ya se vio, para que
+   quien vuelve entre directo al simulador. */
+(function(){
+  var raiz = document.getElementById('simz');
+  if (!raiz) return;
+  var CLAVE = 'hl-sim-guia';
+  var onb = raiz.querySelector('#simz-onb');
+  var app = raiz.querySelector('#simz-app');
+  var pasos = [].slice.call(raiz.querySelectorAll('.simz-paso'));
+  var fotos = [].slice.call(raiz.querySelectorAll('.simz-foto'));
+  var puntos = raiz.querySelector('#simz-puntos');
+  var cuenta = raiz.querySelector('#simz-cuenta');
+  var atras = raiz.querySelector('#simz-atras');
+  var sig = raiz.querySelector('#simz-sig');
+  var saltar = raiz.querySelector('#simz-saltar');
+  var N = pasos.length, paso = 0;
+
+  function leer(){ try { return localStorage.getItem(CLAVE); } catch(e){ return null; } }
+  function guardar(v){ try { localStorage.setItem(CLAVE, v); } catch(e){} }
+
+  for (var i = 0; i < N; i++) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'simz-punto';
+    b.setAttribute('aria-label', 'Pantalla ' + (i + 1) + ' de ' + N);
+    b.setAttribute('data-ir', i);
+    puntos.appendChild(b);
+  }
+  var bolas = [].slice.call(puntos.children);
+
+  function mostrar(n){
+    paso = Math.max(0, Math.min(N - 1, n));
+    pasos.forEach(function(p, k){ p.classList.toggle('on', k === paso); });
+    fotos.forEach(function(f, k){ f.classList.toggle('on', k === paso); });
+    bolas.forEach(function(p, k){
+      p.classList.toggle('on', k === paso);
+      if (k === paso) p.setAttribute('aria-current', 'step'); else p.removeAttribute('aria-current');
+    });
+    cuenta.textContent = (paso + 1) + ' de ' + N;
+    atras.hidden = paso === 0;
+    sig.textContent = paso === N - 1 ? 'Abrir el simulador' : 'Siguiente';
+    saltar.style.visibility = paso === N - 1 ? 'hidden' : 'visible';   /* sin quitarlo: si no, la fila encoge y la tarjeta salta */
+    programar();
+  }
+
+  /* Barra pegada en el teléfono. No se usa position:sticky porque las
+     páginas de GHL suelen llevar overflow-x:hidden en el <body> y eso lo
+     anula sin avisar; ni position:fixed, que un ancestro con transform
+     rompe. Un transform funciona dentro de cualquier contenedor. */
+  var barra = raiz.querySelector('.simz-nav');
+  var texto = raiz.querySelector('.simz-onb-txt');
+  var pendiente = false;
+  function pegarBarra(){
+    pendiente = false;
+    barra.style.transform = '';
+    if (window.innerWidth > 900 || onb.hidden) return;
+    var alto = parseFloat(raiz.style.getPropertyValue('--simz-alto-muelle')) || 0;
+    var limite = window.innerHeight - alto;
+    var b = barra.getBoundingClientRect();
+    if (b.bottom <= limite) return;
+    var subir = b.bottom - limite;
+    var techo = Math.max(texto.getBoundingClientRect().top, 0) + 80;
+    if (b.top - subir < techo) return;          /* la tarjeta ya casi salió de la vista */
+    barra.style.transform = 'translateY(' + (-Math.round(subir)) + 'px)';
+  }
+  function programar(){ if (!pendiente) { pendiente = true; requestAnimationFrame(pegarBarra); } }
+  document.addEventListener('scroll', programar, true);
+  window.addEventListener('resize', programar);
+  window.addEventListener('simz-muelle', programar);
+  function irAPaso(n){
+    mostrar(n);
+    if (window.innerWidth > 900) return;
+    var arriba = onb.getBoundingClientRect().top;
+    if (arriba < 0) { try { onb.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch(e){ onb.scrollIntoView(); } }
+  }
+
+  function abrirSimulador(conScroll){
+    guardar('vista');
+    onb.hidden = true;
+    app.hidden = false;
+    if (conScroll) { try { app.scrollIntoView({ block: 'start' }); } catch(e){} }
+  }
+  function abrirGuia(){
+    app.hidden = true;
+    onb.hidden = false;
+    mostrar(0);
+    try { onb.scrollIntoView({ block: 'start' }); } catch(e){}
+  }
+
+  sig.addEventListener('click', function(){ if (paso === N - 1) abrirSimulador(true); else irAPaso(paso + 1); });
+  atras.addEventListener('click', function(){ irAPaso(paso - 1); });
+  saltar.addEventListener('click', function(){ abrirSimulador(true); });
+  puntos.addEventListener('click', function(ev){
+    var t = ev.target.closest ? ev.target.closest('[data-ir]') : null;
+    if (t) irAPaso(+t.getAttribute('data-ir'));
+  });
+  raiz.querySelector('#simz-reguia').addEventListener('click', abrirGuia);
+
+  /* Botón «Moneda». Muestra la moneda activa del simulador (que la anuncia con
+     el evento hlab-moneda y el atributo data-moneda de su raíz) y lleva a su
+     selector. Si la guía está abierta, primero abre el simulador: así la barra
+     pegada del teléfono se suelta sola, porque pegarBarra no hace nada con la
+     guía oculta. */
+  var botonesMoneda = [].slice.call(raiz.querySelectorAll('[data-simz-moneda]'));
+  function pintarMoneda(cod){
+    botonesMoneda.forEach(function(b){
+      var x = b.querySelector('b');
+      if (x) x.textContent = cod;
+      b.setAttribute('aria-label', 'Moneda: ' + cod + '. Cambiar la moneda del simulador');
+    });
+  }
+  var hlab = raiz.querySelector('.hlab');
+  pintarMoneda((hlab && hlab.getAttribute('data-moneda')) || 'COP');
+  window.addEventListener('hlab-moneda', function(ev){
+    if (ev.detail && ev.detail.codigo) pintarMoneda(ev.detail.codigo);
+  });
+  function irAMoneda(){
+    if (app.hidden) abrirSimulador(false);
+    var sel = raiz.querySelector('#curSel');
+    if (!sel) return;
+    try { sel.scrollIntoView({ block: 'center' }); } catch(e){ sel.scrollIntoView(); }
+    try { sel.focus({ preventScroll: true }); } catch(e){ sel.focus(); }
+    var caja = raiz.querySelector('#monedaBox');
+    if (caja) { caja.classList.remove('resalta'); void caja.offsetWidth; caja.classList.add('resalta'); }
+  }
+  botonesMoneda.forEach(function(b){ b.addEventListener('click', irAMoneda); });
+  onb.addEventListener('keydown', function(ev){
+    if (ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+    if (ev.key === 'ArrowRight') { ev.preventDefault(); if (paso < N - 1) mostrar(paso + 1); }
+    if (ev.key === 'ArrowLeft')  { ev.preventDefault(); mostrar(paso - 1); }
+  });
+
+  /* Práctica del paso 3: la misma cuenta que la guía original
+     (80 % de postura, 330 días, $ 750 el huevo). */
+  var rango = raiz.querySelector('#simz-rango');
+  function nf(v){ return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  function practicar(){
+    var g = parseInt(rango.value, 10);
+    var huevos = Math.round(g * 0.8) * 330;
+    raiz.querySelector('#simz-g').textContent = nf(g);
+    raiz.querySelector('#simz-h').textContent = nf(huevos);
+    raiz.querySelector('#simz-d').textContent = '$ ' + nf(huevos * 750);
+  }
+  rango.addEventListener('input', practicar);
+  practicar();
+
+  mostrar(0);
+  if (leer() === 'vista') abrirSimulador(false);
+})();
+</script>
+<script>
+/* Puerta con la palabra de la clase. Va al final a propósito: así la guía y
+   el muelle ya existen y solo hay que taparlos. Normaliza lo que se escribe
+   (mayúsculas, tildes, espacios de más y signos) para que «Productor
+   Preparado.» también valga. */
+(function(){
+  var raiz = document.getElementById('simz');
+  if (!raiz) return;
+  var llave = raiz.querySelector('#simz-llave');
+  var form  = raiz.querySelector('#simz-llave-form');
+  var campo = raiz.querySelector('#simz-llave-campo');
+  var aviso = raiz.querySelector('#simz-llave-aviso');
+  if (!llave || !form || !campo) return;
+
+  var CLAVE = 'hl-sim-llave';
+  var PALABRA = 'productor preparado';
+
+  function limpiar(t){
+    return String(t || '')
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9ñ ]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  function abierto(){
+    try { return localStorage.getItem(CLAVE) === PALABRA; } catch(e){ return false; }
+  }
+  function muelles(ver){
+    [document.querySelector('.simz-muelle'), document.querySelector('.simz-pastilla')].forEach(function(el){
+      if (!el) return;
+      if (ver) { el.style.removeProperty('display'); }
+      else { el.style.setProperty('display', 'none', 'important'); }
+    });
+  }
+  function abrir(guardando){
+    raiz.classList.remove('bloqueado');
+    llave.hidden = true;
+    muelles(true);
+    if (guardando) { try { localStorage.setItem(CLAVE, PALABRA); } catch(e){} }
+    /* El muelle y la barra pegada miden alturas al cargar: con la guía
+       oculta esas medidas salían a cero. */
+    window.dispatchEvent(new Event('resize'));
+  }
+  function cerrar(){
+    raiz.classList.add('bloqueado');
+    llave.hidden = false;
+    muelles(false);
+  }
+
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    if (limpiar(campo.value) === PALABRA) {
+      aviso.textContent = '';
+      abrir(true);
+      var onb = raiz.querySelector('#simz-onb');
+      if (onb) onb.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      aviso.textContent = campo.value.trim()
+        ? 'Esa no es la palabra. La dice Iván en la clase en vivo.'
+        : 'Escribe la palabra que dice Iván en la clase.';
+      campo.focus();
+      campo.select();
+    }
+  });
+
+  if (abierto()) abrir(false); else cerrar();
+})();
+</script>
+</div>

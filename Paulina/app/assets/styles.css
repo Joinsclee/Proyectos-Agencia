@@ -529,7 +529,7 @@ input[type="range"].pv-slider::-moz-range-thumb {
   border-radius: 14px;
   padding: 0.375rem;
   width: 100%;
-  max-width: 560px;
+  max-width: 680px;   /* 6 pestañas con texto (antes 5 en 560px) */
   margin: 0 auto 2rem;
   box-shadow: 0 2px 8px -4px rgba(8, 49, 92, 0.06);
 }
@@ -570,6 +570,14 @@ input[type="range"].pv-slider::-moz-range-thumb {
 .pv-tab .pv-tab-icon {
   font-size: 1rem;
   line-height: 1;
+  flex-shrink: 0;   /* sin esto, la pestaña más larga aplasta su icono a un punto */
+}
+
+/* Con la sexta pestaña (Matriz) los textos ya no caben por debajo de ~640px:
+   ahí quedan solo los iconos, como ya pasaba en móvil. */
+@media (max-width: 640px) {
+  .pv-tab .pv-tab-label-full { display: none; }
+  .pv-tab .pv-tab-icon { font-size: 1.15rem; }
 }
 
 @media (max-width: 480px) {
@@ -768,6 +776,23 @@ input[type="range"].pv-slider::-moz-range-thumb {
 }
 .rueda-snapshot:hover { background: #edf1f7; }
 
+/* Ruedas pasadas desplegables: la fila es un botón y abre la rueda de ese mes */
+.rueda-snapshot-item + .rueda-snapshot-item { margin-top: 0.5rem; }
+button.rueda-snapshot { width: 100%; gap: 0.75rem; border: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+button.rueda-snapshot:focus-visible { outline: 2px solid var(--pv-navy); outline-offset: 2px; }
+.rueda-snapshot-chevron { display: inline-flex; width: 1rem; height: 1rem; color: var(--pv-ink-soft); transition: transform .2s ease; }
+.rueda-snapshot-chevron.abierto { transform: rotate(90deg); }
+.rueda-snapshot-detalle { padding: 1rem 0.25rem 0.5rem; }
+.rueda-snapshot-svg { max-width: 260px; margin: 0 auto; }
+.rueda-snapshot-aviso { font-size: 0.8rem; color: var(--pv-ink-soft); background: var(--pv-paper); border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.75rem; }
+.rueda-snapshot-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.4rem; font-size: 0.82rem; }
+.rueda-snapshot-lista li { display: grid; grid-template-columns: minmax(0, 1fr) 60px 1.5rem; align-items: center; gap: 0.5rem; }
+.rueda-snapshot-nombre { line-height: 1.3; }  /* parte en dos líneas antes que cortar «Ambiente y organización» */
+.rueda-snapshot-barra { height: 6px; border-radius: 3px; background: var(--pv-line); overflow: hidden; }
+.rueda-snapshot-barra i { display: block; height: 100%; background: var(--pv-gold); }
+.rueda-snapshot-lista strong { text-align: right; color: var(--pv-navy); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .rueda-snapshot-chevron { transition: none; } }
+
 /* ========================================
    FOOTER — premium con ornamento dorado
    ======================================== */
@@ -923,6 +948,234 @@ input[type="range"].pv-slider::-moz-range-thumb {
   background-size: 18px 18px;
 }
 
+/* ========================================
+   ONBOARDING — modal de bienvenida con slides
+   ======================================== */
+.onb-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background:
+    radial-gradient(900px 420px at 75% -10%, rgba(244, 201, 74, 0.18), transparent 60%),
+    radial-gradient(700px 380px at -5% 110%, rgba(13, 65, 120, 0.55), transparent 55%),
+    rgba(8, 49, 92, 0.92);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  animation: pv-fade-in 0.3s ease both;
+}
+
+.onb-modal {
+  position: relative;
+  background: #fff;
+  border-radius: 24px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 92vh;
+  overflow: hidden;
+  box-shadow:
+    0 32px 64px -16px rgba(8, 49, 92, 0.45),
+    0 0 0 1px rgba(8, 49, 92, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Línea dorada superior decorativa */
+.onb-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 1.5rem;
+  right: 1.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pv-gold) 50%, transparent);
+  opacity: 0.7;
+}
+
+.onb-skip {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--pv-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  z-index: 2;
+}
+.onb-skip:hover {
+  color: var(--pv-navy);
+  background: var(--pv-paper);
+}
+
+.onb-body {
+  padding: 3rem 2rem 1.5rem;
+  text-align: center;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.onb-icon {
+  width: 88px;
+  height: 88px;
+  margin: 0 auto 1.5rem;
+  border-radius: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  position: relative;
+  background: linear-gradient(135deg, var(--pv-gold-glow), rgba(8, 49, 92, 0.05));
+  border: 1px solid rgba(244, 201, 74, 0.4);
+}
+.onb-icon svg {
+  width: 44px;
+  height: 44px;
+  stroke-width: 1.5;
+}
+
+.onb-eyebrow {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  color: var(--pv-gold);
+  margin-bottom: 0.5rem;
+}
+
+.onb-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--pv-navy);
+  letter-spacing: -0.025em;
+  margin-bottom: 0.85rem;
+  line-height: 1.15;
+}
+
+.onb-text {
+  color: var(--pv-ink-soft);
+  font-size: 1rem;
+  line-height: 1.65;
+  max-width: 38ch;
+  margin: 0 auto;
+}
+
+.onb-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem auto 0;
+  max-width: 32ch;
+  text-align: left;
+  font-size: 0.92rem;
+}
+.onb-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.4rem 0;
+  color: var(--pv-ink);
+}
+.onb-bullets li::before {
+  content: '';
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pv-gold);
+  margin-top: 0.55rem;
+  box-shadow: 0 0 0 3px rgba(244, 201, 74, 0.2);
+}
+
+.onb-footer {
+  padding: 1rem 2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+/* Indicadores de puntos */
+.onb-dots {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+.onb-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pv-line);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  padding: 0;
+}
+.onb-dot:hover {
+  background: var(--pv-ink-soft);
+}
+.onb-dot.active {
+  width: 32px;
+  border-radius: 999px;
+  background: var(--pv-gold);
+  box-shadow: 0 2px 8px -2px rgba(244, 201, 74, 0.5);
+}
+
+.onb-nav {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 22rem;
+}
+.onb-nav .pv-btn { flex: 1; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .onb-body { padding: 2.5rem 1.5rem 1rem; }
+  .onb-footer { padding: 1rem 1.5rem 1.5rem; }
+  .onb-title { font-size: 1.55rem; }
+  .onb-icon { width: 72px; height: 72px; }
+  .onb-icon svg { width: 36px; height: 36px; }
+}
+
+/* Animación slide */
+.onb-slide-enter { animation: onb-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes onb-slide-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onb-slide-enter, .onb-backdrop { animation: none !important; }
+}
+
+/* Botón "Ver tour" pequeño en Mi Plan */
+.onb-replay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1px dashed var(--pv-line);
+  color: var(--pv-ink-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.onb-replay-btn:hover {
+  border-color: var(--pv-gold);
+  color: var(--pv-navy);
+  background: var(--pv-gold-glow);
+}
+
 /* ========================================================================
    LOGIN / REGISTRO + CUENTA  (branding Paulina: navy #08315C + gold #F4C94A)
    Adaptado del dashboard de Lina, con tipografía Asap.
@@ -937,6 +1190,156 @@ input[type="range"].pv-slider::-moz-range-thumb {
   margin-left: -50vw;
   margin-right: -50vw;
 }
+
+/* ========================================
+   VIEW BLOCKED — usuario sin plan Premium/VIP
+   ======================================== */
+.blocked-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background:
+    radial-gradient(900px 420px at 75% -10%, rgba(244, 201, 74, 0.18), transparent 60%),
+    radial-gradient(700px 380px at -5% 110%, rgba(13, 65, 120, 0.55), transparent 55%),
+    var(--pv-navy);
+}
+.blocked-card {
+  background: #fff;
+  border-radius: 24px;
+  max-width: 560px;
+  width: 100%;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+.blocked-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 1.5rem; right: 1.5rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--pv-gold) 50%, transparent);
+}
+.blocked-logo {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 18px rgba(244, 201, 74, 0.35));
+}
+.blocked-logo img { width: 100%; height: 100%; object-fit: contain; }
+.blocked-eyebrow {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  color: var(--pv-coral);
+  margin-bottom: 0.5rem;
+}
+.blocked-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--pv-navy);
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  line-height: 1.15;
+}
+.blocked-text {
+  color: var(--pv-ink-soft);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  max-width: 40ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+.blocked-text strong { color: var(--pv-navy); }
+.blocked-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--pv-paper);
+  color: var(--pv-navy);
+  border: 1px solid var(--pv-line);
+  margin: 1rem 0 1.5rem;
+}
+.blocked-pill .level { color: var(--pv-coral); }
+.blocked-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(180deg, var(--pv-gold-soft) 0%, var(--pv-gold) 100%);
+  color: var(--pv-navy);
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 0.95rem 1.75rem;
+  border-radius: 14px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-shadow:
+    0 10px 24px -10px rgba(244, 201, 74, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  max-width: 320px;
+}
+.blocked-cta:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 28px -10px rgba(244, 201, 74, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.blocked-secondary {
+  margin-top: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--pv-ink-soft);
+}
+.blocked-secondary a,
+.blocked-link {
+  color: var(--pv-navy);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+}
+.blocked-link:hover { color: var(--pv-coral); }
+.blocked-link:focus-visible {
+  outline: 2px solid var(--pv-gold);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.blocked-status {
+  margin-top: 1.25rem;
+  font-size: 0.78rem;
+  color: var(--pv-ink-soft);
+  font-style: italic;
+}
+.blocked-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--pv-line);
+  border-top-color: var(--pv-navy);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+@keyframes spinner-rotate { to { transform: rotate(360deg); } }
 
 /* ---- Overlay de carga ---- */
 .pv-boot {
@@ -1059,18 +1462,14 @@ input[type="range"].pv-slider::-moz-range-thumb {
 .auth-form-inner { width: 100%; max-width: 430px; }
 .auth-form-header { margin-bottom: 2rem; text-align: center; }
 .auth-form-logo {
-  width: 88px;
-  height: 88px;
-  border-radius: 22px;
-  background: #fff;
-  border: 1px solid var(--pv-line);
+  width: 130px;
+  height: 130px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  padding: 13px;
-  margin: 0 auto 1.2rem;
-  box-shadow: 0 10px 30px -14px rgba(8, 49, 92, .25);
+  margin: 0 auto 1.4rem;
+  /* Glow dorado sutil detrás del isotipo, sin fondo blanco */
+  filter: drop-shadow(0 4px 18px rgba(244, 201, 74, 0.35));
 }
 .auth-form-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .auth-form-title {
@@ -1316,4 +1715,239 @@ input[type="range"].pv-slider::-moz-range-thumb {
   .auth-hero p.lead, .auth-hero-foot { display: none; }
   .auth-form-title { font-size: 1.5rem; }
   .auth-card h2 { font-size: 1.6rem; }
+}
+
+
+/* ========================================
+   MATRIZ DE URGENCIA E IMPORTANCIA (pestaña «Matriz»)
+   Portada de matriz-urgencia-importancia.html con prefijo mz- : Mi Barco ya
+   define .pv-btn, .pv-chip, .pv-pill… con otro aspecto, y compartir nombres
+   rompía las dos. Los tokens --pv-* son los mismos de :root.
+   ======================================== */
+.mz { --pv-gold-text: #8a6a12; color: var(--pv-ink); }
+.mz-ico { width: 1.05em; height: 1.05em; flex-shrink: 0; }
+
+.mz-eyebrow { font-size: .8rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--pv-gold-text); }
+.mz-eyebrow.light { color: var(--pv-gold); }
+.mz-hl { color: var(--pv-gold); }
+
+.mz-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+  background: linear-gradient(180deg, var(--pv-gold-soft), var(--pv-gold));
+  color: var(--pv-navy);
+  font-weight: 800; font-size: 1rem; letter-spacing: .01em;
+  padding: .9rem 1.7rem; border-radius: 14px;
+  border: none; cursor: pointer; text-decoration: none;
+  box-shadow: 0 14px 30px -10px rgba(244, 201, 74, 0.6);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  line-height: 1.2; text-align: center;
+}
+.mz-btn:hover { filter: brightness(1.03); transform: translateY(-2px); }
+.mz-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.mz-btn-ghost {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: rgba(244,201,74,.14); color: var(--pv-gold);
+  border: 1px solid rgba(244,201,74,.4);
+  font-weight: 700; font-size: .85rem; padding: .55rem 1rem; border-radius: 11px;
+  text-decoration: none; cursor: pointer; transition: background .15s ease;
+}
+.mz-btn-ghost:hover { background: rgba(244,201,74,.24); }
+
+.mz-btn-outline-navy {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: #fff; color: var(--pv-navy);
+  border: 1.5px solid var(--pv-line);
+  font-weight: 700; font-size: .85rem; padding: .5rem .95rem; border-radius: 11px;
+  cursor: pointer; transition: border-color .15s ease, background .15s ease;
+}
+.mz-btn-outline-navy:hover { border-color: var(--pv-navy); background: var(--pv-paper); }
+
+
+/* ================= Brain dump ================= */
+.mz-dump-card {
+  background: #fff; border: 1px solid var(--pv-line); border-radius: 20px;
+  padding: 1.5rem; box-shadow: 0 20px 45px -30px rgba(8,49,92,.35);
+}
+.mz-dump-input {
+  flex: 1; border: 1.5px solid var(--pv-line); border-radius: 12px;
+  padding: .85rem 1rem; font-size: 1rem; font-family: inherit; color: var(--pv-ink);
+  outline: none; transition: border-color .15s ease;
+}
+.mz-dump-input:focus { border-color: var(--pv-gold); }
+
+.mz-chip {
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: var(--pv-paper); border: 1.5px solid var(--pv-line);
+  border-radius: 999px; padding: .5rem .5rem .5rem 1rem;
+  font-size: .92rem; font-weight: 600; color: var(--pv-ink);
+  cursor: pointer; transition: border-color .15s ease, background .15s ease, transform .1s ease;
+  max-width: 100%;
+}
+.mz-chip:hover { border-color: var(--pv-gold); }
+.mz-chip.is-selected {
+  background: rgba(244,201,74,.16); border-color: var(--pv-gold);
+  box-shadow: 0 0 0 3px rgba(244,201,74,.22);
+}
+.mz-chip__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mz-chip__del {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--pv-ink-soft); background: rgba(0,0,0,.05);
+  border: none; cursor: pointer; font-size: .8rem; line-height: 1;
+}
+.mz-chip__del:hover { background: rgba(217,69,52,.15); color: var(--pv-coral); }
+
+/* ================= Cuadrantes (explicación) ================= */
+.mz-legend-card {
+  border-radius: 16px; padding: 1.1rem 1.2rem; border: 1.5px solid var(--pv-line);
+  background: #fff;
+}
+.mz-legend-card .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* ================= Matriz interactiva ================= */
+.mz-matrix-shell {
+  display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto 1fr;
+  grid-template-areas: ". axis-x" "axis-y quad"; gap: .5rem;
+}
+.mz-axis-y {
+  grid-area: axis-y;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--pv-ink-soft); padding: .25rem 0;
+}
+.mz-axis-x {
+  grid-area: axis-x; display: flex; justify-content: space-between;
+  font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--pv-ink-soft); padding: .25rem .5rem;
+}
+.mz-quad-grid { grid-area: quad; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: .9rem; min-height: 460px; }
+
+.mz-quad {
+  border-radius: 18px; padding: 1rem; border: 1.5px dashed var(--pv-line);
+  background: #fff; display: flex; flex-direction: column; min-height: 200px;
+  transition: border-color .15s ease, background .15s ease;
+}
+.mz-quad.is-target { border-color: var(--pv-gold); background: rgba(244,201,74,.08); }
+.mz-quad-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+.mz-quad-title { font-weight: 800; font-size: .95rem; }
+.mz-quad-action {
+  font-size: .68rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase;
+  padding: .2rem .55rem; border-radius: 999px; color: #fff;
+}
+.mz-quad-empty { font-size: .82rem; color: var(--pv-ink-soft); font-style: italic; padding: .5rem 0; }
+.mz-quad-list { display: flex; flex-direction: column; gap: .5rem; flex: 1; }
+
+.mz-quad--q1 { border-top: 4px solid var(--pv-coral); }
+.mz-quad--q2 { border-top: 4px solid var(--pv-gold); }
+.mz-quad--q3 { border-top: 4px solid var(--pv-amber); }
+.mz-quad--q4 { border-top: 4px solid var(--pv-ink-soft); }
+.mz-badge--q1 { background: var(--pv-coral); }
+.mz-badge--q2 { background: var(--pv-gold-text); }
+.mz-badge--q3 { background: var(--pv-amber); }
+.mz-badge--q4 { background: var(--pv-ink-soft); }
+
+.mz-task-in-quad {
+  display: flex; align-items: flex-start; gap: .5rem;
+  background: var(--pv-paper); border: 1px solid var(--pv-line); border-radius: 10px;
+  padding: .5rem .6rem; font-size: .88rem; line-height: 1.35;
+}
+/* :not(.mz-check) es obligatorio: esta regla es más específica que .mz-check
+   y le borraba el borde, el fondo y el color, dejando el ✓ de "marcar como
+   hecha" idéntico al botón de quitar. Nadie distinguía uno del otro. */
+.mz-task-in-quad button:not(.mz-check) {
+  flex-shrink: 0; border: none; background: transparent; color: var(--pv-ink-soft);
+  cursor: pointer; font-size: .75rem; padding: 0; margin-top: .1rem;
+}
+.mz-task-in-quad button:not(.mz-check):hover { color: var(--pv-navy); }
+
+/* ================= Diagnóstico ================= */
+.mz-diag-card {
+  border-radius: 20px; padding: 1.5rem; background: var(--pv-navy); color: #fff;
+  box-shadow: 0 24px 55px -30px rgba(8,49,92,.55);
+}
+.mz-diag-stat { text-align: center; }
+.mz-diag-num { font-size: 1.8rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.mz-diag-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.6); margin-top: .25rem; }
+
+/* ================= Asistente de criterio (Paso 3) ================= */
+.mz-wizard { margin-top: 1.15rem; border-top: 1px solid var(--pv-line); padding-top: 1.15rem; }
+.mz-wizard__head { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin-bottom: 1rem; }
+.mz-wizard__task { font-weight: 800; font-size: 1rem; line-height: 1.3; color: var(--pv-navy); }
+.mz-wizard__eyebrow { display: block; font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--pv-ink-soft); margin-bottom: .2rem; }
+.mz-wizard__close { flex-shrink: 0; border: none; background: transparent; color: var(--pv-ink-soft); cursor: pointer; font-size: .85rem; padding: .15rem .35rem; }
+.mz-wizard__close:hover { color: var(--pv-coral); }
+.mz-wizard__q { margin-bottom: 1.05rem; }
+.mz-wizard__qtitle { font-size: .92rem; font-weight: 700; line-height: 1.3; }
+.mz-wizard__qhint { font-size: .78rem; color: var(--pv-ink-soft); margin: .15rem 0 .55rem; }
+.mz-wizard__opts { display: flex; flex-wrap: wrap; gap: .45rem; }
+.mz-opt {
+  border: 1.5px solid var(--pv-line); background: #fff; border-radius: 10px;
+  padding: .45rem .85rem; font-size: .85rem; font-weight: 600; color: var(--pv-ink);
+  font-family: inherit; text-align: left; cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.mz-opt:hover { border-color: var(--pv-gold); }
+.mz-opt.is-on { background: rgba(244,201,74,.16); border-color: var(--pv-gold); box-shadow: 0 0 0 3px rgba(244,201,74,.2); }
+.mz-wizard__pending { font-size: .85rem; font-style: italic; color: var(--pv-ink-soft); }
+.mz-wizard__result { background: var(--pv-paper); border: 1px solid var(--pv-line); border-radius: 14px; padding: 1rem; }
+.mz-wizard__verdict { font-size: 1rem; font-weight: 800; color: var(--pv-navy); margin: .55rem 0 0; }
+.mz-wizard__why { font-size: .88rem; line-height: 1.55; color: var(--pv-ink-soft); margin: .3rem 0 .95rem; }
+.mz-wizard__cta { display: flex; flex-wrap: wrap; gap: .6rem; }
+.mz-wizard__cta .mz-btn { font-size: .9rem; padding: .7rem 1.2rem; }
+.mz-manual-hint {
+  margin-top: .9rem; background: rgba(244,201,74,.14); border: 1px solid rgba(244,201,74,.4);
+  border-radius: 12px; padding: .7rem .9rem; font-size: .85rem; line-height: 1.45; color: var(--pv-gold-text);
+}
+
+/* ================= Completar tareas ================= */
+/* El ✓ tiene que verse SIEMPRE: antes solo aparecía en :hover y en móvil,
+   donde no hay hover, quedaba un cuadrito mudo. Nadie encontraba cómo
+   marcar una tarea como hecha. */
+.mz-check {
+  flex-shrink: 0; width: 22px; height: 22px; margin-top: .04rem; padding: 0;
+  border: 1.5px solid var(--pv-mint); border-radius: 7px; background: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--pv-mint); cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.mz-check svg { width: 13px; height: 13px; }
+.mz-check:hover, .mz-check:focus-visible { background: var(--pv-mint); color: #fff; }
+.mz-done-toggle {
+  margin-top: .7rem; border: none; background: transparent; padding: .2rem 0;
+  font-family: inherit; font-size: .8rem; font-weight: 700; color: var(--pv-navy);
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+.mz-done-toggle:hover { color: var(--pv-gold-text); }
+.mz-task-suggest { display: block; font-size: .72rem; font-weight: 700; color: var(--pv-gold-text); margin-top: .15rem; }
+
+.mz-done-row { display: flex; align-items: flex-start; gap: .6rem; padding: .6rem 0; border-bottom: 1px solid var(--pv-line); }
+.mz-done-row:last-child { border-bottom: none; }
+.mz-done-mark {
+  flex-shrink: 0; width: 18px; height: 18px; margin-top: .12rem; border-radius: 6px;
+  background: var(--pv-mint); color: #fff; display: inline-flex; align-items: center; justify-content: center;
+}
+.mz-done-row__body { flex: 1; min-width: 0; }
+.mz-done-row__text { font-size: .88rem; line-height: 1.35; color: var(--pv-ink-soft); text-decoration: line-through; }
+.mz-done-row__meta { display: block; font-size: .72rem; letter-spacing: .02em; color: var(--pv-ink-soft); margin-top: .15rem; }
+.mz-done-row__btn { flex-shrink: 0; border: none; background: transparent; color: var(--pv-ink-soft); cursor: pointer; font-size: .75rem; padding: .1rem .3rem; }
+.mz-done-row__btn:hover { color: var(--pv-navy); }
+
+/* ================= Diagnóstico ================= */
+.mz-diag-alert {
+  margin-top: 1rem; background: rgba(244,201,74,.16); border: 1px solid rgba(244,201,74,.42);
+  border-radius: 12px; padding: .85rem 1rem; font-size: .88rem; line-height: 1.55; color: #fff;
+}
+.mz-diag-alert strong { color: var(--pv-gold); }
+
+@media (max-width: 860px) {
+  .mz-axis-y, .mz-axis-x { display: none; }
+  .mz-matrix-shell { grid-template-columns: 1fr; grid-template-areas: "quad"; }
+  .mz-quad-grid { grid-template-columns: 1fr; grid-template-rows: none; min-height: 0; }
+}
+
+.mz-import-note {
+  margin-bottom: 1rem; background: rgba(47,158,111,.08); border: 1px solid rgba(47,158,111,.3);
+  border-radius: 12px; padding: .7rem .9rem; font-size: .85rem; line-height: 1.45; color: var(--pv-ink);
 }

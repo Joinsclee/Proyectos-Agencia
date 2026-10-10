@@ -9,16 +9,25 @@ const PROYECTO = resolve(__dirname, '..');
 const DESTINO = join(PROYECTO, '.chrome-profile-auto');
 const ORIGEN_BASE = join(homedir(), 'Library', 'Application Support', 'Google', 'Chrome');
 
+// Las cachés se excluyen por NOMBRE, no por ruta: antes solo decían 'Default/...' y
+// los perfiles numerados (Profile 1..8) se clonaban enteros. Eso metió 6 GB de basura
+// en el clon: 4 GB del modelo on-device de Chrome y 2 GB de cachés de service workers.
 const EXCLUSIONES = [
-  'Default/Cache',
-  'Default/Code Cache',
-  'Default/GPUCache',
-  'Default/Service Worker/CacheStorage',
-  'Default/Service Worker/ScriptCache',
-  'Default/Application Cache',
-  'Default/File System',
-  'Default/IndexedDB/*-shm',
-  'Default/IndexedDB/*-wal',
+  'Cache',
+  'Code Cache',
+  'GPUCache',
+  'Service Worker/CacheStorage',
+  'Service Worker/ScriptCache',
+  'Application Cache',
+  'File System',
+  'Shared Dictionary',
+  'DawnGraphiteCache',
+  'DawnWebGPUCache',
+  'OptGuideOnDeviceModel',
+  'screen_ai',
+  'extensions_crx_cache',
+  'IndexedDB/*-shm',
+  'IndexedDB/*-wal',
   'ShaderCache',
   'GraphiteDawnCache',
   'GrShaderCache',

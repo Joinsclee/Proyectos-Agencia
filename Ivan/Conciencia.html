@@ -1,0 +1,1254 @@
+<!-- BLOQUE GHL · Pegar completo dentro de un elemento “HTML/Javascript personalizado”. -->
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap');
+    #fp-conciencia{
+      --deep:#061f1d;--forest:#082f2b;--green:#0f4640;--leaf:#87a942;--lime:#c8db52;
+      --coral:#ef7854;--ivory:#f8f5ed;--paper:#fffdf8;--ink:#14322f;--muted:#61746e;
+      --line:rgba(20,50,47,.14);
+      /* Versiones legibles de lima y coral para texto pequeño sobre fondo claro:
+         #87a942 daba 2.65:1 y #ef7854 2.76:1, cuando el mínimo para 11 px es 4.5. */
+      --leaf-txt:#4a6b22;--coral-txt:#b8431f;
+    }
+    :where(#fp-conciencia),:where(#fp-conciencia *){box-sizing:border-box;margin:0;padding:0}
+    #fp-conciencia{
+      background:var(--ivory);color:var(--ink);overflow:hidden;
+      font-family:Inter,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;
+      /* Ancho completo dentro de la columna estrecha de GHL. */
+      width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);max-width:100vw;
+    }
+    :where(#fp-conciencia) :where(img,svg){display:block;max-width:100%}
+    :where(#fp-conciencia) :where(a){color:inherit;text-decoration:none}
+    :where(#fp-conciencia) :where(button){font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+    #fp-conciencia h1,#fp-conciencia h2,#fp-conciencia h3{text-wrap:balance;line-height:1.1;letter-spacing:-.04em}
+    .cw{width:min(1120px,calc(100% - 72px));margin-inline:auto}
+
+    /* ── Hero ─────────────────────────────────────────────────────────────── */
+    .c-hero{position:relative;isolation:isolate;background:var(--deep);color:#fff;padding:82px 0 74px;overflow:hidden}
+    .c-hero::before{content:"";position:absolute;inset:0;z-index:-2;background:url("https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6a95b1a6648f56e7e4337792.jpg") center/cover;opacity:.26}
+    .c-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(103deg,rgba(6,31,29,.97),rgba(6,31,29,.84) 58%,rgba(6,31,29,.62))}
+    .c-hero .c-eyebrow{margin:0 0 18px;color:var(--lime);font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+    .c-hero h1{max-width:880px;font-size:clamp(38px,4.6vw,62px);font-weight:780}
+    .c-hero h1 em{display:block;margin-top:8px;color:var(--lime);font-family:"Playfair Display",Georgia,serif;font-style:italic;font-weight:600}
+    .c-hero p{max-width:640px;margin-top:22px;color:rgba(255,255,255,.82);font-size:17.5px;line-height:1.68}
+    .c-wa{margin-top:34px;padding:24px 26px;border-radius:16px;background:rgba(255,255,255,.07);max-width:640px}
+    .c-wa p{margin:0 0 15px;color:rgba(255,255,255,.9);font-size:16px}
+    .c-btn{display:inline-flex;align-items:center;gap:10px;padding:16px 26px;border-radius:13px;background:#20bd5a;color:#fff;font-size:13.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 12px 26px rgba(32,189,90,.24);transition:transform .22s cubic-bezier(.2,.8,.2,1),background .22s ease}
+    .c-btn:hover{background:#18a94d;transform:translateY(-2px)}
+    .c-btn.coral{background:var(--coral);box-shadow:0 12px 26px rgba(239,120,84,.26)}
+    .c-btn.coral:hover{background:#e05f39}
+    .c-wa .c-nota{margin-top:12px;color:rgba(255,255,255,.55);font-size:12.5px;line-height:1.55}
+
+    /* ── Secciones ────────────────────────────────────────────────────────── */
+    #fp-conciencia section{padding:96px 0}
+    .c-tag{margin:0 0 14px;color:var(--coral-txt);font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+    .c-title{max-width:820px;font-size:clamp(32px,3.7vw,50px)}
+    .c-title em{font-family:"Playfair Display",Georgia,serif;font-style:italic;color:var(--green);font-weight:600}
+    .c-intro{max-width:680px;margin-top:20px;color:var(--muted);font-size:17px;line-height:1.68}
+
+    /* ── Recurso de bienvenida ────────────────────────────────────────────
+       El PDF todavía no está. Este bloque queda deliberadamente sobrio: solo
+       hay que sustituir el href y el nombre del recurso cuando llegue. */
+    .c-regalo{background:var(--paper)}
+    .c-regalo-caja{display:grid;grid-template-columns:1fr auto;gap:52px;align-items:center;margin-top:34px;padding:44px 46px;border-radius:18px;background:var(--deep);color:#fff}
+    .c-regalo-caja h3{font-size:clamp(24px,2.6vw,32px);margin-bottom:12px}
+    .c-regalo-caja p{max-width:520px;color:rgba(255,255,255,.75);font-size:16px;line-height:1.68}
+    .c-regalo-caja .c-regalo-pie{margin-top:16px;color:rgba(255,255,255,.5);font-size:12.5px;line-height:1.55}
+    .c-regalo-lado{flex:none;text-align:center}
+    .c-regalo-lado .c-btn{width:100%;justify-content:center}
+    .c-espera{display:inline-flex;align-items:center;gap:9px;margin-top:14px;color:rgba(255,255,255,.55);font-size:12px;font-weight:600}
+    .c-espera i{width:7px;height:7px;border-radius:50%;background:var(--lime);flex:none}
+
+    /* ── Ruta ─────────────────────────────────────────────────────────────── */
+    .c-clases{display:grid;gap:16px;margin-top:52px}
+    .c-clase{
+      position:relative;padding:30px 32px;border:1px solid var(--line);border-radius:18px;background:var(--paper);
+      /* La miniatura manda: ocupa su propia columna y llega a lo alto de la
+         tarjeta, en vez de ir escondida bajo el párrafo. */
+      display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:26px 32px;align-items:start;
+      transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .28s ease,box-shadow .28s ease}
+    .c-clase>.c-puntos{grid-column:1 / -1}
+    .c-clase:hover{transform:translateY(-3px);border-color:rgba(135,169,66,.5);box-shadow:0 20px 44px rgba(6,31,29,.08)}
+    .c-clase-cab{display:flex;align-items:baseline;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:14px}
+    .c-clase-cab>div{min-width:0}
+    .c-clase h3{font-size:25px;max-width:720px}
+    .c-cuando{display:block;margin-bottom:9px;color:var(--leaf-txt);font-size:11.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    .c-estado{flex:none;padding:7px 14px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
+    .c-estado.abierta{background:rgba(135,169,66,.2);color:#3d5c1f}
+    .c-estado.cerrada{background:rgba(20,50,47,.08);color:#4e6159}
+    .c-clase>p{max-width:760px;color:var(--muted);font-size:16px;line-height:1.68}
+    .c-puntos{margin-top:20px;padding-top:20px;border-top:1px solid var(--line);display:grid;gap:9px}
+    .c-punto{display:grid;grid-template-columns:20px 1fr;gap:11px;color:var(--ink);font-size:15px;line-height:1.6}
+    .c-punto span{color:var(--leaf-txt);font-weight:800}
+
+
+    /* ── Clases con liberación por fecha ──────────────────────────────────
+       Mientras la clase no se abre, el vídeo se ve difuminado con un candado
+       y su cuenta atrás; el recurso queda en gris. A la hora exacta el JS
+       quita el bloqueo sin que haya que editar el HTML. */
+    .c-clase-info{min-width:0}
+    .c-video{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--deep)}
+    .c-video-img{position:absolute;inset:0;background-size:cover;background-position:center;transition:filter .5s ease,transform .5s ease}
+    /* Sin blur: la miniatura se ve y se reconoce. Que está bloqueada lo dicen
+       el velo, el candado y la cuenta atrás, no un desenfoque que además
+       escondía el trabajo de las portadas. */
+    .c-clase[data-cerrada] .c-video-img{filter:saturate(.82) brightness(.78)}
+    .c-clase[data-cerrada] .c-video{box-shadow:inset 0 0 0 2px rgba(200,219,82,.3)}
+    /* El aviso baja a la banda inferior: en el centro tapaba el titular de
+       la portada, que es justo lo que queremos que se lea. */
+    .c-clase[data-cerrada] .c-video-capa{
+      background:linear-gradient(180deg,rgba(6,31,29,.1) 30%,rgba(6,31,29,.5) 66%,rgba(6,31,29,.92));
+      align-items:end;justify-items:stretch;padding:0 15px 14px}
+    .c-clase[data-cerrada] .c-video-capa>div{
+      display:grid;grid-template-columns:auto 1fr;grid-template-areas:"lock txt" "lock reloj";
+      gap:0 12px;align-items:center;text-align:left}
+    .c-clase[data-cerrada] .c-candado{grid-area:lock;width:38px;height:38px;margin:0;border-radius:11px}
+    .c-clase[data-cerrada] .c-candado svg{width:17px;height:17px}
+    .c-clase[data-cerrada] [data-capa-txt]{grid-area:txt;align-self:end}
+    .c-clase[data-cerrada] [data-reloj]{grid-area:reloj;align-self:start;margin-top:1px;font-size:20px}
+    .c-video-capa{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;color:#fff}
+    .c-clase:not([data-cerrada]) .c-video-capa{background:linear-gradient(0deg,rgba(6,31,29,.62),transparent 62%)}
+    .c-candado{width:46px;height:46px;margin:0 auto 12px;display:grid;place-items:center;border-radius:13px;background:rgba(6,31,29,.55);border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(6px)}
+    .c-candado svg{width:19px;height:19px}
+    .c-capa-txt{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.86);text-shadow:0 1px 8px rgba(6,31,29,.8)}
+    .c-capa-reloj{margin-top:6px;font-size:23px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 2px 12px rgba(6,31,29,.9)}
+    .c-play[hidden],.c-candado[hidden],[data-capa-txt][hidden],[data-reloj][hidden]{display:none!important}
+    .c-play{width:68px;height:68px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(4px);transition:transform .3s cubic-bezier(.2,.8,.2,1),background .3s ease}
+    .c-play svg{width:26px;height:26px;margin-left:3px}
+    .c-video:hover .c-play{transform:scale(1.07);background:rgba(255,255,255,.26)}
+    /* Cubre la miniatura entera para que se pueda clicar como el play.
+       El JS la enseña solo cuando el enlace del directo es real. */
+    .c-video-tapa{position:absolute;inset:0;z-index:2;width:100%;height:100%}
+    .c-video-tapa[hidden]{display:none!important}
+    .c-video-tapa:focus-visible{outline:3px solid var(--lime);outline-offset:-3px}
+
+    /* El reproductor se mete en el mismo hueco de la miniatura. No se carga
+       hasta que alguien le da: un iframe de YouTube por tarjeta traería sus
+       cookies y su peso a todo el que abra la página, hayan o no ido a ver. */
+    .c-video-marco{position:absolute;inset:0;z-index:3;border:0;width:100%;height:100%;background:#000}
+
+    .c-acciones{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:20px}
+    .c-directo{display:inline-flex;align-items:center;gap:10px;padding:13px 22px;border-radius:12px;background:var(--coral);color:#fff;font-size:13px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 12px 26px rgba(239,120,84,.24);transition:transform .22s cubic-bezier(.2,.8,.2,1),background .22s ease}
+    .c-directo:hover{background:#e05f39;transform:translateY(-2px)}
+    .c-directo[hidden]{display:none!important}
+    .c-directo svg{width:17px;height:17px;flex:none}
+    .c-recurso{display:inline-flex;align-items:center;gap:11px;padding:13px 20px;border-radius:12px;font-size:13.5px;font-weight:800;letter-spacing:.03em;transition:transform .22s cubic-bezier(.2,.8,.2,1),background .22s ease}
+    .c-recurso svg{width:17px;height:17px;flex:none}
+    .c-recurso.libre{background:var(--green);color:#fff}
+    .c-recurso.libre:hover{background:var(--deep);transform:translateY(-2px)}
+    .c-recurso.trabado{background:rgba(20,50,47,.07);color:var(--muted);cursor:not-allowed;pointer-events:none}
+    .c-recurso small:empty{display:none}
+    .c-recurso small{font-weight:600;letter-spacing:0;opacity:.85;font-variant-numeric:tabular-nums}
+    .c-dura{margin-top:14px;color:var(--muted);font-size:13px}
+
+    /* ── Calendario ───────────────────────────────────────────────────────── */
+    .c-agenda{background:var(--paper)}
+    .c-dias{display:grid;gap:12px;margin-top:46px}
+    .c-dia{display:grid;grid-template-columns:78px 1fr auto;gap:26px;align-items:center;padding:22px 26px;border:1px solid var(--line);border-radius:15px;background:var(--ivory);transition:border-color .28s ease,box-shadow .28s ease}
+    .c-dia:hover{border-color:rgba(135,169,66,.5);box-shadow:0 14px 32px rgba(6,31,29,.06)}
+    .c-dia.grande{background:var(--deep);border-color:transparent;color:#fff}
+    .c-fecha{text-align:center;padding:10px 0;border-radius:12px;background:rgba(20,50,47,.06)}
+    .c-dia.grande .c-fecha{background:rgba(255,255,255,.1)}
+    .c-fecha b{display:block;font-size:29px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+    .c-fecha small{display:block;margin-top:5px;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+    .c-dia.grande .c-fecha small{color:rgba(255,255,255,.6)}
+    .c-dia-txt strong{display:block;font-size:17px;line-height:1.32;letter-spacing:-.02em;margin-bottom:5px}
+    .c-dia-txt span{color:var(--muted);font-size:13.5px;line-height:1.5}
+    .c-dia.grande .c-dia-txt span{color:rgba(255,255,255,.66)}
+    .c-agendar{flex:none}
+    .c-cal{display:inline-flex;align-items:center;gap:9px;padding:12px 20px;border-radius:11px;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:12px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;transition:background .22s ease,color .22s ease,border-color .22s ease}
+    .c-cal svg{width:15px;height:15px;flex:none}
+    .c-cal:hover{background:var(--green);border-color:var(--green);color:#fff}
+    .c-dia.grande .c-cal{background:var(--lime);border-color:var(--lime);color:var(--deep)}
+    .c-dia.grande .c-cal:hover{background:#d8ea6a;border-color:#d8ea6a}
+
+    /* ── Comentarios ──────────────────────────────────────────────────────── */
+    .c-com-caja{margin-top:44px;padding:34px 36px;border:1px solid var(--line);border-radius:16px;background:var(--paper)}
+    .c-campo{margin-bottom:20px}
+    .c-campo label{display:block;margin-bottom:8px;color:var(--green);font-size:11px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    .c-campo input,.c-campo textarea{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:11px;background:var(--ivory);color:var(--ink);font:inherit;font-size:15px;line-height:1.6;transition:border-color .2s ease,background .2s ease}
+    .c-campo textarea{resize:vertical;min-height:118px}
+    .c-campo input:focus,.c-campo textarea:focus{outline:0;border-color:var(--leaf);background:var(--paper)}
+    .c-enviar{width:100%;justify-content:center;background:var(--green);box-shadow:0 12px 26px rgba(15,70,64,.2)}
+    .c-enviar:hover{background:var(--deep)}
+    .c-enviar[disabled]{opacity:.55;cursor:not-allowed;transform:none}
+    .c-aviso{margin-top:14px;text-align:center;font-size:13.5px;font-weight:600;line-height:1.5}
+    .c-aviso[hidden]{display:none!important}
+    .c-cerrado{margin-bottom:22px;padding:14px 18px;border-radius:11px;background:rgba(135,169,66,.14);color:var(--green);font-size:14px;font-weight:600;line-height:1.55}
+    .c-cerrado[hidden]{display:none!important}
+    .c-com-caja[data-cerrado] .c-campo,.c-com-caja[data-cerrado] .c-enviar{opacity:.5;pointer-events:none}
+    .c-lista{display:grid;gap:12px;margin-top:26px}
+    .c-com{padding:22px 24px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+    .c-com-cab{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:9px}
+    .c-com-cab b{font-size:15.5px;letter-spacing:-.01em;min-width:0;overflow-wrap:anywhere}
+    .c-com-cab time{color:var(--muted);font-size:12px;white-space:nowrap}
+    .c-com p{color:var(--ink);font-size:15px;line-height:1.68;white-space:pre-wrap;overflow-wrap:anywhere}
+    .c-vacio{padding:38px 0;text-align:center;color:var(--muted);font-size:14.5px}
+    .c-mas{display:block;margin:22px auto 0;padding:13px 26px;border-radius:11px;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;transition:background .22s ease,color .22s ease}
+    .c-mas:hover{background:var(--green);border-color:var(--green);color:#fff}
+    .c-mas[hidden]{display:none!important}
+
+    /* ── Encuentro ────────────────────────────────────────────────────────── */
+    .c-encuentro{background:var(--deep);color:#fff}
+    .c-encuentro .c-tag{color:var(--lime)}
+    .c-encuentro .c-title{color:#fff}
+    .c-encuentro .c-title em{color:var(--lime)}
+    .c-enc-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:70px;align-items:center;margin-top:8px}
+    .c-cuenta{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:34px;max-width:460px}
+    .c-t{padding:18px 8px;border-radius:14px;background:rgba(255,255,255,.07);text-align:center}
+    .c-t b{display:block;font-size:31px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+    .c-t small{display:block;margin-top:7px;color:rgba(255,255,255,.5);font-size:9.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+    .c-t b.tick{animation:cTick .42s cubic-bezier(.2,.8,.2,1)}
+    @keyframes cTick{0%{transform:translateY(-40%);opacity:0}60%{opacity:1}100%{transform:none;opacity:1}}
+    .c-horas{display:grid;gap:2px;padding:26px 28px;border-radius:16px;background:rgba(255,255,255,.055)}
+    .c-hora{display:flex;justify-content:space-between;gap:18px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:14.5px}
+    .c-hora:last-child{border-bottom:0}
+    .c-hora b{color:var(--lime);font-variant-numeric:tabular-nums;white-space:nowrap}
+    .c-hora span{color:rgba(255,255,255,.62);text-align:right}
+
+    /* ── Pie ──────────────────────────────────────────────────────────────── */
+    #fp-conciencia footer{padding:30px 0;background:#041715;color:rgba(255,255,255,.5);text-align:center;font-size:11.5px;line-height:1.65}
+
+    /* ── Movimiento ───────────────────────────────────────────────────────
+       El ocultado inicial cuelga de .c-js, que el propio script pone en el
+       contenedor. Si el JS no llega a correr (bloqueado, error de GHL, un
+       navegador viejo), la página se ve entera en vez de quedarse en blanco
+       de la sección del recurso para abajo. */
+    #fp-conciencia.c-js .c-rev{opacity:0;transform:translateY(20px);transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1);transition-delay:var(--d,0ms)}
+    #fp-conciencia.c-js .c-rev.visto{opacity:1;transform:none}
+
+
+    /* ── Encuesta: aviso al entrar y botón flotante ───────────────────────
+       El aviso sale una sola vez por navegador y a los 2,5 s: uno que salta
+       de golpe al cargar se cierra por reflejo, sin leerlo. Después queda el
+       botón flotante, que es el que recoge a quien lo cerró.
+
+       OJO en GHL: la columna va dentro de una sección con `transform`, y eso
+       rompe el `position:fixed`. El JS los cuelga del <body> cuando detecta
+       un ancestro así. */
+    .c-enc-flota{
+      position:fixed;right:20px;bottom:20px;z-index:998;
+      display:inline-flex;align-items:center;gap:11px;
+      padding:14px 20px;border-radius:999px;border:0;
+      background:var(--green);color:#fff;
+      font:800 13px/1.15 Inter,system-ui,sans-serif;letter-spacing:.04em;
+      box-shadow:0 14px 34px rgba(6,31,29,.3);
+      cursor:pointer;transition:transform .22s cubic-bezier(.2,.8,.2,1),background .22s ease;
+    }
+    .c-enc-flota:hover{background:var(--deep);transform:translateY(-2px)}
+    .c-enc-flota[hidden]{display:none!important}
+    .c-enc-flota svg{width:17px;height:17px;flex:none}
+    .c-enc-flota small{display:block;margin-top:3px;font-weight:600;font-size:11.5px;opacity:.72;letter-spacing:0}
+    /* Un latido muy leve al aparecer, para que el ojo lo encuentre una vez
+       y luego se quede quieto. */
+    @keyframes cLlama{0%,100%{box-shadow:0 14px 34px rgba(6,31,29,.3)}
+      50%{box-shadow:0 14px 34px rgba(6,31,29,.3),0 0 0 12px rgba(135,169,66,.18)}}
+    .c-enc-flota.llama{animation:cLlama 2.6s ease-in-out 3}
+
+    .c-enc-fondo{
+      position:fixed;inset:0;z-index:999;
+      display:grid;place-items:center;padding:22px;
+      background:rgba(6,31,29,.72);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);
+      opacity:0;transition:opacity .3s ease;
+    }
+    .c-enc-fondo[hidden]{display:none!important}
+    /* El diálogo recibe el foco al abrirse, pero no lleva anillo: el anillo
+       es solo para los botones, y por eso el selector nombra `button` en vez
+       de cualquier descendiente enfocable. */
+    .c-enc:focus,.c-enc:focus-visible{outline:none}
+    .c-enc-fondo button:focus-visible,.c-enc-flota:focus-visible{
+      outline:3px solid var(--leaf);outline-offset:2px;
+    }
+    .c-enc-fondo.puesto{opacity:1}
+
+    .c-enc{
+      width:min(620px,100%);max-height:min(88vh,860px);overflow:auto;
+      background:var(--paper);border-radius:20px;
+      box-shadow:0 40px 90px rgba(6,31,29,.4);
+      transform:translateY(14px) scale(.985);transition:transform .32s cubic-bezier(.2,.8,.2,1);
+    }
+    .c-enc-fondo.puesto .c-enc{transform:none}
+    .c-enc.ancha{width:min(860px,100%)}
+
+    .c-enc-cab{padding:38px 40px 0;position:relative}
+    .c-enc-cab .c-tag{margin-bottom:12px}
+    .c-enc-cab h3{font-size:clamp(23px,3vw,30px);letter-spacing:-.03em;line-height:1.16}
+    .c-enc-cab p{margin-top:14px;color:var(--muted);font-size:15.5px;line-height:1.62}
+    .c-enc-cerrar{
+      position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:50%;
+      display:grid;place-items:center;color:var(--muted);background:rgba(20,50,47,.06);
+    }
+    .c-enc-cerrar:hover{background:rgba(20,50,47,.12);color:var(--ink)}
+    .c-enc-cerrar svg{width:15px;height:15px}
+
+    .c-enc-lista{margin:22px 0 0;display:grid;gap:9px}
+    .c-enc-lista li{list-style:none;display:grid;grid-template-columns:18px 1fr;gap:10px;
+      color:var(--ink);font-size:14.5px;line-height:1.55}
+    .c-enc-lista b{color:var(--leaf-txt);font-weight:800}
+
+    .c-enc-pie{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:26px 40px 34px}
+    /* `display:flex` le gana al `[hidden]{display:none}` del navegador: sin
+       esta línea salían los dos pies a la vez. */
+    .c-enc-pie[hidden]{display:none!important}
+    .c-enc-pie .c-btn{background:var(--green);box-shadow:0 12px 26px rgba(15,70,64,.2)}
+    .c-enc-pie .c-btn:hover{background:var(--deep)}
+    .c-enc-luego{padding:14px 18px;border-radius:12px;color:var(--muted);font-size:13px;font-weight:700}
+    .c-enc-luego:hover{background:rgba(20,50,47,.06);color:var(--ink)}
+    .c-enc-hecha{margin-left:auto;white-space:nowrap;color:var(--muted);font-size:12.5px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+    .c-enc-hecha:hover{color:var(--green)}
+
+    /* El formulario solo se carga cuando alguien dice que sí. */
+    .c-enc-marco{display:block;width:100%;height:min(72vh,720px);border:0;background:var(--paper)}
+    .c-enc-marco[hidden]{display:none!important}
+
+    @media(max-width:600px){
+      .c-enc-fondo{padding:0;place-items:end stretch}
+      .c-enc{width:100%;max-height:92vh;border-radius:20px 20px 0 0}
+      .c-enc-cab{padding:30px 24px 0}
+      .c-enc-pie{padding:22px 24px 28px}
+      .c-enc-pie .c-btn{width:100%;justify-content:center}
+      .c-enc-luego,.c-enc-hecha{margin:0;text-align:center;width:100%}
+      .c-enc-flota{right:14px;bottom:14px;padding:12px 17px}
+    }
+
+    /* Pantallas cortas (un iPhone SE son 568 px de alto): con los tres botones
+       apilados, «Ahora no» y «Ya la respondí» caían fuera de la hoja y había
+       que desplazar dentro del modal para encontrarlos. Aquí se compacta todo
+       y los dos secundarios comparten fila. */
+    @media(max-width:600px) and (max-height:680px){
+      .c-enc{max-height:96vh}
+      .c-enc-cab{padding:22px 22px 0}
+      .c-enc-cab .c-tag{margin-bottom:8px}
+      .c-enc-cab p{margin-top:10px;font-size:14.5px;line-height:1.55}
+      .c-enc-lista{margin-top:14px;gap:6px}
+      .c-enc-lista li{font-size:13.5px;line-height:1.45}
+      .c-enc-pie{padding:16px 22px 20px;gap:8px}
+      .c-enc-pie .c-btn{padding-top:13px;padding-bottom:13px}
+      .c-enc-luego,.c-enc-hecha{width:auto;flex:1 1 0;padding:11px 10px}
+    }
+
+    @media(max-width:980px){
+      .cw{width:min(100% - 40px,760px)}
+      .c-enc-grid{grid-template-columns:1fr;gap:44px}
+      .c-regalo-caja{grid-template-columns:1fr;gap:28px;padding:34px}
+      .c-regalo-lado{text-align:left}
+    }
+    @media(max-width:820px){.c-clase{grid-template-columns:minmax(0,1fr);gap:22px}}
+    @media(max-width:640px){
+      .cw{width:min(100% - 28px,540px)}
+      .c-hero{padding:60px 0 54px}
+      #fp-conciencia section{padding:70px 0}
+      .c-clase{padding:26px 22px}
+      .c-clase h3{font-size:21px}
+      .c-clase-cab{flex-direction:column;align-items:flex-start;gap:12px}
+      .c-acciones{flex-direction:column;align-items:stretch}
+      .c-acciones>*{justify-content:center}
+      .c-dia{grid-template-columns:64px 1fr;gap:16px;padding:20px}
+      .c-fecha b{font-size:24px}
+      .c-agendar{grid-column:1 / -1;margin-top:4px}
+      .c-cal{width:100%;justify-content:center}
+      .c-com-caja{padding:26px 22px}
+      .c-hora{flex-direction:column;align-items:flex-start;gap:1px;padding:10px 0}
+      .c-hora span{text-align:left}
+      .c-horas{padding:20px 22px}
+      .c-cuenta{grid-template-columns:repeat(4,1fr);gap:6px}
+      .c-t{padding:14px 4px}
+      .c-t b{font-size:24px}
+      .c-btn{width:100%;justify-content:center}
+    }
+    @media(max-width:1024px),(hover:none) and (pointer:coarse){
+      #fp-conciencia input,#fp-conciencia textarea{font-size:16px}
+    }
+    @media(prefers-reduced-motion:reduce){
+      #fp-conciencia.c-js .c-rev{opacity:1;transform:none;transition:none}
+      #fp-conciencia *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    }
+  </style>
+<div id="fp-conciencia">
+
+  <header class="c-hero">
+    <div class="cw">
+      <p class="c-eyebrow">Finca sin improvisar · Recursos extra</p>
+      <h1>Bienvenido a los recursos extra <em>de Finca sin improvisar.</em></h1>
+      <p>Esta es la página de la semana: las tres clases del 14, 15 y 16 de septiembre, la clase principal del jueves 17 y el material que iremos publicando aquí. Guárdala, porque todo va a salir en este mismo sitio.</p>
+      <div class="c-wa">
+        <p>¿Todavía no estás en la comunidad de WhatsApp?</p>
+        <!-- GHL: enlace del grupo 1. Si se abre un grupo nuevo, sustituir aquí y en el botón del bloque del 17. -->
+        <a class="c-btn" href="https://chat.whatsapp.com/E0WwgTzro5l3pI3aGPjKJk" target="_blank" rel="noopener">Unirme ahora y recibir el enlace de la clase</a>
+        <p class="c-nota">El enlace de cada directo y los avisos oficiales se publican únicamente dentro del grupo.</p>
+      </div>
+    </div>
+  </header>
+
+  <section class="c-regalo">
+    <div class="cw">
+      <p class="c-tag c-rev">El descargable de hoy</p>
+      <h2 class="c-title c-rev">Tu recurso de bienvenida</h2>
+      <p class="c-intro c-rev">Ábrelo antes del lunes. Las tres clases de esta semana parten de lo que hay aquí dentro.</p>
+
+      <!-- El libro que se decidió en la reunión del 10/09 como descargable de
+           bienvenida. El PDF está en la biblioteca de la subcuenta, no en Drive:
+           el original pesaba 32 MB y no era público. Copy provisional hasta que
+           se cierre en la próxima reunión. -->
+      <div class="c-regalo-caja c-rev">
+        <div>
+          <h3>Un viaje a la regeneración</h3>
+          <p>Es el libro que Iván entrega a quien visita La Huerta. En 50 páginas repasa por qué el modelo agrícola de hoy dejó de funcionar, cómo fue su propio cambio y los siete principios que el bosque lleva usando desde siempre. Cada dato viene con su fuente.</p>
+          <p class="c-regalo-pie">También lo compartimos en la comunidad de WhatsApp.</p>
+        </div>
+        <div class="c-regalo-lado">
+          <!-- data-descarga es lo que hace que el clic se cuente. Cuando los
+               descargables de las clases tengan archivo, ponerles también su
+               propio data-descarga («recurso-clase-1», etc.) y quedan contados
+               sin tocar nada más. -->
+          <a class="c-btn coral" data-descarga="libro-bienvenida" href="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/5a81ecc8-30bc-4adc-a979-4a7a00e2ab78.pdf" target="_blank" rel="noopener">Descargar el libro · PDF</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cw">
+      <h2 class="c-title c-rev">Tres clases antes de la clase principal</h2>
+      <p class="c-intro c-rev">Lunes, martes y miércoles a las 6:00 p. m. hora de Colombia, de 30 a 45 minutos cada una. Cada clase se abre en su fecha y prepara la siguiente.</p>
+
+      <div class="c-clases">
+        <article class="c-clase c-rev" data-abre="2026-09-14T18:00:00-05:00">
+          <div class="c-video">
+            <div class="c-video-img" data-yt="tTQ3hYfVX9A" style="background-image:url('https://i.ytimg.com/vi/tTQ3hYfVX9A/maxresdefault.jpg')"></div>
+            <div class="c-video-capa">
+              <div>
+                <div class="c-candado" data-candado><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="c-play" data-play hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></div>
+                <p class="c-capa-txt" data-capa-txt>Se desbloquea en</p>
+                <p class="c-capa-reloj" data-reloj>--</p>
+              </div>
+            </div>
+            <button class="c-video-tapa" type="button" data-ver aria-label="Ver la clase aquí" hidden></button>
+          </div>
+
+          <div class="c-clase-info">
+            <div class="c-clase-cab">
+              <div>
+                <span class="c-cuando">Clase 1 · Lunes 14 de septiembre · 6:00 p. m. Colombia</span>
+                <h3>Un viaje a la regeneración</h3>
+              </div>
+              <span class="c-estado cerrada" data-estado>Se abre el 14 de septiembre</span>
+            </div>
+            <p>¿Tienes una finca, o sueñas con tenerla, pero todavía no ves cómo convertirla en un sistema productivo que trabaje a tu favor? Iván muestra por qué muchas fincas no responden aunque sus propietarios trabajen, compren insumos y sigan recomendaciones. No siempre falta esfuerzo: muchas veces falta diseño.</p>
+
+              <div class="c-acciones">
+                <a class="c-directo" data-directo href="https://youtube.com/live/tTQ3hYfVX9A" target="_blank" rel="noopener" hidden>
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Abrir en YouTube, con el chat</span>
+                </a>
+              </div>
+              <p class="c-dura">Duración aproximada: de 30 a 45 minutos.</p>
+          </div>
+
+          <div class="c-puntos">
+            <div class="c-punto"><span>·</span><div>Por qué el modelo de comprar insumos, producir y vender crea dependencia.</div></div>
+            <div class="c-punto"><span>·</span><div>La diferencia entre tener elementos sueltos y construir un sistema.</div></div>
+            <div class="c-punto"><span>·</span><div>Qué podemos aprender de los ecosistemas vivos antes de sembrar o invertir más.</div></div>
+            <div class="c-punto"><span>·</span><div>La pregunta que conviene resolver antes de seguir improvisando.</div></div>
+          </div>
+        </article>
+
+        <article class="c-clase c-rev" data-abre="2026-09-15T18:00:00-05:00">
+          <div class="c-video">
+            <div class="c-video-img" data-yt="XGtDRHH9Xyw" style="background-image:url('https://i.ytimg.com/vi/XGtDRHH9Xyw/maxresdefault.jpg')"></div>
+            <div class="c-video-capa">
+              <div>
+                <div class="c-candado" data-candado><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="c-play" data-play hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></div>
+                <p class="c-capa-txt" data-capa-txt>Se desbloquea en</p>
+                <p class="c-capa-reloj" data-reloj>--</p>
+              </div>
+            </div>
+            <button class="c-video-tapa" type="button" data-ver aria-label="Ver la clase aquí" hidden></button>
+          </div>
+
+          <div class="c-clase-info">
+            <div class="c-clase-cab">
+              <div>
+                <span class="c-cuando">Clase 2 · Martes 15 de septiembre · 6:00 p. m. Colombia</span>
+                <h3>Renuncié y tuve que empezar de nuevo</h3>
+              </div>
+              <span class="c-estado cerrada" data-estado>Se abre el 15 de septiembre</span>
+            </div>
+            <p>Después de casi veinte años trabajando alrededor de la agricultura, Iván dejó los agroquímicos y empezó de nuevo en su propia finca. Y ocurrió algo que no esperaba: sus primeros cultivos no mejoraron.</p>
+
+              <div class="c-acciones">
+                <a class="c-directo" data-directo href="https://youtube.com/live/XGtDRHH9Xyw" target="_blank" rel="noopener" hidden>
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Abrir en YouTube, con el chat</span>
+                </a>
+              </div>
+              <p class="c-dura">Duración aproximada: de 30 a 45 minutos.</p>
+          </div>
+
+          <div class="c-puntos">
+            <div class="c-punto"><span>·</span><div>Por qué «orgánico» no significa automáticamente «bien diseñado».</div></div>
+            <div class="c-punto"><span>·</span><div>El error de cambiar el frasco sin cambiar el sistema.</div></div>
+            <div class="c-punto"><span>·</span><div>Qué le enseñó que se le arruinaran las cosechas aun siendo ingeniero agrónomo.</div></div>
+            <div class="c-punto"><span>·</span><div>Cómo la observación del bosque abrió otra forma de integrar suelo, agua, diversidad, nutrientes, energía, descanso y microorganismos.</div></div>
+          </div>
+        </article>
+
+        <article class="c-clase c-rev" data-abre="2026-09-16T18:00:00-05:00">
+          <div class="c-video">
+            <div class="c-video-img" data-yt="n4QQHpcU4-s" style="background-image:url('https://i.ytimg.com/vi/n4QQHpcU4-s/maxresdefault.jpg')"></div>
+            <div class="c-video-capa">
+              <div>
+                <div class="c-candado" data-candado><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+                <div class="c-play" data-play hidden><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></div>
+                <p class="c-capa-txt" data-capa-txt>Se desbloquea en</p>
+                <p class="c-capa-reloj" data-reloj>--</p>
+              </div>
+            </div>
+            <button class="c-video-tapa" type="button" data-ver aria-label="Ver la clase aquí" hidden></button>
+          </div>
+
+          <div class="c-clase-info">
+            <div class="c-clase-cab">
+              <div>
+                <span class="c-cuando">Clase 3 · Miércoles 16 de septiembre · 6:00 p. m. Colombia</span>
+                <h3>Lo que nadie te dice antes de meterle plata a una finca</h3>
+              </div>
+              <span class="c-estado cerrada" data-estado>Se abre el 16 de septiembre</span>
+            </div>
+            <p>Vivir en el campo puede ser una de las mejores decisiones de tu vida. Pero la ilusión no sustituye el diseño. Iván repasa los cinco errores que conviene revisar antes de comprar, sembrar o invertir más.</p>
+
+              <div class="c-acciones">
+                <a class="c-directo" data-directo href="https://youtube.com/live/n4QQHpcU4-s" target="_blank" rel="noopener" hidden>
+                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span>Abrir en YouTube, con el chat</span>
+                </a>
+              </div>
+              <p class="c-dura">Duración aproximada: de 30 a 45 minutos.</p>
+          </div>
+
+          <div class="c-puntos">
+            <div class="c-punto"><span>·</span><div>Comprar por emoción sin comprobar agua, acceso, seguridad, suelo y propósito.</div></div>
+            <div class="c-punto"><span>·</span><div>Sembrar antes de decidir para quién y para qué vas a producir.</div></div>
+            <div class="c-punto"><span>·</span><div>Apostarlo todo a un solo cultivo o depender de un intermediario.</div></div>
+            <div class="c-punto"><span>·</span><div>Tratar agua, suelo, animales y cultivos como partes aisladas.</div></div>
+            <div class="c-punto"><span>·</span><div>Calcular la compra, pero no el costo real de operar, desplazarse y sostener la finca.</div></div>
+            <div class="c-punto"><span>·</span><div>Y por qué el suelo puede ser el depósito de agua más grande y más barato que tienes.</div></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="c-agenda">
+    <div class="cw">
+      <p class="c-tag c-rev">Guárdalo en tu calendario</p>
+      <h2 class="c-title c-rev">Cuatro citas, del 14 al 17 de septiembre</h2>
+      <p class="c-intro c-rev">Todas a las 6:00 p. m. hora de Colombia. Agrégalas a tu Google Calendar y recibirás el aviso sin depender de acordarte.</p>
+
+      <!-- Los data-* alimentan el enlace de Google Calendar; las horas van en
+           UTC (6:00 p. m. Colombia = 23:00 UTC del mismo día). -->
+      <div class="c-dias">
+        <div class="c-dia c-rev" data-cita
+             data-titulo="Clase 1 · Un viaje a la regeneración"
+             data-ini="20260914T230000Z" data-fin="20260914T234500Z"
+             data-desc="Primera clase de Finca sin improvisar, con Iván Castrillón. El enlace del directo se publica en la comunidad de WhatsApp.">
+          <div class="c-fecha"><b>14</b><small>Lun</small></div>
+          <div class="c-dia-txt">
+            <strong>Clase 1 · Un viaje a la regeneración</strong>
+            <span>6:00 p. m. hora de Colombia</span>
+          </div>
+          <div class="c-agendar">
+            <a class="c-cal" href="#" data-gcal target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar en Google</a>
+          </div>
+        </div>
+
+        <div class="c-dia c-rev" data-cita
+             data-titulo="Clase 2 · Renuncié y tuve que empezar de nuevo"
+             data-ini="20260915T230000Z" data-fin="20260915T234500Z"
+             data-desc="Segunda clase de Finca sin improvisar, con Iván Castrillón. El enlace del directo se publica en la comunidad de WhatsApp.">
+          <div class="c-fecha"><b>15</b><small>Mar</small></div>
+          <div class="c-dia-txt">
+            <strong>Clase 2 · Renuncié y tuve que empezar de nuevo</strong>
+            <span>6:00 p. m. hora de Colombia</span>
+          </div>
+          <div class="c-agendar">
+            <a class="c-cal" href="#" data-gcal target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar en Google</a>
+          </div>
+        </div>
+
+        <div class="c-dia c-rev" data-cita
+             data-titulo="Clase 3 · Lo que nadie te dice antes de meterle plata a una finca"
+             data-ini="20260916T230000Z" data-fin="20260916T234500Z"
+             data-desc="Tercera clase de Finca sin improvisar, con Iván Castrillón. El enlace del directo se publica en la comunidad de WhatsApp.">
+          <div class="c-fecha"><b>16</b><small>Mié</small></div>
+          <div class="c-dia-txt">
+            <strong>Clase 3 · Lo que nadie te dice antes de meterle plata a una finca</strong>
+            <span>6:00 p. m. hora de Colombia</span>
+          </div>
+          <div class="c-agendar">
+            <a class="c-cal" href="#" data-gcal target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar en Google</a>
+          </div>
+        </div>
+
+        <div class="c-dia grande c-rev" data-cita
+             data-titulo="Finca sin improvisar · Clase principal en vivo"
+             data-ini="20260917T230000Z" data-fin="20260918T003000Z"
+             data-desc="La clase principal de Finca sin improvisar, con Iván Castrillón. Qué se decide primero antes de comprar, sembrar o invertir más en tu finca. El enlace del directo se publica en la comunidad de WhatsApp.">
+          <div class="c-fecha"><b>17</b><small>Jue</small></div>
+          <div class="c-dia-txt">
+            <strong>Finca sin improvisar, la clase principal</strong>
+            <span>6:00 p. m. hora de Colombia · la cita grande de la semana</span>
+          </div>
+          <div class="c-agendar">
+            <a class="c-cal" href="#" data-gcal target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Agendar en Google</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cw">
+      <p class="c-tag c-rev">La comunidad</p>
+      <h2 class="c-title c-rev">Cuéntanos dónde estás</h2>
+      <p class="c-intro c-rev">Escribe en qué punto está tu finca o qué estás evaluando antes de comprar. Iván lee los comentarios y usa los casos reales para ajustar los ejemplos de las clases.</p>
+
+      <!-- ══════════════════════════════════════════════════════════════════
+           PENDIENTE · COMENTARIOS
+           Mismo montaje que la página de Lina y la de Nico: una Google Sheet
+           con un Apps Script publicado como aplicación web.
+             1. Crea una hoja nueva para Iván con la pestaña «Comentarios» y
+                las columnas: id | fecha | nombre | texto.
+             2. Pega el Apps Script (GET ?action=read devuelve el JSON de la
+                hoja; POST con {name,text,date} añade una fila y devuelve
+                {id}) y despliégalo con acceso «Cualquier usuario».
+             3. Pega la URL /exec en C_COMENTARIOS.URL, más abajo en el JS.
+           Mientras esa constante esté vacía, el formulario avisa de que
+           todavía no está abierto en vez de fingir que publicó.
+      ═══════════════════════════════════════════════════════════════════ -->
+      <div class="c-com-caja c-rev">
+        <!-- El JS lo enseña solo si C_COMENTARIOS.URL sigue vacío, para que
+             nadie escriba un comentario que no se va a poder publicar. -->
+        <p class="c-cerrado" id="c-cerrado" hidden>Los comentarios abren en unas horas, junto con el recurso de bienvenida.</p>
+        <form id="c-form" novalidate>
+          <div class="c-campo">
+            <label for="c-nombre">Tu nombre</label>
+            <input type="text" id="c-nombre" name="nombre" maxlength="60" autocomplete="name" placeholder="¿Cómo te llamas?" required>
+          </div>
+          <div class="c-campo">
+            <label for="c-texto">Tu comentario</label>
+            <textarea id="c-texto" name="texto" maxlength="900" placeholder="¿En qué punto está tu finca? ¿Qué decisión tienes pendiente?" required></textarea>
+          </div>
+          <button type="submit" class="c-btn c-enviar" id="c-enviar">
+            <span data-enviar-txt>Publicar mi comentario</span>
+          </button>
+          <p class="c-aviso" id="c-aviso" role="status" aria-live="polite" hidden></p>
+        </form>
+      </div>
+
+      <div class="c-lista" id="c-lista">
+        <div class="c-vacio">Sé el primero en escribir.</div>
+      </div>
+      <button class="c-mas" id="c-mas" type="button" hidden>Ver más comentarios</button>
+    </div>
+  </section>
+
+  <section class="c-encuentro">
+    <div class="cw c-enc-grid">
+      <div>
+        <p class="c-tag c-rev">La cita grande</p>
+        <h2 class="c-title c-rev">Finca sin improvisar, <em>en vivo.</em></h2>
+        <p class="c-intro c-rev" style="color:rgba(255,255,255,.75)">Jueves 17 de septiembre de 2026 · 6:00 p. m. hora de Colombia. Aquí se une todo lo de las tres clases: qué se decide primero antes de comprar, sembrar o invertir más en tu finca.</p>
+        <div class="c-cuenta" aria-hidden="true">
+          <div class="c-t"><b id="cD">00</b><small>Días</small></div>
+          <div class="c-t"><b id="cH">00</b><small>Horas</small></div>
+          <div class="c-t"><b id="cM">00</b><small>Minutos</small></div>
+          <div class="c-t"><b id="cS">00</b><small>Segundos</small></div>
+        </div>
+        <div style="margin-top:30px">
+          <a class="c-btn" href="https://chat.whatsapp.com/E0WwgTzro5l3pI3aGPjKJk" target="_blank" rel="noopener">Entrar a la comunidad y recibir el enlace</a>
+        </div>
+      </div>
+      <div class="c-horas c-rev">
+        <div class="c-hora"><b>6:00 p. m.</b><span>Colombia, Ecuador y Perú</span></div>
+        <div class="c-hora"><b>5:00 p. m.</b><span>México, Costa Rica y El Salvador</span></div>
+        <div class="c-hora"><b>7:00 p. m.</b><span>Venezuela, Miami y Nueva York</span></div>
+        <div class="c-hora"><b>4:00 p. m.</b><span>Los Ángeles</span></div>
+        <div class="c-hora"><b>1:00 a. m.</b><span>España peninsular, día siguiente</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="cw">La Huerta Hotel · Yotoco, Valle del Cauca · Los recursos y el enlace de cada directo se publican en la comunidad de WhatsApp.</div>
+  </footer>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       ENCUESTA · «Queremos conocer tu proyecto de finca»
+       Seis preguntas para que Iván adapte los ejemplos y el Q&A. Sale sola
+       una vez y luego se queda el botón flotante.
+       El formulario va incrustado, pero el iframe NO se crea hasta que
+       alguien pulsa «Responder»: si no, todo el que abra la página se lleva
+       el peso y las cookies de Google sin haber pedido nada.
+       Si se cambia el formulario, la dirección está en C_ENCUESTA, en el JS.
+  ═══════════════════════════════════════════════════════════════════ -->
+  <div class="c-enc-fondo" id="c-enc-fondo" role="dialog" aria-modal="true" aria-labelledby="c-enc-tit" hidden>
+    <div class="c-enc" id="c-enc" tabindex="-1">
+      <div class="c-enc-cab">
+        <button type="button" class="c-enc-cerrar" id="c-enc-x" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <p class="c-tag">Antes de la clase</p>
+        <h3 id="c-enc-tit">Queremos conocer tu proyecto de finca</h3>
+        <p>Iván usa estas respuestas para elegir los ejemplos y para decidir qué preguntas responde en vivo. Si contestas, es más probable que lo que veas se parezca a tu caso.</p>
+        <ul class="c-enc-lista">
+          <li><b>·</b><div>Seis preguntas. Dos minutos.</div></li>
+          <li><b>·</b><div>No hay respuestas correctas: es para saber de dónde parte cada uno.</div></li>
+          <li><b>·</b><div>Se responde aquí mismo, sin salir de la página.</div></li>
+        </ul>
+      </div>
+      <iframe class="c-enc-marco" id="c-enc-marco" title="Queremos conocer tu proyecto de finca" hidden></iframe>
+      <div class="c-enc-pie" id="c-enc-pie">
+        <button type="button" class="c-btn" id="c-enc-si">Responder ahora · 2 min</button>
+        <button type="button" class="c-enc-luego" id="c-enc-luego">Ahora no</button>
+        <button type="button" class="c-enc-hecha" id="c-enc-ya">Ya la respondí</button>
+      </div>
+      <!-- Al enviar el formulario, Google se queda dentro del iframe y desde
+           fuera no hay forma de enterarse: es otro dominio. Por eso este pie
+           lo dice la persona, y es lo que apaga el botón flotante. -->
+      <div class="c-enc-pie" id="c-enc-pie-fin" hidden>
+        <button type="button" class="c-btn" id="c-enc-fin">Listo, ya la envié</button>
+        <button type="button" class="c-enc-luego" id="c-enc-seguir">Seguir en la página</button>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" class="c-enc-flota" id="c-enc-flota" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
+    <span>Cuéntanos de tu finca<small>Seis preguntas · dos minutos</small></span>
+  </button>
+</div>
+<script>
+  (function(){
+    /* ── Comentarios: pega aquí la URL /exec del Apps Script ──────────────
+       Vacío = el formulario avisa de que todavía no está abierto. */
+    var C_COMENTARIOS={URL:'https://script.google.com/macros/s/AKfycbxw5BaRAxE5Ua7lsqDFG6_JiY99w52ETnleiXMxWFVvbUnt4v5vssSQ1hL1DLpnqz3H9g/exec'};
+
+
+    /* ── Encuesta: si cambia el formulario, se cambia aquí y ya ─────────── */
+    var C_ENCUESTA={
+      URL:'https://docs.google.com/forms/d/e/1FAIpQLScWzx-NBKpG3tX763b762-7TzRXG4AxrX4bd8Sb2g6tPKXfmQ/viewform',
+      CLAVE:'hl-encuesta-finca',
+      ESPERA_MS:2500
+    };
+
+    function iniciarConciencia(){
+      var root=document.getElementById('fp-conciencia');
+      if(!root||root.getAttribute('data-listo')==='true') return;
+      root.setAttribute('data-listo','true');
+      root.classList.add('c-js');
+      var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* Ningún href="#" debe llevarse el clic: son marcadores a la espera de
+         archivo y saltar al principio de la página parece que algo se rompió. */
+      root.addEventListener('click',function(ev){
+        var a=ev.target.closest?ev.target.closest('a[data-pendiente]'):null;
+        if(a&&(a.getAttribute('href')||'#')==='#') ev.preventDefault();
+      });
+
+      /* ── Contar las descargas del recurso ──────────────────────────────
+         Iván quiere el número de gente que se lleva el libro. El PDF sigue
+         siendo un enlace directo y abierto: no se pide correo ni se mete un
+         formulario, porque en la reunión se decidió que es un regalo.
+
+         Se anota con sendBeacon, que no bloquea el clic ni retrasa la
+         apertura del PDF, y va al mismo Apps Script de los comentarios, que
+         lo guarda en la pestaña «Descargas» del mismo libro. El
+         identificador de visitante es anónimo y vive solo en el navegador
+         de quien entra; sirve para distinguir «personas» de «clics», que es
+         lo que se quiere saber. Si el aviso falla, no pasa nada: el enlace
+         no depende de él. */
+      function idVisitante(){
+        try{
+          var k='hl-visitante',v=localStorage.getItem(k);
+          if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem(k,v);}
+          return v;
+        }catch(e){return 'sin-almacenamiento';}
+      }
+
+      function anotarDescarga(recurso){
+        /* Mismo backend y misma URL que los comentarios: el Apps Script
+           distingue por el campo «tipo» y lo anota en su propia pestaña
+           del libro. Una URL menos que configurar y que se pueda romper. */
+        var url=(C_COMENTARIOS.URL||'').trim();
+        if(!url) return;
+        var cuerpo=JSON.stringify({
+          tipo:'descarga',
+          recurso:recurso,
+          visitante:idVisitante(),
+          dispositivo:(window.innerWidth<=700?'movil':'escritorio'),
+          origen:(document.referrer||'directo').slice(0,180)
+        });
+        try{
+          if(navigator.sendBeacon&&window.Blob){
+            navigator.sendBeacon(url,new Blob([cuerpo],{type:'text/plain;charset=utf-8'}));
+            return;
+          }
+        }catch(e){}
+        try{fetch(url,{method:'POST',keepalive:true,body:cuerpo});}catch(e){}
+      }
+
+      /* En captura, para que quede anotado aunque algún otro manejador
+         detenga la propagación del clic. */
+      root.addEventListener('click',function(ev){
+        var a=ev.target.closest?ev.target.closest('a[data-descarga]'):null;
+        if(a) anotarDescarga(a.getAttribute('data-descarga'));
+      },true);
+
+      /* Ancho completo medido: la columna de GHL no siempre está centrada. */
+      function ajustarAncho(){
+        var vw=document.documentElement.clientWidth||window.innerWidth;
+        root.style.marginLeft='0px';root.style.marginRight='0px';root.style.width='auto';
+        var c=root.getBoundingClientRect();
+        if(c.width===0&&c.height===0){root.style.marginLeft='';root.style.marginRight='';root.style.width='';return;}
+        root.style.marginLeft=(-c.left)+'px';root.style.marginRight='0px';root.style.width=vw+'px';
+      }
+      ajustarAncho();
+      var t=null;
+      function reajustar(){clearTimeout(t);t=setTimeout(ajustarAncho,90);}
+      window.addEventListener('resize',reajustar);
+      window.addEventListener('orientationchange',reajustar);
+      if(window.ResizeObserver){try{new ResizeObserver(reajustar).observe(document.body);}catch(e){}}
+
+      var obs=new IntersectionObserver(function(es){
+        es.filter(function(e){return e.isIntersecting;}).forEach(function(e,i){
+          e.target.style.setProperty('--d',(Math.min(i,5)*70)+'ms');
+          e.target.classList.add('visto');obs.unobserve(e.target);
+        });
+      },{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+      root.querySelectorAll('.c-rev').forEach(function(el){obs.observe(el);});
+
+      /* ── Ver la clase aquí mismo ────────────────────────────────────────
+         Al pulsar la miniatura se cambia por el reproductor de YouTube, en
+         el mismo hueco. El iframe se crea en ese momento y no al cargar la
+         página: si estuvieran los tres desde el principio, todo el que
+         entrara se llevaría el peso y las cookies de YouTube sin haber
+         pedido ver nada. */
+      root.addEventListener('click',function(ev){
+        var b=ev.target.closest?ev.target.closest('[data-ver]'):null;
+        if(!b) return;
+        var caja=b.closest('.c-video');
+        var img=caja?caja.querySelector('[data-yt]'):null;
+        var id=img?img.getAttribute('data-yt'):'';
+        if(!caja||!id||caja.querySelector('.c-video-marco')) return;
+
+        var marco=document.createElement('iframe');
+        marco.className='c-video-marco';
+        marco.src='https://www.youtube.com/embed/'+encodeURIComponent(id)+'?autoplay=1&rel=0';
+        marco.title='Clase en vivo · La Huerta LAB';
+        marco.allow='accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share';
+        marco.setAttribute('allowfullscreen','');
+        marco.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+        caja.appendChild(marco);
+
+        var capa=caja.querySelector('.c-video-capa');
+        if(capa) capa.style.display='none';
+        b.hidden=true;
+      });
+
+      /* ── Miniaturas de YouTube ──────────────────────────────────────────
+         Se sirven desde YouTube a propósito: si Iván cambia la portada del
+         directo, la página se actualiza sola.
+
+         El gotcha: cuando un vídeo no tiene maxresdefault, YouTube NO
+         devuelve 404. Devuelve un 200 con una imagen gris de 120x90. Por
+         eso no basta con onerror: hay que mirar el ancho real. */
+      root.querySelectorAll('[data-yt]').forEach(function(el){
+        var id=el.getAttribute('data-yt');
+        if(!id) return;
+        var prueba=new Image();
+        function respaldo(){
+          el.style.backgroundImage="url('https://i.ytimg.com/vi/"+id+"/hqdefault.jpg')";
+        }
+        prueba.onerror=respaldo;
+        prueba.onload=function(){ if(prueba.naturalWidth<600) respaldo(); };
+        prueba.src='https://i.ytimg.com/vi/'+id+'/maxresdefault.jpg';
+      });
+
+      /* ── Liberación por fecha ───────────────────────────────────────────
+         data-abre lleva la hora con su huso (-05:00), así que la clase se
+         abre a las 6 de la tarde de Colombia para todo el mundo, no a la
+         medianoche de cada navegador. */
+      var clases=[].slice.call(root.querySelectorAll('[data-abre]'));
+
+      /* El sello se formatea SIEMPRE en hora de Colombia. Con getDate() del
+         navegador, a un inscrito en España la clase del lunes 14 le salía
+         como «Se abre el 15»: 6 de la tarde en Bogotá es la 1 de la madrugada
+         del día siguiente en Madrid. Si Intl falla, se respeta el texto que
+         ya venía escrito en el HTML. */
+      var fmtDia=null;
+      try{fmtDia=new Intl.DateTimeFormat('es-CO',{timeZone:'America/Bogota',day:'numeric',month:'long'});}catch(e){}
+      clases.forEach(function(art){
+        var s=art.querySelector('[data-estado]');
+        if(s&&s.getAttribute('data-txt')===null) s.setAttribute('data-txt',s.textContent);
+      });
+
+      function faltaPara(ms){
+        var d=Math.floor(ms/86400000), h=Math.floor(ms/3600000)%24, m=Math.floor(ms/60000)%60, sg=Math.floor(ms/1000)%60;
+        // Con días por delante, los segundos son ruido; en el último día sí importan.
+        if(d>0)  return d+' d '+h+' h '+m+' min';
+        if(h>0)  return h+' h '+m+' min '+sg+' s';
+        return m+' min '+sg+' s';
+      }
+      function textoCorto(ms){
+        var d=Math.floor(ms/86400000), h=Math.floor(ms/3600000)%24, m=Math.floor(ms/60000)%60;
+        if(d>0) return 'en '+d+' d '+h+' h';
+        if(h>0) return 'en '+h+' h '+m+' min';
+        return 'en '+m+' min';
+      }
+
+      /* Escribir solo cuando cambia. Asignar textContent sustituye el nodo de
+         texto aunque la cadena sea idéntica, y con un tick por segundo eso
+         significa que nadie puede seleccionar «Disponible» ni el reloj para
+         copiarlos: la selección se pierde sola. */
+      function set(el,v){ if(el&&el.textContent!==v) el.textContent=v; }
+
+      function repasarClases(){
+        var ahora=Date.now();
+        clases.forEach(function(art){
+          var fecha=new Date(art.getAttribute('data-abre')).getTime();
+          if(isNaN(fecha)) return;
+          var sello=art.querySelector('[data-estado]');
+          var reloj=art.querySelector('[data-reloj]');
+          var capaTxt=art.querySelector('[data-capa-txt]');
+          var candado=art.querySelector('[data-candado]');
+          var play=art.querySelector('[data-play]');
+          var directo=art.querySelector('[data-directo]');
+          var recurso=art.querySelector('[data-recurso]');
+          var relojRec=art.querySelector('[data-recurso-reloj]');
+          var abierta=ahora>=fecha;
+
+          /* Mientras el enlace del directo siga siendo un marcador, no hay
+             nada que reproducir: un botón de play que no hace nada se lee
+             como una página rota. Aparece solo cuando el enlace es real, y
+             entonces la miniatura entera lleva a la clase. */
+          var directoListo=!!(directo&&!directo.hasAttribute('data-pendiente')&&(directo.getAttribute('href')||'#')!=='#');
+          var tapa=art.querySelector('[data-ver]');
+
+          if(abierta){
+            art.removeAttribute('data-cerrada');
+            if(sello){set(sello,'Disponible');sello.classList.remove('cerrada');sello.classList.add('abierta');}
+            if(candado) candado.hidden=true;
+            if(play) play.hidden=!directoListo;
+            if(capaTxt) capaTxt.hidden=true;
+            if(reloj) reloj.hidden=true;
+            if(directo) directo.hidden=false;
+            /* Si ya se abrió el reproductor no se vuelve a enseñar la tapa:
+               taparía el vídeo que la persona está viendo. */
+            if(tapa&&!art.querySelector('.c-video-marco')) tapa.hidden=!directoListo;
+            /* Un recurso que sigue con data-pendiente apunta a href="#": si se
+               «libera» tal cual, el 14 a las seis de la tarde queda un botón
+               vivo que solo salta al principio de la página. Se queda en gris
+               hasta que alguien le pegue el archivo de verdad. */
+            if(recurso&&!recurso.hasAttribute('data-pendiente')){recurso.classList.remove('trabado');recurso.classList.add('libre');}
+            set(relojRec,'');
+          }else{
+            art.setAttribute('data-cerrada','');
+            var falta=fecha-ahora;
+            if(sello) set(sello,fmtDia?('Se abre el '+fmtDia.format(new Date(fecha))):(sello.getAttribute('data-txt')||sello.textContent));
+            if(candado) candado.hidden=false;
+            if(play) play.hidden=true;
+            if(tapa) tapa.hidden=true;
+            if(capaTxt){capaTxt.hidden=false;set(capaTxt,'Se desbloquea en');}
+            if(reloj){reloj.hidden=false;set(reloj,faltaPara(falta));}
+            if(directo) directo.hidden=true;
+            if(recurso){recurso.classList.add('trabado');recurso.classList.remove('libre');}
+            set(relojRec,'· '+textoCorto(falta));
+          }
+        });
+      }
+      repasarClases();
+      window.setInterval(repasarClases,1000);
+
+      /* ── Calendario ─────────────────────────────────────────────────────
+         Una sola acción por fila: el enlace de Google Calendar. Las horas de
+         data-ini y data-fin van en UTC (6:00 p. m. de Colombia = 23:00 UTC). */
+      root.querySelectorAll('[data-cita]').forEach(function(fila){
+        var titulo=fila.getAttribute('data-titulo')||'';
+        var ini=fila.getAttribute('data-ini')||'';
+        var fin=fila.getAttribute('data-fin')||'';
+        var desc=fila.getAttribute('data-desc')||'';
+
+        var gcal=fila.querySelector('[data-gcal]');
+        if(gcal){
+          gcal.href='https://calendar.google.com/calendar/render?action=TEMPLATE'
+            +'&text='+encodeURIComponent(titulo)
+            +'&dates='+ini+'/'+fin
+            +'&details='+encodeURIComponent(desc)
+            +'&location='+encodeURIComponent('En línea');
+        }
+      });
+
+      /* ── Contador de la clase principal ─────────────────────────────── */
+      var meta=new Date('2026-09-17T18:00:00-05:00').getTime();
+      var dos=function(n){return String(Math.max(0,n)).padStart(2,'0');};
+      function pinta(id,valor){
+        var el=root.querySelector('#'+id);
+        if(!el||el.textContent===valor) return;
+        el.textContent=valor;
+        if(reduce) return;
+        el.classList.remove('tick');void el.offsetWidth;el.classList.add('tick');
+      }
+      function latir(){
+        var falta=meta-Date.now();
+        if(falta<=0){['cD','cH','cM','cS'].forEach(function(id){pinta(id,'00');});return;}
+        pinta('cD',dos(Math.floor(falta/86400000)));
+        pinta('cH',dos(Math.floor(falta/3600000)%24));
+        pinta('cM',dos(Math.floor(falta/60000)%60));
+        pinta('cS',dos(Math.floor(falta/1000)%60));
+      }
+      latir();window.setInterval(latir,1000);
+
+      /* ── Comentarios ───────────────────────────────────────────────────
+         Mismo contrato que la página de Lina: GET ?action=read devuelve el
+         array de la hoja; POST {name,text,date} añade una fila. */
+      var URL_COM=(C_COMENTARIOS.URL||'').trim();
+      var lista=root.querySelector('#c-lista');
+      var form=root.querySelector('#c-form');
+      var btnMas=root.querySelector('#c-mas');
+      var aviso=root.querySelector('#c-aviso');
+      var cerrado=root.querySelector('#c-cerrado');
+      var caja=root.querySelector('.c-com-caja');
+      var comentarios=[];
+      var visibles=4;
+      var vacioTxt='Sé el primero en escribir.';
+
+      /* Sin backend no se pide que escriban: el formulario se apaga y lo dice
+         antes, no después de que hayan tecleado el comentario. */
+      if(!URL_COM){
+        if(cerrado) cerrado.hidden=false;
+        if(caja) caja.setAttribute('data-cerrado','');
+        /* El aviso de arriba ya lo dice: la lista sobra y repetirlo dos veces
+           en la misma pantalla se lee como un error. */
+        if(lista) lista.hidden=true;
+        if(btnMas) btnMas.hidden=true;
+      }
+
+      /* El navegador no puede fiarse de sus propios maxlength: el POST al Apps
+         Script se puede hacer desde fuera de esta página. */
+      function recortar(v,max){
+        var t=String(v==null?'':v).replace(/\s+$/,'');
+        t=t.replace(/\n{3,}/g,'\n\n');
+        return t.length>max?t.slice(0,max)+'…':t;
+      }
+
+      function decir(texto,tipo){
+        if(!aviso) return;
+        aviso.textContent=texto;
+        aviso.style.color=(tipo==='error')?'#c0492a':'#2f6b4f';
+        aviso.hidden=false;
+      }
+      function escapar(s){
+        var d=document.createElement('div');
+        d.appendChild(document.createTextNode(String(s==null?'':s)));
+        return d.innerHTML;
+      }
+      function pintarComentarios(){
+        if(!lista) return;
+        if(!comentarios.length){
+          lista.innerHTML='<div class="c-vacio">'+escapar(vacioTxt)+'</div>';
+          if(btnMas) btnMas.hidden=true;
+          return;
+        }
+        lista.innerHTML=comentarios.slice(0,visibles).map(function(c){
+          var f=recortar(c.date,40);
+          return '<article class="c-com"><div class="c-com-cab"><b>'+escapar(recortar(c.name,60))+'</b>'
+            +(f?'<time>'+escapar(f)+'</time>':'')
+            +'</div><p>'+escapar(recortar(c.text,900))+'</p></article>';
+        }).join('');
+        if(btnMas) btnMas.hidden=comentarios.length<=visibles;
+      }
+      /* Apps Script no siempre responde JSON: cuando algo falla devuelve su
+         página de error en HTML, y r.json() revienta con un mensaje inútil. */
+      function leerJson(r){
+        if(!r.ok) throw new Error('HTTP '+r.status);
+        return r.text().then(function(t){
+          try{return JSON.parse(t);}catch(e){throw new Error('respuesta no JSON');}
+        });
+      }
+      /* fetch no se rinde solo: sin esto, una red que se queda colgada deja el
+         botón en «Publicando…» hasta que el usuario recargue. */
+      function conLimite(url,opciones,ms){
+        var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+        var op=opciones||{};
+        if(ctrl) op.signal=ctrl.signal;
+        var reloj=window.setTimeout(function(){if(ctrl) ctrl.abort();},ms||15000);
+        return fetch(url,op).then(function(r){window.clearTimeout(reloj);return r;},
+                                  function(e){window.clearTimeout(reloj);throw e;});
+      }
+      function cargarComentarios(){
+        if(!URL_COM) return;
+        conLimite(URL_COM+'?action=read',{},15000)
+          .then(leerJson)
+          .then(function(data){
+            if(!Array.isArray(data)) throw new Error('formato inesperado');
+            comentarios=data.slice().reverse();
+            pintarComentarios();
+          })
+          .catch(function(err){
+            console.error('Comentarios:',err);
+            /* Que no haya podido leerlos no significa que no existan. */
+            if(!comentarios.length){
+              vacioTxt='No pudimos cargar los comentarios. Recarga la página en un momento.';
+              pintarComentarios();
+            }
+          });
+      }
+      if(btnMas) btnMas.addEventListener('click',function(){visibles+=4;pintarComentarios();});
+      pintarComentarios();
+
+      if(form){
+        form.addEventListener('submit',function(e){
+          e.preventDefault();
+          var nombre=(root.querySelector('#c-nombre').value||'').trim();
+          var texto=(root.querySelector('#c-texto').value||'').trim();
+          if(!nombre||!texto){decir('Escribe tu nombre y tu comentario.','error');return;}
+          if(!URL_COM){decir('Los comentarios todavía no están abiertos. Escríbenos por WhatsApp mientras tanto.','error');return;}
+
+          var btn=root.querySelector('#c-enviar');
+          var etiqueta=btn.querySelector('[data-enviar-txt]');
+          var original=etiqueta?etiqueta.textContent:'';
+          btn.disabled=true;
+          if(etiqueta) etiqueta.textContent='Publicando…';
+
+          var fecha=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
+          conLimite(URL_COM,{
+            method:'POST',mode:'cors',
+            headers:{'Content-Type':'text/plain'},
+            body:JSON.stringify({name:nombre,text:texto,date:fecha})
+          },20000)
+          .then(leerJson)
+          .then(function(res){
+            if(!res||res.ok===false||!res.id) throw new Error((res&&res.error)||'sin id');
+            comentarios.unshift({name:nombre,text:texto,date:fecha,id:res.id});
+            pintarComentarios();
+            form.reset();
+            decir('Publicado. Gracias por contarnos.','ok');
+          })
+          .catch(function(err){
+            console.error('Comentarios:',err);
+            decir('No pudimos publicarlo. Inténtalo de nuevo en un momento.','error');
+          })
+          .then(function(){
+            btn.disabled=false;
+            if(etiqueta) etiqueta.textContent=original;
+            window.setTimeout(function(){if(aviso) aviso.hidden=true;},4000);
+          });
+        });
+      }
+      cargarComentarios();
+
+      /* ── Encuesta ───────────────────────────────────────────────────────
+         Sale sola una vez por navegador, a los 2,5 s: un aviso que salta de
+         golpe al cargar se cierra por reflejo. Quien lo cierra se queda con
+         el botón flotante, que es el que recoge al que dijo «ahora no». */
+      (function(){
+        var fondo=root.querySelector('#c-enc-fondo');
+        var flota=root.querySelector('#c-enc-flota');
+        if(!fondo||!flota) return;
+
+        /* Se buscan dentro de `fondo` y no de `root`: si se reubican en el
+           <body>, dejan de estar dentro del contenedor de la página. */
+        var caja=fondo.querySelector('#c-enc');
+        var marco=fondo.querySelector('#c-enc-marco');
+        var pie=fondo.querySelector('#c-enc-pie');
+        var pieFin=fondo.querySelector('#c-enc-pie-fin');
+        var devolverFoco=null;
+
+        function recordado(){
+          try{ return localStorage.getItem(C_ENCUESTA.CLAVE)||''; }catch(e){ return ''; }
+        }
+        function recordar(v){
+          try{ localStorage.setItem(C_ENCUESTA.CLAVE,v); }catch(e){}
+        }
+
+        /* En GHL la columna vive dentro de una sección con `transform`, y eso
+           convierte el `position:fixed` en relativo a esa caja: el aviso
+           saldría metido dentro del ancho de la columna en vez de cubrir la
+           pantalla. Colgarlos del <body> lo resuelve. */
+        function estorbaAlgunAncestro(el){
+          for(var e=el.parentElement;e&&e!==document.body;e=e.parentElement){
+            var c=getComputedStyle(e);
+            if((c.transform&&c.transform!=='none')||(c.perspective&&c.perspective!=='none')||
+               (c.filter&&c.filter!=='none')||(c.backdropFilter&&c.backdropFilter!=='none')||
+               (c.contain&&/paint|layout|strict|content/.test(c.contain))) return true;
+          }
+          return false;
+        }
+        if(estorbaAlgunAncestro(fondo)){ document.body.appendChild(fondo); document.body.appendChild(flota); }
+
+        function abrir(){
+          devolverFoco=document.activeElement;
+          fondo.hidden=false;
+          window.requestAnimationFrame(function(){ fondo.classList.add('puesto'); });
+          /* El foco va a la caja, no al aspa: así el lector de pantalla lee
+             el título y el teclado no arranca apuntando a «cerrar». */
+          if(caja) caja.focus();
+        }
+        function cerrar(motivo){
+          fondo.classList.remove('puesto');
+          window.setTimeout(function(){ fondo.hidden=true; },300);
+          if(motivo) recordar(motivo);
+          flota.hidden=(recordado()==='hecha');
+          if(devolverFoco&&devolverFoco.focus) devolverFoco.focus();
+        }
+
+        /* El iframe se crea al pulsar «Responder», no al cargar la página:
+           si no, todo el que entre se lleva el peso y las cookies de Google
+           sin haber pedido ver el formulario. */
+        function mostrarFormulario(){
+          if(!marco.getAttribute('src')){
+            marco.setAttribute('src',C_ENCUESTA.URL+'?embedded=true');
+          }
+          marco.hidden=false;
+          if(pie) pie.hidden=true;
+          if(pieFin) pieFin.hidden=false;
+          caja.classList.add('ancha');
+          recordar('empezada');
+        }
+
+        var si=fondo.querySelector('#c-enc-si');
+        var luego=fondo.querySelector('#c-enc-luego');
+        var ya=fondo.querySelector('#c-enc-ya');
+        var x=fondo.querySelector('#c-enc-x');
+        var fin=fondo.querySelector('#c-enc-fin');
+        var seguir=fondo.querySelector('#c-enc-seguir');
+        if(fin) fin.addEventListener('click',function(){cerrar('hecha');});
+        if(seguir) seguir.addEventListener('click',function(){cerrar('empezada');});
+        if(si) si.addEventListener('click',mostrarFormulario);
+        if(luego) luego.addEventListener('click',function(){cerrar('pospuesta');});
+        if(ya) ya.addEventListener('click',function(){cerrar('hecha');});
+        if(x) x.addEventListener('click',function(){cerrar('pospuesta');});
+        fondo.addEventListener('click',function(ev){ if(ev.target===fondo) cerrar('pospuesta'); });
+        window.addEventListener('keydown',function(ev){
+          if(ev.key==='Escape'&&!fondo.hidden) cerrar('pospuesta');
+        });
+        flota.addEventListener('click',abrir);
+
+        var visto=recordado();
+        if(visto==='hecha'){ flota.hidden=true; return; }
+        flota.hidden=false;
+        if(!visto){
+          window.setTimeout(function(){
+            if(fondo.hidden) abrir();
+          },C_ENCUESTA.ESPERA_MS);
+        }else if(!reduce){
+          /* A quien ya lo cerró no se le vuelve a abrir el aviso: solo se le
+             marca el botón un momento. */
+          flota.classList.add('llama');
+        }
+      })();
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',iniciarConciencia);
+    else iniciarConciencia();
+    document.addEventListener('hydrationDone',iniciarConciencia);
+  })();
+</script>

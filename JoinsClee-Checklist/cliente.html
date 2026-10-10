@@ -271,7 +271,7 @@ button{cursor:pointer; border:none; background:none}
 .status-pill[data-status="in_progress"]{background:var(--accent-soft); border-color:var(--accent); color:var(--accent)}
 .status-pill[data-status="in_progress"] svg{opacity:1}
 .status-pill[data-status="in_progress"]::after{content:''; position:absolute; inset:3px; border-radius:50%; background:var(--accent); animation:status-pulse 2.4s infinite var(--ease-out)}
-.status-pill[data-status="blocked"]{background:var(--danger-bg); border-color:var(--danger); color:var(--danger)}
+.status-pill[data-status="blocked"]{background:var(--warning-bg); border-color:var(--warning); color:var(--warning)}
 .status-pill[data-status="blocked"] svg{opacity:1}
 .status-pill[data-status="done"]{background:var(--success); border-color:var(--success); color:#fff}
 .status-pill[data-status="done"] svg{opacity:1}
@@ -283,7 +283,7 @@ button{cursor:pointer; border:none; background:none}
 .status-option .status-dot{width:14px; height:14px; border-radius:50%; display:grid; place-items:center; flex-shrink:0; border:1.5px solid var(--border-strong); background:var(--surface); color:#fff}
 .status-option .status-dot svg{width:8px; height:8px; stroke-width:3; opacity:0}
 .status-option[data-status="in_progress"] .status-dot{background:var(--accent); border-color:var(--accent)}
-.status-option[data-status="blocked"] .status-dot{background:var(--danger); border-color:var(--danger)}
+.status-option[data-status="blocked"] .status-dot{background:var(--warning); border-color:var(--warning)}
 .status-option[data-status="blocked"] .status-dot svg{opacity:1}
 .status-option[data-status="done"] .status-dot{background:var(--success); border-color:var(--success)}
 .status-option[data-status="done"] .status-dot svg{opacity:1}
@@ -311,18 +311,18 @@ button{cursor:pointer; border:none; background:none}
 .status-option-btn:hover{border-color:var(--border-strong); color:var(--text)}
 .status-option-btn .status-dot{width:12px; height:12px; border-radius:50%; flex-shrink:0; border:1.5px solid var(--border-strong); background:var(--surface)}
 .status-option-btn .status-dot.in_progress{background:var(--accent); border-color:var(--accent)}
-.status-option-btn .status-dot.blocked{background:var(--danger); border-color:var(--danger)}
+.status-option-btn .status-dot.blocked{background:var(--warning); border-color:var(--warning)}
 .status-option-btn .status-dot.done{background:var(--success); border-color:var(--success)}
 .status-option-btn.active{background:var(--accent-soft); color:var(--accent); border-color:var(--accent)}
-.status-option-btn.active[data-status="blocked"]{background:var(--danger-bg); color:var(--danger); border-color:var(--danger)}
+.status-option-btn.active[data-status="blocked"]{background:var(--warning-bg); color:var(--warning); border-color:var(--warning)}
 .status-option-btn.active[data-status="done"]{background:var(--success-bg); color:var(--success); border-color:var(--success)}
 
 .chip-link{color:var(--accent); text-decoration:none; border:1px solid var(--accent-soft); background:var(--accent-soft)}
 .chip-link:hover{background:var(--accent); color:#fff; border-color:var(--accent)}
 .chip-link svg{width:10px; height:10px; stroke-width:2.5}
 
-.item.blocked{background:linear-gradient(90deg, rgba(220,38,38,0.04), transparent 60%)}
-.item.blocked .item-title{color:var(--danger)}
+.item.blocked{background:linear-gradient(90deg, rgba(217,119,6,0.05), transparent 60%)}
+.item.blocked .item-title{color:var(--warning)}
 
 .item-body{flex:1; min-width:0}
 .item-title{font-size:.92rem; font-weight:600; line-height:1.4; letter-spacing:-.01em; word-break:break-word}
@@ -759,11 +759,11 @@ body{ margin:0 !important; padding:0 !important; overflow-x:hidden; }
 }
 .board-column.pending     .board-dot{ background:#9ca3af }
 .board-column.in_progress .board-dot{ background:var(--accent) }
-.board-column.blocked     .board-dot{ background:var(--danger) }
+.board-column.blocked     .board-dot{ background:var(--warning) }
 .board-column.done        .board-dot{ background:var(--success) }
 .board-column.pending     { border-top:3px solid #9ca3af }
 .board-column.in_progress { border-top:3px solid var(--accent) }
-.board-column.blocked     { border-top:3px solid var(--danger) }
+.board-column.blocked     { border-top:3px solid var(--warning) }
 .board-column.done        { border-top:3px solid var(--success) }
 .board-column-body{
   flex:1; padding:var(--s-3);
@@ -982,7 +982,7 @@ body{ margin:0 !important; padding:0 !important; overflow-x:hidden; }
       <div class="status-select" id="d_status">
         <button class="status-option-btn" data-status="pending"><span class="status-dot pending"></span>Pendiente</button>
         <button class="status-option-btn" data-status="in_progress"><span class="status-dot in_progress"></span>En curso</button>
-        <button class="status-option-btn" data-status="blocked"><span class="status-dot blocked"></span>Bloqueado</button>
+        <button class="status-option-btn" data-status="blocked"><span class="status-dot blocked"></span>En revisión</button>
         <button class="status-option-btn" data-status="done"><span class="status-dot done"></span>Hecho</button>
       </div>
     </div>
@@ -1159,7 +1159,7 @@ const Q = {
   deleteComment:(id) => api('DELETE','cl_comments',{ filters:`id=eq.${id}` }),
 };
 
-const STATUS_LABEL = { pending:'Pendiente', in_progress:'En curso', blocked:'Bloqueado', done:'Hecho' };
+const STATUS_LABEL = { pending:'Pendiente', in_progress:'En curso', blocked:'En revisión', done:'Hecho' };
 const STATUS_ORDER = ['pending','in_progress','blocked','done'];
 const BLOCK_CLASS = {
   'Operaciones':'b-ops',
@@ -1191,7 +1191,7 @@ const PRIORITY_META = {
 const STATUS_META = {
   pending:     { label:'Pendiente',  color:'#9ca3af' },
   in_progress: { label:'En curso',   color:'var(--accent)' },
-  blocked:     { label:'Bloqueada',  color:'var(--danger)' },
+  blocked:     { label:'En revisión', color:'var(--warning)' },
   done:        { label:'Hecha',      color:'var(--success)' },
 };
 const MONTH_NAMES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
@@ -1721,7 +1721,7 @@ async function createItemWithDate(title, due_date){
 const BOARD_COLUMNS = [
   { key:'pending',     label:'Pendiente' },
   { key:'in_progress', label:'En curso' },
-  { key:'blocked',     label:'Bloqueada' },
+  { key:'blocked',     label:'En revisión' },
   { key:'done',        label:'Hecha' },
 ];
 
@@ -1946,7 +1946,7 @@ function renderItem(item){
   const updatedCls = item.updated_by==='client' ? 'by-client' : 'by-agency';
   const unread = unreadForClient(item);
   const totalMsgs = Array.isArray(item.cl_comments) ? item.cl_comments.length : 0;
-  const statusIcon = isBlocked ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+  const statusIcon = isBlocked ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>'
                      : Icon.check;
   return `
     <div class="item ${isDone?'done':''} ${isBlocked?'blocked':''}" data-id="${item.id}">
@@ -1974,7 +1974,7 @@ function renderItem(item){
       <div class="status-popover" data-popover="${item.id}">
         ${STATUS_ORDER.map(s => `
           <button class="status-option ${status===s?'active':''}" data-status="${s}">
-            <span class="status-dot">${s==='blocked' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' : (s==='done' ? Icon.check : '')}</span>
+            <span class="status-dot">${s==='blocked' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>' : (s==='done' ? Icon.check : '')}</span>
             <span>${STATUS_LABEL[s]}</span>
           </button>`).join('')}
       </div>

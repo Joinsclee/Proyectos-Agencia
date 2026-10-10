@@ -1,0 +1,820 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page { size: A4; margin: 0; }
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --sage:#9CAF88; --sage-deep:#7B8F6A; --sage-light:#DCE2CB;
+  --gold:#B8943E; --gold-soft:#cda651; --cream:#F5EFE6; --cream-deep:#EDE4D3;
+  --paper:#FAF7F2; --dark:#2A2823; --ink:#1F1F1B; --ink-soft:#4A4A45; --ink-mute:#7A7A72;
+  --line:#D4CBB8; --line-soft:#E5DCC8;
+  --sans:'Hanken Grotesk',system-ui,sans-serif; --serif:'Cormorant Garamond',Georgia,serif;
+}
+html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{ font-family:var(--sans); color:var(--ink); background:#fff; }
+.page{
+  width:210mm; height:297mm; position:relative; overflow:hidden;
+  background:var(--paper); page-break-after:always;
+}
+.page:last-child{ page-break-after:auto; }
+.pad{ padding:18mm 16mm; height:100%; display:flex; flex-direction:column; }
+.serif{ font-family:var(--serif); }
+.em{ font-family:var(--serif); font-style:italic; }
+
+/* running footer */
+.foot{ position:absolute; left:0; right:0; bottom:8mm; text-align:center;
+  font-size:8.5pt; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-mute); }
+.foot b{ color:var(--sage-deep); font-weight:800; letter-spacing:.22em; }
+.pnum{ position:absolute; right:12mm; bottom:8mm; font-size:8.5pt; color:var(--ink-mute); letter-spacing:.1em;}
+
+/* COVER */
+.cover{ background:linear-gradient(160deg,#fbf8f3,#efe6d6 60%,#e4ecd6); }
+.cover .pad{ align-items:center; justify-content:center; text-align:center; }
+.cv-logo{ width:70px; height:70px; border-radius:18px; object-fit:cover; box-shadow:0 12px 30px -12px rgba(42,40,35,.5); }
+.cv-wm{ margin-top:14px; font-family:var(--serif); font-style:italic; font-size:30pt; letter-spacing:.16em; color:var(--sage-deep); }
+.cv-rule{ width:54px; height:2px; background:var(--gold); margin:18px auto; }
+.cv-kicker{ font-size:10.5pt; letter-spacing:.42em; text-transform:uppercase; color:var(--gold); font-weight:700;}
+.cv-title{ font-family:var(--serif); font-weight:600; font-size:62pt; line-height:.96; color:var(--ink); margin:6px 0 2px;}
+.cv-sub{ font-family:var(--serif); font-style:italic; font-size:19pt; color:var(--sage-deep); max-width:120mm; margin:6px auto 0; line-height:1.25;}
+.cv-soap{ width:130mm; margin:14mm auto 0; display:block; filter:drop-shadow(0 26px 40px rgba(42,40,35,.32)); }
+.cv-foot{ margin-top:auto; font-size:9pt; letter-spacing:.32em; text-transform:uppercase; color:var(--ink-mute); }
+.cv-foot b{ color:var(--sage-deep); }
+.cv-sprig{ position:absolute; width:60mm; opacity:.5; }
+.cv-sprig.tl{ top:-10mm; left:-12mm; transform:rotate(-18deg); }
+.cv-sprig.br{ bottom:-6mm; right:-12mm; transform:rotate(160deg); }
+
+/* INTRO */
+.intro h1{ font-family:var(--serif); font-weight:600; font-size:34pt; line-height:1.04; color:var(--ink); }
+.intro h1 .em{ color:var(--sage-deep); }
+.lead{ font-size:12pt; line-height:1.6; color:var(--ink-soft); margin-top:8mm; max-width:150mm;}
+.intro .kicker{ font-size:10pt; letter-spacing:.34em; text-transform:uppercase; color:var(--gold); font-weight:700; margin-bottom:4mm;}
+.method{ margin-top:auto; background:var(--cream-deep); border-radius:14px; padding:9mm 8mm; }
+.method h2{ font-family:var(--serif); font-style:italic; font-size:20pt; color:var(--sage-deep); margin-bottom:2mm; }
+.method p.mh{ font-size:10pt; color:var(--ink-soft); margin-bottom:6mm; }
+.steps{ display:grid; grid-template-columns:repeat(4,1fr); gap:6mm; }
+.step{ text-align:center; }
+.step .sn{ width:34px;height:34px;border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold-soft)); color:#fff; font-weight:800; font-size:13pt; display:flex; align-items:center; justify-content:center; margin:0 auto 4mm;}
+.step h3{ font-size:10.5pt; font-weight:800; color:var(--ink); margin-bottom:2mm;}
+.step p{ font-size:8.8pt; line-height:1.4; color:var(--ink-soft); }
+.intro-soap{ position:absolute; right:-18mm; top:24mm; width:70mm; opacity:.9; filter:drop-shadow(0 20px 30px rgba(42,40,35,.22)); transform:rotate(6deg);}
+
+/* DIVIDER */
+.divider .pad{ justify-content:center; }
+.dv-band{ position:absolute; inset:0; }
+.dv-photo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.dv-tint{ position:absolute; inset:0; }
+.dv-inner{ position:relative; z-index:2; text-align:center; color:#fff; }
+.dv-no{ font-family:var(--serif); font-style:italic; font-size:15pt; letter-spacing:.2em; opacity:.92;}
+.dv-eyebrow{ font-size:11pt; letter-spacing:.4em; text-transform:uppercase; font-weight:700; opacity:.9; margin-bottom:3mm;}
+.dv-title{ font-family:var(--serif); font-weight:600; font-size:50pt; line-height:1; margin-bottom:6mm; }
+.dv-desc{ font-size:11.5pt; line-height:1.6; max-width:130mm; margin:0 auto; opacity:.96;}
+.dv-rule{ width:60px; height:2px; background:rgba(255,255,255,.85); margin:7mm auto; }
+.dv-count{ margin-top:7mm; font-size:9.5pt; letter-spacing:.3em; text-transform:uppercase; opacity:.85;}
+.dv-sprig{ position:absolute; width:54mm; opacity:.5; z-index:2;}
+
+/* RECIPE PAGES */
+.rp .pad{ gap:9mm; }
+.rp-head{ display:flex; align-items:center; gap:5mm; margin-bottom:1mm;}
+.rp-head .cat{ font-size:9.5pt; letter-spacing:.3em; text-transform:uppercase; color:var(--gold); font-weight:800;}
+.rp-head .ln{ flex:1; height:1px; background:var(--line);}
+.cards{ display:flex; flex-direction:column; gap:8mm; flex:1; }
+.card{ position:relative; background:var(--paper); border:1px solid var(--line-soft); border-left:4px solid var(--sage);
+  border-radius:14px; padding:8mm 9mm; overflow:hidden; box-shadow:0 10px 24px -20px rgba(42,40,35,.5); flex:1;}
+.card .tag{ display:inline-block; font-size:8.5pt; letter-spacing:.14em; text-transform:uppercase; font-weight:800;
+  color:#fff; background:linear-gradient(135deg,var(--sage),var(--sage-deep)); padding:2.4mm 4mm; border-radius:999px;}
+.card .rname{ font-family:var(--serif); font-weight:600; font-size:24pt; line-height:1.02; color:var(--ink); margin:4mm 0 1mm;}
+.card .rsub{ font-family:var(--serif); font-style:italic; font-size:12pt; color:var(--sage-deep); margin-bottom:5mm;}
+.card .ing-h{ font-size:8.5pt; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-mute); font-weight:800; margin-bottom:3mm;}
+.ings{ list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:2.4mm 8mm;}
+.ings.one{ grid-template-columns:1fr; }
+.ings li{ font-size:10pt; line-height:1.35; color:var(--ink-soft); padding-left:6mm; position:relative;}
+.ings li::before{ content:""; position:absolute; left:0; top:2mm; width:2.4mm; height:2.4mm; border-radius:50%; background:var(--gold);}
+.tip{ margin-top:5mm; background:var(--sage-light); border-radius:10px; padding:4mm 5mm; display:flex; gap:4mm; align-items:flex-start;}
+.tip .ti{ flex:none; width:7mm; height:7mm; border-radius:50%; background:var(--sage-deep); color:#fff; display:flex; align-items:center; justify-content:center; font-size:10pt; font-weight:800;}
+.tip .tx{ font-size:9pt; line-height:1.45; color:var(--ink);}
+.tip .tx b{ color:var(--sage-deep); text-transform:uppercase; letter-spacing:.08em; font-size:8.2pt;}
+.card .wm{ position:absolute; right:-8mm; bottom:-8mm; width:42mm; opacity:.10; transform:rotate(160deg);}
+.card .rno{ position:absolute; right:8mm; top:7mm; font-family:var(--serif); font-style:italic; font-size:15pt; color:var(--line);}
+</style></head><body>
+
+<div class="page cover">
+  <img class="cv-sprig tl" src="assets/sprig.png">
+  <img class="cv-sprig br" src="assets/sprig.png">
+  <div class="pad">
+    <img class="cv-logo" src="assets/savias-logo.png">
+    <div class="cv-wm">Savias</div>
+    <div class="cv-rule"></div>
+    <div class="cv-kicker">Ruta Jabonera</div>
+    <div class="cv-title serif">Recetario</div>
+    <div class="cv-sub">50 recetas creativas, únicas y funcionales con jabón base de glicerina</div>
+    <img class="cv-soap" src="assets/soap-hero.png">
+    <div class="cv-foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+  </div>
+</div>
+<div class="page intro">
+  <img class="intro-soap" src="assets/soap-set.png">
+  <div class="pad">
+    <div class="kicker">Bienvenida</div>
+    <h1>Crea jabones <span class="em">hermosos, prácticos<br>y listos para vender</span></h1>
+    <p class="lead">Descubre recetas únicas para crear jabones perfectos para uso personal o para vender. Cada una está diseñada para que explores tu creatividad con diferentes colores, aromas y beneficios para la piel, todas elaboradas con jabón base de glicerina.</p>
+    <div class="method">
+      <h2>El método base</h2>
+      <p class="mh">Todas las recetas se preparan igual. Aprende estos cuatro pasos una vez y aplícalos en las 50.</p>
+      <div class="steps"><div class="step"><div class="sn">1</div><h3>Pesa y derrite</h3><p>Pesa el jabón base, córtalo en cubos y derrítelo a baño maría (máx. 65°). No lo sobrecalientes.</p></div><div class="step"><div class="sn">2</div><h3>Enriquece</h3><p>Fuera del fuego, añade los aditivos y principios activos elegidos.</p></div><div class="step"><div class="sn">3</div><h3>Aromatiza</h3><p>Incorpora la fragancia o el aceite esencial al gusto.</p></div><div class="step"><div class="sn">4</div><h3>Enmolda</h3><p>Vierte en el molde, rocía alcohol, deja solidificar, desmolda y cubre con film.</p></div></div>
+    </div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page divider">
+  <div class="dv-band">
+    <img class="dv-photo" src="assets/soap-hero.png">
+    <div class="dv-tint" style="background:linear-gradient(160deg,rgba(123,143,106,.78),rgba(42,40,35,.62))"></div>
+  </div>
+  <img class="dv-sprig" src="assets/sprig.png" style="top:14mm;left:14mm;transform:rotate(-20deg)">
+  <img class="dv-sprig" src="assets/sprig.png" style="bottom:14mm;right:14mm;transform:rotate(160deg)">
+  <div class="pad">
+    <div class="dv-inner">
+      <div class="dv-no">Capítulo 1</div>
+      <div class="dv-rule"></div>
+      <div class="dv-eyebrow">Jabones</div>
+      <div class="dv-title serif">Veganos</div>
+      <div class="dv-desc">Libres de ingredientes de origen animal, elaborados con aceites vegetales, mantecas cremosas y esencias 100% botánicas. Un ritual de limpieza consciente y respetuoso con todos los seres vivos.</div>
+      <div class="dv-count">10 recetas</div>
+    </div>
+  </div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Veganos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Purificante</span>
+      <div class="rname">Arcilla &amp; Romero</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>1 g arcilla roja</li><li>10 gotas aceite esencial de romero</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Nutritivo</span>
+      <div class="rname">Cacao &amp; Naranja</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1.5 g manteca de cacao</li><li>10 gotas aceite esencial de naranja dulce</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Rocía alcohol isopropílico sobre la superficie del jabón recién vertido para eliminar burbujas.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Veganos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Antioxidante</span>
+      <div class="rname">Té Verde &amp; Limón</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g base de glicerina vegetal</li><li>2 g té verde en polvo</li><li>8 gotas aceite esencial de limón</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Envuelve en papel celofán transparente y átalo con un lazo de yute. Agrega una etiqueta personalizada.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Calmante</span>
+      <div class="rname">Caléndula &amp; Avena</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>0.5 g pétalos de caléndula</li><li>3 g avena coloidal</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Veganos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Hidratante</span>
+      <div class="rname">Aloe Vera &amp; Cedro</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>3 g de aloe vera en polvo</li><li>8 gotas aceite esencial de cedro</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Iluminador</span>
+      <div class="rname">Cúrcuma &amp; Mandarina</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 g cúrcuma en polvo</li><li>10 gotas aceite esencial de mandarina</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Disuelve los aditivos en polvo en glicerina vegetal o alcohol antes de añadir al jabón derretido</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Veganos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Exfoliante</span>
+      <div class="rname">Café &amp; Cacao</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g base de glicerina vegetal</li><li>1,5 g café molido fino</li><li>2 g de cacao en polvo</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Bolsas de celofán con etiquetas de colores vibrantes.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Cremosidad</span>
+      <div class="rname">Arcilla Blanca &amp; Lavanda</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 g arcilla blanca (caolín)</li><li>15 gotas aceite esencial de lavanda</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Veganos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Refrescante</span>
+      <div class="rname">Pepino &amp; Menta</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g extracto de pepino</li><li>8 gotas aceite esencial de menta</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Pieles sensibles</span>
+      <div class="rname">Manzanilla &amp; Karité</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 g manteca de karite</li><li>10 gotas aceite esencial de manzanilla</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Utiliza base de jabón blanca para tonalidades pasteles y translúcida para colores vibrantes.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page divider">
+  <div class="dv-band">
+    <img class="dv-photo" src="assets/adi-cuidado.jpg">
+    <div class="dv-tint" style="background:linear-gradient(160deg,rgba(123,143,106,.82),rgba(42,40,35,.55))"></div>
+  </div>
+  <img class="dv-sprig" src="assets/sprig.png" style="top:14mm;left:14mm;transform:rotate(-20deg)">
+  <img class="dv-sprig" src="assets/sprig.png" style="bottom:14mm;right:14mm;transform:rotate(160deg)">
+  <div class="pad">
+    <div class="dv-inner">
+      <div class="dv-no">Capítulo 2</div>
+      <div class="dv-rule"></div>
+      <div class="dv-eyebrow">Jabones</div>
+      <div class="dv-title serif">Con aditivos calmantes</div>
+      <div class="dv-desc">Pensados para pieles que piden suavidad. Avena, caléndula, manzanilla y mantecas que calman, reconfortan y devuelven el equilibrio a la piel más sensible.</div>
+      <div class="dv-count">10 recetas</div>
+    </div>
+  </div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos calmantes</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Pieles sensibles</span>
+      <div class="rname">Avena &amp; Miel</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g avena coloidal</li><li>2 g miel pura</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Hidratante</span>
+      <div class="rname">Leche de Coco &amp; Karité</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 g manteca de karité</li><li>3 g leche de coco en polvo</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Si no consigues avena coloidal puedes usar harina de avena o moler muy finamente las hojuelas</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos calmantes</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Emoliente</span>
+      <div class="rname">Almendras &amp; Vainilla</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g de aceite de almendras dulces</li><li>10 gotas aceite esencial de vainilla</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Usa cajas pequeñas de cartón decoradas con motivos naturales.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Regenerador</span>
+      <div class="rname">Rosa Mosqueta &amp; Caléndula</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 g pétalos secos de caléndula triturados</li><li>2 g de aceite vegetal de rosa mosqueta</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos calmantes</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Hidratante</span>
+      <div class="rname">Yogur &amp; Pepino</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g de yogur</li><li>2 g extracto de pepino</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Hidratante</span>
+      <div class="rname">Coco &amp; Avena</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>2 g avena molida</li><li>2 g de aceite de coco fraccionado</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Usa moldes con detalles florales para un acabado más elegante.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos calmantes</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Extra suavidad</span>
+      <div class="rname">Leche de Cabra &amp; Miel</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g leche de cabra en polvo</li><li>2 g miel pura</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Usa tela de algodón y átalo con una cuerda rústica.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Piel irritada</span>
+      <div class="rname">Aloe Vera &amp; Manzanilla</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>2 g gel de aloe vera</li><li>1 g infusión concentrada de manzanilla</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos calmantes</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Reparación</span>
+      <div class="rname">Oliva &amp; Lavanda</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>3 g de aceite de oliva extra virgen</li><li>10 gotas aceite esencial de lavanda</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Nutrición intensa</span>
+      <div class="rname">Cacao &amp; Vitamina E</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g jabón base de glicerina</li><li>1 g manteca de cacao</li><li>1 g cacao en polvo</li><li>1 cápsula de vitamina E (punzada)</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>El cacao es ideal para piel seca por sus propiedades nutritivas</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page divider">
+  <div class="dv-band">
+    <img class="dv-photo" src="assets/adi-arcillosos.jpg">
+    <div class="dv-tint" style="background:linear-gradient(160deg,rgba(42,40,35,.74),rgba(123,143,106,.58))"></div>
+  </div>
+  <img class="dv-sprig" src="assets/sprig.png" style="top:14mm;left:14mm;transform:rotate(-20deg)">
+  <img class="dv-sprig" src="assets/sprig.png" style="bottom:14mm;right:14mm;transform:rotate(160deg)">
+  <div class="pad">
+    <div class="dv-inner">
+      <div class="dv-no">Capítulo 3</div>
+      <div class="dv-rule"></div>
+      <div class="dv-eyebrow">Jabones</div>
+      <div class="dv-title serif">Con aditivos terapéuticos</div>
+      <div class="dv-desc">Arcillas, carbón activado y activos botánicos que cuidan con intención: purifican, equilibran la grasa y ayudan a la piel a recuperar su mejor versión.</div>
+      <div class="dv-count">10 recetas</div>
+    </div>
+  </div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos terapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Contra el acné</span>
+      <div class="rname">Carbón Activado &amp; Tea Tree</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>1 g carbón activado en polvo</li><li>8 gotas de aceite esencial de tea tree</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Pieles grasas</span>
+      <div class="rname">Arcilla Verde &amp; Limón</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g jabón base de glicerina</li><li>1 g arcilla verde</li><li>3 gotas de aceite esencial de limón</li><li>5 gotas de aceite esencial de romero</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Derrite tu jabón a baja temperatura para evitar burbujas y quemar la base.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos terapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Piel irritada</span>
+      <div class="rname">Aloe Vera &amp; Lavanda</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>3 g gel de aloe vera puro</li><li>8 gotas de aceite esencial de lavanda</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Personaliza tus empaques con tarjetas colgantes con datos del jabón y una ilustración.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Piel sensible</span>
+      <div class="rname">Avena Coloidal &amp; Caléndula</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>2 g avena coloidal</li><li>2 g de infusión de caléndula</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos terapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Pieles maduras</span>
+      <div class="rname">Arcilla Rosada &amp; Rosa Mosqueta</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g de jabón base de glicerina</li><li>1 g arcilla rosada</li><li>1.5 g de aceite de rosa mosqueta</li><li>(vegetal)</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Acné</span>
+      <div class="rname">Neem &amp; Menta</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 g polvo de neem</li><li>7 gotas de aceite esencial de menta</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>No excedas los aditivos, lo recomendado es maximo el 5% , o sea 5g de aditivos por cada 100g de jabón base.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos terapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Piel mixta</span>
+      <div class="rname">Pepino &amp; Romero</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g extracto de pepino</li><li>8 gotas de aceite esencial de romero</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Usa pañuelos de tela pequeños (técnica furoshiki para envolver).</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Piel sensible</span>
+      <div class="rname">Arcilla Rosa &amp; Lavanda</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 g arcilla rosa</li><li>10 gotas de aceite esencial de lavanda</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Con aditivos terapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Poros abiertos</span>
+      <div class="rname">Carbón Activado &amp; Eucalipto</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>1 g carbón activado</li><li>7 gotas de aceite esencial de eucalipto</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Piel irritada</span>
+      <div class="rname">Caléndula &amp; Miel</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>2 g infusión concentrada de manzanilla</li><li>1 g miel</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Si vas a poner color, añade colorantes específicos para jabón</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page divider">
+  <div class="dv-band">
+    <img class="dv-photo" src="assets/soap-set.png">
+    <div class="dv-tint" style="background:linear-gradient(160deg,rgba(184,148,62,.70),rgba(42,40,35,.66))"></div>
+  </div>
+  <img class="dv-sprig" src="assets/sprig.png" style="top:14mm;left:14mm;transform:rotate(-20deg)">
+  <img class="dv-sprig" src="assets/sprig.png" style="bottom:14mm;right:14mm;transform:rotate(160deg)">
+  <div class="pad">
+    <div class="dv-inner">
+      <div class="dv-no">Capítulo 4</div>
+      <div class="dv-rule"></div>
+      <div class="dv-eyebrow">Jabones</div>
+      <div class="dv-title serif">Para regalar</div>
+      <div class="dv-desc">Jabones con forma, color y aroma para enamorar a primera vista. Corazones, cupcakes, sets y diseños personalizados, perfectos para detalles que se recuerdan.</div>
+      <div class="dv-count">8 recetas</div>
+    </div>
+  </div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Para regalar</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">San valentin</span>
+      <div class="rname">Corazón de Rosas &amp; Fresa</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g de jabón base de glicerina</li><li>1 g pétalos secos de rosa triturados</li><li>5 gotas fragancia de fresa</li><li>Colorante rosa (opcional)</li><li>Molde en forma de corazón</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Para mamá</span>
+      <div class="rname">Flor de Lavanda</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g jabón base de glicerina</li><li>8 gotas aceite esencial de lavanda</li><li>Molde con forma de flor</li><li>Colorante para jabón lila (opcional)</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Usa moldes de silicona para desmoldar fácilmente.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Para regalar</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Decorativo y aromático</span>
+      <div class="rname">Cupcake de Vainilla &amp; Coco</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g de jabón base de glicerina</li><li>10 gotas esencia de vainilla</li><li>2 g aceite de coco</li><li>Molde tipo cupcake o pastelito</li><li>Decoración con mica o topping de jabón rallado o mica comestible</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Kit de regalo</span>
+      <div class="rname">Set Mini Jabones Decorativos</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>4 mini jabones de 25 g (formas: flor, estrella, hoja, corazón)</li><li>Aromas combinados: lavanda, rosa, vainilla y menta</li><li>Ideal para presentar en cajita con moño</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Para regalar</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Detalle dulce</span>
+      <div class="rname">Chocolate &amp; Naranja</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g de jabón base de glicerina</li><li>0.5 g de cacao en polvo</li><li>10 gotas aceite esencial de naranja</li><li>Molde en forma de bombón o corazón</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Detalle navideño</span>
+      <div class="rname">Mandarina &amp; Canela</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g jabón base de glicerina</li><li>1 pizca de canela molida</li><li>8 gotas aceite esencial de mandarina</li><li>Colorante naranja (opcional)</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Si tu diseño es de capas, rocía alcohol entre capas para que se peguen bien.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Para regalar</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Especial para niños</span>
+      <div class="rname">Con Juguete Sorpresa</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>Juguete de plástico pequeño (seguro y no tóxico)</li><li>5 gotas fragancia frutal (manzana o cereza)</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Puedes hacer bolsas de papel reciclado con semillas (biodegradable y ecofriendly) para entregar tus jabones .</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">100% personalizado</span>
+      <div class="rname">Con Foto o Logo</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>Imagen impresa en papel soluble</li><li>Fragancia neutra (vainilla o lavanda suave)</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page divider">
+  <div class="dv-band">
+    <img class="dv-photo" src="assets/adi-extractos.jpg">
+    <div class="dv-tint" style="background:linear-gradient(160deg,rgba(123,143,106,.80),rgba(42,40,35,.60))"></div>
+  </div>
+  <img class="dv-sprig" src="assets/sprig.png" style="top:14mm;left:14mm;transform:rotate(-20deg)">
+  <img class="dv-sprig" src="assets/sprig.png" style="bottom:14mm;right:14mm;transform:rotate(160deg)">
+  <div class="pad">
+    <div class="dv-inner">
+      <div class="dv-no">Capítulo 5</div>
+      <div class="dv-rule"></div>
+      <div class="dv-eyebrow">Jabones</div>
+      <div class="dv-title serif">Aromaterapéuticos</div>
+      <div class="dv-desc">El poder de los aceites esenciales al servicio de tu bienestar. Aromas que relajan, energizan y acompañan cada momento del día con intención.</div>
+      <div class="dv-count">10 recetas</div>
+    </div>
+  </div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Aromaterapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Anti estrés</span>
+      <div class="rname">Lavanda &amp; Avena</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g avena molida</li><li>15 gotas aceite esencial de lavanda</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Armonizante</span>
+      <div class="rname">Ylang Ylang &amp; Naranja</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g jabón base de glicerina</li><li>8 gotas aceite esencial de naranja</li><li>5 gotas aceite esencial de ylang ylang</li><li>1 g ralladura de cascara de naranja</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Prueba primero en pequeñas cantidades antes de hacer lotes grandes.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Aromaterapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Revitalizante</span>
+      <div class="rname">Menta &amp; Limon</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings "><li>100 g de jabón base de glicerina</li><li>7 gotas aceite esencial de menta</li><li>5 gotas aceite esencial de limón</li><li>1 g de ralladura cascara de limón</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Utiliza cajitas de cartón tipo &quot;matchbox&quot; con ventana.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Relajación profunda</span>
+      <div class="rname">Manzanilla &amp; Lavanda</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>2 g infusión de manzanilla</li><li>10 gotas aceite esencial de lavanda</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Aromaterapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Claridad mental E</span>
+      <div class="rname">Romero &amp; Eucalipto</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>8 gotas aceite esencial de romero</li><li>5 gotas aceite esencial de eucalipto opcional: 3 gotas colorante verde</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Energizante y cálido</span>
+      <div class="rname">Canela &amp; Naranja</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>1 pizca de canela molida</li><li>10 gotas aceite esencial de naranja opcional: 0,5 g ralladura cascara de naranja</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Prueba técnicas de “embeds” (jabón dentro de jabón).</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Aromaterapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Relajante y sensual</span>
+      <div class="rname">Jazmin &amp; Sandalo</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>7 gotas aceite esencial de jazmín</li><li>5 gotas aceite esencial de sándalo</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Idea para empaque</b><br>Arma kits y ubicalos en Mini canastas de mimbre o rattan.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Control ansiedad</span>
+      <div class="rname">Vetiver &amp; Cedro</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>8 gotas aceite esencia de vetiver</li><li>5 gotas aceite esencial de cedro</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+<div class="page rp">
+  <div class="pad">
+    <div class="rp-head"><span class="cat">Aromaterapéuticos</span><span class="ln"></span></div>
+    <div class="cards">
+    <div class="card">
+      <span class="tag">Equilibrio emocional</span>
+      <div class="rname">Geranio &amp; Rosas</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g de jabón base de glicerina</li><li>8 gotas aceite esencial de geranio</li><li>5 gotas aceite esencial de rosas opcional: rosas secas para decoras</li></ul>
+      
+      <img class="wm" src="assets/sprig.png">
+    </div>
+    <div class="card">
+      <span class="tag">Sueño tranquilo</span>
+      <div class="rname">Mandarina &amp; Lavanda</div>
+      <div class="rsub">para barra de 100 g</div>
+      <div class="ing-h">Ingredientes</div>
+      <ul class="ings one"><li>100 g jabón base de glicerina</li><li>8 gotas aceite esencial de mandarina</li><li>5 gotas aceite esencial de lavanda</li></ul>
+      <div class="tip"><div class="ti">✦</div><div class="tx"><b>Consejo</b><br>Limpia bien los utensilios entre cada mezcla para evitar manchas.</div></div>
+      <img class="wm" src="assets/sprig.png">
+    </div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+</div>
+</body></html>

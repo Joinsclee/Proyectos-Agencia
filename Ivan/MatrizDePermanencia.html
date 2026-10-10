@@ -1,0 +1,780 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+.mpz-guard{display:none}
+.mpz *{box-sizing:border-box;margin:0;padding:0}
+.mpz{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#13251c;background:#f5f7f3;padding:18px;-webkit-font-smoothing:antialiased}
+.mpz .wrap{max-width:none;margin:0 auto}
+.mpz h1,.mpz h2,.mpz h3{font-family:"Zilla Slab",Georgia,"Times New Roman",serif;text-wrap:balance;line-height:1.2}
+.mpz button{font-family:inherit;cursor:pointer}
+.mpz button:focus-visible,.mpz input:focus-visible,.mpz select:focus-visible{outline:3px solid #1f6b45;outline-offset:2px}
+
+/* ---------- ONBOARDING ---------- */
+.mpz .onb{background:#12452c;border-radius:18px;padding:0;overflow:hidden;color:#ffffff;max-width:720px;margin:0 auto}
+.mpz .onb .body{padding:36px 34px 28px}
+.mpz .onb .eyebrow{font-size:12.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d9b458;margin-bottom:12px}
+.mpz .onb h2{font-size:32px;font-weight:700;color:#ffffff;margin-bottom:14px}
+.mpz .onb p{font-size:18.5px;color:#cfe3d6;margin-bottom:14px;max-width:54ch}
+.mpz .onb p:last-child{margin-bottom:0}
+.mpz .onb strong{color:#ffffff;font-weight:700}
+.mpz .onbstep{display:none}
+.mpz .onbstep.on{display:block}
+.mpz .onb .nav{display:flex;align-items:center;gap:12px;background:#0d3320;padding:16px 24px;border-top:1px solid #2f7a53}
+.mpz .onb .dots{display:flex;gap:7px;flex:1}
+.mpz .onb .dot{width:9px;height:9px;border-radius:50%;background:#2f7a53;border:none;padding:0}
+.mpz .onb .dot.on{background:#d9b458;width:26px;border-radius:99px}
+.mpz .onb .nb{background:transparent;border:1px solid #4a9370;color:#cfe3d6;font-size:15px;font-weight:600;padding:9px 16px;border-radius:9px}
+.mpz .onb .nb:hover{border-color:#a9d9bd;color:#ffffff}
+.mpz .onb .nb.go{background:#d9b458;border-color:#d9b458;color:#12452c;font-weight:700}
+.mpz .onb .nb.go:hover{background:#e8c877}
+.mpz .onb .nb.skip{border-color:transparent;font-size:14px;color:#8fbfa4}
+
+.mpz .layerlist{list-style:none;counter-reset:ll;margin-top:6px}
+.mpz .layerlist li{counter-increment:ll;position:relative;padding:7px 0 7px 40px;font-size:16.5px;color:#cfe3d6;border-bottom:1px solid #1c5637}
+.mpz .layerlist li:last-child{border-bottom:none}
+.mpz .layerlist li:before{content:counter(ll);position:absolute;left:0;top:9px;width:26px;height:26px;border-radius:50%;background:#1c5637;color:#a9d9bd;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.mpz .layerlist li.crit:before{background:#d9b458;color:#12452c}
+.mpz .layerlist li b{color:#ffffff}
+.mpz .axis{display:flex;justify-content:space-between;font-size:13px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8fbfa4;margin:14px 0 4px}
+.mpz .axisbar{height:6px;border-radius:99px;background:#d9b458;background:linear-gradient(90deg,#d9b458 0%,#2f7a53 100%);margin-bottom:16px}
+.mpz .sig{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #1c5637}
+.mpz .sig:last-child{border-bottom:none}
+.mpz .sig .b{flex:none;font-size:14px;font-weight:700;padding:5px 11px;border-radius:8px;white-space:nowrap;margin-top:2px}
+.mpz .sig p{font-size:16.5px;margin:0}
+.mpz .b.ok{background:#1f8a4c;color:#ffffff}
+.mpz .b.mid{background:#c98a13;color:#ffffff}
+.mpz .b.bad{background:#b3402c;color:#ffffff}
+.mpz .b.veto{background:#ffffff;color:#b3402c}
+
+/* ---------- APP ---------- */
+.mpz .app{display:none}
+.mpz .app.on{display:block}
+.mpz .hd{background:#12452c;color:#ffffff;border-radius:14px;padding:20px 24px;margin-bottom:14px}
+.mpz .hd h1{font-size:25px;font-weight:700;color:#ffffff}
+.mpz .hd p{font-size:15.5px;color:#cfe3d6;margin-top:3px}
+.mpz .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#ffffff;border:1px solid #dee5db;border-radius:12px;padding:10px 12px;margin-bottom:14px}
+.mpz .btn{border:1px solid #cbd6c9;background:#ffffff;color:#1f6b45;font-size:14px;font-weight:700;padding:8px 14px;border-radius:9px}
+.mpz .btn:hover{background:#eef4ee}
+.mpz .btn.warn{color:#b3402c;border-color:#e4c3bc}
+.mpz .spacer{flex:1}
+.mpz .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.mpz .tab{border:1px solid #dee5db;background:#ffffff;color:#5d6b60;font-size:15px;font-weight:700;padding:10px 18px;border-radius:10px}
+.mpz .tab:hover{color:#1f6b45}
+.mpz .tab.on{background:#1f6b45;border-color:#1f6b45;color:#ffffff}
+.mpz .panel{display:none}
+.mpz .panel.on{display:block}
+
+.mpz .card{background:#ffffff;border:1px solid #dee5db;border-radius:13px;padding:20px 22px;margin-bottom:14px}
+.mpz .card > h2{font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#1f6b45;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid #eaefe8;font-family:"Source Sans 3",sans-serif}
+.mpz .hint{font-size:15.5px;color:#5d6b60;margin-bottom:14px;max-width:64ch}
+
+.mpz .dests{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.mpz .dest{border:2px solid #e2e8df;background:#fbfcfa;border-radius:11px;padding:14px 15px;text-align:left}
+.mpz .dest:hover{border-color:#a9c9b4}
+.mpz .dest.on{border-color:#1f6b45;background:#eef4ee}
+.mpz .dest .t{font-size:17px;font-weight:700;color:#12452c;font-family:"Zilla Slab",Georgia,serif}
+.mpz .dest .d{font-size:14px;color:#5d6b60;margin-top:2px;line-height:1.4}
+.mpz .dest.on .d{color:#3e5548}
+
+.mpz .fincas{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.mpz .fchip{display:flex;align-items:center;gap:8px;border:1px solid #dee5db;border-radius:10px;padding:7px 8px 7px 12px;background:#fbfcfa}
+.mpz .fchip .sw{width:12px;height:12px;border-radius:3px;flex:none}
+.mpz .fchip input{border:none;background:transparent;font-family:inherit;font-size:16px;font-weight:700;color:#13251c;width:120px;padding:2px 0}
+.mpz .fchip .x{border:none;background:#eef1ec;color:#8a978c;width:26px;height:26px;border-radius:7px;font-size:16px;line-height:1}
+.mpz .fchip .x:hover{background:#f5dbd5;color:#b3402c}
+.mpz .addf{border:1px dashed #a9c9b4;background:#ffffff;color:#1f6b45;font-size:15px;font-weight:700;padding:9px 15px;border-radius:10px}
+.mpz .addf:hover{background:#eef4ee}
+
+.mpz .prog{display:flex;align-items:center;gap:12px;margin-top:14px;font-size:15px;color:#5d6b60}
+.mpz .prog .track{flex:1;height:8px;background:#eef1ec;border-radius:99px;overflow:hidden}
+.mpz .prog .fill{height:100%;background:#1f6b45;border-radius:99px;width:0}
+
+.mpz .capa{background:#ffffff;border:1px solid #dee5db;border-radius:13px;padding:0;margin-bottom:12px;overflow:hidden}
+.mpz .capa.crit{border-left:5px solid #a97c1f}
+.mpz .capa .top{padding:16px 20px 14px;border-bottom:1px solid #f0f3ee}
+.mpz .capa .tl{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mpz .capa .n{font-size:12.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:#8a978c}
+.mpz .capa h3{font-size:21px;font-weight:700;color:#12452c;flex:1;min-width:180px}
+.mpz .capa .w{font-size:13px;font-weight:700;background:#eef4ee;color:#1f6b45;border:1px solid #d5e5d9;border-radius:7px;padding:3px 9px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.mpz .capa .badge{font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:#faf4e6;color:#8a6210;border:1px solid #ecdcb8;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.mpz .capa .look{font-size:15.5px;color:#5d6b60;margin-top:7px;max-width:66ch}
+.mpz .capa .ask{font-size:16px;color:#2f4a3a;margin-top:7px;padding-left:13px;border-left:3px solid #d5e5d9;max-width:64ch}
+.mpz .capa .rows{padding:6px 20px 16px}
+.mpz .rrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid #f5f7f4}
+.mpz .rrow:last-child{border-bottom:none}
+.mpz .rrow .nm{display:flex;align-items:center;gap:7px;min-width:130px;font-size:15.5px;font-weight:700;color:#42544a}
+.mpz .rrow .nm .sw{width:11px;height:11px;border-radius:3px;flex:none}
+.mpz .scale{display:flex;gap:6px}
+.mpz .sc{width:46px;height:46px;border:1.5px solid #dde4da;background:#ffffff;border-radius:10px;font-size:17px;font-weight:700;color:#7d8b81;font-variant-numeric:tabular-nums}
+.mpz .sc:hover{border-color:#1f6b45;color:#1f6b45}
+.mpz .sc.on{color:#ffffff;border-color:transparent}
+.mpz .sc.on.v1{background:#b3402c}
+.mpz .sc.on.v2{background:#cc6633}
+.mpz .sc.on.v3{background:#c98a13}
+.mpz .sc.on.v4{background:#4a9350}
+.mpz .sc.on.v5{background:#1f8a4c}
+.mpz .rrow .clr{border:none;background:transparent;color:#a3b0a6;font-size:14px;font-weight:600;padding:4px 6px}
+.mpz .rrow .clr:hover{color:#b3402c}
+.mpz .capa .nota{padding:0 20px 16px}
+.mpz .capa .nota label{display:block;font-size:12.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#8a978c;margin-bottom:5px}
+.mpz .capa .nota textarea{width:100%;font-family:inherit;font-size:15.5px;color:#13251c;background:#fbfcfa;border:1px solid #e2e8df;border-radius:9px;padding:9px 11px;resize:vertical;min-height:44px;line-height:1.5}
+.mpz .capa .nota textarea:focus{background:#ffffff;border-color:#a9c9b4;outline:none}
+
+.mpz .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.mpz .lg{display:flex;align-items:center;gap:7px;font-size:14.5px;color:#5d6b60;background:#fbfcfa;border:1px solid #e9eee7;border-radius:8px;padding:6px 11px}
+.mpz .lg i{width:22px;height:22px;border-radius:6px;color:#ffffff;font-style:normal;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+
+/* ---------- RESULTADOS ---------- */
+.mpz .res{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.mpz .rcard{border:1px solid #dee5db;border-radius:13px;background:#ffffff;overflow:hidden}
+.mpz .rcard .rh{padding:16px 20px;color:#ffffff;background:#5d6b60}
+.mpz .rcard.ok .rh{background:#1f8a4c}
+.mpz .rcard.mid .rh{background:#c98a13}
+.mpz .rcard.bad .rh{background:#b3402c}
+.mpz .rcard .rh .nm{font-size:15px;font-weight:700;opacity:.85;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mpz .rcard .rh .pt{font-family:"Zilla Slab",Georgia,serif;font-size:44px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums;margin-top:2px;color:#ffffff}
+.mpz .rcard .rh .pt small{font-size:17px;font-weight:600;opacity:.75}
+.mpz .rcard .rh .lb{font-size:16px;font-weight:700;margin-top:2px}
+.mpz .rcard .rb{padding:16px 20px}
+.mpz .rcard .veto{background:#fdeeea;border:1px solid #eec4b9;color:#8f3222;border-radius:9px;padding:10px 13px;font-size:15px;font-weight:600;margin-bottom:12px}
+.mpz .rcard .lrow{display:flex;align-items:center;gap:9px;padding:5px 0;font-size:15px}
+.mpz .rcard .lrow .ln{flex:1;color:#42544a}
+.mpz .rcard .lrow .lv{width:26px;height:26px;border-radius:7px;color:#ffffff;font-size:13.5px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.mpz .rcard .lrow .lw{font-size:13px;color:#8a978c;width:42px;text-align:right;font-variant-numeric:tabular-nums}
+.mpz .rcard .lrow.miss .lv{background:#eef1ec;color:#a3b0a6}
+.mpz .empty{text-align:center;color:#8a978c;font-size:16.5px;padding:26px 20px;background:#fbfcfa;border:1px dashed #dde4da;border-radius:12px}
+
+.mpz table{width:100%;border-collapse:collapse;font-size:15.5px}
+.mpz th{text-align:left;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#5d6b60;padding:8px;border-bottom:2px solid #eaefe8;white-space:nowrap}
+.mpz td{padding:6px 8px;border-bottom:1px solid #f0f3ee}
+.mpz td.n,.mpz th.n{text-align:right;font-variant-numeric:tabular-nums}
+.mpz tr.tot td{background:#f2f5f1;font-weight:700}
+.mpz .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.mpz #tblPesos{min-width:720px}
+.mpz input.wq{font-family:inherit;font-size:15px;color:#0b4fb0;font-weight:700;background:#f2f7fd;border:1px solid #cfe0f5;border-radius:7px;padding:5px 7px;width:72px;text-align:right;font-variant-numeric:tabular-nums}
+.mpz .bad100{color:#b3402c;font-weight:700}
+.mpz .ok100{color:#1f8a4c;font-weight:700}
+.mpz .callout{background:#faf4e6;border:1px solid #ecdcb8;border-left:5px solid #a97c1f;border-radius:0 11px 11px 0;padding:14px 18px;font-size:15.5px;color:#5c4610;margin-top:14px}
+.mpz .foot{text-align:center;font-size:13.5px;color:#8a978c;padding:16px 0 4px}
+
+@media(max-width:640px){
+  .mpz{padding:11px;font-size:16px}
+  .mpz .onb .body{padding:26px 20px 20px}
+  .mpz .onb h2{font-size:25px}
+  .mpz .onb p{font-size:17px}
+  .mpz .onb .nav{padding:13px 16px;gap:8px}
+  .mpz .hd h1{font-size:21px}
+  .mpz .card,.mpz .capa .top,.mpz .capa .rows,.mpz .capa .nota{padding-left:15px;padding-right:15px}
+  .mpz .capa h3{font-size:19px}
+  .mpz .sc{width:42px;height:42px}
+  .mpz .rrow .nm{min-width:100%}
+}
+@media print{
+  .mpz{background:#ffffff;padding:0}
+  .mpz .toolbar,.mpz .tabs,.mpz .onb,.mpz .addf,.mpz .clr,.mpz .fchip .x{display:none!important}
+  .mpz .panel{display:block!important}
+  .mpz .capa,.mpz .rcard,.mpz .card{break-inside:avoid;border-color:#cccccc}
+}
+@media(prefers-reduced-motion:reduce){.mpz *{transition:none!important;animation:none!important}}
+
+@media(max-width:420px){
+  .mpz .onb .nav{flex-wrap:wrap;row-gap:10px}
+  .mpz .onb .dots{flex:1 0 100%}
+  .mpz .onb .nb{flex:1 1 auto}
+}
+</style>
+<div class="mpz">
+<div class="mpz-guard"></div>
+<div class="wrap">
+
+  <!-- ============ ONBOARDING ============ -->
+  <div class="onb" id="onb">
+    <div class="body">
+
+      <div class="onbstep on" data-step="0">
+        <div class="eyebrow">La Huerta LAB · Iván Castrillón · Lago Calima</div>
+        <h2>Matriz de Permanencia</h2>
+        <p>Sirve para <strong>evaluar una finca antes de comprarla</strong>, con la cabeza y no con el corazón.</p>
+        <p>Casi todo el mundo compra al revés: se enamora de la casa, del paisaje o del precio, y deja el agua y el clima para el final. Después descubre que el agua se seca en verano. Eso no se arregla con dinero.</p>
+        <p>Esta herramienta le pone número a lo que ya sabes mirar, para que puedas comparar dos o tres fincas sin engañarte.</p>
+      </div>
+
+      <div class="onbstep" data-step="1">
+        <div class="eyebrow">La idea de fondo</div>
+        <h2>Primero lo que no se puede cambiar</h2>
+        <p>Las nueve capas están ordenadas de lo <strong>menos modificable</strong> a lo <strong>más modificable</strong>. Arriba, lo que la finca te da o no te da. Abajo, lo que tú puedes arreglar con trabajo y plata.</p>
+        <div class="axis"><span>No se cambia</span><span>Sí se cambia</span></div>
+        <div class="axisbar"></div>
+        <ul class="layerlist">
+          <li class="crit"><b>Contexto y mercado</b>: ¿a quién le vas a vender y qué tan lejos está?</li>
+          <li class="crit"><b>Clima</b>: lluvias, altura, heladas, vientos</li>
+          <li class="crit"><b>Topografía</b>: pendiente, curvas, hacia dónde miran las laderas</li>
+          <li class="crit"><b>Agua</b>: caudal en el peor verano, calidad y derecho legal</li>
+          <li><b>Acceso y vías</b>: estado del camino, qué carro necesitas</li>
+          <li><b>Bosques</b>: vegetación que ya existe, atractivo natural</li>
+          <li><b>Construcciones</b>: estado, permisos, uso del suelo</li>
+          <li><b>Cercas y linderos</b>: papeles claros, líos con vecinos</li>
+          <li><b>Suelo</b>: fertilidad y contaminación química previa</li>
+        </ul>
+        <p style="margin-top:14px">Las cuatro primeras van marcadas en dorado: son las que <strong>no se corrigen nunca</strong>.</p>
+      </div>
+
+      <div class="onbstep" data-step="2">
+        <div class="eyebrow">Cómo se usa</div>
+        <h2>Tres cosas y ya está</h2>
+        <p><strong>1. Dices para qué quieres la finca.</strong> Vender directo, turismo, educación, restaurantes o comer tu familia. Según lo que elijas, la matriz le da más importancia a unas capas que a otras. Para turismo el bosque pesa mucho; para autoconsumo, el agua.</p>
+        <p><strong>2. Le pones nota de 1 a 5 a cada capa.</strong> Un botón por nota. 1 es muy malo, 5 es excelente. Si una capa no la has podido mirar todavía, déjala en blanco: no cuenta.</p>
+        <p><strong>3. Miras el resultado.</strong> La matriz saca un puntaje, te pone un color y, si evalúas varias fincas, te dice cuál va ganando.</p>
+        <p>Puedes ir y volver cuantas veces quieras. Todo queda guardado en tu propio teléfono o computador.</p>
+      </div>
+
+      <div class="onbstep" data-step="3">
+        <div class="eyebrow">Lo último y arrancamos</div>
+        <h2>Las dos señales que tienes que leer</h2>
+        <div class="sig"><span class="b ok">4,0 o más</span><p><strong>Verde: compra.</strong> Finca con buen potencial. Pasa al checklist de 30 puntos y ve a verificarlo en campo.</p></div>
+        <div class="sig"><span class="b mid">de 3,0 a 3,9</span><p><strong>Amarillo: revisar.</strong> Tiene potencial pero también problemas. Mira qué capas salieron flojas y pregúntate si se pueden arreglar.</p></div>
+        <div class="sig"><span class="b bad">menos de 3,0</span><p><strong>Rojo: descartar.</strong> Limitaciones serias. Descártala o úsalo para negociar el precio.</p></div>
+        <div class="sig"><span class="b veto">⚠ VETO</span><p><strong>La alerta que manda sobre todas.</strong> Si una de las cuatro primeras capas saca un 1, la finca se descarta aunque el puntaje total salga alto. Esas cuatro no se corrigen.</p></div>
+        <p style="margin-top:16px">La matriz es una ayuda para decidir, no un veredicto. <strong>Tu criterio pesa más que el número.</strong></p>
+      </div>
+
+    </div>
+    <div class="nav">
+      <div class="dots" id="onbDots"></div>
+      <button class="nb skip" id="onbSkip">Saltar</button>
+      <button class="nb" id="onbPrev">Atrás</button>
+      <button class="nb go" id="onbNext">Siguiente</button>
+    </div>
+  </div>
+
+  <!-- ============ APP ============ -->
+  <div class="app" id="app">
+
+    <div class="hd">
+      <h1>Matriz de Permanencia</h1>
+      <p>Las 9 capas para evaluar una finca antes de tenerla</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="btnGuia">Ver la guía</button>
+      <span class="spacer"></span>
+      <button class="btn" id="btnCsv">Exportar CSV</button>
+      <button class="btn" id="btnPrint">Imprimir / PDF</button>
+      <button class="btn warn" id="btnReset">Empezar de nuevo</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="evaluar">1 · Evaluar</button>
+      <button class="tab" data-tab="resultados">2 · Resultados</button>
+      <button class="tab" data-tab="pesos">Pesos por destino</button>
+    </div>
+
+    <!-- ---- EVALUAR ---- -->
+    <div class="panel on" id="p-evaluar">
+
+      <div class="card">
+        <h2>Paso 1 · ¿Para qué quieres la finca?</h2>
+        <p class="hint">Elige el destino productivo. Según lo que elijas, la matriz le da más peso a unas capas que a otras.</p>
+        <div class="dests" id="dests"></div>
+      </div>
+
+      <div class="card">
+        <h2>Paso 2 · ¿Qué fincas estás mirando?</h2>
+        <p class="hint">Ponles nombre para no confundirte. Puedes evaluar una sola o comparar hasta tres.</p>
+        <div class="fincas" id="fincas"></div>
+        <div class="prog">
+          <span id="progTxt">Sin calificar</span>
+          <span class="track"><span class="fill" id="progFill"></span></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Paso 3 · Califica cada capa de 1 a 5</h2>
+        <p class="hint">Si una capa todavía no la has podido mirar, déjala en blanco. No cuenta en el puntaje y podrás volver después.</p>
+        <div class="legend">
+          <span class="lg"><i style="background:#b3402c">1</i> Muy malo</span>
+          <span class="lg"><i style="background:#cc6633">2</i> Malo</span>
+          <span class="lg"><i style="background:#c98a13">3</i> Regular</span>
+          <span class="lg"><i style="background:#4a9350">4</i> Bueno</span>
+          <span class="lg"><i style="background:#1f8a4c">5</i> Excelente</span>
+        </div>
+      </div>
+
+      <div id="capas"></div>
+    </div>
+
+    <!-- ---- RESULTADOS ---- -->
+    <div class="panel" id="p-resultados">
+      <div id="resWrap"></div>
+      <div class="card">
+        <h2>Cómo interpretar los resultados</h2>
+        <div class="sig" style="border-bottom:1px solid #f0f3ee"><span class="b ok">4,0 +</span><p style="color:#42544a">Finca con potencial alto. Avanza al checklist de 30 puntos para validarla en campo.</p></div>
+        <div class="sig" style="border-bottom:1px solid #f0f3ee"><span class="b mid">3,0 – 3,9</span><p style="color:#42544a">Potencial con limitaciones. Identifica las capas débiles y evalúa si son corregibles.</p></div>
+        <div class="sig" style="border-bottom:1px solid #f0f3ee"><span class="b bad">menos de 3,0</span><p style="color:#42544a">Limitaciones serias. Descartar o renegociar el precio.</p></div>
+        <div class="sig"><span class="b veto" style="border:1px solid #eec4b9">⚠ VETO</span><p style="color:#42544a">Si una capa entre la 1 y la 4 saca 1, la finca se descarta sin importar el puntaje total. Esas capas son las más permanentes: no se corrigen.</p></div>
+        <div class="callout">El puntaje se calcula solo con las capas que ya calificaste. Si te faltan capas, el número es provisional. Termínalas antes de decidir.</div>
+      </div>
+    </div>
+
+    <!-- ---- PESOS ---- -->
+    <div class="panel" id="p-pesos">
+      <div class="card">
+        <h2>Pesos por destino productivo</h2>
+        <p class="hint">Estos son los pesos que la matriz aplica automáticamente. <strong>Solo cambia esto si sabes lo que estás haciendo.</strong> Cada columna tiene que sumar 100%.</p>
+        <div class="tw"><table id="tblPesos"></table></div>
+        <div class="callout">
+          <strong>Por qué pesan así:</strong> el contexto de mercado es lo más alto en casi todos los destinos porque define si el negocio es viable. En turismo el bosque es el activo escénico. En autoconsumo mandan agua y clima: sin esos dos no hay autosostenibilidad. En chef-restaurantes, contexto y acceso suman 43% porque la logística de entrega es el cuello de botella.
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">Matriz de Permanencia · La Huerta LAB · Basada en la Escala de Permanencia de P.A. Yeomans (1958), adaptada para Latinoamérica 2026</div>
+  </div>
+
+</div>
+</div>
+<script>
+(function(){
+"use strict";
+var all = document.getElementsByClassName('mpz');
+var R = all[all.length - 1];
+var $ = function(s){ return R.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(R.querySelectorAll(s)); };
+
+var DESTINOS = [
+  { k:'Venta directa',        d:'Vendes tu cosecha directo a familias' },
+  { k:'Turismo',              d:'Recibes visitantes, hospedaje o experiencias' },
+  { k:'Educación',            d:'Cursos, talleres y grupos que vienen a aprender' },
+  { k:'Chef-restaurantes',    d:'Le vendes a restaurantes y cocinas' },
+  { k:'Autoconsumo familiar', d:'Para comer tu familia y no depender del mercado' }
+];
+
+var CAPAS = [
+  { n:'Contexto de mercado y destino productivo',
+    look:'Distancia al cliente, atractivos turísticos cercanos, acceso para grupos.',
+    ask:'¿A quién le vas a vender y cuánto te cuesta llegar hasta él?' },
+  { n:'Clima',
+    look:'Régimen de lluvias, pisos térmicos, heladas, vientos.',
+    ask:'¿Llueve cuando lo necesitas? ¿Hay heladas o vientos que te tumben el cultivo?' },
+  { n:'Topografía',
+    look:'Pendiente, curvas de nivel, orientación de las laderas.',
+    ask:'¿Se puede trabajar esa pendiente, o toca todo a lomo y con riesgo?' },
+  { n:'Agua',
+    look:'Caudal en verano, calidad, derecho legal, captación, servidumbre.',
+    ask:'¿Hay agua en el peor mes del verano, y es legalmente tuya?' },
+  { n:'Acceso / vías',
+    look:'Estado de la vía, vehículo necesario, distancia al pueblo, costo logístico.',
+    ask:'¿Puede entrar un camión cargado en pleno invierno?' },
+  { n:'Bosques y vegetación existente',
+    look:'Servicios ambientales, posibilidad de RNSC, atractivo natural.',
+    ask:'¿Lo que ya está sembrado suma, o toca empezar de cero?' },
+  { n:'Construcciones',
+    look:'Estado estructural, permisos, uso del suelo según el POT.',
+    ask:'¿Lo construido sirve y está en regla, o es un gasto disfrazado?' },
+  { n:'Subdivisiones y cercas',
+    look:'Linderos legales, cercas existentes, disputas con vecinos.',
+    ask:'¿Los linderos del papel coinciden con los del terreno?' },
+  { n:'Suelo',
+    look:'Fertilidad, materia orgánica, contaminación química previa.',
+    ask:'¿Qué le echaron a esta tierra en los últimos diez años?' }
+];
+var CRIT = 4; /* las 4 primeras capas son las de veto */
+var ESCALA = ['Muy malo','Malo','Regular','Bueno','Excelente'];
+var COLF = ['#1f6b45','#a97c1f','#3d6ea8'];
+var COLV = ['#b3402c','#cc6633','#c98a13','#4a9350','#1f8a4c'];
+
+var PESOS_DEF = {
+  'Venta directa':        [0.25, 0.12, 0.10, 0.15, 0.13, 0.05, 0.05, 0.05, 0.10],
+  'Turismo':              [0.25, 0.10, 0.10, 0.12, 0.18, 0.15, 0.07, 0.02, 0.01],
+  'Educación':            [0.22, 0.10, 0.12, 0.13, 0.15, 0.12, 0.08, 0.03, 0.05],
+  'Chef-restaurantes':    [0.28, 0.12, 0.08, 0.15, 0.15, 0.03, 0.05, 0.04, 0.10],
+  'Autoconsumo familiar': [0.10, 0.15, 0.10, 0.18, 0.10, 0.12, 0.12, 0.03, 0.10]
+};
+
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function blank(){
+  return {
+    destino: 'Venta directa',
+    pesos: clone(PESOS_DEF),
+    fincas: [{ name:'Finca A', on:true }, { name:'Finca B', on:false }, { name:'Finca C', on:false }],
+    notas: ['','','','','','','','',''],
+    scores: [[null,null,null,null,null,null,null,null,null],
+             [null,null,null,null,null,null,null,null,null],
+             [null,null,null,null,null,null,null,null,null]],
+    onbDone: false
+  };
+}
+
+var LSKEY = 'hlab_matriz_v1';
+var S = blank();
+try{
+  var raw = window.localStorage ? window.localStorage.getItem(LSKEY) : null;
+  if(raw){
+    var sv = JSON.parse(raw);
+    if(sv.destino && PESOS_DEF[sv.destino]) S.destino = sv.destino;
+    if(sv.pesos) for(var d in PESOS_DEF){ if(sv.pesos[d] && sv.pesos[d].length === 9) S.pesos[d] = sv.pesos[d].map(function(x){ return typeof x === 'number' ? x : 0; }); }
+    if(sv.fincas && sv.fincas.length === 3) sv.fincas.forEach(function(f,i){ if(f){ S.fincas[i].name = String(f.name || S.fincas[i].name); S.fincas[i].on = !!f.on; } });
+    if(!S.fincas[0].on && !S.fincas[1].on && !S.fincas[2].on) S.fincas[0].on = true;
+    if(sv.notas && sv.notas.length === 9) S.notas = sv.notas.map(function(x){ return String(x || ''); });
+    if(sv.scores && sv.scores.length === 3) sv.scores.forEach(function(row,i){
+      if(row && row.length === 9) row.forEach(function(v,j){ S.scores[i][j] = (v >= 1 && v <= 5) ? v : null; });
+    });
+    S.onbDone = !!sv.onbDone;
+  }
+}catch(e){}
+function save(){ try{ if(window.localStorage) window.localStorage.setItem(LSKEY, JSON.stringify(S)); }catch(e){} }
+
+function esc(t){ return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nf1(v){ return (Math.round(v * 10) / 10).toFixed(1).replace('.', ','); }
+function pesos(){ return S.pesos[S.destino] || PESOS_DEF['Venta directa']; }
+function activos(){ var a = []; S.fincas.forEach(function(f,i){ if(f.on) a.push(i); }); return a; }
+
+/* ================== CÁLCULO ================== */
+function calc(){
+  var w = pesos();
+  var out = [];
+  activos().forEach(function(fi){
+    var num = 0, den = 0, done = 0, veto = false, faltan = [];
+    for(var i = 0; i < 9; i++){
+      var s = S.scores[fi][i];
+      if(s != null){ num += w[i] * s; den += w[i]; done++; if(i < CRIT && s === 1) veto = true; }
+      else faltan.push(i);
+    }
+    out.push({ fi:fi, name:S.fincas[fi].name, total: den > 0 ? num / den : null, veto:veto, done:done, faltan:faltan });
+  });
+  var scored = out.filter(function(o){ return o.total != null; }).slice().sort(function(a,b){ return b.total - a.total; });
+  var rank = 0, prev = null, seen = 0;
+  scored.forEach(function(o){ seen++; if(prev === null || o.total < prev - 1e-9){ rank = seen; prev = o.total; } o.rank = rank; });
+  return out;
+}
+function semaforo(t){
+  if(t == null) return { cls:'', lab:'Sin calificar' };
+  if(t >= 4) return { cls:'ok',  lab:'🟢 COMPRA' };
+  if(t >= 3) return { cls:'mid', lab:'🟡 REVISAR' };
+  return { cls:'bad', lab:'🔴 DESCARTAR' };
+}
+
+/* ================== RENDER ================== */
+function renderDests(){
+  $('#dests').innerHTML = DESTINOS.map(function(d){
+    return '<button class="dest' + (d.k === S.destino ? ' on' : '') + '" data-dest="' + esc(d.k) + '">' +
+           '<span class="t">' + esc(d.k) + '</span><span class="d">' + esc(d.d) + '</span></button>';
+  }).join('');
+}
+
+function renderFincas(){
+  var h = '';
+  S.fincas.forEach(function(f,i){
+    if(!f.on) return;
+    h += '<span class="fchip"><span class="sw" style="background:' + COLF[i] + '"></span>' +
+         '<input type="text" data-fname="' + i + '" value="' + esc(f.name) + '" aria-label="Nombre de la finca ' + (i+1) + '">' +
+         (activos().length > 1 ? '<button class="x" data-fdel="' + i + '" title="Quitar esta finca">×</button>' : '') +
+         '</span>';
+  });
+  if(activos().length < 3) h += '<button class="addf" id="addFinca">+ Comparar otra finca</button>';
+  $('#fincas').innerHTML = h;
+}
+
+function renderCapas(){
+  var w = pesos();
+  var act = activos();
+  var h = '';
+  CAPAS.forEach(function(c,i){
+    h += '<div class="capa' + (i < CRIT ? ' crit' : '') + '">';
+    h += '<div class="top"><div class="tl"><span class="n">Capa ' + (i+1) + '</span><h3>' + esc(c.n) + '</h3>' +
+         (i < CRIT ? '<span class="badge">No se corrige</span>' : '') +
+         '<span class="w" data-w="' + i + '">' + Math.round(w[i]*100) + '%</span></div>' +
+         '<p class="look">' + esc(c.look) + '</p>' +
+         '<p class="ask">' + esc(c.ask) + '</p></div>';
+    h += '<div class="rows">';
+    act.forEach(function(fi){
+      var sv = S.scores[fi][i];
+      h += '<div class="rrow"><span class="nm"><span class="sw" style="background:' + COLF[fi] + '"></span>' + esc(S.fincas[fi].name) + '</span><span class="scale">';
+      for(var v = 1; v <= 5; v++){
+        h += '<button class="sc' + (sv === v ? ' on v' + v : '') + '" data-sc="' + fi + '_' + i + '_' + v + '" title="' + ESCALA[v-1] + '" aria-label="' + esc(S.fincas[fi].name) + ', ' + esc(c.n) + ': ' + v + ': ' + ESCALA[v-1] + '">' + v + '</button>';
+      }
+      h += '</span>' + (sv != null ? '<button class="clr" data-clr="' + fi + '_' + i + '">borrar</button>' : '') + '</div>';
+    });
+    h += '</div>';
+    h += '<div class="nota"><label for="nota' + i + '">Observaciones de esta capa</label>' +
+         '<textarea id="nota' + i + '" data-nota="' + i + '" rows="1" placeholder="Lo que viste, lo que te dijeron, lo que falta confirmar…">' + esc(S.notas[i]) + '</textarea></div>';
+    h += '</div>';
+  });
+  $('#capas').innerHTML = h;
+}
+
+function renderPesos(){
+  var h = '<thead><tr><th>Capa</th><th>Factor</th>' + DESTINOS.map(function(d){ return '<th class="n">' + esc(d.k) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  CAPAS.forEach(function(c,i){
+    h += '<tr><td class="muted">Capa ' + (i+1) + '</td><td>' + esc(c.n) + '</td>';
+    DESTINOS.forEach(function(d){
+      h += '<td class="n"><input class="wq" type="number" step="1" min="0" max="100" data-peso="' + esc(d.k) + '_' + i + '" value="' + Math.round(S.pesos[d.k][i] * 100) + '"> %</td>';
+    });
+    h += '</tr>';
+  });
+  h += '<tr class="tot"><td></td><td>TOTAL (debe ser 100%)</td>';
+  DESTINOS.forEach(function(d){ h += '<td class="n" data-sum="' + esc(d.k) + '"></td>'; });
+  h += '</tr></tbody>';
+  $('#tblPesos').innerHTML = h;
+  updateSums();
+}
+function updateSums(){
+  DESTINOS.forEach(function(d){
+    var s = S.pesos[d.k].reduce(function(a,b){ return a + b; }, 0);
+    var el = $('[data-sum="' + d.k.replace(/"/g,'') + '"]');
+    if(!el) return;
+    var pc = Math.round(s * 1000) / 10;
+    var ok = Math.abs(s - 1) < 0.005;
+    el.innerHTML = '<span class="' + (ok ? 'ok100' : 'bad100') + '">' + String(pc).replace('.', ',') + ' %' + (ok ? '' : ' ⚠') + '</span>';
+  });
+}
+
+function renderResultados(){
+  var res = calc();
+  var w = pesos();
+  var conNota = res.filter(function(o){ return o.total != null; });
+  if(!conNota.length){
+    $('#resWrap').innerHTML = '<div class="card"><h2>Resultados</h2><div class="empty">Todavía no has calificado ninguna capa.<br>Vuelve a <strong>1 · Evaluar</strong> y ponle nota a las capas que ya conozcas.</div></div>';
+    return;
+  }
+  var medal = { 1:'🥇 #1', 2:'🥈 #2', 3:'🥉 #3' };
+  var h = '<div class="card"><h2>Resultados · destino: ' + esc(S.destino) + '</h2><div class="res">';
+  res.forEach(function(o){
+    var sf = semaforo(o.total);
+    h += '<div class="rcard ' + sf.cls + '">';
+    h += '<div class="rh"><div class="nm"><span>' + esc(o.name) + '</span><span>' + (conNota.length > 1 && o.rank ? medal[o.rank] || '' : '') + '</span></div>';
+    h += '<div class="pt">' + (o.total != null ? nf1(o.total) : '—') + '<small> / 5</small></div>';
+    h += '<div class="lb">' + sf.lab + '</div></div>';
+    h += '<div class="rb">';
+    if(o.veto) h += '<div class="veto">⚠ VETO: hay un 1 en una de las cuatro capas que no se corrigen. Descártala aunque el puntaje salga alto.</div>';
+    if(o.faltan.length) h += '<div class="veto" style="background:#fdf6ec;border-color:#eddfbf;color:#6b5410">Faltan ' + o.faltan.length + ' capa' + (o.faltan.length > 1 ? 's' : '') + ' por calificar. El puntaje es provisional.</div>';
+    CAPAS.forEach(function(c,i){
+      var v = S.scores[o.fi][i];
+      h += '<div class="lrow' + (v == null ? ' miss' : '') + '"><span class="lv"' + (v != null ? ' style="background:' + COLV[v-1] + '"' : '') + '>' + (v != null ? v : '–') + '</span>' +
+           '<span class="ln">' + esc(c.n) + '</span><span class="lw">' + Math.round(w[i]*100) + '%</span></div>';
+    });
+    h += '</div></div>';
+  });
+  h += '</div></div>';
+  $('#resWrap').innerHTML = h;
+}
+
+function updateProgreso(){
+  var act = activos();
+  var tot = act.length * 9, done = 0;
+  act.forEach(function(fi){ for(var i = 0; i < 9; i++) if(S.scores[fi][i] != null) done++; });
+  $('#progTxt').textContent = done === 0 ? 'Sin calificar' : 'Has calificado ' + done + ' de ' + tot + ' capas';
+  $('#progFill').style.width = (tot ? (done / tot) * 100 : 0) + '%';
+}
+function updatePesosBadges(){
+  var w = pesos();
+  $$('[data-w]').forEach(function(el){ el.textContent = Math.round(w[parseInt(el.getAttribute('data-w'), 10)] * 100) + '%'; });
+}
+function refresh(){ updateProgreso(); renderResultados(); save(); }
+
+/* ================== ONBOARDING ================== */
+var STEPS = $$('.onbstep').length;
+var step = 0;
+function renderDots(){
+  var h = '';
+  for(var i = 0; i < STEPS; i++) h += '<button class="dot' + (i === step ? ' on' : '') + '" data-dot="' + i + '" aria-label="Pantalla ' + (i+1) + ' de ' + STEPS + '"></button>';
+  $('#onbDots').innerHTML = h;
+}
+function showStep(n){
+  step = Math.max(0, Math.min(STEPS - 1, n));
+  $$('.onbstep').forEach(function(el){ el.classList.toggle('on', parseInt(el.getAttribute('data-step'), 10) === step); });
+  $('#onbPrev').style.visibility = step === 0 ? 'hidden' : 'visible';
+  $('#onbNext').textContent = step === STEPS - 1 ? 'Empezar a evaluar' : 'Siguiente';
+  $('#onbSkip').style.visibility = step === STEPS - 1 ? 'hidden' : 'visible';
+  renderDots();
+}
+function abrirApp(){
+  S.onbDone = true; save();
+  $('#onb').style.display = 'none';
+  $('#app').classList.add('on');
+  try{ R.scrollIntoView({ block:'start' }); }catch(e){}
+}
+function abrirGuia(){
+  $('#app').classList.remove('on');
+  $('#onb').style.display = '';
+  showStep(0);
+  try{ R.scrollIntoView({ block:'start' }); }catch(e){}
+}
+$('#onbNext').addEventListener('click', function(){ if(step === STEPS - 1) abrirApp(); else showStep(step + 1); });
+$('#onbPrev').addEventListener('click', function(){ showStep(step - 1); });
+$('#onbSkip').addEventListener('click', abrirApp);
+$('#onbDots').addEventListener('click', function(ev){
+  var b = ev.target.closest ? ev.target.closest('[data-dot]') : null;
+  if(b) showStep(parseInt(b.getAttribute('data-dot'), 10));
+});
+$('#btnGuia').addEventListener('click', abrirGuia);
+
+/* ================== EVENTOS ================== */
+R.addEventListener('click', function(ev){
+  var t = ev.target;
+  var b = t.closest ? t.closest('button') : null;
+  if(!b) return;
+
+  if(b.hasAttribute('data-dest')){
+    S.destino = b.getAttribute('data-dest');
+    renderDests(); updatePesosBadges(); refresh();
+    return;
+  }
+  if(b.hasAttribute('data-sc')){
+    var p = b.getAttribute('data-sc').split('_');
+    var fi = +p[0], ci = +p[1], v = +p[2];
+    S.scores[fi][ci] = (S.scores[fi][ci] === v) ? null : v;
+    repintarFila(fi, ci); refresh();
+    return;
+  }
+  if(b.hasAttribute('data-clr')){
+    var q = b.getAttribute('data-clr').split('_');
+    S.scores[+q[0]][+q[1]] = null;
+    repintarFila(+q[0], +q[1]); refresh();
+    return;
+  }
+  if(b.id === 'addFinca'){
+    for(var i = 0; i < 3; i++) if(!S.fincas[i].on){ S.fincas[i].on = true; break; }
+    renderFincas(); renderCapas(); refresh();
+    return;
+  }
+  if(b.hasAttribute('data-fdel')){
+    var fd = +b.getAttribute('data-fdel');
+    if(!window.confirm('¿Quitar «' + S.fincas[fd].name + '» y borrar sus calificaciones?')) return;
+    S.fincas[fd].on = false;
+    S.scores[fd] = [null,null,null,null,null,null,null,null,null];
+    renderFincas(); renderCapas(); refresh();
+    return;
+  }
+  if(b.classList.contains('tab')){
+    $$('.tab').forEach(function(x){ x.classList.remove('on'); });
+    $$('.panel').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    var pan = $('#p-' + b.getAttribute('data-tab'));
+    if(pan) pan.classList.add('on');
+    return;
+  }
+});
+
+function repintarFila(fi, ci){
+  var sv = S.scores[fi][ci];
+  for(var v = 1; v <= 5; v++){
+    var el = $('[data-sc="' + fi + '_' + ci + '_' + v + '"]');
+    if(!el) continue;
+    el.className = 'sc' + (sv === v ? ' on v' + v : '');
+  }
+  var row = $('[data-sc="' + fi + '_' + ci + '_1"]');
+  row = row ? row.parentNode.parentNode : null;
+  if(!row) return;
+  var old = row.querySelector('[data-clr]');
+  if(sv == null && old) old.parentNode.removeChild(old);
+  if(sv != null && !old){
+    var btn = document.createElement('button');
+    btn.className = 'clr'; btn.setAttribute('data-clr', fi + '_' + ci); btn.textContent = 'borrar';
+    row.appendChild(btn);
+  }
+}
+
+R.addEventListener('input', function(ev){
+  var el = ev.target;
+  if(el.hasAttribute && el.hasAttribute('data-fname')){
+    var i = +el.getAttribute('data-fname');
+    S.fincas[i].name = el.value;
+    renderNombresEnCapas(); refresh();
+    return;
+  }
+  if(el.hasAttribute && el.hasAttribute('data-nota')){
+    S.notas[+el.getAttribute('data-nota')] = el.value;
+    el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px';
+    save();
+    return;
+  }
+  if(el.hasAttribute && el.hasAttribute('data-peso')){
+    var raw = el.getAttribute('data-peso');
+    var idx = raw.lastIndexOf('_');
+    var dest = raw.slice(0, idx), ci = +raw.slice(idx + 1);
+    var val = parseFloat(String(el.value).replace(',', '.'));
+    if(!isFinite(val)) val = 0;
+    S.pesos[dest][ci] = val / 100;
+    updateSums();
+    if(dest === S.destino){ updatePesosBadges(); }
+    refresh();
+    return;
+  }
+});
+
+function renderNombresEnCapas(){
+  var act = activos();
+  $$('.capa').forEach(function(capa){
+    var rows = capa.querySelectorAll('.rrow .nm');
+    act.forEach(function(fi, k){
+      if(rows[k]) rows[k].innerHTML = '<span class="sw" style="background:' + COLF[fi] + '"></span>' + esc(S.fincas[fi].name);
+    });
+  });
+}
+
+/* ================== BOTONES ================== */
+$('#btnPrint').addEventListener('click', function(){ window.print(); });
+$('#btnReset').addEventListener('click', function(){
+  if(!window.confirm('¿Borrar todas las calificaciones y empezar de nuevo?')) return;
+  var keep = S.onbDone;
+  S = blank(); S.onbDone = keep;
+  try{ if(window.localStorage) window.localStorage.removeItem(LSKEY); }catch(e){}
+  renderDests(); renderFincas(); renderCapas(); renderPesos(); updatePesosBadges(); refresh();
+});
+$('#btnCsv').addEventListener('click', function(){
+  var res = calc(), w = pesos(), act = activos();
+  var L = [];
+  function add(arr){ L.push(arr.map(function(x){ return '"' + String(x == null ? '' : x).replace(/"/g, '""') + '"'; }).join(';')); }
+  add(['MATRIZ DE PERMANENCIA: La Huerta LAB']);
+  add(['Destino productivo', S.destino]);
+  add([]);
+  add(['Capa','Factor','Peso %'].concat(act.map(function(fi){ return S.fincas[fi].name; })).concat(['Observaciones']));
+  CAPAS.forEach(function(c,i){
+    add(['Capa ' + (i+1), c.n, Math.round(w[i]*100)]
+      .concat(act.map(function(fi){ return S.scores[fi][i] == null ? '' : S.scores[fi][i]; }))
+      .concat([S.notas[i]]));
+  });
+  add([]);
+  add(['PUNTAJE PONDERADO'].concat(['','']).concat(res.map(function(o){ return o.total == null ? '' : nf1(o.total); })));
+  add(['SEMÁFORO'].concat(['','']).concat(res.map(function(o){ return semaforo(o.total).lab; })));
+  add(['ALERTA DE VETO'].concat(['','']).concat(res.map(function(o){ return o.veto ? 'VETO: revisar capas criticas' : (o.done ? 'Sin alerta' : '-'); })));
+  add(['CAPAS CALIFICADAS'].concat(['','']).concat(res.map(function(o){ return o.done + ' de 9'; })));
+  var csv = '﻿' + L.join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'matriz-permanencia.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* ================== INIT ================== */
+renderDests(); renderFincas(); renderCapas(); renderPesos(); refresh();
+$$('[data-nota]').forEach(function(el){ el.style.height = 'auto'; el.style.height = (el.scrollHeight + 2) + 'px'; });
+if(S.onbDone){ $('#onb').style.display = 'none'; $('#app').classList.add('on'); }
+else { showStep(0); }
+})();
+</script>
+
+<script>
+/* Ancho completo dentro de GoHighLevel: la fila del constructor trae un
+   max-width de 1170px que recorta el bloque. Esto lo neutraliza solo en los
+   contenedores que envuelven a este bloque, sin tocar el resto de la pagina. */
+(function(){
+  var all = document.getElementsByClassName('mpz');
+  var R = all[all.length - 1];
+  if(!R) return;
+  function full(){
+    var el = R.parentElement;
+    while(el && el !== document.body && el !== document.documentElement){
+      var cs = window.getComputedStyle(el);
+      if(cs.maxWidth !== 'none') el.style.setProperty('max-width','none','important');
+      if(parseFloat(cs.marginLeft) > 0)  el.style.setProperty('margin-left','0','important');
+      if(parseFloat(cs.marginRight) > 0) el.style.setProperty('margin-right','0','important');
+      el = el.parentElement;
+    }
+  }
+  full();
+  window.addEventListener('resize', full);
+  setTimeout(full, 400);
+  setTimeout(full, 1500);
+})();
+</script>

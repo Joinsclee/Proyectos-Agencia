@@ -1,0 +1,1192 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+.pfz-guard{display:none}
+.pfz *{box-sizing:border-box;margin:0;padding:0}
+.pfz{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6;color:#13251c;background:#f5f7f3;padding:18px;-webkit-font-smoothing:antialiased}
+.pfz .wrap{max-width:none;margin:0 auto}
+.pfz h1,.pfz h2,.pfz h3{font-family:"Zilla Slab",Georgia,"Times New Roman",serif;text-wrap:balance;line-height:1.2}
+.pfz button{font-family:inherit;cursor:pointer}
+.pfz button:focus-visible,.pfz input:focus-visible,.pfz select:focus-visible{outline:3px solid #1f6b45;outline-offset:2px}
+
+/* ---------- ONBOARDING ---------- */
+.pfz .onb{background:#12452c;border-radius:18px;overflow:hidden;color:#ffffff;max-width:730px;margin:0 auto}
+.pfz .onb .body{padding:36px 34px 28px}
+.pfz .onb .eyebrow{font-size:12.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#d9b458;margin-bottom:12px}
+.pfz .onb h2{font-size:32px;font-weight:700;color:#ffffff;margin-bottom:14px}
+.pfz .onb p{font-size:18.5px;color:#cfe3d6;margin-bottom:14px;max-width:54ch}
+.pfz .onb p:last-child{margin-bottom:0}
+.pfz .onb strong{color:#ffffff}
+.pfz .onbstep{display:none}
+.pfz .onbstep.on{display:block}
+.pfz .onb .nav{display:flex;align-items:center;gap:12px;background:#0d3320;padding:16px 24px;border-top:1px solid #2f7a53}
+.pfz .onb .dots{display:flex;gap:7px;flex:1}
+.pfz .onb .dot{width:9px;height:9px;border-radius:50%;background:#2f7a53;border:none;padding:0}
+.pfz .onb .dot.on{background:#d9b458;width:26px;border-radius:99px}
+.pfz .onb .nb{background:transparent;border:1px solid #4a9370;color:#cfe3d6;font-size:15px;font-weight:600;padding:9px 16px;border-radius:9px}
+.pfz .onb .nb:hover{border-color:#a9d9bd;color:#ffffff}
+.pfz .onb .nb.go{background:#d9b458;border-color:#d9b458;color:#12452c;font-weight:700}
+.pfz .onb .nb.go:hover{background:#e8c877}
+.pfz .onb .nb.skip{border-color:transparent;font-size:14px;color:#8fbfa4}
+.pfz .steplist{list-style:none;counter-reset:sl;margin-top:4px}
+.pfz .steplist li{counter-increment:sl;position:relative;padding:9px 0 9px 44px;font-size:17px;color:#cfe3d6;border-bottom:1px solid #1c5637}
+.pfz .steplist li:last-child{border-bottom:none}
+.pfz .steplist li:before{content:counter(sl);position:absolute;left:0;top:11px;width:28px;height:28px;border-radius:50%;background:#d9b458;color:#12452c;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.pfz .steplist li b{color:#ffffff}
+.pfz .warnk{background:#0d3320;border:1px solid #2f7a53;border-left:4px solid #d9b458;border-radius:0 10px 10px 0;padding:14px 18px;font-size:16px;color:#cfe3d6;margin-top:16px}
+
+/* ---------- APP ---------- */
+.pfz .app{display:none}
+.pfz .app.on{display:block}
+.pfz .hd{background:#12452c;color:#ffffff;border-radius:14px;padding:20px 24px;margin-bottom:12px}
+.pfz .hd h1{font-size:25px;font-weight:700;color:#ffffff}
+.pfz .hd p{font-size:15.5px;color:#cfe3d6;margin-top:3px}
+.pfz .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#ffffff;border:1px solid #dee5db;border-radius:12px;padding:10px 12px;margin-bottom:12px}
+.pfz .btn{border:1px solid #cbd6c9;background:#ffffff;color:#1f6b45;font-size:14px;font-weight:700;padding:8px 14px;border-radius:9px}
+.pfz .btn:hover{background:#eef4ee}
+.pfz .btn.warn{color:#b3402c;border-color:#e4c3bc}
+.pfz .spacer{flex:1}
+
+.pfz .kstrip{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px}
+.pfz .k{background:#ffffff;border:1px solid #dee5db;border-top:4px solid #1f6b45;border-radius:12px;padding:13px 15px}
+.pfz .k .lb{font-size:11.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#7d8b81;margin-bottom:4px}
+.pfz .k .vl{font-family:"Zilla Slab",Georgia,serif;font-size:25px;font-weight:700;color:#13251c;font-variant-numeric:tabular-nums;line-height:1.15}
+.pfz .k .sb{font-size:13.5px;color:#7d8b81;margin-top:2px}
+.pfz .k.pos{border-top-color:#2f9c57}.pfz .k.pos .vl{color:#1a6f3d}
+.pfz .k.neg{border-top-color:#8c4a12}.pfz .k.neg .vl{color:#8c4a12}
+.pfz .k.gold{border-top-color:#a97c1f}
+
+.pfz .tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.pfz .tab{border:1px solid #dee5db;background:#ffffff;color:#5d6b60;font-size:14.5px;font-weight:700;padding:10px 15px;border-radius:10px}
+.pfz .tab:hover{color:#1f6b45}
+.pfz .tab.on{background:#1f6b45;border-color:#1f6b45;color:#ffffff}
+.pfz .panel{display:none}
+.pfz .panel.on{display:block}
+
+.pfz .card{background:#ffffff;border:1px solid #dee5db;border-radius:13px;padding:20px 22px;margin-bottom:14px}
+.pfz .card > h2{font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#1f6b45;margin-bottom:6px;font-family:"Source Sans 3",sans-serif}
+.pfz .card > h2 + .hint{margin-bottom:14px}
+.pfz .hint{font-size:15.5px;color:#5d6b60;max-width:70ch;margin-bottom:12px}
+.pfz .split2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ---------- TABLA COMPARADOR ---------- */
+.pfz .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.pfz table{width:100%;border-collapse:collapse;font-size:15.5px}
+.pfz #tblComp,.pfz #tblProy{min-width:660px}
+.pfz th{text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#5d6b60;padding:9px 8px;border-bottom:2px solid #eaefe8;white-space:nowrap;vertical-align:bottom}
+.pfz th.n{text-align:right}
+.pfz th .big{display:block;font-size:15px;letter-spacing:0;text-transform:none;color:#13251c;font-family:"Zilla Slab",Georgia,serif;font-weight:700}
+.pfz td{padding:5px 8px;border-bottom:1px solid #f2f5f1;vertical-align:middle}
+.pfz td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pfz tr.grp td{background:#eef4ee;color:#12452c;font-weight:700;font-size:11.5px;letter-spacing:.7px;text-transform:uppercase;padding:9px 8px}
+.pfz tr.sub td{background:#fafbf9;font-weight:700}
+.pfz tr.big td{background:#12452c;color:#ffffff;font-weight:700;font-size:16.5px;padding:12px 8px}
+.pfz tr.big td.n{font-family:"Zilla Slab",Georgia,serif;font-size:20px}
+.pfz .lab{color:#33463a}
+.pfz .dlt{font-weight:700;font-variant-numeric:tabular-nums}
+.pfz .dlt.up{color:#1a6f3d}
+.pfz .dlt.dn{color:#8c4a12}
+.pfz .dlt.ze{color:#a3b0a6}
+
+.pfz input[type=number],.pfz input[type=text],.pfz input[type=date],.pfz select{font-family:inherit;font-size:15px;color:#0b4fb0;font-weight:700;background:#f2f7fd;border:1px solid #cfe0f5;border-radius:8px;padding:7px 9px;width:132px;text-align:right;font-variant-numeric:tabular-nums}
+.pfz input[type=text]{text-align:left}
+.pfz select{text-align:left;width:auto;min-width:118px}
+.pfz input:focus,.pfz select:focus{background:#ffffff;border-color:#0b4fb0;outline:none}
+.pfz input.pct{width:80px}
+.pfz input.sm{width:92px}
+.pfz .u{font-size:13px;color:#8a978c;margin-left:3px}
+
+/* ---------- GRÁFICOS ---------- */
+.pfz .chart{position:relative;margin-top:6px}
+.pfz .chart svg{display:block;width:100%;height:auto;overflow:visible}
+.pfz .cgrid{stroke:#e6ebe4;stroke-width:1}
+.pfz .czero{stroke:#b9c4bb;stroke-width:1.5}
+.pfz .cax{fill:#8a978c;font-size:11.5px;font-family:"Source Sans 3",sans-serif;font-variant-numeric:tabular-nums}
+.pfz .clab{fill:#33463a;font-size:12px;font-weight:700;font-family:"Source Sans 3",sans-serif;font-variant-numeric:tabular-nums}
+.pfz .cmark{stroke:#a97c1f;stroke-width:2;stroke-dasharray:4 4}
+.pfz .cmarkt{fill:#8a6210;font-size:11.5px;font-weight:700;font-family:"Source Sans 3",sans-serif}
+.pfz .chit{fill:transparent;cursor:crosshair}
+.pfz .ctip{position:absolute;pointer-events:none;background:#13251c;color:#ffffff;border-radius:9px;padding:9px 12px;font-size:13.5px;line-height:1.45;white-space:nowrap;opacity:0;transition:opacity .1s;z-index:5;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.pfz .ctip b{font-variant-numeric:tabular-nums}
+.pfz .ctip .t{font-size:11.5px;letter-spacing:.6px;text-transform:uppercase;color:#a9d9bd;display:block;margin-bottom:2px}
+.pfz .clg{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:13.5px;color:#5d6b60}
+.pfz .clg span{display:flex;align-items:center;gap:6px}
+.pfz .clg i{width:13px;height:13px;border-radius:3px;flex:none}
+
+/* ---------- PLAN ---------- */
+.pfz .cond{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f2f5f1}
+.pfz .cond:last-of-type{border-bottom:none}
+.pfz .cond .tx{flex:1;font-size:16.5px;color:#33463a;min-width:190px}
+.pfz .tog{display:flex;gap:0;border:1.5px solid #dde4da;border-radius:9px;overflow:hidden;flex:none}
+.pfz .tog button{border:none;background:#ffffff;color:#7d8b81;font-size:14.5px;font-weight:700;padding:8px 16px}
+.pfz .tog button.on.si{background:#1f8a4c;color:#ffffff}
+.pfz .tog button.on.no{background:#eef1ec;color:#5d6b60}
+.pfz .verd{border-radius:12px;padding:18px 20px;color:#ffffff;margin-top:14px}
+.pfz .verd.ok{background:#1f8a4c}.pfz .verd.mid{background:#c98a13}.pfz .verd.bad{background:#b3402c}
+.pfz .verd .t{font-family:"Zilla Slab",Georgia,serif;font-size:23px;font-weight:700}
+.pfz .verd .s{font-size:16px;opacity:.92;margin-top:3px}
+
+.pfz .meta{display:grid;grid-template-columns:1.6fr 1.1fr .9fr .8fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f2f5f1}
+.pfz .meta:last-child{border-bottom:none}
+.pfz .meta .nm{font-size:15.5px;color:#33463a}
+.pfz .meta input,.pfz .meta select{width:100%}
+
+.pfz .vcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.pfz .vc{border:1px solid #dee5db;border-left:5px solid #a3b0a6;border-radius:11px;padding:15px 17px;background:#ffffff}
+.pfz .vc.ok{border-left-color:#1f8a4c}.pfz .vc.mid{border-left-color:#c98a13}.pfz .vc.bad{border-left-color:#b3402c}
+.pfz .vc .h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#7d8b81;margin-bottom:5px}
+.pfz .vc .h i{width:10px;height:10px;border-radius:50%;background:#a3b0a6;flex:none}
+.pfz .vc.ok .h i{background:#1f8a4c}.pfz .vc.mid .h i{background:#c98a13}.pfz .vc.bad .h i{background:#b3402c}
+.pfz .vc .v{font-family:"Zilla Slab",Georgia,serif;font-size:22px;font-weight:700;color:#13251c;font-variant-numeric:tabular-nums;line-height:1.2}
+.pfz .vc .d{font-size:15px;color:#5d6b60;margin-top:5px}
+
+.pfz .callout{background:#faf4e6;border:1px solid #ecdcb8;border-left:5px solid #a97c1f;border-radius:0 11px 11px 0;padding:14px 18px;font-size:15.5px;color:#5c4610;margin-top:14px}
+.pfz .callout.red{background:#fdeeea;border-color:#eec4b9;border-left-color:#b3402c;color:#8f3222}
+.pfz .foot{text-align:center;font-size:13.5px;color:#8a978c;padding:16px 0 4px}
+
+@media(max-width:720px){
+  .pfz{padding:11px;font-size:16px}
+  .pfz .onb .body{padding:26px 20px 20px}
+  .pfz .onb h2{font-size:25px}
+  .pfz .onb p{font-size:17px}
+  .pfz .split2{grid-template-columns:1fr}
+  .pfz .hd h1{font-size:21px}
+  .pfz .card{padding:16px 15px}
+  .pfz .meta{grid-template-columns:1fr 1fr;gap:6px}
+  .pfz .meta .nm{grid-column:1 / -1;font-weight:700}
+}
+@media print{
+  .pfz{background:#ffffff;padding:0}
+  .pfz .toolbar,.pfz .tabs,.pfz .onb{display:none!important}
+  .pfz .panel{display:block!important}
+  .pfz .card,.pfz .vc{break-inside:avoid;border-color:#cccccc}
+}
+@media(prefers-reduced-motion:reduce){.pfz *{transition:none!important}}
+
+@media(max-width:420px){
+  .pfz .onb .nav{flex-wrap:wrap;row-gap:10px}
+  .pfz .onb .dots{flex:1 0 100%}
+  .pfz .onb .nb{flex:1 1 auto}
+}
+</style>
+<div class="pfz">
+<div class="pfz-guard"></div>
+<div class="wrap">
+
+  <!-- ============ ONBOARDING ============ -->
+  <div class="onb" id="onb">
+    <div class="body">
+
+      <div class="onbstep on" data-step="0">
+        <div class="eyebrow">La Huerta LAB · Ecosistema Regenerativo</div>
+        <h2>La Calculadora del Paso de Fe</h2>
+        <p>Sirve para responder una sola pregunta: <strong>¿me alcanza para irme a vivir de la finca?</strong></p>
+        <p>No con corazonadas. Con tus números reales: lo que ganas hoy, lo que gastas hoy, lo que tendrías allá, el capital que puedes reunir y qué pasa con todo eso durante los próximos años.</p>
+        <p>Si el proyecto no cierra en el papel, no va a cerrar en la tierra. Mejor descubrirlo aquí.</p>
+      </div>
+
+      <div class="onbstep" data-step="1">
+        <div class="eyebrow">Cómo funciona</div>
+        <h2>Cinco pantallas, en este orden</h2>
+        <ul class="steplist">
+          <li><b>Hoy vs. La finca</b>: dos columnas lado a lado. Cuánto te queda libre cada mes en cada escenario.</li>
+          <li><b>Capital</b>: qué reúnes si vendes, qué deudas liquidas, qué te queda de colchón.</li>
+          <li><b>Proyección</b>: año a año hasta donde tú quieras mirar. Aquí aparece el retiro.</li>
+          <li><b>Plan</b>: las seis condiciones que deberías cumplir antes de renunciar.</li>
+          <li><b>Veredicto</b>: todo junto, en una sola pantalla.</li>
+        </ul>
+        <p style="margin-top:14px">Empieza con los números que ya conoces. Los que no sepas, déjalos como están y vuelve después. Todo queda guardado.</p>
+      </div>
+
+      <div class="onbstep" data-step="2">
+        <div class="eyebrow">Los tres números que deciden</div>
+        <h2>Qué vas a estar mirando</h2>
+        <p><strong>La diferencia mensual.</strong> Si vivir en la finca te deja más plata libre que tu vida de hoy, el salto tiene sentido económico ya. Si te deja menos, no significa que no: significa que necesitas capital para aguantar la diferencia.</p>
+        <p><strong>El colchón.</strong> Cuántos meses puedes vivir del capital si no entrara ni un peso. Menos de seis meses es imprudente.</p>
+        <p><strong>El año del cruce.</strong> El año en que los ingresos de la finca cubren todos los gastos. A partir de ahí dejas de quemar capital y empiezas a construirlo.</p>
+      </div>
+
+      <div class="onbstep" data-step="3">
+        <div class="eyebrow">Antes de empezar</div>
+        <h2>Dos advertencias honestas</h2>
+        <p><strong>Los números que trae puestos son un ejemplo.</strong> Cámbialos por los tuyos o el resultado no significa nada. Todas las casillas azules son tuyas.</p>
+        <p><strong>Esto es un ejercicio de reflexión, no asesoría financiera.</strong> Son proyecciones basadas en supuestos que tú eliges. Antes de vender una casa o renunciar a un empleo, siéntate con alguien que sepa.</p>
+        <div class="warnk">Un consejo sobre los supuestos de crecimiento: es tentador poner 30% anual a los ingresos de la finca. Si el resultado solo funciona con números optimistas, el proyecto todavía no está listo. Ponlo conservador y mira si aun así cierra.</div>
+      </div>
+
+    </div>
+    <div class="nav">
+      <div class="dots" id="onbDots"></div>
+      <button class="nb skip" id="onbSkip">Saltar</button>
+      <button class="nb" id="onbPrev">Atrás</button>
+      <button class="nb go" id="onbNext">Siguiente</button>
+    </div>
+  </div>
+
+  <!-- ============ APP ============ -->
+  <div class="app" id="app">
+
+    <div class="hd">
+      <h1>La Calculadora del Paso de Fe</h1>
+      <p>¿Me alcanza para irme a vivir de la finca? · La Huerta LAB</p>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" id="btnGuia">Ver la guía</button>
+      <span class="spacer"></span>
+      <button class="btn" id="btnCsv">Exportar CSV</button>
+      <button class="btn" id="btnPrint">Imprimir / PDF</button>
+      <button class="btn warn" id="btnReset">Empezar de nuevo</button>
+    </div>
+
+    <div class="kstrip" id="kstrip"></div>
+
+    <div class="tabs">
+      <button class="tab on" data-tab="comp">1 · Hoy vs. La finca</button>
+      <button class="tab" data-tab="cap">2 · Capital</button>
+      <button class="tab" data-tab="proy">3 · Proyección</button>
+      <button class="tab" data-tab="plan">4 · Plan</button>
+      <button class="tab" data-tab="verd">5 · Veredicto</button>
+    </div>
+
+    <!-- ---- 1 COMPARADOR ---- -->
+    <div class="panel on" id="p-comp">
+      <div class="card">
+        <h2>Comparador de ingreso disponible mensual</h2>
+        <p class="hint">Llena las dos columnas con tus cifras reales. La tercera columna te muestra cuánto cambia cada línea al mudarte. Ahí es donde se ve de verdad de dónde sale (o se pierde) la plata.</p>
+        <div class="tw"><table id="tblComp"></table></div>
+      </div>
+      <div id="compNota"></div>
+    </div>
+
+    <!-- ---- 2 CAPITAL ---- -->
+    <div class="panel" id="p-cap">
+      <div class="split2">
+        <div class="card">
+          <h2>Venta de la casa o apartamento</h2>
+          <div class="tw"><table id="tblVenta"></table></div>
+        </div>
+        <div class="card">
+          <h2>Otros activos y ahorros</h2>
+          <div class="tw"><table id="tblActivos"></table></div>
+        </div>
+      </div>
+      <div class="split2">
+        <div class="card">
+          <h2>Deudas que liquidarías al dar el salto</h2>
+          <div class="tw"><table id="tblDeudas"></table></div>
+        </div>
+        <div class="card">
+          <h2>Inversión inicial necesaria en la finca</h2>
+          <div class="tw"><table id="tblInvIni"></table></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Resultado del capital</h2>
+        <div class="tw"><table id="tblCapRes"></table></div>
+        <div id="capNota"></div>
+      </div>
+    </div>
+
+    <!-- ---- 3 PROYECCIÓN ---- -->
+    <div class="panel" id="p-proy">
+      <div class="card">
+        <h2>Supuestos de crecimiento</h2>
+        <p class="hint">Sé conservador. Un proyecto que solo funciona con supuestos optimistas todavía no está listo.</p>
+        <div class="tw"><table id="tblSup"></table></div>
+      </div>
+
+      <div class="card">
+        <h2>Patrimonio acumulado</h2>
+        <p class="hint" id="patHint"></p>
+        <div class="chart" id="chPat"><div class="ctip" id="tipPat"></div></div>
+        <div class="clg"><span><i style="background:#1f6b45"></i> Patrimonio al cierre de cada año</span><span><i style="background:#a97c1f"></i> Año de independencia financiera</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Flujo neto de cada año</h2>
+        <p class="hint" id="fluHint"></p>
+        <div class="chart" id="chFlu"><div class="ctip" id="tipFlu"></div></div>
+        <div class="clg"><span><i style="background:#2f9c57"></i> Superávit: el año cierra en positivo</span><span><i style="background:#8c4a12"></i> Déficit: ese año quemas capital</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Año a año</h2>
+        <div class="tw"><table id="tblProy"></table></div>
+      </div>
+
+      <div class="card">
+        <h2>Retiro e independencia financiera</h2>
+        <p class="hint">La regla de la tasa segura: si tu patrimonio rinde de forma estable, puedes retirar cada año un porcentaje pequeño sin consumirlo. Cuando ese retiro cubre tus gastos, ya no dependes de trabajar.</p>
+        <div class="tw"><table id="tblRetiro"></table></div>
+        <div id="retNota"></div>
+      </div>
+    </div>
+
+    <!-- ---- 4 PLAN ---- -->
+    <div class="panel" id="p-plan">
+      <div class="card">
+        <h2>Semáforo de preparación</h2>
+        <p class="hint">Seis condiciones. No son burocracia: cada una es una forma conocida de que este salto salga mal.</p>
+        <div id="conds"></div>
+        <div id="condVerd"></div>
+      </div>
+      <div class="card">
+        <h2>Mis metas de transición</h2>
+        <p class="hint">Ponle fecha a cada cosa. Una meta sin fecha es un deseo.</p>
+        <div id="metas"></div>
+      </div>
+    </div>
+
+    <!-- ---- 5 VEREDICTO ---- -->
+    <div class="panel" id="p-verd">
+      <div id="verdWrap"></div>
+    </div>
+
+    <div class="foot">La Huerta Hotel · Ecosistema Regenerativo · La Huerta LAB<br>Ejercicio de reflexión personal, no asesoría financiera profesional.</div>
+  </div>
+
+</div>
+</div>
+<script>
+(function(){
+"use strict";
+var all = document.getElementsByClassName('pfz');
+var R = all[all.length - 1];
+var $ = function(s){ return R.querySelector(s); };
+var $$ = function(s){ return Array.prototype.slice.call(R.querySelectorAll(s)); };
+
+/* ================== MODELO ================== */
+var ING = [
+  ['sueldo','Sueldo / salario principal'],
+  ['remoto','Ingresos remotos / freelance / rentas'],
+  ['finca','Ingresos de la finca (cultivos, turismo, etc.)'],
+  ['otrosI','Otros ingresos']
+];
+var VIV = [
+  ['arriendo','Arriendo mensual'],
+  ['hipoteca','Cuota hipotecaria / crédito vivienda'],
+  ['admin','Administración / mantenimiento / predial']
+];
+var DEU = [
+  ['cCons','Cuota crédito de consumo / personal'],
+  ['cTarj','Cuota tarjeta de crédito'],
+  ['cVeh','Cuota vehículo'],
+  ['cOtras','Otras deudas']
+];
+var GAS = [
+  ['alim','Alimentación (mercado + restaurantes)'],
+  ['transp','Transporte (gasolina, peajes, transporte público)'],
+  ['serv','Servicios públicos (luz, agua, gas, internet)'],
+  ['salud','Salud (medicina prepagada, EPS, seguros)'],
+  ['educ','Educación (hijos, cursos, etc.)'],
+  ['entret','Entretenimiento y gastos personales'],
+  ['otrosG','Otros gastos fijos']
+];
+var INV = [
+  ['envios','Dinero que envías mensualmente a la finca'],
+  ['invFinca','Inversión en infraestructura / cultivos (mensual)']
+];
+var CONDS = [
+  'Tengo una fuente de ingresos puente (remoto, ahorros o finca ya produciendo)',
+  'Tengo equipo local de confianza en la finca',
+  'Tengo 6 meses o más de colchón (ver pantalla 2)',
+  'He liquidado o reestructurado mis deudas de consumo',
+  'Tengo definido el plan de vivienda en la finca',
+  'Tengo un primer cultivo o ingreso productivo funcionando'
+];
+var METAS = [
+  'Ahorrar el capital de transición necesario',
+  'Liquidar todas las deudas de consumo',
+  'Establecer el ingreso remoto / puente',
+  'Definir y contratar al encargado de la finca',
+  'Establecer el primer cultivo o animal productivo',
+  'Construir o adecuar la vivienda en la finca',
+  'Renunciar y hacer el traslado',
+  'Meta personal'
+];
+var ESTADOS = ['Sin empezar','En progreso','Hecha'];
+var PRIOS = ['Alta','Media','Baja'];
+
+var CH = { area:'#1f6b45', areaFill:'#1f6b45', pos:'#2f9c57', neg:'#8c4a12', mark:'#a97c1f' };
+
+function blank(){
+  return {
+    onbDone:false,
+    hoy:{ sueldo:8000000, remoto:0, finca:0, otrosI:0, tasaRenta:0.19, tasaSS:0.08,
+          arriendo:1800000, hipoteca:0, admin:200000,
+          cCons:400000, cTarj:300000, cVeh:500000, cOtras:0,
+          alim:1200000, transp:500000, serv:350000, salud:300000, educ:0, entret:400000, otrosG:200000,
+          envios:800000, invFinca:200000 },
+    fin:{ sueldo:3500000, remoto:500000, finca:800000, otrosI:0, tasaRenta:0.04, tasaSS:0.08,
+          arriendo:0, hipoteca:0, admin:80000,
+          cCons:400000, cTarj:150000, cVeh:0, cOtras:0,
+          alim:350000, transp:150000, serv:220000, salud:300000, educ:0, entret:200000, otrosG:100000,
+          envios:0, invFinca:300000 },
+    cap:{ valorVenta:300000000, deudaHip:80000000, pctGastosVenta:0.03, pctGanancia:0.10,
+          ahorros:20000000, cesantias:15000000, pensionVol:0, otrosAct:0,
+          sCons:8000000, sTarj:5000000, sVeh:12000000, sOtras:0,
+          tierra:0, vivienda:50000000, infra:15000000, capTrabajo:5000000, mesesColchon:6 },
+    proy:{ gFinca:0.20, gRemoto:0.05, inflacion:0.06, rendimiento:0.08, horizonte:15, edad:40, tasaRetiro:0.04 },
+    plan:{ cond:[false,false,false,false,false,false],
+           metas: METAS.map(function(m){ return { desc:'', fecha:'', estado:0, prio:1 }; }) }
+  };
+}
+
+var LSKEY = 'hlab_pasodefe_v1';
+var S = blank();
+(function load(){
+  try{
+    var raw = window.localStorage ? window.localStorage.getItem(LSKEY) : null;
+    if(!raw) return;
+    var sv = JSON.parse(raw);
+    ['hoy','fin','cap','proy'].forEach(function(sec){
+      if(sv[sec]) for(var k in S[sec]) if(typeof sv[sec][k] === 'number' && isFinite(sv[sec][k])) S[sec][k] = sv[sec][k];
+    });
+    if(sv.plan){
+      if(sv.plan.cond && sv.plan.cond.length === 6) S.plan.cond = sv.plan.cond.map(Boolean);
+      if(sv.plan.metas && sv.plan.metas.length === METAS.length) sv.plan.metas.forEach(function(m,i){
+        S.plan.metas[i] = { desc:String(m.desc||''), fecha:String(m.fecha||''), estado:+m.estado||0, prio:(m.prio==null?1:+m.prio) };
+      });
+    }
+    S.onbDone = !!sv.onbDone;
+  }catch(e){}
+})();
+function save(){ try{ if(window.localStorage) window.localStorage.setItem(LSKEY, JSON.stringify(S)); }catch(e){} }
+
+/* ================== FORMATO ================== */
+function esc(t){ return String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function nf(v, d){
+  if(!isFinite(v)) v = 0;
+  var neg = v < 0; v = Math.abs(v);
+  var p = v.toFixed(d == null ? 0 : d).split('.');
+  p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return (neg ? '−' : '') + p.join(',');
+}
+function money(v){ return '$ ' + nf(v, 0); }
+function signed(v){ return (v > 0 ? '+' : '') + money(v).replace('$ ', '$ '); }
+function pct(v){ return nf(v * 100, 1) + ' %'; }
+function compact(v){
+  var a = Math.abs(v), s = v < 0 ? '−' : '';
+  if(a >= 1e9) return s + nf(a / 1e9, 1) + ' MM';
+  if(a >= 1e6) return s + nf(a / 1e6, a >= 1e7 ? 0 : 1) + ' M';
+  if(a >= 1e3) return s + nf(a / 1e3, 0) + ' k';
+  return s + nf(a, 0);
+}
+
+/* ================== CÁLCULO ================== */
+var C = {};
+function col(c){
+  var o = S[c], r = {};
+  r.brutos = ING.reduce(function(a,x){ return a + o[x[0]]; }, 0);
+  r.impuestos = r.brutos * (o.tasaRenta + o.tasaSS);
+  r.neto = r.brutos - r.impuestos;
+  r.vivienda = VIV.reduce(function(a,x){ return a + o[x[0]]; }, 0);
+  r.deudas = DEU.reduce(function(a,x){ return a + o[x[0]]; }, 0);
+  r.gfijos = GAS.reduce(function(a,x){ return a + o[x[0]]; }, 0);
+  r.invF = INV.reduce(function(a,x){ return a + o[x[0]]; }, 0);
+  r.gastoTotal = r.vivienda + r.deudas + r.gfijos + r.invF;
+  r.disponible = r.neto - r.gastoTotal;
+  return r;
+}
+function compute(){
+  C.hoy = col('hoy');
+  C.fin = col('fin');
+  C.difMes = C.fin.disponible - C.hoy.disponible;
+  C.difAno = C.difMes * 12;
+
+  var p = S.cap;
+  C.gananciaBruta = p.valorVenta - p.deudaHip;
+  C.gastosVenta = p.valorVenta * p.pctGastosVenta;
+  C.impGanancia = C.gananciaBruta * p.pctGanancia;
+  C.capitalVenta = C.gananciaBruta - C.gastosVenta - C.impGanancia;
+  C.otrosActivos = p.ahorros + p.cesantias + p.pensionVol + p.otrosAct;
+  C.deudasLiq = p.sCons + p.sTarj + p.sVeh + p.sOtras;
+  C.colchon = C.fin.gastoTotal * p.mesesColchon;
+  C.invInicial = p.tierra + p.vivienda + p.infra + p.capTrabajo + C.colchon;
+  C.capitalTotal = C.capitalVenta + C.otrosActivos;
+  C.capitalNeto = C.capitalTotal - C.deudasLiq - C.invInicial;
+  C.mesesSinIngresos = C.fin.gastoTotal > 0 ? C.capitalNeto / C.fin.gastoTotal : 0;
+  C.deficitMes = C.fin.disponible < 0 ? -C.fin.disponible : 0;
+  C.mesesDeficit = C.deficitMes > 0 ? C.capitalNeto / C.deficitMes : Infinity;
+
+  var q = S.proy;
+  var H = Math.max(1, Math.min(40, Math.round(q.horizonte)));
+  C.H = H;
+  var f = S.fin;
+  var ingFinca0 = f.finca * 12;
+  var ingOtro0 = (f.sueldo + f.remoto + f.otrosI) * 12;
+  var gasto0 = C.fin.gastoTotal * 12;
+  var tasa = f.tasaRenta + f.tasaSS;
+  var años = [], patrimonio = C.capitalNeto;
+  for(var n = 1; n <= H; n++){
+    var iF = ingFinca0 * Math.pow(1 + q.gFinca, n - 1);
+    var iO = ingOtro0 * Math.pow(1 + q.gRemoto, n - 1);
+    var bruto = iF + iO;
+    var imp = bruto * tasa;
+    var neto = bruto - imp;
+    var gas = gasto0 * Math.pow(1 + q.inflacion, n - 1);
+    var flujo = neto - gas;
+    patrimonio = patrimonio * (1 + q.rendimiento) + flujo;
+    años.push({ n:n, edad:q.edad + n, iFinca:iF, iOtro:iO, bruto:bruto, imp:imp, neto:neto,
+                gasto:gas, flujo:flujo, mes:flujo / 12, patrimonio:patrimonio,
+                pasivo: patrimonio * q.tasaRetiro / 12, gastoMes: gas / 12 });
+  }
+  C.años = años;
+  C.cruce = null;
+  for(var i = 0; i < años.length; i++) if(años[i].flujo >= 0){ C.cruce = años[i]; break; }
+  C.indep = null;
+  for(var j = 0; j < años.length; j++) if(años[j].pasivo >= años[j].gastoMes){ C.indep = años[j]; break; }
+  C.final = años[años.length - 1];
+
+  C.condOk = S.plan.cond.filter(Boolean).length;
+  var señales = [C.difMes >= 0, C.mesesSinIngresos >= 6, C.cruce != null && C.cruce.n <= 5, C.condOk >= 5];
+  C.señales = señales.filter(Boolean).length;
+}
+
+/* ================== HELPERS DE RENDER ================== */
+function inp(path, val, cls, step){
+  return '<input type="number" step="' + (step || 'any') + '" class="' + (cls || '') + '" data-path="' + path + '" value="' + val + '">';
+}
+function inpPct(path, val){
+  return '<input type="number" step="0.1" class="pct" data-path="' + path + '@pct" value="' + (Math.round(val * 1000) / 10) + '"><span class="u">%</span>';
+}
+function o(k){ return '<span data-out="' + k + '"></span>'; }
+function od(k){ return '<span class="dlt" data-out="' + k + '"></span>'; }
+
+/* ---------- 1 · COMPARADOR ---------- */
+function buildComp(){
+  var h = '<thead><tr><th>Concepto</th><th class="n"><span class="big">Hoy</span>situación actual</th>' +
+          '<th class="n"><span class="big">En la finca</span>viviendo allá</th>' +
+          '<th class="n"><span class="big">Diferencia</span>finca − hoy</th></tr></thead><tbody>';
+  function grp(t){ h += '<tr class="grp"><td colspan="4">' + esc(t) + '</td></tr>'; }
+  function fila(k, n){
+    h += '<tr><td class="lab">' + esc(n) + '</td><td class="n">' + inp('hoy.' + k, S.hoy[k]) + '</td>' +
+         '<td class="n">' + inp('fin.' + k, S.fin[k]) + '</td><td class="n">' + od('d.' + k) + '</td></tr>';
+  }
+  function sub(k, n, cls){
+    h += '<tr class="' + (cls || 'sub') + '"><td>' + esc(n) + '</td><td class="n">' + o('hoy.' + k) + '</td>' +
+         '<td class="n">' + o('fin.' + k) + '</td><td class="n">' + od('d.' + k) + '</td></tr>';
+  }
+  grp('📥 Ingresos brutos mensuales');
+  ING.forEach(function(x){ fila(x[0], x[1]); });
+  sub('brutos', 'Total ingresos brutos');
+
+  grp('🏛️ Impuestos y seguridad social');
+  h += '<tr><td class="lab">Tasa efectiva de impuesto a la renta</td><td class="n">' + inpPct('hoy.tasaRenta', S.hoy.tasaRenta) + '</td><td class="n">' + inpPct('fin.tasaRenta', S.fin.tasaRenta) + '</td><td class="n">' + o('d.tasaRenta') + '</td></tr>';
+  h += '<tr><td class="lab">Aportes salud + pensión</td><td class="n">' + inpPct('hoy.tasaSS', S.hoy.tasaSS) + '</td><td class="n">' + inpPct('fin.tasaSS', S.fin.tasaSS) + '</td><td class="n">' + o('d.tasaSS') + '</td></tr>';
+  sub('impuestos', 'Total impuestos y aportes');
+  sub('neto', 'Ingreso neto (después de impuestos)');
+
+  grp('🏠 Vivienda');
+  VIV.forEach(function(x){ fila(x[0], x[1]); });
+  sub('vivienda', 'Subtotal vivienda');
+
+  grp('💳 Pago de deudas mensuales');
+  DEU.forEach(function(x){ fila(x[0], x[1]); });
+  sub('deudas', 'Subtotal deudas');
+
+  grp('🛒 Gastos fijos mensuales');
+  GAS.forEach(function(x){ fila(x[0], x[1]); });
+  sub('gfijos', 'Subtotal gastos fijos');
+
+  grp('🌾 Envíos e inversión en la finca');
+  INV.forEach(function(x){ fila(x[0], x[1]); });
+  sub('invF', 'Subtotal inversión finca');
+
+  h += '<tr class="grp"><td colspan="4">Resultado</td></tr>';
+  sub('gastoTotal', 'Gasto total mensual (vivienda + deudas + fijos + finca)');
+  sub('disponible', 'Dinero disponible real al mes', 'big');
+  h += '<tr class="sub"><td>Diferencia anual (finca − hoy)</td><td class="n"></td><td class="n"></td><td class="n">' + od('d.anual') + '</td></tr>';
+  h += '</tbody>';
+  $('#tblComp').innerHTML = h;
+}
+
+/* ---------- 2 · CAPITAL ---------- */
+function buildCapital(){
+  var p = S.cap;
+  function t(rows){ return '<tbody>' + rows.join('') + '</tbody>'; }
+  function fi(n, k, cls){ return '<tr><td class="lab">' + esc(n) + '</td><td class="n">' + inp('cap.' + k, p[k], cls) + '</td></tr>'; }
+  function fp(n, k){ return '<tr><td class="lab">' + esc(n) + '</td><td class="n">' + inpPct('cap.' + k, p[k]) + '</td></tr>'; }
+  function fo(n, k, cls){ return '<tr class="' + (cls || 'sub') + '"><td>' + esc(n) + '</td><td class="n">' + o(k) + '</td></tr>'; }
+
+  $('#tblVenta').innerHTML = t([
+    fi('Valor estimado de venta de la propiedad', 'valorVenta'),
+    fi('Deuda hipotecaria pendiente', 'deudaHip'),
+    fp('Gastos notariales y comisión inmobiliaria', 'pctGastosVenta'),
+    fp('Impuesto de ganancia ocasional', 'pctGanancia'),
+    fo('Ganancia bruta (venta − deuda)', 'cap.gananciaBruta'),
+    fo('Gastos de venta', 'cap.gastosVenta'),
+    fo('Impuesto de ganancia ocasional', 'cap.impGanancia'),
+    fo('Capital neto de la venta', 'cap.capitalVenta', 'big')
+  ]);
+  $('#tblActivos').innerHTML = t([
+    fi('Ahorros en cuenta / CDT', 'ahorros'),
+    fi('Cesantías / liquidación laboral estimada', 'cesantias'),
+    fi('Fondo de pensiones voluntario', 'pensionVol'),
+    fi('Otros activos liquidables', 'otrosAct'),
+    fo('Total otros activos', 'cap.otrosActivos', 'big')
+  ]);
+  $('#tblDeudas').innerHTML = t([
+    fi('Saldo crédito de consumo / personal', 'sCons'),
+    fi('Saldo tarjeta de crédito', 'sTarj'),
+    fi('Saldo crédito vehículo', 'sVeh'),
+    fi('Otras deudas a cancelar', 'sOtras'),
+    fo('Total deudas a liquidar', 'cap.deudasLiq', 'big')
+  ]);
+  $('#tblInvIni').innerHTML = t([
+    fi('Compra de tierra (si aún no la tienes)', 'tierra'),
+    fi('Construcción / adecuación de vivienda', 'vivienda'),
+    fi('Infraestructura productiva (galpón, riego, etc.)', 'infra'),
+    fi('Capital de trabajo inicial (semillas, animales)', 'capTrabajo'),
+    '<tr><td class="lab">Meses de colchón de emergencia <span class="u">× gasto mensual en la finca</span></td><td class="n">' + inp('cap.mesesColchon', p.mesesColchon, 'sm', '1') + '</td></tr>',
+    fo('Colchón de emergencia', 'cap.colchon'),
+    fo('Total inversión inicial', 'cap.invInicial', 'big')
+  ]);
+  $('#tblCapRes').innerHTML = t([
+    fo('Capital total disponible (venta + activos)', 'cap.capitalTotal'),
+    fo('− Deudas a liquidar', 'cap.deudasLiqNeg'),
+    fo('− Inversión inicial en la finca', 'cap.invInicialNeg'),
+    fo('Capital neto que te queda', 'cap.capitalNeto', 'big'),
+    fo('Meses que cubre si no entrara ningún ingreso', 'cap.mesesSinIngresos'),
+    fo('Con tus ingresos de finca, el mes cierra en', 'cap.cierreMes'),
+    fo('Si el mes cierra en negativo, el capital dura', 'cap.mesesDeficit')
+  ]);
+}
+
+/* ---------- 3 · SUPUESTOS ---------- */
+function buildSup(){
+  var q = S.proy;
+  var h = '<tbody>';
+  function fp(n, k, nota){ h += '<tr><td class="lab">' + esc(n) + '</td><td class="n">' + inpPct('proy.' + k, q[k]) + '</td><td class="lab" style="color:#8a978c;font-size:14.5px">' + esc(nota || '') + '</td></tr>'; }
+  function fn(n, k, nota, step){ h += '<tr><td class="lab">' + esc(n) + '</td><td class="n">' + inp('proy.' + k, q[k], 'sm', step || '1') + '</td><td class="lab" style="color:#8a978c;font-size:14.5px">' + esc(nota || '') + '</td></tr>'; }
+  fp('Crecimiento anual de los ingresos de la finca', 'gFinca', 'Cuánto crece lo que produce la tierra cada año');
+  fp('Crecimiento anual de los ingresos remotos', 'gRemoto', 'Sueldo, freelance, rentas');
+  fp('Inflación / aumento anual de los gastos', 'inflacion', 'Todo se encarece; no lo dejes en cero');
+  fp('Rendimiento anual del capital invertido', 'rendimiento', 'Lo que rinde el dinero que no gastas');
+  fn('Horizonte de proyección', 'horizonte', 'Años a futuro que quieres mirar (1 a 40)');
+  fn('Tu edad hoy', 'edad', 'Para traducir los años a edades');
+  fp('Tasa segura de retiro anual', 'tasaRetiro', 'Cuánto puedes sacar al año sin consumir el capital');
+  h += '</tbody>';
+  $('#tblSup').innerHTML = h;
+}
+
+/* ================== PINTAR SALIDAS ================== */
+var GOOD_UP = { sueldo:1, remoto:1, finca:1, otrosI:1, brutos:1, neto:1, disponible:1 };
+function paint(){
+  var O = {};
+  function put(k, t, c){ O[k] = { t:t, c:c }; }
+
+  ['hoy','fin'].forEach(function(c){
+    ['brutos','impuestos','neto','vivienda','deudas','gfijos','invF','gastoTotal','disponible'].forEach(function(k){
+      put(c + '.' + k, money(C[c][k]));
+    });
+  });
+  var keys = [].concat(ING.map(function(x){ return x[0]; }), VIV.map(function(x){ return x[0]; }),
+                       DEU.map(function(x){ return x[0]; }), GAS.map(function(x){ return x[0]; }),
+                       INV.map(function(x){ return x[0]; }));
+  keys.forEach(function(k){
+    var d = S.fin[k] - S.hoy[k];
+    var eff = GOOD_UP[k] ? d : -d;
+    put('d.' + k, d === 0 ? '—' : signed(d), 'dlt ' + (Math.abs(d) < 0.5 ? 'ze' : eff > 0 ? 'up' : 'dn'));
+  });
+  ['brutos','impuestos','neto','vivienda','deudas','gfijos','invF','gastoTotal','disponible'].forEach(function(k){
+    var d = C.fin[k] - C.hoy[k];
+    var eff = GOOD_UP[k] ? d : -d;
+    put('d.' + k, d === 0 ? '—' : signed(d), 'dlt ' + (Math.abs(d) < 0.5 ? 'ze' : eff > 0 ? 'up' : 'dn'));
+  });
+  put('d.tasaRenta', nf((S.fin.tasaRenta - S.hoy.tasaRenta) * 100, 1) + ' pp');
+  put('d.tasaSS', nf((S.fin.tasaSS - S.hoy.tasaSS) * 100, 1) + ' pp');
+  put('d.anual', signed(C.difAno), 'dlt ' + (C.difAno > 0 ? 'up' : C.difAno < 0 ? 'dn' : 'ze'));
+
+  put('cap.gananciaBruta', money(C.gananciaBruta));
+  put('cap.gastosVenta', money(C.gastosVenta));
+  put('cap.impGanancia', money(C.impGanancia));
+  put('cap.capitalVenta', money(C.capitalVenta));
+  put('cap.otrosActivos', money(C.otrosActivos));
+  put('cap.deudasLiq', money(C.deudasLiq));
+  put('cap.deudasLiqNeg', money(-C.deudasLiq));
+  put('cap.colchon', money(C.colchon));
+  put('cap.invInicial', money(C.invInicial));
+  put('cap.invInicialNeg', money(-C.invInicial));
+  put('cap.capitalTotal', money(C.capitalTotal));
+  put('cap.capitalNeto', money(C.capitalNeto));
+  put('cap.mesesSinIngresos', C.capitalNeto <= 0 ? 'ninguno' : nf(C.mesesSinIngresos, 1) + ' meses');
+  put('cap.cierreMes', (C.fin.disponible >= 0 ? '+' : '') + money(C.fin.disponible) + ' al mes');
+  put('cap.mesesDeficit', C.deficitMes <= 0 ? 'no aplica (el mes cierra en positivo)'
+      : (C.capitalNeto <= 0 ? 'el capital ya está en negativo' : nf(C.mesesDeficit, 1) + ' meses'));
+
+  $$('[data-out]').forEach(function(el){
+    var v = O[el.getAttribute('data-out')];
+    if(!v){ el.textContent = ''; return; }
+    el.textContent = v.t;
+    if(v.c != null) el.className = v.c;
+  });
+}
+
+/* ================== PROYECCIÓN: TABLA ================== */
+function renderProy(){
+  var h = '<thead><tr><th>Año</th><th class="n">Edad</th><th class="n">Ing. Finca</th><th class="n">Ing. Externos</th>' +
+          '<th class="n">Impuestos</th><th class="n">Gastos</th><th class="n">Flujo neto</th><th class="n">Al mes</th><th class="n">Patrimonio</th></tr></thead><tbody>';
+  C.años.forEach(function(a){
+    var mark = (C.cruce && a.n === C.cruce.n) ? ' style="background:#eef7f0"' : ((C.indep && a.n === C.indep.n) ? ' style="background:#faf4e6"' : '');
+    h += '<tr' + mark + '><td><strong>Año ' + a.n + '</strong></td><td class="n">' + a.edad + '</td>' +
+         '<td class="n">' + money(a.iFinca) + '</td><td class="n">' + money(a.iOtro) + '</td>' +
+         '<td class="n">' + money(-a.imp) + '</td><td class="n">' + money(-a.gasto) + '</td>' +
+         '<td class="n"><span class="dlt ' + (a.flujo >= 0 ? 'up' : 'dn') + '">' + signed(a.flujo) + '</span></td>' +
+         '<td class="n"><span class="dlt ' + (a.mes >= 0 ? 'up' : 'dn') + '">' + signed(a.mes) + '</span></td>' +
+         '<td class="n"><strong>' + money(a.patrimonio) + '</strong></td></tr>';
+  });
+  h += '</tbody>';
+  $('#tblProy').innerHTML = h;
+
+  $('#patHint').textContent = 'Empiezas con ' + money(C.capitalNeto) + ' y, con estos supuestos, llegas a ' +
+    money(C.final.patrimonio) + ' en el año ' + C.H + ' (a los ' + C.final.edad + ' años).';
+  $('#fluHint').textContent = C.cruce
+    ? 'Los ingresos cubren todos los gastos a partir del año ' + C.cruce.n + ', cuando tengas ' + C.cruce.edad + ' años. Antes de eso vives del capital.'
+    : 'Con estos supuestos ningún año cierra en positivo dentro del horizonte. Sube los ingresos de la finca, baja gastos o alarga el horizonte.';
+
+  var q = S.proy;
+  var patrNecesario = C.fin.gastoTotal * 12 / (q.tasaRetiro || 1);
+  var rh = '<tbody>';
+  function fr(n, v, nota){ rh += '<tr><td class="lab">' + esc(n) + '</td><td class="n"><strong>' + v + '</strong></td><td class="lab" style="color:#8a978c;font-size:14.5px">' + esc(nota || '') + '</td></tr>'; }
+  fr('Primer año en que la finca cubre todos los gastos', C.cruce ? 'Año ' + C.cruce.n + ' · ' + C.cruce.edad + ' años' : 'no ocurre en ' + C.H + ' años', 'Desde ahí dejas de quemar capital');
+  fr('Patrimonio que necesitarías para no depender de nadie', money(patrNecesario), 'Gasto anual de hoy en la finca ÷ tasa segura de retiro');
+  fr('Año en que alcanzas la independencia financiera', C.indep ? 'Año ' + C.indep.n + ' · ' + C.indep.edad + ' años' : 'no ocurre en ' + C.H + ' años', 'Cuando la renta del patrimonio cubre el gasto del mes');
+  fr('Patrimonio al final del horizonte', money(C.final.patrimonio), 'Año ' + C.H + ', a los ' + C.final.edad + ' años');
+  fr('Renta mensual que daría ese patrimonio', money(C.final.pasivo), 'Al ' + pct(q.tasaRetiro) + ' anual');
+  fr('Gasto mensual estimado en ese año', money(C.final.gastoMes), 'Con la inflación acumulada');
+  rh += '</tbody>';
+  $('#tblRetiro').innerHTML = rh;
+
+  var cubre = C.final.pasivo >= C.final.gastoMes;
+  $('#retNota').innerHTML = '<div class="callout' + (cubre ? '' : ' red') + '">' +
+    (cubre
+      ? '<strong>Al año ' + C.H + ' podrías dejar de trabajar.</strong> La renta del patrimonio (' + money(C.final.pasivo) + ' al mes) cubre tus gastos de ese año (' + money(C.final.gastoMes) + ').'
+      : '<strong>Al año ' + C.H + ' todavía no alcanzas la independencia.</strong> La renta del patrimonio daría ' + money(C.final.pasivo) + ' al mes y tus gastos serían ' + money(C.final.gastoMes) + '. Alarga el horizonte, baja el gasto o sube el crecimiento de la finca, pero solo si es creíble.') +
+    '</div>';
+}
+
+/* ================== GRÁFICOS ================== */
+var VBW = 760, VBH = 250, M = { l:70, r:20, t:16, b:34 };
+function niceTicks(min, max){
+  if(max === min){ max = min + 1; }
+  var span = max - min, step = Math.pow(10, Math.floor(Math.log(span / 4) / Math.LN10));
+  [1,2,2.5,5,10].some(function(m){ if(step * m >= span / 4){ step = step * m; return true; } return false; });
+  var t = [], s = Math.ceil(min / step) * step;
+  for(var v = s; v <= max + step * 0.001; v += step) t.push(Math.round(v * 1e6) / 1e6);
+  return t;
+}
+function chartFrame(vals){
+  var mx = Math.max.apply(null, vals.concat([0]));
+  var mn = Math.min.apply(null, vals.concat([0]));
+  var pad = (mx - mn) * 0.10 || 1;
+  var yMax = mx + pad, yMin = mn - (mn < 0 ? pad : 0);
+  var iw = VBW - M.l - M.r, ih = VBH - M.t - M.b;
+  return {
+    iw:iw, ih:ih, yMin:yMin, yMax:yMax,
+    X: function(i, n){ return n <= 1 ? M.l + iw / 2 : M.l + (i / (n - 1)) * iw; },
+    Y: function(v){ return M.t + ih * (1 - (v - yMin) / (yMax - yMin)); },
+    ticks: niceTicks(yMin, yMax)
+  };
+}
+function gridSvg(f){
+  var s = '';
+  f.ticks.forEach(function(t){
+    var y = f.Y(t);
+    s += '<line class="' + (Math.abs(t) < 1e-9 ? 'czero' : 'cgrid') + '" x1="' + M.l + '" y1="' + y + '" x2="' + (VBW - M.r) + '" y2="' + y + '"></line>';
+    s += '<text class="cax" x="' + (M.l - 9) + '" y="' + (y + 4) + '" text-anchor="end">' + compact(t) + '</text>';
+  });
+  return s;
+}
+function anchorFor(x){
+  if(x < M.l + 70) return { a:'start', x:M.l + 2 };
+  if(x > VBW - M.r - 70) return { a:'end', x:VBW - M.r - 2 };
+  return { a:'middle', x:x };
+}
+function xLabels(años, f){
+  var n = años.length, cada = n <= 12 ? 1 : (n <= 24 ? 2 : 5), s = '';
+  años.forEach(function(a, i){
+    if(i % cada !== 0 && i !== n - 1) return;
+    s += '<text class="cax" x="' + f.X(i, n) + '" y="' + (VBH - M.b + 18) + '" text-anchor="middle">' + a.n + '</text>';
+  });
+  s += '<text class="cax" x="' + (M.l + f.iw / 2) + '" y="' + (VBH - 2) + '" text-anchor="middle">año de la proyección</text>';
+  return s;
+}
+function bindTip(host, tip, n, texts){
+  var svg = host.querySelector('svg');
+  var rects = host.querySelectorAll('.chit');
+  Array.prototype.forEach.call(rects, function(r, i){
+    r.addEventListener('mouseenter', function(){
+      var b = svg.getBoundingClientRect(), hb = host.getBoundingClientRect();
+      var k = b.width / VBW;
+      var cx = parseFloat(r.getAttribute('data-cx')) * k + (b.left - hb.left);
+      tip.innerHTML = texts[i];
+      tip.style.opacity = '1';
+      var tw = tip.offsetWidth;
+      tip.style.left = Math.max(0, Math.min(hb.width - tw, cx - tw / 2)) + 'px';
+      tip.style.top = '0px';
+    });
+    r.addEventListener('mouseleave', function(){ tip.style.opacity = '0'; });
+  });
+}
+function renderChartPat(){
+  var años = C.años, n = años.length;
+  var vals = años.map(function(a){ return a.patrimonio; });
+  var f = chartFrame(vals);
+  var pts = años.map(function(a,i){ return [f.X(i,n), f.Y(a.patrimonio)]; });
+  var base = f.Y(Math.max(f.yMin, 0));
+  var d = pts.map(function(p,i){ return (i ? 'L' : 'M') + p[0] + ',' + p[1]; }).join(' ');
+  var area = 'M' + pts[0][0] + ',' + base + ' ' + d.replace(/^M/, 'L') + ' L' + pts[n-1][0] + ',' + base + ' Z';
+  var s = '<svg viewBox="0 0 ' + VBW + ' ' + VBH + '" role="img" aria-label="Patrimonio acumulado año a año">';
+  s += gridSvg(f);
+  s += '<path d="' + area + '" fill="' + CH.areaFill + '" fill-opacity="0.13"></path>';
+  s += '<path d="' + d + '" fill="none" stroke="' + CH.area + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>';
+  if(C.indep){
+    var xi = f.X(C.indep.n - 1, n);
+    var an = anchorFor(xi);
+    s += '<line class="cmark" x1="' + xi + '" y1="' + M.t + '" x2="' + xi + '" y2="' + (VBH - M.b) + '"></line>';
+    s += '<text class="cmarkt" x="' + an.x + '" y="' + (VBH - M.b - 8) + '" text-anchor="' + an.a + '">independencia · ' + C.indep.edad + ' años</text>';
+  }
+  if(n <= 20) años.forEach(function(a,i){ s += '<circle cx="' + f.X(i,n) + '" cy="' + f.Y(a.patrimonio) + '" r="3.2" fill="' + CH.area + '" stroke="#ffffff" stroke-width="2"></circle>'; });
+  var lx = pts[n-1][0], ly = pts[n-1][1];
+  s += '<circle cx="' + lx + '" cy="' + ly + '" r="5" fill="' + CH.area + '" stroke="#ffffff" stroke-width="2"></circle>';
+  s += '<text class="clab" x="' + (lx - 8) + '" y="' + Math.max(M.t + 10, ly - 13) + '" text-anchor="end">' + compact(años[n-1].patrimonio) + '</text>';
+  s += xLabels(años, f);
+  var w = f.iw / Math.max(1, n);
+  años.forEach(function(a,i){
+    s += '<rect class="chit" data-cx="' + f.X(i,n) + '" x="' + (f.X(i,n) - w/2) + '" y="' + M.t + '" width="' + w + '" height="' + f.ih + '"></rect>';
+  });
+  s += '</svg>';
+  var host = $('#chPat'), tip = $('#tipPat');
+  host.innerHTML = s; host.appendChild(tip);
+  bindTip(host, tip, n, años.map(function(a){
+    return '<span class="t">Año ' + a.n + ' · ' + a.edad + ' años</span>Patrimonio <b>' + money(a.patrimonio) + '</b><br>Renta mensual que daría: <b>' + money(a.pasivo) + '</b>';
+  }));
+}
+function barPath(x, y, w, h, r, up){
+  r = Math.min(r, w / 2, h);
+  if(h <= 0.5) return 'M' + x + ',' + y + ' h' + w;
+  return up
+    ? 'M' + x + ',' + (y + h) + ' V' + (y + r) + ' Q' + x + ',' + y + ' ' + (x + r) + ',' + y + ' H' + (x + w - r) + ' Q' + (x + w) + ',' + y + ' ' + (x + w) + ',' + (y + r) + ' V' + (y + h) + ' Z'
+    : 'M' + x + ',' + y + ' V' + (y + h - r) + ' Q' + x + ',' + (y + h) + ' ' + (x + r) + ',' + (y + h) + ' H' + (x + w - r) + ' Q' + (x + w) + ',' + (y + h) + ' ' + (x + w) + ',' + (y + h - r) + ' V' + y + ' Z';
+}
+function renderChartFlu(){
+  var años = C.años, n = años.length;
+  var f = chartFrame(años.map(function(a){ return a.flujo; }));
+  var zero = f.Y(0);
+  var bw = Math.min(38, Math.max(4, (f.iw / n) * 0.62));
+  var s = '<svg viewBox="0 0 ' + VBW + ' ' + VBH + '" role="img" aria-label="Flujo neto de cada año">';
+  s += gridSvg(f);
+  años.forEach(function(a,i){
+    var cx = f.X(i,n), y = f.Y(a.flujo), up = a.flujo >= 0;
+    var top = up ? y : zero, h = Math.abs(zero - y);
+    s += '<path d="' + barPath(cx - bw/2, top, bw, h, 4, up) + '" fill="' + (up ? CH.pos : CH.neg) + '"></path>';
+  });
+  s += '<line class="czero" x1="' + M.l + '" y1="' + zero + '" x2="' + (VBW - M.r) + '" y2="' + zero + '"></line>';
+  var ci = C.cruce ? C.cruce.n - 1 : -1;
+  var etiquetas = [0, n - 1].filter(function(i, k, arr){ return arr.indexOf(i) === k && i !== ci; });
+  etiquetas.forEach(function(i){
+    var a = años[i]; if(!a) return;
+    var cx = f.X(i,n), y = f.Y(a.flujo), up = a.flujo >= 0;
+    s += '<text class="clab" x="' + cx + '" y="' + (up ? y - 7 : y + 15) + '" text-anchor="middle">' + compact(a.flujo) + '</text>';
+  });
+  if(C.cruce){
+    var xc = f.X(ci, n), ac = anchorFor(xc);
+    s += '<line class="cmark" x1="' + xc + '" y1="' + M.t + '" x2="' + xc + '" y2="' + (VBH - M.b) + '"></line>';
+    if(ci < n - 2 || n <= 2) s += '<text class="cmarkt" x="' + ac.x + '" y="' + (M.t + 10) + '" text-anchor="' + ac.a + '">primer año en positivo · ' + compact(C.cruce.flujo) + '</text>';
+  }
+  s += xLabels(años, f);
+  var w = f.iw / Math.max(1, n);
+  años.forEach(function(a,i){
+    s += '<rect class="chit" data-cx="' + f.X(i,n) + '" x="' + (f.X(i,n) - w/2) + '" y="' + M.t + '" width="' + w + '" height="' + f.ih + '"></rect>';
+  });
+  s += '</svg>';
+  var host = $('#chFlu'), tip = $('#tipFlu');
+  host.innerHTML = s; host.appendChild(tip);
+  bindTip(host, tip, n, años.map(function(a){
+    return '<span class="t">Año ' + a.n + ' · ' + a.edad + ' años</span>' +
+           'Ingreso neto <b>' + money(a.neto) + '</b><br>Gastos <b>' + money(a.gasto) + '</b><br>' +
+           (a.flujo >= 0 ? 'Superávit' : 'Déficit') + ' <b>' + signed(a.flujo) + '</b> · <b>' + signed(a.mes) + '</b> al mes';
+  }));
+}
+
+/* ================== 4 · PLAN ================== */
+function renderConds(){
+  $('#conds').innerHTML = CONDS.map(function(c,i){
+    var on = S.plan.cond[i];
+    return '<div class="cond"><span class="tx">' + esc(c) + '</span>' +
+           '<span class="tog"><button class="si' + (on ? ' on' : '') + '" data-cond="' + i + '_1">Sí</button>' +
+           '<button class="no' + (!on ? ' on' : '') + '" data-cond="' + i + '_0">No</button></span></div>';
+  }).join('');
+  var k = C.condOk;
+  var cls = k >= 5 ? 'ok' : k >= 3 ? 'mid' : 'bad';
+  var txt = k >= 5 ? 'Puedes considerar el salto' : k >= 3 ? 'En proceso: sigue construyendo' : 'Todavía no: prepara más el camino';
+  $('#condVerd').innerHTML = '<div class="verd ' + cls + '"><div class="t">' + k + ' de 6 condiciones cumplidas</div><div class="s">' + txt + '</div></div>';
+}
+function buildMetas(){
+  var h = '<div class="meta" style="border-bottom:2px solid #eaefe8;padding-bottom:6px">' +
+          '<span class="nm" style="font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#5d6b60">Meta</span>' +
+          '<span style="font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#5d6b60">Detalle / número</span>' +
+          '<span style="font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#5d6b60">Fecha objetivo</span>' +
+          '<span style="font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:#5d6b60">Estado</span></div>';
+  METAS.forEach(function(m,i){
+    var g = S.plan.metas[i];
+    h += '<div class="meta"><span class="nm">' + esc(m) + '</span>' +
+         '<input type="text" data-meta="' + i + '_desc" value="' + esc(g.desc) + '" placeholder="¿Cuánto? ¿Qué exactamente?">' +
+         '<input type="date" data-meta="' + i + '_fecha" value="' + esc(g.fecha) + '">' +
+         '<select data-meta="' + i + '_estado">' + ESTADOS.map(function(e,j){ return '<option value="' + j + '"' + (g.estado === j ? ' selected' : '') + '>' + e + '</option>'; }).join('') + '</select></div>';
+  });
+  $('#metas').innerHTML = h;
+}
+
+/* ================== 5 · VEREDICTO + KPIs ================== */
+function renderKpis(){
+  var mDif = C.difMes;
+  var col = C.mesesSinIngresos;
+  var h = '';
+  h += '<div class="k ' + (mDif >= 0 ? 'pos' : 'neg') + '"><div class="lb">Diferencia mensual</div><div class="vl">' + signed(mDif) + '</div><div class="sb">' + signed(C.difAno) + ' al año</div></div>';
+  h += '<div class="k ' + (C.capitalNeto >= 0 ? '' : 'neg') + '"><div class="lb">Capital neto tras el salto</div><div class="vl">' + money(C.capitalNeto) + '</div><div class="sb">después de deudas e inversión</div></div>';
+  h += '<div class="k ' + (col >= 12 ? 'pos' : col >= 6 ? 'gold' : 'neg') + '"><div class="lb">Colchón sin ingresos</div><div class="vl">' + (C.capitalNeto <= 0 ? 'ninguno' : nf(col, 1) + ' meses') + '</div><div class="sb">' + (col >= 12 ? 'holgado' : col >= 6 ? 'justo' : 'insuficiente') + '</div></div>';
+  h += '<div class="k ' + (C.cruce ? 'pos' : 'neg') + '"><div class="lb">Año del cruce</div><div class="vl">' + (C.cruce ? 'Año ' + C.cruce.n : 'no llega') + '</div><div class="sb">' + (C.cruce ? 'a los ' + C.cruce.edad + ' años la finca se sostiene sola' : 'ningún año cierra en positivo') + '</div></div>';
+  h += '<div class="k gold"><div class="lb">Independencia financiera</div><div class="vl">' + (C.indep ? C.indep.edad + ' años' : '—') + '</div><div class="sb">' + (C.indep ? 'en el año ' + C.indep.n + ' de la proyección' : 'no ocurre en ' + C.H + ' años') + '</div></div>';
+  $('#kstrip').innerHTML = h;
+}
+function renderVeredicto(){
+  var n = C.señales;
+  var cls = n >= 4 ? 'ok' : n >= 2 ? 'mid' : 'bad';
+  var tit = n >= 4 ? 'Los números te dan' : n >= 2 ? 'Vas por buen camino, pero todavía no' : 'Todavía no';
+  var sub = n >= 4 ? 'Las cuatro señales están en verde. Valida los supuestos con alguien que sepa y ponle fecha al salto.'
+          : n >= 2 ? 'Tienes ' + n + ' de 4 señales en verde. Mira cuáles están en rojo abajo: son tu lista de tareas.'
+          : 'Solo ' + n + ' de 4 señales en verde. Dar el salto ahora sería apostar, no decidir.';
+  var h = '<div class="card"><h2>Veredicto</h2><div class="verd ' + cls + '"><div class="t">' + tit + '</div><div class="s">' + sub + '</div></div>';
+  h += '<div class="vcards" style="margin-top:16px">';
+  function vc(estado, titulo, valor, detalle){
+    h += '<div class="vc ' + estado + '"><div class="h"><i></i>' + esc(titulo) + '</div><div class="v">' + valor + '</div><div class="d">' + detalle + '</div></div>';
+  }
+  vc(C.difMes >= 0 ? 'ok' : 'bad', '1 · El mes a mes',
+     signed(C.difMes),
+     C.difMes >= 0
+       ? 'Vivir en la finca te deja <strong>más</strong> plata libre cada mes que tu vida actual.'
+       : 'Vivir en la finca te deja <strong>menos</strong> plata libre. No es un no: significa que necesitas capital para cubrir la diferencia.');
+  vc(C.mesesSinIngresos >= 12 ? 'ok' : C.mesesSinIngresos >= 6 ? 'mid' : 'bad', '2 · El colchón',
+     C.capitalNeto <= 0 ? 'ninguno' : nf(C.mesesSinIngresos, 1) + ' meses',
+     C.mesesSinIngresos >= 12 ? 'Puedes vivir más de un año sin que entre un peso. Eso es margen para equivocarte.'
+       : C.mesesSinIngresos >= 6 ? 'Alcanza para medio año. Es el mínimo aceptable. No dejes que baje de ahí.'
+       : 'Menos de seis meses de aire. Liquida más deuda o reúne más ahorro antes de renunciar.');
+  vc(C.cruce ? (C.cruce.n <= 3 ? 'ok' : C.cruce.n <= 5 ? 'mid' : 'bad') : 'bad', '3 · El año del cruce',
+     C.cruce ? 'Año ' + C.cruce.n : 'no llega',
+     C.cruce
+       ? 'A partir del año ' + C.cruce.n + ' (a los ' + C.cruce.edad + ') los ingresos cubren todos los gastos. Antes de eso, vives del capital.'
+       : 'Con estos supuestos ningún año cierra en positivo dentro del horizonte. Revisa gastos e ingresos de la finca.');
+  vc(C.condOk >= 5 ? 'ok' : C.condOk >= 3 ? 'mid' : 'bad', '4 · Tu preparación',
+     C.condOk + ' de 6',
+     C.condOk >= 5 ? 'Tienes casi todo listo. Revisa la pantalla del plan y ponle fechas.'
+       : 'Te faltan ' + (6 - C.condOk) + ' condiciones. Están en la pantalla <strong>4 · Plan</strong>.');
+  vc(C.indep ? 'ok' : 'mid', '5 · El retiro',
+     C.indep ? C.indep.edad + ' años' : 'no en ' + C.H + ' años',
+     C.indep
+       ? 'A esa edad la renta de tu patrimonio (' + money(C.indep.pasivo) + ' al mes) cubriría tus gastos sin trabajar.'
+       : 'Dentro del horizonte que pusiste no alcanzas la independencia. Alarga el horizonte o revisa los supuestos.');
+  vc(C.final.patrimonio >= 0 ? 'ok' : 'bad', '6 · Patrimonio al final',
+     money(C.final.patrimonio),
+     'En el año ' + C.H + ', a los ' + C.final.edad + ' años, con los supuestos que pusiste.');
+  h += '</div>';
+
+  var avisos = [];
+  if(C.deudasLiq > 0 && C.fin.deudas > 0) avisos.push('Estás liquidando ' + money(C.deudasLiq) + ' de deuda con el capital, pero en la columna «En la finca» todavía pagas ' + money(C.fin.deudas) + ' de cuotas al mes. Si de verdad las liquidas, esas cuotas deberían bajar.');
+  if(S.cap.valorVenta > 0 && S.fin.arriendo === 0 && S.fin.hipoteca === 0 && S.cap.vivienda === 0) avisos.push('Vendes la casa y en la finca no pagas arriendo ni hipoteca, pero tampoco presupuestaste construcción de vivienda. ¿Dónde vas a vivir?');
+  if(S.proy.gFinca > 0.25) avisos.push('Pusiste ' + pct(S.proy.gFinca) + ' de crecimiento anual en la finca. Es muy optimista: comprueba si el resultado aguanta con la mitad.');
+  if(S.proy.inflacion === 0) avisos.push('Dejaste la inflación en cero. Los gastos siempre suben; con inflación en cero el resultado se ve mejor de lo que será.');
+  if(S.fin.finca === 0) avisos.push('Los ingresos de la finca están en cero. Si aún no produce nada, todo el peso recae en el ingreso remoto y el capital.');
+  if(avisos.length) h += '<div class="callout" style="margin-top:16px"><strong>Revisa estas inconsistencias:</strong><ul style="margin:8px 0 0 18px">' + avisos.map(function(a){ return '<li style="margin-bottom:5px">' + a + '</li>'; }).join('') + '</ul></div>';
+
+  h += '<div class="callout red" style="margin-top:14px"><strong>Aviso.</strong> Esto es un ejercicio de reflexión, no asesoría financiera. Los cálculos son proyecciones basadas en supuestos que tú elegiste. Antes de vender una casa o renunciar a un empleo, consulta con un asesor financiero certificado.</div>';
+  h += '</div>';
+  $('#verdWrap').innerHTML = h;
+
+  var notas = [];
+  if(C.fin.disponible < 0) notas.push('En la finca el mes cierra en <strong>' + money(C.fin.disponible) + '</strong>. Vas a estar consumiendo capital cada mes: mira la pantalla 2 para saber cuánto te dura.');
+  if(C.difMes >= 0) notas.push('La diferencia mensual es <strong>positiva</strong>: vivir en la finca te deja más disponible que hoy. El salto tiene sentido económico ya.');
+  else notas.push('La diferencia mensual es <strong>negativa</strong>. Tienes tres palancas: reducir deudas, aumentar los ingresos de la finca, o usar el capital de la venta (pantalla 2).');
+  $('#compNota').innerHTML = '<div class="callout">' + notas.join('<br><br>') + '</div>';
+
+  $('#capNota').innerHTML = '<div class="callout' + (C.mesesSinIngresos >= 6 ? '' : ' red') + '">' +
+    (C.mesesSinIngresos >= 12 ? '🟢 <strong>Colchón holgado.</strong> Más de doce meses de gastos cubiertos: tienes margen para que las cosas salgan mal un par de veces.'
+     : C.mesesSinIngresos >= 6 ? '🟡 <strong>Colchón justo.</strong> Entre seis y doce meses. Considera aumentar los ingresos de la finca antes de renunciar.'
+     : '🔴 <strong>Colchón insuficiente.</strong> Menos de seis meses. Liquida más deudas o reúne más ahorro antes de dar el paso.') +
+    '</div>';
+}
+
+/* ================== REFRESCO ================== */
+function refresh(){
+  compute();
+  paint();
+  renderKpis();
+  renderProy();
+  renderChartPat();
+  renderChartFlu();
+  renderConds();
+  renderVeredicto();
+  save();
+}
+
+/* ================== ONBOARDING ================== */
+var STEPS = $$('.onbstep').length, step = 0;
+function renderDots(){
+  var h = '';
+  for(var i = 0; i < STEPS; i++) h += '<button class="dot' + (i === step ? ' on' : '') + '" data-dot="' + i + '" aria-label="Pantalla ' + (i+1) + ' de ' + STEPS + '"></button>';
+  $('#onbDots').innerHTML = h;
+}
+function showStep(n){
+  step = Math.max(0, Math.min(STEPS - 1, n));
+  $$('.onbstep').forEach(function(el){ el.classList.toggle('on', +el.getAttribute('data-step') === step); });
+  $('#onbPrev').style.visibility = step === 0 ? 'hidden' : 'visible';
+  $('#onbNext').textContent = step === STEPS - 1 ? 'Empezar' : 'Siguiente';
+  $('#onbSkip').style.visibility = step === STEPS - 1 ? 'hidden' : 'visible';
+  renderDots();
+}
+function abrirApp(){
+  S.onbDone = true; save();
+  $('#onb').style.display = 'none';
+  $('#app').classList.add('on');
+  refresh();
+  try{ R.scrollIntoView({ block:'start' }); }catch(e){}
+}
+$('#onbNext').addEventListener('click', function(){ if(step === STEPS - 1) abrirApp(); else showStep(step + 1); });
+$('#onbPrev').addEventListener('click', function(){ showStep(step - 1); });
+$('#onbSkip').addEventListener('click', abrirApp);
+$('#onbDots').addEventListener('click', function(ev){
+  var b = ev.target.closest ? ev.target.closest('[data-dot]') : null;
+  if(b) showStep(+b.getAttribute('data-dot'));
+});
+$('#btnGuia').addEventListener('click', function(){
+  $('#app').classList.remove('on');
+  $('#onb').style.display = '';
+  showStep(0);
+  try{ R.scrollIntoView({ block:'start' }); }catch(e){}
+});
+
+/* ================== EVENTOS ================== */
+function setPath(path, v){
+  var isPct = false;
+  if(path.indexOf('@pct') > 0){ isPct = true; path = path.replace('@pct', ''); }
+  var p = path.split('.'), ref = S;
+  for(var i = 0; i < p.length - 1; i++) ref = ref[p[i]];
+  ref[p[p.length - 1]] = isPct ? v / 100 : v;
+}
+R.addEventListener('input', function(ev){
+  var el = ev.target;
+  if(el.hasAttribute && el.hasAttribute('data-path')){
+    var v = parseFloat(String(el.value).replace(',', '.'));
+    if(!isFinite(v)) v = 0;
+    setPath(el.getAttribute('data-path'), v);
+    refresh();
+    return;
+  }
+  if(el.hasAttribute && el.hasAttribute('data-meta')){
+    var raw = el.getAttribute('data-meta'), i = +raw.split('_')[0], f = raw.split('_')[1];
+    S.plan.metas[i][f] = (f === 'estado' || f === 'prio') ? +el.value : el.value;
+    save();
+    return;
+  }
+});
+R.addEventListener('change', function(ev){
+  var el = ev.target;
+  if(el.hasAttribute && el.hasAttribute('data-meta')){
+    var raw = el.getAttribute('data-meta'), i = +raw.split('_')[0], f = raw.split('_')[1];
+    S.plan.metas[i][f] = (f === 'estado' || f === 'prio') ? +el.value : el.value;
+    save();
+  }
+});
+R.addEventListener('click', function(ev){
+  var b = ev.target.closest ? ev.target.closest('button') : null;
+  if(!b) return;
+  if(b.hasAttribute('data-cond')){
+    var q = b.getAttribute('data-cond').split('_');
+    S.plan.cond[+q[0]] = q[1] === '1';
+    refresh();
+    return;
+  }
+  if(b.classList.contains('tab')){
+    $$('.tab').forEach(function(x){ x.classList.remove('on'); });
+    $$('.panel').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    var pan = $('#p-' + b.getAttribute('data-tab'));
+    if(pan) pan.classList.add('on');
+  }
+});
+$('#btnPrint').addEventListener('click', function(){ window.print(); });
+$('#btnReset').addEventListener('click', function(){
+  if(!window.confirm('¿Borrar todos tus datos y volver al ejemplo original?')) return;
+  var keep = S.onbDone;
+  S = blank(); S.onbDone = keep;
+  try{ if(window.localStorage) window.localStorage.removeItem(LSKEY); }catch(e){}
+  buildComp(); buildCapital(); buildSup(); buildMetas(); refresh();
+});
+$('#btnCsv').addEventListener('click', function(){
+  var L = [];
+  function add(a){ L.push(a.map(function(x){ return '"' + String(x == null ? '' : x).replace(/"/g, '""') + '"'; }).join(';')); }
+  add(['CALCULADORA DEL PASO DE FE · La Huerta LAB']); add([]);
+  add(['COMPARADOR MENSUAL','Hoy','En la finca','Diferencia']);
+  function fila(n, k){ add([n, S.hoy[k], S.fin[k], S.fin[k] - S.hoy[k]]); }
+  ING.concat(VIV, DEU, GAS, INV).forEach(function(x){ fila(x[1], x[0]); });
+  ['brutos','impuestos','neto','vivienda','deudas','gfijos','invF','gastoTotal','disponible'].forEach(function(k){
+    add([k, Math.round(C.hoy[k]), Math.round(C.fin[k]), Math.round(C.fin[k] - C.hoy[k])]);
+  });
+  add([]); add(['CAPITAL','COP']);
+  [['Capital neto de la venta',C.capitalVenta],['Otros activos',C.otrosActivos],['Deudas a liquidar',C.deudasLiq],
+   ['Colchón de emergencia',C.colchon],['Inversión inicial total',C.invInicial],['Capital total',C.capitalTotal],
+   ['Capital neto',C.capitalNeto]].forEach(function(p){ add([p[0], Math.round(p[1])]); });
+  add(['Meses de colchón sin ingresos', Math.round(C.mesesSinIngresos * 10) / 10]);
+  add([]); add(['PROYECCIÓN','Año','Edad','Ing. Finca','Ing. Externos','Impuestos','Gastos','Flujo neto','Al mes','Patrimonio']);
+  C.años.forEach(function(a){ add(['', a.n, a.edad, Math.round(a.iFinca), Math.round(a.iOtro), Math.round(a.imp), Math.round(a.gasto), Math.round(a.flujo), Math.round(a.mes), Math.round(a.patrimonio)]); });
+  add([]); add(['INDICADORES']);
+  add(['Año del cruce', C.cruce ? C.cruce.n : 'no llega']);
+  add(['Edad en el cruce', C.cruce ? C.cruce.edad : '']);
+  add(['Año de independencia financiera', C.indep ? C.indep.n : 'no llega']);
+  add(['Edad de independencia', C.indep ? C.indep.edad : '']);
+  add(['Patrimonio final', Math.round(C.final.patrimonio)]);
+  add(['Condiciones cumplidas', C.condOk + ' de 6']);
+  add([]); add(['PLAN: CONDICIONES','¿Cumplida?']);
+  CONDS.forEach(function(c,i){ add([c, S.plan.cond[i] ? 'Sí' : 'No']); });
+  add([]); add(['PLAN. METAS','Detalle','Fecha','Estado']);
+  METAS.forEach(function(m,i){ var g = S.plan.metas[i]; add([m, g.desc, g.fecha, ESTADOS[g.estado]]); });
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + L.join('\n'));
+  a.download = 'calculadora-paso-de-fe.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+});
+
+/* ================== INIT ================== */
+buildComp(); buildCapital(); buildSup(); buildMetas();
+refresh();
+if(S.onbDone){ $('#onb').style.display = 'none'; $('#app').classList.add('on'); }
+else { showStep(0); }
+window.addEventListener('resize', function(){ renderChartPat(); renderChartFlu(); });
+})();
+</script>
+
+<script>
+/* Ancho completo dentro de GoHighLevel: la fila del constructor trae un
+   max-width de 1170px que recorta el bloque. Esto lo neutraliza solo en los
+   contenedores que envuelven a este bloque, sin tocar el resto de la pagina. */
+(function(){
+  var all = document.getElementsByClassName('pfz');
+  var R = all[all.length - 1];
+  if(!R) return;
+  function full(){
+    var el = R.parentElement;
+    while(el && el !== document.body && el !== document.documentElement){
+      var cs = window.getComputedStyle(el);
+      if(cs.maxWidth !== 'none') el.style.setProperty('max-width','none','important');
+      if(parseFloat(cs.marginLeft) > 0)  el.style.setProperty('margin-left','0','important');
+      if(parseFloat(cs.marginRight) > 0) el.style.setProperty('margin-right','0','important');
+      el = el.parentElement;
+    }
+  }
+  full();
+  window.addEventListener('resize', full);
+  setTimeout(full, 400);
+  setTimeout(full, 1500);
+})();
+</script>

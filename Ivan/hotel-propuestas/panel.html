@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seguimiento de propuestas</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&family=Inter:wght@400;500;600;700;800&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --verde:#1c3a2b; --lima:#a9c346; --terra:#b8603c; --crema:#f4efe3; --crema-borde:#ddd5c4;
+  --tinta:#3f4a43; --tenue:#6c7871; --linea:#e4e2da;
+  --terra-txt:#9c4a28; --oliva-txt:#4a6b22;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fbfaf7;color:var(--verde);
+  font:16px/1.6 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{width:min(1080px,calc(100% - 40px));margin:0 auto}
+h1,h2{margin:0;font-family:Lora,Georgia,serif;font-weight:600;letter-spacing:-.015em}
+h1{font-size:clamp(26px,3.4vw,38px)}
+h2{font-size:21px}
+.eyebrow{margin:0 0 8px;color:var(--oliva-txt);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+header{padding:34px 0 26px;border-bottom:1px solid var(--linea);background:#fff}
+header .wrap{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+main{padding:30px 0 70px}
+
+/* Entrada */
+.entrar{max-width:420px;margin:60px auto;padding:32px 30px;border:1px solid var(--crema-borde);
+  border-radius:6px;background:#fff;box-shadow:0 14px 40px rgba(28,58,43,.07)}
+.entrar h2{margin-bottom:6px}
+.entrar p{margin:0 0 20px;color:var(--tenue);font-size:14.5px}
+label{display:block;margin-bottom:6px;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tenue)}
+input{width:100%;margin-bottom:16px;padding:13px 14px;border:1px solid var(--crema-borde);border-radius:4px;
+  background:#fff;color:var(--verde);font:inherit;font-size:15px}
+input:focus{outline:2px solid var(--verde);outline-offset:-1px;border-color:var(--verde)}
+button{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:13px 24px;border:0;
+  border-radius:4px;background:var(--verde);color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer;
+  transition:background-color .2s ease}
+button:hover{background:#16301f}
+button.ancho{width:100%}
+button.sec{background:transparent;color:var(--verde);border:1px solid var(--crema-borde);min-height:40px;padding:8px 16px;font-size:13.5px}
+button.sec:hover{background:var(--crema)}
+.aviso{margin:0 0 16px;padding:12px 14px;border-radius:4px;background:#fdeceb;color:#8c2f22;font-size:14px}
+
+/* Propuestas */
+.prop{margin-bottom:26px;border:1px solid var(--linea);border-radius:6px;background:#fff;overflow:hidden}
+.prop-cab{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  padding:20px 24px;border-bottom:1px solid var(--linea);background:var(--crema)}
+.prop-cab h2{font-size:20px}
+.prop-cab .tot{display:flex;gap:26px;flex-wrap:wrap}
+.prop-cab .tot div{text-align:right}
+.prop-cab .tot b{display:block;font-family:Lora,Georgia,serif;font-size:24px;line-height:1.1}
+.prop-cab .tot span{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--tenue)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+thead th{padding:12px 16px;border-bottom:1px solid var(--linea);color:var(--tenue);
+  font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;text-align:left}
+td{padding:14px 16px;border-bottom:1px solid var(--linea);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.quien{font-weight:600}
+.tenue{color:var(--tenue)}
+.chip{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:.04em}
+.chip.frio{background:#eef0ed;color:#5d6b62}
+.chip.tibio{background:#fbf0e6;color:var(--terra-txt)}
+.chip.caliente{background:var(--verde);color:var(--lima)}
+.barra{position:relative;height:7px;border-radius:4px;background:var(--linea);overflow:hidden;min-width:90px}
+.barra i{position:absolute;inset:0 auto 0 0;background:var(--lima);border-radius:4px}
+.vacio{padding:40px 24px;color:var(--tenue);text-align:center;font-size:14.5px}
+.pie{margin-top:10px;color:var(--tenue);font-size:12.5px}
+@media(max-width:700px){
+  thead{display:none}
+  tbody tr{display:block;padding:14px 16px;border-bottom:1px solid var(--linea)}
+  td{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border:0}
+  td::before{content:attr(data-th);color:var(--tenue);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+  td.n{text-align:right}
+}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <div><p class="eyebrow">La Huerta Hotel</p><h1>Seguimiento de propuestas</h1></div>
+  <div id="sesion"></div>
+</div></header>
+
+<main class="wrap">
+  <div id="entrar" class="entrar" hidden>
+    <h2>Entra con tu cuenta</h2>
+    <p>Las aperturas solo las ve el equipo del hotel. El cliente que abre la propuesta no puede consultarlas.</p>
+    <div id="error" class="aviso" hidden></div>
+    <label for="email">Correo</label>
+    <input id="email" type="email" autocomplete="username" placeholder="gerente@lahuertahotel.com.co">
+    <label for="clave">Contraseña</label>
+    <input id="clave" type="password" autocomplete="current-password">
+    <button class="ancho" id="btn-entrar">Entrar</button>
+  </div>
+
+  <div id="datos" hidden></div>
+</main>
+
+<script>
+/* Panel de seguimiento de propuestas.
+   Usa SU PROPIO cliente de Supabase con la clave anon, no uno compartido que sirva
+   datos con service_role: hacer signInWithPassword sobre un cliente compartido
+   rompe el RLS para todos los demás usuarios. */
+const SUPABASE_URL  = 'https://bevduxusxfwmgtudytax.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJldmR1eHVzeGZ3bWd0dWR5dGF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNjcwNTAsImV4cCI6MjEwNDY0MzA1MH0.Q2f-6NlE-KHfIFn3rBdxsVrO3GPuVWfJUEe9G9ohwMg';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const $ = (s) => document.querySelector(s);
+const SECCIONES = ['Portada','Datos generales','Sobre el hotel','Alojamiento','Alimentación',
+                   'Espacio de trabajo','Experiencias','Programa','Resumen de inversión','Condiciones'];
+
+function cuando(iso) {
+  const d = new Date(iso), ahora = new Date();
+  const min = Math.round((ahora - d) / 60000);
+  if (min < 60) return `hace ${min} min`;
+  if (min < 1440) return `hace ${Math.round(min / 60)} h`;
+  if (min < 2880) return 'ayer';
+  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+}
+function duracion(s) {
+  if (!s) return '—';
+  if (s < 60) return s + ' s';
+  return Math.floor(s / 60) + ' min ' + (s % 60 ? (s % 60) + ' s' : '');
+}
+/* Un lector que llegó al resumen de inversión y estuvo más de tres minutos
+   interesa más que uno que abrió y cerró. Eso es lo que colorea la fila. */
+function temperatura(f) {
+  const hondo = (f.seccion_mas_lejos_n || 0) >= 8;
+  const rato  = (f.segundos_max || 0) >= 180;
+  if (hondo && (rato || f.aperturas > 2)) return ['caliente', 'Llegó al precio'];
+  if (hondo || rato || f.aperturas > 1) return ['tibio', 'Lo está mirando'];
+  return ['frio', 'Solo lo abrió'];
+}
+
+async function pintar() {
+  const { data, error } = await sb.from('propuesta_resumen').select('*').order('ultima_vez', { ascending: false });
+  const cont = $('#datos');
+  if (error) { cont.innerHTML = `<div class="vacio">No se pudieron leer los datos: ${error.message}</div>`; return; }
+  if (!data || !data.length) {
+    cont.innerHTML = '<div class="prop"><div class="vacio">Todavía no ha abierto nadie ninguna propuesta.<br>' +
+      'En cuanto alguien abra su enlace aparecerá aquí.</div></div>';
+    return;
+  }
+  const porSlug = {};
+  data.forEach((f) => { (porSlug[f.slug] = porSlug[f.slug] || []).push(f); });
+
+  cont.innerHTML = Object.entries(porSlug).map(([slug, filas]) => {
+    const aperturas = filas.reduce((a, f) => a + (f.aperturas || 0), 0);
+    const llegaron  = filas.filter((f) => (f.seccion_mas_lejos_n || 0) >= 8).length;
+    const cuerpo = filas.map((f) => {
+      const [clase, etiqueta] = temperatura(f);
+      const pct = Math.round(((f.seccion_mas_lejos_n || 0) / (SECCIONES.length - 1)) * 100);
+      const sec = f.seccion_mas_lejos || '—';
+      return `<tr>
+        <td data-th="Quién"><span class="quien">${f.destinatario}</span></td>
+        <td data-th="Estado"><span class="chip ${clase}">${etiqueta}</span></td>
+        <td data-th="Aperturas" class="n">${f.aperturas || 0}</td>
+        <td data-th="Tiempo" class="n">${duracion(f.segundos_max)}</td>
+        <td data-th="Hasta dónde leyó">
+          <div class="barra"><i style="width:${pct}%"></i></div>
+          <span class="tenue" style="font-size:12.5px">${sec}</span>
+        </td>
+        <td data-th="Última vez" class="n tenue">${cuando(f.ultima_vez)}</td>
+      </tr>`;
+    }).join('');
+    return `<section class="prop">
+      <div class="prop-cab">
+        <div><p class="eyebrow">Propuesta</p><h2>${slug}</h2></div>
+        <div class="tot">
+          <div><b>${filas.length}</b><span>destinatarios</span></div>
+          <div><b>${aperturas}</b><span>aperturas</span></div>
+          <div><b>${llegaron}</b><span>vieron el precio</span></div>
+        </div>
+      </div>
+      <table><thead><tr>
+        <th>Quién</th><th>Estado</th><th class="n">Aperturas</th><th class="n">Tiempo</th>
+        <th>Hasta dónde leyó</th><th class="n">Última vez</th>
+      </tr></thead><tbody>${cuerpo}</tbody></table>
+    </section>`;
+  }).join('') + '<p class="pie">«Llegó al precio» significa que vio el resumen de inversión. El tiempo es el de la visita más larga.</p>';
+}
+
+async function estado() {
+  const { data: { session } } = await sb.auth.getSession();
+  $('#entrar').hidden = !!session;
+  $('#datos').hidden = !session;
+  $('#sesion').innerHTML = session
+    ? `<button class="sec" id="btn-salir">Salir · ${session.user.email}</button>`
+    : '';
+  if (session) {
+    document.getElementById('btn-salir').onclick = async () => { await sb.auth.signOut(); estado(); };
+    pintar();
+  }
+}
+
+$('#btn-entrar').onclick = async () => {
+  const err = $('#error'); err.hidden = true;
+  const { error } = await sb.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#clave').value });
+  if (error) { err.textContent = 'No se pudo entrar: ' + error.message; err.hidden = false; return; }
+  estado();
+};
+$('#clave').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#btn-entrar').click(); });
+
+estado();
+</script>
+</body></html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!--
+  VIDEO CORTO DE MARCA · SAVIAS — v2 PREMIUM
+  Cliente: SAVIAS · Talento: Lina Toro · Dirección creativa: Cristhian (JoinsClee)
+  Tipo: bumper / intro de marca autocontenido (4 escenas) · motion editorial premium
+  Duración total: 17.0s · Dimensiones: 1920x1080 (YouTube horizontal)
+  Captura: node _capture/capture-animation.js "Video Corto Marca SAVIAS/animation.html" "Video Corto Marca SAVIAS/savias-marca-v2.mp4" 1920 1080 17.0 30 mp4
+
+  Craft premium añadido sobre v1:
+   · Reveal por letra del wordmark (blur + rise + stagger expo)
+   · Reveal por palabra en la cita
+   · Mask reveals (cortina overflow) en titulares
+   · Number-badges con anillo SVG dibujándose (stroke-dashoffset)
+   · Light sweep (destello) + bloom radial cálido detrás del nombre
+   · Ken Burns drift continuo + focus-out al salir de cada escena
+   · Grano de película sutil (textura táctil) + easings expo
+  Sistema visual Brand Kit v1.0 · 100% serif (Cormorant Garamond + SC + Lora).
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Video corto de marca · SAVIAS · v2 premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&family=Cormorant+SC:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage: #9CAF88;
+  --sage-deep: #7B8F6A;
+  --sage-light: #DCE2CB;
+  --gold: #B8943E;
+  --gold-bright: #D4AC55;
+  --cream: #F5EFE6;
+  --cream-deep: #EDE4D3;
+  --cream-soft: rgba(245, 239, 230, 0.74);
+  --paper: #FAF7F2;
+  --ink: #1F1F1B;
+  --ink-soft: #4A4A45;
+  --ink-mute: #7A7A72;
+  --dark-hero: #2A2823;
+
+  --font-display: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-sc: 'Cormorant SC', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+
+  /* easings editoriales premium */
+  --e-expo: cubic-bezier(0.16, 1, 0.30, 1);
+  --e-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --e-inout: cubic-bezier(0.83, 0, 0.17, 1);
+
+  --total-duration: 17.0s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--dark-hero);
+}
+body {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  position: relative;
+}
+
+/* ════════════════ ESCENAS ════════════════ */
+.scene { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
+.scene-1 { z-index: 1; background: var(--dark-hero);
+  animation: appear .6s var(--e-soft) 0.0s forwards, vanish .55s var(--e-inout) 4.35s forwards; }
+.scene-2 { z-index: 2; background: var(--cream);
+  animation: appear .6s var(--e-soft) 4.6s forwards, vanish .55s var(--e-inout) 8.65s forwards; }
+.scene-3 { z-index: 3; background: var(--cream-deep);
+  animation: appear .6s var(--e-soft) 8.9s forwards, vanish .55s var(--e-inout) 12.25s forwards; }
+.scene-4 { z-index: 4; background: var(--sage);
+  animation: appear .65s var(--e-soft) 12.5s forwards; }
+
+/* capa interior: Ken Burns drift + focus-out al salir */
+.scene-inner { position: absolute; inset: 0; transform-origin: center; }
+.scene-1 .scene-inner { animation: drift 5.4s linear 0.0s both, focusOut .6s ease-in 4.35s forwards; }
+.scene-2 .scene-inner { animation: drift 5.0s linear 4.6s both, focusOut .6s ease-in 8.65s forwards; }
+.scene-3 .scene-inner { animation: drift 4.5s linear 8.9s both, focusOut .6s ease-in 12.25s forwards; }
+.scene-4 .scene-inner { animation: drift 5.0s linear 12.5s both; }
+
+@keyframes appear  { to { opacity: 1; } }
+@keyframes vanish  { to { opacity: 0; } }
+@keyframes drift   { from { transform: scale(1.0); } to { transform: scale(1.05); } }
+@keyframes focusOut{ from { filter: blur(0); } to { filter: blur(7px); } }
+
+/* ── grano de película global ── */
+.grain {
+  position: absolute; inset: -60%;
+  width: 220%; height: 220%;
+  z-index: 90; pointer-events: none;
+  opacity: 0.06; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 1.2s steps(5) infinite;
+}
+@keyframes grain {
+  0%   { transform: translate(0,0); }
+  20%  { transform: translate(-3%,2%); }
+  40%  { transform: translate(2%,-3%); }
+  60%  { transform: translate(-2%,-2%); }
+  80%  { transform: translate(3%,2%); }
+  100% { transform: translate(0,0); }
+}
+
+/* ── corner tags ── */
+.corner-tag {
+  position: absolute;
+  font-family: var(--font-sc); font-weight: 500;
+  font-size: 15px; letter-spacing: 0.34em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 14px; opacity: 0;
+}
+.corner-tag::before { content: ''; width: 24px; height: 1px; }
+.corner-tag.tl { top: 70px; left: 90px; }
+.corner-tag.br { bottom: 70px; right: 90px; flex-direction: row-reverse; }
+
+/* ════════════════ ESCENA 1 · DARK HERO ════════════════ */
+.s1-bloom {
+  position: absolute; top: 47%; left: 50%;
+  width: 1300px; height: 1300px; transform: translate(-50%,-50%) scale(.8);
+  background: radial-gradient(circle,
+    rgba(212,172,85,0.16) 0%, rgba(212,172,85,0.07) 30%, rgba(42,40,35,0) 62%);
+  opacity: 0; filter: blur(10px);
+  animation: bloom 3.2s var(--e-soft) 0.3s forwards;
+}
+.s1-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 46%,
+    rgba(42,40,35,0) 0%, rgba(42,40,35,0) 54%, rgba(14,13,10,0.6) 100%);
+  opacity: 0; animation: appear 1.4s ease-out 0.2s forwards;
+}
+.s1-lightsweep {
+  position: absolute; top: -20%; left: 0;
+  width: 55%; height: 140%;
+  background: linear-gradient(105deg, transparent 38%, rgba(245,239,230,0.10) 50%, transparent 62%);
+  mix-blend-mode: screen;
+  transform: translateX(-140%) skewX(-8deg); opacity: 0;
+  animation: sweep 1.9s var(--e-inout) 1.7s forwards;
+}
+.s1-stack {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+}
+.s1-topline {
+  width: 150px; height: 1.5px; background: var(--sage);
+  margin-bottom: 42px; box-shadow: 0 0 8px rgba(156,175,136,0.4);
+  transform: scaleX(0); transform-origin: center;
+  animation: growX .9s var(--e-expo) 0.5s forwards;
+}
+.s1-eyebrow {
+  font-family: var(--font-sc); font-weight: 500;
+  font-size: 27px; text-transform: uppercase; color: var(--sage);
+  margin-bottom: 40px; letter-spacing: 0.46em;
+  opacity: 0; transform: translateY(12px); filter: blur(6px);
+  animation: blurRise 1.0s var(--e-expo) 0.7s forwards;
+}
+.s1-name {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 236px; line-height: .96; color: var(--cream);
+  display: flex; letter-spacing: 0.14em; padding-left: 0.14em;
+}
+.s1-name .ltr {
+  display: inline-block; opacity: 0;
+  transform: translateY(38px) scale(1.05); filter: blur(12px);
+  animation: letterIn 1.2s var(--e-expo) calc(1.0s + var(--i) * 0.075s) forwards;
+}
+.s1-underline {
+  width: 150px; height: 1.5px; background: var(--gold-bright);
+  margin-top: 8px; opacity: .9;
+  transform: scaleX(0); transform-origin: center;
+  animation: growX 1.0s var(--e-expo) 2.35s forwards;
+}
+.s1-desc {
+  font-family: var(--font-display); font-style: italic; font-weight: 400;
+  font-size: 46px; line-height: 1.3; color: var(--cream-soft);
+  margin-top: 34px; opacity: 0; transform: translateY(18px); filter: blur(8px);
+  animation: blurRise 1.0s var(--e-expo) 2.5s forwards;
+}
+.s1-desc .accent { color: var(--gold-bright); font-style: italic; }
+.s1-ornament {
+  font-family: var(--font-display); font-size: 26px;
+  letter-spacing: 0.5em; color: var(--gold-bright); margin-top: 40px;
+  opacity: 0; transform: scale(.5);
+  animation: popIn .7s var(--e-expo) 2.95s forwards;
+}
+.scene-1 .corner-tag { color: var(--sage); }
+.scene-1 .corner-tag::before { background: var(--sage); }
+.scene-1 .corner-tag.tl { animation: appear .8s ease-out 0.6s forwards; }
+.scene-1 .corner-tag.br { animation: appear .8s ease-out 0.75s forwards; }
+
+/* ════════════════ ESCENA 2 · MÉTODO EVA (cream) ════════════════ */
+.s2-wrap { position: absolute; top: 50%; left: 150px; transform: translateY(-50%); max-width: 1500px; }
+.ui-tag {
+  font-family: var(--font-sc); font-weight: 600;
+  font-size: 22px; letter-spacing: 0.36em; text-transform: uppercase;
+  color: var(--sage-deep); display: flex; align-items: center; gap: 16px;
+  margin-bottom: 30px; opacity: 1;
+}
+.ui-tag .ln { width: 40px; height: 1.5px; background: var(--gold); transform: scaleX(0); transform-origin: left center; }
+.ui-tag .tx { opacity: 0; transform: translateY(8px); }
+.s2-ui .ln { animation: growX .7s var(--e-expo) 5.0s forwards; }
+.s2-ui .tx { animation: blurRise .7s var(--e-expo) 5.2s forwards; }
+
+.s2-head {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 90px; line-height: 1.06; color: var(--ink);
+  letter-spacing: -0.005em; margin-bottom: 52px;
+}
+.mask { display: block; overflow: hidden; padding-bottom: 0.1em; }
+.mask > span { display: inline-block; transform: translateY(118%); }
+.s2-head .mask:nth-child(1) > span { animation: maskUp 1.0s var(--e-expo) 5.4s forwards; }
+.s2-head .mask:nth-child(2) > span { animation: maskUp 1.0s var(--e-expo) 5.58s forwards; }
+.s2-head em { font-style: italic; color: var(--gold); }
+
+.eva-list { list-style: none; display: flex; flex-direction: column; gap: 26px; }
+.eva-item { display: flex; align-items: center; gap: 34px; }
+.eva-item .badge { flex: 0 0 auto; position: relative; width: 74px; height: 74px; }
+.eva-item .badge svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+.eva-item .badge circle {
+  fill: var(--paper); stroke: var(--gold); stroke-width: 1.5;
+  stroke-dasharray: 226; stroke-dashoffset: 226;
+}
+.eva-item .badge i {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-style: italic; font-weight: 500;
+  font-size: 40px; color: var(--gold); font-style: italic; opacity: 0;
+}
+.eva-word {
+  font-family: var(--font-display); font-weight: 500; font-size: 58px;
+  color: var(--ink); line-height: 1; opacity: 0; transform: translateX(-20px); filter: blur(7px);
+}
+.eva-word small {
+  display: block; font-family: var(--font-body); font-weight: 400;
+  font-size: 22px; font-style: italic; color: var(--ink-soft);
+  margin-top: 6px; letter-spacing: 0.01em;
+}
+.eva-item:nth-child(1) circle { animation: ringDraw .9s var(--e-soft) 5.95s forwards; }
+.eva-item:nth-child(1) i      { animation: appear .5s ease-out 6.25s forwards; }
+.eva-item:nth-child(1) .eva-word { animation: slideBlur .8s var(--e-expo) 6.10s forwards; }
+.eva-item:nth-child(2) circle { animation: ringDraw .9s var(--e-soft) 6.30s forwards; }
+.eva-item:nth-child(2) i      { animation: appear .5s ease-out 6.60s forwards; }
+.eva-item:nth-child(2) .eva-word { animation: slideBlur .8s var(--e-expo) 6.45s forwards; }
+.eva-item:nth-child(3) circle { animation: ringDraw .9s var(--e-soft) 6.65s forwards; }
+.eva-item:nth-child(3) i      { animation: appear .5s ease-out 6.95s forwards; }
+.eva-item:nth-child(3) .eva-word { animation: slideBlur .8s var(--e-expo) 6.80s forwards; }
+.s2-ornament {
+  font-family: var(--font-display); font-size: 22px;
+  letter-spacing: 0.5em; color: var(--sage-deep); margin-top: 50px;
+  opacity: 0; transform: scale(.6);
+  animation: popIn .6s var(--e-expo) 7.7s forwards;
+}
+
+/* ════════════════ ESCENA 3 · FILOSOFÍA (cream deep) ════════════════ */
+.s3-wrap {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 1500px; max-width: 86%; padding-left: 56px;
+}
+.s3-rule {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--gold);
+  transform: scaleY(0); transform-origin: top center;
+  animation: growY .9s var(--e-expo) 9.4s forwards;
+}
+.s3-intro {
+  font-family: var(--font-sc); font-weight: 600;
+  font-size: 22px; letter-spacing: 0.34em; text-transform: uppercase;
+  color: var(--sage-deep); margin-bottom: 34px;
+  opacity: 0; transform: translateY(10px); filter: blur(6px);
+  animation: blurRise .8s var(--e-expo) 9.5s forwards;
+}
+.s3-quote {
+  font-family: var(--font-display); font-weight: 400;
+  font-size: 96px; line-height: 1.1; color: var(--ink); letter-spacing: -0.005em;
+}
+.s3-quote .w {
+  display: inline-block; opacity: 0; transform: translateY(22px); filter: blur(9px);
+  animation: blurRise .95s var(--e-expo) calc(9.8s + var(--i) * 0.13s) forwards;
+}
+.s3-quote em { font-style: italic; color: var(--gold); }
+.hl { position: relative; display: inline-block; }
+.hl::before {
+  content: ''; position: absolute; left: -6px; right: -6px; top: 16%; bottom: 10%;
+  background: rgba(184,148,62,0.20); z-index: -1;
+  transform: skew(-3deg) scaleX(0); transform-origin: left center;
+  animation: skewIn .6s var(--e-expo) 10.95s forwards;
+}
+.s3-attr {
+  font-family: var(--font-display); font-style: italic; font-weight: 400;
+  font-size: 40px; color: var(--ink-soft); margin-top: 40px;
+  opacity: 0; transform: translateY(12px); filter: blur(6px);
+  animation: blurRise .8s var(--e-expo) 11.2s forwards;
+}
+
+/* ════════════════ ESCENA 4 · CIERRE (sage) ════════════════ */
+.s4-bloom {
+  position: absolute; top: 48%; left: 50%; transform: translate(-50%,-50%) scale(.8);
+  width: 1200px; height: 1200px;
+  background: radial-gradient(circle, rgba(245,239,230,0.34) 0%, rgba(245,239,230,0.12) 34%, rgba(156,175,136,0) 64%);
+  opacity: 0; filter: blur(8px);
+  animation: bloom 3.4s var(--e-soft) 12.7s forwards;
+}
+.s4-sweep {
+  position: absolute; top: -20%; left: 0; width: 60%; height: 140%;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.14) 50%, transparent 60%);
+  mix-blend-mode: soft-light;
+  transform: translateX(-140%) skewX(-8deg); opacity: 0;
+  animation: sweep 2.0s var(--e-inout) 13.7s forwards;
+}
+.s4-stack {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+}
+.s4-topline {
+  width: 150px; height: 1.5px; background: var(--cream); margin-bottom: 38px;
+  transform: scaleX(0); transform-origin: center;
+  animation: growX .9s var(--e-expo) 13.1s forwards;
+}
+.s4-eyebrow {
+  font-family: var(--font-sc); font-weight: 500;
+  font-size: 22px; text-transform: uppercase; color: var(--ink);
+  margin-bottom: 30px; letter-spacing: 0.4em;
+  opacity: 0; transform: translateY(12px); filter: blur(6px);
+  animation: blurRise 1.0s var(--e-expo) 13.3s forwards;
+}
+.s4-name {
+  font-family: var(--font-display); font-weight: 600;
+  font-size: 172px; line-height: 1; color: var(--cream);
+  display: flex; letter-spacing: 0.12em; padding-left: 0.12em;
+  text-shadow: 0 2px 16px rgba(31,31,27,0.24);
+}
+.s4-name .ltr {
+  display: inline-block; opacity: 0; transform: translateY(32px) scale(1.04); filter: blur(11px);
+  animation: letterIn 1.15s var(--e-expo) calc(13.55s + var(--i) * 0.07s) forwards;
+}
+.s4-tagline {
+  font-family: var(--font-display); font-style: italic; font-weight: 400;
+  font-size: 44px; color: var(--ink-soft); margin-top: 24px;
+  opacity: 0; transform: translateY(12px); filter: blur(7px);
+  animation: blurRise .9s var(--e-expo) 14.8s forwards;
+}
+.s4-divider {
+  font-family: var(--font-display); font-size: 24px;
+  letter-spacing: 0.5em; color: var(--cream); margin-top: 40px;
+  opacity: 0; transform: scale(.6);
+  animation: popIn .6s var(--e-expo) 15.2s forwards;
+}
+.s4-url {
+  font-family: var(--font-sc); font-weight: 500;
+  font-size: 26px; text-transform: uppercase; color: var(--ink);
+  margin-top: 26px; letter-spacing: 0.26em;
+  opacity: 0; transform: translateY(10px); filter: blur(6px);
+  animation: blurRise .9s var(--e-expo) 15.5s forwards;
+}
+
+/* ════════════════ KEYFRAMES ════════════════ */
+@keyframes growX    { to { transform: scaleX(1); } }
+@keyframes growY    { to { transform: scaleY(1); } }
+@keyframes blurRise { to { opacity: 1; transform: translateY(0); filter: blur(0); } }
+@keyframes slideBlur{ to { opacity: 1; transform: translateX(0); filter: blur(0); } }
+@keyframes maskUp   { to { transform: translateY(0); } }
+@keyframes letterIn { to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
+@keyframes popIn    { to { opacity: 1; transform: scale(1); } }
+@keyframes skewIn   { to { transform: skew(-3deg) scaleX(1); } }
+@keyframes ringDraw { to { stroke-dashoffset: 0; } }
+@keyframes bloom    { 0% { opacity: 0; transform: translate(-50%,-50%) scale(.8); }
+                      55% { opacity: 1; }
+                      100% { opacity: .85; transform: translate(-50%,-50%) scale(1.08); } }
+@keyframes sweep    { 0% { opacity: 0; transform: translateX(-140%) skewX(-8deg); }
+                      15% { opacity: 1; } 85% { opacity: 1; }
+                      100% { opacity: 0; transform: translateX(230%) skewX(-8deg); } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ ESCENA 1 · DARK HERO ═══════════ -->
+<section class="scene scene-1">
+  <div class="scene-inner">
+    <div class="s1-bloom"></div>
+    <div class="s1-vignette"></div>
+    <div class="corner-tag tl">Jabonería artesanal</div>
+    <div class="corner-tag br">Comunidad · Lina Toro</div>
+    <div class="s1-stack">
+      <div class="s1-topline"></div>
+      <div class="s1-eyebrow">Desde el taller de Lina</div>
+      <h1 class="s1-name"><span class="ltr" style="--i:0">S</span><span class="ltr" style="--i:1">A</span><span class="ltr" style="--i:2">V</span><span class="ltr" style="--i:3">I</span><span class="ltr" style="--i:4">A</span><span class="ltr" style="--i:5">S</span></h1>
+      <div class="s1-underline"></div>
+      <div class="s1-desc">Jabonería artesanal con <span class="accent">criterio</span></div>
+      <div class="s1-ornament">·&nbsp;&nbsp;✦&nbsp;&nbsp;·</div>
+    </div>
+    <div class="s1-lightsweep"></div>
+  </div>
+</section>
+
+<!-- ═══════════ ESCENA 2 · MÉTODO EVA ═══════════ -->
+<section class="scene scene-2">
+  <div class="scene-inner">
+    <div class="s2-wrap">
+      <div class="ui-tag s2-ui"><span class="ln"></span><span class="tx">El método</span></div>
+      <h2 class="s2-head">
+        <span class="mask"><span>No memorices recetas.</span></span>
+        <span class="mask"><span>Domina el <em>método</em>.</span></span>
+      </h2>
+      <ul class="eva-list">
+        <li class="eva-item">
+          <span class="badge"><svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="36"/></svg><i>1</i></span>
+          <span class="eva-word">Entender<small>por qué reacciona cada ingrediente</small></span>
+        </li>
+        <li class="eva-item">
+          <span class="badge"><svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="36"/></svg><i>2</i></span>
+          <span class="eva-word">Verificar<small>medir, observar, ajustar con criterio</small></span>
+        </li>
+        <li class="eva-item">
+          <span class="badge"><svg viewBox="0 0 74 74"><circle cx="37" cy="37" r="36"/></svg><i>3</i></span>
+          <span class="eva-word">Aplicar<small>crear tus propias fórmulas con seguridad</small></span>
+        </li>
+      </ul>
+      <div class="s2-ornament">·&nbsp;&nbsp;✦&nbsp;&nbsp;·</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ESCENA 3 · FILOSOFÍA ═══════════ -->
+<section class="scene scene-3">
+  <div class="scene-inner">
+    <div class="s3-wrap">
+      <div class="s3-rule"></div>
+      <div class="s3-intro">La filosofía</div>
+      <blockquote class="s3-quote">
+        <span class="w" style="--i:0">No</span> <span class="w" style="--i:1">copies</span> <span class="w" style="--i:2">la</span> <span class="w" style="--i:3">receta.</span><br>
+        <span class="w" style="--i:4">Entiende</span> <span class="w" style="--i:5">el</span> <span class="w" style="--i:6"><span class="hl"><em>criterio</em></span>.</span>
+      </blockquote>
+      <div class="s3-attr">— Lina Toro</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ESCENA 4 · CIERRE ═══════════ -->
+<section class="scene scene-4">
+  <div class="scene-inner">
+    <div class="s4-bloom"></div>
+    <div class="s4-stack">
+      <div class="s4-topline"></div>
+      <div class="s4-eyebrow">Comunidad de jabonería artesanal</div>
+      <div class="s4-name"><span class="ltr" style="--i:0">S</span><span class="ltr" style="--i:1">A</span><span class="ltr" style="--i:2">V</span><span class="ltr" style="--i:3">I</span><span class="ltr" style="--i:4">A</span><span class="ltr" style="--i:5">S</span></div>
+      <div class="s4-tagline">Entender. Verificar. Aplicar.</div>
+      <div class="s4-divider">·&nbsp;&nbsp;✦&nbsp;&nbsp;·</div>
+      <div class="s4-url">linatorojaboneria.com</div>
+    </div>
+    <div class="s4-sweep"></div>
+  </div>
+</section>
+
+</body>
+</html>

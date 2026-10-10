@@ -1,0 +1,292 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page { size: Letter; margin: 0; }
+* { margin:0; padding:0; box-sizing:border-box; }
+:root{
+  --sage:#9CAF88; --sage-deep:#7B8F6A; --sage-light:#DCE2CB;
+  --gold:#B8943E; --gold-soft:#cda651; --cream:#F5EFE6; --cream-deep:#EDE4D3;
+  --paper:#FAF7F2; --dark:#2A2823; --ink:#1F1F1B; --ink-soft:#4A4A45; --ink-mute:#7A7A72;
+  --line:#D4CBB8; --line-soft:#E5DCC8;
+  --sans:'Hanken Grotesk',system-ui,sans-serif; --serif:'Cormorant Garamond',Georgia,serif;
+}
+html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+body{ font-family:var(--sans); color:var(--ink); }
+.page{ width:215.9mm; height:279.4mm; position:relative; overflow:hidden; background:var(--paper); page-break-after:always; }
+.page:last-child{ page-break-after:auto; }
+.pad{ padding:16mm 16mm; height:100%; display:flex; flex-direction:column; }
+.serif{ font-family:var(--serif); } .em{ font-family:var(--serif); font-style:italic; }
+.foot{ position:absolute; left:0; right:0; bottom:7mm; text-align:center; font-size:8pt; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-mute); }
+.foot b{ color:var(--sage-deep); font-weight:800; letter-spacing:.2em; }
+.eyebrow{ font-size:9.5pt; letter-spacing:.34em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+.h-title{ font-family:var(--serif); font-weight:600; font-size:32pt; line-height:1.03; color:var(--ink); margin:3mm 0 0; }
+.h-title .em{ color:var(--sage-deep); }
+.h-rule{ width:48px; height:2px; background:var(--gold); margin:6mm 0; }
+p.body{ font-size:10.5pt; line-height:1.6; color:var(--ink-soft); }
+
+/* COVER */
+.cover{ background:linear-gradient(160deg,#e7eed8,#d9e3c6 55%,#cdd9b6); }
+.cover .pad{ align-items:center; justify-content:center; text-align:center; }
+.cv-logo{ width:74px;height:74px;border-radius:18px;object-fit:cover;box-shadow:0 14px 32px -12px rgba(42,40,35,.5);}
+.cv-wm{ margin-top:14px; font-family:var(--serif); font-style:italic; font-size:30pt; letter-spacing:.16em; color:var(--sage-deep);}
+.cv-rule{ width:54px;height:2px;background:var(--gold);margin:16px auto;}
+.cv-kicker{ font-size:11pt; letter-spacing:.44em; text-transform:uppercase; color:var(--gold); font-weight:700;}
+.cv-title{ font-family:var(--serif); font-weight:600; font-size:58pt; line-height:.98; color:var(--ink); margin:4px 0;}
+.cv-sub{ font-family:var(--serif); font-style:italic; font-size:18pt; color:var(--dark); max-width:140mm; margin:6px auto 0;}
+.cv-soap{ width:120mm; margin:10mm auto 0; display:block; filter:drop-shadow(0 26px 40px rgba(42,40,35,.32)); }
+.cv-foot{ margin-top:auto; font-size:9pt; letter-spacing:.3em; text-transform:uppercase; color:var(--dark);}
+.cv-foot b{ color:var(--sage-deep);}
+.cv-sprig{ position:absolute; width:58mm; opacity:.45;}
+
+/* TOC */
+.toc .pad{ justify-content:center; }
+.toc ol{ list-style:none; margin-top:8mm; }
+.toc li{ display:flex; align-items:baseline; gap:5mm; padding:5mm 0; border-bottom:1px solid var(--line-soft); }
+.toc li .n{ font-family:var(--serif); font-style:italic; font-size:20pt; color:var(--gold); width:14mm; }
+.toc li .t{ font-family:var(--serif); font-size:21pt; color:var(--ink); flex:1; }
+.toc li .pg{ font-size:10pt; color:var(--ink-mute); letter-spacing:.1em; }
+.toc-soap{ position:absolute; right:-22mm; bottom:-14mm; width:90mm; opacity:.9; transform:rotate(8deg); filter:drop-shadow(0 18px 28px rgba(42,40,35,.2)); }
+
+/* generic section */
+.sec-head{ margin-bottom:8mm; }
+/* QA blocks */
+.qa{ display:grid; grid-template-columns:1fr 1fr; gap:7mm; }
+.qa .card{ background:var(--paper); border:1px solid var(--line-soft); border-left:4px solid var(--sage); border-radius:12px; padding:7mm; }
+.qa .card h3{ font-family:var(--serif); font-style:italic; font-size:16pt; color:var(--sage-deep); margin-bottom:3mm; }
+.qa .card p{ font-size:9.6pt; line-height:1.5; color:var(--ink-soft); }
+.result{ margin-top:7mm; background:linear-gradient(135deg,var(--sage-deep),var(--sage)); color:#fff; border-radius:12px; padding:7mm 8mm; display:flex; gap:6mm; align-items:center;}
+.result .em{ font-size:15pt; color:#fff; }
+.result p{ font-size:10pt; line-height:1.5; }
+.qa-soap{ width:46mm; flex:none; }
+
+/* photo cards (3-col) */
+.pcards{ display:grid; grid-template-columns:repeat(3,1fr); gap:7mm; margin-top:2mm; }
+.pcard{ background:var(--paper); border:1px solid var(--line-soft); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; }
+.pcard .ph{ height:46mm; background:var(--cream-deep); }
+.pcard .ph img{ width:100%; height:100%; object-fit:cover; display:block; }
+.pcard .bd{ padding:6mm; flex:1; }
+.pcard .bd h3{ font-family:var(--serif); font-style:italic; font-size:17pt; color:var(--sage-deep); margin-bottom:3mm; }
+.pcard .bd ul{ list-style:none; }
+.pcard .bd li{ font-size:9pt; line-height:1.4; color:var(--ink-soft); padding-left:5mm; position:relative; margin-bottom:2.4mm; }
+.pcard .bd li::before{ content:""; position:absolute; left:0; top:1.8mm; width:2.2mm; height:2.2mm; border-radius:50%; background:var(--gold); }
+.pcard .bd li b{ color:var(--ink); }
+
+/* tables */
+.two{ display:grid; grid-template-columns:1.05fr .95fr; gap:9mm; flex:1; }
+.tbl{ width:100%; border-collapse:collapse; margin-top:3mm; }
+.tbl th{ background:var(--sage-deep); color:#fff; font-size:8.5pt; letter-spacing:.12em; text-transform:uppercase; text-align:left; padding:3.4mm 4mm; }
+.tbl td{ font-size:9.2pt; color:var(--ink-soft); padding:3.2mm 4mm; border-bottom:1px solid var(--line-soft); line-height:1.35; }
+.tbl tr:nth-child(even) td{ background:var(--cream); }
+.tbl td.act{ font-weight:800; color:var(--ink); }
+.subh{ font-family:var(--serif); font-style:italic; font-size:18pt; color:var(--sage-deep); margin-bottom:2mm; }
+.note{ background:var(--cream-deep); border-radius:10px; padding:5mm 6mm; font-size:9.2pt; line-height:1.5; color:var(--ink-soft); margin-top:5mm; }
+.note b{ color:var(--sage-deep); }
+.colimg{ width:100%; border-radius:12px; margin-top:5mm; object-fit:cover; }
+
+/* utensilios grid */
+.ugrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6mm; margin-top:2mm; }
+.uitem{ background:var(--paper); border:1px solid var(--line-soft); border-radius:12px; overflow:hidden; }
+.uitem img{ width:100%; height:34mm; object-fit:cover; display:block; }
+.uitem .ub{ padding:4mm 5mm; }
+.uitem .ub h4{ font-size:10.5pt; font-weight:800; color:var(--ink); margin-bottom:1.5mm; }
+.uitem .ub p{ font-size:8.6pt; line-height:1.4; color:var(--ink-soft); }
+
+/* steps (creación) */
+.bigsteps{ display:flex; flex-direction:column; gap:6mm; margin-top:3mm; flex:1; }
+.bstep{ display:flex; gap:6mm; align-items:stretch; background:var(--paper); border:1px solid var(--line-soft); border-radius:14px; overflow:hidden; }
+.bstep .bimg{ width:48mm; flex:none; background:var(--cream-deep); }
+.bstep .bimg img{ width:100%; height:100%; object-fit:cover; }
+.bstep .bct{ padding:6mm 7mm; display:flex; flex-direction:column; justify-content:center; }
+.bstep .bn{ font-family:var(--serif); font-style:italic; font-size:13pt; color:var(--gold); }
+.bstep h3{ font-size:13pt; font-weight:800; color:var(--ink); margin:1mm 0 2mm; }
+.bstep p{ font-size:9.4pt; line-height:1.5; color:var(--ink-soft); }
+
+/* recetas practicar */
+.rgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6mm; margin-top:2mm; }
+.rcard{ background:var(--paper); border:1px solid var(--line-soft); border-top:4px solid var(--gold); border-radius:12px; padding:6mm; }
+.rcard .tag{ display:inline-block; font-size:7.6pt; letter-spacing:.12em; text-transform:uppercase; font-weight:800; color:#fff; background:var(--sage-deep); padding:2mm 3.4mm; border-radius:999px; }
+.rcard h3{ font-family:var(--serif); font-weight:600; font-size:17pt; line-height:1.05; color:var(--ink); margin:3mm 0 3mm; }
+.rcard ul{ list-style:none; }
+.rcard li{ font-size:8.8pt; line-height:1.4; color:var(--ink-soft); padding-left:4.5mm; position:relative; margin-bottom:2mm; }
+.rcard li::before{ content:""; position:absolute; left:0; top:1.6mm; width:2mm; height:2mm; border-radius:50%; background:var(--gold); }
+.elab{ margin-top:7mm; background:var(--cream-deep); border-radius:12px; padding:6mm 7mm; }
+.elab h3{ font-family:var(--serif); font-style:italic; font-size:16pt; color:var(--sage-deep); margin-bottom:3mm; }
+.elab ol{ margin-left:5mm; }
+.elab li{ font-size:9.4pt; line-height:1.55; color:var(--ink-soft); margin-bottom:1mm; }
+</style></head><body>
+
+<div class="page cover">
+  <img class="cv-sprig" src="assets/sprig.png" style="top:-10mm;left:-12mm;transform:rotate(-18deg)">
+  <img class="cv-sprig" src="assets/sprig.png" style="bottom:-6mm;right:-12mm;transform:rotate(160deg)">
+  <div class="pad">
+    <img class="cv-logo" src="assets/savias-logo.png">
+    <div class="cv-wm">Savias</div>
+    <div class="cv-rule"></div>
+    <div class="cv-kicker">Ruta Jabonera</div>
+    <div class="cv-title serif">Manual</div>
+    <div class="cv-sub">Introducción a los jabones base de glicerina</div>
+    <img class="cv-soap" src="assets/soap-set.png">
+    <div class="cv-foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b></div>
+  </div>
+</div>
+<div class="page toc">
+  <img class="toc-soap" src="assets/soap-hero.png">
+  <div class="pad">
+    <div class="eyebrow">Manual Ruta Jabonera</div>
+    <div class="h-title serif">Con<span class="em">tenido</span></div>
+    <div class="h-rule"></div>
+    <ol><li><span class="n">01</span><span class="t">Generalidades</span><span class="pg">pág. 03</span></li><li><span class="n">02</span><span class="t">Ingredientes esenciales</span><span class="pg">pág. 04</span></li><li><span class="n">03</span><span class="t">Aditivos y extractos</span><span class="pg">pág. 05</span></li><li><span class="n">04</span><span class="t">Utensilios</span><span class="pg">pág. 07</span></li><li><span class="n">05</span><span class="t">Paso a paso para personalizar tu base</span><span class="pg">pág. 08</span></li><li><span class="n">06</span><span class="t">Recetas para practicar</span><span class="pg">pág. 09</span></li></ol>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+<div class="page">
+  <div class="pad">
+    <div class="sec-head">
+      <div class="eyebrow">01 · Generalidades</div>
+      <div class="h-title serif">¿Qué es un jabón <span class="em">de glicerina?</span></div>
+      <div class="h-rule"></div>
+      <p class="body" style="max-width:165mm">Se trata de un jabón neutro, con un pH respetuoso con la piel; por eso limpia sin ser agresivo. Está elaborado a base de aceites vegetales y soda cáustica mediante un proceso de saponificación en caliente, durante el cual se le añade glicerina vegetal, alcohol y/o sorbitol para lograr los distintos grados de transparencia y su reconocida capacidad de derretir y enmoldar fácilmente. Gracias a la glicerina vegetal son jabones con un gran poder humectante y, gracias a su pH, se catalogan como hipoalergénicos: ideales para todo tipo de pieles.</p>
+    </div>
+    <div class="qa">
+      <div class="card">
+        <h3>¿Qué lo diferencia de los saponificados?</h3>
+        <p>Los jabones de glicerina se hacen a partir de bases ya semielaboradas, por lo que el jabón ya está curado: una vez lo personalizas, está listo para usar. Su elaboración es más sencilla — basta con fundir la base, añadir los aditivos que quieras y darle forma con un molde.</p>
+      </div>
+      <div class="card">
+        <h3>Y entonces… ¿cuál es mejor?</h3>
+        <p>Es cuestión de gustos personales. Con ambas técnicas obtenemos jabones naturales cargados de propiedades para la piel; elige el que mejor se adapte a tu ritmo, tus tiempos y el tipo de jabón que quieres crear.</p>
+      </div>
+    </div>
+    <div class="result">
+      <img class="qa-soap" src="assets/soap-hero.png">
+      <div>
+        <span class="em">¿El resultado?</span>
+        <p>Un jabón artesanal respetuoso y lleno de beneficios para tu piel, con la forma, el aroma y el color de tu preferencia.</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+<div class="page">
+  <div class="pad">
+    <div class="sec-head">
+      <div class="eyebrow">02 · Ingredientes esenciales</div>
+      <div class="h-title serif">Lo que da vida <span class="em">a tu jabón</span></div>
+      <div class="h-rule"></div>
+    </div>
+    <div class="pcards">
+      <div class="pcard"><div class="ph"><img src="assets/item-base.jpg"></div><div class="bd">
+        <h3>La base</h3>
+        <ul><li><b>Transparente:</b> jabones translúcidos de colores vibrantes.</li>
+        <li><b>Blanca:</b> opaca por el dióxido de titanio, ideal para tonos pastel.</li></ul></div></div>
+      <div class="pcard"><div class="ph"><img src="assets/item-colorantes.jpg"></div><div class="bd">
+        <h3>Colorantes</h3>
+        <ul><li><b>Líquidos:</b> fáciles de trabajar, amplia gama.</li>
+        <li><b>Naturales:</b> de plantas, gama más reducida.</li>
+        <li><b>Micas:</b> visos nacarados de origen mineral.</li></ul></div></div>
+      <div class="pcard"><div class="ph"><img src="assets/item-fragancias.jpg"></div><div class="bd">
+        <h3>Fragancias</h3>
+        <ul><li><b>Esencias:</b> 1 a 3% del peso del jabón.</li>
+        <li><b>Aceites esenciales:</b> 0,5 a 2%; 100% naturales y aportan propiedades.</li></ul></div></div>
+    </div>
+    <div class="note" style="margin-top:8mm"><b>Tip de pro.</b> Cualquiera que sea tu elección de color, asegúrate de que los productos sean de <b>uso cosmético</b>. La principal diferencia entre esencias y aceites esenciales es su origen y las propiedades que aportan a la piel.</div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+<div class="page">
+  <div class="pad">
+    <div class="sec-head">
+      <div class="eyebrow">03 · Aditivos y extractos</div>
+      <div class="h-title serif">Activos que dan <span class="em">propiedades</span></div>
+      <div class="h-rule"></div>
+      <p class="body" style="max-width:170mm">Los aditivos son grandes aliados para darle propiedades específicas a tu jabón. La elección depende del uso que quieras darle. Aquí tienes una guía para empezar — de tu curiosidad dependerá hacerla crecer hacia fórmulas infinitas.</p>
+    </div>
+    <div class="two">
+      <div>
+        <div class="subh">Aditivos</div>
+        <table class="tbl"><tr><th>Acción</th><th>Ingrediente recomendado</th></tr><tr><td class="act">Hidratante</td><td>Yogurt (mejor en polvo), leche de cabra, alantoína, miel</td></tr><tr><td class="act">Seborregulador</td><td>Carbón activado, azufre, arcillas</td></tr><tr><td class="act">Antioxidante</td><td>Naranja en polvo, té verde</td></tr><tr><td class="act">Exfoliante</td><td>Café, avena molida</td></tr><tr><td class="act">Calmante</td><td>Manzanilla, caléndula, avena</td></tr></table>
+        <img class="colimg" src="assets/adi-textura.jpg" style="height:42mm">
+      </div>
+      <div>
+        <div class="subh">Extractos vegetales</div>
+        <table class="tbl"><tr><th>Acción</th><th>Extracto recomendado</th></tr><tr><td class="act">Hidratante</td><td>Aloe vera, arroz, pepino</td></tr><tr><td class="act">Suavizante</td><td>Arroz, avena</td></tr><tr><td class="act">Antiinflamatorio</td><td>Árnica, hipérico, lavanda</td></tr><tr><td class="act">Despigmentante</td><td>Arroz, cúrcuma, zanahoria</td></tr><tr><td class="act">Calmante</td><td>Caléndula, manzanilla</td></tr></table>
+        <img class="colimg" src="assets/adi-extractos.jpg" style="height:42mm">
+      </div>
+    </div>
+    <div class="note"><b>¿Cómo y cuándo se añaden?</b> La mayoría de los aditivos se incorporan al jabón <b>fundido</b>, al final de la elaboración, para que sus propiedades no se alteren con el calor. La dosis total recomendada es del <b>5%</b>, ajustable según la ficha técnica de cada proveedor.</div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+<div class="page">
+  <div class="pad">
+    <div class="sec-head">
+      <div class="eyebrow">03 · Aditivos y extractos</div>
+      <div class="h-title serif">Plantas, extractos <span class="em">y alcohol</span></div>
+      <div class="h-rule"></div>
+    </div>
+    <div class="pcards">
+      <div class="pcard"><div class="ph"><img src="assets/adi-arcillosos.jpg"></div><div class="bd">
+        <h3>Extractos vegetales</h3>
+        <ul><li>Macerados de plantas en glicerina, agua o alcohol que extraen sus principios activos.</li>
+        <li>Para glicerina se recomiendan los <b>glicerinados</b> y las <b>tinturas</b>.</li></ul></div></div>
+      <div class="pcard"><div class="ph"><img src="assets/adi-cuidado.jpg"></div><div class="bd">
+        <h3>Plantas</h3>
+        <ul><li>Si amas lo rústico y natural, añade plantas secas y molidas al jabón fundido.</li>
+        <li>Aportan propiedades y una textura artesanal preciosa.</li></ul></div></div>
+      <div class="pcard"><div class="ph"><img src="assets/item-vasos.jpg"></div><div class="bd">
+        <h3>Alcohol</h3>
+        <ul><li>Deshace las burbujas al enmoldar y pega capas o figuras.</li>
+        <li>Usa alcohol de <b>70 o 96°</b> en pulverizador.</li></ul></div></div>
+    </div>
+    <div class="note" style="margin-top:8mm"><b>Existen tantos extractos como plantas.</b> Empieza por los de acción que más te interese (hidratante, calmante, despigmentante…) y ve ampliando tu botiquín botánico a medida que experimentas.</div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+<div class="page">
+  <div class="pad">
+    <div class="sec-head">
+      <div class="eyebrow">04 · Utensilios</div>
+      <div class="h-title serif">Las herramientas <span class="em">que necesitas</span></div>
+      <div class="h-rule"></div>
+      <p class="body" style="max-width:170mm">Hacer tu jabón de glicerina será muy fácil y divertido, y más si cuentas con las herramientas adecuadas. Estos son los básicos para empezar:</p>
+    </div>
+    <div class="ugrid"><div class="uitem"><img src="assets/item-bascula.jpg"><div class="ub"><h4>Báscula digital</h4><p>Pesar con precisión es clave para que el jabón salga bien.</p></div></div><div class="uitem"><img src="assets/item-olla.jpg"><div class="ub"><h4>Jarras y olla</h4><p>De vidrio o plástico resistente al calor para derretir a baño maría.</p></div></div><div class="uitem"><img src="assets/item-espatulas.jpg"><div class="ub"><h4>Espátulas</h4><p>De silicona, para mezclar bien todos los ingredientes.</p></div></div><div class="uitem"><img src="assets/item-moldes.jpg"><div class="ub"><h4>Moldes</h4><p>De silicona: dan forma única y facilitan el desmolde.</p></div></div><div class="uitem"><img src="assets/item-otros.jpg"><div class="ub"><h4>Guantes</h4><p>De látex o nitrilo, para que tus jabones no se contaminen.</p></div></div><div class="uitem"><img src="assets/item-film.jpg"><div class="ub"><h4>Film protector</h4><p>Cubre el jabón para protegerlo y evitar que sude.</p></div></div></div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+<div class="page">
+  <div class="pad">
+    <div class="sec-head">
+      <div class="eyebrow">05 · Paso a paso</div>
+      <div class="h-title serif">La creación, <span class="em">paso a paso</span></div>
+      <div class="h-rule"></div>
+    </div>
+    <div class="bigsteps"><div class="bstep"><div class="bimg"><img src="assets/item-olla.jpg"></div><div class="bct"><div class="bn">Paso 1</div><h3>Derretir la base</h3><p>Corta la base en trozos pequeños y derrítela a baño maría. No la sobre-cocines: temperatura máxima 65°. Así evitas el estado de gel y que el jabón sude por pérdida de humedad.</p></div></div><div class="bstep"><div class="bimg"><img src="assets/item-colorantes.jpg"></div><div class="bct"><div class="bn">Paso 2</div><h3>Dar color y enriquecer</h3><p>Una vez fundido, añade el colorante y los principios activos elegidos en el porcentaje recomendado.</p></div></div><div class="bstep"><div class="bimg"><img src="assets/item-fragancias.jpg"></div><div class="bct"><div class="bn">Paso 3</div><h3>Añadir aroma</h3><p>Con el jabón ya enriquecido, incorpora la fragancia y/o los aceites esenciales según tus preferencias.</p></div></div><div class="bstep"><div class="bimg"><img src="assets/item-moldes.jpg"></div><div class="bct"><div class="bn">Paso 4</div><h3>Enmoldar</h3><p>Vierte en el molde y pulveriza alcohol para eliminar burbujas. Cuando solidifique, desmolda y cubre con film para protegerlo y evitar que sude.</p></div></div></div>
+    <div class="note" style="margin-top:6mm"><b>¿Necesito esperar 40 días para usarlos?</b> No. Estas bases ya están saponificadas y listas para usar: en solo 4 pasos tendrás tus jabones de glicerina terminados.</div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+<div class="page">
+  <div class="pad">
+    <div class="sec-head">
+      <div class="eyebrow">06 · Recetas para practicar</div>
+      <div class="h-title serif">Empieza hoy <span class="em">mismo</span></div>
+      <div class="h-rule"></div>
+      <p class="body" style="max-width:170mm">Con todos los ingredientes y utensilios listos, deja volar tu creatividad. Aquí tienes tres recetas sencillas para dar tus primeros pasos.</p>
+    </div>
+    <div class="rgrid"><div class="rcard"><span class="tag">Sebo-reguladoras</span><h3>Arcilla verde</h3><ul><li>240 g jabón base transparente</li><li>5 g arcilla verde</li><li>2 g miel</li><li>30 gotas A.E. árbol de té</li></ul></div><div class="rcard"><span class="tag">Refrescantes</span><h3>Pepino &amp; aloe</h3><ul><li>240 g jabón base blanco</li><li>2 g extracto hidroglicerinado de pepino</li><li>2 g extracto hidroglicerinado de aloe</li><li>3 g menta molida</li><li>30 gotas esencia de menta</li></ul></div><div class="rcard"><span class="tag">Calmantes</span><h3>Lavanda &amp; avena</h3><ul><li>240 g jabón base blanco</li><li>10 g avena molida</li><li>30 gotas A.E. de lavanda</li></ul></div></div>
+    <div class="elab">
+      <h3>Elaboración</h3>
+      <ol>
+        <li>Derrite la base de jabón de glicerina a baño maría.</li>
+        <li>Agrega los aditivos elegidos.</li>
+        <li>Incorpora el aceite esencial o la esencia aromática.</li>
+        <li>Vierte la mezcla en los moldes y deja que se enfríe y endurezca.</li>
+        <li>Desmolda y cubre con plástico film.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="foot">Jabonería &amp; Cosmética Artesanal · <b>Savias</b> · Ruta Jabonera</div>
+</div>
+</body></html>

@@ -1,0 +1,707 @@
+<!-- ══════════════════════════════════════════════════════════════════════
+     LA HUERTA LAB · SIMULADOR FINANCIERO PARA EL EMBUDO DE LANZAMIENTO
+     Plantilla. NO se pega esta: se pega SimuladorLanzamiento.html, que sale
+     de aquí con `python3 construir.py`. El simulador va insertado tal cual
+     desde ../SimuladorFincanciero.html en el marcador de abajo.
+
+     Tres piezas, en este orden:
+       1. La guía de bienvenida (cinco pantallas, fotos reales de la finca).
+       2. El simulador, que aparece al terminar o saltar la guía.
+       3. El botón flotante a las dos páginas de venta.
+
+     Va en el paso propio del «Embudo Lanzamiento» de GHL, que es donde
+     está instalado el píxel. Sin login: lo abre cualquiera.
+     ══════════════════════════════════════════════════════════════════════ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Paleta de las herramientas de Iván (la misma del simulador) para la guía,
+   y la del lanzamiento (verde profundo + lima) solo para el botón de venta,
+   que así se distingue de todo lo demás sin salirse de la marca. */
+.simz{
+  --bosque:#12452c;--hondo:#0d3320;--acento:#1f6b45;--borde:#2f7a53;--borde-2:#1c5637;
+  --claro:#cfe3d6;--claro-2:#a9d9bd;--claro-3:#8fbfa4;--oro:#d9b458;--oro-2:#e8c877;
+  --fondo:#f4f6f2;--tinta:#13251c;--azul:#0b4fb0;--azul-f:#f2f7fd;--azul-b:#cfe0f5;
+  --lz-hondo:#061f1d;--lz-verde:#0f4640;--lz-lima:#c8db52;--lz-papel:#f7f6ef;
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--tinta);background:var(--fondo);
+  -webkit-font-smoothing:antialiased;
+  /* Hueco para que el botón flotante nunca tape el final del simulador. */
+  padding-bottom:150px;
+}
+.simz *{box-sizing:border-box}
+.simz button{font-family:inherit;cursor:pointer}
+.simz :focus-visible{outline:3px solid var(--oro);outline-offset:2px}
+.simz-guard{display:none}
+
+/* ── 0 · Puerta con la palabra de la clase ──────────────────────────────
+   El simulador se entrega en el directo: hasta que no se escribe la palabra
+   que dice Iván, la guía, el simulador y el botón de cursos no se muestran.
+   Es un candado de clase en vivo, no de seguridad: todo el contenido viaja
+   en el bloque, así que quien sepa mirar el código lo puede saltar. */
+.simz.bloqueado .simz-guia,
+.simz.bloqueado .simz-app{display:none!important}
+.simz-llave{padding:26px 18px 10px}
+.simz-llave-caja{
+  max-width:720px;margin:0 auto;border-radius:22px;overflow:clip;
+  background:linear-gradient(135deg,var(--bosque) 0%,var(--acento) 100%);
+  color:#fff;box-shadow:0 18px 44px rgba(6,31,29,.18);padding:34px 30px 30px;text-align:center;
+}
+.simz-llave-eyebrow{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--claro-2)}
+.simz-llave h2{margin:0 0 10px;font-size:clamp(23px,4.4vw,31px);line-height:1.2;font-weight:800;letter-spacing:-.4px}
+.simz-llave p{margin:0 auto;max-width:44ch;font-size:16px;line-height:1.55;color:var(--claro)}
+.simz-llave-form{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:22px}
+.simz-llave-form input{
+  flex:1 1 280px;min-width:0;max-width:360px;font:inherit;font-size:17px;font-weight:700;
+  color:var(--tinta);background:#fff;border:2px solid var(--borde);border-radius:12px;padding:13px 16px;text-align:center;
+}
+.simz-llave-form button{
+  flex:0 0 auto;border:0;border-radius:12px;padding:13px 26px;font-size:16px;font-weight:800;
+  color:var(--bosque);background:var(--oro-2);
+}
+.simz-llave-form button:hover{background:var(--oro)}
+.simz-llave-aviso{min-height:22px;margin-top:14px;font-size:15px;font-weight:700;color:var(--oro-2)}
+.simz-llave-pie{margin-top:16px;font-size:14px;color:var(--claro-3)}
+@media(max-width:560px){
+  .simz-llave{padding:16px 12px 6px}
+  .simz-llave-caja{padding:26px 18px 24px}
+  .simz-llave-form input{flex:1 1 100%;max-width:none}
+  .simz-llave-form button{flex:1 1 100%}
+}
+
+/* ── 1 · Guía de bienvenida ─────────────────────────────────────────── */
+.simz-guia{padding:18px 18px 8px}
+.simz-onb{
+  max-width:1120px;margin:0 auto;border-radius:22px;
+  /* clip y no hidden: hidden la convierte en contenedor de scroll y anula el
+     sticky de la barra en el teléfono. hidden queda de respaldo. */
+  overflow:hidden;overflow:clip;
+  background:var(--bosque);color:#fff;
+  display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  box-shadow:0 24px 60px rgba(13,51,32,.22);
+}
+.simz-onb[hidden]{display:none!important}
+.simz-onb-txt{display:flex;flex-direction:column;min-height:560px}
+.simz-onb-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:26px 40px 0}
+.simz-cuenta{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--claro-3);font-variant-numeric:tabular-nums}
+.simz-saltar{background:none;border:0;color:var(--claro-3);font-size:15px;font-weight:600;padding:6px 2px;text-decoration:underline;text-underline-offset:3px}
+.simz-saltar:hover{color:#fff}
+/* Botón «Moneda»: lleva al selector de moneda del simulador (abre el
+   simulador si hace falta). Hay uno en la guía y otro en la barra del
+   simulador; nunca se ven los dos a la vez. */
+.simz-onb-top{flex-wrap:wrap;row-gap:8px}
+.simz-onb-top .simz-moneda{margin-left:auto}
+.simz-moneda{display:inline-flex;align-items:center;gap:5px;min-height:38px;border-radius:999px;padding:7px 14px;
+  font-size:15px;font-weight:700;line-height:1;white-space:nowrap;
+  background:rgba(217,180,88,.14);border:1.5px solid var(--oro);color:#fff;transition:background .2s ease}
+.simz-moneda b{color:var(--oro-2);letter-spacing:.04em}
+.simz-moneda:hover{background:rgba(217,180,88,.28)}
+
+.simz-pasos{flex:1;padding:22px 40px 26px;display:grid}
+/* Las cinco pantallas se apilan en la misma celda: la tarjeta mide lo que
+   la más larga y no salta al pasar de una a otra. */
+.simz-paso{grid-area:1/1;visibility:hidden}
+.simz-paso.on{visibility:visible;animation:simzEntra .34s cubic-bezier(.2,.8,.2,1)}
+@keyframes simzEntra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.simz-eyebrow{font-size:13px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--oro);margin:0 0 12px}
+.simz-onb h2{font-family:"Zilla Slab",Georgia,serif;font-weight:700;font-size:clamp(28px,3.1vw,38px);line-height:1.14;letter-spacing:-.01em;color:#fff;margin:0 0 16px;text-wrap:balance}
+.simz-onb p{font-size:18px;line-height:1.55;color:var(--claro);margin:0 0 14px;max-width:52ch}
+.simz-onb strong{color:#fff}
+.simz-nota{font-size:15px!important;color:var(--claro-3)!important}
+
+/* paso 1 · las tres preguntas */
+.simz-tres{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:6px 0 18px}
+.simz-tres div{background:var(--hondo);border:1px solid var(--borde-2);border-radius:14px;padding:16px 16px 18px}
+.simz-tres b{display:block;font-family:"Zilla Slab",Georgia,serif;font-size:21px;line-height:1.2;color:#fff}
+.simz-tres span{display:block;margin-top:8px;font-size:14.5px;line-height:1.4;color:var(--claro-2)}
+
+/* paso 2 · los cinco negocios */
+.simz-lineas{list-style:none;margin:4px 0 16px;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px}
+.simz-lineas li{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;color:#fff}
+.simz-lineas li::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--oro)}
+
+/* paso 3 · la regla de los colores, con el aspecto real del simulador */
+.simz-regla{background:#fff;border-radius:16px;padding:18px 18px 16px;color:var(--tinta);margin:4px 0 16px;display:grid;gap:12px}
+.simz-regla-fila{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}
+.simz-caja{display:inline-block;font-weight:700;font-size:20px;color:var(--azul);background:var(--azul-f);border:1px solid var(--azul-b);border-radius:8px;padding:6px 14px;text-align:right;font-variant-numeric:tabular-nums}
+.simz-negro{font-weight:700;font-size:20px;color:var(--tinta);font-variant-numeric:tabular-nums;white-space:nowrap}
+.simz-regla-fila span{font-size:15.5px;line-height:1.4;color:#40524a}
+.simz-practica{background:var(--hondo);border:1px solid var(--borde);border-radius:16px;padding:16px 18px}
+.simz-practica label{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;font-weight:700;color:var(--claro)}
+.simz-practica label output{font-size:22px;color:#fff;font-variant-numeric:tabular-nums}
+.simz-practica input[type=range]{width:100%;accent-color:var(--oro);height:28px;margin:6px 0 10px}
+.simz-practica-res{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.simz-practica-res div{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--claro-3)}
+.simz-practica-res output{display:block;margin-top:2px;font-size:22px;letter-spacing:0;text-transform:none;color:#fff;font-variant-numeric:tabular-nums}
+.simz-practica small{display:block;margin-top:10px;font-size:13.5px;color:var(--claro-3)}
+
+/* paso 4 · los seis números */
+.simz-seis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:4px 0 14px}
+.simz-seis div{background:var(--hondo);border:1px solid var(--borde-2);border-radius:12px;padding:12px 13px 13px}
+.simz-seis i{display:block;font-style:normal;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--claro-3)}
+.simz-seis b{display:block;margin:4px 0 4px;font-size:24px;line-height:1.1;color:#fff;font-variant-numeric:tabular-nums}
+.simz-seis .dest b{color:var(--oro)}
+.simz-seis span{display:block;font-size:13.5px;line-height:1.35;color:var(--claro-2)}
+
+/* paso 5 · las reglas */
+.simz-reglas{list-style:none;margin:4px 0 16px;padding:0;display:grid;gap:10px}
+.simz-reglas li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:18px;line-height:1.45;color:var(--claro)}
+.simz-reglas li::before{content:"";width:12px;height:12px;margin-top:7px;border-radius:3px;background:var(--oro)}
+.simz-reglas b{color:#fff}
+
+/* navegación */
+.simz-nav{display:flex;align-items:center;gap:12px;background:var(--hondo);border-top:1px solid var(--borde);padding:16px 40px}
+.simz-puntos{display:flex;gap:7px;flex:1}
+.simz-punto{width:10px;height:10px;border-radius:99px;border:0;padding:0;background:var(--borde);transition:width .25s ease,background .25s ease}
+.simz-punto.on{width:28px;background:var(--oro)}
+.simz-btn{border-radius:10px;font-size:16px;font-weight:700;padding:11px 18px;border:1px solid #4a9370;background:transparent;color:var(--claro);transition:background .2s ease,color .2s ease,border-color .2s ease,transform .2s ease}
+.simz-btn:hover{border-color:var(--claro-2);color:#fff}
+.simz-btn.ir{background:var(--oro);border-color:var(--oro);color:var(--bosque)}
+.simz-btn.ir:hover{background:var(--oro-2);border-color:var(--oro-2);color:var(--bosque);transform:translateY(-1px)}
+.simz-btn[hidden]{display:none}
+
+/* fotos: una por paso, en fundido */
+.simz-onb-foto{position:relative;min-height:560px;background:var(--hondo);overflow:hidden}
+.simz-foto{position:absolute;inset:0;opacity:0;transition:opacity .5s ease}
+.simz-foto.on{opacity:1}
+.simz-foto img{width:100%;height:100%;object-fit:cover;display:block}
+.simz-foto::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,69,44,.35),transparent 30%)}
+.simz-mosaico{position:absolute;inset:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;background:var(--hondo)}
+.simz-mosaico figure{position:relative;margin:0;overflow:hidden}
+.simz-mosaico img{width:100%;height:100%;object-fit:cover;display:block}
+.simz-mosaico figcaption{position:absolute;left:10px;bottom:10px;font-size:13px;font-weight:700;letter-spacing:.06em;color:#fff;background:rgba(13,51,32,.82);padding:5px 10px;border-radius:99px}
+
+/* ── 2 · El simulador ──────────────────────────────────────────────── */
+.simz-app[hidden]{display:none!important}
+.simz-volver{max-width:none;margin:0;padding:14px 18px 0;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.simz-volver button{background:#fff;border:1px solid #d7e0d5;color:var(--acento);font-size:15px;font-weight:700;border-radius:99px;padding:8px 16px}
+.simz-volver button:hover{background:#eef4ee}
+.simz-volver .simz-moneda{border:1.5px solid #c8a12b;color:var(--acento);padding:8px 16px}
+.simz-volver .simz-moneda b{color:var(--bosque)}
+
+@media (max-width:900px){
+  .simz-onb{grid-template-columns:minmax(0,1fr)}
+  /* En el teléfono cada pantalla mide lo suyo: apiladas, la más larga dejaba
+     el botón «Siguiente» a un palmo de scroll de las cortas. Al cambiar de
+     pantalla, el script sube la tarjeta a la vista. */
+  .simz-pasos{display:block}
+  .simz-paso{display:none;visibility:visible}
+  .simz-paso.on{display:block}
+  .simz-onb-foto{order:-1;min-height:0;aspect-ratio:16/9}
+  .simz-onb-txt{min-height:0}
+  .simz-onb-top,.simz-pasos{padding-left:22px;padding-right:22px}
+  /* En el teléfono la barra se queda a la vista, justo encima del botón
+     flotante (ver pegarBarra en el script). */
+  .simz-nav{padding:12px 22px;position:relative;z-index:2;will-change:transform}
+  .simz-tres,.simz-seis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .simz-tres div:last-child{grid-column:1/-1}
+}
+@media (max-width:520px){
+  .simz-guia{padding:10px 10px 6px}
+  /* La fila de arriba no cabe entera: «Saltar» baja a su propia línea. */
+  .simz-onb-top .simz-saltar{margin-left:auto}
+  .simz-volver{padding:10px 10px 0}
+  .simz-onb{border-radius:18px}
+  .simz-onb p{font-size:17px}
+  .simz-tres{grid-template-columns:minmax(0,1fr);gap:8px}
+  .simz-tres div{padding:12px 14px}
+  .simz-tres b{font-size:18px}
+  .simz-tres span{margin-top:4px}
+  .simz-seis b{font-size:21px}
+  .simz-seis span{font-size:12.5px}
+  .simz-lineas{grid-template-columns:minmax(0,1fr)}
+  .simz-regla-fila{grid-template-columns:minmax(0,1fr);gap:6px}
+  .simz-btn{padding:10px 14px;font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){
+  .simz-paso.on{animation:none}
+  .simz-foto,.simz-punto,.simz-btn,.simz-moneda{transition:none}
+}
+</style>
+
+<div class="simz" id="simz">
+<div class="simz-guard"></div>
+
+<!-- ══ 0 · Puerta con la palabra de la clase ═══════════════════════════ -->
+<section class="simz-llave" id="simz-llave" aria-label="Palabra de acceso" hidden>
+  <div class="simz-llave-caja">
+    <p class="simz-llave-eyebrow">Simulador financiero · La Huerta LAB</p>
+    <h2>Esto se abre con la palabra de la clase</h2>
+    <p>Iván la dice en la masterclass en vivo. Escríbela aquí y el simulador
+       se queda abierto en este dispositivo.</p>
+    <form class="simz-llave-form" id="simz-llave-form" autocomplete="off">
+      <input type="text" id="simz-llave-campo" name="palabra" placeholder="Escribe la palabra"
+             aria-label="Palabra de acceso" spellcheck="false" autocapitalize="none">
+      <button type="submit">Abrir el simulador</button>
+    </form>
+    <p class="simz-llave-aviso" id="simz-llave-aviso" role="status" aria-live="polite"></p>
+    <p class="simz-llave-pie">¿Te perdiste la clase? Escríbenos por WhatsApp y te contamos
+       cuándo volvemos a abrirlo.</p>
+  </div>
+</section>
+
+<!-- ══ 1 · Guía de bienvenida ══════════════════════════════════════════ -->
+<section class="simz-guia" aria-label="Guía del simulador">
+  <div class="simz-onb" id="simz-onb">
+    <div class="simz-onb-txt">
+      <div class="simz-onb-top">
+        <span class="simz-cuenta" id="simz-cuenta">1 de 5</span>
+        <button type="button" class="simz-moneda" data-simz-moneda title="Cambiar la moneda del simulador">Moneda: <b>COP</b></button>
+        <button type="button" class="simz-saltar" id="simz-saltar">Saltar e ir al simulador</button>
+      </div>
+
+      <div class="simz-pasos" aria-live="polite">
+        <div class="simz-paso on" data-paso="0">
+          <p class="simz-eyebrow">Simulador financiero · La Huerta LAB</p>
+          <h2>Haz las cuentas de una finca de 2 hectáreas antes de poner un peso.</h2>
+          <p>Tú le dices cuántos animales hay y a qué precio vendes. La página hace todas las cuentas y te responde tres preguntas:</p>
+          <div class="simz-tres">
+            <div><b>¿Cuánto pongo para arrancar?</b><span>La inversión, antes de vender nada.</span></div>
+            <div><b>¿Cuánto entra cada año?</b><span>Todo lo que vende la finca.</span></div>
+            <div><b>¿Cuánto me sobra?</b><span>Lo que queda después de pagar.</span></div>
+          </div>
+          <p class="simz-nota">Son cinco pantallas cortas. Si ya lo conoces, puedes saltarlas.</p>
+        </div>
+
+        <div class="simz-paso" data-paso="1">
+          <p class="simz-eyebrow">Qué hay dentro</p>
+          <h2>Cinco negocios en la misma tierra.</h2>
+          <p>El modelo junta animales y cultivos, porque en una finca bien diseñada lo que sale de uno alimenta al otro: el estiércol vuelve al suelo como abono.</p>
+          <ul class="simz-lineas">
+            <li>Gallinas de huevo azul</li>
+            <li>Pollos de engorde</li>
+            <li>Corderos Dorper</li>
+            <li>Cerdos en cama profunda</li>
+            <li>Hortalizas y frutas en terrazas</li>
+          </ul>
+          <p class="simz-nota">Cada uno tiene su pestaña con sus cantidades y sus precios.</p>
+        </div>
+
+        <div class="simz-paso" data-paso="2">
+          <p class="simz-eyebrow">La única regla</p>
+          <h2>Lo azul lo cambias tú. Lo negro lo calcula la página.</h2>
+          <div class="simz-regla">
+            <div class="simz-regla-fila"><span class="simz-caja">150</span><span>Número azul en su cajita: haz clic, borra y escribe el tuyo.</span></div>
+            <div class="simz-regla-fila"><span class="simz-negro">$ 95.819.610</span><span>Número negro: se recalcula solo cada vez que cambias uno azul.</span></div>
+          </div>
+          <div class="simz-practica">
+            <label for="simz-rango">Pruébalo: número de gallinas <output id="simz-g">150</output></label>
+            <input type="range" id="simz-rango" min="50" max="400" step="10" value="150">
+            <div class="simz-practica-res">
+              <div>Huevos al año <output id="simz-h">39.600</output></div>
+              <div>Dinero al año <output id="simz-d">$ 29.700.000</output></div>
+            </div>
+            <small>Es solo para practicar: no cambia nada del simulador.</small>
+          </div>
+        </div>
+
+        <div class="simz-paso" data-paso="3">
+          <p class="simz-eyebrow">Dónde mirar</p>
+          <h2>Seis números te dicen si la finca da.</h2>
+          <div class="simz-seis">
+            <div><i>Inversión inicial</i><b>$ 95,8 M</b><span>Se pone una sola vez, antes de vender.</span></div>
+            <div><i>Entra al año</i><b>$ 184,6 M</b><span>Todo lo que vendes. Aún no es ganancia.</span></div>
+            <div><i>Se va en costos</i><b>$ 119,6 M</b><span>Sueldos, concentrado, semillas, luz.</span></div>
+            <div class="dest"><i>Sobra al año</i><b>$ 65,0 M</b><span>Lo que entra menos lo que sale (EBITDA).</span></div>
+            <div><i>Margen</i><b>35,2 %</b><span>De cada 100 pesos que entran, sobran 35.</span></div>
+            <div class="dest"><i>Recuperas lo invertido</i><b>17,7 meses</b><span>Un año y medio, más o menos.</span></div>
+          </div>
+          <p class="simz-nota">Son los valores con los que abre el modelo, en pesos colombianos. Cuando cambias un número azul, cambian solos. Si usas otra moneda, cámbiala con el botón «Moneda» de arriba.</p>
+        </div>
+
+        <div class="simz-paso" data-paso="4">
+          <p class="simz-eyebrow">Antes de empezar</p>
+          <h2>Tres reglas y ya puedes jugar con los números.</h2>
+          <ul class="simz-reglas">
+            <li><span><b>Cambia una cosa a la vez.</b> Así sabes qué movió el resultado.</span></li>
+            <li><span><b>Se guarda solo</b>, en tu teléfono o tu computador. Nadie más ve tus cambios.</span></li>
+            <li><span><b>Si te pierdes</b>, el botón «Restaurar valores originales» lo devuelve todo a como estaba.</span></li>
+          </ul>
+          <p class="simz-nota">En el teléfono, desliza las tablas hacia la izquierda para ver todas las columnas.</p>
+        </div>
+      </div>
+
+      <div class="simz-nav">
+        <div class="simz-puntos" id="simz-puntos"></div>
+        <button type="button" class="simz-btn" id="simz-atras" hidden>Atrás</button>
+        <button type="button" class="simz-btn ir" id="simz-sig">Siguiente</button>
+      </div>
+    </div>
+
+    <div class="simz-onb-foto" aria-hidden="true">
+      <div class="simz-foto on" data-foto="0"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/a90bb69c-110d-410a-b19c-41cc1e5639e1.jpg" alt=""></div>
+      <div class="simz-foto" data-foto="1">
+        <div class="simz-mosaico">
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/c386a32a-1961-42ef-a3d0-64fac683929f.jpg" alt="" loading="lazy"><figcaption>Gallinas y pollos</figcaption></figure>
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/892335cd-fca2-41b9-ad0f-c7794bd34cb5.jpg" alt="" loading="lazy"><figcaption>Corderos</figcaption></figure>
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6645b1d9-7c5b-40bf-a487-3f8bef75595e.jpg" alt="" loading="lazy"><figcaption>Cerdos</figcaption></figure>
+          <figure><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/05596c67-5cc9-4b9e-9497-a49759644fb0.jpg" alt="" loading="lazy"><figcaption>Terrazas</figcaption></figure>
+        </div>
+      </div>
+      <div class="simz-foto" data-foto="2"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/36226a85-e443-48ac-b36f-9cf73a85b86d.jpg" alt="" loading="lazy"></div>
+      <div class="simz-foto" data-foto="3"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/81594db8-18c8-43b2-be72-365dcc191048.jpg" alt="" loading="lazy"></div>
+      <div class="simz-foto" data-foto="4"><img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/31ea5432-6fd7-423c-84f0-1791a20c118c.jpg" alt="" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 2 · El simulador ═══════════════════════════════════════════════ -->
+<section class="simz-app" id="simz-app" aria-label="Simulador financiero" hidden>
+  <div class="simz-volver">
+    <button type="button" class="simz-moneda" data-simz-moneda title="Cambiar la moneda del simulador">Moneda: <b>COP</b></button>
+    <button type="button" id="simz-reguia">Ver la guía otra vez</button>
+  </div>
+<!-- SIMULADOR -->
+</section>
+
+<!-- ══ 3 · Botón flotante a las páginas de venta ═══════════════════════ -->
+<style>
+/* El muelle puede acabar colgado del <body> (ver el script), así que no
+   hereda nada de .simz: colores y tipografía van escritos aquí. Los colores
+   son los del lanzamiento: verde profundo y lima. */
+.simz-muelle{
+  position:fixed;right:18px;bottom:18px;z-index:2147482500;
+  width:min(440px,calc(100vw - 36px));
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  background:#061f1d;color:#f7f6ef;border:1px solid rgba(200,219,82,.35);border-radius:18px;
+  box-shadow:0 18px 44px rgba(6,31,29,.35);padding:14px 14px 14px;
+  animation:simzMuelle .45s cubic-bezier(.2,.8,.2,1) .6s both;
+  -webkit-font-smoothing:antialiased;text-align:left;
+}
+.simz-muelle[hidden]{display:none!important}
+@keyframes simzMuelle{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.simz-muelle *{box-sizing:border-box}
+.simz-muelle-cab{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px}
+.simz-muelle-cab p{margin:0;font-size:16px;font-weight:700;line-height:1.25;color:#f7f6ef;letter-spacing:0}
+.simz-muelle-cab p em{font-style:normal;color:#c8db52}
+.simz-muelle-min{flex:none;width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(247,246,239,.1);color:#f7f6ef;font:700 18px/30px -apple-system,Arial,sans-serif;text-align:center}
+.simz-muelle-min:hover{background:rgba(247,246,239,.2)}
+.simz-muelle-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.simz-curso{display:block;text-decoration:none!important;border-radius:12px;padding:11px 12px 12px;
+  border:1.5px solid #c8db52;color:#f7f6ef;transition:transform .2s ease,background .2s ease}
+.simz-curso b{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:16px;font-weight:700;line-height:1.2;color:inherit}
+.simz-curso b::after{content:"→";font-weight:700}
+.simz-curso span{display:block;margin-top:3px;font-size:13px;font-weight:600;line-height:1.3;opacity:.78;color:inherit}
+.simz-curso:hover{transform:translateY(-2px);background:rgba(200,219,82,.12)}
+.simz-curso.lleno{background:#c8db52;color:#061f1d}
+.simz-curso.lleno:hover{background:#d6e674}
+.simz-muelle :focus-visible,.simz-pastilla:focus-visible{outline:3px solid #c8db52;outline-offset:2px}
+.simz-pastilla{position:fixed;right:18px;bottom:18px;z-index:2147482500;cursor:pointer;
+  font:700 15px/1 "Source Sans 3",-apple-system,Arial,sans-serif;color:#061f1d;background:#c8db52;
+  border:0;border-radius:999px;padding:13px 18px;box-shadow:0 12px 30px rgba(6,31,29,.3)}
+.simz-pastilla::after{content:" ↑"}
+.simz-pastilla[hidden]{display:none!important}
+@media (max-width:600px){
+  .simz-muelle{left:8px;right:8px;bottom:8px;width:auto;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));border-radius:16px}
+  .simz-muelle-cab{margin-bottom:8px}
+  .simz-muelle-cab p{font-size:14.5px}
+  .simz-curso{padding:10px 10px}
+  .simz-curso b{font-size:15px}
+  .simz-curso span{display:none}
+  .simz-pastilla{right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+}
+@media (prefers-reduced-motion:reduce){.simz-muelle{animation:none}.simz-curso{transition:none}}
+</style>
+
+<aside class="simz-muelle" id="simz-muelle" aria-label="Cursos con Iván">
+  <div class="simz-muelle-cab">
+    <p>¿Quieres montarla <em>con Iván</em>?</p>
+    <button type="button" class="simz-muelle-min" id="simz-min" aria-label="Ocultar los cursos">−</button>
+  </div>
+  <div class="simz-muelle-btns">
+    <a class="simz-curso lleno" href="https://lahuertalab.com/curso-presencial" data-modalidad="presencial">
+      <b>Curso presencial</b><span>Cuatro días en la finca</span>
+    </a>
+    <a class="simz-curso" href="https://lahuertalab.com/curso-online" data-modalidad="online">
+      <b>Curso online</b><span>8 sesiones en vivo</span>
+    </a>
+  </div>
+</aside>
+<button type="button" class="simz-pastilla" id="simz-pastilla" hidden>Cursos con Iván</button>
+
+<script>
+/* Muelle de venta. Dos cosas que en GHL fallan en silencio si no se cuidan:
+   · un ancestro con transform convierte el position:fixed en relativo a esa
+     caja, y el muelle aparecería metido en la columna. Se cuelga del <body>.
+   · el píxel lo instala la página (código de cabecera del embudo); aquí solo
+     se avisa del clic, y solo si el píxel existe. */
+(function(){
+  var muelle = document.getElementById('simz-muelle');
+  var pastilla = document.getElementById('simz-pastilla');
+  if (!muelle || !pastilla) return;
+  var CLAVE = 'hl-sim-muelle';
+
+  function estorba(el){
+    for (var e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+      var c = getComputedStyle(e);
+      if ((c.transform && c.transform !== 'none') || (c.perspective && c.perspective !== 'none') ||
+          (c.filter && c.filter !== 'none') || (c.backdropFilter && c.backdropFilter !== 'none') ||
+          (c.contain && /paint|layout|strict|content/.test(c.contain))) return true;
+    }
+    return false;
+  }
+  function colgar(){
+    if (!document.body) return;
+    if (muelle.parentElement !== document.body && estorba(muelle)) {
+      document.body.appendChild(muelle);
+      document.body.appendChild(pastilla);
+    }
+  }
+  colgar();
+  window.addEventListener('load', colgar);
+  setTimeout(colgar, 1500);
+
+  function leer(){ try { return localStorage.getItem(CLAVE); } catch(e){ return null; } }
+  function guardar(v){ try { localStorage.setItem(CLAVE, v); } catch(e){} }
+  /* La guía necesita saber cuánto ocupa el muelle para no quedar debajo. */
+  function medir(){
+    var raiz = document.getElementById('simz');
+    if (!raiz) return;
+    var fijo = getComputedStyle(muelle).left !== 'auto' && window.innerWidth <= 600;
+    var h = 0;
+    if (fijo) h = muelle.hidden ? pastilla.getBoundingClientRect().height + 16
+                                : muelle.getBoundingClientRect().height + 8;
+    raiz.style.setProperty('--simz-alto-muelle', Math.round(h) + 'px');
+    try { window.dispatchEvent(new Event('simz-muelle')); } catch(e){}
+  }
+  function plegar(){ muelle.hidden = true; pastilla.hidden = false; guardar('plegado'); medir(); }
+  function desplegar(){ muelle.hidden = false; pastilla.hidden = true; guardar('abierto'); medir(); }
+  window.addEventListener('resize', medir);
+  setTimeout(medir, 1200);
+  document.getElementById('simz-min').addEventListener('click', plegar);
+  pastilla.addEventListener('click', desplegar);
+  if (leer() === 'plegado') { muelle.hidden = true; pastilla.hidden = false; }
+  medir();
+
+  [].forEach.call(muelle.querySelectorAll('[data-modalidad]'), function(a){
+    a.addEventListener('click', function(){
+      try {
+        if (typeof window.fbq === 'function')
+          window.fbq('trackCustom', 'ClicCursoDesdeSimulador', { modalidad: a.getAttribute('data-modalidad') });
+      } catch(e){}
+    });
+  });
+})();
+</script>
+
+<script>
+/* Guía de bienvenida. Recuerda en este navegador si ya se vio, para que
+   quien vuelve entre directo al simulador. */
+(function(){
+  var raiz = document.getElementById('simz');
+  if (!raiz) return;
+  var CLAVE = 'hl-sim-guia';
+  var onb = raiz.querySelector('#simz-onb');
+  var app = raiz.querySelector('#simz-app');
+  var pasos = [].slice.call(raiz.querySelectorAll('.simz-paso'));
+  var fotos = [].slice.call(raiz.querySelectorAll('.simz-foto'));
+  var puntos = raiz.querySelector('#simz-puntos');
+  var cuenta = raiz.querySelector('#simz-cuenta');
+  var atras = raiz.querySelector('#simz-atras');
+  var sig = raiz.querySelector('#simz-sig');
+  var saltar = raiz.querySelector('#simz-saltar');
+  var N = pasos.length, paso = 0;
+
+  function leer(){ try { return localStorage.getItem(CLAVE); } catch(e){ return null; } }
+  function guardar(v){ try { localStorage.setItem(CLAVE, v); } catch(e){} }
+
+  for (var i = 0; i < N; i++) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'simz-punto';
+    b.setAttribute('aria-label', 'Pantalla ' + (i + 1) + ' de ' + N);
+    b.setAttribute('data-ir', i);
+    puntos.appendChild(b);
+  }
+  var bolas = [].slice.call(puntos.children);
+
+  function mostrar(n){
+    paso = Math.max(0, Math.min(N - 1, n));
+    pasos.forEach(function(p, k){ p.classList.toggle('on', k === paso); });
+    fotos.forEach(function(f, k){ f.classList.toggle('on', k === paso); });
+    bolas.forEach(function(p, k){
+      p.classList.toggle('on', k === paso);
+      if (k === paso) p.setAttribute('aria-current', 'step'); else p.removeAttribute('aria-current');
+    });
+    cuenta.textContent = (paso + 1) + ' de ' + N;
+    atras.hidden = paso === 0;
+    sig.textContent = paso === N - 1 ? 'Abrir el simulador' : 'Siguiente';
+    saltar.style.visibility = paso === N - 1 ? 'hidden' : 'visible';   /* sin quitarlo: si no, la fila encoge y la tarjeta salta */
+    programar();
+  }
+
+  /* Barra pegada en el teléfono. No se usa position:sticky porque las
+     páginas de GHL suelen llevar overflow-x:hidden en el <body> y eso lo
+     anula sin avisar; ni position:fixed, que un ancestro con transform
+     rompe. Un transform funciona dentro de cualquier contenedor. */
+  var barra = raiz.querySelector('.simz-nav');
+  var texto = raiz.querySelector('.simz-onb-txt');
+  var pendiente = false;
+  function pegarBarra(){
+    pendiente = false;
+    barra.style.transform = '';
+    if (window.innerWidth > 900 || onb.hidden) return;
+    var alto = parseFloat(raiz.style.getPropertyValue('--simz-alto-muelle')) || 0;
+    var limite = window.innerHeight - alto;
+    var b = barra.getBoundingClientRect();
+    if (b.bottom <= limite) return;
+    var subir = b.bottom - limite;
+    var techo = Math.max(texto.getBoundingClientRect().top, 0) + 80;
+    if (b.top - subir < techo) return;          /* la tarjeta ya casi salió de la vista */
+    barra.style.transform = 'translateY(' + (-Math.round(subir)) + 'px)';
+  }
+  function programar(){ if (!pendiente) { pendiente = true; requestAnimationFrame(pegarBarra); } }
+  document.addEventListener('scroll', programar, true);
+  window.addEventListener('resize', programar);
+  window.addEventListener('simz-muelle', programar);
+  function irAPaso(n){
+    mostrar(n);
+    if (window.innerWidth > 900) return;
+    var arriba = onb.getBoundingClientRect().top;
+    if (arriba < 0) { try { onb.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch(e){ onb.scrollIntoView(); } }
+  }
+
+  function abrirSimulador(conScroll){
+    guardar('vista');
+    onb.hidden = true;
+    app.hidden = false;
+    if (conScroll) { try { app.scrollIntoView({ block: 'start' }); } catch(e){} }
+  }
+  function abrirGuia(){
+    app.hidden = true;
+    onb.hidden = false;
+    mostrar(0);
+    try { onb.scrollIntoView({ block: 'start' }); } catch(e){}
+  }
+
+  sig.addEventListener('click', function(){ if (paso === N - 1) abrirSimulador(true); else irAPaso(paso + 1); });
+  atras.addEventListener('click', function(){ irAPaso(paso - 1); });
+  saltar.addEventListener('click', function(){ abrirSimulador(true); });
+  puntos.addEventListener('click', function(ev){
+    var t = ev.target.closest ? ev.target.closest('[data-ir]') : null;
+    if (t) irAPaso(+t.getAttribute('data-ir'));
+  });
+  raiz.querySelector('#simz-reguia').addEventListener('click', abrirGuia);
+
+  /* Botón «Moneda». Muestra la moneda activa del simulador (que la anuncia con
+     el evento hlab-moneda y el atributo data-moneda de su raíz) y lleva a su
+     selector. Si la guía está abierta, primero abre el simulador: así la barra
+     pegada del teléfono se suelta sola, porque pegarBarra no hace nada con la
+     guía oculta. */
+  var botonesMoneda = [].slice.call(raiz.querySelectorAll('[data-simz-moneda]'));
+  function pintarMoneda(cod){
+    botonesMoneda.forEach(function(b){
+      var x = b.querySelector('b');
+      if (x) x.textContent = cod;
+      b.setAttribute('aria-label', 'Moneda: ' + cod + '. Cambiar la moneda del simulador');
+    });
+  }
+  var hlab = raiz.querySelector('.hlab');
+  pintarMoneda((hlab && hlab.getAttribute('data-moneda')) || 'COP');
+  window.addEventListener('hlab-moneda', function(ev){
+    if (ev.detail && ev.detail.codigo) pintarMoneda(ev.detail.codigo);
+  });
+  function irAMoneda(){
+    if (app.hidden) abrirSimulador(false);
+    var sel = raiz.querySelector('#curSel');
+    if (!sel) return;
+    try { sel.scrollIntoView({ block: 'center' }); } catch(e){ sel.scrollIntoView(); }
+    try { sel.focus({ preventScroll: true }); } catch(e){ sel.focus(); }
+    var caja = raiz.querySelector('#monedaBox');
+    if (caja) { caja.classList.remove('resalta'); void caja.offsetWidth; caja.classList.add('resalta'); }
+  }
+  botonesMoneda.forEach(function(b){ b.addEventListener('click', irAMoneda); });
+  onb.addEventListener('keydown', function(ev){
+    if (ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName)) return;
+    if (ev.key === 'ArrowRight') { ev.preventDefault(); if (paso < N - 1) mostrar(paso + 1); }
+    if (ev.key === 'ArrowLeft')  { ev.preventDefault(); mostrar(paso - 1); }
+  });
+
+  /* Práctica del paso 3: la misma cuenta que la guía original
+     (80 % de postura, 330 días, $ 750 el huevo). */
+  var rango = raiz.querySelector('#simz-rango');
+  function nf(v){ return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+  function practicar(){
+    var g = parseInt(rango.value, 10);
+    var huevos = Math.round(g * 0.8) * 330;
+    raiz.querySelector('#simz-g').textContent = nf(g);
+    raiz.querySelector('#simz-h').textContent = nf(huevos);
+    raiz.querySelector('#simz-d').textContent = '$ ' + nf(huevos * 750);
+  }
+  rango.addEventListener('input', practicar);
+  practicar();
+
+  mostrar(0);
+  if (leer() === 'vista') abrirSimulador(false);
+})();
+</script>
+<script>
+/* Puerta con la palabra de la clase. Va al final a propósito: así la guía y
+   el muelle ya existen y solo hay que taparlos. Normaliza lo que se escribe
+   (mayúsculas, tildes, espacios de más y signos) para que «Productor
+   Preparado.» también valga. */
+(function(){
+  var raiz = document.getElementById('simz');
+  if (!raiz) return;
+  var llave = raiz.querySelector('#simz-llave');
+  var form  = raiz.querySelector('#simz-llave-form');
+  var campo = raiz.querySelector('#simz-llave-campo');
+  var aviso = raiz.querySelector('#simz-llave-aviso');
+  if (!llave || !form || !campo) return;
+
+  var CLAVE = 'hl-sim-llave';
+  var PALABRA = 'productor preparado';
+
+  function limpiar(t){
+    return String(t || '')
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9ñ ]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  function abierto(){
+    try { return localStorage.getItem(CLAVE) === PALABRA; } catch(e){ return false; }
+  }
+  function muelles(ver){
+    [document.querySelector('.simz-muelle'), document.querySelector('.simz-pastilla')].forEach(function(el){
+      if (!el) return;
+      if (ver) { el.style.removeProperty('display'); }
+      else { el.style.setProperty('display', 'none', 'important'); }
+    });
+  }
+  function abrir(guardando){
+    raiz.classList.remove('bloqueado');
+    llave.hidden = true;
+    muelles(true);
+    if (guardando) { try { localStorage.setItem(CLAVE, PALABRA); } catch(e){} }
+    /* El muelle y la barra pegada miden alturas al cargar: con la guía
+       oculta esas medidas salían a cero. */
+    window.dispatchEvent(new Event('resize'));
+  }
+  function cerrar(){
+    raiz.classList.add('bloqueado');
+    llave.hidden = false;
+    muelles(false);
+  }
+
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    if (limpiar(campo.value) === PALABRA) {
+      aviso.textContent = '';
+      abrir(true);
+      var onb = raiz.querySelector('#simz-onb');
+      if (onb) onb.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      aviso.textContent = campo.value.trim()
+        ? 'Esa no es la palabra. La dice Iván en la clase en vivo.'
+        : 'Escribe la palabra que dice Iván en la clase.';
+      campo.focus();
+      campo.select();
+    }
+  });
+
+  if (abierto()) abrir(false); else cerrar();
+})();
+</script>
+</div>

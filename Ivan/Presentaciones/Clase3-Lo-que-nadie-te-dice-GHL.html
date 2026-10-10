@@ -1,0 +1,2235 @@
+<!-- ══════════════════════════════════════════════════════════════════
+     Clase 3 · Lo que nadie te dice · La Huerta LAB
+     BLOQUE CUSTOM HTML DE GHL · generado con construir-ghl.py
+     No editar a mano: se edita el archivo de la carpeta Presentaciones y
+     se vuelve a generar.
+
+     Qué cambia respecto del archivo local:
+       · El CSS y el motor van empotrados. En GHL una ruta relativa se
+         resuelve contra el dominio del sitio y da 404.
+       · Las imágenes apuntan al CDN de la subcuenta, por lo mismo.
+       · Cada regla de estilo cuelga de `deck-stage`, para no pisar la
+         cabecera, el pie ni el editor de la página.
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Fraunces:ital,opsz,wght@1,9..144,500;1,9..144,600&display=swap" rel="stylesheet">
+<style>
+/* El componente se pinta a pantalla completa por encima de la página. */
+deck-stage{position:fixed;inset:0;z-index:2147483000}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LA HUERTA LAB · Sistema visual de las clases en directo
+   Lienzo 1920×1080. Se proyecta en un directo de YouTube, así que manda
+   la legibilidad a tamaño pequeño: nadie lee un cuerpo de 20 px en un
+   móvil con la señal regular.
+
+   Reglas que vienen de eso:
+     · Cuerpo nunca por debajo de 34 px; titulares de 90 px para arriba.
+     · Poco texto por diapositiva. Lo demás lo dice Iván.
+     · Contraste alto siempre: crema sobre verde bosque, o al revés.
+   ══════════════════════════════════════════════════════════════════════ */
+
+deck-stage{
+  --bosque:#082E27;        /* el fondo de casi todo */
+  --bosque-2:#0d3d33;      /* superficies elevadas sobre el bosque */
+  --bosque-3:#061f1d;      /* el más profundo, para viñetear */
+  --lima:#C9DE3F;          /* el acento. Se usa poco y se nota */
+  --lima-2:#a8bd2a;
+  --coral:#E87B58;         /* la alarma, el dato incómodo */
+  --crema:#F6F4EA;         /* el papel */
+  --crema-2:#e4e0cf;
+  --tinta:#14261f;         /* texto sobre crema */
+  --suave:rgba(246,244,234,.62);
+  --linea:rgba(246,244,234,.16);
+}
+deck-stage,
+deck-stage *{box-sizing:border-box;margin:0;padding:0}
+/* `deck-stage` va nombrado a propósito: el motor declara su propia tipografía
+   en :host y esa le gana a la herencia desde <body>. Sin esto, en local todo
+   salía en la fuente del sistema y en GHL en Archivo, con saltos de línea
+   distintos: se maquetaba contra una fuente que el público no veía. */
+deck-stage{font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+deck-stage>section{
+  background:var(--bosque);
+  color:var(--crema);
+  overflow:hidden;
+}
+deck-stage>section>.d{position:absolute;inset:0;width:100%;height:100%}
+/* La caja donde vive el contenido. 130 px de margen: en un directo, el
+   reproductor recorta los bordes más de lo que uno cree. */
+deck-stage .pad{position:absolute;inset:0;padding:110px 130px;display:flex;flex-direction:column;justify-content:center}
+deck-stage .pad.top{justify-content:flex-start}
+/* Bloque de contenido pegado a la derecha. El texto de dentro sigue
+   alineado a la izquierda: un titular de 132 px en bandera derecha se
+   lee fatal. */
+/* Con align-items basta: cada hijo se encoge a su contenido y se pega a la
+   derecha. Forzarles width:100% reventaba la marca, que está posicionada en
+   absoluto y se iba 130 px fuera del lienzo. */
+deck-stage .pad.der{align-items:flex-end}
+/* Espeja la foto. Los fondos son 16:9 exactos, así que «cover» no deja
+   margen para reencuadrar: si el sujeto cae debajo del titular, la única
+   forma de moverlo al otro tercio sin perder resolución es voltear. */
+deck-stage .foto.espejo{transform:scaleX(-1)}
+/* ── Tipografía ───────────────────────────────────────────────────── */
+deck-stage .eyebrow{
+  font-size:26px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--lima);margin-bottom:34px;
+}
+deck-stage .eyebrow.coral{color:var(--coral)}
+deck-stage h1{font-size:132px;font-weight:800;line-height:.96;letter-spacing:-.035em;text-wrap:balance}
+deck-stage h2{font-size:96px;font-weight:800;line-height:1.02;letter-spacing:-.03em;text-wrap:balance}
+deck-stage h3{font-size:62px;font-weight:700;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+deck-stage h1 em,
+deck-stage h2 em,
+deck-stage h3 em{
+  font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:600;
+  color:var(--lima);
+}
+deck-stage .lead{font-size:42px;line-height:1.42;color:var(--suave);max-width:24ch;margin-top:38px}
+deck-stage .lead.ancho{max-width:34ch}
+deck-stage p.dato{font-size:36px;line-height:1.45;color:var(--suave)}
+deck-stage .fuente{
+  position:absolute;left:130px;bottom:58px;right:130px;
+  font-size:22px;line-height:1.4;color:rgba(246,244,234,.42);
+}
+/* Un dato sin fuente no se proyecta. Lo que Iván no ha cerrado va así. */
+deck-stage .pend{
+  display:inline-block;padding:2px 12px;border-radius:6px;
+  background:#ffe08a;color:#7a2d00;font-weight:800;font-size:.82em;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+}
+/* ── Fondo: las curvas de nivel de la finca ───────────────────────── */
+deck-stage .curvas{position:absolute;inset:0;opacity:.14;pointer-events:none}
+deck-stage .curvas svg{width:100%;height:100%}
+deck-stage .viñeta{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 42%,transparent 40%,rgba(6,31,29,.72))}
+/* ── Foto de fondo ────────────────────────────────────────────────── */
+deck-stage .foto{position:absolute;inset:0;background-size:cover;background-position:center}
+deck-stage .foto.der{background-position:right center}
+deck-stage .velo{position:absolute;inset:0}
+deck-stage .velo.izq{background:linear-gradient(100deg,rgba(8,46,39,.97) 34%,rgba(8,46,39,.72) 58%,rgba(8,46,39,.2))}
+/* El espejo de la anterior: la foto se ve por la izquierda y el texto va
+   a la derecha. Hace falta cuando el sujeto de la foto cae justo debajo
+   del titular y queda tapado. */
+deck-stage .velo.der{background:linear-gradient(260deg,rgba(8,46,39,.97) 34%,rgba(8,46,39,.72) 58%,rgba(8,46,39,.2))}
+deck-stage .velo.abajo{background:linear-gradient(180deg,rgba(8,46,39,.18) 30%,rgba(8,46,39,.88))}
+deck-stage .velo.full{background:rgba(8,46,39,.82)}
+/* ── Marca ────────────────────────────────────────────────────────── */
+deck-stage .marca{position:absolute;left:130px;top:62px;display:flex;align-items:center;gap:20px;z-index:5}
+deck-stage .marca img{height:74px;width:auto;filter:brightness(0) invert(1)}
+deck-stage .marca span{font-size:22px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--suave)}
+deck-stage .paso{position:absolute;right:130px;top:66px;z-index:5;
+  font-size:22px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(246,244,234,.4)}
+/* ── Piezas de datos ──────────────────────────────────────────────── */
+deck-stage .cifra{font-size:190px;font-weight:800;line-height:.88;letter-spacing:-.05em;color:var(--lima)}
+deck-stage .cifra.coral{color:var(--coral)}
+deck-stage .cifra small{display:block;font-size:32px;font-weight:600;letter-spacing:0;color:var(--suave);margin-top:18px;line-height:1.35}
+deck-stage .tarjetas{display:grid;gap:26px;margin-top:52px}
+deck-stage .tarjetas.tres{grid-template-columns:repeat(3,1fr)}
+deck-stage .tarjetas.dos{grid-template-columns:repeat(2,1fr)}
+deck-stage .tarjetas.cuatro{grid-template-columns:repeat(4,1fr);gap:20px}
+deck-stage .tarjetas.cuatro .tarjeta{padding:32px 28px}
+deck-stage .tarjetas.cuatro .tarjeta b{font-size:36px;margin-bottom:12px}
+deck-stage .tarjetas.cuatro .tarjeta span{font-size:26px;line-height:1.4}
+deck-stage .tarjeta{padding:40px;border:1px solid var(--linea);border-radius:20px;background:rgba(246,244,234,.05)}
+deck-stage .tarjeta b{display:block;font-size:46px;font-weight:800;color:var(--lima);margin-bottom:16px;line-height:1.05}
+deck-stage .tarjeta span{font-size:30px;line-height:1.42;color:var(--suave)}
+deck-stage .lista{display:grid;gap:26px;margin-top:46px}
+deck-stage .lista li{list-style:none;display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start;
+  font-size:40px;line-height:1.36}
+deck-stage .lista li i{width:14px;height:14px;border-radius:50%;background:var(--lima);margin-top:16px;flex:none}
+/* ── Animación al entrar en la diapositiva ────────────────────────────
+   deck-stage pone data-deck-active en la sección activa y lo quita al
+   salir. Colgar de ahí hace que la animación se reproduzca de nuevo
+   cada vez que se vuelve a la diapositiva, no solo la primera. */
+deck-stage [data-anim]{opacity:0}
+/* «traza» solo anima stroke-dashoffset: si además se le aplica el opacity:0
+   de arriba, el trazo nunca aparece. Tiene que quedar visible desde el
+   principio y dejar que sea el guion el que lo dibuje. */
+deck-stage [data-anim="dibuja-x"],
+deck-stage [data-anim="dibuja-y"],
+deck-stage [data-anim="revela"],
+deck-stage [data-anim="traza"]{opacity:1}
+deck-stage [data-anim="dibuja-x"]{transform:scaleX(0);transform-origin:left center}
+deck-stage [data-anim="dibuja-y"]{transform:scaleY(0);transform-origin:bottom center}
+@keyframes lh-sube{from{opacity:0;transform:translateY(34px)} to{opacity:1;transform:none}}
+@keyframes lh-baja{from{opacity:0;transform:translateY(-28px)}to{opacity:1;transform:none}}
+@keyframes lh-izq{from{opacity:0;transform:translateX(-56px)}to{opacity:1;transform:none}}
+@keyframes lh-der{from{opacity:0;transform:translateX(56px)} to{opacity:1;transform:none}}
+@keyframes lh-zoom{from{opacity:0;transform:scale(.93)}       to{opacity:1;transform:none}}
+@keyframes lh-revela{from{clip-path:inset(0 100% 0 0)}          to{clip-path:inset(0 0 0 0)}}
+@keyframes lh-dib-x{from{transform:scaleX(0)}                  to{transform:scaleX(1)}}
+@keyframes lh-dib-y{from{transform:scaleY(0)}                  to{transform:scaleY(1)}}
+@keyframes lh-traza{to{stroke-dashoffset:0}}
+deck-stage [data-deck-active] [data-anim="sube"]{animation:lh-sube   900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="baja"]{animation:lh-baja   900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="izq"]{animation:lh-izq    900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="der"]{animation:lh-der    900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="zoom"]{animation:lh-zoom  1100ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="revela"]{animation:lh-revela 1200ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="dibuja-x"]{animation:lh-dib-x  1000ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="dibuja-y"]{animation:lh-dib-y  1100ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="traza"]{animation:lh-traza  1600ms cubic-bezier(.6,0,.3,1) var(--d,0ms) both}
+/* Los latidos decorativos van siempre: dan sensación de directo vivo. */
+@keyframes lh-latido{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.45);opacity:.5}}
+@keyframes lh-onda{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.6);opacity:0}}
+@keyframes lh-flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+/* Dentro de un SVG el origen de transformación es la esquina del viewBox,
+   así que un «zoom» se lanza desde ahí en lugar de crecer en su sitio. */
+deck-stage svg [data-anim="zoom"],
+deck-stage svg [data-anim="sube"],
+deck-stage svg [data-anim="izq"],
+deck-stage svg [data-anim="der"]{
+  transform-box:fill-box;transform-origin:center;
+}
+deck-stage .punto{position:relative;display:inline-block;width:14px;height:14px;border-radius:50%;
+  background:var(--coral);animation:lh-latido 2s ease-in-out infinite}
+deck-stage .punto::after{content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:2px solid var(--coral);animation:lh-onda 2s ease-out infinite}
+deck-stage .flota{animation:lh-flota 5s ease-in-out infinite}
+</style>
+
+<deck-stage width="1920" height="1080">
+
+<!-- ── 01 · Portada ──────────────────────────────────────────────────── -->
+<section data-label="Portada">
+  <div class="d">
+    <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6023fb13-e9ee-4a4e-9fbc-f3722b982d36.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="curvas"><svg viewBox="0 0 1920 1080" preserveAspectRatio="none" aria-hidden="true">
+      <g fill="none" stroke="#C9DE3F" stroke-width="2">
+        <path d="M-100 880 Q 400 700 900 810 T 2020 690"/>
+        <path d="M-100 950 Q 420 780 940 880 T 2020 770"/>
+        <path d="M-100 1020 Q 440 860 980 950 T 2020 850"/>
+      </g>
+    </svg></div>
+    <div class="pad">
+      <div class="marca">
+        <img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6aa46253f4e2fd8aa0ffbddd.png" alt="La Huerta LAB">
+      </div>
+      <p class="eyebrow" data-anim="sube">Clase 3 de 3 · Miércoles 16 de septiembre</p>
+      <h1 data-anim="sube" style="--d:120ms">Lo que nadie te dice <em>antes de meterle plata.</em></h1>
+      <p class="lead ancho" data-anim="sube" style="--d:280ms">
+        Las cinco cosas duras de irse al campo, y la única que decide
+        si las demás se aguantan.
+      </p>
+      <p style="--d:420ms;margin-top:56px;font-size:30px;color:var(--suave)" data-anim="sube">
+        <span class="punto"></span> &nbsp;En vivo · con Iván Castrillón
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 02 · No vengo a venderte el sueño ────────────────────────────── -->
+<section data-label="El sueño">
+  <div class="d">
+    <!-- c2-ivan.jpg NO es Iván: es un muchacho del equipo con una papaya
+         (el archivo original se llama «Ingenieros agrónomos expertos…»).
+         c3-ivan-foto.jpg es la foto profesional de los cofundadores editada
+         con imagegen (16/09): se quitó a Gina y se amplió el fondo. La cara
+         es la de la foto real, comparada a mano antes de usarla. -->
+    <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/4ab33814-2d50-41d5-ac19-272ff71a6d7f.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Antes de nada</p>
+      <h3 data-anim="sube" style="--d:120ms;max-width:22ch">
+        Desde niño soñaba con vivir en el campo. Lo logré a los 47.
+        Y fue <em>la mejor decisión de mi vida.</em>
+      </h3>
+      <h2 data-anim="sube" style="--d:480ms;margin-top:44px;max-width:20ch;color:var(--lima)">
+        Pero hoy no vengo a venderte <em style="color:var(--coral)">el sueño.</em>
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- ── 03 · El 95 % · INFOGRAFÍA ────────────────────────────────────────
+     Cien puntos. Noventa y cinco se apagan. Es el dato más fuerte de la
+     noche y no necesita nada más encima. -->
+<section data-label="El 95 %">
+  <div class="d" style="background:var(--bosque-3)">
+    <div class="pad" style="padding:92px 130px">
+      <p class="eyebrow coral" data-anim="sube">Francia, después de mayo del 68</p>
+      <h3 data-anim="sube" style="--d:100ms;max-width:40ch">
+        Miles de jóvenes dejaron la ciudad para irse al campo.
+        Dos sociólogos los siguieron durante años.
+      </h3>
+
+      <div style="display:grid;grid-template-columns:minmax(0,700px) minmax(0,1fr);gap:80px;align-items:center;margin-top:48px">
+        <!-- La cuadrícula se pinta con JS abajo: cien divs a mano no los
+             lee nadie y aquí lo que importa es el patrón, no el marcado. -->
+        <div id="c3-cien" style="display:grid;grid-template-columns:repeat(10,1fr);gap:12px;max-width:520px"></div>
+
+        <div>
+          <div class="cifra coral" data-anim="zoom" style="--d:2600ms;max-width:15ch">
+            95
+            <small>de cada cien volvieron a la ciudad.</small>
+          </div>
+          <p class="dato" style="--d:3000ms;margin-top:40px;max-width:26ch" data-anim="sube">
+            Y sobre las ecoaldeas, la estimación que más se repite entre
+            los especialistas es que nueve de cada diez proyectos nunca
+            despegan.
+          </p>
+        </div>
+      </div>
+    </div>
+    <p class="fuente">
+      Léger, D. &amp; Hervieu, B. (1979). <em style="font-family:Fraunces,serif">Le retour à la nature</em>. París: Seuil ·
+      Christian, D. L. (2003). <em style="font-family:Fraunces,serif">Creating a Life Together</em>.
+      Lo de las ecoaldeas es una estimación de especialistas, no una cifra medida.
+    </p>
+  </div>
+</section>
+
+<!-- ── 04 · El cinco por ciento ─────────────────────────────────────── -->
+<section data-label="El cinco por ciento">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Y aquí está lo incómodo</p>
+      <h2 data-anim="sube" style="--d:140ms;max-width:24ch">
+        Yo estoy en el cinco por ciento <em>que se quedó.</em>
+      </h2>
+      <p class="lead ancho" data-anim="sube" style="--d:420ms">
+        Y no me quedé porque fuera más fuerte, ni porque supiera más.
+        Me quedé por una sola razón.
+      </p>
+      <p class="dato" style="--d:700ms;margin-top:46px;max-width:34ch;color:var(--lima);font-size:40px;font-weight:700" data-anim="sube">
+        Se la voy a decir al final de esta noche. Porque es la misma razón
+        por la que la finca de muchos de ustedes hoy no responde.
+      </p>
+    </div>
+    <div class="viñeta"></div>
+  </div>
+</section>
+
+<!-- ── 05 · Divisor ─────────────────────────────────────────────────── -->
+<section data-label="Bloque 2">
+  <div class="d" style="background:var(--bosque-3)">
+    <div class="pad">
+      <p class="paso">Bloque 1</p>
+      <p class="eyebrow" data-anim="izq">Lo que a mí nadie me dijo</p>
+      <h1 data-anim="izq" style="--d:120ms">Las cinco cosas <em>duras.</em></h1>
+      <div style="--d:340ms;margin-top:52px;height:5px;background:var(--lima);max-width:420px"
+           data-anim="dibuja-x"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 06 · Cosa 1 ──────────────────────────────────────────────────── -->
+<section data-label="Cosa 1 · Tu patrón">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow coral" data-anim="sube">Cosa 1 de 5</p>
+      <h2 data-anim="sube" style="--d:120ms;max-width:26ch">
+        Vas a ser tu propio patrón. Y ese patrón <em>no da vacaciones.</em>
+      </h2>
+      <p class="lead ancho" data-anim="sube" style="--d:400ms">
+        En una empresa hay horario, contrato y alguien que te manda a la
+        casa. En tu finca ese alguien eres tú. Y tú nunca te vas a mandar
+        a la casa.
+      </p>
+      <h3 data-anim="sube" style="--d:680ms;margin-top:46px;max-width:34ch;color:var(--lima)">
+        Tiene nombre desde hace cien años. Chayanov lo llamó
+        <em>autoexplotación:</em> la familia que trabaja su propia tierra
+        no se rige por el salario, se rige por la fatiga.
+      </h3>
+    </div>
+    <p class="fuente">Chayanov, A. (1925). Estudio de miles de familias campesinas.</p>
+  </div>
+</section>
+
+<!-- ── 07 · El burnout · INFOGRAFÍA ─────────────────────────────────── -->
+<section data-label="Burnout">
+  <div class="d">
+    <div class="pad" style="padding:104px 130px">
+      <p class="eyebrow coral" data-anim="sube">Y hoy tiene medida</p>
+      <h3 data-anim="sube" style="--d:100ms;max-width:32ch">
+        Más de mil agricultores encuestados. Esto es lo que salió.
+      </h3>
+
+      <!-- Una sola barra de cien. Se llena por tramos para que se lea
+           que el 44 % no está bien: va en camino. -->
+      <div style="margin-top:76px">
+        <div style="position:relative;height:104px;border-radius:16px;background:rgba(246,244,234,.07);overflow:hidden;display:flex">
+          <div style="--d:400ms;width:12%;background:#E87B58;transform-origin:left center" data-anim="dibuja-x"></div>
+          <div style="--d:900ms;width:44%;background:#B9684C;transform-origin:left center" data-anim="dibuja-x"></div>
+          <div style="--d:1400ms;width:43.5%;background:#2C4A41;transform-origin:left center" data-anim="dibuja-x"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:12.1fr 44fr 43.5fr;gap:20px;margin-top:30px">
+          <div data-anim="sube" style="--d:1700ms">
+            <b style="display:block;font-size:52px;font-weight:800;color:var(--coral);line-height:1">12 %</b>
+            <span style="display:block;font-size:28px;line-height:1.38;color:var(--suave);margin-top:12px">En burnout.</span>
+          </div>
+          <div data-anim="sube" style="--d:1840ms">
+            <b style="display:block;font-size:52px;font-weight:800;color:#E8A48D;line-height:1">44 %</b>
+            <span style="display:block;font-size:28px;line-height:1.38;color:var(--suave);margin-top:12px">Iba en camino.</span>
+          </div>
+          <div data-anim="sube" style="--d:1980ms">
+            <b style="display:block;font-size:52px;font-weight:800;color:var(--suave);line-height:1">43 %</b>
+            <span style="display:block;font-size:28px;line-height:1.38;color:var(--suave);margin-top:12px">El resto.</span>
+          </div>
+        </div>
+
+        <h3 data-anim="sube" style="--d:2200ms;margin-top:56px;max-width:32ch;color:var(--lima)">
+          Más de la mitad del campo <em>está quemado o yendo hacia allá.</em>
+        </h3>
+      </div>
+    </div>
+    <p class="fuente">
+      Jones-Bitton et al. (2019), <em style="font-family:Fraunces,serif">IJERPH</em> 16(24), n = 1.075, Universidad de Guelph ·
+      Una revisión sistemática de 2022 pone el burnout severo entre el 10 y el 14 %
+      (O’Shaughnessy et al., <em style="font-family:Fraunces,serif">Journal of Rural Studies</em> 96).
+    </p>
+  </div>
+</section>
+
+<!-- ── 08 · Setenta horas ───────────────────────────────────────────── -->
+<section data-label="Setenta horas">
+  <div class="d">
+    <div class="pad" style="align-items:flex-start">
+      <p class="eyebrow" data-anim="sube">Mi primer año aquí</p>
+      <div class="cifra coral" data-anim="zoom" style="--d:200ms;max-width:18ch">
+        70 horas
+        <small>a la semana. Sin domingo y sin festivo.</small>
+      </div>
+      <h3 data-anim="sube" style="--d:640ms;margin-top:50px;max-width:26ch;color:var(--lima)">
+        Y lo peor: <em>sin saber que eso tenía nombre.</em>
+      </h3>
+    </div>
+    <div class="viñeta"></div>
+  </div>
+</section>
+
+<!-- ── 09 · Cosa 2 · los dos pisos · INFOGRAFÍA ─────────────────────── -->
+<section data-label="Cosa 2 · Soledad">
+  <div class="d">
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/9c32cdc9-585f-4b84-88a2-7b8eb7bce888.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow coral" data-anim="sube">Cosa 2 de 5</p>
+      <h2 data-anim="sube" style="--d:120ms;max-width:none">
+        La soledad tiene <em>dos pisos.</em>
+      </h2>
+
+      <!-- Dos pisos de verdad: uno encima del otro, y el de abajo, el que
+           nadie cuenta, con más peso visual que el de arriba. -->
+      <div style="max-width:880px;margin-top:44px">
+        <div data-anim="der" style="--d:420ms;border:1px solid var(--linea);border-radius:20px 20px 0 0;padding:34px 38px;background:rgba(246,244,234,.05)">
+          <b style="display:block;font-size:26px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--suave);margin-bottom:14px">Primer piso</b>
+          <span style="display:block;font-size:34px;line-height:1.38;color:var(--crema)">
+            La distancia. El vecino a veinte minutos, el pueblo a una hora,
+            tu familia a cinco. <em style="font-family:Fraunces,serif;color:var(--lima)">Ese se aguanta.</em>
+          </span>
+        </div>
+        <div data-anim="der" style="--d:820ms;border:2px solid var(--coral);border-top:0;border-radius:0 0 20px 20px;padding:40px 38px;background:rgba(232,123,88,.1)">
+          <b style="display:block;font-size:26px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--coral);margin-bottom:14px">Segundo piso · el que nadie cuenta</b>
+          <span style="display:block;font-size:38px;line-height:1.34;color:var(--crema);font-weight:600">
+            No pertenecer. Llegas donde todos se conocen hace tres
+            generaciones y tú llegaste el martes.
+          </span>
+        </div>
+      </div>
+
+      <p class="dato" style="--d:1240ms;margin-top:38px;max-width:38ch;color:var(--lima);font-weight:700;font-size:38px" data-anim="sube">
+        Puedes estar rodeado de gente y ser la persona más sola de la vereda.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 10 · El dato de la soledad ───────────────────────────────────────
+     PENDIENTE 5 del guion: verificar la autoría del estudio antes del
+     miércoles o retirar la cifra y quedarse con la idea, que funciona
+     igual. PENDIENTE 2: la anécdota real, en una frase. Sin ella este
+     bloque es puro dato. -->
+<section data-label="El dato de la soledad">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Y eso se paga</p>
+      <!-- La cifra «2,25 veces» venía atribuida a «Reed et al. (2026)» y esa
+           autoría NO se pudo confirmar. La propia diapositiva mandaba qué
+           hacer en ese caso: quitar la cifra y contar solo la idea. Eso es
+           lo que hay aquí. La asociación sí está publicada, y la fuente que
+           se cita abajo sí existe y sí es de Nature Communications. -->
+      <h2 data-anim="sube" style="--d:140ms;max-width:26ch">
+        Quien se siente solo tiene más probabilidad de acabar
+        con un diagnóstico de <em>depresión.</em>
+      </h2>
+      <!-- La anécdota de soledad la cuenta Iván en vivo (Loom 16/09). -->
+    </div>
+    <p class="fuente">
+      <em style="font-family:Fraunces,serif">Nature Communications</em> (2026),
+      cohorte UK Biobank.
+    </p>
+    <div class="viñeta"></div>
+  </div>
+</section>
+
+<!-- ── 11 · Cosa 3 ──────────────────────────────────────────────────── -->
+<section data-label="Cosa 3 · La pareja">
+  <div class="d">
+    <!-- La diapositiva habla de Gina y con .foto.der ella quedaba debajo del
+         velo: solo se veía a Iván. c3-pareja.jpg es la misma foto de los
+         cofundadores corrida 420 px a la derecha, y el velo termina antes. -->
+    <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/5433bf5a-edef-41b0-ae9b-6946ef5a1ca6.jpg')"></div>
+    <div class="velo" style="background:linear-gradient(100deg,rgba(8,46,39,.97) 30%,rgba(8,46,39,.62) 50%,rgba(8,46,39,.06) 66%)"></div>
+    <div class="pad">
+      <p class="eyebrow coral" data-anim="sube">Cosa 3 de 5</p>
+      <h2 data-anim="sube" style="--d:120ms;max-width:15ch">
+        El sueño es tuyo. La vida <em>es de los dos.</em>
+      </h2>
+      <p class="lead" data-anim="sube" style="--d:440ms">
+        Gina no soñaba con levantarse a las cinco ni con vivir a una hora
+        del hospital.
+      </p>
+      <p class="dato" style="--d:720ms;margin-top:36px;max-width:32ch;color:var(--lima);font-size:40px;font-weight:700" data-anim="sube">
+        Ella firmó por mí. No por la finca.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 12 · Los datos de la pareja ──────────────────────────────────── -->
+<section data-label="Datos de pareja">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Y esto está documentado</p>
+      <div class="tarjetas dos" style="margin-top:20px">
+        <div class="tarjeta" data-anim="izq" style="--d:300ms;border-color:rgba(232,123,88,.34)">
+          <b style="color:var(--coral)">Aldea Feliz, Colombia</b>
+          <span>En los primeros años se formaron parejas, otras se separaron,
+          y aparecieron conflictos que nunca se resolvieron.</span>
+        </div>
+        <div class="tarjeta" data-anim="der" style="--d:460ms;border-color:rgba(201,222,63,.34)">
+          <!-- Antes decía «El factor número uno: lo que más reduce el burnout
+               es el apoyo de la pareja». Jones-Bitton et al. (2019) no lo
+               clasifica así: la falta de apoyo de la pareja, de la familia y
+               del sector se asocian, las tres, con menor eficacia profesional. -->
+          <b>Los mismos mil agricultores</b>
+          <span>Sin el apoyo de la pareja se sentían menos capaces en su
+          trabajo. Pasaba igual con la familia y con el sector.</span>
+        </div>
+      </div>
+      <h2 data-anim="sube" style="--d:820ms;margin-top:56px;max-width:26ch">
+        Si está a bordo, es tu mejor protección. Si no,
+        <em style="color:var(--coral)">es tu mayor riesgo.</em>
+      </h2>
+    </div>
+    <p class="fuente">
+      Muñoz-Villarreal (2018), <em style="font-family:Fraunces,serif">Entramado</em> 14(2), Universidad de Caldas ·
+      Jones-Bitton et al. (2019).
+    </p>
+  </div>
+</section>
+
+<!-- ── 13 · Gina en vivo ────────────────────────────────────────────────
+     PENDIENTE 4: confirmar si entra y cuántos minutos. Si entra, este es
+     el momento de mayor conexión de la noche. Una sola pregunta y sin
+     guion. Y no recortarle el costo real que mencione: la respuesta
+     honesta vale más que la bonita y el público lo distingue. -->
+<section data-label="Gina en vivo">
+  <div class="d" style="background:var(--crema);color:var(--tinta)">
+    <div class="pad" style="align-items:center;text-align:center">
+      <p style="font-size:26px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#7a8b3a;margin-bottom:34px"
+         data-anim="sube">Una sola pregunta</p>
+      <h2 data-anim="zoom" style="--d:200ms;max-width:20ch;color:var(--tinta);font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:600;letter-spacing:-.02em">
+        ¿En qué momento pensaste que nos habíamos equivocado?
+      </h2>
+      <p style="--d:640ms;margin-top:48px;font-size:36px;line-height:1.4;max-width:32ch;color:#3c5a44"
+         data-anim="sube">
+        Si estás viendo esto con tu pareja, pausa aquí y háganse esa
+        misma pregunta. Después seguimos.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 14 · Cosa 4 ──────────────────────────────────────────────────── -->
+<section data-label="Cosa 4 · El de la ciudad">
+  <div class="d">
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/37c0eb36-5813-4e5e-bd95-f7ac03f84d35.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow coral" data-anim="sube">Cosa 4 de 5</p>
+      <h2 data-anim="sube" style="--d:120ms;max-width:20ch">
+        Vas a llegar siendo <em>«el de la ciudad».</em>
+      </h2>
+      <p class="lead" data-anim="sube" style="--d:440ms">
+        Y no importa cuántos diplomas traigas.
+      </p>
+      <p class="dato" style="--d:720ms;margin-top:36px;max-width:38ch" data-anim="sube">
+        Yo llegué con veinte años de industria y una maestría. El señor
+        que llevaba cuarenta años en la vereda sabía cuándo iba a llover
+        mirando el cerro. Yo miraba el celular.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 15 · Cómo te llaman ──────────────────────────────────────────── -->
+<section data-label="Cómo te llaman">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Y tiene nombre en cada región</p>
+      <div class="tarjetas tres" style="margin-top:24px">
+        <div class="tarjeta" data-anim="sube" style="--d:300ms"><b>Gringos. Hippies.</b><span>Traslasierra, Argentina.</span></div>
+        <div class="tarjeta" data-anim="sube" style="--d:430ms"><b>Desconfianza inicial</b><span>Así lo llaman los estudios de la Alpujarra española.</span></div>
+        <div class="tarjeta" data-anim="sube" style="--d:560ms"><b>Agromelos</b><span>Agro más gomelo. Se lo pusieron ellos mismos, en Aldea Feliz.</span></div>
+      </div>
+      <h3 data-anim="sube" style="--d:860ms;margin-top:56px;max-width:38ch;color:var(--lima)">
+        Edelmira Pérez lo describe así: la relación entre el neorrural y
+        el campesino es como la de un barrio de estrato cinco con las
+        casas de al lado. <em>Se ven, no se hablan.</em>
+      </h3>
+    </div>
+    <p class="fuente">
+      <em style="font-family:Fraunces,serif">Chungará</em> 49(1), 2017 · Sayadi et al., Alpujarra Granadina ·
+      Muñoz-Villarreal (2018) · Pérez Correa, Instituto de Estudios Rurales, Javeriana.
+    </p>
+  </div>
+</section>
+
+<!-- ── 16 · Preguntar como alumno ───────────────────────────────────────
+     PENDIENTE 3 del guion: el nombre de un vecino o trabajador y qué te
+     enseñó, en concreto. Es la frase que humaniza el bloque entero. -->
+<section data-label="Preguntar">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Lo único que me funcionó</p>
+      <h2 data-anim="sube" style="--d:140ms;max-width:24ch">
+        Fue la estrategia más incómoda: <em>preguntar.</em>
+      </h2>
+      <h3 data-anim="sube" style="--d:440ms;margin-top:36px;max-width:26ch;color:var(--lima)">
+        Preguntar como alumno. No como jefe.
+      </h3>
+      <!-- El vecino y lo que le enseñó los cuenta Iván en vivo (Loom 16/09). -->
+    </div>
+    <div class="viñeta"></div>
+  </div>
+</section>
+
+<!-- ── 17 · Cosa 5 ──────────────────────────────────────────────────── -->
+<section data-label="Cosa 5 · El cansancio">
+  <div class="d">
+    <!-- c2-manos.jpg salía girada 90°. Iván pidió una horizontal. -->
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/86376661-93ff-4921-a164-f81edf6b6379.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Cosa 5 de 5</p>
+      <h2 data-anim="sube" style="--d:120ms;max-width:22ch">
+        El cansancio cambia de signo el día que <em>la finca paga.</em>
+      </h2>
+      <p class="dato" style="--d:460ms;margin-top:38px;max-width:36ch" data-anim="sube">
+        Las mismas horas que el primer año me estaban rompiendo, hoy me
+        llenan. Las horas siguen siendo muchas. La diferencia es que
+        ahora producen algo que puedo ver, pesar y vender.
+      </p>
+      <p class="dato" style="--d:760ms;margin-top:32px;max-width:36ch;color:var(--lima);font-weight:700" data-anim="sube">
+        En Portugal encontraron dos tipos de agricultor familiar: los
+        conformados y los satisfechos. Los satisfechos eran los que
+        trabajaban más horas y cuya finca pesaba más en el ingreso.
+      </p>
+    </div>
+    <p class="fuente">
+      <em style="font-family:Fraunces,serif">Healthcare</em> 13(9):1027 (2025), escala FMLSS, Portugal.
+      La muestra son treinta agricultores: es una señal, no una ley.
+    </p>
+  </div>
+</section>
+
+<!-- ── 18 · El tomate ───────────────────────────────────────────────── -->
+<section data-label="El tomate">
+  <div class="d">
+    <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/c057942f-9112-4739-90de-c9aaf898f1ff.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="velo" style="background:linear-gradient(180deg,transparent 58%,rgba(6,31,29,.9) 90%)"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Hoy</p>
+      <div class="cifra" data-anim="zoom" style="--d:180ms;max-width:16ch">
+        70 %
+        <small>de las frutas, verduras, legumbres y carnes que sirve mi
+        restaurante sale de esta tierra.</small>
+      </div>
+      <h3 data-anim="sube" style="--d:620ms;margin-top:44px;max-width:26ch;color:var(--lima)">
+        Cuando un huésped se come un tomate que yo sembré, el cansancio
+        de esa semana <em>tiene sentido.</em>
+      </h3>
+    </div>
+  </div>
+</section>
+
+<!-- ── 18b · Lo que compramos ──────────────────────────────────────────
+     Lo pidió Iván en el Loom del 16/09: el 70 % agrupado por frutas,
+     verduras, legumbres y carnes, comparando lo que se compra con lo que
+     sale de la finca. Datos de Alejandro, en pesos, enero a agosto de 2026.
+
+     Por qué en pesos y no en kilos: el «70 %» de la diapositiva anterior es
+     por valor (72,2 % sin lácteos). Por peso esas cuatro categorías dan
+     57,8 %, y el titular dejaría de ser cierto.
+
+     Colores: lima para la finca y el coral oscuro para lo comprado, que en
+     este curso es la dependencia. Validado: solo se distinguen con
+     daltonismo rojo-verde porque tienen luz muy distinta (ΔE 17), así que
+     no se pueden acercar de luminosidad. Por eso cada fila lleva además su
+     cifra escrita. -->
+<section data-label="Lo que compramos">
+  <div class="d">
+    <div class="pad" style="padding:96px 130px">
+      <p class="eyebrow" data-anim="sube">Por categoría, en pesos</p>
+      <h3 data-anim="sube" style="--d:120ms;max-width:none;font-size:56px">
+        Lo que sale de la finca <em>y lo que todavía compramos.</em>
+      </h3>
+
+      <div data-anim="sube" style="--d:320ms;display:flex;gap:34px;margin-top:26px;font-size:24px;color:var(--suave)">
+        <span style="display:inline-flex;align-items:center;gap:12px"><i style="width:22px;height:22px;border-radius:4px;background:#C9DE3F"></i>Sale de la finca</span>
+        <span style="display:inline-flex;align-items:center;gap:12px"><i style="width:22px;height:22px;border-radius:4px;background:#D8623C"></i>Se compra</span>
+      </div>
+
+      <div style="display:grid;gap:22px;margin-top:34px">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+              <span style="--d:520ms;font-size:34px;font-weight:700;color:var(--crema)" data-anim="sube">Carnes y proteína</span>
+              <span style="--d:1220ms;font-size:24px;color:var(--suave)" data-anim="sube"><b style="font-size:46px;font-weight:800;color:var(--crema);font-variant-numeric:tabular-nums">81 %</b> de la finca</span>
+            </div>
+            <div style="display:flex;gap:3px;height:30px">
+              <div style="--d:620ms;flex:0 0 81.1%;background:#C9DE3F;border-radius:4px 0 0 4px" data-anim="dibuja-x"></div>
+              <div style="--d:1020ms;flex:1 1 0;background:#D8623C;border-radius:0 4px 4px 0" data-anim="dibuja-x"></div>
+            </div>
+            <p style="--d:1320ms;margin-top:8px;font-size:24px;color:var(--suave);font-variant-numeric:tabular-nums" data-anim="sube">$57,9 millones de la finca · $13,5 millones comprados</p>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+              <span style="--d:700ms;font-size:34px;font-weight:700;color:var(--crema)" data-anim="sube">Verduras y hortalizas</span>
+              <span style="--d:1400ms;font-size:24px;color:var(--suave)" data-anim="sube"><b style="font-size:46px;font-weight:800;color:var(--crema);font-variant-numeric:tabular-nums">71 %</b> de la finca</span>
+            </div>
+            <div style="display:flex;gap:3px;height:30px">
+              <div style="--d:800ms;flex:0 0 71.0%;background:#C9DE3F;border-radius:4px 0 0 4px" data-anim="dibuja-x"></div>
+              <div style="--d:1200ms;flex:1 1 0;background:#D8623C;border-radius:0 4px 4px 0" data-anim="dibuja-x"></div>
+            </div>
+            <p style="--d:1500ms;margin-top:8px;font-size:24px;color:var(--suave);font-variant-numeric:tabular-nums" data-anim="sube">$23,6 millones de la finca · $9,7 millones comprados</p>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+              <span style="--d:880ms;font-size:34px;font-weight:700;color:var(--crema)" data-anim="sube">Granos y leguminosas</span>
+              <span style="--d:1580ms;font-size:24px;color:var(--suave)" data-anim="sube"><b style="font-size:46px;font-weight:800;color:var(--crema);font-variant-numeric:tabular-nums">69 %</b> de la finca</span>
+            </div>
+            <div style="display:flex;gap:3px;height:30px">
+              <div style="--d:980ms;flex:0 0 69.3%;background:#C9DE3F;border-radius:4px 0 0 4px" data-anim="dibuja-x"></div>
+              <div style="--d:1380ms;flex:1 1 0;background:#D8623C;border-radius:0 4px 4px 0" data-anim="dibuja-x"></div>
+            </div>
+            <p style="--d:1680ms;margin-top:8px;font-size:24px;color:var(--suave);font-variant-numeric:tabular-nums" data-anim="sube">$4,9 millones de la finca · $2,1 millones comprados</p>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px">
+              <span style="--d:1060ms;font-size:34px;font-weight:700;color:var(--crema)" data-anim="sube">Frutas</span>
+              <span style="--d:1760ms;font-size:24px;color:var(--suave)" data-anim="sube"><b style="font-size:46px;font-weight:800;color:var(--crema);font-variant-numeric:tabular-nums">25 %</b> de la finca</span>
+            </div>
+            <div style="display:flex;gap:3px;height:30px">
+              <div style="--d:1160ms;flex:0 0 25.1%;background:#C9DE3F;border-radius:4px 0 0 4px" data-anim="dibuja-x"></div>
+              <div style="--d:1560ms;flex:1 1 0;background:#D8623C;border-radius:0 4px 4px 0" data-anim="dibuja-x"></div>
+            </div>
+            <p style="--d:1860ms;margin-top:8px;font-size:24px;color:var(--suave);font-variant-numeric:tabular-nums" data-anim="sube">$3,1 millones de la finca · $9,1 millones comprados</p>
+          </div>
+      </div>
+    </div>
+    <p class="fuente">
+      Registros de La Huerta Hotel, enero a agosto de 2026, cifras redondeadas. En conjunto,
+      sin lácteos, salió del predio el 72,2 % del valor: $89,5 de $123,8 millones.
+    </p>
+  </div>
+</section>
+
+<!-- ── 19 · La cuenta del trancón ───────────────────────────────────────
+     Esta cuenta va aquí y no en la cosa 1: aquí funciona como alivio
+     después de cuatro bloques duros; allá habría anulado el dato del
+     burnout. -->
+<section data-label="La cuenta">
+  <div class="d">
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/0cb67100-692a-46fe-9488-6018adcc96d3.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Y una cuenta que casi nadie hace</p>
+      <h3 data-anim="sube" style="--d:120ms;max-width:26ch">
+        A sus horas de oficina súmenles levantarse más temprano, el trancón
+        de ida y el de vuelta.
+      </h3>
+      <div class="cifra coral" data-anim="zoom" style="--d:460ms;margin-top:36px;max-width:22ch">
+        10 horas
+        <small>a la semana que usted trabaja sin que nadie se las pague
+        y sin que nadie se las cuente.</small>
+      </div>
+      <p class="dato" style="--d:900ms;margin-top:40px;max-width:36ch;color:var(--lima);font-weight:700" data-anim="sube">
+        En la finca no se trabaja menos. Se trabaja más. Pero esas horas
+        están adentro de su vida, no atravesadas en la mitad de ella.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 20 · Divisor · el puente ─────────────────────────────────────── -->
+<section data-label="Bloque 3">
+  <div class="d" style="background:var(--bosque-3)">
+    <div class="pad">
+      <p class="paso">Bloque 2</p>
+      <p class="eyebrow" data-anim="izq">La bisagra de la noche</p>
+      <h1 data-anim="izq" style="--d:120ms">Todo esto <em>se aguanta si la finca paga.</em></h1>
+      <div style="--d:340ms;margin-top:52px;height:5px;background:var(--lima);max-width:420px"
+           data-anim="dibuja-x"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 21 · El interruptor ──────────────────────────────────────────── -->
+<section data-label="El interruptor">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Fíjense en lo que acabo de decir</p>
+      <h3 data-anim="sube" style="--d:120ms;max-width:34ch">
+        Las horas, la soledad, la pareja, ser el de afuera.
+        <em>Ninguna se aguanta con fuerza de voluntad.</em>
+      </h3>
+      <h2 data-anim="sube" style="--d:520ms;margin-top:44px;max-width:26ch;color:var(--lima)">
+        Se aguantan cuando la finca paga. Ese es el interruptor.
+      </h2>
+      <p class="dato" style="--d:880ms;margin-top:44px;max-width:44ch" data-anim="sube">
+        Los que se fueron no se fueron porque el campo fuera duro.
+        Se fueron porque el campo fue duro <em style="font-family:Fraunces,serif;color:var(--coral)">y además no daba.</em>
+      </p>
+    </div>
+    <div class="viñeta"></div>
+  </div>
+</section>
+
+<!-- ── 22 · El agua ─────────────────────────────────────────────────────
+     Silencio de dos segundos después de la palabra. Es el giro de la
+     noche y por eso la diapositiva no tiene nada más. -->
+<section data-label="El agua">
+  <div class="d" style="background:var(--bosque-3)">
+    <div class="pad" style="align-items:center;text-align:center">
+      <p class="eyebrow" data-anim="sube" style="margin-bottom:46px">
+        Si la finca no paga, casi nunca es porque le falte tierra, ni sol,
+        ni ganas
+      </p>
+      <h1 data-anim="zoom" style="--d:600ms;font-size:220px;color:var(--lima)">El agua.</h1>
+    </div>
+    <div class="viñeta"></div>
+  </div>
+</section>
+
+<!-- ── 23 · Divisor ─────────────────────────────────────────────────── -->
+<section data-label="Bloque 4">
+  <div class="d" style="background:var(--bosque-3)">
+    <div class="pad">
+      <p class="paso">Bloque 3</p>
+      <p class="eyebrow coral" data-anim="izq">La parte que ayer no les conté</p>
+      <h1 data-anim="izq" style="--d:120ms">La cosa <em style="color:var(--coral)">más cara.</em></h1>
+      <div style="--d:340ms;margin-top:52px;height:5px;background:var(--coral);max-width:420px"
+           data-anim="dibuja-x"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 24 · El bus de los lunes ─────────────────────────────────────────
+     Estuvo retirada unas horas el 16/09 por una mala lectura del Loom.
+     Iván la pidió de vuelta ese mismo día: «da muchísimo hilo a la
+     historia… es un momento clímax». No se quita. -->
+<section data-label="El bus">
+  <div class="d">
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/031df324-c7ee-4492-9b62-5b23595a4139.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">A la mitad de mi carrera</p>
+      <h3 data-anim="sube" style="--d:120ms;max-width:24ch">
+        Hubo una reestructuración y me quedé sin el cargo.
+        <em>Entró alguien con más experiencia.</em>
+      </h3>
+      <p class="dato" style="--d:440ms;margin-top:38px;max-width:34ch" data-anim="sube">
+        Vivíamos en Bogotá. Gina estaba terminando la carrera y embarazada
+        de Eva, así que no nos podíamos mover.
+      </p>
+      <p class="dato" style="--d:720ms;margin-top:28px;max-width:34ch;color:var(--lima);font-weight:700" data-anim="sube">
+        Así que empecé a viajar solo. Nueve horas de bus hasta el Lago
+        Calima todos los lunes en la noche. Volvía los viernes.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 25 · Diciembre ───────────────────────────────────────────────────
+     PENDIENTE 1 · CRÍTICO: el año exacto de ese fenómeno de El Niño.
+     Sin fecha, la comparación con el actual queda coja y alguien la
+     puede cuestionar. Y precisar qué se secó: el reservorio de la finca,
+     las fuentes de la zona o el embalse. Es un detalle que la gente de
+     la región conoce. -->
+<section data-label="Se secaron los lagos">
+  <div class="d">
+    <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6023fb13-e9ee-4a4e-9fbc-f3722b982d36.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="velo" style="background:linear-gradient(180deg,transparent 56%,rgba(6,31,29,.92) 90%)"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Sembraba al partir con agricultores de la zona. Y el primer año fue bien</p>
+      <h2 data-anim="sube" style="--d:140ms;max-width:22ch">
+        Hasta que llegó diciembre <em style="color:var(--coral)">y llegó El Niño.</em>
+      </h2>
+      <p class="dato" style="--d:460ms;margin-top:38px;max-width:36ch" data-anim="sube">
+        No pude volver a sembrar en tres o cuatro meses porque se secaron
+        el reservorio y las fuentes de agua de la zona.
+      </p>
+      <p class="dato" style="--d:760ms;margin-top:28px;max-width:36ch;color:var(--coral);font-weight:700;font-size:40px" data-anim="sube">
+        Esa pérdida fue de las más grandes que he tenido en la vida.
+      </p>
+    </div>
+    <!-- PENDIENTE · el año de ese Niño. Iván no lo cerró en el Loom del 16/09.
+         Se quitó de la vista porque el marcador y la nota interna salían en
+         pantalla durante el directo; si lo confirma, va aquí:
+         <p class="fuente">Fenómeno de El Niño de AÑO.</p> -->
+  </div>
+</section>
+
+<!-- ── 26 · El cuarto lleno ─────────────────────────────────────────── -->
+<section data-label="El cuarto">
+  <div class="d">
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/aae89b82-8487-4530-b423-2c3796060e7c.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Y yo tenía el cuarto lleno</p>
+      <h3 data-anim="sube" style="--d:120ms;max-width:24ch">
+        De fertilizante y de veneno. El cuarto olía a veneno entero.
+      </h3>
+      <h2 data-anim="sube" style="--d:520ms;margin-top:42px;max-width:22ch;color:var(--lima)">
+        Nada de eso me sirvió <em style="color:var(--coral)">para nada.</em>
+      </h2>
+      <p class="dato" style="--d:880ms;margin-top:38px;max-width:36ch" data-anim="sube">
+        Porque el problema no era una plaga, ni un hongo, ni que le
+        faltara nutrición a la planta. El problema era que no había agua.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── 27 · La creencia ─────────────────────────────────────────────── -->
+<section data-label="Es que no llovió">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow coral" data-anim="sube">Cuando a la finca se le seca todo, todo el mundo dice lo mismo</p>
+      <h1 data-anim="sube" style="--d:140ms;max-width:16ch">«Es que <em style="color:var(--coral)">no llovió</em>».</h1>
+      <p class="lead ancho" data-anim="sube" style="--d:480ms">
+        Y casi nunca es verdad. Al bosque de mi finca le llueve
+        exactamente lo mismo que a mis cultivos. Y el bosque no se seca
+        nunca.
+      </p>
+    </div>
+    <div class="viñeta"></div>
+  </div>
+</section>
+
+<!-- ── 28 · La frase ────────────────────────────────────────────────── -->
+<section data-label="La frase del agua">
+  <div class="d" style="background:var(--crema);color:var(--tinta)">
+    <div class="pad" style="align-items:center;text-align:center">
+      <h2 data-anim="zoom" style="max-width:24ch;color:var(--tinta);font-family:Fraunces,Georgia,serif;font-style:italic;font-weight:600;letter-spacing:-.02em">
+        El agua no se va cuando deja de llover. El agua se va el día que
+        llueve, si tú no la guardaste.
+      </h2>
+    </div>
+  </div>
+</section>
+
+<!-- ── 29 · Por qué se va · INFOGRAFÍA ──────────────────────────────────
+     El corazón conceptual de la noche. Dos cortes del mismo suelo, misma
+     lluvia, misma pendiente. Explicación del porqué, nunca del cómo: las
+     terrazas y las curvas de nivel son el curso. -->
+<section data-label="Por qué se va">
+  <div class="d" style="background:var(--bosque-3)">
+    <div class="pad" style="padding:74px 130px">
+      <p class="eyebrow" data-anim="sube">Misma lluvia, misma pendiente, el mismo trozo de ladera</p>
+      <h3 data-anim="sube" style="--d:100ms;max-width:40ch;font-size:54px">
+        Lo único que cambia es <em>si el suelo la deja entrar.</em>
+      </h3>
+
+      <!-- Los dos cortes comparten desnivel total, lluvia y bloque de tierra.
+           El de la derecha va en terrazas (lo pidió Iván, 16/09): el centro de
+           cada huella cae sobre la misma recta que la ladera de la izquierda,
+           así que la pendiente media sigue siendo la misma.
+
+           OJO al editar: una animación CSS termina en opacity:1 y pisa el
+           atributo opacity del SVG. Lo que lleve data-anim no puede llevar
+           su propia opacity: va en un <g> envolvente que no se anima, o
+           como fill-opacity, que el keyframe no toca. -->
+      <svg viewBox="0 0 1660 740" style="width:100%;height:auto;margin-top:30px"
+           font-family="Archivo,sans-serif" aria-hidden="true">
+        <defs>
+          <linearGradient id="c3tierra" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stop-color="#17463B"/>
+            <stop offset=".5"  stop-color="#0D2E26"/>
+            <stop offset="1"   stop-color="#071C17"/>
+          </linearGradient>
+          <linearGradient id="c3reserva" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#C9DE3F" stop-opacity="0"/>
+            <stop offset="1" stop-color="#C9DE3F" stop-opacity=".34"/>
+          </linearGradient>
+          <linearGradient id="c3lamina" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#E87B58" stop-opacity=".42"/>
+            <stop offset="1" stop-color="#E87B58" stop-opacity=".06"/>
+          </linearGradient>
+          <clipPath id="c3bloqueB"><path d="M870 202 H1068 V248 H1265 V292 H1462 V338 H1660 V610 H870 Z"/></clipPath>
+          <clipPath id="c3bloqueA"><path d="M0 180 L790 360 L790 610 L0 610 Z"/></clipPath>
+        </defs>
+
+        <g font-size="27" font-weight="800" letter-spacing="5">
+          <text x="0" y="22" fill="#E87B58" data-anim="izq" style="--d:200ms">SUELO DESNUDO Y COMPACTADO</text>
+          <text x="870" y="22" fill="#C9DE3F" data-anim="der" style="--d:200ms">SUELO CUBIERTO, VIVO Y EN TERRAZAS</text>
+        </g>
+
+        <!-- La misma llovizna sobre los dos -->
+        <g stroke="#F6F4EA" stroke-width="2" stroke-linecap="round" opacity=".2">
+      <line x1="24" y1="62" x2="19" y2="80" data-anim="baja" style="--d:260ms"/>
+      <line x1="65" y1="91" x2="60" y2="116" data-anim="baja" style="--d:276ms"/>
+      <line x1="106" y1="82" x2="101" y2="102" data-anim="baja" style="--d:292ms"/>
+      <line x1="147" y1="73" x2="142" y2="100" data-anim="baja" style="--d:308ms"/>
+      <line x1="188" y1="64" x2="183" y2="86" data-anim="baja" style="--d:324ms"/>
+      <line x1="229" y1="93" x2="224" y2="122" data-anim="baja" style="--d:340ms"/>
+      <line x1="270" y1="84" x2="265" y2="108" data-anim="baja" style="--d:356ms"/>
+      <line x1="311" y1="75" x2="306" y2="94" data-anim="baja" style="--d:372ms"/>
+      <line x1="352" y1="66" x2="347" y2="92" data-anim="baja" style="--d:388ms"/>
+      <line x1="393" y1="95" x2="388" y2="116" data-anim="baja" style="--d:404ms"/>
+      <line x1="434" y1="86" x2="429" y2="114" data-anim="baja" style="--d:420ms"/>
+      <line x1="475" y1="77" x2="470" y2="100" data-anim="baja" style="--d:436ms"/>
+      <line x1="516" y1="68" x2="511" y2="86" data-anim="baja" style="--d:452ms"/>
+      <line x1="557" y1="97" x2="552" y2="122" data-anim="baja" style="--d:468ms"/>
+      <line x1="598" y1="88" x2="593" y2="108" data-anim="baja" style="--d:484ms"/>
+      <line x1="639" y1="79" x2="634" y2="106" data-anim="baja" style="--d:500ms"/>
+      <line x1="680" y1="70" x2="675" y2="92" data-anim="baja" style="--d:516ms"/>
+      <line x1="721" y1="99" x2="716" y2="128" data-anim="baja" style="--d:532ms"/>
+      <line x1="762" y1="90" x2="757" y2="114" data-anim="baja" style="--d:548ms"/>
+      <line x1="803" y1="81" x2="798" y2="100" data-anim="baja" style="--d:564ms"/>
+      <line x1="844" y1="72" x2="839" y2="98" data-anim="baja" style="--d:580ms"/>
+      <line x1="885" y1="63" x2="880" y2="84" data-anim="baja" style="--d:596ms"/>
+      <line x1="926" y1="92" x2="921" y2="120" data-anim="baja" style="--d:612ms"/>
+      <line x1="967" y1="83" x2="962" y2="106" data-anim="baja" style="--d:628ms"/>
+      <line x1="1008" y1="74" x2="1003" y2="92" data-anim="baja" style="--d:644ms"/>
+      <line x1="1049" y1="65" x2="1044" y2="90" data-anim="baja" style="--d:660ms"/>
+      <line x1="1090" y1="94" x2="1085" y2="114" data-anim="baja" style="--d:676ms"/>
+      <line x1="1131" y1="85" x2="1126" y2="112" data-anim="baja" style="--d:692ms"/>
+      <line x1="1172" y1="76" x2="1167" y2="98" data-anim="baja" style="--d:708ms"/>
+      <line x1="1213" y1="67" x2="1208" y2="96" data-anim="baja" style="--d:724ms"/>
+      <line x1="1254" y1="96" x2="1249" y2="120" data-anim="baja" style="--d:740ms"/>
+      <line x1="1295" y1="87" x2="1290" y2="106" data-anim="baja" style="--d:756ms"/>
+      <line x1="1336" y1="78" x2="1331" y2="104" data-anim="baja" style="--d:772ms"/>
+      <line x1="1377" y1="69" x2="1372" y2="90" data-anim="baja" style="--d:788ms"/>
+      <line x1="1418" y1="98" x2="1413" y2="126" data-anim="baja" style="--d:804ms"/>
+      <line x1="1459" y1="89" x2="1454" y2="112" data-anim="baja" style="--d:820ms"/>
+      <line x1="1500" y1="80" x2="1495" y2="98" data-anim="baja" style="--d:836ms"/>
+      <line x1="1541" y1="71" x2="1536" y2="96" data-anim="baja" style="--d:852ms"/>
+      <line x1="1582" y1="62" x2="1577" y2="82" data-anim="baja" style="--d:868ms"/>
+      <line x1="1623" y1="91" x2="1618" y2="118" data-anim="baja" style="--d:884ms"/>
+        </g>
+
+        <!-- ══ Bloque A · el agua corre por encima ══════════════════════ -->
+        <path d="M0 180 L790 360 L790 610 L0 610 Z" fill="url(#c3tierra)"/>
+        <g clip-path="url(#c3bloqueA)">
+          <!-- la costra: una franja apretada y laminar bajo la superficie -->
+          <path d="M0 180 L790 360 L790 392 L0 212 Z" fill="url(#c3lamina)"/>
+          <g stroke="#E87B58" stroke-width="2" fill="none" opacity=".5">
+            <path d="M0 191 L790 371" stroke-dasharray="26 20"/>
+            <path d="M0 202 L790 382" stroke-dasharray="42 32"/>
+          </g>
+          <!-- tierra apelmazada, para que el bloque tenga cuerpo -->
+          <g fill="#F6F4EA" opacity=".07">
+            <circle cx="128" cy="325" r="3"/>
+            <circle cx="246" cy="312" r="3"/>
+            <circle cx="196" cy="400" r="3"/>
+            <circle cx="330" cy="387" r="3"/>
+            <circle cx="412" cy="357" r="3"/>
+            <circle cx="300" cy="483" r="3"/>
+            <circle cx="470" cy="452" r="3"/>
+            <circle cx="560" cy="407" r="3"/>
+            <circle cx="628" cy="466" r="3"/>
+            <circle cx="392" cy="538" r="3"/>
+            <circle cx="548" cy="545" r="3"/>
+            <circle cx="688" cy="405" r="3"/>
+            <circle cx="86" cy="430" r="3"/>
+            <circle cx="712" cy="557" r="3"/>
+            <circle cx="164" cy="509" r="3"/>
+            <circle cx="608" cy="601" r="3"/>
+          </g>
+          <!-- las grietas de abajo: el suelo que nunca se mojó -->
+          <g stroke="#F6F4EA" stroke-width="3" fill="none" opacity=".11" stroke-linecap="round">
+            <path d="M168 368 l22 40 l-20 40 l26 42"/>
+            <path d="M424 387 l-22 42 l26 40 l-22 42"/>
+            <path d="M640 426 l24 38 l-22 38 l26 40"/>
+            <path d="M286 495 l22 34 l-20 32"/>
+          </g>
+        </g>
+        <path d="M0 212 L790 392" stroke="#E87B58" stroke-width="2.5" opacity=".5" fill="none"/>
+        <path d="M0 180 L790 360" stroke="#E87B58" stroke-width="5" fill="none"/>
+
+        <!-- el agua corriendo, pegada a la superficie -->
+        <path d="M52 182 L640 316" fill="none" stroke="#F7AE92" stroke-width="11"
+              stroke-linecap="round" stroke-dasharray="612" stroke-dashoffset="612"
+              data-anim="traza" style="--d:1100ms"/>
+        <path d="M700 329 L647 338 L656 299 Z"
+              fill="#E87B58" data-anim="zoom" style="--d:2500ms"/>
+        <!-- y lo que se lleva por delante: eso sí es tierra, va en el coral oscuro -->
+        <g fill="#D8623C" stroke="#F7AE92" stroke-width="2">
+          <circle cx="236" cy="228" r="8" data-anim="zoom" style="--d:2150ms"/>
+          <circle cx="374" cy="259" r="6" data-anim="zoom" style="--d:2250ms"/>
+          <circle cx="492" cy="286" r="7" data-anim="zoom" style="--d:2350ms"/>
+          <circle cx="588" cy="308" r="5" data-anim="zoom" style="--d:2450ms"/>
+        </g>
+
+        <g data-anim="sube" style="--d:2900ms">
+          <path d="M400 313 L400 371" stroke="#E87B58" stroke-width="2" opacity=".55"/>
+          <text x="400" y="409" text-anchor="middle" font-size="26" font-weight="800"
+                letter-spacing="4" fill="rgba(232,123,88,.92)">COSTRA COMPACTADA</text>
+        </g>
+
+        <!-- ══ Bloque B · el agua entra ═════════════════════════════════
+             Mismo desnivel total que el bloque A, pero en 4 terrazas: el
+             centro de cada huella cae sobre la misma recta que la ladera de
+             la izquierda. La pendiente media no cambia; cambia que el agua
+             tiene dónde pararse. -->
+        <path d="M870 202 H1068 V248 H1265 V292 H1462 V338 H1660 V610 H870 Z" fill="url(#c3tierra)"/>
+        <g clip-path="url(#c3bloqueB)">
+          <!-- la reserva: se llena al final, cuando ya bajaron las cuatro -->
+          <path d="M870 505 Q 1067 488 1264 510 T 1660 516 L1660 610 L870 610 Z"
+                fill="url(#c3reserva)" data-anim="sube" style="--d:2700ms"/>
+          <g fill="#C9DE3F" opacity=".22">
+      <circle cx="958" cy="312" r="7"/>
+      <circle cx="1044" cy="373" r="5"/>
+      <circle cx="1118" cy="320" r="7"/>
+      <circle cx="1208" cy="376" r="5"/>
+      <circle cx="1286" cy="371" r="7"/>
+      <circle cx="1350" cy="478" r="7"/>
+      <circle cx="1434" cy="393" r="7"/>
+      <circle cx="1500" cy="489" r="5"/>
+      <circle cx="1576" cy="404" r="5"/>
+      <circle cx="1022" cy="442" r="7"/>
+      <circle cx="932" cy="366" r="5"/>
+      <circle cx="1160" cy="451" r="5"/>
+      <circle cx="1404" cy="335" r="5"/>
+          </g>
+          <!-- una raíz por terraza, a un lado de la flecha para no taparla -->
+          <g stroke="#C9DE3F" stroke-width="3" fill="none" opacity=".3" stroke-linecap="round">
+            <path d="M921 206 c -7 57, 17 96, 6 170 M927 284 l 35 35 M923 334 l -33 31"/>
+            <path d="M1119 252 c -7 57, 17 96, 6 170 M1125 330 l 35 35 M1121 380 l -33 31"/>
+            <path d="M1316 296 c -7 57, 17 96, 6 170 M1322 374 l 35 35 M1318 424 l -33 31"/>
+            <path d="M1513 342 c -6 48, 14 80, 5 142 M1518 407 l 29 29 M1515 448 l -28 26"/>
+          </g>
+        </g>
+        <path d="M870 202 H1068 V248 H1265 V292 H1462 V338 H1660" stroke="#C9DE3F" stroke-width="4" opacity=".85" fill="none" stroke-linejoin="round"/>
+        <g fill="#C9DE3F">
+      <g transform="rotate(-24 888 196)"><ellipse cx="888" cy="196" rx="17" ry="5" fill-opacity="0.62"/></g>
+      <g transform="rotate(12 928 196)"><ellipse cx="928" cy="196" rx="17" ry="5" fill-opacity="0.4"/></g>
+      <g transform="rotate(-7 969 196)"><ellipse cx="969" cy="196" rx="17" ry="5" fill-opacity="0.7"/></g>
+      <g transform="rotate(27 1010 196)"><ellipse cx="1010" cy="196" rx="17" ry="5" fill-opacity="0.45"/></g>
+      <g transform="rotate(-31 1050 196)"><ellipse cx="1050" cy="196" rx="17" ry="5" fill-opacity="0.58"/></g>
+      <g transform="rotate(-11 910 185)"><ellipse cx="910" cy="185" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(30 969 185)"><ellipse cx="969" cy="185" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(-24 1028 185)"><ellipse cx="1028" cy="185" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(-11 1086 242)"><ellipse cx="1086" cy="242" rx="17" ry="5" fill-opacity="0.62"/></g>
+      <g transform="rotate(30 1126 242)"><ellipse cx="1126" cy="242" rx="17" ry="5" fill-opacity="0.4"/></g>
+      <g transform="rotate(-24 1166 242)"><ellipse cx="1166" cy="242" rx="17" ry="5" fill-opacity="0.7"/></g>
+      <g transform="rotate(12 1207 242)"><ellipse cx="1207" cy="242" rx="17" ry="5" fill-opacity="0.45"/></g>
+      <g transform="rotate(-7 1247 242)"><ellipse cx="1247" cy="242" rx="17" ry="5" fill-opacity="0.58"/></g>
+      <g transform="rotate(-15 1108 231)"><ellipse cx="1108" cy="231" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(21 1166 231)"><ellipse cx="1166" cy="231" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(-11 1225 231)"><ellipse cx="1225" cy="231" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(-15 1283 286)"><ellipse cx="1283" cy="286" rx="17" ry="5" fill-opacity="0.62"/></g>
+      <g transform="rotate(21 1323 286)"><ellipse cx="1323" cy="286" rx="17" ry="5" fill-opacity="0.4"/></g>
+      <g transform="rotate(-11 1364 286)"><ellipse cx="1364" cy="286" rx="17" ry="5" fill-opacity="0.7"/></g>
+      <g transform="rotate(30 1404 286)"><ellipse cx="1404" cy="286" rx="17" ry="5" fill-opacity="0.45"/></g>
+      <g transform="rotate(-24 1444 286)"><ellipse cx="1444" cy="286" rx="17" ry="5" fill-opacity="0.58"/></g>
+      <g transform="rotate(-31 1305 275)"><ellipse cx="1305" cy="275" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(5 1364 275)"><ellipse cx="1364" cy="275" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(-15 1422 275)"><ellipse cx="1422" cy="275" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(-31 1480 332)"><ellipse cx="1480" cy="332" rx="17" ry="5" fill-opacity="0.62"/></g>
+      <g transform="rotate(5 1520 332)"><ellipse cx="1520" cy="332" rx="17" ry="5" fill-opacity="0.4"/></g>
+      <g transform="rotate(-15 1561 332)"><ellipse cx="1561" cy="332" rx="17" ry="5" fill-opacity="0.7"/></g>
+      <g transform="rotate(21 1602 332)"><ellipse cx="1602" cy="332" rx="17" ry="5" fill-opacity="0.45"/></g>
+      <g transform="rotate(-11 1642 332)"><ellipse cx="1642" cy="332" rx="17" ry="5" fill-opacity="0.58"/></g>
+      <g transform="rotate(-7 1502 321)"><ellipse cx="1502" cy="321" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(27 1561 321)"><ellipse cx="1561" cy="321" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+      <g transform="rotate(-31 1620 321)"><ellipse cx="1620" cy="321" rx="15" ry="4.5" fill-opacity="0.3"/></g>
+        </g>
+        <g fill="none" stroke="#C9DE3F" stroke-width="8" stroke-linecap="round">
+      <line x1="969" y1="224" x2="969" y2="478" stroke-dasharray="258" stroke-dashoffset="258" data-anim="traza" style="--d:1100ms"/>
+      <line x1="1166" y1="270" x2="1166" y2="484" stroke-dasharray="218" stroke-dashoffset="218" data-anim="traza" style="--d:1250ms"/>
+      <line x1="1364" y1="314" x2="1364" y2="490" stroke-dasharray="180" stroke-dashoffset="180" data-anim="traza" style="--d:1400ms"/>
+      <line x1="1561" y1="360" x2="1561" y2="496" stroke-dasharray="140" stroke-dashoffset="140" data-anim="traza" style="--d:1550ms"/>
+        </g>
+        <g fill="none" stroke="#C9DE3F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M954 466 L969 486 L984 466" data-anim="zoom" style="--d:2300ms"/>
+      <path d="M1151 472 L1166 492 L1181 472" data-anim="zoom" style="--d:2370ms"/>
+      <path d="M1349 478 L1364 498 L1379 478" data-anim="zoom" style="--d:2440ms"/>
+      <path d="M1546 484 L1561 504 L1576 484" data-anim="zoom" style="--d:2510ms"/>
+        </g>
+        <text x="1265" y="574" text-anchor="middle" font-size="26" font-weight="800"
+              letter-spacing="4" fill="#C9DE3F"
+              data-anim="sube" style="--d:2900ms">AGUA GUARDADA</text>
+
+        <!-- ══ Los dos remates ══════════════════════════════════════════ -->
+        <g text-anchor="middle" font-size="34">
+          <text x="395" y="672" fill="rgba(246,244,234,.6)" data-anim="sube" style="--d:3000ms">El agua corre por encima</text>
+          <text x="395" y="716" fill="#E87B58" font-weight="700" data-anim="sube" style="--d:3080ms">y se lleva la capa fértil.</text>
+          <text x="1265" y="672" fill="rgba(246,244,234,.6)" data-anim="sube" style="--d:3000ms">El agua entra</text>
+          <text x="1265" y="716" fill="#C9DE3F" font-weight="700" data-anim="sube" style="--d:3080ms">y se queda abajo.</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ── 30 · Las tres verdades del suelo ─────────────────────────────── -->
+<section data-label="El tanque incluido">
+  <div class="d">
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/b99db2ab-a3d8-4db1-ab25-f554a288e54e.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Y esto es lo que nadie mira antes de comprar</p>
+      <ul class="lista" style="max-width:820px;margin-top:38px">
+        <li data-anim="sube" style="--d:300ms"><i></i>El suelo es el tanque de agua más grande y más barato que tienes. Y viene incluido con la finca.</li>
+        <li data-anim="sube" style="--d:480ms"><i></i><span>La pendiente no es el enemigo. La pendiente <em style="font-family:Fraunces,serif;color:var(--lima)">sin obra</em> es el enemigo.</span></li>
+        <li data-anim="sube" style="--d:660ms"><i></i>Nadie compra una finca preguntando si el suelo guarda agua. Preguntan por la escritura, el acceso, la vista y la quebrada.</li>
+      </ul>
+      <h3 data-anim="sube" style="--d:960ms;margin-top:46px;max-width:26ch;color:var(--coral)">
+        Y la quebrada no te sirve de nada <em style="color:var(--coral)">en agosto.</em>
+      </h3>
+    </div>
+  </div>
+</section>
+
+<!-- ── 31 · El tanque roto ──────────────────────────────────────────────
+     Aquí, y solo aquí, entra un resultado de la tesis. Uno, dicho como
+     imagen y no como índice. Sin PERMANOVA, sin correlaciones y sin el
+     valor del índice. Y no se dice que se midió una mejora en el
+     tiempo: es una comparación entre sistemas en una sola fecha. -->
+<section data-label="El tanque roto">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Nosotros medimos esto, con la Universidad Nacional</p>
+      <h3 data-anim="sube" style="--d:120ms;max-width:44ch">
+        Comparamos tres sistemas del hotel (bosque, terrazas y potreros)
+        con un suelo vecino de manejo convencional. Ese fue el que más
+        <em>suelo sin agregar</em> tenía.
+      </h3>
+      <h1 data-anim="sube" style="--d:560ms;margin-top:48px;max-width:20ch;color:var(--coral)">
+        Es un <em style="color:var(--coral)">tanque roto.</em>
+      </h1>
+      <p class="dato" style="--d:900ms;margin-top:36px;max-width:40ch" data-anim="sube">
+        Y un suelo desagregado y compactado es un suelo que no puede
+        almacenar agua.
+      </p>
+    </div>
+    <p class="fuente">
+      Índice General de Calidad del Suelo · tesis de maestría en Ciencias
+      Agrarias, Universidad Nacional de Colombia, 2026. Bosque, terrazas y
+      potreros del predio frente a un suelo vecino con manejo convencional;
+      cinco réplicas por sistema, en una sola fecha.
+    </p>
+  </div>
+</section>
+
+<!-- ── 32 · Divisor · El Niño ───────────────────────────────────────── -->
+<section data-label="Bloque 5">
+  <div class="d" style="background:var(--bosque-3)">
+    <div class="pad">
+      <p class="paso">Bloque 4</p>
+      <p class="eyebrow coral" data-anim="izq">Y esto no es hipotético</p>
+      <h1 data-anim="izq" style="--d:120ms">El verano <em style="color:var(--coral)">ya viene en camino.</em></h1>
+      <div style="--d:340ms;margin-top:52px;height:5px;background:var(--coral);max-width:420px"
+           data-anim="dibuja-x"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 33 · Las probabilidades · INFOGRAFÍA ─────────────────────────────
+     PENDIENTE 6: estos son los boletines de agosto de 2026. Hay que
+     revisar los de septiembre antes del miércoles; es un dato vivo.
+     Tono: informar, no aterrorizar. -->
+<section data-label="El Niño">
+  <div class="d">
+    <div class="pad" style="padding:84px 130px">
+      <p class="eyebrow coral" data-anim="sube">Boletines de septiembre de 2026</p>
+      <h3 data-anim="sube" style="--d:100ms;max-width:34ch">
+        El Niño está firmemente establecido. Esto es lo que dicen
+        <em>los organismos, no yo.</em>
+      </h3>
+
+      <div style="display:grid;gap:30px;margin-top:52px">
+
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+            <span style="--d:400ms;font-size:32px;color:var(--crema)" data-anim="sube">Que persista de septiembre a noviembre, y de diciembre a febrero</span>
+            <b style="--d:1400ms;font-size:48px;font-weight:800;color:var(--coral)" data-anim="sube">Casi el 100 %</b>
+          </div>
+          <div style="height:34px;border-radius:10px;background:rgba(246,244,234,.07);overflow:hidden">
+            <div style="--d:520ms;height:100%;width:100%;background:var(--coral);transform-origin:left center" data-anim="dibuja-x"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+            <span style="--d:700ms;font-size:32px;color:var(--crema)" data-anim="sube">Que sea un episodio muy fuerte</span>
+            <b style="--d:1560ms;font-size:48px;font-weight:800;color:var(--coral)" data-anim="sube">Más del 90 %</b>
+          </div>
+          <div style="height:34px;border-radius:10px;background:rgba(246,244,234,.07);overflow:hidden">
+            <div style="--d:820ms;height:100%;width:91%;background:rgba(232,123,88,.78);transform-origin:left center" data-anim="dibuja-x"></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+            <span style="--d:1000ms;font-size:32px;color:var(--crema)" data-anim="sube">Que de octubre a diciembre sea el evento más fuerte desde 1950</span>
+            <b style="--d:1720ms;font-size:48px;font-weight:800;color:var(--coral)" data-anim="sube">75 %</b>
+          </div>
+          <div style="height:34px;border-radius:10px;background:rgba(246,244,234,.07);overflow:hidden">
+            <div style="--d:1120ms;height:100%;width:75%;background:rgba(232,123,88,.55);transform-origin:left center" data-anim="dibuja-x"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <h3 data-anim="sube" style="--d:2000ms;margin-top:40px;max-width:46ch;font-size:52px;color:var(--lima)">
+        O sea que el verano del que hablamos no es del año entrante.
+        <em>Va a caer justo encima de estos meses.</em>
+      </h3>
+    </div>
+    <p class="fuente">
+      Persistencia: Organización Meteorológica Mundial, <em style="font-family:Fraunces,serif">El Niño/La Niña Hoy</em>
+      (agosto de 2026), publicado el 3 de septiembre · Intensidad: NOAA Climate
+      Prediction Center, discusión del 10 de septiembre de 2026.
+    </p>
+  </div>
+</section>
+
+<!-- ── 34 · Se resuelve antes ───────────────────────────────────────── -->
+<section data-label="Se resuelve antes">
+  <div class="d">
+    <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/3c2a0b1f-b5dc-4105-88da-900859a9ecdb.jpg')"></div>
+    <div class="velo abajo"></div>
+    <div class="pad" style="justify-content:flex-end;padding-bottom:104px">
+      <p class="eyebrow" data-anim="sube">Y la buena noticia</p>
+      <h2 data-anim="sube" style="--d:140ms;max-width:24ch">
+        Esto se resuelve. Pero se resuelve <em>antes, no después.</em>
+      </h2>
+      <p class="dato" style="--d:480ms;margin-top:32px;max-width:40ch" data-anim="sube">
+        Guardar agua es de las pocas cosas que no se pueden improvisar
+        cuando ya empezó el verano.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Testimonios · antes del cierre ─────────────────────────────────
+     Los pidió Iván el 16/09, igual que en la Clase 2. Frases transcritas
+     literales de los clips de Drive («CURSO 1 ABRIL testimonio isa.mp4» y
+     «DianaYAndres.mp4»); el vídeo se reproduce desde la diapositiva.
+     ANTES DE EMITIR: permiso por escrito de cada persona. -->
+<section data-label="Testimonio · Isa">
+  <div class="d">
+    <div class="pad">
+      <div style="display:grid;grid-template-columns:1fr 1.38fr;gap:60px;align-items:center">
+        <div>
+          <p class="eyebrow" data-anim="sube">Lo dicen los que ya vinieron</p>
+          <h3 data-anim="sube" style="--d:140ms;font-size:50px;line-height:1.22">
+            «Ya tener un diseño te da una ruta para que puedas llegar más fácilmente a tus metas, <em>no te agobies con tanta información.</em>»
+          </h3>
+          <p data-anim="sube" style="--d:460ms;margin-top:34px;font-size:32px;font-weight:800;color:var(--lima)">Isa Rodríguez</p>
+          <p data-anim="sube" style="--d:520ms;margin-top:6px;font-size:27px;color:var(--suave)">Ingeniera agrónoma</p>
+        </div>
+        <div data-anim="sube" style="--d:640ms">
+          <video src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/5c34f6b8-65fa-4db2-bd91-2c3da08b7144.mp4" poster="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/2d02f513-c891-4dac-9ff7-2a298ea6a4ff.jpg"
+                 controls preload="none" playsinline
+                 style="display:block;width:100%;aspect-ratio:16/9;border-radius:18px;
+                        border:1px solid var(--linea);background:#061f1d"></video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section data-label="Testimonio · Diana y Andrés">
+  <div class="d">
+    <div class="pad">
+      <div style="display:grid;grid-template-columns:1fr 1.38fr;gap:60px;align-items:center">
+        <div>
+          <p class="eyebrow" data-anim="sube">Lo dicen los que ya vinieron</p>
+          <h3 data-anim="sube" style="--d:140ms;font-size:50px;line-height:1.22">
+            «Queremos organizar una tierrita que tenemos con un enfoque agroecológico. <em>Podríamos hasta repetirlo de lo rico que fue.</em>»
+          </h3>
+          <p data-anim="sube" style="--d:460ms;margin-top:34px;font-size:32px;font-weight:800;color:var(--lima)">Diana y Andrés</p>
+          <p data-anim="sube" style="--d:520ms;margin-top:6px;font-size:27px;color:var(--suave)">Bolívar, Valle del Cauca</p>
+        </div>
+        <div data-anim="sube" style="--d:640ms">
+          <video src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/89bc531f-eab0-49e3-9022-83c885928859.mp4" poster="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/a5932b6d-42b2-4d7e-a6a2-db12c09a7055.jpg"
+                 controls preload="none" playsinline
+                 style="display:block;width:100%;aspect-ratio:16/9;border-radius:18px;
+                        border:1px solid var(--linea);background:#061f1d"></video>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 35 · Cierre · las tres noches ────────────────────────────────── -->
+<section data-label="Las tres noches">
+  <div class="d">
+    <div class="pad">
+      <p class="eyebrow" data-anim="sube">Resumamos las tres noches</p>
+      <div style="display:grid;gap:26px;margin-top:40px;max-width:1300px">
+        <div data-anim="izq" style="--d:300ms;display:grid;grid-template-columns:210px 1fr;gap:34px;align-items:baseline;padding-bottom:26px;border-bottom:1px solid var(--linea)">
+          <b style="font-size:34px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--suave)">El lunes</b>
+          <span style="font-size:38px;line-height:1.34;color:var(--crema)">De dónde salió el modelo que le vendieron a tu finca.</span>
+        </div>
+        <div data-anim="izq" style="--d:480ms;display:grid;grid-template-columns:210px 1fr;gap:34px;align-items:baseline;padding-bottom:26px;border-bottom:1px solid var(--linea)">
+          <b style="font-size:34px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--suave)">Ayer</b>
+          <span style="font-size:38px;line-height:1.34;color:var(--crema)">Que yo sabía que se podía y aun así perdí dos años, porque estaba cambiando el frasco en vez de cambiar el sistema.</span>
+        </div>
+        <div data-anim="izq" style="--d:660ms;display:grid;grid-template-columns:210px 1fr;gap:34px;align-items:baseline">
+          <b style="font-size:34px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--lima)">Hoy</b>
+          <span style="font-size:38px;line-height:1.34;color:var(--lima)">Que lo que decide si te quedas o te vas no es la fuerza de voluntad. Es si la finca paga. Y eso empieza por el agua.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 36 · Gancho al jueves ────────────────────────────────────────────
+     «Cinco decisiones», nunca «los cinco pilares»: el nombre se revela
+     el jueves y ahí es donde tiene fuerza. Ni precio, ni cupos, ni
+     fechas del curso esta noche; si alguien pregunta en el chat, el
+     moderador responde «mañana se cuenta todo». -->
+<section data-label="Mañana">
+  <div class="d">
+    <div class="foto der" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/b076a2d3-aeab-4139-be92-3118ee6f75c5.jpg')"></div>
+    <div class="velo izq"></div>
+    <div class="pad">
+      <p class="eyebrow coral" data-anim="sube">Mañana, jueves 17 · 6:00 p. m.</p>
+      <h1 data-anim="sube" style="--d:120ms">Mañana no les voy a contar <em>una historia.</em></h1>
+      <p class="lead ancho" data-anim="sube" style="--d:300ms">
+        Les voy a mostrar el orden completo: qué hay que decidir en una
+        finca, en qué orden, y qué se decide primero para no gastar mal.
+      </p>
+      <p class="dato" style="--d:520ms;margin-top:44px;color:var(--lima);font-size:42px;font-weight:700;max-width:26ch"
+         data-anim="sube">
+        Son cinco decisiones. Y les voy a mostrar también cómo se aprende
+        a hacerlas. Escriban «voy» en el chat.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Este script tiene que vivir DENTRO de <deck-stage>: el generador de GHL
+     solo se lleva lo que hay entre sus etiquetas, y fuera la cuadrícula
+     salía vacía en producción. El motor ignora los SCRIPT al contar
+     diapositivas. -->
+<script>
+/* La cuadrícula de cien de la diapositiva 3. Se genera aquí porque cien
+   divs escritos a mano no los mantiene nadie, y lo que importa es el
+   patrón: cinco encendidos entre noventa y cinco apagados. Los cinco que
+   se quedan van al final para que el ojo los encuentre al terminar de
+   recorrer la cuadrícula. */
+(function(){
+  var caja = document.getElementById('c3-cien');
+  if (!caja) return;
+  for (var i = 0; i < 100; i++) {
+    var p = document.createElement('span');
+    var sequeda = i >= 95;
+    p.setAttribute('data-anim', 'zoom');
+    p.style.cssText =
+      'aspect-ratio:1;border-radius:50%;--d:' + (200 + i * 22) + 'ms;' +
+      (sequeda
+        ? 'background:var(--lima);box-shadow:0 0 0 5px rgba(201,222,63,.2)'
+        : 'background:rgba(232,123,88,.42)');
+    caja.appendChild(p);
+  }
+})();
+</script>
+<script>
+  /* En un directo, si se pasa de diapositiva con un clip sonando, el audio
+     sigue: el componente oculta la diapositiva pero no toca el <video>. */
+  (function () {
+    var d = document.querySelector('deck-stage');
+    if (!d) return;
+    d.addEventListener('slidechange', function (e) {
+      var ant = e.detail && e.detail.previousSlide;
+      if (!ant) return;
+      ant.querySelectorAll('video').forEach(function (v) { if (!v.paused) v.pause(); });
+    });
+  })();
+</script>
+</deck-stage>
+
+<script>
+/* GHL envuelve el bloque en secciones propias, y algunas llevan `transform`.
+   Un ancestro transformado convierte el `position:fixed` del componente en
+   relativo a esa caja: la presentación se encoge al ancho de la columna en
+   vez de ocupar la pantalla. Cuando se detecta uno de esos ancestros, el
+   <deck-stage> se cuelga directamente del <body>.
+
+   Va ANTES de definir el elemento a propósito: en este punto todavía es un
+   nodo inerte, así que moverlo no dispara ningún montaje ni desmontaje.
+   Se repite tras la hidratación porque GHL puede volver a envolverlo. */
+(function () {
+  var MUEVE = /translate|scale|rotate|matrix|perspective/;
+
+  function ancestroQueEstorba(el) {
+    for (var e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+      var s = getComputedStyle(e);
+      if ((s.transform && s.transform !== 'none') ||
+          (s.perspective && s.perspective !== 'none') ||
+          (s.filter && s.filter !== 'none') ||
+          (s.backdropFilter && s.backdropFilter !== 'none') ||
+          (s.willChange && MUEVE.test(s.willChange)) ||
+          (s.contain && /paint|layout|strict|content/.test(s.contain))) return e;
+    }
+    return null;
+  }
+
+  function enVertical() { return window.innerHeight > window.innerWidth; }
+
+  function recolocar() {
+    var d = document.querySelector('deck-stage');
+    if (!d || !document.body || d.parentElement === document.body) return;
+    /* En vertical no se toca: ahi no es una capa a pantalla completa, sino un
+       bloque en el flujo de la pagina, y colgarlo del <body> lo mandaria
+       detras de todo el contenido. */
+    if (enVertical()) return;
+    if (ancestroQueEstorba(d)) document.body.appendChild(d);
+  }
+
+  recolocar();
+  window.addEventListener('load', recolocar);
+  document.addEventListener('hydrationDone', recolocar);
+  setTimeout(recolocar, 1200);
+  setTimeout(recolocar, 3500);
+})();
+</script>
+
+<style>
+/* Las barras del letterbox: el componente las pinta negras. En verde
+   profundo de marca la pantalla entera se lee como una sola pieza en vez
+   de como una diapositiva pequeña dentro de un marco negro. */
+deck-stage{background:#061F1D}
+
+/* En vertical, un lienzo 16:9 encajado a pantalla completa deja dos bandas
+   enormes: medido en un movil de 390x844, la presentacion se quedaba en el
+   26 % del alto, y en una tableta de 768x1024 en el 42 %. Por debajo de 1:1
+   deja de ser una capa que tapa la pantalla y se comporta como un
+   reproductor: ancho completo, 16:9 de alto, y la pagina se desplaza normal.
+
+   El 56,25vw no es un numero redondo elegido a ojo: el motor escala con
+   min(vw/1920, vh/1080), y en vertical manda la anchura, asi que el lienzo
+   mide exactamente 1080*(vw/1920) = 0,5625*vw de alto. Coincide al pixel.
+
+   El ancho va con el truco de siempre en GHL, porque la columna que envuelve
+   el bloque casi nunca llega al borde. */
+@media (max-aspect-ratio: 1/1){
+  deck-stage{
+    position:relative;inset:auto;z-index:auto;
+    width:100vw;margin-left:calc(50% - 50vw);
+    height:56.25vw;
+    /* Las zonas tactiles y el contador del motor son `position:fixed`: en
+       modo capa eso estaba bien, pero aqui seguirian tapando la pantalla
+       entera y cualquier toque en la pagina pasaria de diapositiva. Medido:
+       el bloque ocupaba 390x219 y las zonas 390x844. Un `transform` en el
+       anfitrion lo convierte en el bloque contenedor de sus descendientes
+       fijos, que es justo la trampa del punto 3 del procedimiento de GHL,
+       usada aqui a proposito. */
+    transform:translateZ(0);
+  }
+}
+
+/* Botón de pantalla completa. Se crea desde JS y se cuelga del <body>,
+   igual que el componente: si quedara dentro de una sección de GHL con
+   `transform`, su `position:fixed` se rompería exactamente igual. */
+.lhp-fs{
+  position:fixed;right:22px;bottom:22px;z-index:2147483001;
+  display:inline-flex;align-items:center;gap:10px;
+  padding:11px 18px;border:1px solid rgba(201,222,63,.45);border-radius:999px;
+  background:rgba(6,31,29,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  color:#C9DE3F;font:700 13px/1 'Archivo',system-ui,sans-serif;
+  letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+  transition:opacity .3s ease,transform .3s ease,background .2s ease;
+}
+.lhp-fs:hover{background:rgba(6,31,29,.96);border-color:#C9DE3F}
+.lhp-fs:focus-visible{outline:2px solid #C9DE3F;outline-offset:3px}
+/* Se retira sola tras un rato quieto, como los controles de un reproductor. */
+.lhp-fs.lhp-dormido{opacity:0;transform:translateY(10px);pointer-events:none}
+@media(max-width:600px){.lhp-fs{right:12px;bottom:12px;padding:9px 14px;font-size:11px;letter-spacing:.1em}}
+</style>
+<script>
+(function () {
+  var raiz = document.documentElement;
+  var pedir = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+  var salir = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!pedir) return;                       // iPhone: no hay API, no se pinta el botón
+
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'lhp-fs';
+  b.innerHTML = '<span aria-hidden="true">\u26F6</span><span class="lhp-txt">Pantalla completa</span>';
+  var txt = b.querySelector('.lhp-txt');
+
+  function completa() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function alternar() { completa() ? salir.call(document) : pedir.call(raiz); }
+  function pintar() {
+    txt.textContent = completa() ? 'Salir' : 'Pantalla completa';
+    b.setAttribute('aria-label', txt.textContent);
+  }
+
+  b.addEventListener('click', alternar);
+  document.addEventListener('fullscreenchange', pintar);
+  document.addEventListener('webkitfullscreenchange', pintar);
+
+  // F alterna, como en cualquier reproductor. El componente no usa esa tecla.
+  window.addEventListener('keydown', function (e) {
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'f' || e.key === 'F') { e.preventDefault(); alternar(); }
+  });
+
+  var reloj = null;
+  function despertar() {
+    b.classList.remove('lhp-dormido');
+    clearTimeout(reloj);
+    reloj = setTimeout(function () { b.classList.add('lhp-dormido'); }, 2600);
+  }
+  window.addEventListener('mousemove', despertar, { passive: true });
+  window.addEventListener('touchstart', despertar, { passive: true });
+
+  function montar() {
+    if (!document.body) return setTimeout(montar, 60);
+    if (!b.isConnected) document.body.appendChild(b);
+    pintar();
+    despertar();
+  }
+  montar();
+})();
+</script>
+
+<script>
+/**
+ * <deck-stage>: reusable web component for HTML decks.
+ *
+ * Handles:
+ *  (a) speaker notes, which read <script type="application/json" id="speaker-notes">
+ *      and posts {slideIndexChanged: N} to the parent window on nav.
+ *  (b) keyboard navigation with arrows, PgUp/PgDn, Space, Home/End, number keys.
+ *  (c) press R to reset to slide 0 (with a tasteful keyboard hint).
+ *  (d) bottom-center overlay showing slide count + hints, fades out on idle.
+ *  (e) auto-scaling: the inner canvas is a fixed design size (default 1920×1080)
+ *      scaled with `transform: scale()` to fit the viewport, letterboxed.
+ *      Set the `noscale` attribute to render at authored size (1:1); the
+ *      PPTX exporter sets this so its DOM capture sees unscaled geometry.
+ *  (f) print: `@media print` lays every slide out as its own page at the
+ *      design size, so the browser's Print → Save as PDF produces a clean
+ *      one-page-per-slide PDF with no extra setup.
+ *
+ * Slides are HIDDEN, not unmounted. Non-active slides stay in the DOM with
+ * `visibility: hidden` + `opacity: 0`, so their state (videos, iframes,
+ * form inputs, React trees) is preserved across navigation.
+ *
+ * Lifecycle event: the component dispatches a `slidechange` CustomEvent on
+ * itself whenever the active slide changes (including the initial mount).
+ * The event bubbles and composes out of shadow DOM, so you can listen on
+ * the <deck-stage> element or on document:
+ *
+ *   document.querySelector('deck-stage').addEventListener('slidechange', (e) => {
+ *     e.detail.index         // new 0-based index
+ *     e.detail.previousIndex // previous index, or -1 on init
+ *     e.detail.total         // total slide count
+ *     e.detail.slide         // the new active slide element
+ *     e.detail.previousSlide // the prior slide element, or null on init
+ *     e.detail.reason        // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+ *   });
+ *
+ * Persistence: none at the deck level. The host app keeps the current slide
+ * in its own URL (?slide=) and re-delivers it via location.hash on load, so a
+ * bare load with no hash always starts at slide 1.
+ *
+ * Usage:
+ *   <deck-stage width="1920" height="1080">
+ *     <section data-label="Title">...</section>
+ *     <section data-label="Agenda">...</section>
+ *   </deck-stage>
+ *
+ * Slides are the direct element children of <deck-stage>. Each slide is
+ * automatically tagged with:
+ *   - data-screen-label="NN Label"   (1-indexed, for comment flow)
+ *   - data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text"
+ */
+
+(() => {
+  const DESIGN_W_DEFAULT = 1920;
+  const DESIGN_H_DEFAULT = 1080;
+  const OVERLAY_HIDE_MS = 1800;
+  const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const stylesheet = `
+    :host {
+      position: fixed;
+      inset: 0;
+      display: block;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canvas {
+      position: relative;
+      transform-origin: center center;
+      flex-shrink: 0;
+      background: #fff;
+      will-change: transform;
+    }
+
+    /* Slides live in light DOM (via <slot>) so authored CSS still applies.
+       We absolutely position each slotted child to stack them. */
+    ::slotted(*) {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+    ::slotted([data-deck-active]) {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    /* Tap zones for mobile: back/forward thirds like Stories.
+       Transparent, no visible UI, don't block the overlay. */
+    .tapzones {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      z-index: 2147482000;
+      pointer-events: none;
+    }
+    .tapzone {
+      flex: 1;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Only activate tap zones on coarse pointers (touch devices). */
+    @media (hover: hover) and (pointer: fine) {
+      .tapzones { display: none; }
+    }
+
+    .overlay {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translate(-50%, 6px) scale(0.92);
+      filter: blur(6px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: #000;
+      color: #fff;
+      border-radius: 999px;
+      font-size: 12px;
+      font-feature-settings: "tnum" 1;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease, transform 260ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
+      transform-origin: center bottom;
+      z-index: 2147483000;
+      user-select: none;
+    }
+    .overlay[data-visible] {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0) scale(1);
+      filter: blur(0);
+    }
+
+    .btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      cursor: default;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 999px;
+      color: rgba(255,255,255,0.72);
+      transition: background 140ms ease, color 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn:active { background: rgba(255,255,255,0.18); }
+    .btn:focus { outline: none; }
+    .btn:focus-visible { outline: none; }
+    .btn::-moz-focus-inner { border: 0; }
+    .btn svg { width: 14px; height: 14px; display: block; }
+    .btn.reset {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0 10px 0 12px;
+      gap: 6px;
+      color: rgba(255,255,255,0.72);
+    }
+    .btn.reset .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1;
+      color: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.12);
+      border-radius: 4px;
+    }
+
+    .count {
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+      font-weight: 500;
+      padding: 0 8px;
+      min-width: 42px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .count .sep { color: rgba(255,255,255,0.45); margin: 0 3px; font-weight: 400; }
+    .count .total { color: rgba(255,255,255,0.55); }
+
+    .divider {
+      width: 1px;
+      height: 14px;
+      background: rgba(255,255,255,0.18);
+      margin: 0 2px;
+    }
+
+    /* ── Print: one page per slide, no chrome ────────────────────────────
+       The screen layout stacks every slide at inset:0 inside a scaled
+       canvas; for print we want them in document flow at the authored
+       design size so the browser paginates one slide per sheet. The
+       @page size is set from the width/height attributes via the inline
+       <style id="deck-stage-print-page"> that connectedCallback injects
+       into <head> (the @page at-rule has no effect inside shadow DOM). */
+    @media print {
+      :host {
+        position: static;
+        inset: auto;
+        background: none;
+        overflow: visible;
+        color: inherit;
+      }
+      .stage { position: static; display: block; }
+      .canvas {
+        transform: none !important;
+        width: auto !important;
+        height: auto !important;
+        background: none;
+        will-change: auto;
+      }
+      ::slotted(*) {
+        position: relative !important;
+        inset: auto !important;
+        width: var(--deck-design-w) !important;
+        height: var(--deck-design-h) !important;
+        box-sizing: border-box !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto;
+        break-after: page;
+        page-break-after: always;
+        break-inside: avoid;
+        overflow: hidden;
+      }
+      ::slotted(*:last-child) {
+        break-after: auto;
+        page-break-after: auto;
+      }
+      .overlay, .tapzones { display: none !important; }
+    }
+  `;
+
+  class DeckStage extends HTMLElement {
+    static get observedAttributes() { return ['width', 'height', 'noscale']; }
+
+    constructor() {
+      super();
+      this._root = this.attachShadow({ mode: 'open' });
+      this._index = 0;
+      this._slides = [];
+      this._notes = [];
+      this._hideTimer = null;
+      this._mouseIdleTimer = null;
+
+      this._onKey = this._onKey.bind(this);
+      this._onResize = this._onResize.bind(this);
+      this._onSlotChange = this._onSlotChange.bind(this);
+      this._onMouseMove = this._onMouseMove.bind(this);
+      this._onTapBack = this._onTapBack.bind(this);
+      this._onTapForward = this._onTapForward.bind(this);
+    }
+
+    get designWidth() {
+      return parseInt(this.getAttribute('width'), 10) || DESIGN_W_DEFAULT;
+    }
+    get designHeight() {
+      return parseInt(this.getAttribute('height'), 10) || DESIGN_H_DEFAULT;
+    }
+
+    connectedCallback() {
+      this._render();
+      this._loadNotes();
+      this._syncPrintPageRule();
+      window.addEventListener('keydown', this._onKey);
+      window.addEventListener('resize', this._onResize);
+      window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      // Initial collection + layout happens via slotchange, which fires on mount.
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('keydown', this._onKey);
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('mousemove', this._onMouseMove);
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
+    }
+
+    attributeChangedCallback() {
+      if (this._canvas) {
+        this._canvas.style.width = this.designWidth + 'px';
+        this._canvas.style.height = this.designHeight + 'px';
+        this._canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+        this._canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+        this._fit();
+        this._syncPrintPageRule();
+      }
+    }
+
+    _render() {
+      const style = document.createElement('style');
+      style.textContent = stylesheet;
+
+      const stage = document.createElement('div');
+      stage.className = 'stage';
+
+      const canvas = document.createElement('div');
+      canvas.className = 'canvas';
+      canvas.style.width = this.designWidth + 'px';
+      canvas.style.height = this.designHeight + 'px';
+      canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+      canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+
+      const slot = document.createElement('slot');
+      slot.addEventListener('slotchange', this._onSlotChange);
+      canvas.appendChild(slot);
+      stage.appendChild(canvas);
+
+      // Tap zones (mobile): left third = back, right third = forward.
+      const tapzones = document.createElement('div');
+      tapzones.className = 'tapzones export-hidden';
+      tapzones.setAttribute('aria-hidden', 'true');
+      tapzones.setAttribute('data-noncommentable', '');
+      const tzBack = document.createElement('div');
+      tzBack.className = 'tapzone tapzone--back';
+      const tzMid = document.createElement('div');
+      tzMid.className = 'tapzone tapzone--mid';
+      tzMid.style.pointerEvents = 'none';
+      const tzFwd = document.createElement('div');
+      tzFwd.className = 'tapzone tapzone--fwd';
+      tzBack.addEventListener('click', this._onTapBack);
+      tzFwd.addEventListener('click', this._onTapForward);
+      tapzones.append(tzBack, tzMid, tzFwd);
+
+      // Overlay: compact, solid black, with clickable controls.
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay export-hidden';
+      overlay.setAttribute('role', 'toolbar');
+      overlay.setAttribute('aria-label', 'Deck controls');
+      overlay.setAttribute('data-noncommentable', '');
+      overlay.innerHTML = `
+        <button class="btn prev" type="button" aria-label="Previous slide" title="Previous (←)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+        </button>
+        <span class="count" aria-live="polite"><span class="current">1</span><span class="sep">/</span><span class="total">1</span></span>
+        <button class="btn next" type="button" aria-label="Next slide" title="Next (→)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+        </button>
+        <span class="divider"></span>
+        <button class="btn reset" type="button" aria-label="Reset to first slide" title="Reset (R)">Reset<span class="kbd">R</span></button>
+      `;
+
+      overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
+      overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
+      overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
+
+      this._root.append(style, stage, tapzones, overlay);
+      this._canvas = canvas;
+      this._slot = slot;
+      this._overlay = overlay;
+      this._countEl = overlay.querySelector('.current');
+      this._totalEl = overlay.querySelector('.total');
+    }
+
+    /** @page must live in the document stylesheet; it's a no-op inside
+     *  shadow DOM. Inject/update a single <head> style tag so the print
+     *  sheet matches the design size and Save-as-PDF yields one slide per
+     *  page with no margins. */
+    _syncPrintPageRule() {
+      const id = 'deck-stage-print-page';
+      let tag = document.getElementById(id);
+      if (!tag) {
+        tag = document.createElement('style');
+        tag.id = id;
+        document.head.appendChild(tag);
+      }
+      tag.textContent =
+        '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } ' +
+        '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } ' +
+        '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+    }
+
+    _onSlotChange() {
+      this._collectSlides();
+      this._restoreIndex();
+      this._applyIndex({ showOverlay: false, broadcast: true, reason: 'init' });
+      this._fit();
+    }
+
+    _collectSlides() {
+      const assigned = this._slot.assignedElements({ flatten: true });
+      this._slides = assigned.filter((el) => {
+        // Skip template/style/script nodes even if someone slots them.
+        const tag = el.tagName;
+        return tag !== 'TEMPLATE' && tag !== 'SCRIPT' && tag !== 'STYLE';
+      });
+
+      this._slides.forEach((slide, i) => {
+        const n = i + 1;
+        // Determine a label for comment flow: prefer explicit data-label,
+        // then an existing data-screen-label, then first heading, else "Slide".
+        let label = slide.getAttribute('data-label');
+        if (!label) {
+          const existing = slide.getAttribute('data-screen-label');
+          if (existing) {
+            // Strip any leading number the author may have included.
+            label = existing.replace(/^\s*\d+\s*/, '').trim() || existing;
+          }
+        }
+        if (!label) {
+          const h = slide.querySelector('h1, h2, h3, [data-title]');
+          if (h) label = (h.textContent || '').trim().slice(0, 40);
+        }
+        if (!label) label = 'Slide';
+        slide.setAttribute('data-screen-label', `${pad2(n)} ${label}`);
+
+        // Validation attribute for comment flow / auto-checks.
+        if (!slide.hasAttribute('data-om-validate')) {
+          slide.setAttribute('data-om-validate', VALIDATE_ATTR);
+        }
+
+        slide.setAttribute('data-deck-slide', String(i));
+      });
+
+      if (this._totalEl) this._totalEl.textContent = String(this._slides.length || 1);
+      if (this._index >= this._slides.length) this._index = Math.max(0, this._slides.length - 1);
+    }
+
+    _loadNotes() {
+      const tag = document.getElementById('speaker-notes');
+      if (!tag) { this._notes = []; return; }
+      try {
+        const parsed = JSON.parse(tag.textContent || '[]');
+        if (Array.isArray(parsed)) this._notes = parsed;
+      } catch (e) {
+        console.warn('[deck-stage] Failed to parse #speaker-notes JSON:', e);
+        this._notes = [];
+      }
+    }
+
+    _restoreIndex() {
+      // The host's ?slide= param is delivered as a #<int> hash (1-indexed) on
+      // the iframe src. No hash → slide 1; the deck itself keeps no position
+      // state across loads.
+      const h = (location.hash || '').match(/^#(\d+)$/);
+      if (h) {
+        const n = parseInt(h[1], 10) - 1;
+        if (n >= 0 && n < this._slides.length) this._index = n;
+      }
+    }
+
+    _applyIndex({ showOverlay = true, broadcast = true, reason = 'init' } = {}) {
+      if (!this._slides.length) return;
+      const prev = this._prevIndex == null ? -1 : this._prevIndex;
+      const curr = this._index;
+      // Keep the iframe's own hash in sync so an in-iframe location.reload()
+      // (reload banner path in viewer-handle.ts) lands on the current slide,
+      // not the stale deep-link hash from initial load.
+      try { history.replaceState(null, '', '#' + (curr + 1)); } catch (e) {}
+      this._slides.forEach((s, i) => {
+        if (i === curr) s.setAttribute('data-deck-active', '');
+        else s.removeAttribute('data-deck-active');
+      });
+      if (this._countEl) this._countEl.textContent = String(curr + 1);
+
+      if (broadcast) {
+        // (1) Legacy: host-window postMessage for speaker-notes renderers.
+        try { window.postMessage({ slideIndexChanged: curr }, '*'); } catch (e) {}
+
+        // (2) In-page CustomEvent on the <deck-stage> element itself.
+        //     Bubbles and composes out of shadow DOM so slide code can listen:
+        //       document.querySelector('deck-stage').addEventListener('slidechange', e => {
+        //         e.detail.index, e.detail.previousIndex, e.detail.total, e.detail.slide, e.detail.reason
+        //       });
+        const detail = {
+          index: curr,
+          previousIndex: prev,
+          total: this._slides.length,
+          slide: this._slides[curr] || null,
+          previousSlide: prev >= 0 ? (this._slides[prev] || null) : null,
+          reason: reason, // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+        };
+        this.dispatchEvent(new CustomEvent('slidechange', {
+          detail,
+          bubbles: true,
+          composed: true,
+        }));
+      }
+
+      this._prevIndex = curr;
+      if (showOverlay) this._flashOverlay();
+    }
+
+    _flashOverlay() {
+      if (!this._overlay) return;
+      this._overlay.setAttribute('data-visible', '');
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      this._hideTimer = setTimeout(() => {
+        this._overlay.removeAttribute('data-visible');
+      }, OVERLAY_HIDE_MS);
+    }
+
+    _fit() {
+      if (!this._canvas) return;
+      // PPTX export sets noscale so the DOM capture sees authored-size
+      // geometry: the scaled canvas is in shadow DOM, so the exporter's
+      // resetTransformSelector can't reach .canvas.style.transform directly.
+      if (this.hasAttribute('noscale')) {
+        this._canvas.style.transform = 'none';
+        return;
+      }
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const s = Math.min(vw / this.designWidth, vh / this.designHeight);
+      this._canvas.style.transform = `scale(${s})`;
+    }
+
+    _onResize() { this._fit(); }
+
+    _onMouseMove() {
+      // Keep overlay visible while mouse moves; hide after idle.
+      this._flashOverlay();
+    }
+
+    _onTapBack(e) {
+      e.preventDefault();
+      this._go(this._index - 1, 'tap');
+    }
+
+    _onTapForward(e) {
+      e.preventDefault();
+      this._go(this._index + 1, 'tap');
+    }
+
+    _onKey(e) {
+      // Ignore when the user is typing.
+      const t = e.target;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const key = e.key;
+      let handled = true;
+
+      if (key === 'ArrowRight' || key === 'PageDown' || key === ' ' || key === 'Spacebar') {
+        this._go(this._index + 1, 'keyboard');
+      } else if (key === 'ArrowLeft' || key === 'PageUp') {
+        this._go(this._index - 1, 'keyboard');
+      } else if (key === 'Home') {
+        this._go(0, 'keyboard');
+      } else if (key === 'End') {
+        this._go(this._slides.length - 1, 'keyboard');
+      } else if (key === 'r' || key === 'R') {
+        this._go(0, 'keyboard');
+      } else if (/^[0-9]$/.test(key)) {
+        // 1..9 jump to that slide; 0 jumps to 10.
+        const n = key === '0' ? 9 : parseInt(key, 10) - 1;
+        if (n < this._slides.length) this._go(n, 'keyboard');
+      } else {
+        handled = false;
+      }
+
+      if (handled) {
+        e.preventDefault();
+        this._flashOverlay();
+      }
+    }
+
+    _go(i, reason = 'api') {
+      if (!this._slides.length) return;
+      const clamped = Math.max(0, Math.min(this._slides.length - 1, i));
+      if (clamped === this._index) {
+        this._flashOverlay();
+        return;
+      }
+      this._index = clamped;
+      this._applyIndex({ showOverlay: true, broadcast: true, reason });
+    }
+
+    // Public API ------------------------------------------------------------
+
+    /** Current slide index (0-based). */
+    get index() { return this._index; }
+    /** Total slide count. */
+    get length() { return this._slides.length; }
+    /** Programmatically navigate. */
+    goTo(i) { this._go(i, 'api'); }
+    next() { this._go(this._index + 1, 'api'); }
+    prev() { this._go(this._index - 1, 'api'); }
+    reset() { this._go(0, 'api'); }
+  }
+
+  if (!customElements.get('deck-stage')) {
+    customElements.define('deck-stage', DeckStage);
+  }
+})();
+
+</script>

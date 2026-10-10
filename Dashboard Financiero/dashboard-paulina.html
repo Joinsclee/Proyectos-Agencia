@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cuadre Financiero · Barco de Papel (Paulina Valencia) × JoinsClee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Asap:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+<style>
+  :root{
+    --navy-soft:#0d4178;
+    --navy:#08315C;
+    --navy-tint:#dfe9f4;
+    --navy-mist:#f1f5fa;
+    --cream:#f7f9fc;
+    --ink:#1a2433;
+    --ink-soft:#46536a;
+    --muted:#6b7787;
+    --border:#e2e8f0;
+    --bg:#f7f9fc;
+    --white:#ffffff;
+    --danger:#c0564e;
+    --danger-soft:#f9e9e8;
+    --warn:#a8791a;
+    --warn-soft:#f9f0d8;
+    --success:#2f9e6f;
+    --success-soft:#e0f2ea;
+    --info:#3a6ea5;
+    --info-soft:#e7eef7;
+    --gold:#F4C94A;
+    --gold-soft:#f7d56e;
+    --gold-deep:#e0b43c;
+    --gold-text:#8a6a12;
+    --radius:14px;
+    --radius-lg:20px;
+    --radius-sm:8px;
+    --shadow-sm:0 2px 8px rgba(8,49,92,.06);
+    --shadow:0 12px 32px -12px rgba(8,49,92,.18);
+    --shadow-lg:0 24px 60px -20px rgba(8,49,92,.25);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{width:100%;overflow-x:hidden}
+  body{
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    overflow-x:hidden;
+    font-family:'Asap',system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:'Asap',system-ui,sans-serif;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;color:var(--ink)}
+
+  /* ============ FULL-BLEED (escapa de contenedores GHL) ============ */
+  .full-bleed{
+    width:100vw;
+    position:relative;
+    left:50%;
+    right:50%;
+    margin-left:-50vw;
+    margin-right:-50vw;
+    background:var(--bg);
+  }
+
+  /* Wrapper interno: padding lateral en el contenedor para que las cards no peguen al borde */
+  .shell{
+    max-width:1280px;
+    margin:0 auto;
+    padding:24px clamp(12px, 3vw, 28px) 80px;
+    display:grid;
+    gap:clamp(14px, 2vw, 20px);
+    width:100%;
+  }
+
+  /* ============ Topbar ============ */
+  .topbar{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:18px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    box-shadow:var(--shadow-sm);
+  }
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand .logo{
+    width:48px;height:48px;border-radius:14px;
+    background:linear-gradient(135deg,var(--navy-soft) 0%,var(--navy) 100%);
+    display:flex;align-items:center;justify-content:center;color:var(--gold);
+    border:1.5px solid rgba(244,201,74,.55);
+    box-shadow:var(--shadow-sm);
+  }
+  .brand .logo svg{width:26px;height:26px}
+  .brand h1{font-size:22px;line-height:1.1}
+  .brand .sub{font-size:12px;color:var(--muted);margin-top:3px}
+
+  .topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+  /* ============ Buttons ============ */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;
+    border:1px solid transparent;background:var(--white);color:var(--ink);
+    transition:all .15s ease;line-height:1;cursor:pointer;
+  }
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+  .btn-primary{background:linear-gradient(180deg,var(--gold-soft),var(--gold));color:var(--navy);box-shadow:0 8px 20px -10px rgba(244,201,74,.7)}
+  .btn-primary:hover{background:linear-gradient(180deg,var(--gold-soft),var(--gold-deep));box-shadow:0 12px 26px -10px rgba(244,201,74,.8)}
+  .btn-ghost{background:transparent;border-color:var(--border);color:var(--ink-soft)}
+  .btn-ghost:hover{background:var(--navy-mist)}
+  .btn-danger{background:var(--danger-soft);color:var(--danger);border-color:transparent}
+  .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+
+  /* ============ Cards ============ */
+  .card{
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:22px;
+    box-shadow:var(--shadow-sm);
+  }
+  .card h2{font-size:18px;margin-bottom:4px}
+  .card .card-sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .card-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    flex-wrap:wrap;margin-bottom:14px;
+  }
+  .card-head h2{margin-bottom:0}
+
+  /* ============ Params bar ============ */
+  .params{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+  .param{display:flex;flex-direction:column;gap:4px}
+  .param label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .param .input-wrap{
+    display:flex;align-items:center;gap:6px;
+    background:var(--navy-mist);border:1px solid var(--border);border-radius:10px;padding:8px 12px;
+  }
+  .param input{border:none;background:none;font-size:15px;font-weight:600;width:100%;outline:none}
+  .param .input-wrap small{color:var(--muted);font-size:11px}
+  .param .hint{font-size:11px;color:var(--muted)}
+
+  /* ============ KPIs ============ */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px}
+  .kpi{
+    background:var(--white);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px;display:flex;flex-direction:column;gap:6px;
+    box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  }
+  .kpi::before{content:'';position:absolute;inset:0 auto auto 0;width:4px;height:100%;background:var(--navy-soft)}
+  .kpi.kpi-revenue::before{background:var(--success)}
+  .kpi.kpi-expense::before{background:var(--danger)}
+  .kpi.kpi-profit::before{background:var(--navy)}
+  .kpi.kpi-paulina::before{background:var(--info)}
+  .kpi.kpi-agency::before{background:var(--warn)}
+  .kpi-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .kpi-value{font-family:'Asap',system-ui,sans-serif;font-size:24px;font-weight:800;line-height:1.1;color:var(--ink)}
+  .kpi-sub{font-size:12px;color:var(--muted)}
+  .kpi-detail{font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;border-top:1px dashed var(--border)}
+  .kpi-detail b{color:var(--ink-soft);font-weight:600}
+
+  /* ============ Tabs ============ */
+  .tabs{display:flex;gap:2px;background:var(--navy-mist);padding:4px;border-radius:12px;flex-wrap:wrap}
+  .tab{
+    flex:1;min-width:120px;padding:10px 14px;border-radius:9px;
+    font-size:13px;font-weight:600;color:var(--muted);
+    transition:all .15s ease;text-align:center;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab.active{background:var(--white);color:var(--ink);box-shadow:var(--shadow-sm)}
+
+  /* ============ Tables ============ */
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--white)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{
+    background:var(--navy-mist);color:var(--muted);
+    font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:600;
+    padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:1;
+  }
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--ink-soft)}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:var(--navy-mist)}
+  .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}
+  .num b{font-weight:600;color:var(--ink)}
+  .pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:600}
+  .pill-paulina{background:var(--info-soft);color:var(--info)}
+  .pill-agency{background:var(--warn-soft);color:var(--warn)}
+  .pill-success{background:var(--success-soft);color:var(--success)}
+  .pill-danger{background:var(--danger-soft);color:var(--danger)}
+  .pill-muted{background:var(--navy-mist);color:var(--muted)}
+
+  .row-actions{display:flex;gap:4px;justify-content:flex-end}
+  .row-actions button{padding:4px 8px;font-size:11px;border-radius:6px;color:var(--muted)}
+  .row-actions button:hover{background:var(--navy-mist);color:var(--ink)}
+  .row-actions .del:hover{background:var(--danger-soft);color:var(--danger)}
+
+  .empty{padding:42px 24px;text-align:center;color:var(--muted);font-size:14px}
+  .empty b{display:block;font-size:16px;color:var(--ink);margin-bottom:4px;font-family:'Asap',system-ui,sans-serif}
+
+  /* ============ Charts ============ */
+  .charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:20px}
+  @media (max-width:900px){.charts-row{grid-template-columns:1fr}}
+  .chart-wrap{position:relative;height:240px}
+
+  /* ============ Modal ============ */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(8,49,92,.42);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;z-index:999;padding:16px;
+  }
+  .modal-overlay.show{display:flex}
+  .modal{
+    background:var(--white);border-radius:var(--radius-lg);
+    width:min(560px,100%);max-height:90vh;overflow:auto;
+    box-shadow:var(--shadow-lg);
+  }
+  .modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-head h3{font-size:18px}
+  .modal-body{padding:22px}
+  .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--navy-mist)}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .form-grid .full{grid-column:1/-1}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .field input,.field select,.field textarea{
+    border:1px solid var(--border);border-radius:10px;padding:10px 12px;
+    font-size:14px;outline:none;background:var(--white);transition:border-color .15s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--navy)}
+  .field textarea{min-height:60px;resize:vertical}
+
+  /* ============ Liquidación ============ */
+  .liq-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:760px){.liq-grid{grid-template-columns:1fr}}
+  .liq-card{
+    border:1px solid var(--border);border-radius:14px;padding:18px;
+    background:linear-gradient(180deg,var(--navy-mist) 0%,var(--white) 70%);
+  }
+  .liq-card.agency{background:linear-gradient(180deg,var(--warn-soft) 0%,var(--white) 70%)}
+  .liq-card h4{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;margin-bottom:8px}
+  .liq-card .liq-name{font-family:'Asap',system-ui,sans-serif;font-size:22px;font-weight:800;margin-bottom:14px}
+  .liq-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--ink-soft)}
+  .liq-row.total{border-top:2px solid var(--border);margin-top:8px;padding-top:10px;font-weight:700;color:var(--ink);font-size:15px}
+
+  /* ============ Toasts ============ */
+  .toasts{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:9999;max-width:340px}
+  .toast{
+    background:var(--white);border:1px solid var(--border);border-radius:12px;
+    padding:12px 16px;box-shadow:var(--shadow);font-size:13px;
+    display:flex;align-items:center;gap:10px;animation:slideIn .3s ease;
+  }
+  .toast.success{border-left:4px solid var(--success)}
+  .toast.error{border-left:4px solid var(--danger)}
+  @keyframes slideIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+  @media print{
+    body{background:#fff}
+    .full-bleed{position:static;width:100%;left:0;right:0;margin:0}
+    .shell{padding:0}
+    .topbar-actions,.tabs,.btn,.row-actions,#paramsCard{display:none !important}
+    .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+  }
+
+  /* ============ Responsive ============ */
+  @media (max-width:1024px){
+    .charts-row{gap:14px}
+    .card{padding:18px}
+  }
+
+  @media (max-width:900px){
+    .charts-row{grid-template-columns:1fr}
+    .chart-wrap{height:220px}
+    .brand h1{font-size:19px}
+    .kpi-value{font-size:21px}
+  }
+
+  @media (max-width:760px){
+    .liq-grid{grid-template-columns:1fr}
+    .topbar{padding:14px 16px}
+    .topbar-actions{width:100%;justify-content:flex-end}
+    .card-head{flex-direction:column;align-items:flex-start;gap:8px}
+    .tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+    .tab{flex:0 0 auto;min-width:auto;padding:8px 14px;white-space:nowrap}
+    .params{grid-template-columns:repeat(2,1fr)}
+  }
+
+  @media (max-width:640px){
+    .kpis{grid-template-columns:repeat(2,1fr);gap:10px}
+    .kpi{padding:14px}
+    .kpi-value{font-size:18px}
+    .kpi-label{font-size:10px}
+    .kpi-detail{font-size:10px;flex-direction:column;gap:2px}
+    .form-grid{grid-template-columns:1fr}
+    .brand{gap:10px}
+    .brand .logo{width:40px;height:40px}
+    .brand h1{font-size:17px}
+    .brand .sub{font-size:11px}
+    .card{padding:16px;border-radius:14px}
+    .card h2{font-size:16px}
+    .card .card-sub{font-size:12px}
+    thead th{padding:8px 10px;font-size:10px}
+    tbody td{padding:8px 10px;font-size:12px}
+    .modal{max-height:95vh}
+    .modal-body{padding:18px}
+    .toasts{left:10px;right:10px;bottom:10px;max-width:none}
+  }
+
+  @media (max-width:480px){
+    .shell{padding:14px 10px 60px;gap:12px}
+    .kpis{grid-template-columns:1fr}
+    .params{grid-template-columns:1fr}
+    .topbar{flex-direction:column;align-items:stretch;gap:12px}
+    .topbar-actions{flex-wrap:wrap;justify-content:stretch}
+    .topbar-actions .btn{flex:1;min-width:120px}
+    .liq-card{padding:14px}
+    .liq-card .liq-name{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="full-bleed"><div class="shell">
+
+  <!-- ====================== TOPBAR ====================== -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14l9-4 9 4-9 4-9-4z"/><path d="M12 10V4M12 4l3 2"/></svg>
+      </div>
+      <div>
+        <h1>Cuadre Financiero · Barco de Papel</h1>
+        <div class="sub">Paulina Valencia × JoinsClee · reparto de socios</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" id="exportXlsxBtn">↓ Excel</button>
+      <button class="btn btn-primary btn-sm" id="exportPdfBtn">↓ Informe PDF</button>
+    </div>
+  </div>
+
+  <!-- ====================== PARAMS ====================== -->
+  <div class="card" id="paramsCard">
+    <div class="card-head">
+      <div>
+        <h2>Parámetros del cuadre</h2>
+        <div class="card-sub">Edita TRM y % de reparto. Los cambios se guardan automáticamente.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="pill pill-muted" id="periodPill">Acumulado</span>
+        <select id="periodFilter" class="btn btn-ghost btn-sm" style="cursor:pointer">
+          <option value="all">Todo el período</option>
+        </select>
+      </div>
+    </div>
+    <div class="params">
+      <div class="param">
+        <label for="trmInput">TRM (COP por USD)</label>
+        <div class="input-wrap">
+          <input type="number" step="0.01" id="trmInput" placeholder="3729.27" />
+          <small>COP/USD</small>
+        </div>
+        <div class="hint">Recalcula todos los importes en COP.</div>
+      </div>
+      <div class="param">
+        <label for="paulinaShareInput">% para Paulina (Barco de Papel)</label>
+        <div class="input-wrap">
+          <input type="number" step="1" min="0" max="100" id="paulinaShareInput" />
+          <small>%</small>
+        </div>
+        <div class="hint">Parte de Paulina del beneficio neto.</div>
+      </div>
+      <div class="param">
+        <label for="agencyShareInput">% para JoinsClee</label>
+        <div class="input-wrap">
+          <input type="number" step="1" min="0" max="100" id="agencyShareInput" />
+          <small>%</small>
+        </div>
+        <div class="hint">Parte de la agencia. Paulina + JoinsClee = 100%.</div>
+      </div>
+      <div class="param">
+        <label for="trmSourceInput">Fuente del TRM</label>
+        <div class="input-wrap">
+          <input type="text" id="trmSourceInput" placeholder="Banco de la República" />
+        </div>
+        <div class="hint">Para referencia en informes.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== KPIs ====================== -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- ====================== CHARTS ====================== -->
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-head"><div><h2>Ingresos vs Gastos</h2><div class="card-sub">Mes a mes en COP</div></div></div>
+      <div class="chart-wrap"><canvas id="chartMonthly" role="img" aria-label="Gráfico de barras: ingresos vs gastos mes a mes en COP"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h2>Distribución de los ingresos</h2><div class="card-sub">A dónde va cada peso que entró</div></div></div>
+      <div class="chart-wrap"><canvas id="chartSplit" role="img" aria-label="Gráfico de dona: distribución de los ingresos entre utilidades y gastos"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ====================== TABS ====================== -->
+  <div class="card">
+    <div class="tabs" id="tabs">
+      <div class="tab active" data-tab="ingresos">Ingresos Skool</div>
+      <div class="tab" data-tab="gastos-paulina">Gastos Paulina</div>
+      <div class="tab" data-tab="gastos-agencia">Gastos JoinsClee</div>
+      <div class="tab" data-tab="liquidacion">Liquidación</div>
+    </div>
+    <div style="margin-top:18px" id="tabContent"></div>
+  </div>
+
+</div></div>
+
+<!-- ====================== MODAL ====================== -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Nuevo registro</h3>
+      <button class="btn btn-ghost btn-sm" id="modalCloseBtn" aria-label="Cerrar" title="Cerrar">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" id="modalCancelBtn">Cancelar</button>
+      <button class="btn btn-primary btn-sm" id="modalSaveBtn">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* ============================================================
+ *  CONFIG · Paulina Valencia
+ * ============================================================ */
+const SUPABASE_URL = 'https://octilxlxwewlfbaoeihr.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jdGlseGx4d2V3bGZiYW9laWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMzY1MDUsImV4cCI6MjA5NjYxMjUwNX0.IciEMKNMKznyAsq4GtM9TINtnm7bSpgSf15rQi9CK0A';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const T = {
+  params: 'paulina_finance_params',
+  revenues: 'paulina_finance_revenues',
+  expenses: 'paulina_finance_expenses',
+};
+const PARTNER_PAULINA = 'paulina';
+const PARTNER_AGENCY = 'joinsclee';
+
+/* ============================================================
+ *  STATE
+ * ============================================================ */
+const state = {
+  params: null,
+  revenues: [],
+  expenses: [],
+  period: 'all',
+  tab: 'ingresos',
+};
+
+/* ============================================================
+ *  HELPERS
+ * ============================================================ */
+const fmtUSD = n => '$' + (Number(n)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtCOP = n => '$' + Math.round(Number(n)||0).toLocaleString('es-CO') + ' COP';
+const fmtPct = n => (Number(n)*100).toFixed(1) + '%';
+const fmtDate = d => d ? new Date(d).toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const monthOf = d => d ? String(d).slice(0,7) : '';
+const monthLabel = m => {
+  if(!m) return '—';
+  const [y,mo] = m.split('-');
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${meses[parseInt(mo,10)-1]} ${y}`;
+};
+const todayISO = () => new Date().toISOString().slice(0,10);
+
+function toast(msg, kind='success'){
+  const t = document.createElement('div');
+  t.className = 'toast ' + kind;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 3200);
+}
+
+async function db(promise){
+  const { data, error } = await promise;
+  if(error){
+    console.error(error);
+    toast(error.message || 'Error en la base de datos', 'error');
+    throw error;
+  }
+  return data;
+}
+
+/* ============================================================
+ *  DATA LOADERS
+ * ============================================================ */
+async function loadAll(){
+  const [params, revenues, expenses] = await Promise.all([
+    db(sb.from(T.params).select('*').eq('id', 1).maybeSingle()),
+    db(sb.from(T.revenues).select('*').order('paid_at', { ascending: false })),
+    db(sb.from(T.expenses).select('*').order('spent_at', { ascending: false })),
+  ]);
+  state.params = params || { id: 1, trm_cop_per_usd: 3729.27, paulina_share: 0.7, joinsclee_share: 0.3, trm_source: '' };
+  state.revenues = revenues || [];
+  state.expenses = expenses || [];
+  if(!params){
+    await db(sb.from(T.params).upsert(state.params));
+  }
+  renderAll();
+}
+
+/* ============================================================
+ *  AGGREGATIONS
+ * ============================================================ */
+function filterByPeriod(rows, dateField){
+  if(state.period === 'all') return rows;
+  return rows.filter(r => monthOf(r[dateField]) === state.period);
+}
+
+function availablePeriods(){
+  const set = new Set();
+  state.revenues.forEach(r => set.add(monthOf(r.paid_at)));
+  state.expenses.forEach(e => set.add(monthOf(e.spent_at)));
+  return Array.from(set).filter(Boolean).sort().reverse();
+}
+
+function aggregate(){
+  const trm = Number(state.params?.trm_cop_per_usd) || 0;
+  const paulinaShare = Number(state.params?.paulina_share) || 0.7;
+  const agencyShare = Number(state.params?.joinsclee_share) || 0.3;
+
+  const revs = filterByPeriod(state.revenues, 'paid_at');
+  const exps = filterByPeriod(state.expenses, 'spent_at');
+
+  const incomeUSD = revs.reduce((s,r) => s + (Number(r.usd_amount)||0), 0);
+  // Ingresos = COP real confirmado en banco; si el payout aún está "pendiente",
+  // se cuenta el esperado (USD × TRM), igual que los gastos. El COP real solo lo ajusta al llegar.
+  const incomeCOP = revs.reduce((s,r) => {
+    const real = Number(r.cop_real)||0;
+    return s + (real > 0 ? real : (Number(r.usd_amount)||0) * trm);
+  }, 0);
+  // COP esperado vía TRM: solo referencia/comparación, no entra en el cuadre.
+  const incomeCOPexpected = revs.reduce((s,r) => s + (Number(r.usd_amount)||0) * trm, 0);
+
+  const expenseTotal = (filter) => exps.filter(filter).reduce((s,e) => {
+    const meses = Number(e.months_billed)||1;
+    if(e.cop_amount && Number(e.cop_amount) > 0){
+      return s + Number(e.cop_amount) * meses;
+    }
+    return s + (Number(e.usd_amount)||0) * trm * meses;
+  }, 0);
+
+  const paulinaExp = expenseTotal(e => e.paid_by === PARTNER_PAULINA);
+  const agencyExp = expenseTotal(e => e.paid_by === PARTNER_AGENCY);
+  const totalExp = paulinaExp + agencyExp;
+  const profit = incomeCOP - totalExp;
+  const margin = incomeCOP > 0 ? profit / incomeCOP : 0;
+  const paulinaProfit = profit * paulinaShare;
+  const agencyProfit = profit * agencyShare;
+
+  return {
+    trm, paulinaShare, agencyShare,
+    incomeUSD, incomeCOP, incomeCOPexpected,
+    paulinaExp, agencyExp, totalExp,
+    profit, margin,
+    paulinaProfit, agencyProfit,
+    // Paulina conserva (neto) = su utilidad = ingresos − sus gastos − transferencia a JoinsClee.
+    // Sus gastos NO se le reembolsan aparte: ya los pagó de su propia cuenta.
+    // agencyTotal = único movimiento real: lo que Paulina transfiere a JoinsClee (30% + reembolso USD).
+    agencyTotal: agencyProfit + agencyExp,
+  };
+}
+
+function monthlySeries(){
+  const trm = Number(state.params?.trm_cop_per_usd) || 0;
+  const map = {};
+  state.revenues.forEach(r => {
+    const m = monthOf(r.paid_at); if(!m) return;
+    map[m] = map[m] || { income: 0, expense: 0 };
+    const real = Number(r.cop_real)||0;
+    map[m].income += real > 0 ? real : (Number(r.usd_amount)||0) * trm;
+  });
+  state.expenses.forEach(e => {
+    const m = monthOf(e.spent_at); if(!m) return;
+    map[m] = map[m] || { income: 0, expense: 0 };
+    const meses = Number(e.months_billed)||1;
+    const cop = (e.cop_amount && Number(e.cop_amount) > 0)
+      ? Number(e.cop_amount) * meses : (Number(e.usd_amount)||0) * trm * meses;
+    map[m].expense += cop;
+  });
+  const keys = Object.keys(map).sort();
+  return {
+    labels: keys.map(monthLabel),
+    income: keys.map(k => map[k].income),
+    expense: keys.map(k => map[k].expense),
+  };
+}
+
+/* ============================================================
+ *  RENDER · PARAMS
+ * ============================================================ */
+function renderParams(){
+  const p = state.params; if(!p) return;
+  document.getElementById('trmInput').value = p.trm_cop_per_usd;
+  document.getElementById('paulinaShareInput').value = Math.round((p.paulina_share || 0)*100);
+  document.getElementById('agencyShareInput').value = Math.round((p.joinsclee_share || 0)*100);
+  document.getElementById('trmSourceInput').value = p.trm_source || '';
+
+  const periods = availablePeriods();
+  const sel = document.getElementById('periodFilter');
+  sel.innerHTML = '<option value="all">Todo el período</option>' +
+                   periods.map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
+  sel.value = state.period;
+  document.getElementById('periodPill').textContent = state.period === 'all' ? 'Acumulado' : monthLabel(state.period);
+}
+
+/* ============================================================
+ *  RENDER · KPIs
+ * ============================================================ */
+function renderKpis(){
+  const a = aggregate();
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi kpi-revenue">
+      <div class="kpi-label">Ingresos</div>
+      <div class="kpi-value">${fmtCOP(a.incomeCOP)}</div>
+      <div class="kpi-sub">${fmtUSD(a.incomeUSD)} USD enviados por Skool</div>
+    </div>
+    <div class="kpi kpi-expense">
+      <div class="kpi-label">Gastos totales</div>
+      <div class="kpi-value">${fmtCOP(a.totalExp)}</div>
+      <div class="kpi-detail"><span>Paulina <b>${fmtCOP(a.paulinaExp)}</b></span><span>JoinsClee <b>${fmtCOP(a.agencyExp)}</b></span></div>
+    </div>
+    <div class="kpi kpi-profit">
+      <div class="kpi-label">Beneficio neto</div>
+      <div class="kpi-value">${fmtCOP(a.profit)}</div>
+      <div class="kpi-sub">${fmtPct(a.margin)} de margen sobre ingresos</div>
+    </div>
+    <div class="kpi kpi-paulina">
+      <div class="kpi-label">Paulina conserva (neto)</div>
+      <div class="kpi-value">${fmtCOP(a.paulinaProfit)}</div>
+      <div class="kpi-sub">Su ${Math.round(a.paulinaShare*100)}% del beneficio · ya en su cuenta</div>
+      <div class="kpi-detail"><span>Ingresos − sus gastos − transferencia</span></div>
+    </div>
+    <div class="kpi kpi-agency">
+      <div class="kpi-label">Paulina transfiere a JoinsClee</div>
+      <div class="kpi-value">${fmtCOP(a.agencyTotal)}</div>
+      <div class="kpi-sub">Único movimiento a realizar</div>
+      <div class="kpi-detail"><span>Utilidad ${Math.round(a.agencyShare*100)}% <b>${fmtCOP(a.agencyProfit)}</b></span><span>Reembolso USD <b>${fmtCOP(a.agencyExp)}</b></span></div>
+    </div>
+  `;
+}
+
+/* ============================================================
+ *  RENDER · CHARTS
+ * ============================================================ */
+let chartMonthly, chartSplit;
+function renderCharts(){
+  const s = monthlySeries();
+  const a = aggregate();
+  const ctxM = document.getElementById('chartMonthly').getContext('2d');
+  if(chartMonthly) chartMonthly.destroy();
+  chartMonthly = new Chart(ctxM, {
+    type: 'bar',
+    data: {
+      labels: s.labels,
+      datasets: [
+        { label: 'Ingresos', data: s.income, backgroundColor: '#2f9e6f', borderRadius: 6 },
+        { label: 'Gastos',   data: s.expense, backgroundColor: '#c0564e', borderRadius: 6 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family:'Asap', size: 12 }, color: '#46536a' } },
+        tooltip: { callbacks: { label: c => `${c.dataset.label}: ${fmtCOP(c.parsed.y)}` } }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { callback: v => '$' + (v/1000000).toFixed(1) + 'M', color: '#6b7787', font: { family:'Asap' } }, grid: { color: '#e2e8f0' } },
+        x: { ticks: { color: '#6b7787', font: { family:'Asap' } }, grid: { display: false } }
+      }
+    }
+  });
+
+  const ctxS = document.getElementById('chartSplit').getContext('2d');
+  if(chartSplit) chartSplit.destroy();
+  chartSplit = new Chart(ctxS, {
+    type: 'doughnut',
+    data: {
+      labels: ['Utilidad Paulina', 'Utilidad JoinsClee', 'Gastos Paulina', 'Gastos JoinsClee (USD)'],
+      datasets: [{
+        data: [a.paulinaProfit, a.agencyProfit, a.paulinaExp, a.agencyExp],
+        backgroundColor: ['#3a6ea5', '#a8791a', '#0d4178', '#e0b43c'],
+        borderColor: '#fff', borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { family:'Asap', size: 11 }, color: '#46536a', boxWidth: 12 } },
+        tooltip: { callbacks: { label: c => `${c.label}: ${fmtCOP(c.parsed)}` } }
+      }
+    }
+  });
+}
+
+/* ============================================================
+ *  RENDER · TABS
+ * ============================================================ */
+function renderTabs(){
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === state.tab));
+  const root = document.getElementById('tabContent');
+  if(state.tab === 'ingresos')             root.innerHTML = renderIngresosTable();
+  else if(state.tab === 'gastos-paulina')     root.innerHTML = renderGastosTable(PARTNER_PAULINA);
+  else if(state.tab === 'gastos-agencia')  root.innerHTML = renderGastosTable(PARTNER_AGENCY);
+  else if(state.tab === 'liquidacion')     root.innerHTML = renderLiquidacion();
+  attachRowHandlers();
+}
+
+function renderIngresosTable(){
+  const trm = Number(state.params?.trm_cop_per_usd)||0;
+  const rows = filterByPeriod(state.revenues, 'paid_at');
+  if(!rows.length) return tabHeader('Ingresos Skool','Payouts de Skool recibidos en la cuenta de Paulina','revenue') + emptyState('Sin ingresos en este período');
+
+  let totalUSD=0, totalCOPexp=0, totalCOPreal=0;
+  const body = rows.map(r => {
+    const usd = Number(r.usd_amount)||0;
+    const copExp = usd * trm;
+    const copReal = Number(r.cop_real)||0;
+    totalUSD += usd; totalCOPexp += copExp; totalCOPreal += copReal;
+    const spread = copReal ? (copReal - copExp) : 0;
+    return `<tr>
+      <td>${fmtDate(r.paid_at)}</td>
+      <td>${r.concept || '—'}</td>
+      <td class="num"><b>${fmtUSD(usd)}</b></td>
+      <td class="num">${fmtCOP(copExp)}</td>
+      <td class="num">${copReal ? '<b>'+fmtCOP(copReal)+'</b>' : '<span class="pill pill-muted">pendiente</span>'}</td>
+      <td class="num">${copReal ? (spread>=0 ? '<span class="pill pill-success">'+fmtCOP(spread)+'</span>' : '<span class="pill pill-danger">'+fmtCOP(spread)+'</span>') : '—'}</td>
+      <td class="row-actions">
+        <button class="edit" data-table="revenues" data-id="${r.id}">Editar</button>
+        <button class="del" data-table="revenues" data-id="${r.id}" aria-label="Eliminar ingreso" title="Eliminar">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return tabHeader('Ingresos Skool', 'Lo que Skool envió (USD) y lo que entró al banco (COP). Si el payout aún está pendiente, el cuadre cuenta el COP esperado (USD × TRM); al confirmar el COP real, se ajusta.', 'revenue') + `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Fecha</th><th>Concepto</th>
+        <th class="num">USD enviado</th>
+        <th class="num">COP esperado · ref</th>
+        <th class="num">COP real banco</th>
+        <th class="num">Spread/comisión</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${body}
+        <tr style="background:var(--navy-mist);font-weight:700">
+          <td colspan="2">TOTAL</td>
+          <td class="num">${fmtUSD(totalUSD)}</td>
+          <td class="num">${fmtCOP(totalCOPexp)}</td>
+          <td class="num">${fmtCOP(totalCOPreal)}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table></div>`;
+}
+
+function renderGastosTable(paidBy){
+  const trm = Number(state.params?.trm_cop_per_usd)||0;
+  const rows = filterByPeriod(state.expenses, 'spent_at').filter(e => e.paid_by === paidBy);
+  const title = paidBy === PARTNER_PAULINA ? 'Gastos asumidos por Paulina' : 'Gastos asumidos por JoinsClee';
+  const sub = paidBy === PARTNER_PAULINA
+    ? 'Todo lo que se carga al banco de Paulina en COP: suscripciones, pauta Meta, edición, etc. Registra el COP real que le sacan.'
+    : 'Servicios que JoinsClee pagó en USD. Se le cobran a Paulina al TRM actual (USD × TRM).';
+  if(!rows.length) return tabHeader(title, sub, 'expense', paidBy) + emptyState('Sin gastos registrados');
+
+  let total = 0;
+  const body = rows.map(e => {
+    const meses = Number(e.months_billed)||1;
+    const cop = (e.cop_amount && Number(e.cop_amount)>0)
+      ? Number(e.cop_amount) * meses
+      : (Number(e.usd_amount)||0) * trm * meses;
+    total += cop;
+    return `<tr>
+      <td>${fmtDate(e.spent_at)}</td>
+      <td><b>${e.concept}</b></td>
+      <td><span class="pill pill-muted">${e.category||'—'}</span></td>
+      <td>${e.frequency||'—'}</td>
+      <td class="num">${meses}</td>
+      <td class="num">${e.usd_amount ? fmtUSD(e.usd_amount) : '—'}</td>
+      <td class="num">${e.cop_amount ? fmtCOP(e.cop_amount) : '—'}</td>
+      <td class="num"><b>${fmtCOP(cop)}</b></td>
+      <td class="row-actions">
+        <button class="edit" data-table="expenses" data-id="${e.id}">Editar</button>
+        <button class="del" data-table="expenses" data-id="${e.id}" aria-label="Eliminar gasto" title="Eliminar">×</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  return tabHeader(title, sub, 'expense', paidBy) + `
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Fecha</th><th>Concepto</th><th>Categoría</th>
+        <th>Frecuencia</th><th class="num">Meses</th>
+        <th class="num">USD</th><th class="num">COP</th>
+        <th class="num">Total COP</th><th></th>
+      </tr></thead>
+      <tbody>${body}
+        <tr style="background:var(--navy-mist);font-weight:700">
+          <td colspan="7">TOTAL</td>
+          <td class="num">${fmtCOP(total)}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table></div>`;
+}
+
+function renderLiquidacion(){
+  const a = aggregate();
+  return `
+    <div style="margin-bottom:16px">
+      <h3 style="font-size:18px;margin-bottom:4px">Liquidación del período</h3>
+      <div class="card-sub">${state.period === 'all' ? 'Acumulado total' : monthLabel(state.period)}</div>
+    </div>
+
+    <!-- ÚNICO MOVIMIENTO REAL -->
+    <div style="padding:20px 22px;border-radius:16px;border:1px solid var(--warn);background:linear-gradient(180deg,var(--warn-soft) 0%,var(--white) 80%);margin-bottom:18px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--warn)">Único movimiento a realizar</div>
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <span style="font-family:'Asap',system-ui,sans-serif;font-size:15px;color:var(--muted)">Paulina transfiere a JoinsClee</span>
+        <span style="font-family:'Asap',system-ui,sans-serif;font-size:30px;font-weight:700">${fmtCOP(a.agencyTotal)}</span>
+      </div>
+      <div style="font-size:13px;color:var(--ink-soft);margin-top:6px">
+        = Utilidad ${Math.round(a.agencyShare*100)}% del beneficio (<b>${fmtCOP(a.agencyProfit)}</b>) + reembolso de gastos que JoinsClee pagó en USD (<b>${fmtCOP(a.agencyExp)}</b>)
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">
+        Tras pagar sus gastos y esta transferencia, Paulina conserva <b>${fmtCOP(a.paulinaProfit)}</b> (su ${Math.round(a.paulinaShare*100)}% del beneficio). No hay ningún otro movimiento que hacer.
+      </div>
+    </div>
+
+    <div class="liq-grid">
+      <div class="liq-card">
+        <h4>Paulina conserva (neto)</h4>
+        <div class="liq-name">Paulina Valencia (Barco de Papel)</div>
+        <div class="liq-row"><span>Ingresos (COP real o esperado)</span><span><b>${fmtCOP(a.incomeCOP)}</b></span></div>
+        <div class="liq-row"><span>− Sus gastos pagados desde su banco</span><span><b>−${fmtCOP(a.paulinaExp)}</b></span></div>
+        <div class="liq-row"><span>− Transferencia a JoinsClee</span><span><b>−${fmtCOP(a.agencyTotal)}</b></span></div>
+        <div class="liq-row total"><span>Paulina conserva (neto)</span><span>${fmtCOP(a.paulinaProfit)}</span></div>
+        <div class="liq-row" style="color:var(--muted);font-size:12px;border-top:1px dashed var(--border);margin-top:8px;padding-top:8px"><span>Equivale a su ${Math.round(a.paulinaShare*100)}% del beneficio</span><span>${fmtCOP(a.paulinaProfit)}</span></div>
+      </div>
+      <div class="liq-card agency">
+        <h4>JoinsClee recibe</h4>
+        <div class="liq-name">JoinsClee</div>
+        <div class="liq-row"><span>Utilidad ${Math.round(a.agencyShare*100)}% del beneficio</span><span><b>${fmtCOP(a.agencyProfit)}</b></span></div>
+        <div class="liq-row"><span>Reembolso gastos en USD (× TRM ${a.trm.toFixed(2)})</span><span><b>${fmtCOP(a.agencyExp)}</b></span></div>
+        <div class="liq-row total"><span>TOTAL a transferir</span><span>${fmtCOP(a.agencyTotal)}</span></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:18px;background:var(--navy-mist);border-radius:14px;border:1px solid var(--border)">
+      <h4 style="font-family:'Asap',system-ui,sans-serif;font-size:16px;margin-bottom:10px">Cómo se calcula</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;font-size:13px;color:var(--ink-soft)">
+        <div><b>Ingresos (COP)</b><br>${fmtCOP(a.incomeCOP)}<br><small style="color:var(--muted)">COP real confirmado; si está pendiente, esperado (USD × TRM)</small></div>
+        <div><b>− Gastos totales</b><br>${fmtCOP(a.totalExp)}<br><small style="color:var(--muted)">${fmtCOP(a.paulinaExp)} (Paulina) + ${fmtCOP(a.agencyExp)} (JoinsClee, USD)</small></div>
+        <div><b>= Beneficio</b><br>${fmtCOP(a.profit)}<br><small style="color:var(--muted)">Margen ${fmtPct(a.margin)}</small></div>
+        <div><b>Reparto ${Math.round(a.paulinaShare*100)}/${Math.round(a.agencyShare*100)}</b><br>Paulina: ${fmtCOP(a.paulinaProfit)}<br>JoinsClee: ${fmtCOP(a.agencyProfit)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function tabHeader(title, sub, kind, paidBy){
+  const action = kind === 'revenue' ? `<button class="btn btn-primary btn-sm" data-add="revenue">+ Nuevo ingreso</button>`
+              : kind === 'expense' ? `<button class="btn btn-primary btn-sm" data-add="expense" data-paid-by="${paidBy}">+ Nuevo gasto</button>`
+              : '';
+  return `<div class="card-head"><div><h2>${title}</h2><div class="card-sub">${sub}</div></div>${action}</div>`;
+}
+
+function emptyState(msg){
+  return `<div class="empty"><b>${msg}</b><span>Agrega registros con el botón "+ Nuevo" arriba a la derecha.</span></div>`;
+}
+
+/* ============================================================
+ *  RENDER · ROOT
+ * ============================================================ */
+function renderAll(){
+  renderParams();
+  renderKpis();
+  renderCharts();
+  renderTabs();
+}
+
+/* ============================================================
+ *  EVENTOS / MODALS
+ * ============================================================ */
+function attachRowHandlers(){
+  document.querySelectorAll('[data-add="revenue"]').forEach(b => b.addEventListener('click', () => openRevenueModal()));
+  document.querySelectorAll('[data-add="expense"]').forEach(b => b.addEventListener('click', () => openExpenseModal(b.dataset.paidBy)));
+  document.querySelectorAll('.row-actions .edit').forEach(b => b.addEventListener('click', () => editRow(b.dataset.table, b.dataset.id)));
+  document.querySelectorAll('.row-actions .del').forEach(b => b.addEventListener('click', () => deleteRow(b.dataset.table, b.dataset.id)));
+}
+
+function editRow(table, id){
+  if(table === 'revenues'){
+    const r = state.revenues.find(x => x.id === id); if(r) openRevenueModal(r);
+  } else if(table === 'expenses'){
+    const e = state.expenses.find(x => x.id === id); if(e) openExpenseModal(e.paid_by, e);
+  }
+}
+
+async function deleteRow(table, id){
+  if(!confirm('¿Eliminar este registro? No se puede deshacer.')) return;
+  const tbl = table === 'revenues' ? T.revenues : T.expenses;
+  await db(sb.from(tbl).delete().eq('id', id));
+  toast('Eliminado');
+  await loadAll();
+}
+
+function showModal(title, bodyHTML, onSave){
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  const overlay = document.getElementById('modal');
+  overlay.classList.add('show');
+  const close = () => overlay.classList.remove('show');
+  document.getElementById('modalCloseBtn').onclick = close;
+  document.getElementById('modalCancelBtn').onclick = close;
+  document.getElementById('modalSaveBtn').onclick = async () => {
+    try { await onSave(); close(); } catch(e){ /* toast lo maneja */ }
+  };
+}
+
+function openRevenueModal(r){
+  const isEdit = !!r;
+  const body = `
+    <div class="form-grid">
+      <div class="field"><label for="f_paid_at">Fecha del pago</label><input type="date" id="f_paid_at" value="${r?.paid_at || todayISO()}" /></div>
+      <div class="field"><label for="f_source">Fuente</label>
+        <select id="f_source">
+          ${['skool','stripe','manual','otro'].map(o => `<option ${r?.source===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field full"><label for="f_concept">Concepto</label><input id="f_concept" value="${r?.concept||'Payout Skool'}" /></div>
+      <div class="field"><label for="f_usd">USD enviado</label><input type="number" step="0.01" id="f_usd" value="${r?.usd_amount||''}" /></div>
+      <div class="field"><label for="f_cop_real">COP real banco (opcional)</label><input type="number" step="1" id="f_cop_real" value="${r?.cop_real||''}" /></div>
+      <div class="field full"><label for="f_notes">Notas</label><textarea id="f_notes">${r?.notes||''}</textarea></div>
+    </div>`;
+  showModal(isEdit ? 'Editar ingreso' : 'Nuevo ingreso', body, async () => {
+    const payload = {
+      paid_at: document.getElementById('f_paid_at').value,
+      source: document.getElementById('f_source').value,
+      concept: document.getElementById('f_concept').value || null,
+      usd_amount: parseFloat(document.getElementById('f_usd').value) || 0,
+      cop_real: parseFloat(document.getElementById('f_cop_real').value) || null,
+      notes: document.getElementById('f_notes').value || null,
+    };
+    if(isEdit) await db(sb.from(T.revenues).update(payload).eq('id', r.id));
+    else       await db(sb.from(T.revenues).insert(payload));
+    toast(isEdit ? 'Ingreso actualizado' : 'Ingreso agregado');
+    await loadAll();
+  });
+}
+
+function openExpenseModal(paidBy, e){
+  const isEdit = !!e;
+  const body = `
+    <div class="form-grid">
+      <div class="field"><label for="f_spent_at">Fecha</label><input type="date" id="f_spent_at" value="${e?.spent_at || todayISO()}" /></div>
+      <div class="field"><label for="f_paid_by">Asume</label>
+        <select id="f_paid_by">
+          <option value="${PARTNER_PAULINA}" ${paidBy===PARTNER_PAULINA?'selected':''}>Paulina</option>
+          <option value="${PARTNER_AGENCY}" ${paidBy===PARTNER_AGENCY?'selected':''}>JoinsClee</option>
+        </select>
+      </div>
+      <div class="field full"><label for="f_concept">Concepto</label><input id="f_concept" value="${e?.concept||''}" /></div>
+      <div class="field"><label for="f_category">Categoría</label><input id="f_category" value="${e?.category||''}" placeholder="ej: Suscripción, Producción" /></div>
+      <div class="field"><label for="f_frequency">Frecuencia</label>
+        <select id="f_frequency">
+          ${['unico','mensual','acumulado','anual'].map(o => `<option ${e?.frequency===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label for="f_months">Meses cobrados</label><input type="number" step="0.5" id="f_months" value="${e?.months_billed||1}" /></div>
+      <div class="field"><label for="f_usd">USD unitario</label><input type="number" step="0.01" id="f_usd" value="${e?.usd_amount||''}" /></div>
+      <div class="field"><label for="f_cop">COP unitario (si pagaste directo en COP)</label><input type="number" step="1" id="f_cop" value="${e?.cop_amount||''}" /></div>
+      <div class="field full"><label for="f_notes">Notas</label><textarea id="f_notes">${e?.notes||''}</textarea></div>
+    </div>`;
+  showModal(isEdit ? 'Editar gasto' : 'Nuevo gasto', body, async () => {
+    const payload = {
+      spent_at: document.getElementById('f_spent_at').value,
+      paid_by: document.getElementById('f_paid_by').value,
+      concept: document.getElementById('f_concept').value,
+      category: document.getElementById('f_category').value || null,
+      frequency: document.getElementById('f_frequency').value,
+      months_billed: parseFloat(document.getElementById('f_months').value) || 1,
+      usd_amount: parseFloat(document.getElementById('f_usd').value) || null,
+      cop_amount: parseFloat(document.getElementById('f_cop').value) || null,
+      notes: document.getElementById('f_notes').value || null,
+    };
+    if(isEdit) await db(sb.from(T.expenses).update(payload).eq('id', e.id));
+    else       await db(sb.from(T.expenses).insert(payload));
+    toast(isEdit ? 'Gasto actualizado' : 'Gasto agregado');
+    await loadAll();
+  });
+}
+
+/* ============================================================
+ *  PARAMS · auto-save
+ * ============================================================ */
+let saveTimer;
+function bindParamInputs(){
+  const save = async () => {
+    const trm = parseFloat(document.getElementById('trmInput').value) || state.params.trm_cop_per_usd;
+    const ls = (parseFloat(document.getElementById('paulinaShareInput').value)||70)/100;
+    const as = (parseFloat(document.getElementById('agencyShareInput').value)||30)/100;
+    const sum = ls + as;
+    const paulina_share = sum>0 ? ls/sum : 0.7;
+    const joinsclee_share = sum>0 ? as/sum : 0.3;
+    const trm_source = document.getElementById('trmSourceInput').value;
+
+    state.params = { ...state.params, trm_cop_per_usd: trm, paulina_share, joinsclee_share, trm_source };
+    await db(sb.from(T.params).update({
+      trm_cop_per_usd: trm, paulina_share, joinsclee_share, trm_source, trm_updated_at: new Date().toISOString()
+    }).eq('id', 1));
+    renderKpis(); renderCharts(); renderTabs();
+  };
+  ['trmInput','paulinaShareInput','agencyShareInput','trmSourceInput'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(save, 500);
+    });
+  });
+}
+
+/* ============================================================
+ *  EXPORT · Excel
+ * ============================================================ */
+function exportExcel(){
+  const a = aggregate();
+  const trm = state.params.trm_cop_per_usd;
+  const wb = XLSX.utils.book_new();
+
+  const resumen = [
+    ['Paulina Valencia × JoinsClee — Cuadre Financiero'],
+    [`Generado: ${new Date().toLocaleString('es-CO')}`],
+    [`Período: ${state.period === 'all' ? 'Acumulado total' : monthLabel(state.period)}`],
+    [],
+    ['INDICADORES PRINCIPALES'],
+    ['Ingresos totales (USD enviado por Skool)', a.incomeUSD],
+    ['Ingresos totales (COP real o esperado)', a.incomeCOP],
+    ['Gastos totales (COP)', a.totalExp],
+    ['Beneficio (COP)', a.profit],
+    ['Margen %', a.margin],
+    [],
+    ['LIQUIDACIÓN'],
+    ['ÚNICO MOVIMIENTO · Paulina transfiere a JoinsClee', a.agencyTotal],
+    ['Paulina conserva (neto · su 70% del beneficio)', a.paulinaProfit],
+    [],
+    ['DETALLE'],
+    ['Concepto','Valor (COP)'],
+    ['Ingresos (COP real o esperado)', a.incomeCOP],
+    ['(−) Gastos de Paulina (pagados por ella)', a.paulinaExp],
+    ['(−) Transferencia a JoinsClee (30% + reembolso USD)', a.agencyTotal],
+    ['(=) Paulina conserva (neto)', a.paulinaProfit],
+    [],
+    ['Transferencia a JoinsClee = Utilidad 30%', a.agencyProfit],
+    ['  (+) Reembolso gastos USD', a.agencyExp],
+    ['  (=) Total transferencia', a.agencyTotal],
+    [],
+    ['PARÁMETROS'],
+    ['TRM (COP por USD)', trm],
+    ['Fuente TRM', state.params.trm_source || ''],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumen), 'Resumen');
+
+  const ingHead = [['Fecha','Concepto','Fuente','USD enviado','COP esperado (TRM)','COP real banco','Spread','Notas']];
+  const ing = state.revenues.map(r => {
+    const usd = Number(r.usd_amount)||0;
+    const copExp = usd * trm;
+    const copReal = Number(r.cop_real)||0;
+    return [r.paid_at, r.concept||'', r.source||'', usd, copExp, copReal||'', copReal? (copReal - copExp) : '', r.notes||''];
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...ingHead, ...ing]), 'Ingresos');
+
+  for(const who of [PARTNER_PAULINA, PARTNER_AGENCY]){
+    const rows = state.expenses.filter(e => e.paid_by === who);
+    const head = [['Fecha','Concepto','Categoría','Frecuencia','Meses','USD unit','COP unit','Total COP','Notas']];
+    const body = rows.map(e => {
+      const meses = Number(e.months_billed)||1;
+      const total = (e.cop_amount && Number(e.cop_amount)>0)
+        ? Number(e.cop_amount) * meses
+        : (Number(e.usd_amount)||0) * trm * meses;
+      return [e.spent_at, e.concept, e.category||'', e.frequency||'', meses, e.usd_amount||'', e.cop_amount||'', total, e.notes||''];
+    });
+    const sheetName = who === PARTNER_PAULINA ? 'Gastos Paulina' : 'Gastos JoinsClee';
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([...head, ...body]), sheetName);
+  }
+
+  const liq = [
+    ['LIQUIDACIÓN'],
+    [],
+    ['INGRESOS (COP real o esperado)'], ['Total COP', a.incomeCOP],
+    [],
+    ['GASTOS'], ['Paulina (COP, pagados por ella)', a.paulinaExp], ['JoinsClee (USD × TRM)', a.agencyExp], ['TOTAL', a.totalExp],
+    [],
+    ['BENEFICIO', a.profit], ['Margen %', a.margin],
+    [],
+    ['ÚNICO MOVIMIENTO A REALIZAR'],
+    ['Paulina transfiere a JoinsClee', a.agencyTotal],
+    ['  · Utilidad 30% del beneficio', a.agencyProfit],
+    ['  · Reembolso gastos USD', a.agencyExp],
+    [],
+    ['Paulina conserva (neto)', a.paulinaProfit],
+    ['  = Ingresos − sus gastos − transferencia', a.incomeCOP - a.paulinaExp - a.agencyTotal],
+    ['  = su 70% del beneficio', a.paulinaProfit],
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(liq), 'Liquidación');
+
+  XLSX.writeFile(wb, `Cuadre_Paulina_${todayISO()}.xlsx`);
+  toast('Excel descargado');
+}
+
+/* ============================================================
+ *  EXPORT · PDF
+ * ============================================================ */
+function exportPDF(){
+  const a = aggregate();
+  const trm = state.params.trm_cop_per_usd;
+  const period = state.period === 'all' ? 'Acumulado total' : monthLabel(state.period);
+
+  const html = `
+    <div style="font-family:'Asap',system-ui,sans-serif;padding:40px;background:#f7f9fc;color:#1a2433;width:800px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:24px;border-bottom:2px solid #0d4178">
+        <div>
+          <div style="font-family:'Asap',system-ui,sans-serif;font-size:28px;font-weight:700">Informe Financiero</div>
+          <div style="color:#6b7787;font-size:14px;margin-top:4px">Paulina Valencia (Barco de Papel) × JoinsClee</div>
+        </div>
+        <div style="text-align:right;font-size:12px;color:#6b7787">
+          <div><b>Período:</b> ${period}</div>
+          <div><b>Generado:</b> ${new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'})}</div>
+          <div><b>TRM:</b> ${trm.toFixed(2)} COP/USD</div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px">
+        <div style="font-family:'Asap',system-ui,sans-serif;font-size:18px;margin-bottom:12px">Resumen</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="padding:18px;background:#e0f2ea;border-radius:12px;border-left:4px solid #2f9e6f">
+            <div style="font-size:11px;text-transform:uppercase;color:#2f9e6f;font-weight:700">Ingresos</div>
+            <div style="font-family:'Asap',system-ui,sans-serif;font-size:24px;font-weight:700;margin-top:6px">${fmtCOP(a.incomeCOP)}</div>
+            <div style="font-size:12px;color:#6b7787">${fmtUSD(a.incomeUSD)} USD enviado por Skool</div>
+          </div>
+          <div style="padding:18px;background:#f9e9e8;border-radius:12px;border-left:4px solid #c0564e">
+            <div style="font-size:11px;text-transform:uppercase;color:#c0564e;font-weight:700">Gastos</div>
+            <div style="font-family:'Asap',system-ui,sans-serif;font-size:24px;font-weight:700;margin-top:6px">${fmtCOP(a.totalExp)}</div>
+            <div style="font-size:12px;color:#6b7787">Paulina ${fmtCOP(a.paulinaExp)} · JoinsClee ${fmtCOP(a.agencyExp)}</div>
+          </div>
+          <div style="padding:18px;background:#dfe9f4;border-radius:12px;border-left:4px solid #08315C;grid-column:span 2">
+            <div style="font-size:11px;text-transform:uppercase;color:#08315C;font-weight:700">Beneficio · ${fmtPct(a.margin)} de margen</div>
+            <div style="font-family:'Asap',system-ui,sans-serif;font-size:32px;font-weight:700;margin-top:4px">${fmtCOP(a.profit)}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:28px">
+        <div style="font-family:'Asap',system-ui,sans-serif;font-size:18px;margin-bottom:12px">Liquidación</div>
+        <div style="padding:18px;background:#f9f0d8;border-radius:12px;border-left:4px solid #a8791a">
+          <div style="font-size:11px;text-transform:uppercase;color:#a8791a;font-weight:700">Único movimiento a realizar · Paulina transfiere a JoinsClee</div>
+          <div style="font-family:'Asap',system-ui,sans-serif;font-size:28px;font-weight:700;margin-top:4px">${fmtCOP(a.agencyTotal)}</div>
+          <div style="font-size:12px;color:#6b7787;margin-top:4px">= Utilidad ${Math.round(a.agencyShare*100)}% (${fmtCOP(a.agencyProfit)}) + reembolso gastos USD (${fmtCOP(a.agencyExp)}). Tras esto, Paulina conserva <b>${fmtCOP(a.paulinaProfit)}</b> (su ${Math.round(a.paulinaShare*100)}% del beneficio).</div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:14px">
+          <thead>
+            <tr style="background:#dfe9f4">
+              <th style="padding:10px;text-align:left;border-bottom:1px solid #e2e8f0">Concepto</th>
+              <th style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0">COP</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">Ingresos (COP real o esperado)</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0">${fmtCOP(a.incomeCOP)}</td></tr>
+            <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">(−) Gastos de Paulina (pagados por ella)</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0">−${fmtCOP(a.paulinaExp)}</td></tr>
+            <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0">(−) Transferencia a JoinsClee (30% + reembolso USD)</td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0">−${fmtCOP(a.agencyTotal)}</td></tr>
+            <tr><td style="padding:10px;border-bottom:1px solid #e2e8f0;background:#e0f2ea"><b>(=) Paulina conserva (neto · ${Math.round(a.paulinaShare*100)}% del beneficio)</b></td><td style="padding:10px;text-align:right;border-bottom:1px solid #e2e8f0;background:#e0f2ea;font-weight:700">${fmtCOP(a.paulinaProfit)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:28px">
+        <div style="font-family:'Asap',system-ui,sans-serif;font-size:18px;margin-bottom:12px">Detalle de gastos</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#3a6ea5;text-transform:uppercase;margin-bottom:6px">Gastos asumidos por Paulina</div>
+            ${renderExpensesListPDF(PARTNER_PAULINA, trm)}
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:#a8791a;text-transform:uppercase;margin-bottom:6px">Gastos asumidos por JoinsClee</div>
+            ${renderExpensesListPDF(PARTNER_AGENCY, trm)}
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:36px;padding-top:18px;border-top:1px solid #e2e8f0;font-size:11px;color:#6b7787;text-align:center">
+        JoinsClee · Dashboard financiero · ${new Date().getFullYear()}
+      </div>
+    </div>`;
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap);
+  html2pdf().from(wrap.firstElementChild).set({
+    margin: 0, filename: `Informe_Paulina_${todayISO()}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#f7f9fc' },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).save().then(() => {
+    wrap.remove();
+    toast('PDF generado');
+  });
+}
+
+function renderExpensesListPDF(paidBy, trm){
+  const rows = filterByPeriod(state.expenses, 'spent_at').filter(e => e.paid_by === paidBy);
+  if(!rows.length) return '<div style="color:#6b7787;font-size:13px;padding:8px">Sin gastos</div>';
+  return rows.map(e => {
+    const meses = Number(e.months_billed)||1;
+    const total = (e.cop_amount && Number(e.cop_amount)>0)
+      ? Number(e.cop_amount) * meses
+      : (Number(e.usd_amount)||0) * trm * meses;
+    return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #e2e8f0;font-size:12px">
+      <span>${e.concept}${meses>1?` <small style="color:#6b7787">×${meses}</small>`:''}</span>
+      <span style="font-weight:600">${fmtCOP(total)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ============================================================
+ *  INIT
+ * ============================================================ */
+async function init(){
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    state.tab = t.dataset.tab; renderTabs();
+  }));
+
+  document.getElementById('periodFilter').addEventListener('change', e => {
+    state.period = e.target.value;
+    document.getElementById('periodPill').textContent = state.period === 'all' ? 'Acumulado' : monthLabel(state.period);
+    renderKpis(); renderCharts(); renderTabs();
+  });
+
+  document.getElementById('exportXlsxBtn').addEventListener('click', exportExcel);
+  document.getElementById('exportPdfBtn').addEventListener('click', exportPDF);
+
+  bindParamInputs();
+
+  try {
+    await loadAll();
+  } catch(err){
+    console.error(err);
+  }
+}
+
+init();
+</script>
+</body>
+</html>

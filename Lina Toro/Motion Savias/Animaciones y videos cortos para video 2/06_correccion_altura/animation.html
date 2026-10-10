@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<!--
+  ANIMACIÓN #06: Corrección de altura (NO temperatura) — versión sin número
+  Cliente: SAVIAS · Video: Jabón Drop Swirl
+  Tipo: corrección editorial con mini-gráfico regla vertical line-art
+  Duración total: 4.5s
+  Dimensiones: 1920x1080 (overlay sobre video horizontal)
+  Background: transparente (alpha)
+  Posición: centro-derecha del frame
+  Captura: node capture-animation.js animation.html animation.mov 1920 1080 4.5
+
+  NOTA EDITORIAL: Lina dijo "temperatura" pero quería decir "altura". Como ella no
+  especifica una medida concreta en el audio, esta versión NO incluye números —
+  solo la palabra "Altura" con asterisco gold y el descriptor "corrección de medida".
+  La regla vertical line-art se mantiene para reforzar visualmente el concepto de altura.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Animación 06 · Altura · SAVIAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Cormorant+SC:wght@500;600&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage-deep: #7B8F6A;
+  --gold: #B8943E;
+  --gold-soft: rgba(184, 148, 62, 0.55);
+  --cream: #F5EFE6;
+  --ink: #1F1F1B;
+  --ink-soft: #4A4A45;
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-display-sc: 'Cormorant SC', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+
+  --total-duration: 4.5s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: transparent;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ───────── BLOQUE PRINCIPAL ─────────
+   Layout horizontal: regla vertical a la izquierda + bloque texto a la derecha.
+   Placa cream translúcida sutil (~75%) para legibilidad sobre fondos variables. */
+.altura-block {
+  position: absolute;
+  top: 50%;
+  right: 180px;
+  transform: translateY(-50%) translateX(25px);
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  padding: 36px 52px;
+  background: rgba(245, 239, 230, 0.72);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  animation:
+    block-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards,
+    block-exit 0.5s cubic-bezier(0.4, 0, 1, 1) calc(var(--total-duration) - 0.5s) forwards;
+}
+
+/* ───────── MINI GRÁFICO REGLA VERTICAL ─────────
+   Line-art delicado 1.5px gold — 240px de alto. Flechas arriba y abajo. */
+.regla {
+  width: 60px;
+  height: 240px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.regla svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Cada elemento del SVG entra con su propia animación */
+.regla .line {
+  stroke: var(--sage-deep);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-dasharray: 280;
+  stroke-dashoffset: 280;
+  animation: line-stroke 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.55s forwards;
+}
+
+.regla .arrow {
+  fill: var(--sage-deep);
+  opacity: 0;
+  animation: arrow-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) 1.15s forwards;
+}
+
+.regla .tick {
+  stroke: var(--sage-deep);
+  stroke-width: 1.5;
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  animation: tick-draw 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.regla .tick-1 { animation-delay: 0.85s; }
+.regla .tick-2 { animation-delay: 0.95s; }
+.regla .tick-3 { animation-delay: 1.05s; }
+
+/* ───────── BLOQUE TEXTO (DERECHA) ───────── */
+.text-block {
+  padding-left: 38px;
+  position: relative;
+}
+
+.text-block::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 8px;
+  width: 3px; height: calc(100% - 16px);
+  background: var(--sage-deep);
+  transform: scaleY(0);
+  transform-origin: top center;
+  animation: line-draw-vert 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+}
+
+.tag {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 110px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: tag-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.55s forwards;
+}
+
+.tag .asterisk {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 84px;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.descriptor-small {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 30px;
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: desc-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.0s forwards;
+}
+
+/* ───────── KEYFRAMES ───────── */
+@keyframes block-enter {
+  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+@keyframes block-exit {
+  to { opacity: 0; transform: translateY(-50%) translateX(0); }
+}
+
+@keyframes line-stroke { to { stroke-dashoffset: 0; } }
+@keyframes tick-draw { to { stroke-dashoffset: 0; } }
+@keyframes arrow-in { to { opacity: 1; } }
+@keyframes line-draw-vert { to { transform: scaleY(1); } }
+@keyframes tag-in { to { opacity: 1; transform: translateX(0); } }
+@keyframes desc-in { to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<div class="altura-block">
+  <!-- Mini regla vertical line-art -->
+  <div class="regla">
+    <svg viewBox="0 0 60 240" preserveAspectRatio="none">
+      <!-- Línea vertical principal -->
+      <path class="line" d="M 30 14 L 30 226" />
+      <!-- Flecha superior -->
+      <polygon class="arrow" points="30,4 24,18 36,18" />
+      <!-- Flecha inferior -->
+      <polygon class="arrow" points="30,236 24,222 36,222" />
+      <!-- Ticks horizontales -->
+      <line class="tick tick-1" x1="22" y1="60" x2="38" y2="60" />
+      <line class="tick tick-2" x1="22" y1="120" x2="38" y2="120" />
+      <line class="tick tick-3" x1="22" y1="180" x2="38" y2="180" />
+    </svg>
+  </div>
+
+  <!-- Bloque texto -->
+  <div class="text-block">
+    <div class="tag">Altura<span class="asterisk">*</span></div>
+    <div class="descriptor-small">corrección de medida</div>
+  </div>
+</div>
+
+</body>
+</html>

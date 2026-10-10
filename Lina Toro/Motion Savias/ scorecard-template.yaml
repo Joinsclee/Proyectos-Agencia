@@ -1,0 +1,240 @@
+scorecard-template.yaml
+# Voice Evaluator — Scorecard Schema v1
+# Output produced by voice-evaluator skill.
+# Save to Project Knowledge as: {brand-slug}-scorecard-{piece-or-package-id}-{YYYY-MM-DD}.yaml
+ 
+# =============================================================================
+# METADATA
+# =============================================================================
+metadata:
+  brand_slug: savias
+  brand_name: SAVIAS
+  voice_profile_version: 1
+  evaluation_type: piece                  # piece | package | corpus | compare | audit_brand
+  evaluated_at: 2026-05-07
+  evaluated_by_skill_version: 1
+  reviewer_human: null                    # filled in if a human override happens
+  notes: |
+    Optional context. E.g., "Pieza generada por sfc-package-generator a partir
+    de idea_05 — primera evaluación del flujo end-to-end."
+ 
+# =============================================================================
+# PIECE-LEVEL SCORECARD (for evaluate_piece, or one entry per piece in package)
+# =============================================================================
+pieces:
+  - piece_id: piece_reel_lunes_idea_03
+    piece_format: reel                    # reel | carrusel | email | post_corto | story_serie
+    piece_angle: dolor                    # dolor | noticia | premio | autoridad | transformacion
+    piece_mode_used: ataque               # references Voice Profile section_3 modes
+    piece_idea_source: idea_03            # references atomic ideas YAML
+    piece_excerpt_for_audit: |
+      First 200 chars of the piece — for quick audit recall when scrolling
+      historical scorecards. Helps reviewer remember what was being scored.
+ 
+    dimensions:
+      tono:
+        score: 4
+        rationale: |
+          Pieza captura "no es tu culpa, es del sistema que aprendiste"
+          como signature_phrase verbatim. "Chicas" vocativo presente.
+          Methodology_eva referenciado implícitamente. Falta una
+          historia ancla (idea_03 era técnica, no narrativa, lo cual
+          explica el 4 vs 5).
+        evidence_quotes:
+          - quote: "no es tu culpa, es del sistema que aprendiste"
+            anchor: signature_phrase_no_es_tu_culpa_es_del_sistema
+          - quote: "chicas"
+            anchor: signature_phrase_chicas
+        redraft_suggestion: null         # null si score ≥4
+        violations: []
+ 
+      hook_strength:
+        score: 5
+        rationale: |
+          11 palabras en 3 segundos: "Tu jabón sale opaco. Y no es la
+          receta, chicas." POV-first declarativo + signature en los 3s
+          + tensión inmediata. Pasa scroll-stopper test.
+        evidence_quotes:
+          - quote: "Tu jabón sale opaco. Y no es la receta, chicas."
+            position: "0:00-0:03"
+        redraft_suggestion: null
+        violations: []
+ 
+      claridad:
+        score: 5
+        rationale: |
+          Una sola idea: temperatura del baño maría. Body desarrolla
+          la cifra (60-65) + por qué pasa cuando subís de 70 + reframe
+          al sistema enemigo. CTA cierra el loop. Cero digresiones.
+        evidence_quotes: []
+        redraft_suggestion: null
+        violations: []
+ 
+      autoridad:
+        score: 4
+        rationale: |
+          Cifras concretas presentes (60-65 °C, 70 °C). Falta nombre
+          propio o evento específico para alcanzar 5. Si Lina pudiera
+          agregar "como le pasó a Camila la semana pasada con su
+          lote" subiría a 5.
+        evidence_quotes:
+          - quote: "entre 60 y 65 grados"
+            type: cifra_tecnica
+          - quote: "Si te pasas de 70"
+            type: cifra_umbral
+        redraft_suggestion: |
+          Subir a 5: agregar 1 nombre propio o caso específico al
+          body. Ej: "Camila me preguntó esto exacto la semana pasada
+          — su lote había salido quebradizo y pensaba que era la
+          receta."
+        violations: []
+ 
+      ritmo:
+        score: 4
+        rationale: |
+          Mezcla de frases cortas ("Y se te pierde el lote.") con
+          medias ("La temperatura ideal del baño maría está entre 60
+          y 65 grados."). Cierre en frases muy cortas mantiene
+          dinamismo. No uniformidad mecánica.
+        evidence_quotes: []
+        redraft_suggestion: null
+        violations: []
+ 
+      cta_fitness:
+        score: 5
+        rationale: |
+          CTA con keyword TEMPERATURA (en mayúsculas para auto-DM
+          trigger). Beneficio claro: "los 4 puntos críticos del baño
+          maría". Destination YouTube apropiado para audiencia fría
+          (no fuerza VSL ni programa pago directo). Match perfecto
+          con audience_temperature: fria.
+        evidence_quotes:
+          - quote: "Comenta TEMPERATURA y te mando el video donde te muestro los 4 puntos críticos del baño maría."
+        redraft_suggestion: null
+        violations: []
+ 
+      format_fit:
+        score: 5
+        rationale: |
+          34 segundos total (target: 25-50). Hook 11 palabras (target:
+          ≤12). Body 79 palabras en 25 segundos. CTA 17 palabras en 6
+          segundos (al borde del target 5s, aceptable). 4 overlays con
+          timestamps. 5 sugerencias de B-roll. Auto-DM template
+          completo. Caption complementaria de ~150 palabras.
+        evidence_quotes: []
+        redraft_suggestion: null
+        violations: []
+ 
+      voice_compliance:
+        score: 5
+        rationale: |
+          Cero violaciones detectadas en banned_words. Cero banned
+          phrases. Cero em-dashes en el contenido publicado (el caption
+          usa em-dash una vez: "Te lo voy a decir como es: el 80%..." —
+          aceptable, ≤1 por pieza). Cero emoji prohibidos (usa 💚 que
+          es signature de Lina, no AI tell). Cero triadic symmetry.
+          Pregunta retórica con respuesta inmediata: ausente.
+        evidence_quotes: []
+        redraft_suggestion: null
+        violations: []
+ 
+    total_score: 32                       # sum of 8 dimensions
+    max_possible: 40
+    action: polish                        # publish | polish | hold | redraft | redraft_from_brief
+    action_rationale: |
+      32/40 cae en zona Publish (32-35 = strong with optional polish).
+      Dimensiones más bajas (tono: 4, autoridad: 4) son por ausencia
+      de historia ancla, no por errores. Si Lina puede grabar
+      mencionando un caso real de alumna, sube a 36+.
+    hard_rules_triggered: []              # any auto-redraft triggers? (e.g., voice_compliance ≤2)
+    estimated_redraft_minutes: 5          # how long it would take to fix; 0 if Publish
+    publish_recommendation: |
+      Aprobar y grabar tal cual. Opcional: pedir a Lina que en grabación
+      mencione 1 caso real de alumna durante el body, lo cual mueve
+      autoridad de 4 a 5 sin tocar el resto.
+ 
+# =============================================================================
+# PACKAGE-LEVEL SUMMARY (only if evaluation_type: package)
+# =============================================================================
+package_summary:
+  total_pieces_evaluated: 7
+  average_total_score: 33.4
+  distribution:
+    publish: 4                            # 32-40
+    polish: 2                             # 28-31
+    hold: 1                               # 24-27
+    redraft: 0                            # <24
+    redraft_from_brief: 0                 # <15 or hard rule triggered
+  weakest_dimensions_aggregate:
+    - dimension: autoridad
+      avg_score: 3.6
+      reason: "Paquete recurrentemente carece de nombres propios y casos específicos."
+    - dimension: hook_strength
+      avg_score: 3.8
+      reason: "2 de los 7 hooks abren con declaración floja en vez de pattern interrupt."
+  strongest_dimensions_aggregate:
+    - dimension: voice_compliance
+      avg_score: 4.7
+    - dimension: claridad
+      avg_score: 4.6
+  recommended_actions:
+    - "Aprobar las 4 piezas en zona Publish — schedule directo en GHL."
+    - "Para las 2 en Polish: micro-edits en hook (pieza 02 y 05) — sugerencias específicas en cada scorecard."
+    - "Para la 1 en Hold (pieza 06): regenerar con sfc-package-generator usando --feedback='agregar nombre de alumna o caso real al body'."
+    - "Para próxima generación: pasar a sfc-package-generator que priorice atomic ideas con historia ancla anclada."
+ 
+# =============================================================================
+# COMPARE-LEVEL OUTPUT (only if evaluation_type: compare)
+# =============================================================================
+comparison:
+  baseline_piece_id: piece_reel_lunes_v1
+  candidate_piece_ids: [piece_reel_lunes_v2, piece_reel_lunes_v3]
+  per_dimension_winner:
+    tono: v2
+    hook_strength: v3
+    claridad: tied_v2_v3
+    autoridad: v3
+    ritmo: v2
+    cta_fitness: tied_all
+    format_fit: tied_all
+    voice_compliance: v2
+  overall_winner: v2
+  total_scores:
+    v1: 28
+    v2: 35
+    v3: 33
+  recommendation: |
+    v2 gana en 5 de 8 dimensiones. Sugerencia: tomar v2 como base y
+    aplicar el hook de v3 (que ganó hook_strength). Eso produciría
+    una v4 con 36-38 estimado.
+ 
+# =============================================================================
+# AUDIT_BRAND-LEVEL OUTPUT (only if evaluation_type: audit_brand)
+# =============================================================================
+brand_audit:
+  evaluation_window: 30_days
+  pieces_evaluated_total: 24
+  pieces_evaluated_by_format:
+    reel: 12
+    carrusel: 6
+    email: 4
+    post: 2
+  voice_drift_detected: false             # true if scores trending downward
+  voice_drift_severity: null              # null | minor | moderate | severe
+  recurring_violations:
+    - violation: "Em-dash overuse"
+      occurrences: 8
+      pieces_affected: [piece_03, piece_07, piece_11]
+      suggested_remedy: "Banear em-dash en regenerate prompts."
+    - violation: "Hooks abren con definición"
+      occurrences: 5
+      pieces_affected: [piece_05, piece_14, piece_19, piece_22, piece_24]
+      suggested_remedy: "Reforzar Voice Profile section_5 opening_patterns con ejemplos concretos."
+  voice_profile_update_recommendations:
+    - "Agregar al banned_phrases: '{frase específica que apareció múltiples veces}'."
+    - "Documentar nuevo modo tonal observado: 'celebración_íntima' (para wins de alumnas que el founder usa pero no estaba en v1)."
+  publish_quality_trend:
+    last_10_days_avg: 33.2
+    previous_10_days_avg: 31.8
+    trend: improving                      # improving | stable | declining
+ 

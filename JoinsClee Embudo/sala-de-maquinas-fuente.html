@@ -1,0 +1,711 @@
+<title>Sala de Máquinas JoinsClee</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600&family=Rubik:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root{
+    --bg:#070A13;
+    --panel:#0B111F;
+    --row:#0E1424;
+    --row-hi:#141C30;
+    --line:#1B2537;
+    --line-hi:#2C3A52;
+    --fg:#F8FAFC;
+    --fg-2:#CBD5E1;
+    --muted:#94A3B8;
+    --accent:#0070F3;
+    --accent-hi:#5AA5FF;
+    --accent-dim:rgba(0,112,243,.13);
+    --ok:#4ADE80;
+    --warn:#F0A75B;
+    --pill:#0F1729;
+
+    /* corta la herencia del anfitrion: GHL inyecta su tipografia y su alineacion */
+    display:block;
+    font:400 16px/1.55 Rubik,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    text-align:left;
+    letter-spacing:normal;
+    word-spacing:normal;
+    text-transform:none;
+    white-space:normal;
+    text-indent:0;
+    direction:ltr;
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-top:var(--bar,12rem)}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--fg);
+    font-family:Rubik,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:74rem;margin:0 auto;padding:0 1rem}
+
+  /* ============ barra de mando (un solo sticky) ============ */
+  .command{
+    position:sticky;top:0;z-index:60;
+    background:rgba(7,10,19,.94);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--line);
+  }
+  .command-in{max-width:74rem;margin:0 auto;padding:.6rem 1rem .55rem}
+  .row-1{display:flex;align-items:center;gap:.9rem;flex-wrap:wrap}
+  .mark{
+    font-family:Teko,sans-serif;font-weight:600;font-size:1.45rem;line-height:1;
+    letter-spacing:.07em;display:flex;align-items:center;gap:.45rem;white-space:nowrap;
+  }
+  .mark i{width:7px;height:7px;background:var(--accent);border-radius:50%;flex:none}
+  .mark em{
+    font-family:"JetBrains Mono",monospace;font-style:normal;font-size:.58rem;
+    letter-spacing:.16em;color:var(--muted);text-transform:uppercase;
+    padding-left:.45rem;margin-left:.1rem;border-left:1px solid var(--line-hi);
+  }
+  .spacer{flex:1 1 auto}
+  .tally{
+    font-family:"JetBrains Mono",monospace;font-size:.68rem;color:var(--muted);
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .tally b{color:var(--accent-hi);font-weight:700}
+
+  .finder{position:relative;margin-top:.5rem}
+  .finder input{
+    width:100%;background:var(--panel);border:1px solid var(--line-hi);
+    color:var(--fg);border-radius:8px;padding:.62rem 4.6rem .62rem .8rem;
+    font-family:Rubik,sans-serif;font-size:.95rem;
+  }
+  .finder input::placeholder{color:var(--muted);opacity:1}
+  .finder input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+  .finder .hint{
+    position:absolute;right:.5rem;top:50%;transform:translateY(-50%);
+    display:flex;gap:.25rem;pointer-events:none;
+  }
+  .finder kbd{
+    font-family:"JetBrains Mono",monospace;font-size:.62rem;color:var(--muted);
+    border:1px solid var(--line-hi);border-radius:4px;padding:.08rem .3rem;background:var(--bg);
+  }
+
+  .filters{display:flex;gap:.35rem;flex-wrap:wrap;align-items:center;margin-top:.5rem}
+  .chip{
+    font-family:Rubik,sans-serif;font-size:.75rem;font-weight:400;
+    background:var(--panel);border:1px solid var(--line);color:var(--fg-2);
+    padding:.26rem .6rem;border-radius:6px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:.35rem;
+  }
+  .chip:hover{border-color:var(--line-hi);color:var(--fg)}
+  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .chip[aria-pressed="true"]{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-hi)}
+  .chip .k{font-family:"JetBrains Mono",monospace;font-size:.6rem;opacity:.72;font-variant-numeric:tabular-nums}
+  .chip.demo[aria-pressed="true"]{background:rgba(240,167,91,.14);border-color:var(--warn);color:var(--warn)}
+  .vr{width:1px;height:1.1rem;background:var(--line-hi);margin:0 .3rem}
+
+  /* ============ encabezado compacto ============ */
+  .intro{padding:2rem 0 1.4rem;border-bottom:1px solid var(--line)}
+  .kicker{
+    font-family:"JetBrains Mono",monospace;font-size:.64rem;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--accent-hi);
+  }
+  h1{
+    font-family:Teko,sans-serif;font-weight:600;text-transform:uppercase;
+    font-size:clamp(2.4rem,7vw,3.9rem);line-height:.95;letter-spacing:.01em;
+    margin:.35rem 0 .35rem;
+  }
+  h1 span{color:var(--muted);font-weight:400}
+  .intro p{margin:0;color:var(--fg-2);max-width:58ch;font-size:.95rem}
+  .proof{
+    display:flex;gap:1.6rem;flex-wrap:wrap;margin-top:1.3rem;
+    padding-top:1.1rem;border-top:1px solid var(--line);
+  }
+  .proof div{display:flex;flex-direction:column}
+  .proof b{
+    font-family:Teko,sans-serif;font-weight:600;font-size:1.85rem;line-height:1;
+    font-variant-numeric:tabular-nums;letter-spacing:.01em;
+  }
+  .proof b i{font-style:normal;color:var(--accent);font-size:1.15rem}
+  .proof span{
+    font-family:"JetBrains Mono",monospace;font-size:.6rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);margin-top:.2rem;
+  }
+
+  /* ============ capas y filas ============ */
+  .layer{padding:1.9rem 0 .4rem}
+  .layer-head{display:flex;align-items:baseline;gap:.7rem;flex-wrap:wrap;margin-bottom:.75rem}
+  .layer h2{
+    font-family:Teko,sans-serif;font-weight:600;font-size:1.6rem;line-height:1;
+    text-transform:uppercase;letter-spacing:.04em;margin:0;
+  }
+  .layer .sub{color:var(--muted);font-size:.83rem;margin:0}
+  .rows{
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--row);
+    /* datos y acciones con ancho fijo: cada capa es su propia rejilla y con
+       columnas auto la descripcion arrancaba en una x distinta en cada capa */
+    display:grid;grid-template-columns:minmax(10rem,1.1fr) minmax(0,1.6fr) 13.75rem 15.5rem;
+  }
+
+  .item{
+    display:grid;
+    grid-column:1/-1;
+    grid-template-columns:subgrid;
+    gap:.9rem;align-items:center;
+    padding:.72rem .9rem;
+    border-bottom:1px solid var(--line);
+    border-left:2px solid transparent;
+    background:var(--row);
+    transition:background .12s,border-left-color .12s;
+  }
+  @supports not (grid-template-columns:subgrid){
+    .rows{display:block}
+    .item{grid-template-columns:minmax(10rem,1.1fr) minmax(0,1.6fr) 13.75rem 15.5rem}
+  }
+  .item:last-child{border-bottom:0}
+  .item:hover,.item.sel{background:var(--row-hi);border-left-color:var(--accent)}
+  .item.sel{box-shadow:inset 0 0 0 1px rgba(0,112,243,.35)}
+  .item.is-demo .name b::after{
+    content:"★";color:var(--warn);font-size:.7em;margin-left:.4rem;vertical-align:.15em;
+  }
+  .name b{font-weight:500;font-size:.95rem;display:block;line-height:1.3}
+  .name i{
+    font-style:normal;font-family:"JetBrains Mono",monospace;font-size:.64rem;
+    letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+    display:block;margin-top:.15rem;
+  }
+  .desc{color:var(--fg-2);font-size:.86rem;line-height:1.45;margin:0}
+  .facts{display:flex;gap:.8rem;flex-wrap:wrap;justify-content:flex-end}
+  .fact{display:flex;flex-direction:column;align-items:flex-end}
+  .fact b{
+    font-family:"JetBrains Mono",monospace;font-weight:700;font-size:.82rem;
+    line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .fact span{
+    font-family:"JetBrains Mono",monospace;font-size:.64rem;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--muted);white-space:nowrap;
+  }
+  .acts{display:flex;gap:.35rem;align-items:center;justify-content:flex-end}
+  .tag{
+    font-family:"JetBrains Mono",monospace;font-size:.62rem;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;padding:.18rem .4rem;
+    border-radius:4px;white-space:nowrap;background:var(--pill);color:var(--muted);
+  }
+  .tag.login{color:var(--accent-hi)}
+  .tag.interno{color:var(--warn)}
+  .go,.cp{
+    font-family:Rubik,sans-serif;font-size:.78rem;font-weight:500;
+    border-radius:6px;padding:.32rem .62rem;cursor:pointer;
+    border:1px solid var(--line-hi);background:var(--panel);color:var(--fg-2);
+    text-decoration:none;white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem;
+  }
+  .go{border-color:var(--accent);background:var(--accent-dim);color:var(--accent-hi);font-weight:600}
+  .go:hover{background:var(--accent);color:#fff}
+  .cp:hover{border-color:var(--line-hi);color:var(--fg)}
+  .go:focus-visible,.cp:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .none{
+    border:1px dashed var(--line-hi);border-radius:10px;
+    padding:2.5rem 1rem;text-align:center;color:var(--muted);margin-top:1.5rem;
+  }
+  .none b{display:block;color:var(--fg);font-size:1rem;margin-bottom:.25rem}
+
+  footer{
+    margin-top:3rem;border-top:1px solid var(--line);padding:1.3rem 0 3rem;
+    display:flex;justify-content:space-between;gap:.8rem;flex-wrap:wrap;
+    font-family:"JetBrains Mono",monospace;font-size:.66rem;color:var(--muted);letter-spacing:.04em;
+  }
+  .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+  @media (max-width:860px){
+    .rows{display:block}
+    .item{
+      grid-template-columns:1fr;
+      grid-template-areas:"name" "desc" "facts" "acts";
+      row-gap:.5rem;align-items:start;padding:.85rem .9rem;
+    }
+    .name{grid-area:name}
+    .desc{grid-area:desc}
+    .facts{grid-area:facts;justify-content:flex-start;gap:1.1rem}
+    .fact{align-items:flex-start}
+    .acts{grid-area:acts;justify-content:flex-start;flex-wrap:wrap}
+    .name b{font-size:1rem}
+  }
+  @media (max-width:560px){
+    .row-1{gap:.5rem}
+    .mark{font-size:1.25rem}
+    .mark em{display:none}
+    .filters{
+      flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;padding-bottom:.15rem;
+    }
+    .filters::-webkit-scrollbar{display:none}
+    .chip,.vr{flex:none}
+    .finder input{padding:.55rem 3.4rem .55rem .7rem;font-size:.9rem}
+    .finder .hint kbd:last-child{display:none}
+    .intro{padding:1.4rem 0 1rem}
+    .proof{gap:1rem 1.4rem;margin-top:1rem;padding-top:.9rem}
+    .proof b{font-size:1.6rem}
+  }
+</style>
+
+<header class="command">
+  <div class="command-in">
+    <div class="row-1">
+      <div class="mark"><i></i>JOINSCLEE<em>Sala de máquinas</em></div>
+      <span class="spacer"></span>
+      <span class="tally"><b id="n-shown">0</b> / <span id="n-total">0</span></span>
+    </div>
+
+    <div class="finder">
+      <label class="sr" for="q">Buscar cliente, canal o sistema</label>
+      <input id="q" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Escribe un cliente o un sistema. ↓ ↑ para elegir, Enter para abrir."
+             aria-describedby="finder-help">
+      <span class="hint" aria-hidden="true"><kbd>/</kbd><kbd>↵</kbd></span>
+    </div>
+    <p id="finder-help" class="sr">Pulsa barra inclinada para buscar. Flechas arriba y abajo para recorrer los resultados. Enter abre el enlace seleccionado en una pestaña nueva.</p>
+
+    <div class="filters" role="group" aria-label="Filtros">
+      <button class="chip demo" data-filter="demo" aria-pressed="false">★ Demo en frío <span class="k" data-k="demo"></span></button>
+      <span class="vr" aria-hidden="true"></span>
+      <button class="chip" data-filter="layer:atraccion" aria-pressed="false">Atracción <span class="k" data-k="layer:atraccion"></span></button>
+      <button class="chip" data-filter="layer:conversion" aria-pressed="false">Conversión <span class="k" data-k="layer:conversion"></span></button>
+      <button class="chip" data-filter="layer:producto" aria-pressed="false">Producto <span class="k" data-k="layer:producto"></span></button>
+      <span class="vr" aria-hidden="true"></span>
+      <button class="chip" data-filter="access:abierto" aria-pressed="false">Abre sin login <span class="k" data-k="access:abierto"></span></button>
+      <span class="vr" aria-hidden="true"></span>
+      <button class="chip" id="reset" type="button">Limpiar</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="intro">
+    <div class="kicker">Portafolio operativo · Actualizado 16 sep 2026</div>
+    <h1>Todo lo que<br><span>hemos construido</span></h1>
+    <p>Los canales que hacemos crecer, los embudos que convierten y el software que opera el negocio del cliente. Busca, abre y graba.</p>
+    <div class="proof">
+      <div><b>158<i>.650</i></b><span>Suscriptores YouTube</span></div>
+      <div><b>7,0<i> M</i></b><span>Visualizaciones</span></div>
+      <div><b>22<i>.746</i></b><span>Seguidores Instagram</span></div>
+      <div><b id="n-prod">0</b><span>Herramientas publicadas</span></div>
+      <div><b>8</b><span>Marcas atendidas</span></div>
+    </div>
+  </section>
+
+  <div id="board"></div>
+  <p id="status" role="status" aria-live="polite" class="sr"></p>
+
+  <footer>
+    <span>Portafolio de JoinsClee. <b>Todo lo que aparece aquí abre.</b></span>
+    <span>Audiencias verificadas el 15 sep 2026</span>
+  </footer>
+</main>
+
+<script>
+const LAYERS = [
+  {id:"atraccion",  name:"Atracción",  sub:"Dónde generamos la demanda: canales, comunidad y la fábrica de contenido."},
+  {id:"conversion", name:"Conversión", sub:"Los embudos y el CRM que convierten esa atención en llamadas agendadas."},
+  {id:"producto",   name:"Producto",   sub:"El software que opera el negocio del cliente todos los días."}
+];
+
+// access: "abierto" = abre sin nada · "login" = pide credenciales · "interno" = construido, sin URL pública
+const ITEMS = [
+  {id:"yt-daniel", layers:["atraccion"], demo:true, name:"Daniel Felipe Medina", who:"YouTube · Negocios",
+   desc:"Ayuda a emprendedores a vender con YouTube. El canal más grande que operamos.",
+   url:"https://www.youtube.com/@danielfelipemedina/videos", access:"abierto",
+   facts:[["107 K","Subs"],["5,22 M","Views"],["227","Videos"]]},
+
+  {id:"yt-nico", layers:["atraccion"], demo:true, name:"Nico CMW · Nicolas Cort", who:"YouTube · IA aplicada",
+   desc:"IA aplicada, agentes y automatización con n8n. Vende sistemas de IA a más de 7.000 alumnos.",
+   url:"https://www.youtube.com/@nicocmw/videos", access:"abierto",
+   facts:[["42,2 K","Subs"],["1,61 M","Views"],["161","Videos"]]},
+
+  {id:"yt-lina", layers:["atraccion"], demo:true, name:"Lina Toro · Jabonería", who:"YouTube · SAVIAS",
+   desc:"Jabonería y cosmética de autor. Sumó 920 suscriptores en 30 días: un 10,8 % de crecimiento.",
+   url:"https://www.youtube.com/@linatoro_jaboneria/videos", access:"abierto",
+   facts:[["9,45 K","Subs"],["210 K","Views"],["+10,8 %","30 días"]]},
+
+  {id:"ig-lina", layers:["atraccion"], name:"@linatoro_jaboneria", who:"Instagram · SAVIAS",
+   desc:"Creadora del método EVA. El perfil que alimenta la comunidad de savias.club.",
+   url:"https://www.instagram.com/linatoro_jaboneria/", access:"abierto",
+   facts:[["17,8 K","Seguidores"],["561","Posts"]]},
+
+  {id:"ig-nico", layers:["atraccion"], name:"@nico.cmw", who:"Instagram · IA LAB",
+   desc:"Perfil de autoridad de Nicolas Cort: «Preparándome para un futuro agéntico».",
+   url:"https://www.instagram.com/nico.cmw/", access:"abierto",
+   facts:[["4,5 K","Seguidores"],["26","Posts"]]},
+
+  {id:"ig-daniel", layers:["atraccion"], name:"@danielfelipemedina1", who:"Instagram · Negocios",
+   desc:"Cuenta de respaldo. El grueso de su audiencia vive en YouTube.",
+   url:"https://www.instagram.com/danielfelipemedina1/", access:"abierto",
+   facts:[["446","Seguidores"]]},
+
+  {id:"web-nico", layers:["atraccion"], name:"nicolascort.com", who:"Sitio · Nico CMW",
+   desc:"Sitio de autoridad y venta de sus sistemas de IA.",
+   url:"https://nicolascort.com/", access:"abierto"},
+
+  {id:"web-daniel", layers:["atraccion"], name:"danielmedina.net", who:"Sitio · Daniel F. Medina",
+   desc:"Página de ventas del programa de YouTube para emprendedores.",
+   url:"https://danielmedina.net/", access:"abierto"},
+
+  {id:"skool-ivan", layers:["atraccion"], name:"Comunidad La Huerta LAB", who:"Skool · Iván Castrillón",
+   desc:"La comunidad donde aterriza la audiencia de La Huerta LAB.",
+   url:"https://www.skool.com/la-huerta-lab", access:"login"},
+
+  {id:"narri4", layers:["atraccion","producto"], demo:true, name:"NARRI4", who:"Motor de carruseles",
+   desc:"De una idea suelta a un carrusel listo para publicar. Es el motor que sostiene la publicación orgánica.",
+   url:"https://narri4-app.juno8i.easypanel.host", access:"abierto",
+   facts:[["Carruseles","Formato"],["Propio","Origen"]]},
+
+  // ---------- CONVERSIÓN ----------
+  {id:"jc-home", layers:["conversion"], demo:true, name:"JoinsClee · Home", who:"Agencia · Funnel maestro",
+   desc:"Funnels automatizados y CRM de ventas. La puerta de entrada de la agencia.",
+   url:"https://go.joinsclee.com/", access:"abierto"},
+
+  {id:"jc-empresas", layers:["conversion"], demo:true, name:"Software a medida para empresas", who:"Agencia · Oferta nueva",
+   desc:"«Deja de alquilar software. Ten el tuyo propio.» Sistemas propios en 6 a 12 semanas.",
+   url:"https://joinsclee.com/empresas-long-page", access:"abierto"},
+
+  {id:"jc-automatizar", layers:["conversion"], name:"Automatizar empresas", who:"Agencia · Ángulo automatización",
+   desc:"Landing de ángulo: automatización de procesos para empresas de servicios.",
+   url:"https://joinsclee.com/automatizar-empresas-page", access:"abierto"},
+
+  {id:"fn-savias", layers:["conversion"], name:"Cursos y comunidad · SAVIAS", who:"Funnel · Lina Toro",
+   desc:"El embudo que convierte la audiencia de jabonería en alumnas de pago.",
+   url:"https://savias.club/cursos-y-comunidad-page", access:"abierto"},
+
+  {id:"fn-crece", layers:["conversion"], name:"Sistema CRECE", who:"Funnel · Andrés Giraldo",
+   desc:"Inversión inmobiliaria para principiantes: landings, VSL y producto de entrada.",
+   url:"https://sistemacrece.com", access:"abierto"},
+
+  {id:"fn-paulina", layers:["conversion"], demo:true, name:"Barco de Papel", who:"Landing · Paulina Valencia",
+   desc:"Página de venta del Método Barco de Papel, un sistema de hábitos para avanzar cada semana en la meta que dejas para después.",
+   url:"https://paulinavalencia.com/barco-550173", access:"abierto",
+   facts:[["Video","Incluye"],["2 planes","Oferta"]]},
+
+  // FUERA DE LA WEB (16 sep 2026): PV_CONFIG.whatsapp.numero está vacío y el botón principal lleva a
+  // «Pendiente de configurar el número de WhatsApp». Quitar publico:false al configurarlo.
+  {id:"fn-paulina-empresas", layers:["conversion"], publico:false, name:"Barco de Papel para empresas", who:"Landing · Paulina Valencia",
+   desc:"Programas del Método Barco de Papel para líderes y equipos con altas demandas: un taller, un laboratorio de 4 semanas y un programa ejecutivo.",
+   url:"https://paulinavalencia.com/empresarial", access:"abierto",
+   facts:[["3","Programas"],["Empresas","Público"]]},
+
+  {id:"fn-clinicas", layers:["conversion"], name:"Funnel para clínicas", who:"Vertical · Estética y salud",
+   desc:"Landing del sistema de recepción con IA para clínicas. Construida, falta publicarla.",
+   path:"Paginas Web/JoinsClee-Clinicas/index.html", access:"interno"},
+
+  {id:"fn-betts", layers:["conversion"], name:"The Betts AI", who:"Funnel · 6 páginas",
+   desc:"Embudo completo con sistema de diseño propio: landing corta, larga, formulario y dos salidas.",
+   path:"Paginas Web/The Betts AI/", access:"interno"},
+
+  {id:"fn-andy", layers:["conversion"], name:"Vuela · La Evolución", who:"Funnel · Andy",
+   desc:"Registro, gracias y recursos del programa. Incluye clon de voz y chat de soporte.",
+   path:"Paginas Web/Andy/", access:"interno"},
+
+  // ---------- PRODUCTO ----------
+  {id:"casa-club", layers:["producto"], demo:true, name:"Casa Club", who:"Producto propio · Residenciales",
+   desc:"Los residentes reservan la casa club, la piscina o la cancha desde el celular, y la administración verifica el pago y los documentos. Entra como residente, como administración o como portería.",
+   url:"https://casa-club-lake.vercel.app/entrar", access:"abierto",
+   facts:[["Demo abierta","Entrada"],["Multiconjunto","Arquitectura"]]},
+
+  {id:"sw-radar", layers:["producto"], demo:true, name:"Radar de Oportunidades", who:"SaaS · Andrés Giraldo",
+   desc:"Rastrea portales bancarios y remates judiciales y detecta inmuebles por debajo del precio de su zona. Construido a medida y en uso.",
+   url:"https://joinsclee-radar.juno8i.easypanel.host/", access:"abierto",
+   facts:[["Inmobiliario","Vertical"],["En uso","Cliente"]]},
+
+  {id:"sw-crece-diagnostico", layers:["producto"], name:"Diagnóstico de Inmueble Usado", who:"Diagnóstico · Andrés Giraldo",
+   desc:"Filtra un inmueble usado con preguntas de alerta, compara su precio por m² con comparables de la zona y calcula un precio objetivo de compra.",
+   url:"https://sistemacrece.com/validador-de-oportunidades-5540", access:"abierto",
+   facts:[["9 pasos","Análisis"],["PDF","Informe"]]},
+
+  {id:"sw-crece-mejorar-vender", layers:["producto"], name:"Usado · Mejoras y venta", who:"Simulador · Andrés Giraldo",
+   desc:"Simula comprar un inmueble usado, con o sin financiación, mejorarlo y venderlo antes de un año. Calcula ganancia y ROI, con informe en PDF.",
+   url:"https://sistemacrece.com/simulador-inversin-en-inmuebles-usados", access:"abierto",
+   facts:[["ROI","Calcula"],["PDF","Informe"]]},
+
+  {id:"sw-crece-alquilar-vender", layers:["producto"], name:"Usado · Alquiler y venta", who:"Simulador · Andrés Giraldo",
+   desc:"Simula comprar un inmueble usado, arrendarlo un período y venderlo, con crédito, vacancia e IPC. Calcula ganancia, ROI y TIR, con informe en PDF.",
+   url:"https://sistemacrece.com/inmueble-usado-comprar-alquilar-y-vender", access:"abierto",
+   facts:[["ROI y TIR","Calcula"],["PDF","Informe"]]},
+
+  {id:"sw-crece-cesion", layers:["producto"], demo:true, name:"Planos · Cesión de derechos", who:"Simulador · Andrés Giraldo",
+   desc:"Simula vender un inmueble en planos por cesión de derechos antes de escriturar. Calcula ganancia, ROI y TIR, con informe en PDF.",
+   url:"https://sistemacrece.com/simulador-venta-cesion-de-derechos", access:"abierto",
+   facts:[["ROI y TIR","Calcula"],["PDF","Informe"]]},
+
+  {id:"sw-crece-credito-venta", layers:["producto"], name:"Planos · Crédito y venta", who:"Simulador · Andrés Giraldo",
+   desc:"Simula comprar un inmueble en planos con crédito hipotecario y venderlo. Calcula ganancia, ROI y TIR, con informe en PDF.",
+   url:"https://sistemacrece.com/simulador--venta-de-un-inmueble-adquirido-con-crdito-hipotecario-3073", access:"abierto",
+   facts:[["ROI y TIR","Calcula"],["PDF","Informe"]]},
+
+  {id:"sw-crece-planos-alquilar", layers:["producto"], name:"Planos · Alquiler y venta", who:"Simulador · Andrés Giraldo",
+   desc:"Simula comprar un inmueble en planos, alquilarlo y venderlo. Calcula ganancia, ROI y TIR, con informe en PDF.",
+   url:"https://sistemacrece.com/simulador-inversin-en-proyecto-inmobiliarios-en-planos-3481", access:"abierto",
+   facts:[["ROI y TIR","Calcula"],["PDF","Informe"]]},
+
+  {id:"sw-crece-tutor-legal", layers:["producto"], name:"Tutor Legal", who:"Chat IA · Andrés Giraldo",
+   desc:"Tutor de derecho inmobiliario y comercial en Colombia. Responde consultas y analiza documentos PDF, DOCX o TXT adjuntos.",
+   url:"https://sistemacrece.com/gpt-asesor-legal", access:"abierto",
+   facts:[["Inmobiliario","Vertical"],["PDF/DOCX/TXT","Adjuntos"]]},
+
+  {id:"sw-crece-tutor-tributario", layers:["producto"], name:"Tutor Tributario y Financiero", who:"Chat IA · Andrés Giraldo",
+   desc:"Tutor de impuestos, deudas, créditos y financiamiento para inversión inmobiliaria. Responde consultas y analiza documentos PDF, DOCX o TXT adjuntos.",
+   url:"https://sistemacrece.com/gpt---asesor-tributario-crece-8708", access:"abierto",
+   facts:[["Inmobiliario","Vertical"],["PDF/DOCX/TXT","Adjuntos"]]},
+
+  // FUERA DE LA WEB (16 sep 2026): el webhook de n8n responde 200 con el cuerpo vacío y la página
+  // siempre muestra «hubo un problema de conexión». Quitar publico:false cuando responda.
+  {id:"sw-crece-soporte", layers:["producto"], publico:false, name:"Soporte Sistema CRECE", who:"Chat IA · Andrés Giraldo",
+   desc:"Chat de soporte para preguntar dudas sobre el Sistema de Inversión Inmobiliaria CRECE: sus módulos, su metodología y cómo empezar como inversionista.",
+   url:"https://sistemacrece.com/soporte-4880", access:"abierto",
+   facts:[["Inmobiliario","Vertical"],["Chat web","Canal"]]},
+
+  {id:"sw-sicurezza", layers:["producto"], demo:true, name:"Sicurezza · Clínica Isis", who:"SaaS · Agente de voz",
+   desc:"Recepcionista con IA que contesta, califica y agenda. Responde solo desde el material aprobado por la clínica.",
+   url:"https://dineroconsciente-digital--agente-voz-ghl-fastapi-app.modal.run/sicurezza", access:"abierto",
+   facts:[["Voz + chat","Canal"],["Clínicas","Vertical"]]},
+
+  {id:"sw-lina", layers:["producto"], demo:true, name:"Universo Lina Toro", who:"SaaS · SAVIAS",
+   desc:"Portal de alumnas: rutas de aprendizaje, calculadoras de formulación y comunidad.",
+   url:"https://savias.club/dashboard-page", access:"login",
+   facts:[["Portal","Tipo"],["Alumnas","Usuario"]]},
+
+  {id:"sw-ivan", layers:["producto"], demo:true, name:"Universo La Huerta LAB", who:"SaaS · Iván Castrillón",
+   desc:"El mismo motor de portal, revestido con la marca del cliente. La prueba de que el sistema se replica.",
+   url:"https://lahuertalab.com/universo-ivan-page", access:"login",
+   facts:[["Portal","Tipo"],["Replicado","Estado"]]},
+
+  {id:"sw-panel", layers:["producto"], name:"Panel Agente WhatsApp y Voz", who:"SaaS · Multi-cliente",
+   desc:"Inbox conversacional con IA, CRM, base de conocimiento y traspaso a humano. Un espacio por cliente.",
+   url:"https://joinsclee-agente-voz-panel.juno8i.easypanel.host/login", access:"login",
+   facts:[["Multi-cliente","Arquitectura"],["WhatsApp","Canal"]]},
+
+  // Fuera de la version publica (9-oct-2026): checklists-page abre sin pedir nada y
+  // muestra el tablero real de la agencia, con editar y eliminar. Vuelve cuando tenga
+  // login o una instancia de demostracion con datos inventados.
+  {id:"sw-workspace", layers:["producto"], publico:false, demo:true, name:"JoinsClee Workspace", who:"Gestor de proyectos · Propio",
+   desc:"Nuestro gestor: checklist bidireccional entre agencia y cliente, sincronizado en vivo.",
+   url:"https://joinsclee.com/checklists-page", access:"abierto",
+   facts:[["Agencia ↔ Cliente","Flujo"],["En vivo","Sync"]]},
+
+  {id:"sw-barco", layers:["producto"], name:"Mi Barco · Bitácora de hábitos", who:"App · Paulina Valencia",
+   desc:"Bitácora de hábitos con Rueda de la Vida, Neuropliegues y Tracker de Hábitos. Pide cuenta y es exclusiva para los planes Premium y VIP.",
+   url:"https://paulinavalencia.com/mundo-paulina", access:"login",
+   facts:[["Premium/VIP","Acceso"],["10 pilares","Rueda"]]},
+
+  {id:"sw-matriz", layers:["producto"], name:"Matriz de Urgencia e Importancia", who:"App · Paulina Valencia",
+   desc:"Anotas todo lo pendiente, del trabajo y de la casa. Con tres preguntas por tarea la ubica en su cuadrante y te dice por dónde empezar.",
+   url:"https://paulinavalencia.com/matriz", access:"abierto",
+   facts:[["Prototipo","Estado"],["3 preguntas","Por tarea"]]},
+
+  {id:"sw-finanzas", layers:["producto"], name:"Dashboard Financiero", who:"SaaS · Multi-cliente",
+   desc:"Ingresos, gastos y reparto de utilidades por cliente, con tasa de cambio y exportación a Excel y PDF.",
+   path:"Paginas Web/Dashboard Financiero/dashboard.html", access:"interno",
+   facts:[["Multi-cliente","Alcance"],["3 tableros","Vivos"]]},
+
+  {id:"sw-wacrm", layers:["producto"], name:"wacrm", who:"Producto base · CRM WhatsApp",
+   desc:"CRM auto-hospedable: bandeja compartida, embudos, difusiones y automatizaciones sin código.",
+   path:"~/wacrm", access:"interno",
+   facts:[["Licencia MIT","Legal"],["Base","Rol"]]},
+
+  {id:"sw-atlas", layers:["producto"], name:"Atlas", who:"Producto propio · Reformas",
+   desc:"Marketplace con obreros verificados, custodia del pago y liberación por hitos, operado dentro de WhatsApp.",
+   path:"~/Atlas", access:"interno",
+   facts:[["314","Tests"],["Piloto","Estado"]]},
+
+  {id:"sw-cleevoice", layers:["producto"], name:"CleeVoice", who:"Producto propio · Dictado",
+   desc:"Dictado por voz para todo el sistema operativo. Una tecla, hablas y aparece texto limpio.",
+   path:"~/CleeVoice", access:"interno"},
+
+  {id:"sw-ordo", layers:["producto"], name:"ORDO · HUMANOX", who:"SaaS · Conocimiento gobernado",
+   desc:"Responde solo desde un documento aprobado y verifica en el servidor de dónde salió cada respuesta.",
+   path:"~/humanox-ordo", access:"interno"}
+];
+
+const ACCESS = {abierto:["", "Abre solo"], login:["login","Pide login"], interno:["interno","Sin publicar"]};
+
+const board  = document.getElementById("board");
+const input  = document.getElementById("q");
+const status = document.getElementById("status");
+const active = new Set();
+let flat = [];          // resultados en orden de pantalla, para ↓ ↑
+let cursor = -1;        // índice seleccionado
+let statusTimer = null;
+
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+
+function visible(it){
+  const q = input.value.trim();
+  if(q){
+    const hay = norm(`${it.name} ${it.who} ${it.desc||""} ${it.url||""} ${it.path||""}`);
+    if(!norm(q).split(/\s+/).every(w => hay.includes(w))) return false;
+  }
+  for(const f of active){
+    if(f === "demo" && !it.demo) return false;
+    if(f.startsWith("layer:")  && !it.layers.includes(f.slice(6))) return false;
+    if(f.startsWith("access:") && it.access !== f.slice(7))        return false;
+  }
+  return true;
+}
+
+function itemHTML(it, layerId, idx){
+  // publico:false = funciona mal hoy; se ve aqui dentro pero el generador lo deja fuera de la web
+  const [cls,label] = it.publico === false ? ["interno","Solo interno"] : ACCESS[it.access];
+  const target = it.url || it.path;
+  const facts = (it.facts||[]).map(([v,l]) =>
+    `<div class="fact"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+  const open = it.url
+    ? `<a class="go" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer"
+         aria-label="Abrir ${esc(it.name)}, ${esc(it.who)}, en una pestaña nueva">Abrir ↗</a>`
+    : "";
+  return `<div class="item${it.demo?" is-demo":""}" id="row-${layerId}-${idx}">
+    <div class="name"><b>${esc(it.name)}</b><i>${esc(it.who)}</i></div>
+    <p class="desc">${esc(it.desc||"")}</p>
+    <div class="facts">${facts}</div>
+    <div class="acts">
+      <span class="tag ${cls}">${label}</span>
+      ${open}
+      <button class="cp" type="button" data-copy="${esc(target)}"
+        aria-label="Copiar ${it.url?"el enlace":"la ruta"} de ${esc(it.name)}">${it.url?"Copiar":"Ruta"}</button>
+    </div>
+  </div>`;
+}
+
+function render(announce){
+  const shown = ITEMS.filter(visible);
+  flat = []; cursor = -1;
+  let html = "";
+  for(const L of LAYERS){
+    const list = shown.filter(i => i.layers.includes(L.id));
+    if(!list.length) continue;
+    list.forEach((it,k) => flat.push({it, rowId:`row-${L.id}-${k}`}));
+    html += `<section class="layer">
+      <div class="layer-head"><h2>${L.name}</h2><p class="sub">${L.sub}</p></div>
+      <div class="rows">${list.map((it,k) => itemHTML(it, L.id, k)).join("")}</div>
+    </section>`;
+  }
+  board.innerHTML = html || `<div class="none"><b>Nada coincide con esa búsqueda</b>Prueba con el nombre de un cliente, un canal o un sistema.</div>`;
+  document.getElementById("n-shown").textContent = shown.length;
+  if(announce) say(`${shown.length} ${shown.length === 1 ? "resultado" : "resultados"}`);
+}
+
+function say(msg){
+  clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => { status.textContent = msg; }, 180);
+}
+
+function select(i){
+  const prev = board.querySelector(".item.sel");
+  if(prev) prev.classList.remove("sel");
+  if(i < 0 || i >= flat.length){ cursor = -1; return; }
+  cursor = i;
+  const el = document.getElementById(flat[i].rowId);
+  if(!el) return;
+  el.classList.add("sel");
+  el.scrollIntoView({block:"nearest"});
+  const it = flat[i].it;
+  say(`${it.name}. ${it.url ? "Enter para abrir." : "Sin enlace público."}`);
+}
+
+function counts(){
+  document.getElementById("n-total").textContent = ITEMS.length;
+  document.getElementById("n-prod").textContent =
+    ITEMS.filter(i => i.layers.includes("producto") && i.access !== "interno" && i.publico !== false).length;
+  document.querySelectorAll("[data-k]").forEach(el => {
+    const f = el.dataset.k;
+    el.textContent = ITEMS.filter(i =>
+      f === "demo" ? i.demo :
+      f.startsWith("layer:") ? i.layers.includes(f.slice(6)) :
+      i.access === f.slice(7)).length;
+  });
+}
+
+document.querySelectorAll(".chip[data-filter]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const f  = btn.dataset.filter;
+    const on = btn.getAttribute("aria-pressed") === "true";
+    if(!on && f.includes(":")){                       // una sola opción por familia
+      const fam = f.split(":")[0] + ":";
+      document.querySelectorAll(`.chip[data-filter^="${fam}"]`).forEach(o => {
+        o.setAttribute("aria-pressed","false");
+        active.delete(o.dataset.filter);
+      });
+    }
+    btn.setAttribute("aria-pressed", String(!on));
+    on ? active.delete(f) : active.add(f);
+    render(true);
+  });
+});
+
+document.getElementById("reset").addEventListener("click", () => {
+  active.clear(); input.value = "";
+  document.querySelectorAll(".chip[data-filter]").forEach(b => b.setAttribute("aria-pressed","false"));
+  render(true); input.focus();
+});
+
+input.addEventListener("input", () => render(true));
+
+board.addEventListener("click", async e => {
+  const btn = e.target.closest("[data-copy]");
+  if(!btn) return;
+  const text = btn.dataset.copy;
+  const label = btn.dataset.label || (btn.dataset.label = btn.textContent);
+  let ok = false;
+  try{ await navigator.clipboard.writeText(text); ok = true; }
+  catch{
+    try{
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly","");
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+      document.body.appendChild(ta); ta.select();
+      ok = document.execCommand("copy");
+      ta.remove(); btn.focus();
+    }catch{ ok = false; }
+  }
+  clearTimeout(btn._t);
+  btn.textContent = ok ? "Copiado ✓" : "Falló";
+  say(ok ? `Copiado: ${text}` : "No se pudo copiar. Selecciona el enlace a mano.");
+  btn._t = setTimeout(() => { btn.textContent = label; }, 1400);
+});
+
+function editable(el){
+  return el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+}
+
+document.addEventListener("keydown", e => {
+  if(e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.defaultPrevented) return;
+
+  if(e.key === "/" && !editable(document.activeElement)){
+    e.preventDefault(); input.focus(); input.select(); return;
+  }
+  if(e.key === "Escape" && document.activeElement === input){
+    if(input.value){ input.value = ""; render(true); } else { input.blur(); }
+    return;
+  }
+  if(e.key === "ArrowDown" || e.key === "ArrowUp"){
+    if(!flat.length) return;
+    if(editable(document.activeElement) && document.activeElement !== input) return;
+    e.preventDefault();
+    select(e.key === "ArrowDown"
+      ? (cursor + 1) % flat.length
+      : (cursor <= 0 ? flat.length - 1 : cursor - 1));
+    return;
+  }
+  if(e.key === "Enter" && cursor >= 0 &&
+     (document.activeElement === input || document.activeElement === document.body)){
+    const it = flat[cursor].it;
+    if(it.url){ e.preventDefault(); window.open(it.url, "_blank", "noopener"); }
+  }
+});
+
+const bar = document.querySelector(".command");
+function measure(){
+  document.documentElement.style.setProperty("--bar", (bar.offsetHeight + 16) + "px");
+}
+if(window.ResizeObserver){ new ResizeObserver(measure).observe(bar); } else { addEventListener("resize", measure); }
+measure();
+
+counts();
+render(false);
+</script>

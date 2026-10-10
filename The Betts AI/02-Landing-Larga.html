@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agente de IA para tu WhatsApp · The Betts AI</title></head>
+<body>
+
+<!-- ============ ENLACES PENDIENTES DE CONFIRMAR ============
+     Sustituir en este bloque y en los href/action correspondientes.
+     WHATSAPP   https://wa.me/XXXXXXXXXXX
+     FORMULARIO 03-Formulario.html            (o la URL de GHL)
+     CALENDARIO embed del calendario de GHL
+     YOUTUBE    video "cómo montarlo tú mismo"
+     SKOOL      comunidad
+     WEBHOOK    Inbound Webhook de GHL para el submit del formulario
+
+     En ESTA página solo se usa FORMULARIO. Aparece en 4 botones, todos
+     marcados como href="#TODO-FORMULARIO".
+     El VSL va en el hueco .video-slot del hero (comentario en su sitio).
+     ========================================================= -->
+
+<style id="tb-core">
+/* Fuentes variables con rango. Pedir pesos sueltos (600;700;800) hace que
+   Google sirva instancias estáticas y el eje óptico 'opsz' deja de existir,
+   con lo que font-variation-settings queda inerte. Con rangos sí llega la
+   variable font: un archivo por familia en vez de tres, y opsz operativo. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400..700&display=swap');
+
+:root{
+  /* superficies */
+  --bg:#0B1220;
+  --surface:#101A2E;
+  --surface-2:#16213C;
+  /* tinta */
+  --ink:#E8EEF9;
+  --muted:#9FB0CC;
+  /* acento (un solo hue, dos tonos) */
+  --accent:#19C37D;
+  --accent-deep:#12A468;
+  --mint:#7FF0D2;
+  /* hairlines */
+  --line:rgba(232,238,249,.10);
+  --line-strong:rgba(232,238,249,.20);
+  /* escala de espaciado 4px, usada con ritmo variado */
+  --s1:4px;  --s2:8px;   --s3:12px; --s4:16px; --s5:24px;
+  --s6:32px; --s7:48px;  --s8:64px; --s9:88px; --s10:120px;
+  /* radios: tope 14px en cards, pill solo en tags */
+  --r-sm:8px; --r:12px; --r-lg:14px; --r-pill:999px;
+  /* motion */
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-soft:cubic-bezier(.32,.72,0,1);
+  /* medidas, en px a propósito.
+     En ch no funcionan: 1ch escala con el tamaño de fuente del elemento, así
+     que el mismo "66ch" da 628px en un párrafo de 17px y 813px en un lead de
+     22px, y "20ch" en un h2 de 40px da 514px. Resultado: elementos de la misma
+     columna con anchos que no casan, y titulares más estrechos que el texto
+     que llevan debajo. En px todos comparten columna y el ojo la lee recta.
+     640px son unos 68 caracteres a 17px, dentro de la medida de lectura. */
+  --measure:640px;       /* cuerpo y entradillas */
+  --measure-head:760px;  /* titulares: nunca por debajo de --measure */
+  --wide:1180px;
+  --narrow:760px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+html,body{overflow-x:hidden}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  font-size:17px;
+  line-height:1.7;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+img,video{max-width:100%;height:auto;display:block}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- breakout de la columna de GHL ---------- */
+/* .band  -> secciones normales (relative/static) */
+.band{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw}
+/* .fullbleed -> sticky, overlays, cualquier cosa donde `left` no desplace */
+.fullbleed{width:100vw;margin-left:calc(50% - 50vw)}
+
+.wrap{width:min(100% - 40px,var(--wide));margin-inline:auto}
+.wrap-narrow{width:min(100% - 40px,var(--narrow));margin-inline:auto}
+@media (max-width:600px){ .wrap,.wrap-narrow{width:calc(100% - 32px)} }
+
+section{padding-block:clamp(56px,8.5vw,116px)}
+.sec-tight{padding-block:clamp(40px,6vw,72px)}
+
+/* ---------- tipografía ----------
+   escala modular ~1.30: 13 / 17 / 22 / 30 / 40 / display
+   display con techo 76px, tracking -0.03em (piso duro -0.04em)          */
+.display,h1{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:800;
+  font-size:clamp(38px,5.6vw,72px);
+  line-height:1.04;
+  letter-spacing:-.03em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 72;
+}
+/* El titular del hero tiene 28 palabras. A tamaño display serían 5 líneas y
+   un h1 largo inflado es un tell. Se trata como titular editorial: más
+   pequeño, con las tres acciones del Método RCA destacadas en color para
+   dar jerarquía dentro de la frase sin cambiar una sola palabra. */
+.h1-editorial{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(29px,4vw,46px);
+  line-height:1.14;
+  letter-spacing:-.025em;
+  margin:0;
+  /* El ancho lo pone --measure-head, más abajo. No volver a ponerlo en ch:
+     medido, 15ch parecen 690px y en realidad son 440px, que parten este
+     titular de 28 palabras en ocho líneas. */
+  text-wrap:balance;
+  font-variation-settings:'opsz' 46;
+}
+/* .hl pesa 600 y los titulares 700: sin esto, las palabras destacadas salen
+   MÁS ligeras que el resto de la frase, justo al revés de lo que se busca. */
+.h1-editorial .hl,h1 .hl,h2 .hl,h3 .hl{font-weight:inherit}
+
+h2{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(28px,3.6vw,40px);
+  line-height:1.12;
+  letter-spacing:-.025em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 40;
+}
+h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(21px,2.2vw,26px);
+  line-height:1.2;
+  letter-spacing:-.02em;
+  margin:0;
+  text-wrap:balance;
+}
+p{margin:0 0 var(--s5);max-width:var(--measure);text-wrap:pretty}
+p:last-child{margin-bottom:0}
+
+/* Los titulares comparten columna con el cuerpo y nunca quedan por debajo de
+   él: un titular más estrecho que su propio párrafo de apoyo se lee como un
+   fallo de composición, no como jerarquía. */
+h1,h2,.h1-editorial{max-width:var(--measure-head)}
+.lead{font-size:clamp(18px,2vw,22px);line-height:1.55;color:var(--muted);max-width:var(--measure)}
+.small{font-size:14px;line-height:1.6}
+.micro{font-size:13px;line-height:1.55;color:var(--muted)}
+
+.hl{color:var(--accent);font-weight:600}
+.ink-strong{color:var(--ink);font-weight:600}
+em.note{color:var(--muted);font-style:italic}
+
+/* eyebrow: presupuesto de 3 en toda la página, nunca sobre el h1 del hero */
+.eyebrow{
+  font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mint);margin:0 0 var(--s4);
+}
+
+/* ---------- botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 30px;border-radius:var(--r);border:0;
+  background:var(--accent);color:#0B1220;
+  font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:17px;
+  line-height:1.2;letter-spacing:-.01em;text-decoration:none;cursor:pointer;
+  transition:transform .18s var(--ease-out),background-color .18s var(--ease-out);
+}
+.btn:hover{background:var(--mint);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{
+  background:transparent;color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+}
+.btn-ghost:hover{background:var(--surface-2);color:var(--ink);transform:translateY(-1px)}
+.btn-lg{padding:20px 36px;font-size:18px}
+.btn-block{display:flex;width:100%}
+
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline:2px solid var(--mint);outline-offset:3px;border-radius:6px;
+}
+
+.cta-note{margin-top:var(--s4);font-size:14px;color:var(--muted);max-width:52ch}
+
+/* ---------- superficies y hairlines ---------- */
+.panel{background:var(--surface);border-radius:var(--r-lg);box-shadow:inset 0 0 0 1px var(--line);padding:clamp(20px,3vw,32px)}
+.panel-2{background:var(--surface-2)}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ---------- reproductor de video (hueco del VSL) ---------- */
+.video-slot{
+  position:relative;aspect-ratio:16/9;width:100%;
+  background:var(--surface-2);border-radius:var(--r-lg);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+  display:grid;place-content:center;gap:var(--s3);justify-items:center;
+  text-align:center;padding:var(--s5);overflow:hidden;
+}
+.video-slot iframe,.video-slot video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-slot .play{
+  width:64px;height:64px;border-radius:var(--r-pill);background:var(--accent);
+  display:grid;place-content:center;
+}
+.video-slot .play svg{width:22px;height:22px;fill:#0B1220;margin-left:3px}
+.video-cap{margin-top:var(--s3);font-size:13px;color:var(--muted);text-align:center}
+
+/* ---------- animación de entrada ----------
+   El contenido es visible por defecto. Solo se oculta si el JS corrió. */
+.js-anim .anim{opacity:0;transform:translateY(14px)}
+.js-anim .anim.in{opacity:1;transform:none;transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+@media (prefers-reduced-motion:reduce){
+  .js-anim .anim{opacity:1;transform:none}
+  .js-anim .anim.in{transition:opacity .01s linear}
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+/* ---------- pie legal ---------- */
+.legal{font-size:12.5px;line-height:1.6;color:var(--muted);opacity:.85;max-width:70ch}
+</style>
+
+<style id="page">
+/* ==========================================================================
+   02-Landing-Larga · CSS propio de la página.
+   Solo variables del core. Los bloques marcados CMP son los componentes del
+   catálogo del sistema de diseño, copiados sin cambios.
+   ========================================================================== */
+
+/* ---------- masthead (no es un eyebrow: es la firma de marca) ---------- */
+.masthead{border-bottom:1px solid var(--line)}
+.masthead .inner{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s4);padding-block:var(--s5)}
+.wordmark{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.02em;color:var(--ink)}
+.wordmark i{font-style:normal;color:var(--accent)}
+.masthead .sig{font-size:14px;color:var(--muted)}
+@media (max-width:640px){.masthead .sig{display:none}}
+
+/* ---------- 1 · hero: una columna, titular sobre el video ----------
+   Se probó en split de dos columnas y no funciona: la columna de texto queda
+   en 476px y el titular de 28 palabras cae en ocho líneas. Apilado, el titular
+   dispone de la medida completa y el VSL, que es el activo del embudo, se ve
+   al tamaño que merece. De paso el hero queda igual que en la variante corta,
+   con lo que el test A/B compara lo que hay debajo y no dos heros distintos. */
+.hero{padding-block:clamp(44px,6.5vw,88px)}
+.hero-grid{display:grid;gap:clamp(26px,3.6vw,40px);justify-items:start}
+.hero-copy{display:grid;gap:var(--s5)}
+.hero-media{display:grid;gap:var(--s4);width:100%}
+.hero-media .video-slot{max-width:920px}
+.hero-media .over{margin:0;font-size:15px;line-height:1.6;color:var(--muted);max-width:52ch}
+.hero-media .over b{color:var(--ink);font-weight:600}
+.hero-cta{display:grid;gap:var(--s4);justify-items:start}
+.hero-cta .cta-note{margin:0}
+
+/* ---------- 2 · el problema: prosa a ancho de lectura ---------- */
+.prose h2{max-width:var(--measure-head);margin-bottom:var(--s6)}
+.prose p{color:var(--muted)}
+.prose p b{color:var(--ink);font-weight:600}
+.prose .haz-cuenta{
+  margin:var(--s7) 0 0;padding-left:var(--s5);
+  border-left:2px solid var(--accent);
+  font-family:'Bricolage Grotesque',sans-serif;font-weight:600;
+  font-size:clamp(20px,2.4vw,27px);line-height:1.3;letter-spacing:-.02em;
+  color:var(--ink);max-width:28ch;
+}
+
+/* ---------- CMP B · filas con hairline (los 3 cuellos de botella) ---------- */
+.rows{border-top:1px solid var(--line)}
+.row{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s3);
+  padding-block:var(--s6);border-bottom:1px solid var(--line);
+}
+@media (min-width:840px){
+  .row{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:var(--s7);align-items:start}
+}
+.row h3{max-width:22ch}
+.row p{color:var(--muted);margin:0}
+.rows-head{margin-bottom:var(--s7)}
+
+/* ---------- CMP G · banda de CTA intermedio 1 ---------- */
+.ctaband{background:var(--surface-2)}
+.ctaband .inner{display:grid;gap:var(--s5);align-items:center}
+@media (min-width:880px){.ctaband .inner{grid-template-columns:minmax(0,1fr) auto;gap:var(--s8)}}
+.ctaband h2{font-size:clamp(24px,2.8vw,32px);max-width:20ch}
+
+/* ---------- CTA intermedio 2: centrado, hairlines, sin relleno ----------
+   Deliberadamente distinto del primero: otra orientación, otro fondo,
+   otra manera de sostener el botón. */
+.ctaband-2{border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong)}
+.ctaband-2 .inner{display:grid;justify-items:start;gap:var(--s6)}
+.ctaband-2 h2{font-size:clamp(25px,3.2vw,36px);max-width:22ch}
+.ctaband-2 .cta-note{margin-top:0}
+
+/* ---------- CMP D · conversación demo ----------
+   Transcripción estilizada y etiquetada como ejemplo. Deliberadamente NO
+   imita la interfaz de WhatsApp: un pantallazo falso lee como truco. */
+.chat{display:grid;gap:var(--s3);max-width:560px}
+.msg{padding:14px 18px;border-radius:var(--r-lg);font-size:16px;line-height:1.55;max-width:82%}
+.msg .who{display:block;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.msg.them{background:var(--surface-2);justify-self:start;border-bottom-left-radius:var(--r-sm)}
+.msg.us{background:rgba(25,195,125,.13);box-shadow:inset 0 0 0 1px rgba(25,195,125,.30);justify-self:end;border-bottom-right-radius:var(--r-sm)}
+.msg.us .who{color:var(--mint)}
+.chat{margin-inline:auto}
+.demo-head{margin-bottom:var(--s7)}
+.demo-head .lead{margin-top:var(--s5)}
+.chat-cap{margin-top:var(--s5);text-align:center}
+
+/* ---------- CMP C · secuencia con inicial (Método RCA) ---------- */
+.steps{display:grid;gap:1px;background:var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.step{background:var(--surface);padding:clamp(22px,3vw,34px);display:grid;gap:var(--s3)}
+@media (min-width:840px){.step{grid-template-columns:132px minmax(0,1fr);gap:var(--s6);align-items:start}}
+.step .mark{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(34px,4vw,46px);line-height:1;letter-spacing:-.03em;color:var(--mint)}
+.step .mark span{display:block;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.step p{margin:0;color:var(--muted)}
+.step p b{color:var(--ink);font-weight:600}
+.step-plus{background:var(--surface-2)}
+.step-plus .mark{color:var(--accent)}
+.steps-head{margin-bottom:var(--s7)}
+.steps-head .lead{margin-top:var(--s5)}
+
+/* ---------- CMP H · citas / testimonios ---------- */
+.quotes{display:grid;gap:var(--s6)}
+@media (min-width:900px){.quotes{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s6)}}
+.quote{display:grid;gap:var(--s4);align-content:start}
+.quote blockquote{margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:19px;line-height:1.42;letter-spacing:-.015em}
+.quote .by{font-size:14px;color:var(--muted)}
+.quote .by b{color:var(--ink);font-weight:600}
+.quote::before{content:'';display:block;width:32px;height:2px;background:var(--accent)}
+.quotes-head{margin-bottom:var(--s7)}
+
+/* ---------- 6 · comparativa a 3 columnas con encabezado ---------- */
+.compare{display:grid;gap:var(--s6)}
+.compare .col{display:grid;gap:var(--s4);align-content:start}
+.compare h3{font-size:clamp(19px,1.9vw,21px);max-width:20ch}
+.compare p{margin:0;font-size:16px;line-height:1.65;color:var(--muted);max-width:40ch}
+.compare p b{color:var(--ink);font-weight:600}
+@media (max-width:899px){
+  .compare .col + .col{border-top:1px solid var(--line);padding-top:var(--s6)}
+}
+@media (min-width:900px){
+  .compare{grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+  .compare .col{padding-inline:clamp(20px,2.6vw,38px)}
+  .compare .col:first-child{padding-left:0}
+  .compare .col:last-child{padding-right:0}
+  .compare .col + .col{border-left:1px solid var(--line)}
+}
+.compare-head{margin-bottom:var(--s7)}
+
+/* ---------- 8 · bloque de oferta con lista de checks ---------- */
+.offer{display:grid;gap:var(--s5)}
+.offer h2{max-width:none}
+.offer .lead{margin:0}
+.checks{list-style:none;margin:var(--s2) 0 var(--s2);padding:0;display:grid;gap:var(--s4)}
+.checks li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:var(--s3);align-items:start;color:var(--muted);line-height:1.55}
+.checks svg{width:20px;height:20px;margin-top:5px;fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.offer .btn{justify-self:start;margin-top:var(--s2)}
+.offer .cta-note{margin-top:0}
+
+/* ---------- CMP E · timeline numerada ---------- */
+.tl{display:grid;gap:var(--s5);counter-reset:tl}
+@media (min-width:900px){.tl{grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s5)}}
+.tl-item{padding-top:var(--s5);border-top:2px solid var(--line-strong);counter-increment:tl}
+.tl-item::before{content:counter(tl);display:block;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px;color:var(--accent);margin-bottom:var(--s3)}
+.tl-item h3{font-size:19px;margin-bottom:var(--s2)}
+.tl-item p{font-size:15px;color:var(--muted);margin:0}
+.tl-head{margin-bottom:var(--s7)}
+
+/* ---------- CMP F · acordeón FAQ ---------- */
+.faq{border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{
+  list-style:none;cursor:pointer;padding-block:var(--s5);
+  display:flex;gap:var(--s4);align-items:baseline;justify-content:space-between;
+  font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:clamp(17px,1.8vw,20px);
+  letter-spacing:-.015em;line-height:1.35;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';font-size:24px;line-height:1;color:var(--accent);flex:none;transition:transform .22s var(--ease-out)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq .a{padding-bottom:var(--s5);color:var(--muted);max-width:var(--measure)}
+.faq .a p{margin:0}
+.faq-head{margin-bottom:var(--s6)}
+
+/* ---------- 11 · cierre ---------- */
+.close-band{background:var(--surface)}
+.close-band .display{max-width:var(--measure-head)}
+.close-band p{margin-top:var(--s5);color:var(--muted)}
+.close-band p b{color:var(--ink);font-weight:600}
+.close-band .btn{margin-top:var(--s7)}
+
+/* ---------- pie ---------- */
+.site-foot{border-top:1px solid var(--line);padding-block:var(--s7)}
+</style>
+
+
+<!-- ==================================================================
+     MASTHEAD
+     ================================================================== -->
+<header class="band masthead">
+  <div class="wrap inner">
+    <span class="wordmark">The Betts <i>AI</i></span>
+    <span class="sig">Agentes de IA para WhatsApp</span>
+  </div>
+</header>
+
+
+<!-- ==================================================================
+     1 · HERO   ·   familia: split asimétrico, titular + video
+     Sin eyebrow por regla C2 (nunca encima del h1 del hero).
+     ================================================================== -->
+<section class="band hero">
+  <div class="wrap hero-grid">
+
+    <div class="hero-copy">
+      <h1 class="h1-editorial anim">Te instalamos un agente de IA en tu WhatsApp que <span class="hl">responde</span> en menos de 60 segundos, <span class="hl">califica</span> a quien escribe y <span class="hl">agenda solo</span>.</h1>
+      <p class="lead anim">Operativo en 14 días con el Método RCA. En tu mismo número, sin tocar tus procesos.</p>
+    </div>
+
+    <div class="hero-media anim">
+      <p class="over"><b>Mira el video.</b> En 7 minutos ves el agente funcionando y sabes si esto encaja con tu negocio.</p>
+      <!-- HUECO DE VIDEO: sustituir el contenido de .video-slot por el <iframe>
+           del VSL (7:30 a 8:00 min). El CSS del core ya lo posiciona a sangre. -->
+      <div class="video-slot">
+        <span class="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
+        <span class="micro">7 minutos</span>
+      </div>
+    </div>
+
+    <!-- El botón va debajo del video, no encima: se agenda después de verlo. -->
+    <div class="hero-cta">
+      <a class="btn btn-lg anim" href="#TODO-FORMULARIO">Quiero mi diagnóstico gratis</a>
+      <p class="cta-note anim">Diagnóstico de fuga de conversaciones, sin costo. Responde unas preguntas rápidas (2 minutos) para ver si tu negocio califica.</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     2 · EL PROBLEMA   ·   familia: prosa a ancho de lectura
+     ================================================================== -->
+<section class="band prose">
+  <div class="wrap-narrow">
+    <h2 class="anim">No pierdes ventas por falta de clientes. Las pierdes por responder tarde.</h2>
+    <p class="anim">Abre tu WhatsApp y mira los últimos veinte mensajes. “Hola”. “Info”. “¿Cuánto cuesta?”. “¿Tienen disponibilidad?”.</p>
+    <p class="anim">Y ahí estás tú, o alguien de tu equipo pegado al teléfono, respondiendo lo mismo que respondiste ayer y lo mismo que vas a responder mañana.</p>
+    <p class="anim">El que escribió a las diez de la noche no se quedó esperando. A las diez y cuarto ya estaba hablando con otro.</p>
+    <p class="anim"><b>Y si inviertes en anuncios, es peor.</b> Cada campaña mete más gente a ese WhatsApp. Entre más pagas, más se te tapa. Estás comprando conversaciones que nadie alcanza a atender.</p>
+    <p class="haz-cuenta anim">Haz la cuenta: ¿cuánto valen al mes las conversaciones que hoy se te enfrían sin respuesta?</p>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     3 · LOS TRES CUELLOS DE BOTELLA   ·   familia: filas con hairline (CMP B)
+     Los emoji del doc (reloj, diana, calendario) son notación del documento.
+     No se pintan: ni iconos, ni cards.
+     ================================================================== -->
+<section class="band">
+  <div class="wrap">
+    <div class="rows-head">
+      <h2 class="anim">Los tres cuellos de botella</h2>
+    </div>
+    <div class="rows">
+      <div class="row anim">
+        <h3>Llegan a toda hora y compran con quien responde primero</h3>
+        <p>Los mensajes no esperan a tu horario. El agente responde al instante, de día y de noche, aunque tu equipo esté cerrando otra venta.</p>
+      </div>
+      <div class="row anim">
+        <h3>Tu equipo pierde horas atendiendo a quien no va a comprar</h3>
+        <p>El agente califica solo (presupuesto, necesidad, momento) y te pasa únicamente a quien está listo.</p>
+      </div>
+      <div class="row anim">
+        <h3>Las citas se caen por seguimiento tardío</h3>
+        <p>Agenda en tu calendario de forma automática y manda recordatorios para que la persona sí llegue.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     CTA INTERMEDIO 1 (revisión 7)   ·   familia: banda de CTA (CMP G)
+     Titular a ancho, botón a la derecha, fondo --surface-2.
+     ================================================================== -->
+<section class="band ctaband sec-tight">
+  <div class="wrap inner">
+    <h2 class="anim">En WhatsApp gana el que responde primero.</h2>
+    <div class="anim"><a class="btn btn-lg" href="#TODO-FORMULARIO">Quiero mi diagnóstico gratis</a></div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     4 · ASÍ SE VE EN ACCIÓN   ·   familia: conversación (CMP D)
+     REVISIÓN 3: los 3 bullets del doc se eliminan (redundan con la §3).
+     REVISIÓN 4: la demo se mantiene tal cual. John y Jonathan deben aportar
+     un caso REAL y compacto para sustituir este intercambio genérico, de
+     forma que el ida y vuelta se note coherente y distinto de un bot básico.
+     ================================================================== -->
+<section class="band">
+  <div class="wrap-narrow">
+    <div class="demo-head">
+      <h2 class="anim">Tu mejor vendedor, que nunca duerme.</h2>
+      <p class="lead anim">Conversa en WhatsApp como lo haría tu mejor persona: entiende, pregunta coherentemente y agenda. Sin esperas y sin guiones robóticos.</p>
+    </div>
+
+    <div class="chat">
+      <div class="msg them anim"><span class="who">Cliente</span>Hola, vi lo que ofrecen 👀 ¿me pueden dar más info?</div>
+      <div class="msg us anim"><span class="who">Agente IA</span>¡Hola! 👋 Claro. Para orientarte bien, ¿qué es lo que estás buscando resolver y para cuándo lo necesitas?</div>
+      <div class="msg them anim"><span class="who">Cliente</span>Lo necesito para este mes, y manejo un presupuesto medio.</div>
+      <div class="msg us anim"><span class="who">Agente IA</span>Perfecto 🙌 Encaja con lo que hacemos. ¿Te va bien una llamada de 15 minutos? Puedo el jueves 5pm o el sábado 11am 📅</div>
+      <div class="msg them anim"><span class="who">Cliente</span>Sábado 11 me viene bien</div>
+      <div class="msg us anim"><span class="who">Agente IA</span>¡Listo! ✅ Cita confirmada el sábado a las 11am. Te mando el enlace y un recordatorio el día anterior 📍</div>
+    </div>
+
+    <p class="chat-cap micro anim"><em class="note">Conversación de ejemplo · el agente trabaja 24/7</em></p>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     5 · EL MÉTODO RCA   ·   familia: secuencia con inicial (CMP C)
+     Eyebrow 1 de 3.
+     ================================================================== -->
+<section class="band" style="background:var(--bg)">
+  <div class="wrap">
+    <div class="steps-head">
+      <p class="eyebrow anim">Cómo lo hacemos</p>
+      <h2 class="anim">Método RCA: responde, califica y agenda</h2>
+      <p class="lead anim">Tres capas que se instalan en orden. Cada una resuelve un cuello de botella distinto, y por eso funcionan juntas.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step anim">
+        <div class="mark">R<span>Responde</span></div>
+        <p>El agente contesta en menos de 60 segundos, 24/7, en tu mismo número. Entrenado con tu oferta, tus precios y tus objeciones, no con un documento genérico.</p>
+      </div>
+      <div class="step anim">
+        <div class="mark">C<span>Califica</span></div>
+        <p>Hace las preguntas que tú harías para saber si esa persona encaja. Filtra antes de que llegue a ti.</p>
+      </div>
+      <div class="step anim">
+        <div class="mark">A<span>Agenda</span></div>
+        <p>Cierra la cita contra tu calendario real, confirma y recuerda. Conectado a tu CRM y a tus herramientas.</p>
+      </div>
+      <div class="step step-plus anim">
+        <div class="mark">+<span>Afinado</span></div>
+        <p><b>Y una cuarta que casi nadie hace: el afinado.</b> Las primeras semanas leemos las conversaciones reales, vemos dónde se equivoca y lo corregimos hasta que suena a ustedes. Esta es la parte que decide si el agente vende o estorba, y es la que no te toca hacer a ti.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     TESTIMONIOS   ·   familia: citas (CMP H)
+     REVISIÓN 5: sustituye a la §7 «Lo que no hace», eliminada entera.
+     PLACEHOLDER: los tres textos son de relleno y los nombres van entre
+     corchetes a propósito, para que nadie los publique por descuido.
+     Cuando John pase los casos reales hay que actualizar ESTA página y
+     04-Gracias.html a la vez: comparten los mismos tres testimonios.
+     ================================================================== -->
+<section class="band" style="background:var(--surface)">
+  <div class="wrap">
+    <div class="quotes-head">
+      <h2 class="anim">Negocios que dejaron de perder conversaciones</h2>
+    </div>
+    <div class="quotes">
+      <figure class="quote anim">
+        <blockquote>“Lo que más me sorprendió no fue la velocidad, fue llegar a las llamadas sabiendo ya qué necesitaba la persona. Dejé de perder tardes enteras.”</blockquote>
+        <figcaption class="by"><b>[Nombre]</b> · [Tipo de negocio]</figcaption>
+      </figure>
+      <figure class="quote anim">
+        <blockquote>“Antes contestaba yo hasta las once de la noche. Ahora abro el móvil por la mañana y las citas ya están puestas en el calendario.”</blockquote>
+        <figcaption class="by"><b>[Nombre]</b> · [Tipo de negocio]</figcaption>
+      </figure>
+      <figure class="quote anim">
+        <blockquote>“Subimos la inversión en anuncios sin miedo, porque ya sabíamos que todo el que escribiera iba a ser atendido.”</blockquote>
+        <figcaption class="by"><b>[Nombre]</b> · [Tipo de negocio]</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     6 · EN QUÉ SE DIFERENCIA   ·   familia: comparativa a 3 columnas
+     Eyebrow 2 de 3.
+     ================================================================== -->
+<section class="band">
+  <div class="wrap">
+    <div class="compare-head">
+      <p class="eyebrow anim">Las dudas de siempre</p>
+      <h2 class="anim">En qué se diferencia</h2>
+    </div>
+
+    <div class="compare">
+      <div class="col anim">
+        <h3>Contra la IA que ya trae WhatsApp Business</h3>
+        <p>La que Meta activó en las cuentas Business responde preguntas de un prompt. Le das información y unos documentos, y contesta preguntas frecuentes y un catálogo. Hasta ahí llega.</p>
+        <p>No le conectas herramientas externas. Ni calendario, ni CRM, ni agendamiento de verdad. <b>Responde cosas, pero no hace cosas.</b></p>
+      </div>
+      <div class="col anim">
+        <h3>Contra montarlo tú mismo</h3>
+        <p>Hay tutoriales y plantillas, y algunas están bien.</p>
+        <p>Lo que no está en ningún tutorial es la parte que de verdad cuesta: <b>afinar el agente hasta que suena a tu negocio y no a un bot.</b> Eso son semanas de leer conversaciones reales y corregir. Es trabajo, no conocimiento, y es exactamente lo que aquí no te toca.</p>
+      </div>
+      <div class="col anim">
+        <h3>Contra contratar a alguien para el WhatsApp</h3>
+        <p>Una persona te cuesta un sueldo al mes, responde ocho horas al día, cinco días a la semana, y se va de vacaciones. Haz la cuenta de lo que te cuesta al año y compárala con lo que cuesta esto una sola vez.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     CTA INTERMEDIO 2 (revisión 7)   ·   banda de CTA, variante distinta
+     Centrada, sobre --bg y sostenida por dos hairlines en vez de relleno.
+     ================================================================== -->
+<section class="band ctaband-2 sec-tight">
+  <div class="wrap-narrow inner">
+    <h2 class="anim">La única variable que puedes cambiar hoy es cuánto tardas en contestar.</h2>
+    <div class="anim">
+      <a class="btn btn-lg" href="#TODO-FORMULARIO">Quiero mi diagnóstico gratis</a>
+      <p class="cta-note">Diagnóstico de fuga de conversaciones, sin costo.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     8 · EL DIAGNÓSTICO   ·   familia: bloque de oferta con lista de checks
+     Eyebrow 3 de 3.
+     REVISIÓN 6: la escasez de 5 diagnósticos por semana se sostiene.
+     El marcador [CONFIRMAR] no se pinta.
+     ================================================================== -->
+<section class="band">
+  <div class="wrap-narrow">
+    <div class="panel offer anim">
+      <p class="eyebrow">Diagnóstico gratis</p>
+      <h2>Descubre cuántas conversaciones (y cuánto dinero) estás dejando ir</h2>
+      <p class="lead">Revisamos cómo entran y se atienden hoy tus conversaciones, y te mostramos exactamente dónde se enfrían y cuánto te cuesta. Sin costo y sin compromiso.</p>
+      <ul class="checks">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.6l5.2 5.2L20 7"/></svg><span>Cuántas conversaciones se te escapan por responder tarde.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.6l5.2 5.2L20 7"/></svg><span>Qué tan rápido respondes hoy frente a lo que sí cierra ventas.</span></li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.6l5.2 5.2L20 7"/></svg><span>Cómo se vería tu agente atendiéndolas 24/7.</span></li>
+      </ul>
+      <a class="btn btn-lg" href="#TODO-FORMULARIO">Quiero mi diagnóstico gratis</a>
+      <p class="cta-note">Responde unas preguntas rápidas (2 minutos) para ver si calificas. Agenda limitada: tomamos solo 5 diagnósticos por semana.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     9 · QUÉ PASA DESPUÉS   ·   familia: timeline numerada (CMP E)
+     Aquí los números SÍ se pintan: son una secuencia real (regla C3).
+     Los pinta el counter del componente, no el texto.
+     ================================================================== -->
+<section class="band" style="background:var(--surface)">
+  <div class="wrap">
+    <div class="tl-head">
+      <h2 class="anim">Qué pasa después</h2>
+    </div>
+    <div class="tl">
+      <div class="tl-item anim">
+        <h3>Respondes el formulario</h3>
+        <p>Dos minutos. Si tu negocio no encaja, te lo decimos ahí mismo y te mandamos al recurso correcto.</p>
+      </div>
+      <div class="tl-item anim">
+        <h3>Diagnóstico de 15 minutos</h3>
+        <p>Vemos cómo entran hoy tus conversaciones y cuánto se te está escapando.</p>
+      </div>
+      <div class="tl-item anim">
+        <h3>Instalación</h3>
+        <p>Lo montamos, lo conectamos a tus herramientas y lo entrenamos con tu negocio. Tu equipo no para.</p>
+      </div>
+      <div class="tl-item anim">
+        <h3>Afinado</h3>
+        <p>Leemos conversaciones reales y lo corregimos hasta que suena a ustedes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     10 · PREGUNTAS FRECUENTES   ·   familia: acordeón (CMP F)
+     Los [CONFIRMAR] del plazo de 14 días y del rango de precio siguen
+     abiertos y van al README de entrega, no a la pantalla.
+     ================================================================== -->
+<section class="band">
+  <div class="wrap-narrow">
+    <div class="faq-head">
+      <h2 class="anim">Preguntas frecuentes</h2>
+    </div>
+    <div class="faq anim">
+      <details>
+        <summary>¿Tengo que cambiar mi número de WhatsApp?</summary>
+        <div class="a"><p>No. Trabajamos sobre el número que ya usas, el que está en tus tarjetas, tu Instagram y tu web.</p></div>
+      </details>
+      <details>
+        <summary>¿Cuánto tarda la instalación?</summary>
+        <div class="a"><p>14 días.</p></div>
+      </details>
+      <details>
+        <summary>¿Se nota que es un bot?</summary>
+        <div class="a"><p>Responde con la información y el tono de tu negocio. La diferencia está en el afinado, y esa parte la hacemos nosotros.</p></div>
+      </details>
+      <details>
+        <summary>¿Y si el agente se equivoca?</summary>
+        <div class="a"><p>Durante el afinado leemos las conversaciones y corregimos. Y siempre puedes tomar el control de una conversación.</p></div>
+      </details>
+      <details>
+        <summary>¿En qué se diferencia de la IA que ya trae WhatsApp Business?</summary>
+        <div class="a"><p>Esa responde preguntas. Esta hace cosas: califica, agenda y se conecta a tus herramientas.</p></div>
+      </details>
+      <details>
+        <summary>¿Sirve para mi tipo de negocio?</summary>
+        <div class="a"><p>Si vendes por WhatsApp, sí. Lo entrenamos con tu oferta concreta.</p></div>
+      </details>
+      <details>
+        <summary>¿Es un curso?</summary>
+        <div class="a"><p>No. Nosotros lo instalamos, lo entrenamos y lo dejamos funcionando.</p></div>
+      </details>
+      <details>
+        <summary>¿Cuánto cuesta?</summary>
+        <div class="a"><p>Depende del volumen y de las herramientas a conectar. Lo vemos en el diagnóstico.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     11 · CIERRE   ·   familia: banda final
+     Titular corto, así que aquí sí va a .display.
+     ================================================================== -->
+<section class="band close-band">
+  <div class="wrap-narrow">
+    <h2 class="display anim">El costo de no hacer nada no es cero</h2>
+    <p class="anim">Si llegaste hasta aquí es porque esto te sirve. Los que no lo necesitaban se fueron hace rato.</p>
+    <p class="anim">El costo de quedarte igual es cada persona que escribió y no respondiste. Cada una que preguntó el precio a las diez de la noche y a las diez y cuarto ya estaba hablando con otro. <b>Eso lo estás pagando todos los días y no aparece en ningún informe.</b></p>
+    <a class="btn btn-lg anim" href="#TODO-FORMULARIO">Quiero mi diagnóstico gratis</a>
+  </div>
+</section>
+
+
+<!-- ==================================================================
+     PIE LEGAL
+     ================================================================== -->
+<footer class="band site-foot">
+  <div class="wrap-narrow">
+    <p class="legal">Este sitio no forma parte de Meta Platforms, Inc. ni está avalado por ella. WhatsApp es una marca registrada de Meta Platforms, Inc.</p>
+  </div>
+</footer>
+
+
+<script id="tb-core-js">
+(function(){
+  document.documentElement.classList.add('js-anim');
+  var els = document.querySelectorAll('.anim');
+  if(!('IntersectionObserver' in window)){
+    els.forEach(function(e){e.classList.add('in')});
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  },{rootMargin:'0px 0px -8% 0px',threshold:.05});
+  els.forEach(function(e,i){ e.style.transitionDelay = Math.min(i%4,3)*60 + 'ms'; io.observe(e); });
+})();
+</script>
+
+</body>
+</html>

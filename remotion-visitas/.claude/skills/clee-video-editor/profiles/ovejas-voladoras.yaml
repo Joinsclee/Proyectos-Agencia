@@ -1,0 +1,64 @@
+# =============================================================================
+# ovejas-voladoras.yaml — brand-edit-profile de Ovejas Voladoras
+# =============================================================================
+# MARCA: Ovejas Voladoras. Estilo HIPERCINÉTICO de retención agresiva.
+# TONO DE EDICIÓN: cortes ultra-rápidos, subtítulos palabra-por-palabra tipo
+#   karaoke, SFX en casi cada corte/aparición, energía alta constante. Es el
+#   extremo opuesto a SAVIAS.
+#
+# Craft universal en references/craft-rules.md (las 18 reglas aplican igual).
+# Aquí solo se PARAMETRIZAN los diales. Colores EXACTOS -> brand kit.
+# =============================================================================
+
+cliente: "Ovejas Voladoras"
+
+extends_brand_kit: "../../../brand-kits/ovejas-voladoras/brand-kit.yaml"  # TODO confirmar ruta real
+
+# --- Ritmo: hipercinético ----------------------------------------------------
+ritmo:
+  cut_rate_seg: [1.5, 3]    # Planos muy cortos: nunca dejar reposar el ojo.
+  interrupt_cadence_seg: 3  # Interruptor cada ~3s (zoom/corte/SFX/texto).
+  zoom_max_pct: 125         # Push-in punchy y visible; energía.
+
+# --- Captions: word-by-word, karaoke -----------------------------------------
+captions:
+  mode: word                # Palabra por palabra (karaoke duro). Máximo enganche.
+  switch_ms: 350            # ~350ms por palabra: rápido, sincronizado al habla.
+  text_color: "#FFFFFF"    # Blanco base.
+  highlight_color: "#FFD400" # Amarillo alto contraste. Confirmar contra brand kit.
+  outline_px: 4             # Contorno grueso: legible sobre fondos saturados/rápidos.
+  ruta: ffsub               # .ass quemado con $FFSUB (word-by-word barato y sólido).
+                            # Ver references/captions.md, references/engine-decision.md
+                            # y la receta de quemado en references/ffmpeg-recipes.md.
+
+# --- Audio: denso y alto -----------------------------------------------------
+audio:
+  sfx_density: high         # SFX en casi cada corte/aparición (whoosh, pop, impact).
+  music_bpm: [120, 140]     # Tempo alto que empuja el ritmo de corte.
+  music_energy: high        # Lecho energético. Ducking agresivo en references/audio.md.
+
+# --- B-roll: ráfagas ---------------------------------------------------------
+broll:
+  style: flash-fast         # Inserts cortos sincronizados al beat.
+
+# --- Transcripción -----------------------------------------------------------
+transcripcion:
+  whisper_model: small      # Rápido: el volumen y la velocidad priman sobre matiz.
+  vad: false                # Flujo continuo; no cortar silencios (ritmo denso).
+                            # Ver references/pipeline.md.
+
+# --- Formato -----------------------------------------------------------------
+formato_default: 916        # Vertical 9:16. Respeta references/safe-zones.md.
+
+# --- Tipos de edición preferidos ---------------------------------------------
+tipos_edicion_preferidos:
+  - veloz                   # Cortes rápidos, word-by-word, alto SFX.
+  - persuasiva              # Orientada a venta/CTA, énfasis en beneficios.
+
+notas: |
+  Ovejas Voladoras = hipercinético puro. Cada segundo debe justificar el
+  siguiente. Word-by-word amarillo (#FFD400) es marca de casa; validar el HEX
+  exacto y el resto de la paleta contra el brand kit visual del cliente.
+  Vigilar SATURACIÓN de SFX: mantener denso pero sin tapar la voz (ver
+  references/audio.md, ducking). QA de legibilidad word-by-word y safe zones
+  en references/qa.md y references/safe-zones.md.

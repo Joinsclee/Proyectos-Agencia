@@ -29,22 +29,10 @@
 
 <!-- ===================== LOGIN / REGISTRO ===================== -->
 <div class="auth-shell full-bleed" id="view-auth">
-  <!-- Hero con video (fallback: gradiente navy/gold) -->
+  <!-- Hero con video (fallback: gradiente navy/gold). El video ya trae el branding
+       y el copy del lado izquierdo, por eso no se superpone texto encima. -->
   <aside class="auth-hero">
     <video class="auth-hero-video" id="heroVideo" autoplay loop muted playsinline preload="auto"></video>
-    <div class="auth-hero-overlay"></div>
-    <div class="auth-hero-content">
-      <div class="auth-hero-logo">
-        <span class="logo-img">
-          <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
-               alt="Paulina Valencia" />
-        </span>
-        <span class="logo-name">Paulina Valencia</span>
-      </div>
-      <h1>Construye tu identidad,<br/><em>un pliegue a la vez</em>.</h1>
-      <p class="lead">Diagnostica con la Rueda, comprende tu cerebro con los Neuropliegues y sostén tus hábitos con el Tracker.</p>
-    </div>
-    <div class="auth-hero-foot">Mi Barco · Mini-app del ecosistema de Paulina Valencia</div>
   </aside>
 
   <!-- Formularios -->
@@ -60,7 +48,7 @@
 
       <!-- LOGIN -->
       <div class="auth-card" id="card-login">
-        <div class="eyebrow">Bienvenida de vuelta</div>
+        <div class="eyebrow">Te damos la bienvenida de vuelta</div>
         <h2>Ingresa a Mi Barco</h2>
         <p class="sub">Accede con el correo que usaste al registrarte.</p>
         <div class="alert" id="alert-login"></div>
@@ -181,8 +169,40 @@
   </section>
 </div><!-- /view-auth -->
 
+<!-- ===================== BLOQUEADA — no es Premium/VIP ===================== -->
+<div id="view-blocked" class="full-bleed" style="display:none">
+  <div class="blocked-shell">
+    <div class="blocked-card">
+      <div class="blocked-logo">
+        <img src="https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png"
+             alt="Mi Barco · Paulina Valencia" />
+      </div>
+      <p class="blocked-eyebrow">Acceso exclusivo</p>
+      <h1 class="blocked-title">Hola <span id="blockedName">·</span>, esta app es exclusiva para <span style="color: var(--pv-gold);">Premium y VIP</span></h1>
+      <p class="blocked-text">
+        Mi Barco es una herramienta del ecosistema de Paulina Valencia diseñada para quienes están en los planes
+        <strong>Premium</strong> o <strong>VIP</strong> de la comunidad.
+      </p>
+      <div class="blocked-pill" id="blockedLevelPill" style="display:none">
+        Tu plan actual: <strong class="level" id="blockedLevel">—</strong>
+      </div>
+      <a id="blockedCta" href="#" target="_blank" rel="noopener" class="blocked-cta">
+        Adquirir Premium o VIP →
+      </a>
+      <p class="blocked-secondary">
+        ¿Ya eres Premium o VIP y ves este mensaje?
+        <button type="button" id="blockedRetry" class="blocked-link">Sincronizar de nuevo</button>
+      </p>
+      <p class="blocked-secondary">
+        <button type="button" id="blockedLogout" class="blocked-link">Cerrar sesión</button>
+      </p>
+      <p class="blocked-status" id="blockedStatus" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== APP (visible tras iniciar sesión) ===================== -->
-<div id="view-app" style="display:none">
+<div id="view-app" class="full-bleed" style="display:none">
 
 <!-- Barra de cuenta -->
 <div class="pv-account-bar">
@@ -232,7 +252,7 @@
         <strong style="color: var(--pv-gold);">Neuropliegues</strong>. Construye tu identidad con el <strong>Tracker</strong>.
       </p>
       <p x-show="userName" x-cloak class="text-sm italic mt-4 text-white/85">
-        Bienvenida, <span class="font-semibold" x-text="userName"></span>.
+        Hola, <span class="font-semibold" x-text="userName"></span>.
       </p>
     </header>
 
@@ -257,6 +277,10 @@
       <button class="pv-tab" :class="vista === 'plan' ? 'active' : ''" @click="cambiarVista('plan')" role="tab">
         <span class="pv-tab-icon" x-html="icon('clipboard')"></span>
         <span class="pv-tab-label-full">Mi Plan</span>
+      </button>
+      <button class="pv-tab" :class="vista === 'matriz' ? 'active' : ''" @click="cambiarVista('matriz')" role="tab">
+        <span class="pv-tab-icon" x-html="icon('grid')"></span>
+        <span class="pv-tab-label-full">Matriz</span>
       </button>
     </nav>
 
@@ -358,6 +382,20 @@
         </button>
       </div>
 
+      <!-- Herramienta semanal: Matriz -->
+      <button @click="cambiarVista('matriz')" class="pv-card p-5 md:p-6 text-left w-full mt-4 md:mt-5 flex flex-col md:flex-row md:items-center gap-4">
+        <span class="np-icon" style="background: rgba(8,49,92,0.08); color: var(--pv-navy); margin-bottom:0; width:44px; height:44px; font-size:1.3rem; flex-shrink:0;" x-html="icon('grid')"></span>
+        <span class="block flex-1">
+          <span class="block text-[0.65rem] uppercase tracking-widest font-bold mb-1" style="color: #8a6a12;">Cada semana</span>
+          <span class="block text-xl font-extrabold mb-1" style="color: var(--pv-navy); letter-spacing: -0.01em;">Matriz de Urgencia e Importancia</span>
+          <span class="block text-sm" style="color: var(--pv-ink-soft); line-height: 1.6;">Vacía tu mente, ubica cada tarea en su cuadrante y descubre por dónde empezar.</span>
+        </span>
+        <span style="color: var(--pv-navy);" class="font-bold inline-flex items-center gap-1 text-xs flex-shrink-0">
+          Abrir la Matriz
+          <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
+        </span>
+      </button>
+
       <!-- Cómo se hablan las 3 herramientas -->
       <section class="mt-14">
         <div class="pv-ornament"><span class="pv-ornament-dot"></span></div>
@@ -404,7 +442,7 @@
           Diagnostica tu realidad
         </h2>
         <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
-          La Rueda de la Vida — toca un pilar y califícalo del 1 al 10.
+          La Rueda de la Vida: toca un pilar y califícalo del 1 al 10.
         </p>
         <p x-show="rueda.mesAsignado" x-cloak class="text-xs mt-2 italic" style="color: var(--pv-ink-soft);">
           Esta rueda es de <strong x-text="nombreMes(rueda.mesAsignado)"></strong>.
@@ -497,12 +535,46 @@
           <!-- Histórico de ruedas pasadas -->
           <div class="pv-card p-5 md:p-6" x-show="rueda.historial && rueda.historial.length > 0" x-cloak>
             <h3 class="font-serif text-lg font-semibold mb-3">Ruedas pasadas</h3>
+            <p class="text-xs mb-3" style="color: var(--pv-ink-soft);">Toca un mes para ver cómo calificaste cada pilar.</p>
             <template x-for="snap in rueda.historial" :key="snap.mes">
-              <div class="rueda-snapshot">
-                <span x-text="nombreMes(snap.mes)"></span>
-                <span class="font-semibold" style="color: var(--pv-navy);">
-                  Promedio: <span x-text="snap.promedio.toFixed(1)"></span>/10
-                </span>
+              <div class="rueda-snapshot-item">
+                <button type="button" class="rueda-snapshot"
+                        @click="snapAbierto = (snapAbierto === snap.mes ? null : snap.mes)"
+                        :aria-expanded="snapAbierto === snap.mes ? 'true' : 'false'">
+                  <span class="flex-1 text-left" x-text="nombreMes(snap.mes)"></span>
+                  <span class="font-semibold" style="color: var(--pv-navy);">
+                    Promedio: <span x-text="snap.promedio.toFixed(1)"></span>/10
+                  </span>
+                  <span class="rueda-snapshot-chevron" :class="snapAbierto === snap.mes && 'abierto'" x-html="icon('chevronRight')"></span>
+                </button>
+
+                <!-- La rueda de ese mes: forma y calificación de cada pilar -->
+                <div class="rueda-snapshot-detalle" x-show="snapAbierto === snap.mes" x-cloak>
+                  <p class="rueda-snapshot-aviso" x-show="snapSinCalificar(snap)">
+                    Ese mes la rueda quedó con los valores de inicio (todo en 5): es probable que no se llegara a calificar.
+                  </p>
+                  <div class="grid sm:grid-cols-2 gap-4 items-center">
+                    <svg viewBox="-50 -50 500 500" class="wheel-svg rueda-snapshot-svg" preserveAspectRatio="xMidYMid meet" role="img"
+                         :aria-label="'Rueda de ' + nombreMes(snap.mes)">
+                      <circle cx="200" cy="200" r="36" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="72" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="108" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="144" class="wheel-ring" />
+                      <circle cx="200" cy="200" r="180" class="wheel-ring" />
+                      <path :d="ejesSnap(snap)" class="wheel-axis" />
+                      <polygon :points="puntosSnap(snap)" class="wheel-value-line" />
+                    </svg>
+                    <ul class="rueda-snapshot-lista">
+                      <template x-for="v in snap.valores" :key="v.id">
+                        <li>
+                          <span class="rueda-snapshot-nombre" x-text="v.nombre"></span>
+                          <span class="rueda-snapshot-barra"><i :style="'width:' + (v.valor * 10) + '%'"></i></span>
+                          <strong x-text="v.valor"></strong>
+                        </li>
+                      </template>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </template>
           </div>
@@ -574,7 +646,7 @@
                 </span>
                 <span class="np-pill-tool" x-show="np.proximamente" x-cloak
                       style="background: rgba(232,169,78,0.15); color: var(--pv-amber);">Próximamente</span>
-                <span x-show="!np.proximamente" x-cloak class="text-xs font-bold inline-flex items-center gap-1" :style="`color: ${np.color}`">
+                <span x-show="!np.proximamente" x-cloak class="text-xs font-bold inline-flex items-center gap-1" :style="`color: ${colorTexto(np.color)}`">
                   Abrir <span x-html="icon('arrowRight')" class="pv-icon-sm"></span>
                 </span>
               </div>
@@ -595,7 +667,7 @@
             <span class="np-icon" :style="`background: ${neuropliegueActivoData?.color}1a; color: ${neuropliegueActivoData?.color}; margin-bottom: 0;`"
                   x-html="icon(neuropliegueActivoData?.icono)"></span>
             <div>
-              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${neuropliegueActivoData?.color}`">Neuropliegue</p>
+              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${colorTexto(neuropliegueActivoData?.color)}`">Neuropliegue</p>
               <h2 class="text-2xl md:text-3xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.02em;" x-text="neuropliegueActivoData?.nombre"></h2>
             </div>
           </div>
@@ -646,7 +718,7 @@
           <div class="flex items-center gap-3 mb-3">
             <span class="np-icon" :style="`background: ${neuropliegueActivoData?.color}1a; color: ${neuropliegueActivoData?.color}; margin-bottom: 0; width: 36px; height: 36px; font-size: 1.2rem;`"
                   x-html="icon(neuropliegueActivoData?.icono)"></span>
-            <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${neuropliegueActivoData?.color}`"
+            <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${colorTexto(neuropliegueActivoData?.color)}`"
                x-text="neuropliegueActivoData?.nombre"></p>
           </div>
           <h2 class="text-3xl md:text-4xl font-extrabold mb-2" style="color: var(--pv-navy); letter-spacing: -0.02em;"
@@ -692,7 +764,7 @@
               </span>
               <span x-show="estaEnPlanLocal(neuropliegueActivo, herramientaActivaData?.id)" x-cloak class="inline-flex items-center gap-2">
                 <span x-html="icon('bookmarkCheck')" class="pv-icon-sm"></span>
-                En mi plan — quitar
+                En mi plan · Quitar
               </span>
             </button>
           </div>
@@ -754,6 +826,9 @@
                   <span class="flex-1 text-sm font-medium" x-text="habito.nombre"></span>
                   <span class="text-xs pv-num-tabular" style="color: var(--pv-ink-soft);"
                         x-text="`${contarDias(habito.id, 'done')}/${diasMes}`"></span>
+                  <button @click.stop="abrirEditarHabito(habito.id)"
+                          class="opacity-40 hover:opacity-100 hover:text-[var(--pv-navy)] transition" title="Editar nombre"
+                          x-html="icon('edit')"></button>
                   <button @click.stop="eliminarHabito(habito.id)"
                           class="opacity-40 hover:opacity-100 hover:text-[var(--pv-coral)] transition" title="Eliminar"
                           x-html="icon('trash')"></button>
@@ -897,6 +972,10 @@
         <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
           Las herramientas que has elegido aplicar. Tu caja de herramientas conductuales personal.
         </p>
+        <button @click="abrirOnboarding()" class="onb-replay-btn mt-3" title="Volver a ver el tour de bienvenida">
+          <span x-html="icon('sparkles')" class="pv-icon-sm"></span>
+          Ver tour de bienvenida otra vez
+        </button>
       </div>
 
       <div x-show="plan.herramientas.length === 0" x-cloak class="pv-card pv-card-accent-top p-8 text-center max-w-2xl mx-auto">
@@ -921,7 +1000,7 @@
                     x-html="icon(findNeuropliegueById(item.neuropliegueId)?.icono)"></span>
               <div class="flex-1 min-w-0">
                 <p class="text-[0.65rem] uppercase tracking-widest font-bold"
-                   :style="`color: ${findNeuropliegueById(item.neuropliegueId)?.color}`"
+                   :style="`color: ${colorTexto(findNeuropliegueById(item.neuropliegueId)?.color)}`"
                    x-text="findNeuropliegueById(item.neuropliegueId)?.nombre"></p>
                 <h3 class="text-lg font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;"
                     x-text="findHerramientaById(item.neuropliegueId, item.herramientaId)?.nombre"></h3>
@@ -966,6 +1045,195 @@
       </div>
     </section>
 
+    <!-- ===================== MATRIZ ===================== -->
+    <!-- Portada de matriz-urgencia-importancia.html (la página pública sigue
+         existiendo aparte). El contenido de #mz-root lo pinta MatrizMiBarco
+         (app.js) con JS normal, sin Alpine: no añadir directivas x- dentro. -->
+    <section x-show="vista === 'matriz'" x-cloak class="pv-view" role="tabpanel">
+      <div class="text-center mb-8">
+        <p class="pv-pill mb-2">Cada semana</p>
+        <h2 class="font-serif text-3xl md:text-4xl font-semibold" style="color: var(--pv-navy);">Matriz de Urgencia e Importancia</h2>
+        <p class="text-sm md:text-base mt-2 max-w-2xl mx-auto" style="color: var(--pv-ink-soft);">
+          Vacía tu mente y descubre por dónde empezar, en el trabajo y en tu vida personal. Lo que anotes aquí queda guardado en tu cuenta.
+        </p>
+      </div>
+
+      <div id="mz-root" class="mz max-w-3xl mx-auto">
+        <div id="mzImportNote" class="mz-import-note" style="display:none;"></div>
+      <!-- ===================== PASO 1 · VACÍA TU MENTE ===================== -->
+      <section class="mb-12">
+        <div class="mb-5">
+          <span class="mz-eyebrow">Paso 1</span>
+          <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Vacía tu mente</h2>
+          <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+            Escribe todo lo que quieres o necesitas hacer, sin pensar todavía en orden ni prioridad.
+            Trabajo, casa, tú: todo lo que tengas dando vueltas en la cabeza.
+          </p>
+        </div>
+
+        <div class="mz-dump-card">
+          <form id="mzDumpForm" class="flex flex-col sm:flex-row gap-3 mb-5">
+            <input id="mzDumpInput" class="mz-dump-input" type="text" maxlength="140"
+                   placeholder="Ej: Llamar al contador, ordenar el clóset, terminar la propuesta…" autocomplete="off" />
+            <button type="submit" class="mz-btn">
+              <svg class="mz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Agregar
+            </button>
+          </form>
+
+          <div id="mzDumpEmpty" class="text-sm" style="color: var(--pv-ink-soft);">
+            Todavía no has agregado nada. Empieza escribiendo arriba y no te detengas a pensar si es importante o no.
+          </div>
+          <div id="mzDumpList" class="flex flex-wrap gap-2.5"></div>
+        </div>
+      </section>
+
+      <!-- ===================== PASO 2 · LOS 4 CUADRANTES ===================== -->
+      <section class="mb-12">
+        <div class="mb-5">
+          <span class="mz-eyebrow">Paso 2</span>
+          <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Entiende los 4 cuadrantes</h2>
+          <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+            Cada tarea se mueve por dos preguntas: ¿es urgente? ¿es importante para la vida que quiero construir?
+          </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 gap-3.5">
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-coral);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">Urgente + Importante · Hazlo ahora</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Crisis, entregas con fecha límite real, lo que no puede esperar sin costo.</p>
+          </div>
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-gold-text);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">No urgente + Importante · Prográmalo</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Lo que construye la vida que quieres a mediano plazo: salud, hábitos, relaciones, proyectos propios.</p>
+          </div>
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-amber);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">Urgente + No importante · Delégalo</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Interrupciones y pedidos de otros que se sienten urgentes pero no mueven tu propia prioridad. <strong style="color: var(--pv-ink);">Tareas que alguien más puede hacer.</strong></p>
+          </div>
+          <div class="mz-legend-card">
+            <div class="flex items-center gap-2 mb-1.5"><span class="dot" style="background: var(--pv-ink-soft);"></span><span class="font-extrabold text-sm" style="color: var(--pv-navy);">No urgente + No importante · Elimínalo</span></div>
+            <p class="text-[.85rem]" style="color: var(--pv-ink-soft);">Distracciones. Si desaparece de la lista, tu vida no cambia.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== PASO 3 · CLASIFICA ===================== -->
+      <section class="mb-12">
+        <div class="mb-5 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <span class="mz-eyebrow">Paso 3</span>
+            <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Ubica cada tarea</h2>
+            <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+              Toca una tarea y te hago tres preguntas cortas: con tus respuestas te digo en qué cuadrante va y por qué.
+              Si prefieres ubicarla tú, también puedes. Nada queda fijo: puedes moverla después.
+              Cuando termines una tarea, marca el <strong style="color: var(--pv-mint);">✓</strong> de la izquierda y sale del cuadrante.
+            </p>
+          </div>
+          <button id="mzResetBtn" type="button" class="mz-btn-outline-navy">
+            <svg class="mz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/></svg>
+            Reiniciar todo
+          </button>
+        </div>
+
+        <!-- Bandeja de tareas sin clasificar -->
+        <div class="mz-dump-card mb-5">
+          <div id="mzUnsortedLabel" class="text-xs font-extrabold uppercase tracking-wide mb-3" style="color: var(--pv-ink-soft);">Sin clasificar</div>
+          <div id="mzUnsortedEmpty" class="text-sm" style="color: var(--pv-ink-soft);">
+            Agrega tareas en el Paso 1 para empezar a ubicarlas aquí.
+          </div>
+          <div id="mzUnsortedList" class="flex flex-wrap gap-2.5"></div>
+
+          <!-- Asistente de criterio: se llena por JS al tocar una tarea -->
+          <div id="mzWizard" class="mz-wizard" style="display:none;"></div>
+
+          <div id="mzManualHint" class="mz-manual-hint" style="display:none;">
+            Listo. Ahora toca el cuadrante donde quieres ubicarla.
+          </div>
+        </div>
+
+        <!-- Matriz -->
+        <div class="mz-matrix-shell">
+          <div class="mz-axis-y"><span>No urgente</span><span>Urgente</span></div>
+          <div class="mz-axis-x"><span>Importante</span><span>No importante</span></div>
+          <div class="mz-quad-grid">
+            <div class="mz-quad mz-quad--q1" data-quad="q1">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Hazlo ahora</span>
+                <span class="mz-quad-action mz-badge--q1">Urgente · Importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q1"></div>
+              <div class="mz-quad-empty" data-empty="q1">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+            <div class="mz-quad mz-quad--q3" data-quad="q3">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Delégalo</span>
+                <span class="mz-quad-action mz-badge--q3">Urgente · No importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q3"></div>
+              <div class="mz-quad-empty" data-empty="q3">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+            <div class="mz-quad mz-quad--q2" data-quad="q2">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Prográmalo</span>
+                <span class="mz-quad-action mz-badge--q2">No urgente · Importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q2"></div>
+              <div class="mz-quad-empty" data-empty="q2">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+            <div class="mz-quad mz-quad--q4" data-quad="q4">
+              <div class="mz-quad-head">
+                <span class="mz-quad-title">Elimínalo</span>
+                <span class="mz-quad-action mz-badge--q4">No urgente · No importante</span>
+              </div>
+              <div class="mz-quad-list" data-list="q4"></div>
+              <div class="mz-quad-empty" data-empty="q4">Toca una tarea y luego aquí para ubicarla.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== COMPLETADAS ===================== -->
+      <section id="mzDoneSection" class="mb-12" style="display:none;">
+        <div class="mb-5 flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <span class="mz-eyebrow">Ya está</span>
+            <h2 class="text-2xl font-extrabold mt-1 mb-2" style="color: var(--pv-navy);">Completadas</h2>
+            <p class="text-[.95rem]" style="color: var(--pv-ink-soft);">
+              Lo que ya soltaste. Se queda aquí para que veas el avance, no para que te estorbe arriba.
+            </p>
+          </div>
+          <button id="mzClearDoneBtn" type="button" class="mz-btn-outline-navy">
+            <svg class="mz-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+            Limpiar completadas
+          </button>
+        </div>
+
+        <div class="mz-dump-card">
+          <div id="mzDoneCount" class="text-xs font-extrabold uppercase tracking-wide mb-3" style="color: var(--pv-ink-soft);"></div>
+          <div id="mzDoneList"></div>
+        </div>
+      </section>
+
+      <!-- ===================== DIAGNÓSTICO ===================== -->
+      <section id="mzDiagSection" class="mb-6" style="display:none;">
+        <span class="mz-eyebrow">Diagnóstico</span>
+        <h2 class="text-2xl font-extrabold mt-1 mb-4" style="color: var(--pv-navy);">Por dónde empezar</h2>
+
+        <div class="mz-diag-card">
+          <div class="grid grid-cols-4 gap-2 mb-5">
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ1">0</div><div class="mz-diag-label">Hazlo ahora</div></div>
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ2">0</div><div class="mz-diag-label">Prográmalo</div></div>
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ3">0</div><div class="mz-diag-label">Delégalo</div></div>
+            <div class="mz-diag-stat"><div class="mz-diag-num" id="mzCountQ4">0</div><div class="mz-diag-label">Elimínalo</div></div>
+          </div>
+          <p id="mzDiagMessage" class="text-[.95rem] leading-relaxed text-white/90"></p>
+          <div id="mzDiagAlert" class="mz-diag-alert" style="display:none;"></div>
+        </div>
+      </section>
+      </div>
+    </section>
+
     <!-- ===================== MODAL: APLICAR HERRAMIENTA ===================== -->
     <div x-show="modalAplicacion" x-cloak class="pv-modal-backdrop" @click.self="cerrarModalAplicacion()">
       <div class="pv-modal pv-card-accent-top pv-fade-in" style="max-width: 32rem; max-height: 92vh; overflow-y: auto;">
@@ -975,7 +1243,7 @@
             <span class="np-icon" :style="`background: ${aplicacionNeuropliegueData?.color}1a; color: ${aplicacionNeuropliegueData?.color}; margin-bottom: 0; width: 40px; height: 40px; font-size: 1.2rem;`"
                   x-html="icon(aplicacionNeuropliegueData?.icono)"></span>
             <div>
-              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${aplicacionNeuropliegueData?.color}`"
+              <p class="text-[0.65rem] uppercase tracking-widest font-bold" :style="`color: ${colorTexto(aplicacionNeuropliegueData?.color)}`"
                  x-text="aplicacionNeuropliegueData?.nombre"></p>
               <h3 class="text-xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;"
                   x-text="aplicacionHerramientaData?.nombre"></h3>
@@ -1031,14 +1299,17 @@
     </div>
 
     <!-- ===================== MODAL NUEVO HÁBITO ===================== -->
-    <div x-show="modalNuevoHabito" x-cloak class="pv-modal-backdrop" @click.self="modalNuevoHabito = false">
+    <div x-show="modalNuevoHabito" x-cloak class="pv-modal-backdrop" @click.self="cerrarNuevoHabito()">
       <div class="pv-modal pv-card-accent-top pv-fade-in">
         <div class="flex items-center gap-3 mb-3">
-          <span class="np-icon" style="background: rgba(244,201,74,0.15); color: var(--pv-gold); margin-bottom: 0; width: 40px; height: 40px;" x-html="icon('plus')"></span>
-          <h3 class="text-2xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;">Nuevo hábito</h3>
+          <span class="np-icon" style="background: rgba(244,201,74,0.15); color: var(--pv-gold); margin-bottom: 0; width: 40px; height: 40px;" x-html="icon(habitoEditando ? 'edit' : 'plus')"></span>
+          <h3 class="text-2xl font-extrabold" style="color: var(--pv-navy); letter-spacing: -0.01em;" x-text="habitoEditando ? 'Editar hábito' : 'Nuevo hábito'"></h3>
         </div>
-        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);">
+        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);" x-show="!habitoEditando">
           Pequeño. Específico. Sostenible. Encuentra tu versión <em>imposible de fallar</em>.
+        </p>
+        <p class="text-sm mb-5" style="color: var(--pv-ink-soft);" x-show="habitoEditando" x-cloak>
+          Cambia el nombre o el pilar. <strong style="color: var(--pv-navy);">Tu historial de días marcados se conserva.</strong>
         </p>
         <label class="text-[0.7rem] uppercase tracking-widest font-bold block mb-2" style="color: var(--pv-navy);">Nombre del hábito</label>
         <input type="text" class="pv-input mb-4" x-model="nuevoHabitoNombre"
@@ -1052,12 +1323,59 @@
           </template>
         </select>
         <div class="flex gap-2 justify-end">
-          <button @click="modalNuevoHabito = false" class="pv-btn pv-btn-ghost">Cancelar</button>
+          <button @click="cerrarNuevoHabito()" class="pv-btn pv-btn-ghost">Cancelar</button>
           <button @click="confirmarNuevoHabito()" class="pv-btn pv-btn-primary"
                   :disabled="!nuevoHabitoNombre.trim()">
-            <span x-html="icon('plus')" class="pv-icon-sm"></span>
-            Crear hábito
+            <span x-html="icon(habitoEditando ? 'save' : 'plus')" class="pv-icon-sm"></span>
+            <span x-text="habitoEditando ? 'Guardar cambios' : 'Crear hábito'"></span>
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== MODAL: ONBOARDING (primera vez) ===================== -->
+    <div x-show="onboardingVisible" x-cloak class="onb-backdrop" @click.self="cerrarOnboarding(false)">
+      <div class="onb-modal">
+        <button class="onb-skip" @click="cerrarOnboarding(true)" x-show="!esUltimoSlide" x-cloak>
+          Saltar tour
+        </button>
+
+        <div class="onb-body" :key="onboardingSlide">
+          <div class="onb-slide-enter">
+            <div class="onb-icon" :style="`color: var(--pv-navy);`">
+              <span x-html="icon(slideActivoData?.icono)"></span>
+            </div>
+            <p class="onb-eyebrow" x-text="slideActivoData?.eyebrow"></p>
+            <h2 class="onb-title" x-text="slideActivoData?.titulo"></h2>
+            <p class="onb-text" x-text="slideActivoData?.texto"></p>
+            <ul x-show="slideActivoData?.bullets" x-cloak class="onb-bullets">
+              <template x-for="b in slideActivoData?.bullets || []">
+                <li x-text="b"></li>
+              </template>
+            </ul>
+          </div>
+        </div>
+
+        <div class="onb-footer">
+          <div class="onb-dots">
+            <template x-for="(s, i) in slidesOnboarding" :key="i">
+              <button class="onb-dot" :class="i === onboardingSlide ? 'active' : ''"
+                      @click="onboardingSlide = i"
+                      :aria-label="`Ir al paso ${i + 1}`"></button>
+            </template>
+          </div>
+          <div class="onb-nav">
+            <button class="pv-btn pv-btn-ghost" x-show="onboardingSlide > 0" x-cloak
+                    @click="onboardingSlide--">
+              <span x-html="icon('chevronLeft')" class="pv-icon-sm"></span>
+              Atrás
+            </button>
+            <button class="pv-btn pv-btn-primary"
+                    @click="siguienteSlide()">
+              <span x-text="esUltimoSlide ? (slideActivoData?.ctaLabel || 'Empezar') : 'Siguiente'"></span>
+              <span x-html="icon(esUltimoSlide ? 'sparkle' : 'arrowRight')" class="pv-icon-sm"></span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1098,6 +1416,7 @@ function miBarcoApp() {
     // ----- Rueda -----
     rueda: { pilares: [], historial: [] },
     ruedaSelectedIndex: 0,
+    snapAbierto: null,
 
     // ----- Neuropliegues -----
     neuropliegueActivo: null,
@@ -1117,6 +1436,7 @@ function miBarcoApp() {
     modalNuevoHabito: false,
     nuevoHabitoNombre: '',
     nuevoHabitoPilar: '',
+    habitoEditando: null,
 
     // ----- Modal aplicación de herramienta -----
     modalAplicacion: false,
@@ -1124,6 +1444,11 @@ function miBarcoApp() {
     aplicacionHerramientaId: null,
     aplicacionFormData: {},
     aplicacionExitosa: false,
+
+    // ----- Onboarding (modal de bienvenida primera vez) -----
+    onboardingVisible: false,
+    onboardingSlide: 0,
+    slidesOnboarding: window.MisPliegues?.ONBOARDING_SLIDES || [],
 
     // ----- Toast -----
     toastVisible: false,
@@ -1143,10 +1468,10 @@ function miBarcoApp() {
       });
 
       const hash = window.location.hash.replace('#', '');
-      if (['home','rueda','neuropliegues','tracker','plan'].includes(hash)) this.vista = hash;
+      if (['home','rueda','neuropliegues','tracker','plan','matriz'].includes(hash)) this.vista = hash;
       window.addEventListener('hashchange', () => {
         const h = window.location.hash.replace('#', '');
-        if (['home','rueda','neuropliegues','tracker','plan'].includes(h)) this.vista = h;
+        if (['home','rueda','neuropliegues','tracker','plan','matriz'].includes(h)) this.vista = h;
       });
     },
 
@@ -1165,6 +1490,12 @@ function miBarcoApp() {
         this.vista = 'tracker';
         setTimeout(() => this.abrirNuevoHabito(), 200);
       }
+
+      // Onboarding: si es la primera vez que entra (no ha completado el tour), mostrarlo
+      if (!MisPliegues.getOnboardingCompletado(this.plan)) {
+        // Pequeño delay para que la app renderice antes
+        setTimeout(() => { this.abrirOnboarding(); }, 600);
+      }
     },
 
     logout() {
@@ -1178,6 +1509,7 @@ function miBarcoApp() {
         this.neuropliegueActivo = null;
         this.herramientaActiva = null;
       }
+      if (v === 'matriz' && window.MatrizMiBarco) window.MatrizMiBarco.open();
       history.replaceState(null, '', '#' + v);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
@@ -1186,6 +1518,42 @@ function miBarcoApp() {
       this.nuevoHabitoPilar = pilarId || '';
       this.cambiarVista('tracker');
       setTimeout(() => this.abrirNuevoHabito(), 250);
+    },
+
+    // ====================================================
+    // ONBOARDING
+    // ====================================================
+    get slideActivoData() {
+      return this.slidesOnboarding[this.onboardingSlide] || {};
+    },
+    get esUltimoSlide() {
+      return this.onboardingSlide === this.slidesOnboarding.length - 1;
+    },
+
+    abrirOnboarding() {
+      this.onboardingSlide = 0;
+      this.onboardingVisible = true;
+    },
+
+    siguienteSlide() {
+      if (this.esUltimoSlide) {
+        this.cerrarOnboarding(true);
+        // CTA del último slide: llevar a la Rueda para empezar
+        this.cambiarVista('rueda');
+      } else {
+        this.onboardingSlide++;
+      }
+    },
+
+    cerrarOnboarding(marcarComoVisto) {
+      this.onboardingVisible = false;
+      if (marcarComoVisto) {
+        // Persistir en Supabase que ya vio el tour
+        const clon = JSON.parse(JSON.stringify(this.plan));
+        MisPliegues.marcarOnboardingCompletado(clon);
+        this.plan = clon;
+        MisPliegues.savePlan(clon);
+      }
     },
 
     // ====================================================
@@ -1203,6 +1571,19 @@ function miBarcoApp() {
     },
 
     toRad(deg) { return (deg * Math.PI) / 180; },
+    // Ruedas pasadas: mismo dibujo que la rueda actual, con los valores archivados
+    puntosSnap(snap) {
+      return (snap.valores || []).map((v, i) => `${this.pointX(i, v.valor)},${this.pointY(i, v.valor)}`).join(' ');
+    },
+    ejesSnap(snap) {
+      return (snap.valores || []).map((v, i) =>
+        `M 200 200 L ${this.pointX(i, 10)} ${this.pointY(i, 10)}`).join(' ');
+    },
+    snapSinCalificar(snap) {
+      if (snap.calificada === false) return true;
+      // Ruedas archivadas antes de guardar la marca: todo en 5 es el valor de inicio
+      return snap.calificada === undefined && (snap.valores || []).length > 0 && snap.valores.every(v => v.valor === 5);
+    },
     anguloPilarCentro(i) {
       const total = this.rueda.pilares.length || 10;
       return -90 + (i * 360 / total);
@@ -1309,6 +1690,28 @@ function miBarcoApp() {
     },
 
     findNeuropliegueById(id) { return this.neuropliegues.find(n => n.id === id); },
+
+    // Los colores de marca son vivos y funcionan como icono o como fondo, pero
+    // sobre blanco y a 10px no se leen: el dorado da 1.58:1 y el mínimo legible
+    // es 4.5:1. Esto los oscurece SOLO para texto pequeño, conservando el matiz.
+    colorTexto(hex) {
+      const m = /^#?([0-9a-f]{6})$/i.exec(String(hex || '').trim());
+      if (!m) return 'var(--pv-ink)';
+      const n = parseInt(m[1], 16);
+      const r0 = (n >> 16) & 255, g0 = (n >> 8) & 255, b0 = n & 255;
+      const lum = (r, g, b) => {
+        const c = [r, g, b].map(v => {
+          v /= 255;
+          return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+      };
+      for (let f = 1; f >= 0; f -= 0.04) {
+        const r = Math.round(r0 * f), g = Math.round(g0 * f), b = Math.round(b0 * f);
+        if (1.05 / (lum(r, g, b) + 0.05) >= 4.5) return `rgb(${r},${g},${b})`;
+      }
+      return 'var(--pv-ink)';
+    },
     findHerramientaById(neuropliegueId, herramientaId) {
       const np = this.findNeuropliegueById(neuropliegueId);
       return np ? np.herramientas.find(h => h.id === herramientaId) : null;
@@ -1346,47 +1749,21 @@ function miBarcoApp() {
       return !!(this.aplicacionFormData[campos[0].id] || '').trim();
     },
     get habitoSugeridoGenerado() {
+      // Las plantillas usan tokens {id_campo}. Reemplazamos cada {id} por el
+      // valor que la usuaria escribió. Si un campo está vacío, mostramos el
+      // label del campo entre paréntesis y en minúsculas para que sea claro
+      // qué falta llenar (en lugar de dejar el token visible).
       const tpl = this.aplicacionHerramientaData?.formularioAplicacion?.habitoSugerido || '';
       const campos = this.aplicacionHerramientaData?.formularioAplicacion?.campos || [];
+      if (!tpl) return '';
+
       let resultado = tpl;
       campos.forEach(c => {
         const valor = (this.aplicacionFormData[c.id] || '').trim();
-        // Reemplaza [Label original] y [id] por valor
-        resultado = resultado.replace(`[${c.label}]`, valor || `[${c.label}]`);
-      });
-      // Reemplazos simbólicos comunes
-      campos.forEach(c => {
-        const valor = (this.aplicacionFormData[c.id] || '').trim();
-        const tokens = {
-          'accion': 'acción',
-          'cuando': 'Cuándo',
-          'entonces': 'Entonces',
-          'que': 'Qué',
-          'donde': 'Dónde',
-          'habito': 'Hábito',
-          'objeto': 'objeto',
-          'lugar': 'lugar',
-          'habito_viejo': 'hábito viejo',
-          'habito_nuevo': 'hábito nuevo',
-          'partner': 'partner',
-          'compromiso': 'compromiso',
-          'habito_original': 'Hábito original',
-          'version_absurda': 'Versión absurda',
-          'meta_dias': 'Meta días',
-          'habito_100': 'Habito 100%',
-          'habito_50': 'Habito 50%',
-          'identidad': 'identidad',
-          'voto': 'Voto',
-          'narrativa_vieja': 'Narrativa vieja',
-          'narrativa_nueva': 'Narrativa nueva',
-          'referente': 'referente',
-          'por_que': 'Por qué',
-          'pregunta': 'Pregunta clave'
-        };
-        const placeholder = tokens[c.id];
-        if (placeholder) {
-          resultado = resultado.split(`[${placeholder}]`).join(valor || `[${placeholder}]`);
-        }
+        const fallback = `(${(c.label || c.id).toLowerCase()})`;
+        const replacement = valor || fallback;
+        // Reemplazar TODAS las ocurrencias de {id} (no solo la primera)
+        resultado = resultado.split(`{${c.id}}`).join(replacement);
       });
       return resultado;
     },
@@ -1623,21 +2000,44 @@ function miBarcoApp() {
     },
 
     abrirNuevoHabito() {
+      this.habitoEditando = null;
       this.modalNuevoHabito = true;
       this.nuevoHabitoNombre = '';
       this.$nextTick(() => this.$refs.nuevoHabitoInput?.focus());
     },
+    abrirEditarHabito(id) {
+      const h = this.tracker.habitos.find(x => x.id === id);
+      if (!h) return;
+      this.habitoEditando = id;
+      this.nuevoHabitoNombre = h.nombre;
+      this.nuevoHabitoPilar = h.pilarId || '';
+      this.modalNuevoHabito = true;
+      this.$nextTick(() => this.$refs.nuevoHabitoInput?.focus());
+    },
+    cerrarNuevoHabito() {
+      this.modalNuevoHabito = false;
+      this.habitoEditando = null;
+      this.nuevoHabitoNombre = '';
+      this.nuevoHabitoPilar = '';
+    },
     confirmarNuevoHabito() {
       if (!this.nuevoHabitoNombre.trim()) return;
       const clon = JSON.parse(JSON.stringify(this.tracker));
-      const id = MisPliegues.agregarHabito(clon, this.nuevoHabitoNombre.trim(), this.nuevoHabitoPilar);
-      this.tracker = clon;
-      this.guardarTracker();
-      this.habitoActivo = id;
-      this.modalNuevoHabito = false;
-      this.nuevoHabitoNombre = '';
-      this.nuevoHabitoPilar = '';
-      this.showToast('✓ Hábito creado', 'var(--pv-mint)');
+      if (this.habitoEditando) {
+        // Editar: conserva id, color e historial de días marcados
+        MisPliegues.editarHabito(clon, this.habitoEditando, this.nuevoHabitoNombre.trim(), this.nuevoHabitoPilar);
+        this.tracker = clon;
+        this.guardarTracker();
+        this.habitoActivo = this.habitoEditando;
+        this.showToast('✓ Hábito actualizado', 'var(--pv-mint)');
+      } else {
+        const id = MisPliegues.agregarHabito(clon, this.nuevoHabitoNombre.trim(), this.nuevoHabitoPilar);
+        this.tracker = clon;
+        this.guardarTracker();
+        this.habitoActivo = id;
+        this.showToast('✓ Hábito creado', 'var(--pv-mint)');
+      }
+      this.cerrarNuevoHabito();
     },
     eliminarHabito(id) {
       if (!confirm('¿Eliminar este hábito y todo su historial?')) return;

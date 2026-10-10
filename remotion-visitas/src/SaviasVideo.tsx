@@ -6,6 +6,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
   Easing,
+  Img,
 } from "remotion";
 import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
 import { loadFont as loadOutfit } from "@remotion/google-fonts/Outfit";
@@ -233,7 +234,7 @@ const Scene1: React.FC = () => {
           padding: 20,
         }}
       >
-        <img
+        <Img
           src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png"
           alt="Savias"
           style={{ width: "100%", height: "100%", objectFit: "contain" }}
@@ -493,7 +494,7 @@ const Scene4: React.FC = () => {
           marginBottom: 28,
         }}
       >
-        <img
+        <Img
           src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/69aaa9657bdf385b6095e0b8.png"
           alt="Savias"
           style={{ width: "100%", height: "100%", objectFit: "contain" }}

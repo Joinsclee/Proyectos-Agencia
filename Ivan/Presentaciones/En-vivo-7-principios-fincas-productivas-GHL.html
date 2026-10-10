@@ -1,0 +1,1332 @@
+<!-- ══════════════════════════════════════════════════════════════════
+     Los 7 principios del bosque · Fincas Productivas · La Huerta LAB
+     BLOQUE CUSTOM HTML DE GHL · generado con construir-ghl.py
+     No editar a mano: se edita el archivo de la carpeta Presentaciones y
+     se vuelve a generar.
+
+     Qué cambia respecto del archivo local:
+       · El CSS y el motor van empotrados. En GHL una ruta relativa se
+         resuelve contra el dominio del sitio y da 404.
+       · Las imágenes apuntan al CDN de la subcuenta, por lo mismo.
+       · Cada regla de estilo cuelga de `deck-stage`, para no pisar la
+         cabecera, el pie ni el editor de la página.
+     ═══════════════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&amp;family=Fraunces:ital,opsz,wght@1,9..144,500;1,9..144,600&amp;display=swap" rel="stylesheet">
+<style>
+/* El componente se pinta a pantalla completa por encima de la página. */
+deck-stage{position:fixed;inset:0;z-index:2147483000}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LA HUERTA LAB · Sistema visual de las clases en directo
+   Lienzo 1920×1080. Se proyecta en un directo de YouTube, así que manda
+   la legibilidad a tamaño pequeño: nadie lee un cuerpo de 20 px en un
+   móvil con la señal regular.
+
+   Reglas que vienen de eso:
+     · Cuerpo nunca por debajo de 34 px; titulares de 90 px para arriba.
+     · Poco texto por diapositiva. Lo demás lo dice Iván.
+     · Contraste alto siempre: crema sobre verde bosque, o al revés.
+   ══════════════════════════════════════════════════════════════════════ */
+
+deck-stage{
+  --bosque:#082E27;        /* el fondo de casi todo */
+  --bosque-2:#0d3d33;      /* superficies elevadas sobre el bosque */
+  --bosque-3:#061f1d;      /* el más profundo, para viñetear */
+  --lima:#C9DE3F;          /* el acento. Se usa poco y se nota */
+  --lima-2:#a8bd2a;
+  --coral:#E87B58;         /* la alarma, el dato incómodo */
+  --crema:#F6F4EA;         /* el papel */
+  --crema-2:#e4e0cf;
+  --tinta:#14261f;         /* texto sobre crema */
+  --suave:rgba(246,244,234,.62);
+  --linea:rgba(246,244,234,.16);
+}
+deck-stage,
+deck-stage *{box-sizing:border-box;margin:0;padding:0}
+/* `deck-stage` va nombrado a propósito: el motor declara su propia tipografía
+   en :host y esa le gana a la herencia desde <body>. Sin esto, en local todo
+   salía en la fuente del sistema y en GHL en Archivo, con saltos de línea
+   distintos: se maquetaba contra una fuente que el público no veía. */
+deck-stage{font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+deck-stage>section{
+  background:var(--bosque);
+  color:var(--crema);
+  overflow:hidden;
+}
+deck-stage>section>.d{position:absolute;inset:0;width:100%;height:100%}
+/* La caja donde vive el contenido. 130 px de margen: en un directo, el
+   reproductor recorta los bordes más de lo que uno cree. */
+deck-stage .pad{position:absolute;inset:0;padding:110px 130px;display:flex;flex-direction:column;justify-content:center}
+deck-stage .pad.top{justify-content:flex-start}
+/* Bloque de contenido pegado a la derecha. El texto de dentro sigue
+   alineado a la izquierda: un titular de 132 px en bandera derecha se
+   lee fatal. */
+/* Con align-items basta: cada hijo se encoge a su contenido y se pega a la
+   derecha. Forzarles width:100% reventaba la marca, que está posicionada en
+   absoluto y se iba 130 px fuera del lienzo. */
+deck-stage .pad.der{align-items:flex-end}
+/* Espeja la foto. Los fondos son 16:9 exactos, así que «cover» no deja
+   margen para reencuadrar: si el sujeto cae debajo del titular, la única
+   forma de moverlo al otro tercio sin perder resolución es voltear. */
+deck-stage .foto.espejo{transform:scaleX(-1)}
+/* ── Tipografía ───────────────────────────────────────────────────── */
+deck-stage .eyebrow{
+  font-size:26px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--lima);margin-bottom:34px;
+}
+deck-stage .eyebrow.coral{color:var(--coral)}
+deck-stage h1{font-size:132px;font-weight:800;line-height:.96;letter-spacing:-.035em;text-wrap:balance}
+deck-stage h2{font-size:96px;font-weight:800;line-height:1.02;letter-spacing:-.03em;text-wrap:balance}
+deck-stage h3{font-size:62px;font-weight:700;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+deck-stage h1 em,
+deck-stage h2 em,
+deck-stage h3 em{
+  font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:600;
+  color:var(--lima);
+}
+deck-stage .lead{font-size:42px;line-height:1.42;color:var(--suave);max-width:24ch;margin-top:38px}
+deck-stage .lead.ancho{max-width:34ch}
+deck-stage p.dato{font-size:36px;line-height:1.45;color:var(--suave)}
+deck-stage .fuente{
+  position:absolute;left:130px;bottom:58px;right:130px;
+  font-size:22px;line-height:1.4;color:rgba(246,244,234,.42);
+}
+/* Un dato sin fuente no se proyecta. Lo que Iván no ha cerrado va así. */
+deck-stage .pend{
+  display:inline-block;padding:2px 12px;border-radius:6px;
+  background:#ffe08a;color:#7a2d00;font-weight:800;font-size:.82em;
+  -webkit-box-decoration-break:clone;box-decoration-break:clone;
+}
+/* ── Fondo: las curvas de nivel de la finca ───────────────────────── */
+deck-stage .curvas{position:absolute;inset:0;opacity:.14;pointer-events:none}
+deck-stage .curvas svg{width:100%;height:100%}
+deck-stage .viñeta{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 42%,transparent 40%,rgba(6,31,29,.72))}
+/* ── Foto de fondo ────────────────────────────────────────────────── */
+deck-stage .foto{position:absolute;inset:0;background-size:cover;background-position:center}
+deck-stage .foto.der{background-position:right center}
+deck-stage .velo{position:absolute;inset:0}
+deck-stage .velo.izq{background:linear-gradient(100deg,rgba(8,46,39,.97) 34%,rgba(8,46,39,.72) 58%,rgba(8,46,39,.2))}
+/* El espejo de la anterior: la foto se ve por la izquierda y el texto va
+   a la derecha. Hace falta cuando el sujeto de la foto cae justo debajo
+   del titular y queda tapado. */
+deck-stage .velo.der{background:linear-gradient(260deg,rgba(8,46,39,.97) 34%,rgba(8,46,39,.72) 58%,rgba(8,46,39,.2))}
+deck-stage .velo.abajo{background:linear-gradient(180deg,rgba(8,46,39,.18) 30%,rgba(8,46,39,.88))}
+deck-stage .velo.full{background:rgba(8,46,39,.82)}
+/* ── Marca ────────────────────────────────────────────────────────── */
+deck-stage .marca{position:absolute;left:130px;top:62px;display:flex;align-items:center;gap:20px;z-index:5}
+deck-stage .marca img{height:74px;width:auto;filter:brightness(0) invert(1)}
+deck-stage .marca span{font-size:22px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--suave)}
+deck-stage .paso{position:absolute;right:130px;top:66px;z-index:5;
+  font-size:22px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:rgba(246,244,234,.4)}
+/* ── Piezas de datos ──────────────────────────────────────────────── */
+deck-stage .cifra{font-size:190px;font-weight:800;line-height:.88;letter-spacing:-.05em;color:var(--lima)}
+deck-stage .cifra.coral{color:var(--coral)}
+deck-stage .cifra small{display:block;font-size:32px;font-weight:600;letter-spacing:0;color:var(--suave);margin-top:18px;line-height:1.35}
+deck-stage .tarjetas{display:grid;gap:26px;margin-top:52px}
+deck-stage .tarjetas.tres{grid-template-columns:repeat(3,1fr)}
+deck-stage .tarjetas.dos{grid-template-columns:repeat(2,1fr)}
+deck-stage .tarjetas.cuatro{grid-template-columns:repeat(4,1fr);gap:20px}
+deck-stage .tarjetas.cuatro .tarjeta{padding:32px 28px}
+deck-stage .tarjetas.cuatro .tarjeta b{font-size:36px;margin-bottom:12px}
+deck-stage .tarjetas.cuatro .tarjeta span{font-size:26px;line-height:1.4}
+deck-stage .tarjeta{padding:40px;border:1px solid var(--linea);border-radius:20px;background:rgba(246,244,234,.05)}
+deck-stage .tarjeta b{display:block;font-size:46px;font-weight:800;color:var(--lima);margin-bottom:16px;line-height:1.05}
+deck-stage .tarjeta span{font-size:30px;line-height:1.42;color:var(--suave)}
+deck-stage .lista{display:grid;gap:26px;margin-top:46px}
+deck-stage .lista li{list-style:none;display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start;
+  font-size:40px;line-height:1.36}
+deck-stage .lista li i{width:14px;height:14px;border-radius:50%;background:var(--lima);margin-top:16px;flex:none}
+/* ── Animación al entrar en la diapositiva ────────────────────────────
+   deck-stage pone data-deck-active en la sección activa y lo quita al
+   salir. Colgar de ahí hace que la animación se reproduzca de nuevo
+   cada vez que se vuelve a la diapositiva, no solo la primera. */
+deck-stage [data-anim]{opacity:0}
+/* «traza» solo anima stroke-dashoffset: si además se le aplica el opacity:0
+   de arriba, el trazo nunca aparece. Tiene que quedar visible desde el
+   principio y dejar que sea el guion el que lo dibuje. */
+deck-stage [data-anim="dibuja-x"],
+deck-stage [data-anim="dibuja-y"],
+deck-stage [data-anim="revela"],
+deck-stage [data-anim="traza"]{opacity:1}
+deck-stage [data-anim="dibuja-x"]{transform:scaleX(0);transform-origin:left center}
+deck-stage [data-anim="dibuja-y"]{transform:scaleY(0);transform-origin:bottom center}
+@keyframes lh-sube{from{opacity:0;transform:translateY(34px)} to{opacity:1;transform:none}}
+@keyframes lh-baja{from{opacity:0;transform:translateY(-28px)}to{opacity:1;transform:none}}
+@keyframes lh-izq{from{opacity:0;transform:translateX(-56px)}to{opacity:1;transform:none}}
+@keyframes lh-der{from{opacity:0;transform:translateX(56px)} to{opacity:1;transform:none}}
+@keyframes lh-zoom{from{opacity:0;transform:scale(.93)}       to{opacity:1;transform:none}}
+@keyframes lh-revela{from{clip-path:inset(0 100% 0 0)}          to{clip-path:inset(0 0 0 0)}}
+@keyframes lh-dib-x{from{transform:scaleX(0)}                  to{transform:scaleX(1)}}
+@keyframes lh-dib-y{from{transform:scaleY(0)}                  to{transform:scaleY(1)}}
+@keyframes lh-traza{to{stroke-dashoffset:0}}
+deck-stage [data-deck-active] [data-anim="sube"]{animation:lh-sube   900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="baja"]{animation:lh-baja   900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="izq"]{animation:lh-izq    900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="der"]{animation:lh-der    900ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="zoom"]{animation:lh-zoom  1100ms cubic-bezier(.2,.7,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="revela"]{animation:lh-revela 1200ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="dibuja-x"]{animation:lh-dib-x  1000ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="dibuja-y"]{animation:lh-dib-y  1100ms cubic-bezier(.7,0,.2,1) var(--d,0ms) both}
+deck-stage [data-deck-active] [data-anim="traza"]{animation:lh-traza  1600ms cubic-bezier(.6,0,.3,1) var(--d,0ms) both}
+/* Los latidos decorativos van siempre: dan sensación de directo vivo. */
+@keyframes lh-latido{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.45);opacity:.5}}
+@keyframes lh-onda{0%{transform:scale(1);opacity:.7}100%{transform:scale(2.6);opacity:0}}
+@keyframes lh-flota{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+/* Dentro de un SVG el origen de transformación es la esquina del viewBox,
+   así que un «zoom» se lanza desde ahí en lugar de crecer en su sitio. */
+deck-stage svg [data-anim="zoom"],
+deck-stage svg [data-anim="sube"],
+deck-stage svg [data-anim="izq"],
+deck-stage svg [data-anim="der"]{
+  transform-box:fill-box;transform-origin:center;
+}
+deck-stage .punto{position:relative;display:inline-block;width:14px;height:14px;border-radius:50%;
+  background:var(--coral);animation:lh-latido 2s ease-in-out infinite}
+deck-stage .punto::after{content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:2px solid var(--coral);animation:lh-onda 2s ease-out infinite}
+deck-stage .flota{animation:lh-flota 5s ease-in-out infinite}
+deck-stage .folio{position:absolute;right:130px;top:64px;font-size:24px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--lima);z-index:4}
+deck-stage .brand-text{position:absolute;left:130px;top:64px;font-size:28px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;color:var(--crema);z-index:4}
+deck-stage .band{position:absolute;left:130px;right:130px;bottom:96px;display:flex;justify-content:space-between;gap:50px;border-top:2px solid rgba(246,244,234,.25);padding-top:26px;font-size:26px;color:var(--suave);font-weight:600}
+deck-stage .huge{font-size:116px;line-height:.98;font-weight:800;letter-spacing:-.04em;max-width:15ch}
+deck-stage .huge em{font-family:Fraunces,Georgia,serif;color:var(--lima);font-weight:600}
+deck-stage .question{font-size:72px;line-height:1.12;font-weight:800;letter-spacing:-.025em;max-width:23ch}
+deck-stage .statement{font-size:60px;line-height:1.18;font-weight:700;max-width:28ch}
+deck-stage .statement em{font-family:Fraunces,Georgia,serif;color:var(--lima);font-weight:600}
+deck-stage .outcome{font-size:78px;line-height:1.08;font-weight:800;letter-spacing:-.025em;max-width:22ch}
+deck-stage .outcome em{font-family:Fraunces,Georgia,serif;color:var(--lima);font-weight:600}
+deck-stage .subline{font-size:36px;line-height:1.4;color:var(--suave);max-width:33ch;margin-top:34px}
+deck-stage .rule{height:4px;background:var(--lima);width:310px;margin-top:40px}
+deck-stage .twocol{display:grid;grid-template-columns:1fr 1fr;gap:100px;align-items:center;width:100%}
+deck-stage .twocol .bodyline{font-size:42px;line-height:1.28;max-width:24ch;color:var(--crema)}
+deck-stage .twocol .bodyline + .bodyline{margin-top:36px}
+deck-stage .module-list{display:grid;grid-template-columns:1fr 1fr;column-gap:100px;row-gap:26px;margin-top:52px;max-width:1540px}
+deck-stage .module-list p{font-size:45px;font-weight:800;line-height:1.15;letter-spacing:-.015em}
+deck-stage .module-list b{font-size:33px;color:var(--lima);margin-right:22px}
+deck-stage .rowline{border-top:2px solid rgba(246,244,234,.23);padding-top:30px;margin-top:30px;max-width:1450px}
+deck-stage .rowline:first-of-type{margin-top:55px}
+deck-stage .rowline strong{font-size:44px;color:var(--lima)}
+deck-stage .rowline span{font-size:40px;color:var(--crema);margin-left:30px}
+deck-stage .compacto .rowline{padding-top:17px;margin-top:17px}
+deck-stage .compacto .rowline:first-of-type{margin-top:34px}
+deck-stage .compacto .rowline strong{font-size:37px}
+deck-stage .compacto .rowline span{font-size:34px;margin-left:24px}
+deck-stage .small-tag{font-size:29px;color:var(--lima);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+deck-stage .number{font-size:270px;font-weight:900;line-height:.7;color:var(--lima);letter-spacing:-.08em}
+deck-stage .cta-link{font-size:54px;font-weight:800;color:var(--crema);text-decoration:none;border-bottom:4px solid var(--lima);display:inline-block;margin-top:30px}
+deck-stage .qr{position:absolute;right:180px;top:310px;width:450px;padding:28px;border-radius:16px;background:var(--crema)}
+deck-stage .qr img{display:block;width:100%;height:auto}
+</style>
+
+<deck-stage width="1920" height="1080">
+
+<!-- 01 -->
+<section data-label="Portada"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/70095e4a-3843-4bc2-94bb-9c219080e144.jpg')"></div><div class="velo izq"></div>
+  <div class="brand-text">La Huerta LAB</div>
+  <div class="pad">
+    <p class="eyebrow" data-anim="sube">Fincas Productivas · En vivo con Iván Castrillón</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:14ch">Tu finca puede <em>aprender del bosque</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:300ms">Los siete principios que ordenan el curso, módulo por módulo.</p>
+  </div>
+</div></section>
+
+<!-- 02 -->
+<section data-label="Qué veremos"><div class="d"><div class="brand-text">La Huerta LAB</div>
+  <div class="pad">
+    <p class="eyebrow" data-anim="sube">Hoy vamos a abrir el programa</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:19ch">Qué aprenderás <em>en cada módulo</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:300ms;max-width:42ch">Y con qué tarea empiezas a aplicarlo en tu finca o en el predio que estás pensando comprar.</p>
+  </div>
+</div></section>
+
+<!-- 03 -->
+<section data-label="Del diagnóstico al método"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/0dc4d2df-c251-4277-abc2-10800d399d8e.jpg')"></div><div class="velo full"></div>
+  <div class="pad">
+    <p class="eyebrow" data-anim="sube">De la masterclass a este curso</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:22ch">Los cinco pilares te ayudan a <em>decidir</em></h2>
+    <p class="statement" data-anim="sube" style="--d:320ms;margin-top:38px">Los siete principios te muestran <em>cómo trabajar la finca.</em></p>
+  </div>
+</div></section>
+
+<!-- 04 -->
+<section data-label="Los siete módulos"><div class="d" style="background:var(--bosque-3)"><div class="pad">
+  <p class="eyebrow" data-anim="sube">Un principio por módulo</p>
+  <h2 data-anim="sube" style="--d:100ms">El recorrido completo</h2>
+  <div class="module-list" data-anim="sube" style="--d:280ms">
+    <p><b>01</b>Microclima</p><p><b>02</b>Microorganismos</p>
+    <p><b>03</b>Reciclaje de nutrientes</p><p><b>04</b>Diversidad</p>
+    <p><b>05</b>Agua</p><p><b>06</b>Energía</p>
+    <p><b>07</b>Descanso</p>
+  </div>
+</div></div></section>
+
+<!-- 04b -->
+<section data-label="Quién enseña"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/4ab33814-2d50-41d5-ac19-272ff71a6d7f.jpg');background-position:62% center"></div><div class="velo izq"></div>
+  <div class="pad">
+    <p class="eyebrow" data-anim="sube">Quién te va a acompañar</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:16ch">Iván Castrillón, <em>en la finca que diseñó</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">La Huerta es hotel, restaurante y campo escuela en menos de dos hectáreas. Los siete principios no son teoría: están funcionando ahí todos los días.</p>
+  </div>
+</div></section>
+
+<!-- 05 -->
+<section data-label="Módulo 1 · Microclima"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/f1d1d415-a50d-457b-b161-5e0762ee95d1.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 01 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Microclima</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:12ch">Siembra tu <em>propio clima</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">Un predio cubierto y con vegetación en distintos estratos se comporta distinto a un suelo desnudo.</p>
+  </div>
+</div></section>
+
+<!-- 06 -->
+<section data-label="Sombra y cobertura"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">El principio</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:22ch">La sombra empieza <em>en el diseño</em></h2>
+  <p class="statement" data-anim="sube" style="--d:320ms;margin-top:48px">Árboles, cultivos y cobertura protegen el suelo y crean condiciones más estables dentro del predio.</p>
+  <div class="rule" data-anim="dibuja-x" style="--d:620ms"></div>
+</div></div></section>
+
+<!-- 07 -->
+<section data-label="Resultado del módulo 1"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/0d77cd1a-92d0-418c-bd52-ca43f0bd9aa4.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 01 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Lo que empiezas a definir</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:20ch">El diseño inicial de tu predio <em>y tu primer comprador</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">Desde el principio decides qué vas a producir y quién podría comprártelo cerca.</p>
+  </div>
+</div></section>
+
+<!-- 08 -->
+<section data-label="Módulo 2 · Microorganismos"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/35b52ad2-e8b6-475c-9aa2-9406ced005c8.jpg');background-position:right center"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 02 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Microorganismos</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:11ch">El bosque es <em>el donante</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">La vida del suelo participa en la nutrición y en el equilibrio de los cultivos.</p>
+  </div>
+</div></section>
+
+<!-- 09 -->
+<section data-label="El suelo vivo"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">El principio</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:22ch">Un suelo vivo tiene <em>muchos habitantes</em></h2>
+  <p class="statement" data-anim="sube" style="--d:320ms;margin-top:48px">El manejo empieza por cuidar el hábitat de los microorganismos y entender qué función cumplen.</p>
+  <div class="rule" data-anim="dibuja-x" style="--d:620ms"></div>
+</div></div></section>
+
+<!-- 10 -->
+<section data-label="Resultado del módulo 2"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/f0383a56-8c13-462f-a95c-961b4efaaab7.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 02 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">La práctica</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:19ch">Del mantillo del bosque a <em>tu primera biofábrica</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">En el curso trabajas los métodos, las cantidades, los tiempos y los errores que dañan un lote.</p>
+  </div>
+</div></section>
+
+<!-- 11 -->
+<section data-label="Módulo 3 · Nutrientes"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/a789a001-0b2f-4dde-8d3c-4dca4de6c3bf.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 03 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Reciclaje de nutrientes</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:12ch">Primero, <em>el suelo</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">La fertilidad se construye con materia orgánica, microorganismos y minerales.</p>
+  </div>
+</div></section>
+
+<!-- 12 -->
+<section data-label="Leer antes de invertir"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">El principio</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:22ch">Antes de comprar insumos, <em>lee el suelo</em></h2>
+  <p class="statement" data-anim="sube" style="--d:320ms;margin-top:48px">Su textura, su estructura y la materia orgánica te dicen por dónde empezar.</p>
+  <div class="rule" data-anim="dibuja-x" style="--d:620ms"></div>
+</div></div></section>
+
+<!-- 13 -->
+<section data-label="Resultado del módulo 3"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6f4db518-264a-4078-96f4-c2ff91db6448.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 03 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Lo que aprendes a usar</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:19ch">Compost, biochar y bocashi <em>con criterio</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">Cada proceso tiene un propósito. La tarea es interpretar tu suelo o dimensionar tu biofábrica.</p>
+  </div>
+</div></section>
+
+<!-- 14 -->
+<section data-label="Módulo 4 · Diversidad"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/3cc4e4b1-b2ac-403e-a309-e907ae78af32.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 04 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Diversidad</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:12ch">Del plato <em>a la siembra</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">La producción se planifica desde lo que tu familia o tu mercado necesita.</p>
+  </div>
+</div></section>
+
+<!-- 15 -->
+<section data-label="Calendario de siembra"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">El principio</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:20ch">Qué sembrar, cuánto <em>y cada cuándo</em></h2>
+  <p class="statement" data-anim="sube" style="--d:320ms;margin-top:48px">Una planificación semanal evita cosechas que llegan todas al tiempo y semanas sin producto.</p>
+  <div class="rule" data-anim="dibuja-x" style="--d:620ms"></div>
+</div></div></section>
+
+<!-- 16 -->
+<section data-label="Resultado del módulo 4"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/a9175cdb-2c85-4a81-83f3-3eec10cde6da.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 04 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">La herramienta</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:20ch">Tu primera planificación <em>con la calculadora de siembra</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">Superficie disponible, consumo y rotación por familias botánicas.</p>
+  </div>
+</div></section>
+
+<!-- 17 -->
+<section data-label="Módulo 5 · Agua"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/f4e84d8c-55dd-4c19-bba4-ff7f512d6640.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 05 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Agua</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:12ch">El agua se <em>diseña antes</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">Antes de sembrar o comprar un predio, hay que entender su agua.</p>
+  </div>
+</div></section>
+
+<!-- 18 -->
+<section data-label="Mapa del agua"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">El principio</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:19ch">Por dónde entra, corre <em>y sale</em></h2>
+  <p class="statement" data-anim="sube" style="--d:320ms;margin-top:48px">El relieve y la cobertura determinan qué parte de la lluvia puede infiltrarse y quedarse en el lote.</p>
+  <div class="rule" data-anim="dibuja-x" style="--d:620ms"></div>
+</div></div></section>
+
+<!-- 19 -->
+<section data-label="Resultado del módulo 5"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/e20caac5-6081-49e5-84e5-31d6416a11ba.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 05 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">La tarea</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:21ch">El mapa de agua <em>de tu lote</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">Y, si aún estás buscando tierra, un criterio para evaluar predios antes de comprar.</p>
+  </div>
+</div></section>
+
+<!-- 20 -->
+<section data-label="Módulo 6 · Energía"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/94744e99-5f9f-41e9-8ea2-a4dcd4f5f2fd.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 06 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Energía</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:12ch">Que cada recurso <em>dé otra vuelta</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">En una finca, lo que sobra en un proceso puede alimentar el siguiente.</p>
+  </div>
+</div></section>
+
+<!-- 21 -->
+<section data-label="Ciclos en la finca"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">El principio</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:22ch">El residuo de hoy puede ser <em>el insumo de mañana</em></h2>
+  <p class="statement" data-anim="sube" style="--d:320ms;margin-top:48px">El pasto alimenta animales. El estiércol vuelve al suelo. El suelo sostiene nuevos cultivos.</p>
+  <div class="rule" data-anim="dibuja-x" style="--d:620ms"></div>
+</div></div></section>
+
+<!-- 22 -->
+<section data-label="Resultado del módulo 6"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/ebe53e9d-3092-4add-8448-13d5523637a0.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 06 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">La decisión</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:21ch">Qué módulo pecuario cabe <em>en tu realidad</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">Se calcula con el área, el alimento disponible y la mano de obra real.</p>
+  </div>
+</div></section>
+
+<!-- 23 -->
+<section data-label="Módulo 7 · Descanso"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/2a222e89-f807-4a39-abf3-933035e98b4e.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 07 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">Descanso</p>
+    <h1 data-anim="sube" style="--d:120ms;max-width:12ch">Parar a tiempo <em>también produce</em></h1>
+    <p class="lead ancho" data-anim="sube" style="--d:320ms">Plantas y potreros necesitan tiempo para recuperarse antes del siguiente uso.</p>
+  </div>
+</div></section>
+
+<!-- 24 -->
+<section data-label="El tiempo del rebrote"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">El principio</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:22ch">El pastoreo se ajusta <em>al rebrote</em></h2>
+  <p class="statement" data-anim="sube" style="--d:320ms;margin-top:48px">El Pastoreo Racional Voisin organiza la ocupación y el descanso de cada potrero según el crecimiento del pasto.</p>
+  <div class="rule" data-anim="dibuja-x" style="--d:620ms"></div>
+</div></div></section>
+
+<!-- 25 -->
+<section data-label="Resultado del módulo 7"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/60297943-72da-4376-be61-bc29d7effb30.jpg')"></div><div class="velo izq"></div>
+  <div class="folio">Módulo 07 / 07</div><div class="pad">
+    <p class="eyebrow" data-anim="sube">El cierre del programa</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:21ch">Integras los siete principios <em>en tu propio proyecto</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">Sales sabiendo cuál es tu primer paso y qué depende de él.</p>
+  </div>
+</div></section>
+
+<!-- 26 -->
+<section data-label="Tu punto de partida"><div class="d" style="background:var(--bosque-3)"><div class="pad">
+  <p class="eyebrow" data-anim="sube">Pausa para el chat</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:21ch">¿Cuál de estos principios <em>te falta hoy?</em></h2>
+  <p class="statement" data-anim="sube" style="--d:340ms;margin-top:48px">Si todavía no tienes finca, piensa en cuál revisarías primero antes de comprar.</p>
+</div></div></section>
+
+<!-- 26b -->
+<section data-label="Siete decisiones"><div class="d" style="background:var(--bosque-3)"><div class="pad compacto">
+  <p class="eyebrow" data-anim="sube">De cada módulo sales con algo hecho</p>
+  <h2 data-anim="sube" style="--d:100ms;max-width:18ch">No son siete temas: <em>son siete decisiones</em></h2>
+  <div class="rowline" data-anim="sube" style="--d:240ms"><strong>01</strong><span>Tu primer comprador, con nombre propio</span></div>
+  <div class="rowline" data-anim="sube" style="--d:300ms"><strong>02</strong><span>Tu bosque donante y tu primera biofábrica</span></div>
+  <div class="rowline" data-anim="sube" style="--d:360ms"><strong>03</strong><span>La lectura de tu suelo, antes de comprar insumos</span></div>
+  <div class="rowline" data-anim="sube" style="--d:420ms"><strong>04</strong><span>Tu calendario de siembra, con tus datos</span></div>
+  <div class="rowline" data-anim="sube" style="--d:480ms"><strong>05</strong><span>El mapa del agua de tu lote</span></div>
+  <div class="rowline" data-anim="sube" style="--d:540ms"><strong>06</strong><span>Tu módulo pecuario inicial, o la decisión de esperar</span></div>
+  <div class="rowline" data-anim="sube" style="--d:600ms"><strong>07</strong><span>El descanso, puesto en el calendario</span></div>
+</div></div></section>
+
+<!-- 26c -->
+<section data-label="Lo que te llevas"><div class="d" style="background:var(--bosque-3)"><div class="pad">
+  <p class="eyebrow" data-anim="sube">Además de las clases</p>
+  <h2 data-anim="sube" style="--d:100ms;max-width:24ch">Dos herramientas <em>que te quedan</em></h2>
+  <div class="tarjetas dos" style="margin-top:44px">
+    <div class="tarjeta" data-anim="sube" style="--d:320ms;padding:28px 30px">
+      <img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6aaa8294a84eda365a9228f3.png" alt="Memorias del curso" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px;margin-bottom:18px">
+      <b style="font-size:34px">Memorias del curso</b>
+      <span style="font-size:27px;line-height:1.35">Lo que vemos, escrito y ordenado por principio, para consultarlo en tu finca.</span>
+    </div>
+    <div class="tarjeta" data-anim="sube" style="--d:440ms;padding:28px 30px">
+      <img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6aaa828f9f8b31b6ab40990c.png" alt="Calculadora de siembra" style="display:block;width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px;margin-bottom:18px">
+      <b style="font-size:34px">Calculadora de siembra</b>
+      <span style="font-size:27px;line-height:1.35">Qué sembrar, cuánto y cada cuánto, según lo que come tu familia o pide tu mercado.</span>
+    </div>
+  </div>
+</div></div></section>
+
+<!-- 27 -->
+<section data-label="Dos formas de aprender"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/893eba18-d638-441b-b594-075d14ff8dba.jpg')"></div><div class="velo full"></div>
+  <div class="pad">
+    <p class="eyebrow" data-anim="sube">El mismo método</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:22ch">Dos formas de <em>vivir el curso</em></h2>
+    <div class="rowline" data-anim="sube" style="--d:320ms"><strong>Online</strong><span>Ocho semanas desde tu finca o tu casa</span></div>
+    <div class="rowline" data-anim="sube" style="--d:470ms"><strong>Presencial</strong><span>Cuatro días inmersivos en La Huerta</span></div>
+  </div>
+</div></section>
+
+<!-- 28 -->
+<section data-label="Curso online"><div class="d"><div class="pad">
+  <p class="eyebrow" data-anim="sube">Fincas Productivas · Online</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:20ch">Ocho semanas para aplicar <em>un principio cada vez</em></h2>
+  <p class="statement" data-anim="sube" style="--d:330ms;margin-top:42px;font-size:52px">Videos, encuentro en vivo los miércoles, tarea para tu proyecto y grabaciones disponibles.</p>
+  <p class="subline" data-anim="sube" style="--d:520ms;max-width:45ch;color:var(--lima)">Del 30 de septiembre al 18 de noviembre · miércoles, 6:00 a 8:00 p. m. hora Colombia</p>
+</div></div></section>
+
+<!-- 29 -->
+<section data-label="Curso presencial"><div class="d">
+  <div class="foto" style="background-image:url('https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/2c0c6e96-4607-470b-956e-afdb0fb43241.jpg')"></div><div class="velo izq"></div>
+  <div class="pad">
+    <p class="eyebrow" data-anim="sube">Fincas Productivas · Presencial</p>
+    <h2 data-anim="sube" style="--d:120ms;max-width:19ch">Cuatro días <em>en una finca real</em></h2>
+    <p class="lead ancho" data-anim="sube" style="--d:340ms">Biofábrica, cultivos, agua y potreros vistos en su contexto, con práctica en campo.</p>
+    <p class="subline" data-anim="sube" style="--d:520ms;max-width:40ch;color:var(--lima)">Próxima inmersión: del 1 al 4 de octubre de 2026</p>
+  </div>
+</div></section>
+
+<!-- 29b -->
+<section data-label="Antes de que preguntes"><div class="d" style="background:var(--bosque-3)"><div class="pad">
+  <p class="eyebrow" data-anim="sube">Lo que más nos preguntan</p>
+  <h2 data-anim="sube" style="--d:100ms;max-width:20ch">Tres dudas <em>que salen siempre</em></h2>
+  <div class="rowline" data-anim="sube" style="--d:280ms"><strong>¿Todavía no tengo finca?</strong><span>Mejor: entras con criterio para evaluar el agua, el suelo y la distancia al comprador antes de firmar.</span></div>
+  <div class="rowline" data-anim="sube" style="--d:380ms"><strong>¿Mi clima es otro?</strong><span>Los principios no cambian con el clima; cambia cómo los aplicas. Cada tarea se hace sobre tu proyecto.</span></div>
+  <div class="rowline" data-anim="sube" style="--d:480ms"><strong>¿No puedo viajar?</strong><span>El online es el mismo método, ocho semanas desde donde estés, y todo queda grabado.</span></div>
+</div></div></section>
+
+<!-- 30 -->
+<section data-label="Agenda tu llamada"><div class="d" style="background:var(--bosque-3)"><div class="pad">
+  <p class="eyebrow" data-anim="sube">Antes de inscribirte, conversemos</p>
+  <h2 data-anim="sube" style="--d:120ms;max-width:15ch">Agenda tu <em>llamada de claridad</em></h2>
+  <p class="statement" data-anim="sube" style="--d:300ms;margin-top:34px;max-width:26ch;font-size:50px">Nos cuentas en qué punto estás y te decimos qué modalidad encaja. Si ninguna encaja ahora, también te lo decimos.</p>
+  <a class="cta-link" data-anim="sube" style="--d:460ms;width:fit-content" href="https://link.cleesaas.com/widget/booking/7DEVRIcua9bXqeVaBTAc" target="_blank" rel="noopener">Elige tu horario</a>
+  <p class="subline" data-anim="sube" style="--d:600ms;max-width:44ch;font-size:30px;margin-top:26px">Inscripciones previstas hasta el jueves 24 de septiembre, 23:59 (Colombia).<br>¿Prefieres escribir? WhatsApp +57 315 850 5012</p>
+  <a class="qr" href="https://link.cleesaas.com/widget/booking/7DEVRIcua9bXqeVaBTAc" target="_blank" rel="noopener" aria-label="Abrir la agenda de llamadas de La Huerta LAB"><img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MSA0MSIgc2hhcGUtcmVuZGVyaW5nPSJjcmlzcEVkZ2VzIj48cGF0aCBmaWxsPSIjZjZmNGVhIiBkPSJNMCAwaDQxdjQxaC00MXoiLz48cGF0aCBzdHJva2U9IiMwNjFmMWQiIGQ9Ik00IDQuNWg3bTEgMGg0bTEgMGg2bTEgMGgxbTIgMGgxbTIgMGg3bS0zMyAxaDFtNSAwaDFtMiAwaDFtMSAwaDFtMiAwaDFtMyAwaDJtMSAwaDJtMSAwaDFtMSAwaDFtNSAwaDFtLTMzIDFoMW0xIDBoM20xIDBoMW0yIDBoMm0zIDBoMm0xIDBoMW0xIDBoMW0xIDBoMm0xIDBoMW0xIDBoMW0xIDBoM20xIDBoMW0tMzMgMWgxbTEgMGgzbTEgMGgxbTEgMGg1bTIgMGgybTEgMGgxbTEgMGgybTIgMGgxbTEgMGgxbTEgMGgzbTEgMGgxbS0zMyAxaDFtMSAwaDNtMSAwaDFtMSAwaDJtMyAwaDVtMSAwaDFtMiAwaDFtMyAwaDFtMSAwaDNtMSAwaDFtLTMzIDFoMW01IDBoMW0xIDBoMm0xIDBoMW00IDBoMm0xIDBoM200IDBoMW01IDBoMW0tMzMgMWg3bTEgMGgxbTEgMGgxbTEgMGgxbTEgMGgxbTEgMGgxbTEgMGgxbTEgMGgxbTEgMGgxbTEgMGgxbTEgMGg3bS0yNSAxaDFtMSAwaDJtMiAwaDRtMSAwaDFtMSAwaDFtMSAwaDJtLTI1IDFoMW0zIDBoMW0xIDBoM20xIDBoMm01IDBoMW0xIDBoMW0xIDBoMm0xIDBoNm0yIDBoMW0tMzMgMWg1bTMgMGgxbTQgMGg0bTEgMGgxbTQgMGgzbTMgMGgzbS0zMCAxaDFtMiAwaDZtNCAwaDFtMSAwaDFtMiAwaDFtMSAwaDVtMiAwaDFtMSAwaDFtLTMyIDFoMW0yIDBoM20xIDBoMW0yIDBoMW0xIDBoMW0yIDBoNG0yIDBoMm0zIDBoMW00IDBoMm0tMzMgMWg1bTEgMGgybTIgMGgxbTIgMGgzbTEgMGgxbTEgMGgybTEgMGgzbTEgMGgxbTEgMGgybS0yOSAxaDJtMSAwaDFtNiAwaDFtMSAwaDJtMSAwaDFtMSAwaDFtMiAwaDFtMyAwaDFtMSAwaDFtMiAwaDFtLTMxIDFoMm0xIDBoMW0yIDBoMm0xIDBoMW0xIDBoNm0zIDBoMm0xIDBoMW0xIDBoMm0xIDBoNG0tMzIgMWgzbTEgMGgxbTIgMGg1bTEgMGgxbTEgMGgxbTEgMGgybTIgMGg3bS0yNyAxaDFtMSAwaDVtMSAwaDRtMSAwaDFtMiAwaDFtMiAwaDNtMSAwaDFtMSAwaDFtMSAwaDFtMiAwaDFtLTMxIDFoMm0yIDBoMW0xIDBoMW0xIDBoMW0xIDBoMW0xIDBoMW0xIDBoMm0xIDBoMW0yIDBoMW0xIDBoMW0xIDBoMW0zIDBoM20tMzEgMWgzbTIgMGgybTEgMGgzbTMgMGgxbTEgMGgybTEgMGg0bTEgMGgxbTEgMGgxbTEgMGgxbS0yOSAxaDFtMSAwaDNtMyAwaDFtMyAwaDJtMiAwaDJtMiAwaDFtMiAwaDRtLTI3IDFoMW0yIDBoNG0xIDBoM20xIDBoMW0yIDBoMW0yIDBoMW0xIDBoNm0xIDBoMm0yIDBoMW0tMzMgMWgybTEgMGgxbTMgMGgybTIgMGgybTMgMGgybTIgMGgxbTQgMGgxbTEgMGgxbTEgMGgxbTEgMGgxbS0yOSAxaDFtMSAwaDZtMSAwaDVtMSAwaDFtMSAwaDJtMSAwaDRtMyAwaDJtLTMwIDFoMW0xIDBoMW0yIDBoMW0yIDBoNG0yIDBoM20yIDBoMW0yIDBoMW0yIDBoMW0zIDBoMW0tMzIgMWgybTEgMGg0bTEgMGgxbTMgMGgzbTEgMGgybTEgMGg0bTEgMGg1bS0yMSAxaDFtMiAwaDJtMSAwaDNtMSAwaDFtNSAwaDFtMyAwaDFtMSAwaDFtLTMxIDFoN20xIDBoMW0xIDBoMm0xIDBoM20yIDBoMW0xIDBoMW0xIDBoMW0xIDBoMW0xIDBoMW0xIDBoMm0xIDBoMW0tMzIgMWgxbTUgMGgxbTIgMGgybTIgMGgxbTMgMGgxbTEgMGgxbTEgMGgxbTIgMGgxbTMgMGgxbTIgMGgxbS0zMiAxaDFtMSAwaDNtMSAwaDFtMSAwaDFtMSAwaDJtMiAwaDJtMSAwaDFtMSAwaDRtMSAwaDZtMiAwaDFtLTMzIDFoMW0xIDBoM20xIDBoMW00IDBoMW0yIDBoMW0xIDBoM20zIDBoM20xIDBoNG0tMzAgMWgxbTEgMGgzbTEgMGgxbTQgMGgybTIgMGgxbTEgMGgybTEgMGgybTEgMGgybTEgMGgzbTEgMGgxbS0zMSAxaDFtNSAwaDFtNSAwaDFtMSAwaDVtMSAwaDJtMiAwaDNtLTI3IDFoN20xIDBoMm0yIDBoM20yIDBoM20xIDBoMm0xIDBoMW03IDBoMSIvPjwvc3ZnPgo=" alt="QR de la agenda de llamadas"></a>
+</div></div></section>
+
+</deck-stage>
+
+<script>
+/* GHL envuelve el bloque en secciones propias, y algunas llevan `transform`.
+   Un ancestro transformado convierte el `position:fixed` del componente en
+   relativo a esa caja: la presentación se encoge al ancho de la columna en
+   vez de ocupar la pantalla. Cuando se detecta uno de esos ancestros, el
+   <deck-stage> se cuelga directamente del <body>.
+
+   Va ANTES de definir el elemento a propósito: en este punto todavía es un
+   nodo inerte, así que moverlo no dispara ningún montaje ni desmontaje.
+   Se repite tras la hidratación porque GHL puede volver a envolverlo. */
+(function () {
+  var MUEVE = /translate|scale|rotate|matrix|perspective/;
+
+  function ancestroQueEstorba(el) {
+    for (var e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+      var s = getComputedStyle(e);
+      if ((s.transform && s.transform !== 'none') ||
+          (s.perspective && s.perspective !== 'none') ||
+          (s.filter && s.filter !== 'none') ||
+          (s.backdropFilter && s.backdropFilter !== 'none') ||
+          (s.willChange && MUEVE.test(s.willChange)) ||
+          (s.contain && /paint|layout|strict|content/.test(s.contain))) return e;
+    }
+    return null;
+  }
+
+  function enVertical() { return window.innerHeight > window.innerWidth; }
+
+  function recolocar() {
+    var d = document.querySelector('deck-stage');
+    if (!d || !document.body || d.parentElement === document.body) return;
+    /* En vertical no se toca: ahi no es una capa a pantalla completa, sino un
+       bloque en el flujo de la pagina, y colgarlo del <body> lo mandaria
+       detras de todo el contenido. */
+    if (enVertical()) return;
+    if (ancestroQueEstorba(d)) document.body.appendChild(d);
+  }
+
+  recolocar();
+  window.addEventListener('load', recolocar);
+  document.addEventListener('hydrationDone', recolocar);
+  setTimeout(recolocar, 1200);
+  setTimeout(recolocar, 3500);
+})();
+</script>
+
+<style>
+/* Las barras del letterbox: el componente las pinta negras. En verde
+   profundo de marca la pantalla entera se lee como una sola pieza en vez
+   de como una diapositiva pequeña dentro de un marco negro. */
+deck-stage{background:#061F1D}
+
+/* En vertical, un lienzo 16:9 encajado a pantalla completa deja dos bandas
+   enormes: medido en un movil de 390x844, la presentacion se quedaba en el
+   26 % del alto, y en una tableta de 768x1024 en el 42 %. Por debajo de 1:1
+   deja de ser una capa que tapa la pantalla y se comporta como un
+   reproductor: ancho completo, 16:9 de alto, y la pagina se desplaza normal.
+
+   El 56,25vw no es un numero redondo elegido a ojo: el motor escala con
+   min(vw/1920, vh/1080), y en vertical manda la anchura, asi que el lienzo
+   mide exactamente 1080*(vw/1920) = 0,5625*vw de alto. Coincide al pixel.
+
+   El ancho va con el truco de siempre en GHL, porque la columna que envuelve
+   el bloque casi nunca llega al borde. */
+@media (max-aspect-ratio: 1/1){
+  deck-stage{
+    position:relative;inset:auto;z-index:auto;
+    width:100vw;margin-left:calc(50% - 50vw);
+    height:56.25vw;
+    /* Las zonas tactiles y el contador del motor son `position:fixed`: en
+       modo capa eso estaba bien, pero aqui seguirian tapando la pantalla
+       entera y cualquier toque en la pagina pasaria de diapositiva. Medido:
+       el bloque ocupaba 390x219 y las zonas 390x844. Un `transform` en el
+       anfitrion lo convierte en el bloque contenedor de sus descendientes
+       fijos, que es justo la trampa del punto 3 del procedimiento de GHL,
+       usada aqui a proposito. */
+    transform:translateZ(0);
+  }
+}
+
+/* Botón de pantalla completa. Se crea desde JS y se cuelga del <body>,
+   igual que el componente: si quedara dentro de una sección de GHL con
+   `transform`, su `position:fixed` se rompería exactamente igual. */
+.lhp-fs{
+  position:fixed;right:22px;bottom:22px;z-index:2147483001;
+  display:inline-flex;align-items:center;gap:10px;
+  padding:11px 18px;border:1px solid rgba(201,222,63,.45);border-radius:999px;
+  background:rgba(6,31,29,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  color:#C9DE3F;font:700 13px/1 'Archivo',system-ui,sans-serif;
+  letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+  transition:opacity .3s ease,transform .3s ease,background .2s ease;
+}
+.lhp-fs:hover{background:rgba(6,31,29,.96);border-color:#C9DE3F}
+.lhp-fs:focus-visible{outline:2px solid #C9DE3F;outline-offset:3px}
+/* Se retira sola tras un rato quieto, como los controles de un reproductor. */
+.lhp-fs.lhp-dormido{opacity:0;transform:translateY(10px);pointer-events:none}
+@media(max-width:600px){.lhp-fs{right:12px;bottom:12px;padding:9px 14px;font-size:11px;letter-spacing:.1em}}
+</style>
+<script>
+(function () {
+  var raiz = document.documentElement;
+  var pedir = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+  var salir = document.exitFullscreen || document.webkitExitFullscreen;
+  if (!pedir) return;                       // iPhone: no hay API, no se pinta el botón
+
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'lhp-fs';
+  b.innerHTML = '<span aria-hidden="true">\u26F6</span><span class="lhp-txt">Pantalla completa</span>';
+  var txt = b.querySelector('.lhp-txt');
+
+  function completa() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function alternar() { completa() ? salir.call(document) : pedir.call(raiz); }
+  function pintar() {
+    txt.textContent = completa() ? 'Salir' : 'Pantalla completa';
+    b.setAttribute('aria-label', txt.textContent);
+  }
+
+  b.addEventListener('click', alternar);
+  document.addEventListener('fullscreenchange', pintar);
+  document.addEventListener('webkitfullscreenchange', pintar);
+
+  // F alterna, como en cualquier reproductor. El componente no usa esa tecla.
+  window.addEventListener('keydown', function (e) {
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'f' || e.key === 'F') { e.preventDefault(); alternar(); }
+  });
+
+  var reloj = null;
+  function despertar() {
+    b.classList.remove('lhp-dormido');
+    clearTimeout(reloj);
+    reloj = setTimeout(function () { b.classList.add('lhp-dormido'); }, 2600);
+  }
+  window.addEventListener('mousemove', despertar, { passive: true });
+  window.addEventListener('touchstart', despertar, { passive: true });
+
+  function montar() {
+    if (!document.body) return setTimeout(montar, 60);
+    if (!b.isConnected) document.body.appendChild(b);
+    pintar();
+    despertar();
+  }
+  montar();
+})();
+</script>
+
+<script>
+/**
+ * <deck-stage>: reusable web component for HTML decks.
+ *
+ * Handles:
+ *  (a) speaker notes, which read <script type="application/json" id="speaker-notes">
+ *      and posts {slideIndexChanged: N} to the parent window on nav.
+ *  (b) keyboard navigation with arrows, PgUp/PgDn, Space, Home/End, number keys.
+ *  (c) press R to reset to slide 0 (with a tasteful keyboard hint).
+ *  (d) bottom-center overlay showing slide count + hints, fades out on idle.
+ *  (e) auto-scaling: the inner canvas is a fixed design size (default 1920×1080)
+ *      scaled with `transform: scale()` to fit the viewport, letterboxed.
+ *      Set the `noscale` attribute to render at authored size (1:1); the
+ *      PPTX exporter sets this so its DOM capture sees unscaled geometry.
+ *  (f) print: `@media print` lays every slide out as its own page at the
+ *      design size, so the browser's Print → Save as PDF produces a clean
+ *      one-page-per-slide PDF with no extra setup.
+ *
+ * Slides are HIDDEN, not unmounted. Non-active slides stay in the DOM with
+ * `visibility: hidden` + `opacity: 0`, so their state (videos, iframes,
+ * form inputs, React trees) is preserved across navigation.
+ *
+ * Lifecycle event: the component dispatches a `slidechange` CustomEvent on
+ * itself whenever the active slide changes (including the initial mount).
+ * The event bubbles and composes out of shadow DOM, so you can listen on
+ * the <deck-stage> element or on document:
+ *
+ *   document.querySelector('deck-stage').addEventListener('slidechange', (e) => {
+ *     e.detail.index         // new 0-based index
+ *     e.detail.previousIndex // previous index, or -1 on init
+ *     e.detail.total         // total slide count
+ *     e.detail.slide         // the new active slide element
+ *     e.detail.previousSlide // the prior slide element, or null on init
+ *     e.detail.reason        // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+ *   });
+ *
+ * Persistence: none at the deck level. The host app keeps the current slide
+ * in its own URL (?slide=) and re-delivers it via location.hash on load, so a
+ * bare load with no hash always starts at slide 1.
+ *
+ * Usage:
+ *   <deck-stage width="1920" height="1080">
+ *     <section data-label="Title">...</section>
+ *     <section data-label="Agenda">...</section>
+ *   </deck-stage>
+ *
+ * Slides are the direct element children of <deck-stage>. Each slide is
+ * automatically tagged with:
+ *   - data-screen-label="NN Label"   (1-indexed, for comment flow)
+ *   - data-om-validate="no_overflowing_text,no_overlapping_text,slide_sized_text"
+ */
+
+(() => {
+  const DESIGN_W_DEFAULT = 1920;
+  const DESIGN_H_DEFAULT = 1080;
+  const OVERLAY_HIDE_MS = 1800;
+  const VALIDATE_ATTR = 'no_overflowing_text,no_overlapping_text,slide_sized_text';
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+
+  const stylesheet = `
+    :host {
+      position: fixed;
+      inset: 0;
+      display: block;
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .canvas {
+      position: relative;
+      transform-origin: center center;
+      flex-shrink: 0;
+      background: #fff;
+      will-change: transform;
+    }
+
+    /* Slides live in light DOM (via <slot>) so authored CSS still applies.
+       We absolutely position each slotted child to stack them. */
+    ::slotted(*) {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      visibility: hidden;
+    }
+    ::slotted([data-deck-active]) {
+      opacity: 1;
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    /* Tap zones for mobile: back/forward thirds like Stories.
+       Transparent, no visible UI, don't block the overlay. */
+    .tapzones {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      z-index: 2147482000;
+      pointer-events: none;
+    }
+    .tapzone {
+      flex: 1;
+      pointer-events: auto;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Only activate tap zones on coarse pointers (touch devices). */
+    @media (hover: hover) and (pointer: fine) {
+      .tapzones { display: none; }
+    }
+
+    .overlay {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translate(-50%, 6px) scale(0.92);
+      filter: blur(6px);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: #000;
+      color: #fff;
+      border-radius: 999px;
+      font-size: 12px;
+      font-feature-settings: "tnum" 1;
+      letter-spacing: 0.01em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease, transform 260ms cubic-bezier(.2,.8,.2,1), filter 260ms ease;
+      transform-origin: center bottom;
+      z-index: 2147483000;
+      user-select: none;
+    }
+    .overlay[data-visible] {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, 0) scale(1);
+      filter: blur(0);
+    }
+
+    .btn {
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      color: inherit;
+      font: inherit;
+      cursor: default;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 999px;
+      color: rgba(255,255,255,0.72);
+      transition: background 140ms ease, color 140ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .btn:active { background: rgba(255,255,255,0.18); }
+    .btn:focus { outline: none; }
+    .btn:focus-visible { outline: none; }
+    .btn::-moz-focus-inner { border: 0; }
+    .btn svg { width: 14px; height: 14px; display: block; }
+    .btn.reset {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0 10px 0 12px;
+      gap: 6px;
+      color: rgba(255,255,255,0.72);
+    }
+    .btn.reset .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 10px;
+      line-height: 1;
+      color: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.12);
+      border-radius: 4px;
+    }
+
+    .count {
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+      font-weight: 500;
+      padding: 0 8px;
+      min-width: 42px;
+      text-align: center;
+      font-size: 12px;
+    }
+    .count .sep { color: rgba(255,255,255,0.45); margin: 0 3px; font-weight: 400; }
+    .count .total { color: rgba(255,255,255,0.55); }
+
+    .divider {
+      width: 1px;
+      height: 14px;
+      background: rgba(255,255,255,0.18);
+      margin: 0 2px;
+    }
+
+    /* ── Print: one page per slide, no chrome ────────────────────────────
+       The screen layout stacks every slide at inset:0 inside a scaled
+       canvas; for print we want them in document flow at the authored
+       design size so the browser paginates one slide per sheet. The
+       @page size is set from the width/height attributes via the inline
+       <style id="deck-stage-print-page"> that connectedCallback injects
+       into <head> (the @page at-rule has no effect inside shadow DOM). */
+    @media print {
+      :host {
+        position: static;
+        inset: auto;
+        background: none;
+        overflow: visible;
+        color: inherit;
+      }
+      .stage { position: static; display: block; }
+      .canvas {
+        transform: none !important;
+        width: auto !important;
+        height: auto !important;
+        background: none;
+        will-change: auto;
+      }
+      ::slotted(*) {
+        position: relative !important;
+        inset: auto !important;
+        width: var(--deck-design-w) !important;
+        height: var(--deck-design-h) !important;
+        box-sizing: border-box !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto;
+        break-after: page;
+        page-break-after: always;
+        break-inside: avoid;
+        overflow: hidden;
+      }
+      ::slotted(*:last-child) {
+        break-after: auto;
+        page-break-after: auto;
+      }
+      .overlay, .tapzones { display: none !important; }
+    }
+  `;
+
+  class DeckStage extends HTMLElement {
+    static get observedAttributes() { return ['width', 'height', 'noscale']; }
+
+    constructor() {
+      super();
+      this._root = this.attachShadow({ mode: 'open' });
+      this._index = 0;
+      this._slides = [];
+      this._notes = [];
+      this._hideTimer = null;
+      this._mouseIdleTimer = null;
+
+      this._onKey = this._onKey.bind(this);
+      this._onResize = this._onResize.bind(this);
+      this._onSlotChange = this._onSlotChange.bind(this);
+      this._onMouseMove = this._onMouseMove.bind(this);
+      this._onTapBack = this._onTapBack.bind(this);
+      this._onTapForward = this._onTapForward.bind(this);
+    }
+
+    get designWidth() {
+      return parseInt(this.getAttribute('width'), 10) || DESIGN_W_DEFAULT;
+    }
+    get designHeight() {
+      return parseInt(this.getAttribute('height'), 10) || DESIGN_H_DEFAULT;
+    }
+
+    connectedCallback() {
+      this._render();
+      this._loadNotes();
+      this._syncPrintPageRule();
+      window.addEventListener('keydown', this._onKey);
+      window.addEventListener('resize', this._onResize);
+      window.addEventListener('mousemove', this._onMouseMove, { passive: true });
+      // Initial collection + layout happens via slotchange, which fires on mount.
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('keydown', this._onKey);
+      window.removeEventListener('resize', this._onResize);
+      window.removeEventListener('mousemove', this._onMouseMove);
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      if (this._mouseIdleTimer) clearTimeout(this._mouseIdleTimer);
+    }
+
+    attributeChangedCallback() {
+      if (this._canvas) {
+        this._canvas.style.width = this.designWidth + 'px';
+        this._canvas.style.height = this.designHeight + 'px';
+        this._canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+        this._canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+        this._fit();
+        this._syncPrintPageRule();
+      }
+    }
+
+    _render() {
+      const style = document.createElement('style');
+      style.textContent = stylesheet;
+
+      const stage = document.createElement('div');
+      stage.className = 'stage';
+
+      const canvas = document.createElement('div');
+      canvas.className = 'canvas';
+      canvas.style.width = this.designWidth + 'px';
+      canvas.style.height = this.designHeight + 'px';
+      canvas.style.setProperty('--deck-design-w', this.designWidth + 'px');
+      canvas.style.setProperty('--deck-design-h', this.designHeight + 'px');
+
+      const slot = document.createElement('slot');
+      slot.addEventListener('slotchange', this._onSlotChange);
+      canvas.appendChild(slot);
+      stage.appendChild(canvas);
+
+      // Tap zones (mobile): left third = back, right third = forward.
+      const tapzones = document.createElement('div');
+      tapzones.className = 'tapzones export-hidden';
+      tapzones.setAttribute('aria-hidden', 'true');
+      tapzones.setAttribute('data-noncommentable', '');
+      const tzBack = document.createElement('div');
+      tzBack.className = 'tapzone tapzone--back';
+      const tzMid = document.createElement('div');
+      tzMid.className = 'tapzone tapzone--mid';
+      tzMid.style.pointerEvents = 'none';
+      const tzFwd = document.createElement('div');
+      tzFwd.className = 'tapzone tapzone--fwd';
+      tzBack.addEventListener('click', this._onTapBack);
+      tzFwd.addEventListener('click', this._onTapForward);
+      tapzones.append(tzBack, tzMid, tzFwd);
+
+      // Overlay: compact, solid black, with clickable controls.
+      const overlay = document.createElement('div');
+      overlay.className = 'overlay export-hidden';
+      overlay.setAttribute('role', 'toolbar');
+      overlay.setAttribute('aria-label', 'Deck controls');
+      overlay.setAttribute('data-noncommentable', '');
+      overlay.innerHTML = `
+        <button class="btn prev" type="button" aria-label="Previous slide" title="Previous (←)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+        </button>
+        <span class="count" aria-live="polite"><span class="current">1</span><span class="sep">/</span><span class="total">1</span></span>
+        <button class="btn next" type="button" aria-label="Next slide" title="Next (→)">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg>
+        </button>
+        <span class="divider"></span>
+        <button class="btn reset" type="button" aria-label="Reset to first slide" title="Reset (R)">Reset<span class="kbd">R</span></button>
+      `;
+
+      overlay.querySelector('.prev').addEventListener('click', () => this._go(this._index - 1, 'click'));
+      overlay.querySelector('.next').addEventListener('click', () => this._go(this._index + 1, 'click'));
+      overlay.querySelector('.reset').addEventListener('click', () => this._go(0, 'click'));
+
+      this._root.append(style, stage, tapzones, overlay);
+      this._canvas = canvas;
+      this._slot = slot;
+      this._overlay = overlay;
+      this._countEl = overlay.querySelector('.current');
+      this._totalEl = overlay.querySelector('.total');
+    }
+
+    /** @page must live in the document stylesheet; it's a no-op inside
+     *  shadow DOM. Inject/update a single <head> style tag so the print
+     *  sheet matches the design size and Save-as-PDF yields one slide per
+     *  page with no margins. */
+    _syncPrintPageRule() {
+      const id = 'deck-stage-print-page';
+      let tag = document.getElementById(id);
+      if (!tag) {
+        tag = document.createElement('style');
+        tag.id = id;
+        document.head.appendChild(tag);
+      }
+      tag.textContent =
+        '@page { size: ' + this.designWidth + 'px ' + this.designHeight + 'px; margin: 0; } ' +
+        '@media print { html, body { margin: 0 !important; padding: 0 !important; background: none !important; overflow: visible !important; height: auto !important; } ' +
+        '* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }';
+    }
+
+    _onSlotChange() {
+      this._collectSlides();
+      this._restoreIndex();
+      this._applyIndex({ showOverlay: false, broadcast: true, reason: 'init' });
+      this._fit();
+    }
+
+    _collectSlides() {
+      const assigned = this._slot.assignedElements({ flatten: true });
+      this._slides = assigned.filter((el) => {
+        // Skip template/style/script nodes even if someone slots them.
+        const tag = el.tagName;
+        return tag !== 'TEMPLATE' && tag !== 'SCRIPT' && tag !== 'STYLE';
+      });
+
+      this._slides.forEach((slide, i) => {
+        const n = i + 1;
+        // Determine a label for comment flow: prefer explicit data-label,
+        // then an existing data-screen-label, then first heading, else "Slide".
+        let label = slide.getAttribute('data-label');
+        if (!label) {
+          const existing = slide.getAttribute('data-screen-label');
+          if (existing) {
+            // Strip any leading number the author may have included.
+            label = existing.replace(/^\s*\d+\s*/, '').trim() || existing;
+          }
+        }
+        if (!label) {
+          const h = slide.querySelector('h1, h2, h3, [data-title]');
+          if (h) label = (h.textContent || '').trim().slice(0, 40);
+        }
+        if (!label) label = 'Slide';
+        slide.setAttribute('data-screen-label', `${pad2(n)} ${label}`);
+
+        // Validation attribute for comment flow / auto-checks.
+        if (!slide.hasAttribute('data-om-validate')) {
+          slide.setAttribute('data-om-validate', VALIDATE_ATTR);
+        }
+
+        slide.setAttribute('data-deck-slide', String(i));
+      });
+
+      if (this._totalEl) this._totalEl.textContent = String(this._slides.length || 1);
+      if (this._index >= this._slides.length) this._index = Math.max(0, this._slides.length - 1);
+    }
+
+    _loadNotes() {
+      const tag = document.getElementById('speaker-notes');
+      if (!tag) { this._notes = []; return; }
+      try {
+        const parsed = JSON.parse(tag.textContent || '[]');
+        if (Array.isArray(parsed)) this._notes = parsed;
+      } catch (e) {
+        console.warn('[deck-stage] Failed to parse #speaker-notes JSON:', e);
+        this._notes = [];
+      }
+    }
+
+    _restoreIndex() {
+      // The host's ?slide= param is delivered as a #<int> hash (1-indexed) on
+      // the iframe src. No hash → slide 1; the deck itself keeps no position
+      // state across loads.
+      const h = (location.hash || '').match(/^#(\d+)$/);
+      if (h) {
+        const n = parseInt(h[1], 10) - 1;
+        if (n >= 0 && n < this._slides.length) this._index = n;
+      }
+    }
+
+    _applyIndex({ showOverlay = true, broadcast = true, reason = 'init' } = {}) {
+      if (!this._slides.length) return;
+      const prev = this._prevIndex == null ? -1 : this._prevIndex;
+      const curr = this._index;
+      // Keep the iframe's own hash in sync so an in-iframe location.reload()
+      // (reload banner path in viewer-handle.ts) lands on the current slide,
+      // not the stale deep-link hash from initial load.
+      try { history.replaceState(null, '', '#' + (curr + 1)); } catch (e) {}
+      this._slides.forEach((s, i) => {
+        if (i === curr) s.setAttribute('data-deck-active', '');
+        else s.removeAttribute('data-deck-active');
+      });
+      if (this._countEl) this._countEl.textContent = String(curr + 1);
+
+      if (broadcast) {
+        // (1) Legacy: host-window postMessage for speaker-notes renderers.
+        try { window.postMessage({ slideIndexChanged: curr }, '*'); } catch (e) {}
+
+        // (2) In-page CustomEvent on the <deck-stage> element itself.
+        //     Bubbles and composes out of shadow DOM so slide code can listen:
+        //       document.querySelector('deck-stage').addEventListener('slidechange', e => {
+        //         e.detail.index, e.detail.previousIndex, e.detail.total, e.detail.slide, e.detail.reason
+        //       });
+        const detail = {
+          index: curr,
+          previousIndex: prev,
+          total: this._slides.length,
+          slide: this._slides[curr] || null,
+          previousSlide: prev >= 0 ? (this._slides[prev] || null) : null,
+          reason: reason, // 'init' | 'keyboard' | 'click' | 'tap' | 'api'
+        };
+        this.dispatchEvent(new CustomEvent('slidechange', {
+          detail,
+          bubbles: true,
+          composed: true,
+        }));
+      }
+
+      this._prevIndex = curr;
+      if (showOverlay) this._flashOverlay();
+    }
+
+    _flashOverlay() {
+      if (!this._overlay) return;
+      this._overlay.setAttribute('data-visible', '');
+      if (this._hideTimer) clearTimeout(this._hideTimer);
+      this._hideTimer = setTimeout(() => {
+        this._overlay.removeAttribute('data-visible');
+      }, OVERLAY_HIDE_MS);
+    }
+
+    _fit() {
+      if (!this._canvas) return;
+      // PPTX export sets noscale so the DOM capture sees authored-size
+      // geometry: the scaled canvas is in shadow DOM, so the exporter's
+      // resetTransformSelector can't reach .canvas.style.transform directly.
+      if (this.hasAttribute('noscale')) {
+        this._canvas.style.transform = 'none';
+        return;
+      }
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const s = Math.min(vw / this.designWidth, vh / this.designHeight);
+      this._canvas.style.transform = `scale(${s})`;
+    }
+
+    _onResize() { this._fit(); }
+
+    _onMouseMove() {
+      // Keep overlay visible while mouse moves; hide after idle.
+      this._flashOverlay();
+    }
+
+    _onTapBack(e) {
+      e.preventDefault();
+      this._go(this._index - 1, 'tap');
+    }
+
+    _onTapForward(e) {
+      e.preventDefault();
+      this._go(this._index + 1, 'tap');
+    }
+
+    _onKey(e) {
+      // Ignore when the user is typing.
+      const t = e.target;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const key = e.key;
+      let handled = true;
+
+      if (key === 'ArrowRight' || key === 'PageDown' || key === ' ' || key === 'Spacebar') {
+        this._go(this._index + 1, 'keyboard');
+      } else if (key === 'ArrowLeft' || key === 'PageUp') {
+        this._go(this._index - 1, 'keyboard');
+      } else if (key === 'Home') {
+        this._go(0, 'keyboard');
+      } else if (key === 'End') {
+        this._go(this._slides.length - 1, 'keyboard');
+      } else if (key === 'r' || key === 'R') {
+        this._go(0, 'keyboard');
+      } else if (/^[0-9]$/.test(key)) {
+        // 1..9 jump to that slide; 0 jumps to 10.
+        const n = key === '0' ? 9 : parseInt(key, 10) - 1;
+        if (n < this._slides.length) this._go(n, 'keyboard');
+      } else {
+        handled = false;
+      }
+
+      if (handled) {
+        e.preventDefault();
+        this._flashOverlay();
+      }
+    }
+
+    _go(i, reason = 'api') {
+      if (!this._slides.length) return;
+      const clamped = Math.max(0, Math.min(this._slides.length - 1, i));
+      if (clamped === this._index) {
+        this._flashOverlay();
+        return;
+      }
+      this._index = clamped;
+      this._applyIndex({ showOverlay: true, broadcast: true, reason });
+    }
+
+    // Public API ------------------------------------------------------------
+
+    /** Current slide index (0-based). */
+    get index() { return this._index; }
+    /** Total slide count. */
+    get length() { return this._slides.length; }
+    /** Programmatically navigate. */
+    goTo(i) { this._go(i, 'api'); }
+    next() { this._go(this._index + 1, 'api'); }
+    prev() { this._go(this._index - 1, 'api'); }
+    reset() { this._go(0, 'api'); }
+  }
+
+  if (!customElements.get('deck-stage')) {
+    customElements.define('deck-stage', DeckStage);
+  }
+})();
+
+</script>

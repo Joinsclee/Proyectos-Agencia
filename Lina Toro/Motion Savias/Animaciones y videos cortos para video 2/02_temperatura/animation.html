@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<!--
+  ANIMACIÓN #02: Temperatura
+  Cliente: SAVIAS · Video: Jabón Drop Swirl
+  Tipo: counter + tag editorial (rango animado 32 → 35 ºC)
+  Duración total: 3.5s
+  Dimensiones: 1920x1080 (overlay sobre video horizontal)
+  Background: transparente (alpha)
+  Posición: centro-derecha del frame (deja libres las manos de Lina a la izq.)
+  Captura: node capture-animation.js animation.html animation.mov 1920 1080 3.5
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Animación 02 · Temperatura · SAVIAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Cormorant+SC:wght@500;600&family=Lora:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage-deep: #7B8F6A;
+  --gold: #B8943E;
+  --cream: #F5EFE6;
+  --ink: #1F1F1B;
+  --ink-soft: #4A4A45;
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-display-sc: 'Cormorant SC', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+
+  --total-duration: 3.5s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: transparent;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ───────── BLOQUE PRINCIPAL ─────────
+   Centro-derecha, con placa cream translúcida sutil (~75%) para legibilidad
+   sobre fondos variables del video. Línea gold vertical a la izquierda. */
+.temp-block {
+  position: absolute;
+  top: 50%;
+  right: 200px;
+  transform: translateY(-50%) translateX(20px);
+  padding: 32px 48px 32px 38px;
+  background: rgba(245, 239, 230, 0.72);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  animation:
+    block-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards,
+    block-exit 0.5s cubic-bezier(0.4, 0, 1, 1) calc(var(--total-duration) - 0.5s) forwards;
+}
+
+/* La línea gold se dibuja de arriba a abajo dentro de la placa */
+.temp-block::before {
+  content: '';
+  position: absolute;
+  left: 18px; top: 32px;
+  width: 3px; height: calc(100% - 64px);
+  background: var(--sage-deep);
+  transform: scaleY(0);
+  transform-origin: top center;
+  animation: line-draw-vert 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+}
+
+/* ───────── TAG ───────── */
+.tag {
+  font-family: var(--font-display-sc);
+  font-weight: 600;
+  font-size: 24px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--sage-deep);
+  margin-bottom: 20px;
+  
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: tag-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.55s forwards;
+}
+
+/* ───────── NÚMEROS (RANGO) ─────────
+   Cormorant italic gigante en gold, con sombra ink fina */
+.range {
+  display: flex;
+  align-items: baseline;
+  gap: 26px;
+  font-family: var(--font-display);
+  color: var(--gold);
+  
+}
+
+.num {
+  font-style: italic;
+  font-weight: 500;
+  font-size: 168px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transform: translateY(15px);
+  display: inline-block;
+}
+
+.num-1 { animation: num-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.85s forwards; }
+.num-2 { animation: num-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) 1.15s forwards; }
+
+.dash {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 100px;
+  line-height: 1;
+  color: var(--gold);
+  margin-bottom: 12px;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: dash-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) 1.0s forwards;
+}
+
+.unit {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 84px;
+  color: var(--gold);
+  margin-left: 14px;
+  opacity: 0;
+  transform: translateX(-12px);
+  animation: unit-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.35s forwards;
+}
+
+/* ───────── DESCRIPTOR INFERIOR ───────── */
+.descriptor {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 30px;
+  color: var(--ink-soft);
+  margin-top: 18px;
+  
+  opacity: 0;
+  transform: translateY(10px);
+  animation: desc-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.65s forwards;
+}
+
+/* ───────── KEYFRAMES ───────── */
+@keyframes block-enter {
+  to { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+@keyframes block-exit {
+  to { opacity: 0; transform: translateY(-50%) translateX(0); }
+}
+
+@keyframes line-draw-vert {
+  to { transform: scaleY(1); }
+}
+
+@keyframes tag-in {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes num-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dash-in {
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes unit-in {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes desc-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<div class="temp-block">
+  <div class="tag">Temperatura</div>
+  <div class="range">
+    <span class="num num-1">32</span>
+    <span class="dash">—</span>
+    <span class="num num-2">35</span>
+    <span class="unit">ºC</span>
+  </div>
+  <div class="descriptor">al juntar lejía y aceites</div>
+</div>
+
+</body>
+</html>

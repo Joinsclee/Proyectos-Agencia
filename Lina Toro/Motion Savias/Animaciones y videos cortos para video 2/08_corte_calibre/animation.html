@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!--
+  ANIMACIÓN #08: Calibre de corte estándar
+  Cliente: SAVIAS · Video: Jabón Drop Swirl
+  Tipo: counter + mini-esquema line-art (pastilla con medidas) + tag editorial
+  Duración total: 3.5s
+  Dimensiones: 1920x1080 (overlay sobre video horizontal)
+  Background: transparente (alpha)
+  Posición: lateral del frame (no tapa la mano que corta)
+  Captura: node capture-animation.js animation.html animation.mov 1920 1080 3.5
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Animación 08 · Corte · SAVIAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Cormorant+SC:wght@500;600&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage-deep: #7B8F6A;
+  --gold: #B8943E;
+  --cream: #F5EFE6;
+  --ink: #1F1F1B;
+  --ink-soft: #4A4A45;
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-display-sc: 'Cormorant SC', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+
+  --total-duration: 3.5s;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: transparent;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ───────── BLOQUE PRINCIPAL ─────────
+   Posición: arriba-derecha (deja libre el centro-abajo donde está la mano cortando).
+   Placa cream translúcida sutil (~75%) para legibilidad sobre fondos variables. */
+.corte-block {
+  position: absolute;
+  top: 130px;
+  right: 140px;
+  transform: translateX(25px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 32px 44px 36px 44px;
+  background: rgba(245, 239, 230, 0.72);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  animation:
+    block-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards,
+    block-exit 0.5s cubic-bezier(0.4, 0, 1, 1) calc(var(--total-duration) - 0.5s) forwards;
+}
+
+/* ───────── HEADER: TAG + LÍNEA GOLD ───────── */
+.tag {
+  font-family: var(--font-display-sc);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--sage-deep);
+  
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: tag-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+}
+
+.tag::before {
+  content: '';
+  width: 28px; height: 1.5px;
+  background: var(--sage-deep);
+}
+
+/* ───────── CIFRA PRINCIPAL ───────── */
+.value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  font-family: var(--font-display);
+  color: var(--gold);
+  
+}
+
+.num {
+  font-style: italic;
+  font-weight: 500;
+  font-size: 116px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transform: translateY(15px);
+  display: inline-block;
+}
+
+.num-1 { animation: num-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.7s forwards; }
+.num-2 { animation: num-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.0s forwards; }
+
+.dash {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 72px;
+  line-height: 1;
+  color: var(--gold);
+  margin-bottom: 8px;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: dash-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.85s forwards;
+}
+
+.unit {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 60px;
+  color: var(--gold);
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: unit-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.2s forwards;
+}
+
+/* ───────── MINI ESQUEMA PASTILLA LINE-ART ───────── */
+.schema {
+  margin-top: 8px;
+  opacity: 0;
+  animation: schema-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1.45s forwards;
+}
+
+.schema svg {
+  width: 260px;
+  height: auto;
+  overflow: visible;
+}
+
+.schema .pastilla {
+  stroke: var(--sage-deep);
+  stroke-width: 1.5;
+  fill: none;
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: stroke-draw 0.8s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
+}
+
+.schema .medida-line {
+  stroke: var(--sage-deep);
+  stroke-width: 1;
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: stroke-draw 0.3s cubic-bezier(0.22, 1, 0.36, 1) 2.0s forwards;
+}
+
+.schema .medida-arrow {
+  fill: var(--sage-deep);
+  opacity: 0;
+  animation: arrow-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) 2.1s forwards;
+}
+
+/* ───────── DESCRIPTOR ───────── */
+.descriptor {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--ink-soft);
+  
+  opacity: 0;
+  margin-top: 6px;
+  animation: desc-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 1.55s forwards;
+}
+
+/* ───────── KEYFRAMES ───────── */
+@keyframes block-enter { to { opacity: 1; transform: translateX(0); } }
+@keyframes block-exit { to { opacity: 0; transform: translateX(0); } }
+@keyframes tag-in { to { opacity: 1; transform: translateX(0); } }
+@keyframes num-in { to { opacity: 1; transform: translateY(0); } }
+@keyframes dash-in { to { opacity: 1; transform: scaleX(1); } }
+@keyframes unit-in { to { opacity: 1; transform: translateX(0); } }
+@keyframes schema-in { to { opacity: 1; } }
+@keyframes stroke-draw { to { stroke-dashoffset: 0; } }
+@keyframes arrow-in { to { opacity: 1; } }
+@keyframes desc-in { to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<div class="corte-block">
+  <div class="tag">Corte</div>
+
+  <div class="value-row">
+    <span class="num num-1">2</span>
+    <span class="dash">—</span>
+    <span class="num num-2">2,5</span>
+    <span class="unit">cm</span>
+  </div>
+
+  <div class="descriptor">calibre estándar por pastilla</div>
+
+  <!-- Mini esquema de la pastilla con medidas laterales -->
+  <div class="schema">
+    <svg viewBox="0 0 260 110" preserveAspectRatio="xMidYMid meet">
+      <!-- Pastilla (rectángulo redondeado) -->
+      <rect class="pastilla" x="40" y="30" width="180" height="50" rx="4" ry="4" />
+
+      <!-- Líneas de medida arriba -->
+      <line class="medida-line" x1="40" y1="18" x2="220" y2="18" />
+      <!-- Flechas de medida arriba -->
+      <polygon class="medida-arrow" points="40,18 50,14 50,22" />
+      <polygon class="medida-arrow" points="220,18 210,14 210,22" />
+
+      <!-- Línea de medida derecha -->
+      <line class="medida-line" x1="232" y1="30" x2="232" y2="80" />
+      <polygon class="medida-arrow" points="232,30 228,40 236,40" />
+      <polygon class="medida-arrow" points="232,80 228,70 236,70" />
+    </svg>
+  </div>
+</div>
+
+</body>
+</html>

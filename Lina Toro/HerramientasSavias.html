@@ -757,6 +757,53 @@
       white-space: nowrap;
     }
 
+    /* ─── FORMULADOR · MODO GUIADO (% fijos) ─── */
+    .fmg-controls {
+      background: var(--fondo-suave, #f7f8f5);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+    }
+    .fmg-clabel {
+      display: block;
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--negro);
+      margin-bottom: 8px;
+    }
+    .fmg-controls select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: .9rem;
+      background: #fff;
+    }
+    .fmg-puro-msg { font-size: .8rem; font-weight: 600; min-height: 1.1em; margin: 4px 0 2px; }
+    .fmg-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .fmg-line {
+      display: grid;
+      grid-template-columns: 1fr 72px 72px 0;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .fmg-line:last-child { border-bottom: none; }
+    .fmg-line-name { font-weight: 500; color: var(--negro); font-size: .9rem; }
+    .fmg-line-name small { color: var(--texto-suave); font-weight: 400; }
+    .fmg-sug { font-size: .72rem; color: var(--texto-suave); margin-top: 2px; line-height: 1.35; }
+    .fmg-line-pct { font-family: 'Outfit', sans-serif; font-weight: 700; text-align: right; color: var(--verde-hover); }
+    .fmg-line-gram { font-family: 'Outfit', sans-serif; font-weight: 600; text-align: right; font-size: .85rem; color: var(--texto-suave); }
+    .fmg-total-line { background: var(--fondo-suave, #f7f8f5); }
+    .fmg-total-line .fmg-line-name { font-weight: 700; }
+    .fmg-tensio { grid-template-columns: 1fr 70px 70px 28px; }
+
     /* ─── COLLECTION SUMMARY ─── */
     /* ─── PORTFOLIO PDF OUTPUT ─── */
     .pdf-wrap {
@@ -1517,7 +1564,7 @@
     <!-- APP 3: Formulador (Interactive Wizard) -->
     <!-- ════════════════════════════════════════ -->
     <div id="view-formulador" class="view">
-      <button class="btn-back" onclick="showMenu()">&#8592; Volver</button>
+      <button class="btn-back" onclick="fmSmartBack()">&#8592; Volver</button>
 
       <div class="card" style="margin-bottom:20px">
         <div class="card-title">Formulador — Crea tu Fórmula Paso a Paso</div>
@@ -1537,21 +1584,48 @@
           <p style="font-size:.85rem;color:var(--texto-suave);margin-bottom:16px">Elige el tipo de producto y define el tamaño de tu lote. Te guiaremos fase por fase.</p>
 
           <div class="field">
-            <label>Tipo de producto</label>
-            <select id="form-tipo" onchange="fmSelectProduct()">
-              <option value="">Selecciona un producto...</option>
-              <option value="crema-facial">Crema facial hidratante</option>
-              <option value="mantequilla-corporal">Mantequilla corporal</option>
-              <option value="balsamo-labial">Bálsamo labial</option>
-              <option value="serum-facial">Sérum facial</option>
-              <option value="shampoo-solido">Shampoo sólido</option>
-              <option value="locion-corporal">Loción corporal ligera</option>
-              <option value="exfoliante">Exfoliante corporal</option>
-              <option value="limpiador-polvo">Limpiador facial en polvo</option>
-              <option value="limpiador-polvo-enzimatico">Limpiador facial en polvo (enzimático)</option>
-              <option value="jabon-cp">Jabón Cold Process</option>
+            <label>¿Qué quieres crear?</label>
+            <select id="fm-cat" onchange="fmCat()">
+              <option value="">Selecciona...</option>
+              <option value="humectante">Humectante corporal</option>
+              <option value="shampoo">Shampoo</option>
+              <option value="otro">Otro producto</option>
             </select>
           </div>
+          <div class="field" id="fm-sub-wrap" style="display:none">
+            <label id="fm-sub-label">Formato</label>
+            <select id="fm-sub" onchange="fmSub()"><option value="">Selecciona...</option></select>
+          </div>
+          <div class="field" id="fm-sub2-wrap" style="display:none">
+            <label id="fm-sub2-label">Opción</label>
+            <select id="fm-sub2" onchange="fmSub2()"><option value="">Selecciona...</option></select>
+          </div>
+          <!-- Resolutor canónico (oculto): mantiene compatibilidad con goToFormulador() -->
+          <select id="form-tipo" onchange="fmSelectProduct()" style="display:none" aria-hidden="true" tabindex="-1">
+            <option value=""></option>
+            <option value="hum-crema-ligera"></option>
+            <option value="hum-crema-lig-viscosa"></option>
+            <option value="hum-crema-viscosa"></option>
+            <option value="hum-body-butter"></option>
+            <option value="hum-solido"></option>
+            <option value="shampoo-solido-seco"></option>
+            <option value="shampoo-solido-graso"></option>
+            <option value="shampoo-solido-normal"></option>
+            <option value="shampoo-solido-caida"></option>
+            <option value="shampoo-liquido-seco"></option>
+            <option value="shampoo-liquido-normal"></option>
+            <option value="shampoo-liquido-graso"></option>
+            <option value="crema-facial"></option>
+            <option value="mantequilla-corporal"></option>
+            <option value="balsamo-labial"></option>
+            <option value="serum-facial"></option>
+            <option value="shampoo-solido"></option>
+            <option value="locion-corporal"></option>
+            <option value="exfoliante"></option>
+            <option value="limpiador-polvo"></option>
+            <option value="limpiador-polvo-enzimatico"></option>
+            <option value="jabon-cp"></option>
+          </select>
 
           <div id="fm-product-info" style="display:none">
             <div class="consejo-box" style="margin-bottom:16px">
@@ -1585,7 +1659,7 @@
           <p style="font-size:.85rem;color:var(--texto-suave);margin-bottom:8px">Ajusta los porcentajes de cada ingrediente. Los sugeridos son una guía — personaliza a tu gusto.</p>
 
           <!-- Barra de progreso total -->
-          <div style="margin-bottom:20px">
+          <div style="margin-bottom:20px" id="fm-progressbar">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
               <span style="font-size:.75rem;font-weight:700;color:var(--texto-suave);text-transform:uppercase;letter-spacing:.3px">Total de la fórmula</span>
               <span style="font-family:'Outfit',sans-serif;font-weight:700;font-size:1.1rem" id="fm-total-pct">0%</span>
@@ -1753,6 +1827,17 @@
         if (target) target.classList.add('active');
       }
     })();
+
+    // El dashboard (universo-lina) pide "volver": si el formulador puede
+    // retroceder un paso, lo hace y avisa handled:true; si no, avisa handled:false
+    // para que el dashboard cierre la herramienta.
+    window.addEventListener('message', function (e) {
+      var d = e.data;
+      if (!d || d.type !== 'savias:request-back') return;
+      var handled = false;
+      try { handled = (typeof fmStepBack === 'function') ? fmStepBack() : false; } catch (_) { handled = false; }
+      try { (e.source || window.parent).postMessage({ type: 'savias:back-done', handled: handled }, '*'); } catch (_) { }
+    });
 
     // ════════════════════════════════════════
     // APP 1: CreaPrecio
@@ -1936,7 +2021,214 @@
     // ════════════════════════════════════════
     // APP 3: Formulador (Interactive Wizard)
     // ════════════════════════════════════════
+    // ─── Conservantes seleccionables (rango de dosificación por fabricante) ───
+    // Criterio de Lina: usamos el límite superior del rango y el agua se reajusta.
+    var CONSERVANTES = [
+      { nombre:'Germall Plus',  min:0.1,  max:0.5 },
+      { nombre:'Optiphen Plus', min:0.75, max:1.5 },
+      { nombre:'Optiphen',      min:0.5,  max:1.5 },
+      { nombre:'Sharomix',        min:0.6,  max:1.0 },
+      { nombre:'Euxyl PE 9010',   min:0.6,  max:1.0 },
+      { nombre:'Geogard/Cosgard', min:0.75, max:2.0 }
+    ];
+
+    // ─── Materia Activa del Tensioactivo (MAT): % de tensioactivo puro en el
+    // producto comercial. Valores de referencia; varían ±5% por fabricante
+    // (editable en la calculadora — verificar ficha técnica del proveedor). ───
+    var MAT_TENSIOACTIVOS = [
+      { nombre:'Coco betaína (anfótero)',              mat:30 },
+      { nombre:'Lauril glucósido (no iónico)',         mat:43 },
+      { nombre:'Coco glucósido (no iónico)',           mat:52 },
+      { nombre:'Decil glucósido (no iónico)',          mat:60 },
+      { nombre:'SCI · Sodium Cocoyl Isethionate',      mat:60 },
+      { nombre:'SCS · Sodium Coco Sulfate (aniónico)', mat:70 }
+    ];
+
     var formulasDB = {
+
+      // ════════ HUMECTANTES CORPORALES · EMULSIONADOS (con agua) ════════
+      // % fijos; el conservante es la única variable y el agua se ajusta a 100%.
+      'hum-crema-ligera': {
+        nombre:'Humectante · Crema ligera', tipo:'Emulsión O/W (rápida absorción)', dificultad:'Intermedia',
+        modo:'guiado-fijo', conservante:true,
+        descripcion:'Crema ligera de rápida absorción que no se siente aceitosa (usa éster en vez de aceite pesado). Porcentajes fijos: solo eliges el conservante.',
+        agua:{ cat:'Agua', sugeridos:['Agua destilada','Hidrolato'] },
+        items:[
+          { cat:'Humectante',        pct:5,  sugeridos:['Glicerina vegetal','Propanediol','Lactato de sodio'] },
+          { cat:'Cera emulsionante', pct:5,  sugeridos:['Olivem 1000','Cera emulsionante NF','Montanov 68'] },
+          { cat:'Aceite',            pct:5,  sugeridos:['Pepita de uva','Rosa mosqueta','Argán','Jojoba'] },
+          { cat:'Éster',             pct:10, sugeridos:['Coco caprilato','Miristato de isopropilo','MCT (cáprico/caprílico)'] },
+          { cat:'Fragancia',         pct:2,  sugeridos:['Aceite esencial','Fragancia cosmética'] }
+        ],
+        pasos:['Pesa la fase acuosa (agua + humectante) y caliéntala a 70–75°C.','Pesa la fase oleosa (cera emulsionante + aceite + éster) y caliéntala aparte a 70–75°C.','Vierte la fase acuosa sobre la oleosa batiendo con minipímer hasta emulsionar.','Sigue batiendo mientras enfría a 40°C.','Bajo 40°C agrega la fragancia y el conservante elegido.','Mide el pH (ideal 5.0–5.5) y envasa.'],
+        consejo:'El conservante es obligatorio porque la fórmula lleva agua. Elige uno y la calculadora ajusta el agua para sumar 100%.'
+      },
+      'hum-crema-lig-viscosa': {
+        nombre:'Humectante · Crema ligeramente viscosa', tipo:'Emulsión O/W', dificultad:'Intermedia',
+        modo:'guiado-fijo', conservante:true,
+        descripcion:'Crema de cuerpo medio, con manteca para más nutrición. Porcentajes fijos: solo eliges el conservante.',
+        agua:{ cat:'Agua', sugeridos:['Agua destilada','Hidrolato'] },
+        items:[
+          { cat:'Humectante',        pct:5,  sugeridos:['Glicerina vegetal','Propanediol','Lactato de sodio'] },
+          { cat:'Cera emulsionante', pct:5,  sugeridos:['Olivem 1000','Cera emulsionante NF','Montanov 68'] },
+          { cat:'Manteca',           pct:5,  sugeridos:['Mango','Karité','Cacao','Babasú'] },
+          { cat:'Aceite',            pct:10, sugeridos:['Pepita de uva','Algodón','Rosa mosqueta','Argán','Jojoba'] },
+          { cat:'Fragancia',         pct:2,  sugeridos:['Aceite esencial','Fragancia cosmética'] }
+        ],
+        pasos:['Pesa la fase acuosa (agua + humectante) y caliéntala a 70–75°C.','Pesa la fase oleosa (cera emulsionante + manteca + aceite) y caliéntala aparte a 70–75°C.','Vierte la fase acuosa sobre la oleosa batiendo con minipímer hasta emulsionar.','Sigue batiendo mientras enfría a 40°C.','Bajo 40°C agrega la fragancia y el conservante elegido.','Mide el pH (ideal 5.0–5.5) y envasa.'],
+        consejo:'El conservante es obligatorio porque la fórmula lleva agua. Elige uno y la calculadora ajusta el agua para sumar 100%.'
+      },
+      'hum-crema-viscosa': {
+        nombre:'Humectante · Crema viscosa', tipo:'Emulsión O/W (densa)', dificultad:'Intermedia',
+        modo:'guiado-fijo', conservante:true,
+        descripcion:'Crema densa y envolvente, con espesante para más cuerpo. Porcentajes fijos: solo eliges el conservante.',
+        agua:{ cat:'Agua', sugeridos:['Agua destilada','Hidrolato'] },
+        items:[
+          { cat:'Humectante',        pct:5,  sugeridos:['Glicerina vegetal','Propanediol','Lactato de sodio'] },
+          { cat:'Cera emulsionante', pct:5,  sugeridos:['Olivem 1000','Cera emulsionante NF','Montanov 68'] },
+          { cat:'Aceite',            pct:12, sugeridos:['Pepita de uva','Algodón','Rosa mosqueta','Argán','Jojoba'] },
+          { cat:'Espesante',         pct:3,  sugeridos:['Alcohol cetílico','Ácido esteárico'] },
+          { cat:'Fragancia',         pct:2,  sugeridos:['Aceite esencial','Fragancia cosmética'] }
+        ],
+        pasos:['Pesa la fase acuosa (agua + humectante) y caliéntala a 70–75°C.','Pesa la fase oleosa (cera emulsionante + aceite + espesante) y caliéntala aparte a 70–75°C.','Vierte la fase acuosa sobre la oleosa batiendo con minipímer hasta emulsionar.','Sigue batiendo mientras enfría a 40°C.','Bajo 40°C agrega la fragancia y el conservante elegido.','Mide el pH (ideal 5.0–5.5) y envasa.'],
+        consejo:'El espesante (alcohol cetílico o ácido esteárico) da el cuerpo denso. El conservante es obligatorio: el agua se ajusta sola para sumar 100%.'
+      },
+
+      // ════════ HUMECTANTES CORPORALES · ANHIDROS (sin agua) ════════
+      // Sin agua = sin conservante ni emulsionante. % fijos que suman 100%.
+      'hum-body-butter': {
+        nombre:'Humectante · Body butter', tipo:'Anhidro (sin agua)', dificultad:'Básica',
+        modo:'guiado-fijo', conservante:false, agua:null,
+        descripcion:'Manteca corporal batida, sin agua. No necesita conservante ni emulsionante. La fécula de maíz le da un toque seco al absorberse.',
+        items:[
+          { cat:'Manteca',         pct:53, sugeridos:['Karité','Cacao','Mango','Murumuru'] },
+          { cat:'Aceite vegetal',  pct:29, sugeridos:['Almendras','Jojoba','Coco','Argán'] },
+          { cat:'Fécula de maíz',  pct:15, sugeridos:['Fécula de maíz','Almidón de maíz'] },
+          { cat:'Vitamina E',      pct:2,  sugeridos:['Vitamina E (tocoferol)'] },
+          { cat:'Aceite esencial', pct:1,  sugeridos:['Aceite esencial'] }
+        ],
+        pasos:['Derrite las mantecas a baño maría (máx 60°C).','Retira del fuego y agrega el aceite vegetal.','Refrigera 30–45 min hasta que esté semisólido.','Agrega la fécula de maíz, la vitamina E y el aceite esencial.','Bate 5–8 min hasta textura cremosa.','Envasa.'],
+        consejo:'Sin agua = sin conservante. La fécula de maíz quita la sensación grasosa. La textura cambia con la temperatura ambiente.'
+      },
+      'hum-solido': {
+        nombre:'Humectante · Sólido', tipo:'Anhidro (sin agua) · barra', dificultad:'Básica',
+        modo:'guiado-fijo', conservante:false, agua:null,
+        descripcion:'Barra hidratante sólida que se derrite con el calor de la piel. Lleva cera emulsionante para repartirse con el agua de la ducha. % fijos que suman 100%.',
+        items:[
+          { cat:'Manteca',           pct:60, sugeridos:['Karité','Cacao','Mango'] },
+          { cat:'Cera emulsionante', pct:24, sugeridos:['Cera emulsionante NF','Olivem 1000','BTMS'] },
+          { cat:'Aceite vegetal',    pct:10, sugeridos:['Almendras','Jojoba','Coco','Argán'] },
+          { cat:'Alcohol cetílico',  pct:3,  sugeridos:['Alcohol cetílico'] },
+          { cat:'Vitamina E',        pct:2,  sugeridos:['Vitamina E (tocoferol)'] },
+          { cat:'Fragancia',         pct:1,  sugeridos:['Aceite esencial','Fragancia cosmética'] }
+        ],
+        pasos:['Derrite manteca + cera emulsionante + alcohol cetílico a baño maría.','Agrega el aceite vegetal y mezcla.','Retira del fuego y agrega la vitamina E y la fragancia.','Vierte en molde y deja solidificar.','Desmolda cuando esté firme.'],
+        consejo:'Barra hidratante sólida. La cera emulsionante ayuda a que se reparta con el agua. Sin agua en la fórmula = sin conservante.'
+      },
+
+      // ════════ SHAMPOO SÓLIDO · % fijos por tipo de cabello ════════
+      'shampoo-solido-seco': {
+        nombre:'Shampoo sólido · Cabello seco', tipo:'Barra · seco / rizado / maltratado / caspa por sequedad', dificultad:'Intermedia',
+        modo:'guiado-fijo', conservante:false, agua:null,
+        descripcion:'Barra para cabello seco, rizado, maltratado o con caspa por sequedad. % por categoría definidos por Lina; eliges los ingredientes de cada grupo.',
+        items:[
+          { cat:'Tensioactivos',   pct:50, sugeridos:['SCI','Coco betaína','Coco glucósido'] },
+          { cat:'Grasas',          pct:20, sugeridos:['Manteca de karité','Manteca de cacao','Aceite de aguacate'] },
+          { cat:'Activos acuosos', pct:15, sugeridos:['Pantenol','Miel','Aloe','Proteína de seda'] },
+          { cat:'Activos sólidos', pct:15, sugeridos:['Almidón de maíz','Avena coloidal','Keratina','Caolín'] }
+        ],
+        pasos:['Tritura/pesa los tensioactivos (usa mascarilla con los polvos).','Derrite las grasas a baño maría.','Mezcla los tensioactivos con las grasas derretidas.','Agrega los activos acuosos y los activos sólidos.','Amasa hasta una pasta homogénea.','Prensa en molde y deja secar 24–48h antes de usar.'],
+        consejo:'Más grasas = más nutrición para cabello seco. Usa mascarilla al manipular tensioactivos en polvo. Deja secar la barra 24–48h.'
+      },
+      'shampoo-solido-graso': {
+        nombre:'Shampoo sólido · Cabello graso', tipo:'Barra · graso / caspa seborreica', dificultad:'Intermedia',
+        modo:'guiado-fijo', conservante:false, agua:null,
+        descripcion:'Barra para cabello graso o con caspa seborreica. Más tensioactivos para limpiar mejor; menos grasas. Eliges los ingredientes de cada grupo.',
+        items:[
+          { cat:'Tensioactivos',   pct:60, sugeridos:['SCI','SCS','Coco betaína'] },
+          { cat:'Grasas',          pct:10, sugeridos:['Aceite de jojoba','Manteca de karité (poca)'] },
+          { cat:'Activos acuosos', pct:15, sugeridos:['Hidrolato de romero','Pantenol','Niacinamida'] },
+          { cat:'Activos sólidos', pct:15, sugeridos:['Arcilla verde','Carbón activado','Mentol','Almidón de maíz'] }
+        ],
+        pasos:['Tritura/pesa los tensioactivos (usa mascarilla con los polvos).','Derrite las grasas a baño maría.','Mezcla los tensioactivos con las grasas derretidas.','Agrega los activos acuosos y los activos sólidos.','Amasa hasta una pasta homogénea.','Prensa en molde y deja secar 24–48h antes de usar.'],
+        consejo:'Más tensioactivos limpian la grasa; la arcilla o el carbón ayudan a regular el sebo. Deja secar la barra 24–48h.'
+      },
+      'shampoo-solido-normal': {
+        nombre:'Shampoo sólido · Cabello normal', tipo:'Barra · cabello normal', dificultad:'Intermedia',
+        modo:'guiado-fijo', conservante:false, agua:null,
+        descripcion:'Barra equilibrada para cabello normal. % balanceados. Eliges los ingredientes de cada grupo.',
+        items:[
+          { cat:'Tensioactivos',   pct:55, sugeridos:['SCI','Coco betaína','Coco glucósido'] },
+          { cat:'Grasas',          pct:15, sugeridos:['Manteca de karité','Aceite de jojoba','Aceite de coco'] },
+          { cat:'Activos acuosos', pct:15, sugeridos:['Pantenol','Hidrolato','Proteína de trigo'] },
+          { cat:'Activos sólidos', pct:15, sugeridos:['Almidón de maíz','Avena coloidal','Caolín'] }
+        ],
+        pasos:['Tritura/pesa los tensioactivos (usa mascarilla con los polvos).','Derrite las grasas a baño maría.','Mezcla los tensioactivos con las grasas derretidas.','Agrega los activos acuosos y los activos sólidos.','Amasa hasta una pasta homogénea.','Prensa en molde y deja secar 24–48h antes de usar.'],
+        consejo:'Fórmula equilibrada de mantenimiento. Deja secar la barra 24–48h antes del primer uso.'
+      },
+      'shampoo-solido-caida': {
+        nombre:'Shampoo sólido · Caída de cabello', tipo:'Barra · anticaída / crecimiento', dificultad:'Intermedia',
+        modo:'guiado-fijo', conservante:false, agua:null,
+        descripcion:'Barra enfocada en caída y crecimiento: más activos sólidos funcionales. Eliges los ingredientes de cada grupo.',
+        items:[
+          { cat:'Tensioactivos',   pct:50, sugeridos:['SCI','Coco betaína','Coco glucósido'] },
+          { cat:'Grasas',          pct:10, sugeridos:['Aceite de ricino','Aceite de jojoba'] },
+          { cat:'Activos acuosos', pct:15, sugeridos:['Hidrolato de romero','Cafeína','Pantenol'] },
+          { cat:'Activos sólidos', pct:25, sugeridos:['Keratina','Biotina','Niacinamida','Proteína hidrolizada'] }
+        ],
+        pasos:['Tritura/pesa los tensioactivos (usa mascarilla con los polvos).','Derrite las grasas a baño maría.','Mezcla los tensioactivos con las grasas derretidas.','Agrega los activos acuosos y los activos sólidos.','Amasa hasta una pasta homogénea.','Prensa en molde y deja secar 24–48h antes de usar.'],
+        consejo:'Más activos sólidos (keratina, biotina, niacinamida) para fortalecer. El romero y la cafeína estimulan el folículo. Deja secar 24–48h.'
+      },
+
+      // ════════ SHAMPOO LÍQUIDO · cálculo MAT de tensioactivos ════════
+      // Sistema variable: eliges tensioactivos y repartes el % puro (materia
+      // activa) hasta el objetivo del tipo de cabello. g a pesar = %puro × lote / MAT.
+      'shampoo-liquido-seco': {
+        nombre:'Shampoo líquido · Cabello seco', tipo:'Líquido · cabello seco', dificultad:'Avanzada',
+        modo:'guiado-liquido', conservante:true, cabello:'cabello seco',
+        descripcion:'Shampoo líquido para cabello seco. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.',
+        matTarget:{ min:7, max:11, def:9 },
+        tensioDefault:[ { nombre:'SCI · Sodium Cocoyl Isethionate', puro:5, mat:60 }, { nombre:'Coco betaína (anfótero)', puro:4, mat:30 } ],
+        fijos:[
+          { cat:'Gelificante', pct:1, sugeridos:['Goma xantana'] },
+          { cat:'Activo',      pct:1, sugeridos:['Pantenol','Niacinamida'] },
+          { cat:'Solvente',    pct:5, sugeridos:['Glicerina'] },
+          { cat:'Fragancia',   pct:1, sugeridos:['Fragancia cosmética','Aceite esencial'] }
+        ],
+        pasos:['Pesa cada tensioactivo según los GRAMOS calculados (no el % puro).','Disuelve los tensioactivos en el agua tibia removiendo sin hacer espuma.','Agrega la glicerina y los activos (pantenol, etc.).','Espesa con la goma xantana previamente dispersada.','Agrega la fragancia y el conservante elegido.','Mide y ajusta el pH (ideal 4.5–5.5) y envasa.'],
+        consejo:'El % puro es la materia activa; la calculadora lo convierte a gramos reales según el MAT de cada tensioactivo (editable — verifica la ficha técnica de tu proveedor).'
+      },
+      'shampoo-liquido-normal': {
+        nombre:'Shampoo líquido · Cabello normal', tipo:'Líquido · cabello normal', dificultad:'Avanzada',
+        modo:'guiado-liquido', conservante:true, cabello:'cabello normal',
+        descripcion:'Shampoo líquido para cabello normal. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.',
+        matTarget:{ min:12, max:15, def:13 },
+        tensioDefault:[ { nombre:'SCI · Sodium Cocoyl Isethionate', puro:5, mat:60 }, { nombre:'Coco betaína (anfótero)', puro:5, mat:30 }, { nombre:'Coco glucósido (no iónico)', puro:3, mat:52 } ],
+        fijos:[
+          { cat:'Gelificante', pct:1, sugeridos:['Goma xantana'] },
+          { cat:'Activo',      pct:1, sugeridos:['Pantenol','Niacinamida'] },
+          { cat:'Solvente',    pct:5, sugeridos:['Glicerina'] },
+          { cat:'Fragancia',   pct:1, sugeridos:['Fragancia cosmética','Aceite esencial'] }
+        ],
+        pasos:['Pesa cada tensioactivo según los GRAMOS calculados (no el % puro).','Disuelve los tensioactivos en el agua tibia removiendo sin hacer espuma.','Agrega la glicerina y los activos (pantenol, etc.).','Espesa con la goma xantana previamente dispersada.','Agrega la fragancia y el conservante elegido.','Mide y ajusta el pH (ideal 4.5–5.5) y envasa.'],
+        consejo:'El % puro es la materia activa; la calculadora lo convierte a gramos reales según el MAT de cada tensioactivo (editable — verifica la ficha técnica de tu proveedor).'
+      },
+      'shampoo-liquido-graso': {
+        nombre:'Shampoo líquido · Cabello graso', tipo:'Líquido · cabello graso', dificultad:'Avanzada',
+        modo:'guiado-liquido', conservante:true, cabello:'cabello graso',
+        descripcion:'Shampoo líquido para cabello graso. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.',
+        matTarget:{ min:16, max:20, def:18 },
+        tensioDefault:[ { nombre:'SCI · Sodium Cocoyl Isethionate', puro:8, mat:60 }, { nombre:'Coco betaína (anfótero)', puro:10, mat:30 } ],
+        fijos:[
+          { cat:'Gelificante', pct:1, sugeridos:['Goma xantana'] },
+          { cat:'Activo',      pct:1, sugeridos:['Pantenol','Niacinamida'] },
+          { cat:'Solvente',    pct:5, sugeridos:['Glicerina'] },
+          { cat:'Fragancia',   pct:1, sugeridos:['Fragancia cosmética','Aceite esencial'] }
+        ],
+        pasos:['Pesa cada tensioactivo según los GRAMOS calculados (no el % puro).','Disuelve los tensioactivos en el agua tibia removiendo sin hacer espuma.','Agrega la glicerina y los activos (pantenol, etc.).','Espesa con la goma xantana previamente dispersada.','Agrega la fragancia y el conservante elegido.','Mide y ajusta el pH (ideal 4.5–5.5) y envasa.'],
+        consejo:'El % puro es la materia activa; la calculadora lo convierte a gramos reales según el MAT de cada tensioactivo (editable — verifica la ficha técnica de tu proveedor).'
+      },
+
       'crema-facial': {
         nombre: 'Crema Facial Hidratante', tipo: 'Emulsión O/W', dificultad: 'Intermedia',
         descripcion: 'Emulsión aceite-en-agua ideal para hidratar sin engrasar. Requiere emulsionante y calentamiento de ambas fases.',
@@ -2182,6 +2474,7 @@
     };
 
     var fmCurrentProduct = null;
+    var fmCurrentStep = 1;
     var fmRowId = 0;
 
     function fmSelectProduct() {
@@ -2193,15 +2486,18 @@
         return;
       }
       fmCurrentProduct = formulasDB[tipo];
-      document.getElementById('fm-info-title').textContent = fmCurrentProduct.nombre + ' — ' + fmCurrentProduct.tipo;
-      document.getElementById('fm-info-desc').textContent = fmCurrentProduct.descripcion + ' Dificultad: ' + fmCurrentProduct.dificultad + '.';
+      var T = window.__t || function (s) { return s; };
+      document.getElementById('fm-info-title').textContent = T(fmCurrentProduct.nombre) + ' — ' + T(fmCurrentProduct.tipo);
+      document.getElementById('fm-info-desc').textContent = T(fmCurrentProduct.descripcion) + ' ' + T('Dificultad: ') + T(fmCurrentProduct.dificultad) + '.';
       info.style.display = 'block';
       // Limpiar fases previas para que se reconstruyan con el nuevo producto
       document.getElementById('fm-phases-container').innerHTML = '';
+      fmGuidedBuiltFor = null;
     }
 
     function fmGoStep(step) {
       if (step === 2 && !fmCurrentProduct) return;
+      fmCurrentStep = step;
 
       document.querySelectorAll('.fm-step').forEach(function(s) { s.style.display = 'none'; });
       document.getElementById('fm-step' + step).style.display = 'block';
@@ -2216,24 +2512,109 @@
         if (line) line.className = 'step-line' + (i <= step ? ' done' : '');
       }
 
-      if (step === 2) fmBuildPhases();
-      if (step === 3) fmBuildResult();
+      if (step === 2) { fmCurrentProduct.modo ? fmBuildGuided() : fmBuildPhases(); }
+      if (step === 3) { fmCurrentProduct.modo ? fmBuildResultGuided() : fmBuildResult(); }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    // Al cambiar de idioma, las pantallas construidas por innerHTML traen texto compuesto
+    // (texto + números) que el observer no puede re-traducir. Reconstruimos el paso activo
+    // del formulador preservando lo que el usuario ya escribió.
+    function fmReRenderForLang() {
+      var fv = document.getElementById('view-formulador');
+      if (!fv || !fv.classList.contains('active') || !fmCurrentProduct) return;
+      if (fmCurrentStep === 2) {
+        if (fmCurrentProduct.modo === 'guiado-liquido') {
+          // Captura inputs del editor líquido para restaurarlos tras el rebuild.
+          var tInput = document.getElementById('fm-mat-target');
+          var matTarget = tInput ? tInput.value : null;
+          var tensio = [];
+          document.querySelectorAll('#fm-tensio-rows .fmg-tensio').forEach(function (r) {
+            var sel = r.querySelector('[data-ta-name]');
+            tensio.push({
+              name: sel ? sel.value : '',
+              puro: r.querySelector('[data-ta-puro]').value,
+              mat: r.querySelector('[data-ta-mat]').value
+            });
+          });
+          fmGuidedBuiltFor = null; // forzar rebuild de etiquetas estáticas
+          fmBuildGuided();
+          if (matTarget != null) { var ti = document.getElementById('fm-mat-target'); if (ti) ti.value = matTarget; }
+          var cont = document.getElementById('fm-tensio-rows');
+          if (cont && tensio.length) {
+            cont.innerHTML = tensio.map(function (t) { return fmTensioRowHTML(t.name, t.puro, t.mat); }).join('');
+          }
+          fmGuidedRecalc();
+        } else if (fmCurrentProduct.modo) {
+          fmGuidedBuiltFor = null;
+          fmBuildGuided();
+        } else {
+          // Modo clásico: captura nombre/% de cada fila para restaurarlos.
+          var saved = [];
+          (fmCurrentProduct.fases || []).forEach(function (fase, fi) {
+            var rows = [];
+            document.querySelectorAll('#fm-rows-' + fi + ' .fm-row').forEach(function (row) {
+              var sel = row.querySelector('select');
+              var inp = row.querySelector('input[type=number]');
+              rows.push({ name: sel ? sel.value : '', pct: inp ? inp.value : 0 });
+            });
+            saved.push(rows);
+          });
+          var container = document.getElementById('fm-phases-container');
+          if (container) container.innerHTML = '';
+          fmBuildPhases();
+          // Restaura los valores guardados sobre las filas reconstruidas.
+          (fmCurrentProduct.fases || []).forEach(function (fase, fi) {
+            var domRows = document.querySelectorAll('#fm-rows-' + fi + ' .fm-row');
+            (saved[fi] || []).forEach(function (data, ri) {
+              var row = domRows[ri];
+              if (!row) return;
+              var sel = row.querySelector('select');
+              var inp = row.querySelector('input[type=number]');
+              if (sel && data.name) {
+                var has = Array.prototype.some.call(sel.options, function (o) { return o.value === data.name; });
+                if (!has) { var opt = document.createElement('option'); opt.value = data.name; opt.textContent = (window.__t || function (s) { return s; })(data.name); sel.insertBefore(opt, sel.querySelector('option[value="__custom__"]')); }
+                sel.value = data.name;
+              }
+              if (inp) inp.value = data.pct;
+            });
+          });
+          fmRecalcTotal();
+        }
+      } else if (fmCurrentStep === 3) {
+        fmCurrentProduct.modo ? fmBuildResultGuided() : fmBuildResult();
+      }
+    }
+    window.__onLangChange = fmReRenderForLang;
+
+    // Retrocede un paso dentro del wizard del formulador. Devuelve true si pudo.
+    function fmStepBack() {
+      var fv = document.getElementById('view-formulador');
+      if (fv && fv.classList.contains('active') && fmCurrentStep > 1) {
+        fmGoStep(fmCurrentStep - 1);
+        return true;
+      }
+      return false;
+    }
+    // "Volver" del formulador: si hay paso anterior, va a él; si no, sale al menú.
+    function fmSmartBack() { if (!fmStepBack()) showMenu(); }
+
     function fmBuildPhases() {
+      var T = window.__t || function (s) { return s; };
       var container = document.getElementById('fm-phases-container');
+      var pb = document.getElementById('fm-progressbar');
+      if (pb) pb.style.display = 'block'; // modo clásico: mostramos la barra de progreso
       if (container.children.length > 0) { fmRecalcTotal(); return; } // Already built, just update
 
       var html = '';
       fmCurrentProduct.fases.forEach(function(fase, fi) {
         html += '<div class="fm-phase" id="fm-phase-' + fi + '" style="border-left:4px solid ' + fase.color + '">';
         html += '<div class="fm-phase-header">';
-        html += '<div class="fm-phase-title">' + fase.nombre + '</div>';
+        html += '<div class="fm-phase-title">' + T(fase.nombre) + '</div>';
         html += '<div class="fm-phase-pct" id="fm-phase-pct-' + fi + '">0%</div>';
         html += '</div>';
-        if (fase.nota) html += '<p class="fm-phase-note">' + fase.nota + '</p>';
-        html += '<div class="fm-row fm-row-header"><span>Ingrediente</span><span>%</span><span>Gramos</span><span></span></div>';
+        if (fase.nota) html += '<p class="fm-phase-note">' + T(fase.nota) + '</p>';
+        html += '<div class="fm-row fm-row-header"><span>' + T('Ingrediente') + '</span><span>%</span><span>' + T('Gramos') + '</span><span></span></div>';
         html += '<div id="fm-rows-' + fi + '">';
 
         // Pre-populate with suggested ingredients
@@ -2243,7 +2624,7 @@
         });
 
         html += '</div>';
-        html += '<button class="fm-add-btn" onclick="fmAddRow(' + fi + ')">+ Agregar ingrediente</button>';
+        html += '<button class="fm-add-btn" onclick="fmAddRow(' + fi + ')">' + T('+ Agregar ingrediente') + '</button>';
         html += '</div>';
       });
 
@@ -2252,24 +2633,25 @@
     }
 
     function fmRowHTML(phaseIdx, rowId, selectedName, pct, hint, opciones) {
-      var optionsHTML = '<option value="">Selecciona...</option>';
+      var T = window.__t || function (s) { return s; };
+      var optionsHTML = '<option value="">' + T('Selecciona...') + '</option>';
       opciones.forEach(function(o) {
-        optionsHTML += '<option value="' + o + '"' + (o === selectedName ? ' selected' : '') + '>' + o + '</option>';
+        optionsHTML += '<option value="' + o + '"' + (o === selectedName ? ' selected' : '') + '>' + T(o) + '</option>';
       });
       // Add custom option
       var isCustom = selectedName && opciones.indexOf(selectedName) === -1;
       if (isCustom) {
-        optionsHTML += '<option value="' + selectedName + '" selected>' + selectedName + '</option>';
+        optionsHTML += '<option value="' + selectedName + '" selected>' + T(selectedName) + '</option>';
       }
-      optionsHTML += '<option value="__custom__">+ Otro ingrediente...</option>';
+      optionsHTML += '<option value="__custom__">' + T('+ Otro ingrediente...') + '</option>';
 
       var h = '<div class="fm-row" id="fm-row-' + rowId + '" data-phase="' + phaseIdx + '">';
       h += '<div><select onchange="fmIngredientChange(this,' + rowId + ',' + phaseIdx + ')">' + optionsHTML + '</select>';
-      if (hint) h += '<div class="fm-row-hint">' + hint + '</div>';
+      if (hint) h += '<div class="fm-row-hint">' + T(hint) + '</div>';
       h += '</div>';
       h += '<input type="number" value="' + (pct || 0) + '" min="0" max="100" step="0.1" oninput="fmRecalcTotal()" style="width:80px">';
       h += '<span class="fm-gram-col" id="fm-gram-' + rowId + '">0g</span>';
-      h += '<button class="fm-remove-btn" onclick="fmRemoveRow(' + rowId + ')" title="Eliminar">&times;</button>';
+      h += '<button class="fm-remove-btn" onclick="fmRemoveRow(' + rowId + ')" title="' + T('Eliminar') + '">&times;</button>';
       h += '</div>';
       return h;
     }
@@ -2307,6 +2689,7 @@
 
     function fmRecalcTotal() {
       if (!fmCurrentProduct) return;
+      var T = window.__t || function (s) { return s; };
       var grandTotal = 0;
       var batchSize = parseFloat(document.getElementById('fm-batch-size').value) || 100;
 
@@ -2338,22 +2721,23 @@
       if (Math.abs(grandTotal - 100) <= 1) {
         barEl.style.background = 'var(--verde)';
         totalEl.style.color = 'var(--verde-hover)';
-        msgEl.textContent = 'La fórmula está balanceada.';
+        msgEl.textContent = T('La fórmula está balanceada.');
         msgEl.style.color = 'var(--verde-hover)';
       } else if (grandTotal < 100) {
         barEl.style.background = '#f0c040';
         totalEl.style.color = '#b36b10';
-        msgEl.textContent = 'Faltan ' + (100 - grandTotal).toFixed(1) + '% — agrega más ingredientes o ajusta porcentajes.';
+        msgEl.textContent = T('Faltan ') + (100 - grandTotal).toFixed(1) + T('% — agrega más ingredientes o ajusta porcentajes.');
         msgEl.style.color = '#b36b10';
       } else {
         barEl.style.background = '#e07c5a';
         totalEl.style.color = '#c62828';
-        msgEl.textContent = 'Excediste por ' + (grandTotal - 100).toFixed(1) + '% — reduce algún ingrediente.';
+        msgEl.textContent = T('Excediste por ') + (grandTotal - 100).toFixed(1) + T('% — reduce algún ingrediente.');
         msgEl.style.color = '#c62828';
       }
     }
 
     function fmBuildResult() {
+      var T = window.__t || function (s) { return s; };
       var recipeName = document.getElementById('fm-recipe-name').value || fmCurrentProduct.nombre;
       var batchSize = parseFloat(document.getElementById('fm-batch-size').value) || 100;
       var today = new Date();
@@ -2363,7 +2747,7 @@
 
       // Header
       html += '<div class="pdf-header">';
-      html += '<div class="pdf-subtitle">Fórmula Artesanal · ' + fmCurrentProduct.tipo + '</div>';
+      html += '<div class="pdf-subtitle">' + T('Fórmula Artesanal · ') + T(fmCurrentProduct.tipo) + '</div>';
       html += '<div class="pdf-brand-name">' + recipeName + '</div>';
       html += '</div>';
 
@@ -2372,15 +2756,15 @@
 
       // KPI badges
       html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">';
-      html += '<span class="badge badge-verde">Lote: ' + batchSize + 'g</span>';
-      html += '<span class="badge badge-verde">Dificultad: ' + fmCurrentProduct.dificultad + '</span>';
+      html += '<span class="badge badge-verde">' + T('Lote: ') + batchSize + 'g</span>';
+      html += '<span class="badge badge-verde">' + T('Dificultad: ') + T(fmCurrentProduct.dificultad) + '</span>';
       html += '<span class="badge badge-verde">' + dateStr + '</span>';
       html += '</div>';
 
       // Phases with ingredients
       fmCurrentProduct.fases.forEach(function(fase, fi) {
         html += '<div class="pdf-section">';
-        html += '<div class="pdf-section-label">' + fase.nombre + '</div>';
+        html += '<div class="pdf-section-label">' + T(fase.nombre) + '</div>';
 
         var rows = document.querySelectorAll('#fm-rows-' + fi + ' .fm-row');
         rows.forEach(function(row) {
@@ -2392,23 +2776,23 @@
 
           var grams = (pct / 100 * batchSize).toFixed(1);
           html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">';
-          html += '<span style="font-weight:500;color:var(--negro)">' + name + '</span>';
+          html += '<span style="font-weight:500;color:var(--negro)">' + T(name) + '</span>';
           html += '<span style="font-family:Outfit,sans-serif;font-weight:600;color:var(--verde-hover)">' + pct + '% <span style="color:var(--texto-suave);font-weight:400;font-size:.8rem">(' + grams + 'g)</span></span>';
           html += '</div>';
         });
 
         if (fase.nota) {
-          html += '<p style="font-size:.78rem;color:var(--texto-suave);margin-top:8px;font-style:italic">' + fase.nota + '</p>';
+          html += '<p style="font-size:.78rem;color:var(--texto-suave);margin-top:8px;font-style:italic">' + T(fase.nota) + '</p>';
         }
         html += '</div>';
       });
 
       // Process steps
       html += '<div class="pdf-section">';
-      html += '<div class="pdf-section-label">Proceso Paso a Paso</div>';
+      html += '<div class="pdf-section-label">' + T('Proceso Paso a Paso') + '</div>';
       html += '<ol style="padding-left:20px">';
       fmCurrentProduct.pasos.forEach(function(p) {
-        html += '<li style="margin-bottom:8px;font-size:.88rem;line-height:1.5">' + p + '</li>';
+        html += '<li style="margin-bottom:8px;font-size:.88rem;line-height:1.5">' + T(p) + '</li>';
       });
       html += '</ol>';
       html += '</div>';
@@ -2417,12 +2801,364 @@
 
       // Footer
       html += '<div class="pdf-footer-bar">';
-      html += '<div class="pdf-footer-text">' + fmCurrentProduct.consejo + '</div>';
-      html += '<div class="pdf-footer-small">Creado con Herramientas Savias · Formulador</div>';
+      html += '<div class="pdf-footer-text">' + T(fmCurrentProduct.consejo) + '</div>';
+      html += '<div class="pdf-footer-small">' + T('Creado con Herramientas Savias · Formulador') + '</div>';
       html += '</div>';
 
       html += '</div>'; // pdf-sheet
 
+      document.getElementById('fm-final-output').innerHTML = html;
+    }
+
+    // ════════════════════════════════════════
+    // FORMULADOR · SELECTOR JERÁRQUICO (¿qué quieres crear?)
+    // ════════════════════════════════════════
+    var FM_TREE = {
+      humectante: {
+        label: 'Formato',
+        subOpts: [['emulsionado', 'Emulsionado (con agua)'], ['anhidro', 'Anhidro (sin agua)']],
+        sub: {
+          emulsionado: { label2: 'Textura', opts: [
+            ['hum-crema-ligera', 'Crema ligera (rápida absorción)'],
+            ['hum-crema-lig-viscosa', 'Crema ligeramente viscosa'],
+            ['hum-crema-viscosa', 'Crema viscosa']
+          ]},
+          anhidro: { label2: 'Tipo', opts: [
+            ['hum-body-butter', 'Body butter (manteca batida)'],
+            ['hum-solido', 'Humectante sólido']
+          ]}
+        }
+      },
+      shampoo: {
+        label: 'Tipo',
+        subOpts: [['solido', 'Sólido'], ['liquido', 'Líquido']],
+        sub: {
+          solido: { label2: 'Tipo de cabello', opts: [
+            ['shampoo-solido-seco', 'Seco / rizado / maltratado'],
+            ['shampoo-solido-graso', 'Graso / caspa seborreica'],
+            ['shampoo-solido-normal', 'Normal'],
+            ['shampoo-solido-caida', 'Caída de cabello']
+          ]},
+          liquido: { label2: 'Tipo de cabello', opts: [
+            ['shampoo-liquido-seco', 'Seco (materia activa 7–11%)'],
+            ['shampoo-liquido-normal', 'Normal (12–15%)'],
+            ['shampoo-liquido-graso', 'Graso (16–20%)']
+          ]}
+        }
+      },
+      otro: {
+        label: 'Producto',
+        direct: [
+          ['crema-facial', 'Crema facial hidratante'],
+          ['mantequilla-corporal', 'Mantequilla corporal'],
+          ['balsamo-labial', 'Bálsamo labial'],
+          ['serum-facial', 'Sérum facial'],
+          ['locion-corporal', 'Loción corporal ligera'],
+          ['exfoliante', 'Exfoliante corporal'],
+          ['limpiador-polvo', 'Limpiador facial en polvo'],
+          ['limpiador-polvo-enzimatico', 'Limpiador facial en polvo (enzimático)'],
+          ['jabon-cp', 'Jabón Cold Process']
+        ]
+      }
+    };
+
+    function fmResetSelectsBelow(level) {
+      var T = window.__t || function (s) { return s; };
+      if (level <= 1) {
+        document.getElementById('fm-sub-wrap').style.display = 'none';
+        document.getElementById('fm-sub').innerHTML = '<option value="">' + T('Selecciona...') + '</option>';
+      }
+      if (level <= 2) {
+        document.getElementById('fm-sub2-wrap').style.display = 'none';
+        document.getElementById('fm-sub2').innerHTML = '<option value="">' + T('Selecciona...') + '</option>';
+      }
+      document.getElementById('form-tipo').value = '';
+      fmSelectProduct();
+    }
+    function fmCat() {
+      var T = window.__t || function (s) { return s; };
+      var v = document.getElementById('fm-cat').value;
+      fmResetSelectsBelow(1);
+      if (!v || !FM_TREE[v]) return;
+      var node = FM_TREE[v];
+      document.getElementById('fm-sub-label').textContent = T(node.label);
+      var list = node.direct ? node.direct : node.subOpts;
+      var opts = '<option value="">' + T('Selecciona...') + '</option>';
+      list.forEach(function (o) { opts += '<option value="' + o[0] + '">' + T(o[1]) + '</option>'; });
+      document.getElementById('fm-sub').innerHTML = opts;
+      document.getElementById('fm-sub-wrap').style.display = 'block';
+    }
+    function fmSub() {
+      var T = window.__t || function (s) { return s; };
+      var cat = document.getElementById('fm-cat').value;
+      var v = document.getElementById('fm-sub').value;
+      fmResetSelectsBelow(2);
+      if (!v) return;
+      var node = FM_TREE[cat];
+      if (node.direct) { fmResolveProduct(v); return; }
+      var branch = node.sub[v];
+      document.getElementById('fm-sub2-label').textContent = T(branch.label2);
+      var opts = '<option value="">' + T('Selecciona...') + '</option>';
+      branch.opts.forEach(function (o) { opts += '<option value="' + o[0] + '">' + T(o[1]) + '</option>'; });
+      document.getElementById('fm-sub2').innerHTML = opts;
+      document.getElementById('fm-sub2-wrap').style.display = 'block';
+    }
+    function fmSub2() {
+      var v = document.getElementById('fm-sub2').value;
+      if (v) fmResolveProduct(v);
+      else { document.getElementById('form-tipo').value = ''; fmSelectProduct(); }
+    }
+    function fmResolveProduct(key) {
+      document.getElementById('form-tipo').value = key;
+      fmSelectProduct();
+    }
+
+    // ════════════════════════════════════════
+    // FORMULADOR · MODO GUIADO (% fijos + conservante + cálculo MAT)
+    // ════════════════════════════════════════
+    var fmGuidedBuiltFor = null;
+    var fmConservIdx = 3; // Sharomix por defecto
+
+    function fmGuidedBatch() { return parseFloat(document.getElementById('fm-batch-size').value) || 100; }
+    function fmConservPct(idx) { var c = CONSERVANTES[idx]; return c ? c.max : 0; } // límite superior del rango (criterio de Lina)
+    function fmRound(n) { return Math.round(n * 100) / 100; }
+    function fmSugeridosLine(arr) { var T = window.__t || function (s) { return s; }; return (arr && arr.length) ? '<div class="fmg-sug">' + T('Sugeridos: ') + arr.map(function (s) { return T(s); }).join(' · ') + '</div>' : ''; }
+    // Traduce la etiqueta de cada línea de la composición (categoría/agua/tensioactivo/conservante).
+    function fmCatLabel(l) { var T = window.__t || function (s) { return s; }; if (l.kind === 'conserv') { return T('Conservante · ') + (l.brand || ''); } return T(l.cat); }
+
+    function fmConservanteSelectHTML() {
+      var h = '<select id="fm-conserv" onchange="fmConservChange()">';
+      for (var i = 0; i < CONSERVANTES.length; i++) {
+        var c = CONSERVANTES[i];
+        h += '<option value="' + i + '"' + (i === fmConservIdx ? ' selected' : '') + '>' + c.nombre + ' (' + c.min + '–' + c.max + '%)</option>';
+      }
+      return h + '</select>';
+    }
+    function fmConservChange() {
+      fmConservIdx = parseInt(document.getElementById('fm-conserv').value, 10) || 0;
+      fmGuidedRecalc();
+    }
+
+    function fmBuildGuided() {
+      var T = window.__t || function (s) { return s; };
+      var p = fmCurrentProduct;
+      var key = document.getElementById('form-tipo').value;
+      var container = document.getElementById('fm-phases-container');
+      var pb = document.getElementById('fm-progressbar');
+      if (pb) pb.style.display = 'none'; // el modo guiado usa su propio total
+
+      var intro = document.querySelector('#fm-step2 p');
+      if (intro) intro.textContent = (p.modo === 'guiado-liquido')
+        ? T('Elige tus tensioactivos y reparte el % puro (materia activa) hasta el objetivo. La calculadora los convierte a gramos según el MAT de cada uno; el resto de la fórmula tiene % fijos.')
+        : T('Esta fórmula tiene porcentajes fijos probados por Lina. Solo eliges el conservante (si aplica) y el agua se ajusta para sumar 100%. Debajo verás ingredientes sugeridos para cada parte.');
+
+      if (fmGuidedBuiltFor === key && container.children.length) { fmGuidedRecalc(); return; }
+      fmGuidedBuiltFor = key;
+
+      var html = '<div class="consejo-box" style="margin-bottom:16px"><span class="icon">📋</span><div><strong>' + T(p.nombre) + '</strong><p style="margin-top:4px">' + T(p.descripcion) + '</p></div></div>';
+
+      if (p.modo === 'guiado-liquido') {
+        html += fmLiquidoEditorHTML(p);
+        if (p.conservante) html += '<div class="fmg-controls"><label class="fmg-clabel">' + T('Conservante (elige el tuyo — el agua se ajusta sola)') + '</label>' + fmConservanteSelectHTML() + '</div>';
+      } else if (p.conservante) {
+        html += '<div class="fmg-controls"><label class="fmg-clabel">' + T('Conservante (elige el tuyo — el agua se ajusta sola)') + '</label>' + fmConservanteSelectHTML() + '</div>';
+      }
+      html += '<div id="fmg-output"></div>';
+      container.innerHTML = html;
+
+      if (p.modo === 'guiado-liquido') fmRenderTensioRows(p);
+      fmGuidedRecalc();
+    }
+
+    // ─── Shampoo líquido: editor de tensioactivos ───
+    function fmLiquidoEditorHTML(p) {
+      var T = window.__t || function (s) { return s; };
+      var h = '<div class="fmg-controls">';
+      h += '<label class="fmg-clabel">' + T('Materia activa total objetivo (% puro)') + '</label>';
+      h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+      h += '<input type="number" id="fm-mat-target" value="' + p.matTarget.def + '" min="' + p.matTarget.min + '" max="' + p.matTarget.max + '" step="0.5" style="width:90px" oninput="fmGuidedRecalc()">';
+      h += '<span style="font-size:.8rem;color:var(--texto-suave)">' + T('Rango para ') + T(p.cabello) + ': ' + p.matTarget.min + '–' + p.matTarget.max + '%</span>';
+      h += '</div>';
+      h += '<div id="fm-puro-msg" class="fmg-puro-msg"></div>';
+      h += '<div class="fm-row fm-row-header" style="margin-top:10px"><span>' + T('Tensioactivo') + '</span><span>' + T('% puro') + '</span><span>' + T('MAT %') + '</span><span></span></div>';
+      h += '<div id="fm-tensio-rows"></div>';
+      h += '<button class="fm-add-btn" onclick="fmAddTensio()">' + T('+ Agregar tensioactivo') + '</button>';
+      h += '</div>';
+      return h;
+    }
+    function fmTensioRowHTML(name, puro, mat) {
+      var T = window.__t || function (s) { return s; };
+      var opts = '<option value="">' + T('Selecciona...') + '</option>';
+      for (var i = 0; i < MAT_TENSIOACTIVOS.length; i++) {
+        var t = MAT_TENSIOACTIVOS[i];
+        opts += '<option value="' + t.nombre + '" data-mat="' + t.mat + '"' + (t.nombre === name ? ' selected' : '') + '>' + T(t.nombre) + '</option>';
+      }
+      var h = '<div class="fm-row fmg-tensio">';
+      h += '<div><select data-ta-name onchange="fmTensioPick(this)">' + opts + '</select></div>';
+      h += '<input type="number" data-ta-puro value="' + (puro || 0) + '" min="0" step="0.5" style="width:64px" oninput="fmGuidedRecalc()">';
+      h += '<input type="number" data-ta-mat value="' + (mat || 0) + '" min="1" max="100" step="1" style="width:64px" oninput="fmGuidedRecalc()" title="' + T('MAT del proveedor (editable)') + '">';
+      h += '<button class="fm-remove-btn" onclick="this.parentNode.remove();fmGuidedRecalc()" title="' + T('Quitar') + '">&times;</button>';
+      h += '</div>';
+      return h;
+    }
+    function fmTensioPick(sel) {
+      var opt = sel.options[sel.selectedIndex];
+      var mat = opt ? opt.getAttribute('data-mat') : '';
+      var row = sel.closest('.fmg-tensio');
+      if (row && mat) { row.querySelector('[data-ta-mat]').value = mat; }
+      fmGuidedRecalc();
+    }
+    function fmAddTensio() {
+      var cont = document.getElementById('fm-tensio-rows');
+      var div = document.createElement('div');
+      div.innerHTML = fmTensioRowHTML('', 0, 0);
+      cont.appendChild(div.firstElementChild);
+    }
+    function fmRenderTensioRows(p) {
+      var cont = document.getElementById('fm-tensio-rows');
+      var html = '';
+      (p.tensioDefault || []).forEach(function (t) { html += fmTensioRowHTML(t.nombre, t.puro, t.mat); });
+      cont.innerHTML = html;
+    }
+
+    // ─── Cálculo de la composición guiada ───
+    function fmGuidedCompute() {
+      var p = fmCurrentProduct, batch = fmGuidedBatch();
+      var lines = [], total = 0, puroSum = 0, cp;
+
+      if (p.modo === 'guiado-liquido') {
+        var rows = document.querySelectorAll('#fm-tensio-rows .fmg-tensio');
+        rows.forEach(function (r) {
+          var sel = r.querySelector('[data-ta-name]');
+          var name = sel ? sel.value : '';
+          var puro = parseFloat(r.querySelector('[data-ta-puro]').value) || 0;
+          var mat = parseFloat(r.querySelector('[data-ta-mat]').value) || 0;
+          puroSum += puro;
+          var gram = (mat > 0) ? (puro * batch / mat) : 0;
+          var pct = (batch > 0) ? (gram / batch * 100) : 0;
+          total += pct;
+          lines.push({ cat: name || 'Tensioactivo (elige uno)', pct: pct, gram: gram, kind: 'tensio', puro: puro, mat: mat });
+        });
+        (p.fijos || []).forEach(function (it) {
+          var g = it.pct / 100 * batch; total += it.pct;
+          lines.push({ cat: it.cat, pct: it.pct, gram: g, sugeridos: it.sugeridos, kind: 'fijo' });
+        });
+        if (p.conservante) {
+          cp = fmConservPct(fmConservIdx); total += cp;
+          lines.push({ cat: 'Conservante · ' + CONSERVANTES[fmConservIdx].nombre, brand: CONSERVANTES[fmConservIdx].nombre, pct: cp, gram: cp / 100 * batch, kind: 'conserv' });
+        }
+        var aguaL = 100 - total;
+        lines.push({ cat: 'Agua', pct: aguaL, gram: aguaL / 100 * batch, sugeridos: ['Agua destilada', 'Hidrolato'], kind: 'agua' });
+        return { lines: lines, total: 100, puroSum: puroSum };
+      }
+
+      // guiado-fijo (humectantes + shampoo sólido)
+      p.items.forEach(function (it) {
+        var g = it.pct / 100 * batch; total += it.pct;
+        lines.push({ cat: it.cat, pct: it.pct, gram: g, sugeridos: it.sugeridos, kind: 'fijo' });
+      });
+      if (p.conservante) {
+        cp = fmConservPct(fmConservIdx); total += cp;
+        lines.push({ cat: 'Conservante · ' + CONSERVANTES[fmConservIdx].nombre, pct: cp, gram: cp / 100 * batch, kind: 'conserv' });
+      }
+      if (p.agua) {
+        var aguaF = 100 - total;
+        lines.push({ cat: p.agua.cat || 'Agua', pct: aguaF, gram: aguaF / 100 * batch, sugeridos: p.agua.sugeridos, kind: 'agua' });
+        total = 100;
+      }
+      return { lines: lines, total: total };
+    }
+
+    function fmGuidedRecalc() {
+      if (!fmCurrentProduct) return;
+      var T = window.__t || function (s) { return s; };
+      var out = document.getElementById('fmg-output');
+      if (!out) return;
+      var r = fmGuidedCompute();
+      var batch = fmGuidedBatch();
+
+      var html = '<div class="fmg-card"><div class="fm-row fm-row-header"><span>' + T('Parte de la fórmula') + '</span><span>%</span><span>' + T('Gramos') + '</span><span></span></div>';
+      r.lines.forEach(function (l) {
+        var neg = (l.pct < 0);
+        html += '<div class="fmg-line">';
+        html += '<div class="fmg-line-name">' + fmCatLabel(l);
+        if (l.kind === 'tensio' && l.mat) html += ' <small>(' + fmRound(l.puro) + T('% puro · MAT ') + l.mat + ')</small>';
+        html += fmSugeridosLine(l.sugeridos);
+        html += '</div>';
+        html += '<div class="fmg-line-pct"' + (neg ? ' style="color:#c62828"' : '') + '>' + fmRound(l.pct) + '%</div>';
+        html += '<div class="fmg-line-gram">' + fmRound(l.gram).toFixed(1) + 'g</div><div></div>';
+        html += '</div>';
+      });
+      var totOk = Math.abs(r.total - 100) <= 0.5;
+      html += '<div class="fmg-line fmg-total-line"><div class="fmg-line-name">' + T('Total') + '</div>';
+      html += '<div class="fmg-line-pct" style="color:' + (totOk ? 'var(--verde-hover)' : '#c62828') + '">' + fmRound(r.total) + '%</div>';
+      html += '<div class="fmg-line-gram">' + fmRound(batch).toFixed(1) + 'g</div><div></div></div>';
+      html += '</div>';
+      out.innerHTML = html;
+
+      if (fmCurrentProduct.modo === 'guiado-liquido') {
+        var msg = document.getElementById('fm-puro-msg');
+        var mt = fmCurrentProduct.matTarget;
+        var tInput = document.getElementById('fm-mat-target');
+        var target = (tInput && parseFloat(tInput.value)) || mt.def;
+        // Aviso si el objetivo de materia activa queda fuera del rango del tipo de cabello
+        var rangeNote = (target < mt.min || target > mt.max)
+          ? T(' ⚠ Para este cabello se recomienda entre ') + mt.min + '–' + mt.max + '%.'
+          : '';
+        if (msg) {
+          // Tope que pidió Lina: el % puro repartido no debe pasar del objetivo de materia activa
+          var diff = fmRound(r.puroSum - target);
+          if (Math.abs(diff) <= 0.01) { msg.innerHTML = T('✓ % puro asignado: ') + fmRound(r.puroSum) + T('% — coincide con el objetivo (') + target + '%).'; msg.style.color = 'var(--verde-hover)'; }
+          else if (diff < 0) { msg.innerHTML = T('Te faltan ') + Math.abs(diff) + T('% puro para llegar al objetivo de ') + target + '%.'; msg.style.color = '#b36b10'; }
+          else { msg.innerHTML = T('⚠ Te pasaste ') + diff + T('% del objetivo. No conviene superar ') + target + T('% de materia activa.'); msg.style.color = '#c62828'; }
+          msg.innerHTML += rangeNote;
+          if (rangeNote) msg.style.color = '#c62828';
+          // Tope físico: si los tensioactivos ocupan más del 100% del lote, el agua se vuelve negativa
+          var aguaLine = r.lines[r.lines.length - 1];
+          if (aguaLine && aguaLine.pct < 0) {
+            msg.innerHTML += ' <strong>' + T('Los tensioactivos ocupan más del 100% del lote: baja el % puro o sube el MAT.') + '</strong>';
+            msg.style.color = '#c62828';
+          }
+        }
+      }
+    }
+
+    function fmBuildResultGuided() {
+      var T = window.__t || function (s) { return s; };
+      var p = fmCurrentProduct;
+      var recipeName = document.getElementById('fm-recipe-name').value || p.nombre;
+      var batch = fmGuidedBatch();
+      var r = fmGuidedCompute();
+      var today = new Date();
+      var dateStr = today.getDate() + '/' + (today.getMonth() + 1) + '/' + today.getFullYear();
+
+      var html = '<div class="pdf-sheet" id="fm-pdf-sheet"><div class="pdf-header">';
+      html += '<div class="pdf-subtitle">' + T('Fórmula Artesanal · ') + T(p.tipo) + '</div>';
+      html += '<div class="pdf-brand-name">' + recipeName + '</div></div><div class="pdf-body">';
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px">';
+      html += '<span class="badge badge-verde">' + T('Lote: ') + batch + 'g</span>';
+      html += '<span class="badge badge-verde">' + T('Dificultad: ') + T(p.dificultad) + '</span>';
+      html += '<span class="badge badge-verde">' + dateStr + '</span></div>';
+
+      html += '<div class="pdf-section"><div class="pdf-section-label">' + T('Composición') + '</div>';
+      r.lines.forEach(function (l) {
+        if (l.pct <= 0 && l.kind !== 'agua') return;
+        html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">';
+        html += '<span style="font-weight:500;color:var(--negro)">' + fmCatLabel(l);
+        if (l.kind === 'tensio' && l.mat) html += ' <span style="font-weight:400;font-size:.75rem;color:var(--texto-suave)">(' + fmRound(l.puro) + T('% puro · MAT ') + l.mat + ')</span>';
+        if (l.sugeridos && l.sugeridos.length) html += '<br><span style="font-weight:400;font-size:.75rem;color:var(--texto-suave)">' + T('Sugeridos: ') + l.sugeridos.map(function (s) { return T(s); }).join(' · ') + '</span>';
+        html += '</span>';
+        html += '<span style="font-family:Outfit,sans-serif;font-weight:600;color:var(--verde-hover);white-space:nowrap">' + fmRound(l.pct) + '% <span style="color:var(--texto-suave);font-weight:400;font-size:.8rem">(' + fmRound(l.gram).toFixed(1) + 'g)</span></span>';
+        html += '</div>';
+      });
+      html += '</div>';
+
+      html += '<div class="pdf-section"><div class="pdf-section-label">' + T('Proceso Paso a Paso') + '</div><ol style="padding-left:20px">';
+      (p.pasos || []).forEach(function (s) { html += '<li style="margin-bottom:8px;font-size:.88rem;line-height:1.5">' + T(s) + '</li>'; });
+      html += '</ol></div>';
+
+      html += '</div><div class="pdf-footer-bar"><div class="pdf-footer-text">' + T(p.consejo || '') + '</div>';
+      html += '<div class="pdf-footer-small">' + T('Creado con Herramientas Savias · Formulador') + '</div></div></div>';
       document.getElementById('fm-final-output').innerHTML = html;
     }
 
@@ -2733,6 +3469,960 @@
       document.getElementById('sp-result').innerHTML = '';
     }
   </script>
+
+<style>
+  #lang-switch{position:fixed;top:10px;right:10px;z-index:99999;display:flex;gap:3px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:3px;box-shadow:0 2px 12px rgba(0,0,0,.12);font-family:system-ui,sans-serif;}
+  #lang-switch .lang-btn{border:none;background:transparent;color:#777;font-weight:700;font-size:12px;letter-spacing:.04em;padding:5px 10px;border-radius:999px;cursor:pointer;}
+  #lang-switch .lang-btn:hover{color:#333;}
+  #lang-switch .lang-btn.active{background:#9caf88;color:#fff;}
+  @media print{#lang-switch{display:none!important;}}
+</style>
+<div id="lang-switch" class="no-print">
+  <button type="button" data-lang="es" class="lang-btn">ES</button>
+  <button type="button" data-lang="en" class="lang-btn">EN</button>
+  <button type="button" data-lang="pt" class="lang-btn">PT</button>
+</div>
+<script>
+(function(){
+  var DICT = {
+    en: {
+    "Emulsión O/W": "O/W emulsion",
+    "Emulsión O/W (densa)": "O/W emulsion (dense)",
+    "Emulsión O/W (rápida absorción)": "O/W emulsion (fast absorption)",
+    "Emulsión O/W ligera": "Light O/W emulsion",
+    "Anhidra (sin agua)": "Anhydrous (water-free)",
+    "Anhidro": "Anhydrous",
+    "Anhidro (sin agua)": "Anhydrous (water-free)",
+    "Anhidro (sin agua) · barra": "Anhydrous (water-free) · bar",
+    "Anhidro con partículas": "Anhydrous with particles",
+    "Gel acuoso": "Water-based gel",
+    "Tensioactivo sólido": "Solid surfactant",
+    "Saponificación en frío": "Cold process saponification",
+    "Polvo limpiador (sin agua)": "Cleansing powder (water-free)",
+    "Polvo limpiador enzimático (sin agua)": "Enzymatic cleansing powder (water-free)",
+    "Básica": "Basic",
+    "Intermedia": "Intermediate",
+    "Avanzada": "Advanced",
+    "Humectante · Crema ligera": "Moisturizer · Light cream",
+    "Humectante · Crema ligeramente viscosa": "Moisturizer · Slightly viscous cream",
+    "Humectante · Crema viscosa": "Moisturizer · Viscous cream",
+    "Humectante · Body butter": "Moisturizer · Body butter",
+    "Humectante · Sólido": "Moisturizer · Solid",
+    "Shampoo sólido · Cabello seco": "Solid shampoo · Dry hair",
+    "Shampoo sólido · Cabello graso": "Solid shampoo · Oily hair",
+    "Shampoo sólido · Cabello normal": "Solid shampoo · Normal hair",
+    "Shampoo sólido · Caída de cabello": "Solid shampoo · Hair loss",
+    "Shampoo líquido · Cabello seco": "Liquid shampoo · Dry hair",
+    "Shampoo líquido · Cabello normal": "Liquid shampoo · Normal hair",
+    "Shampoo líquido · Cabello graso": "Liquid shampoo · Oily hair",
+    "Crema Facial Hidratante": "Hydrating Facial Cream",
+    "Mantequilla Corporal": "Body Butter",
+    "Bálsamo Labial": "Lip Balm",
+    "Sérum Facial": "Facial Serum",
+    "Loción Corporal Ligera": "Light Body Lotion",
+    "Exfoliante Corporal": "Body Scrub",
+    "Limpiador Facial en Polvo": "Facial Cleansing Powder",
+    "Limpiador Facial en Polvo (Enzimático)": "Facial Cleansing Powder (Enzymatic)",
+    "Shampoo Sólido": "Solid Shampoo",
+    "Jabón Cold Process": "Cold Process Soap",
+    "Crema facial hidratante": "Hydrating facial cream",
+    "Mantequilla corporal": "Body butter",
+    "Bálsamo labial": "Lip balm",
+    "Sérum facial": "Facial serum",
+    "Loción corporal ligera": "Light body lotion",
+    "Exfoliante corporal": "Body scrub",
+    "Limpiador facial en polvo": "Facial cleansing powder",
+    "Limpiador facial en polvo (enzimático)": "Facial cleansing powder (enzymatic)",
+    "Barra · seco / rizado / maltratado / caspa por sequedad": "Bar · dry / curly / damaged / dryness dandruff",
+    "Barra · graso / caspa seborreica": "Bar · oily / seborrheic dandruff",
+    "Barra · cabello normal": "Bar · normal hair",
+    "Barra · anticaída / crecimiento": "Bar · anti-hair-loss / growth",
+    "Líquido · cabello seco": "Liquid · dry hair",
+    "Líquido · cabello normal": "Liquid · normal hair",
+    "Líquido · cabello graso": "Liquid · oily hair",
+    "Crema ligera de rápida absorción que no se siente aceitosa (usa éster en vez de aceite pesado). Porcentajes fijos: solo eliges el conservante.": "Fast-absorbing light cream that doesn't feel oily (uses ester instead of heavy oil). Fixed percentages: you only choose the preservative.",
+    "Crema de cuerpo medio, con manteca para más nutrición. Porcentajes fijos: solo eliges el conservante.": "Medium-body cream, with butter for more nourishment. Fixed percentages: you only choose the preservative.",
+    "Crema densa y envolvente, con espesante para más cuerpo. Porcentajes fijos: solo eliges el conservante.": "Dense, enveloping cream, with thickener for more body. Fixed percentages: you only choose the preservative.",
+    "Manteca corporal batida, sin agua. No necesita conservante ni emulsionante. La fécula de maíz le da un toque seco al absorberse.": "Whipped body butter, water-free. No preservative or emulsifier needed. Cornstarch gives it a dry touch as it absorbs.",
+    "Barra hidratante sólida que se derrite con el calor de la piel. Lleva cera emulsionante para repartirse con el agua de la ducha. % fijos que suman 100%.": "Solid moisturizing bar that melts with the warmth of the skin. It includes emulsifying wax to spread with shower water. Fixed % adding up to 100%.",
+    "Barra para cabello seco, rizado, maltratado o con caspa por sequedad. % por categoría definidos por Lina; eliges los ingredientes de cada grupo.": "Bar for dry, curly, damaged hair or dryness dandruff. % per category defined by Lina; you choose the ingredients in each group.",
+    "Barra para cabello graso o con caspa seborreica. Más tensioactivos para limpiar mejor; menos grasas. Eliges los ingredientes de cada grupo.": "Bar for oily hair or seborrheic dandruff. More surfactants to clean better; fewer fats. You choose the ingredients in each group.",
+    "Barra equilibrada para cabello normal. % balanceados. Eliges los ingredientes de cada grupo.": "Balanced bar for normal hair. Balanced %. You choose the ingredients in each group.",
+    "Barra enfocada en caída y crecimiento: más activos sólidos funcionales. Eliges los ingredientes de cada grupo.": "Bar focused on hair loss and growth: more functional solid actives. You choose the ingredients in each group.",
+    "Shampoo líquido para cabello seco. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.": "Liquid shampoo for dry hair. You choose your surfactants and distribute the % pure up to the target; the calculator converts them to grams based on the MAT.",
+    "Shampoo líquido para cabello normal. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.": "Liquid shampoo for normal hair. You choose your surfactants and distribute the % pure up to the target; the calculator converts them to grams based on the MAT.",
+    "Shampoo líquido para cabello graso. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.": "Liquid shampoo for oily hair. You choose your surfactants and distribute the % pure up to the target; the calculator converts them to grams based on the MAT.",
+    "Emulsión aceite-en-agua ideal para hidratar sin engrasar. Requiere emulsionante y calentamiento de ambas fases.": "Oil-in-water emulsion ideal for hydrating without greasiness. Requires emulsifier and heating of both phases.",
+    "Producto sin agua a base de mantecas y aceites. No necesita conservante ni emulsionante.": "Water-free product based on butters and oils. No preservative or emulsifier needed.",
+    "Mezcla sencilla de ceras, mantecas y aceites que solidifica al enfriar. Ideal para empezar.": "Simple mix of waxes, butters and oils that solidifies when it cools. Ideal to start.",
+    "Formulación de base acuosa con activos concentrados. Textura ligera y de rápida absorción.": "Water-based formulation with concentrated actives. Light, fast-absorbing texture.",
+    "Barra limpiadora a base de tensioactivos sólidos. Ecológica y de larga duración.": "Cleansing bar based on solid surfactants. Eco-friendly and long-lasting.",
+    "Versión más ligera de una crema, con más agua y menos aceites. Absorción rápida.": "A lighter version of a cream, with more water and fewer oils. Fast absorption.",
+    "Mezcla de agente exfoliante con aceites. Sin agua = sin conservante. Muy fácil de hacer.": "Mix of an exfoliating agent with oils. No water = no preservative. Very easy to make.",
+    "Limpiador suave en polvo que se activa con agua al momento de usar. Sin conservantes. Mezclar en seco.": "Gentle powder cleanser activated with water at the time of use. No preservatives. Mix dry.",
+    "Limpiador en polvo con papaína (enzima de papaya) para exfoliación enzimática suave. Ideal para luminosidad y renovación celular.": "Powder cleanser with papain (papaya enzyme) for gentle enzymatic exfoliation. Ideal for radiance and cell renewal.",
+    "Jabón artesanal real por saponificación. Requiere NaOH (sosa cáustica) — usar con precaución y EPP.": "Real handmade soap by saponification. Requires NaOH (caustic soda) — use with caution and PPE.",
+    "El conservante es obligatorio porque la fórmula lleva agua. Elige uno y la calculadora ajusta el agua para sumar 100%.": "The preservative is mandatory because the formula contains water. Choose one and the calculator adjusts the water to add up to 100%.",
+    "El espesante (alcohol cetílico o ácido esteárico) da el cuerpo denso. El conservante es obligatorio: el agua se ajusta sola para sumar 100%.": "The thickener (cetyl alcohol or stearic acid) gives the dense body. The preservative is mandatory: the water adjusts itself to add up to 100%.",
+    "Sin agua = sin conservante. La fécula de maíz quita la sensación grasosa. La textura cambia con la temperatura ambiente.": "No water = no preservative. Cornstarch removes the greasy feel. The texture changes with room temperature.",
+    "Barra hidratante sólida. La cera emulsionante ayuda a que se reparta con el agua. Sin agua en la fórmula = sin conservante.": "Solid moisturizing bar. The emulsifying wax helps it spread with water. No water in the formula = no preservative.",
+    "Más grasas = más nutrición para cabello seco. Usa mascarilla al manipular tensioactivos en polvo. Deja secar la barra 24–48h.": "More fats = more nourishment for dry hair. Wear a mask when handling powdered surfactants. Let the bar dry for 24–48h.",
+    "Más tensioactivos limpian la grasa; la arcilla o el carbón ayudan a regular el sebo. Deja secar la barra 24–48h.": "More surfactants clean the oil; clay or charcoal help regulate sebum. Let the bar dry for 24–48h.",
+    "Fórmula equilibrada de mantenimiento. Deja secar la barra 24–48h antes del primer uso.": "Balanced maintenance formula. Let the bar dry for 24–48h before first use.",
+    "Más activos sólidos (keratina, biotina, niacinamida) para fortalecer. El romero y la cafeína estimulan el folículo. Deja secar 24–48h.": "More solid actives (keratin, biotin, niacinamide) to strengthen. Rosemary and caffeine stimulate the follicle. Let it dry for 24–48h.",
+    "El % puro es la materia activa; la calculadora lo convierte a gramos reales según el MAT de cada tensioactivo (editable — verifica la ficha técnica de tu proveedor).": "% pure is the active matter; the calculator converts it to real grams based on the MAT of each surfactant (editable — check your supplier's technical sheet).",
+    "Si usas ácido hialurónico, prediluirlo en agua tibia la noche anterior. Nunca calentar.": "If you use hyaluronic acid, pre-dilute it in warm water the night before. Never heat it.",
+    "Sin agua = sin conservante necesario. La textura varía con la temperatura ambiente.": "No water = no preservative needed. The texture varies with room temperature.",
+    "Muy duro → más aceite. Muy blando → más cera. Puedes añadir mica para dar color.": "Too hard → more oil. Too soft → more wax. You can add mica to add color.",
+    "Nunca calentar el ácido hialurónico. Usar envase opaco para proteger activos sensibles a la luz.": "Never heat hyaluronic acid. Use an opaque container to protect light-sensitive actives.",
+    "Usar mascarilla al manipular polvos de SCI/SLSA. Necesita 48h de secado antes de usar.": "Wear a mask when handling SCI/SLSA powders. It needs 48h of drying before use.",
+    "Más agua = más ligera. Para pieles secas, agrega un poco de manteca de karité en fase oleosa.": "More water = lighter. For dry skin, add a bit of shea butter to the oil phase.",
+    "Azúcar = piel sensible (se disuelve). Sal = exfoliación intensa. Café = anticelulítico.": "Sugar = sensitive skin (it dissolves). Salt = intense exfoliation. Coffee = anti-cellulite.",
+    "Para usar: tomar una cucharadita en la palma, agregar unas gotas de agua, frotar y aplicar en el rostro. Enjuagar con agua tibia.": "To use: take a teaspoon in your palm, add a few drops of water, rub and apply to the face. Rinse with warm water.",
+    "La papaína es una enzima sensible al calor — nunca calentar. Al activarse con agua tibia, exfolia suavemente disolviendo células muertas. Usar 1-2 veces por semana. Para uso diario, elegir la versión sin enzima.": "Papain is a heat-sensitive enzyme — never heat it. When activated with warm water, it gently exfoliates by dissolving dead cells. Use 1-2 times per week. For daily use, choose the enzyme-free version.",
+    "OBLIGATORIO usar calculadora SAP para el NaOH. NUNCA improvisar cantidades. Usar EPP siempre.": "MANDATORY to use a SAP calculator for the NaOH. NEVER improvise quantities. Always use PPE.",
+    "Fase Acuosa": "Water Phase",
+    "Fase Acuosa (A)": "Water Phase (A)",
+    "Fase Oleosa": "Oil Phase",
+    "Fase Oleosa (B)": "Oil Phase (B)",
+    "Fase Oleosa Ligera": "Light Oil Phase",
+    "Fase Fría": "Cool Phase",
+    "Fase Fría (C)": "Cool Phase (C)",
+    "Ingredientes": "Ingredients",
+    "Aceites / Grasas": "Oils / Fats",
+    "Solución de Lejía": "Lye Solution",
+    "Aditivos (a la traza)": "Additives (at trace)",
+    "Conservante": "Preservative",
+    "Calentar a 70-75°C": "Heat to 70-75°C",
+    "Calentar a 70-75°C por separado": "Heat to 70-75°C separately",
+    "Calentar a 40-45°C": "Heat to 40-45°C",
+    "Agregar bajo 40°C": "Add below 40°C",
+    "Bajo 40°C": "Below 40°C",
+    "Derretir a baño maría (máx 60°C)": "Melt in a double boiler (max 60°C)",
+    "Agregar después de batir": "Add after whipping",
+    "Derretir todo a baño maría": "Melt everything in a double boiler",
+    "No calentar — mezclar a temperatura ambiente": "Do not heat — mix at room temperature",
+    "Mezclar por separado y añadir": "Mix separately and add",
+    "Agregar al final": "Add at the end",
+    "Derretir manteca primero, luego agregar polvos": "Melt the butter first, then add powders",
+    "Mezclar todos los polvos en seco — tamizar para homogeneizar": "Mix all powders dry — sift to homogenize",
+    "Preparar en lugar ventilado — exotérmica": "Prepare in a ventilated area — exothermic",
+    "Agregar cuando alcance consistencia de pudín": "Add when it reaches pudding consistency",
+    "Base de la emulsión": "Base of the emulsion",
+    "Humectante": "Moisturizer",
+    "Calmante": "Soothing",
+    "Emoliente principal": "Main emollient",
+    "Nutritiva": "Nourishing",
+    "Emulsionante": "Emulsifier",
+    "Co-emulsionante": "Co-emulsifier",
+    "Antioxidante": "Antioxidant",
+    "Aroma": "Fragrance",
+    "Base nutritiva": "Nourishing base",
+    "Firmeza": "Firmness",
+    "Absorción rápida": "Fast absorption",
+    "Emoliente ligero": "Light emollient",
+    "Estructura": "Structure",
+    "Hidratación": "Hydration",
+    "Suavidad": "Softness",
+    "Frescura": "Freshness",
+    "Hidratación profunda": "Deep hydration",
+    "Reparador": "Repairing",
+    "Seborregulador": "Sebum-regulating",
+    "Preservante": "Preservative",
+    "Tensioactivo principal": "Main surfactant",
+    "Co-tensioactivo, espuma": "Co-surfactant, foam",
+    "Acondicionante": "Conditioner",
+    "Textura": "Texture",
+    "Nutrición": "Nourishment",
+    "Fortalecimiento": "Strengthening",
+    "Aroma y estimulante": "Fragrance and stimulant",
+    "Emoliente": "Emollient",
+    "Textura sedosa": "Silky texture",
+    "Vehículo": "Carrier",
+    "Base suavizante": "Softening base",
+    "Arcilla limpiadora suave": "Gentle cleansing clay",
+    "Tensioactivo suave, espuma": "Gentle surfactant, foam",
+    "Calmante y aroma natural": "Soothing and natural fragrance",
+    "Enzima exfoliante (de papaya)": "Exfoliating enzyme (from papaya)",
+    "Dureza y espuma": "Hardness and foam",
+    "Cremosidad": "Creaminess",
+    "Espuma estable": "Stable foam",
+    "Calcular con SAP calculator": "Calculate with SAP calculator",
+    "33% del peso de aceites": "33% of the oil weight",
+    "Aceite sin saponificar": "Unsaponified oil",
+    "Cera emulsionante": "Emulsifying wax",
+    "Aceite": "Oil",
+    "Éster": "Ester",
+    "Fragancia": "Fragrance",
+    "Manteca": "Butter",
+    "Espesante": "Thickener",
+    "Aceite vegetal": "Vegetable oil",
+    "Fécula de maíz": "Cornstarch",
+    "Vitamina E": "Vitamin E",
+    "Aceite esencial": "Essential oil",
+    "Alcohol cetílico": "Cetyl alcohol",
+    "Tensioactivos": "Surfactants",
+    "Grasas": "Fats",
+    "Activos acuosos": "Water-based actives",
+    "Activos sólidos": "Solid actives",
+    "Gelificante": "Gelling agent",
+    "Activo": "Active",
+    "Solvente": "Solvent",
+    "Agua": "Water",
+    "Agua destilada": "Distilled water",
+    "Hidrolato": "Hydrosol",
+    "Glicerina vegetal": "Vegetable glycerin",
+    "Glicerina": "Glycerin",
+    "Lactato de sodio": "Sodium lactate",
+    "Cera emulsionante NF": "Emulsifying wax NF",
+    "Pepita de uva": "Grapeseed",
+    "Rosa mosqueta": "Rosehip",
+    "Argán": "Argan",
+    "Coco caprilato": "Coco-caprylate",
+    "Miristato de isopropilo": "Isopropyl myristate",
+    "MCT (cáprico/caprílico)": "MCT (capric/caprylic)",
+    "Karité": "Shea",
+    "Cacao": "Cocoa",
+    "Babasú": "Babassu",
+    "Algodón": "Cottonseed",
+    "Ácido esteárico": "Stearic acid",
+    "Almendras": "Almond",
+    "Coco": "Coconut",
+    "Vitamina E (tocoferol)": "Vitamin E (tocopherol)",
+    "Almidón de maíz": "Corn starch",
+    "Fragancia cosmética": "Cosmetic fragrance",
+    "Coco betaína": "Cocamidopropyl betaine",
+    "Coco glucósido": "Coco glucoside",
+    "Manteca de karité": "Shea butter",
+    "Manteca de cacao": "Cocoa butter",
+    "Aceite de aguacate": "Avocado oil",
+    "Pantenol": "Panthenol",
+    "Miel": "Honey",
+    "Proteína de seda": "Silk protein",
+    "Avena coloidal": "Colloidal oatmeal",
+    "Keratina": "Keratin",
+    "Caolín": "Kaolin",
+    "Aceite de jojoba": "Jojoba oil",
+    "Manteca de karité (poca)": "Shea butter (little)",
+    "Hidrolato de romero": "Rosemary hydrosol",
+    "Niacinamida": "Niacinamide",
+    "Arcilla verde": "Green clay",
+    "Carbón activado": "Activated charcoal",
+    "Mentol": "Menthol",
+    "Aceite de coco": "Coconut oil",
+    "Proteína de trigo": "Wheat protein",
+    "Aceite de ricino": "Castor oil",
+    "Cafeína": "Caffeine",
+    "Biotina": "Biotin",
+    "Proteína hidrolizada": "Hydrolyzed protein",
+    "Goma xantana": "Xanthan gum",
+    "Hidrolato de rosa": "Rose hydrosol",
+    "Hidrolato de manzanilla": "Chamomile hydrosol",
+    "Hidrolato de lavanda": "Lavender hydrosol",
+    "Alantoína": "Allantoin",
+    "Ácido hialurónico": "Hyaluronic acid",
+    "Aceite de almendras": "Almond oil",
+    "Aceite de argán": "Argan oil",
+    "Aceite de rosa mosqueta": "Rosehip oil",
+    "Aceite de coco fraccionado": "Fractionated coconut oil",
+    "Escualano": "Squalane",
+    "Aceite esencial de lavanda": "Lavender essential oil",
+    "Aceite esencial de rosa": "Rose essential oil",
+    "Aceite esencial de manzanilla": "Chamomile essential oil",
+    "Aceite esencial de árbol de té": "Tea tree essential oil",
+    "Extracto de centella": "Centella extract",
+    "Extracto de caléndula": "Calendula extract",
+    "Ácido kójico": "Kojic acid",
+    "Manteca de mango": "Mango butter",
+    "Cera de abejas": "Beeswax",
+    "Aceite esencial de vainilla": "Vanilla essential oil",
+    "Aceite esencial de naranja": "Orange essential oil",
+    "Mica cosmética": "Cosmetic mica",
+    "Cera de candelilla": "Candelilla wax",
+    "Cera de soja": "Soy wax",
+    "Aceite esencial de menta": "Mint essential oil",
+    "Saborizante labial": "Lip flavoring",
+    "Hidrolato de hamamelis": "Witch hazel hydrosol",
+    "Extracto de regaliz": "Licorice extract",
+    "Vitamina C (oil-soluble)": "Vitamin C (oil-soluble)",
+    "Aceite esencial de romero": "Rosemary essential oil",
+    "Aceite esencial de cedro": "Cedar essential oil",
+    "Arcilla blanca": "White clay",
+    "Aceite de girasol": "Sunflower oil",
+    "Aceite esencial de ylang ylang": "Ylang ylang essential oil",
+    "Azúcar morena": "Brown sugar",
+    "Azúcar blanca": "White sugar",
+    "Sal marina": "Sea salt",
+    "Sal del Himalaya": "Himalayan salt",
+    "Café molido": "Ground coffee",
+    "Aceite de oliva": "Olive oil",
+    "Aceite esencial de café": "Coffee essential oil",
+    "Cúrcuma en polvo": "Turmeric powder",
+    "Polvo de rosas": "Rose powder",
+    "Arcilla rosa": "Pink clay",
+    "Polvo de avena": "Oat powder",
+    "Polvo de manzanilla": "Chamomile powder",
+    "Leche en polvo": "Powdered milk",
+    "Almidón de arroz": "Rice starch",
+    "Papaína": "Papain",
+    "Bromelina": "Bromelain",
+    "Aceite de palma": "Palm oil",
+    "Sebo": "Tallow",
+    "Manteca de cerdo": "Lard",
+    "NaOH (Sosa cáustica)": "NaOH (Caustic soda)",
+    "Leche de cabra (congelada)": "Goat milk (frozen)",
+    "Cerveza (desgasificada)": "Beer (degassed)",
+    "Infusión herbal": "Herbal infusion",
+    "Sobreengrasado extra": "Extra superfat",
+    "Avena molida": "Ground oats",
+    "Cúrcuma": "Turmeric",
+    "Óxido de hierro": "Iron oxide",
+    "Pesa la fase acuosa (agua + humectante) y caliéntala a 70–75°C.": "Weigh the water phase (water + moisturizer) and heat it to 70–75°C.",
+    "Pesa la fase oleosa (cera emulsionante + aceite + éster) y caliéntala aparte a 70–75°C.": "Weigh the oil phase (emulsifying wax + oil + ester) and heat it separately to 70–75°C.",
+    "Pesa la fase oleosa (cera emulsionante + manteca + aceite) y caliéntala aparte a 70–75°C.": "Weigh the oil phase (emulsifying wax + butter + oil) and heat it separately to 70–75°C.",
+    "Pesa la fase oleosa (cera emulsionante + aceite + espesante) y caliéntala aparte a 70–75°C.": "Weigh the oil phase (emulsifying wax + oil + thickener) and heat it separately to 70–75°C.",
+    "Vierte la fase acuosa sobre la oleosa batiendo con minipímer hasta emulsionar.": "Pour the water phase over the oil phase, blending with an immersion blender until it emulsifies.",
+    "Sigue batiendo mientras enfría a 40°C.": "Keep blending while it cools to 40°C.",
+    "Bajo 40°C agrega la fragancia y el conservante elegido.": "Below 40°C, add the fragrance and the chosen preservative.",
+    "Mide el pH (ideal 5.0–5.5) y envasa.": "Measure the pH (ideal 5.0–5.5) and package.",
+    "Derrite las mantecas a baño maría (máx 60°C).": "Melt the butters in a double boiler (max 60°C).",
+    "Retira del fuego y agrega el aceite vegetal.": "Remove from heat and add the vegetable oil.",
+    "Refrigera 30–45 min hasta que esté semisólido.": "Refrigerate for 30–45 min until it's semi-solid.",
+    "Agrega la fécula de maíz, la vitamina E y el aceite esencial.": "Add the cornstarch, vitamin E and essential oil.",
+    "Bate 5–8 min hasta textura cremosa.": "Whip for 5–8 min until creamy texture.",
+    "Envasa.": "Package.",
+    "Derrite manteca + cera emulsionante + alcohol cetílico a baño maría.": "Melt butter + emulsifying wax + cetyl alcohol in a double boiler.",
+    "Agrega el aceite vegetal y mezcla.": "Add the vegetable oil and mix.",
+    "Retira del fuego y agrega la vitamina E y la fragancia.": "Remove from heat and add the vitamin E and fragrance.",
+    "Vierte en molde y deja solidificar.": "Pour into a mold and let it solidify.",
+    "Desmolda cuando esté firme.": "Unmold when it's firm.",
+    "Tritura/pesa los tensioactivos (usa mascarilla con los polvos).": "Crush/weigh the surfactants (wear a mask with the powders).",
+    "Derrite las grasas a baño maría.": "Melt the fats in a double boiler.",
+    "Mezcla los tensioactivos con las grasas derretidas.": "Mix the surfactants with the melted fats.",
+    "Agrega los activos acuosos y los activos sólidos.": "Add the water-based actives and the solid actives.",
+    "Amasa hasta una pasta homogénea.": "Knead until a homogeneous paste.",
+    "Prensa en molde y deja secar 24–48h antes de usar.": "Press into a mold and let it dry 24–48h before use.",
+    "Pesa cada tensioactivo según los GRAMOS calculados (no el % puro).": "Weigh each surfactant according to the calculated GRAMS (not the % pure).",
+    "Disuelve los tensioactivos en el agua tibia removiendo sin hacer espuma.": "Dissolve the surfactants in warm water, stirring without making foam.",
+    "Agrega la glicerina y los activos (pantenol, etc.).": "Add the glycerin and the actives (panthenol, etc.).",
+    "Espesa con la goma xantana previamente dispersada.": "Thicken with the previously dispersed xanthan gum.",
+    "Agrega la fragancia y el conservante elegido.": "Add the fragrance and the chosen preservative.",
+    "Mide y ajusta el pH (ideal 4.5–5.5) y envasa.": "Measure and adjust the pH (ideal 4.5–5.5) and package.",
+    "Calentar fase A a 70-75°C.": "Heat phase A to 70-75°C.",
+    "Calentar fase B a 70-75°C por separado.": "Heat phase B to 70-75°C separately.",
+    "Calentar fase B a 70-75°C.": "Heat phase B to 70-75°C.",
+    "Verter fase A sobre fase B lentamente, batiendo con minipimer.": "Pour phase A over phase B slowly, blending with an immersion blender.",
+    "Batir 3-5 min hasta emulsión homogénea.": "Blend for 3-5 min until a homogeneous emulsion.",
+    "Enfriar a 40°C batiendo suavemente.": "Cool to 40°C, blending gently.",
+    "Agregar fase C y mezclar bien.": "Add phase C and mix well.",
+    "Medir pH (ideal 5.0-5.5). Envasar.": "Measure pH (ideal 5.0-5.5). Package.",
+    "Derretir mantecas y aceite de coco a baño maría.": "Melt butters and coconut oil in a double boiler.",
+    "Retirar del calor y agregar aceites líquidos.": "Remove from heat and add liquid oils.",
+    "Refrigerar 30-45 min hasta semi-sólido.": "Refrigerate 30-45 min until semi-solid.",
+    "Batir con batidora 5-8 min hasta textura cremosa.": "Whip with a mixer 5-8 min until creamy texture.",
+    "Agregar fase fría, batir 1 min más.": "Add the cool phase, whip 1 min more.",
+    "Envasar.": "Package.",
+    "Derretir ceras y mantecas a baño maría.": "Melt waxes and butters in a double boiler.",
+    "Agregar aceites, mezclar bien.": "Add oils, mix well.",
+    "Retirar del fuego, agregar vitamina E y esencia.": "Remove from heat, add vitamin E and essence.",
+    "Verter rápidamente en tubos/tarros.": "Pour quickly into tubes/jars.",
+    "Dejar enfriar sin mover (1 hora).": "Let it cool without moving (1 hour).",
+    "Disolver ácido hialurónico en agua tibia (dejar hidratar 2h o toda la noche).": "Dissolve hyaluronic acid in warm water (let it hydrate 2h or overnight).",
+    "Agregar glicerina y activos acuosos.": "Add glycerin and water-based actives.",
+    "Mezclar fase oleosa por separado.": "Mix the oil phase separately.",
+    "Incorporar fase oleosa a la acuosa.": "Incorporate the oil phase into the water phase.",
+    "Agregar conservante, ajustar pH (5.0-5.5).": "Add preservative, adjust pH (5.0-5.5).",
+    "Envasar en frasco con gotero.": "Package in a dropper bottle.",
+    "Derretir manteca a baño maría (máx 50°C).": "Melt butter in a double boiler (max 50°C).",
+    "Agregar SCI y mezclar (usar mascarilla).": "Add SCI and mix (wear a mask).",
+    "Incorporar SLSA y almidón.": "Incorporate SLSA and starch.",
+    "Retirar del calor, agregar aceite y pantenol.": "Remove from heat, add oil and panthenol.",
+    "Bajo 40°C, agregar aceite esencial.": "Below 40°C, add essential oil.",
+    "Prensar en molde. Secar 24-48h.": "Press into a mold. Dry 24-48h.",
+    "Verter A sobre B batiendo con minipimer 3-4 min.": "Pour A over B, blending with an immersion blender 3-4 min.",
+    "Enfriar batiendo suavemente hasta 40°C.": "Cool, blending gently, to 40°C.",
+    "Agregar fase C.": "Add phase C.",
+    "Derretir aceite de coco si está sólido.": "Melt coconut oil if it's solid.",
+    "Mezclar aceites y vitamina E.": "Mix oils and vitamin E.",
+    "Incorporar el exfoliante gradualmente.": "Incorporate the exfoliant gradually.",
+    "Agregar aceite esencial.": "Add essential oil.",
+    "Envasar en tarro de boca ancha.": "Package in a wide-mouth jar.",
+    "Pesar cada ingrediente por separado.": "Weigh each ingredient separately.",
+    "Tamizar el caolín y la fécula para eliminar grumos.": "Sift the kaolin and starch to remove lumps.",
+    "Rallar o triturar el SCI en polvo fino (usar mascarilla).": "Grate or crush the SCI into a fine powder (wear a mask).",
+    "Mezclar todos los polvos en un bowl.": "Mix all the powders in a bowl.",
+    "Tamizar la mezcla completa 2-3 veces para homogeneizar.": "Sift the whole mixture 2-3 times to homogenize.",
+    "Envasar en tarro con tapa.": "Package in a jar with a lid.",
+    "Mezclar todos los polvos EXCEPTO la papaína.": "Mix all the powders EXCEPT the papain.",
+    "Tamizar la mezcla 2-3 veces para homogeneizar.": "Sift the mixture 2-3 times to homogenize.",
+    "Agregar la papaína al final y mezclar suavemente (no tamizar — es delicada).": "Add the papain at the end and mix gently (do not sift — it's delicate).",
+    "Envasar en tarro con tapa hermética.": "Package in a jar with an airtight lid.",
+    "Pesar aceites y calentar a 40-45°C.": "Weigh oils and heat to 40-45°C.",
+    "Preparar solución NaOH+agua con EPP (guantes, gafas, manga larga).": "Prepare the NaOH+water solution with PPE (gloves, goggles, long sleeves).",
+    "Cuando ambas estén a 35-45°C, verter lejía sobre aceites.": "When both are at 35-45°C, pour the lye over the oils.",
+    "Batir con minipimer hasta la traza.": "Blend with an immersion blender until trace.",
+    "Agregar aditivos.": "Add additives.",
+    "Verter en molde, tapar con film y toalla 24-48h.": "Pour into a mold, cover with film and a towel 24-48h.",
+    "Desmoldar, cortar, curar 4-6 semanas.": "Unmold, cut, cure 4-6 weeks.",
+    "Formato": "Format",
+    "Tipo": "Type",
+    "Producto": "Product",
+    "Tipo de cabello": "Hair type",
+    "Emulsionado (con agua)": "Emulsified (with water)",
+    "Crema ligera (rápida absorción)": "Light cream (fast absorption)",
+    "Crema ligeramente viscosa": "Slightly viscous cream",
+    "Crema viscosa": "Viscous cream",
+    "Body butter (manteca batida)": "Body butter (whipped butter)",
+    "Humectante sólido": "Solid moisturizer",
+    "Sólido": "Solid",
+    "Líquido": "Liquid",
+    "Seco / rizado / maltratado": "Dry / curly / damaged",
+    "Graso / caspa seborreica": "Oily / seborrheic dandruff",
+    "Caída de cabello": "Hair loss",
+    "Seco (materia activa 7–11%)": "Dry (active matter 7–11%)",
+    "Graso (16–20%)": "Oily (16–20%)",
+    "Coco betaína (anfótero)": "Cocamidopropyl betaine (amphoteric)",
+    "Lauril glucósido (no iónico)": "Lauryl glucoside (non-ionic)",
+    "Coco glucósido (no iónico)": "Coco glucoside (non-ionic)",
+    "Decil glucósido (no iónico)": "Decyl glucoside (non-ionic)",
+    "SCS · Sodium Coco Sulfate (aniónico)": "SCS · Sodium Coco Sulfate (anionic)",
+    "SAVIAS · HERRAMIENTAS DE COSMÉTICA ARTESANAL": "SAVIAS · ARTISANAL COSMETICS TOOLS",
+    "Herramientas Savias": "Savias Tools",
+    "Tu laboratorio digital de": "Your digital lab of",
+    "cosmética artesanal": "artisanal cosmetics",
+    "← Volver": "← Back",
+    "Simulador de rentabilidad artesanal. Calcula el precio ideal para tus productos.": "Artisanal profitability simulator. Calculate the ideal price for your products.",
+    "Diseñador de extractos botánicos. Encuentra la planta perfecta para tu fórmula.": "Botanical extract designer. Find the perfect plant for your formula.",
+    "Formulador": "Formulator",
+    "Selecciona un tipo de producto y obtén la fórmula base con porcentajes e ingredientes.": "Select a product type and get the base formula with percentages and ingredients.",
+    "Identifica un problema de piel y obtén una línea de productos recomendada.": "Identify a skin concern and get a recommended product line.",
+    "Descubre tu ruta ideal de formación en cosmética artesanal.": "Discover your ideal training path in artisanal cosmetics.",
+    "CreaPrecio — Simulador de Rentabilidad": "CreaPrecio — Profitability Simulator",
+    "FitoMatch — Diseñador de Extractos Botánicos": "FitoMatch — Botanical Extract Designer",
+    "Formulador — Crea tu Fórmula Paso a Paso": "Formulator — Build Your Formula Step by Step",
+    "SkinSolver — Soluciones por Problema de Piel": "SkinSolver — Solutions by Skin Concern",
+    "SaviasPath — Descubre tu Ruta Ideal": "SaviasPath — Discover Your Ideal Path",
+    "¿Qué quieres": "What do you want to",
+    "crear": "create",
+    "Elige el tipo de producto y define el tamaño de tu lote. Te guiaremos fase por fase.": "Choose the product type and define your batch size. We'll guide you phase by phase.",
+    "¿Qué quieres crear?": "What do you want to create?",
+    "Selecciona...": "Select...",
+    "Humectante corporal": "Body moisturizer",
+    "Otro producto": "Other product",
+    "Opción": "Option",
+    "Nombre de tu receta": "Name of your recipe",
+    "Ej: Crema Hidratante Lavanda": "e.g. Lavender Moisturizing Cream",
+    "Tamaño del lote (gramos)": "Batch size (grams)",
+    "Formular →": "Formulate →",
+    "Arma tu": "Build your",
+    "fórmula": "formula",
+    "Ajusta los porcentajes de cada ingrediente. Los sugeridos son una guía — personaliza a tu gusto.": "Adjust the percentages of each ingredient. The suggested ones are a guide — customize to your liking.",
+    "Total de la fórmula": "Formula total",
+    "← Anterior": "← Previous",
+    "Ver resultado ✨": "See result ✨",
+    "Ingrediente": "Ingredient",
+    "Gramos": "Grams",
+    "+ Agregar ingrediente": "+ Add ingredient",
+    "+ Otro ingrediente...": "+ Other ingredient...",
+    "← Editar fórmula": "← Edit formula",
+    "Descargar PDF": "Download PDF",
+    "Esta fórmula tiene porcentajes fijos probados por Lina. Solo eliges el conservante (si aplica) y el agua se ajusta para sumar 100%. Debajo verás ingredientes sugeridos para cada parte.": "This formula has fixed percentages tested by Lina. You only choose the preservative (if applicable) and the water adjusts to add up to 100%. Below you'll see suggested ingredients for each part.",
+    "Elige tus tensioactivos y reparte el % puro (materia activa) hasta el objetivo. La calculadora los convierte a gramos según el MAT de cada uno; el resto de la fórmula tiene % fijos.": "Choose your surfactants and distribute the % pure (active matter) up to the target. The calculator converts them to grams based on each one's MAT; the rest of the formula has fixed %.",
+    "Conservante (elige el tuyo — el agua se ajusta sola)": "Preservative (choose yours — the water adjusts itself)",
+    "Materia activa total objetivo (% puro)": "Total target active matter (% pure)",
+    "Tensioactivo": "Surfactant",
+    "% puro": "% pure",
+    "+ Agregar tensioactivo": "+ Add surfactant",
+    "Parte de la fórmula": "Formula part",
+    "Composición": "Composition",
+    "Proceso Paso a Paso": "Step-by-Step Process",
+    "Creado con Herramientas Savias · Formulador": "Created with Savias Tools · Formulator",
+    "MAT del proveedor (editable)": "Supplier MAT (editable)",
+    "Quitar": "Remove",
+    "Eliminar": "Delete",
+    "Nombre del ingrediente:": "Ingredient name:",
+    "Sugeridos: ": "Suggested: ",
+    "Sugeridos:": "Suggested:",
+    "Tensioactivo (elige uno)": "Surfactant (choose one)",
+    "Conservante · ": "Preservative · ",
+    "Fórmula Artesanal · ": "Artisanal Formula · ",
+    "Lote: ": "Batch: ",
+    "Dificultad: ": "Difficulty: ",
+    ". Dificultad: ": ". Difficulty: ",
+    "Rango para ": "Range for ",
+    "cabello seco": "dry hair",
+    "cabello normal": "normal hair",
+    "cabello graso": "oily hair",
+    "La fórmula está balanceada.": "The formula is balanced.",
+    "Faltan ": "Missing ",
+    "% — agrega más ingredientes o ajusta porcentajes.": "% — add more ingredients or adjust percentages.",
+    "Excediste por ": "Exceeded by ",
+    "% — reduce algún ingrediente.": "% — reduce some ingredient.",
+    "✓ % puro asignado: ": "✓ % pure assigned: ",
+    "% — coincide con el objetivo (": "% — matches the target (",
+    "Te faltan ": "You're missing ",
+    "% puro para llegar al objetivo de ": "% pure to reach the target of ",
+    "⚠ Te pasaste ": "⚠ You went over by ",
+    "% del objetivo. No conviene superar ": "% over the target. It's not advisable to exceed ",
+    "% de materia activa.": "% of active matter.",
+    " ⚠ Para este cabello se recomienda entre ": " ⚠ For this hair, between ",
+    "% se recomienda.": "% is recommended.",
+    "Los tensioactivos ocupan más del 100% del lote: baja el % puro o sube el MAT.": "The surfactants take up more than 100% of the batch: lower the % pure or raise the MAT.",
+    "% puro · MAT ": "% pure · MAT ",
+    "Conservante ·": "Preservative ·",
+    "Fórmula Artesanal ·": "Artisanal Formula ·",
+    "Lote:": "Batch:",
+    "Dificultad:": "Difficulty:",
+    ". Dificultad:": ". Difficulty:",
+    "Rango para": "Range for",
+    "Faltan": "Missing",
+    "Excediste por": "Exceeded by",
+    "✓ % puro asignado:": "✓ % pure assigned:",
+    "Te faltan": "You're missing",
+    "% puro para llegar al objetivo de": "% pure to reach the target of",
+    "⚠ Te pasaste": "⚠ You went over by",
+    "% del objetivo. No conviene superar": "% over the target. It's not advisable to exceed",
+    "⚠ Para este cabello se recomienda entre": "⚠ For this hair, between",
+    "% puro · MAT": "% pure · MAT"
+    },
+    pt: {
+    "Emulsión O/W": "Emulsão O/A",
+    "Emulsión O/W (densa)": "Emulsão O/A (densa)",
+    "Emulsión O/W (rápida absorción)": "Emulsão O/A (absorção rápida)",
+    "Emulsión O/W ligera": "Emulsão O/A leve",
+    "Anhidra (sin agua)": "Anidra (sem água)",
+    "Anhidro": "Anidro",
+    "Anhidro (sin agua)": "Anidro (sem água)",
+    "Anhidro (sin agua) · barra": "Anidro (sem água) · barra",
+    "Anhidro con partículas": "Anidro com partículas",
+    "Gel acuoso": "Gel aquoso",
+    "Tensioactivo sólido": "Tensoativo sólido",
+    "Saponificación en frío": "Saponificação a frio",
+    "Polvo limpiador (sin agua)": "Pó de limpeza (sem água)",
+    "Polvo limpiador enzimático (sin agua)": "Pó de limpeza enzimático (sem água)",
+    "Intermedia": "Intermediária",
+    "Avanzada": "Avançada",
+    "Humectante · Crema ligera": "Hidratante · Creme leve",
+    "Humectante · Crema ligeramente viscosa": "Hidratante · Creme levemente viscoso",
+    "Humectante · Crema viscosa": "Hidratante · Creme viscoso",
+    "Humectante · Body butter": "Hidratante · Body butter",
+    "Humectante · Sólido": "Hidratante · Sólido",
+    "Shampoo sólido · Cabello seco": "Shampoo sólido · Cabelo seco",
+    "Shampoo sólido · Cabello graso": "Shampoo sólido · Cabelo oleoso",
+    "Shampoo sólido · Cabello normal": "Shampoo sólido · Cabelo normal",
+    "Shampoo sólido · Caída de cabello": "Shampoo sólido · Queda de cabelo",
+    "Shampoo líquido · Cabello seco": "Shampoo líquido · Cabelo seco",
+    "Shampoo líquido · Cabello normal": "Shampoo líquido · Cabelo normal",
+    "Shampoo líquido · Cabello graso": "Shampoo líquido · Cabelo oleoso",
+    "Crema Facial Hidratante": "Creme Facial Hidratante",
+    "Mantequilla Corporal": "Manteiga Corporal",
+    "Loción Corporal Ligera": "Loção Corporal Leve",
+    "Exfoliante Corporal": "Esfoliante Corporal",
+    "Limpiador Facial en Polvo": "Limpador Facial em Pó",
+    "Limpiador Facial en Polvo (Enzimático)": "Limpador Facial em Pó (Enzimático)",
+    "Jabón Cold Process": "Sabão Cold Process",
+    "Crema facial hidratante": "Creme facial hidratante",
+    "Mantequilla corporal": "Manteiga corporal",
+    "Loción corporal ligera": "Loção corporal leve",
+    "Exfoliante corporal": "Esfoliante corporal",
+    "Limpiador facial en polvo": "Limpador facial em pó",
+    "Limpiador facial en polvo (enzimático)": "Limpador facial em pó (enzimático)",
+    "Barra · seco / rizado / maltratado / caspa por sequedad": "Barra · seco / cacheado / danificado / caspa por ressecamento",
+    "Barra · graso / caspa seborreica": "Barra · oleoso / caspa seborreica",
+    "Barra · cabello normal": "Barra · cabelo normal",
+    "Barra · anticaída / crecimiento": "Barra · antiqueda / crescimento",
+    "Líquido · cabello seco": "Líquido · cabelo seco",
+    "Líquido · cabello normal": "Líquido · cabelo normal",
+    "Líquido · cabello graso": "Líquido · cabelo oleoso",
+    "Crema ligera de rápida absorción que no se siente aceitosa (usa éster en vez de aceite pesado). Porcentajes fijos: solo eliges el conservante.": "Creme leve de absorção rápida que não fica oleoso (usa éster em vez de óleo pesado). Porcentagens fixas: você só escolhe o conservante.",
+    "Crema de cuerpo medio, con manteca para más nutrición. Porcentajes fijos: solo eliges el conservante.": "Creme de corpo médio, com manteiga para mais nutrição. Porcentagens fixas: você só escolhe o conservante.",
+    "Crema densa y envolvente, con espesante para más cuerpo. Porcentajes fijos: solo eliges el conservante.": "Creme denso e envolvente, com espessante para mais corpo. Porcentagens fixas: você só escolhe o conservante.",
+    "Manteca corporal batida, sin agua. No necesita conservante ni emulsionante. La fécula de maíz le da un toque seco al absorberse.": "Manteiga corporal batida, sem água. Não precisa de conservante nem emulsionante. O amido de milho dá um toque seco ao absorver.",
+    "Barra hidratante sólida que se derrite con el calor de la piel. Lleva cera emulsionante para repartirse con el agua de la ducha. % fijos que suman 100%.": "Barra hidratante sólida que derrete com o calor da pele. Leva cera emulsionante para se espalhar com a água do chuveiro. % fixas que somam 100%.",
+    "Barra para cabello seco, rizado, maltratado o con caspa por sequedad. % por categoría definidos por Lina; eliges los ingredientes de cada grupo.": "Barra para cabelo seco, cacheado, danificado ou com caspa por ressecamento. % por categoria definidos por Lina; você escolhe os ingredientes de cada grupo.",
+    "Barra para cabello graso o con caspa seborreica. Más tensioactivos para limpiar mejor; menos grasas. Eliges los ingredientes de cada grupo.": "Barra para cabelo oleoso ou com caspa seborreica. Mais tensoativos para limpar melhor; menos gorduras. Você escolhe os ingredientes de cada grupo.",
+    "Barra equilibrada para cabello normal. % balanceados. Eliges los ingredientes de cada grupo.": "Barra equilibrada para cabelo normal. % balanceadas. Você escolhe os ingredientes de cada grupo.",
+    "Barra enfocada en caída y crecimiento: más activos sólidos funcionales. Eliges los ingredientes de cada grupo.": "Barra focada em queda e crescimento: mais ativos sólidos funcionais. Você escolhe os ingredientes de cada grupo.",
+    "Shampoo líquido para cabello seco. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.": "Shampoo líquido para cabelo seco. Você escolhe seus tensoativos e distribui o % puro até o objetivo; a calculadora os converte em gramas conforme o MAT.",
+    "Shampoo líquido para cabello normal. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.": "Shampoo líquido para cabelo normal. Você escolhe seus tensoativos e distribui o % puro até o objetivo; a calculadora os converte em gramas conforme o MAT.",
+    "Shampoo líquido para cabello graso. Eliges tus tensioactivos y repartes el % puro hasta el objetivo; la calculadora los pasa a gramos según el MAT.": "Shampoo líquido para cabelo oleoso. Você escolhe seus tensoativos e distribui o % puro até o objetivo; a calculadora os converte em gramas conforme o MAT.",
+    "Emulsión aceite-en-agua ideal para hidratar sin engrasar. Requiere emulsionante y calentamiento de ambas fases.": "Emulsão óleo-em-água ideal para hidratar sem deixar oleoso. Requer emulsionante e aquecimento de ambas as fases.",
+    "Producto sin agua a base de mantecas y aceites. No necesita conservante ni emulsionante.": "Produto sem água à base de manteigas e óleos. Não precisa de conservante nem emulsionante.",
+    "Mezcla sencilla de ceras, mantecas y aceites que solidifica al enfriar. Ideal para empezar.": "Mistura simples de ceras, manteigas e óleos que solidifica ao esfriar. Ideal para começar.",
+    "Formulación de base acuosa con activos concentrados. Textura ligera y de rápida absorción.": "Formulação de base aquosa com ativos concentrados. Textura leve e de absorção rápida.",
+    "Barra limpiadora a base de tensioactivos sólidos. Ecológica y de larga duración.": "Barra de limpeza à base de tensoativos sólidos. Ecológica e de longa duração.",
+    "Versión más ligera de una crema, con más agua y menos aceites. Absorción rápida.": "Versão mais leve de um creme, com mais água e menos óleos. Absorção rápida.",
+    "Mezcla de agente exfoliante con aceites. Sin agua = sin conservante. Muy fácil de hacer.": "Mistura de agente esfoliante com óleos. Sem água = sem conservante. Muito fácil de fazer.",
+    "Limpiador suave en polvo que se activa con agua al momento de usar. Sin conservantes. Mezclar en seco.": "Limpador suave em pó que se ativa com água na hora de usar. Sem conservantes. Misturar a seco.",
+    "Limpiador en polvo con papaína (enzima de papaya) para exfoliación enzimática suave. Ideal para luminosidad y renovación celular.": "Limpador em pó com papaína (enzima do mamão) para esfoliação enzimática suave. Ideal para luminosidade e renovação celular.",
+    "Jabón artesanal real por saponificación. Requiere NaOH (sosa cáustica) — usar con precaución y EPP.": "Sabão artesanal real por saponificação. Requer NaOH (soda cáustica) — usar com cuidado e EPI.",
+    "El conservante es obligatorio porque la fórmula lleva agua. Elige uno y la calculadora ajusta el agua para sumar 100%.": "O conservante é obrigatório porque a fórmula contém água. Escolha um e a calculadora ajusta a água para somar 100%.",
+    "El espesante (alcohol cetílico o ácido esteárico) da el cuerpo denso. El conservante es obligatorio: el agua se ajusta sola para sumar 100%.": "O espessante (álcool cetílico ou ácido esteárico) dá o corpo denso. O conservante é obrigatório: a água se ajusta sozinha para somar 100%.",
+    "Sin agua = sin conservante. La fécula de maíz quita la sensación grasosa. La textura cambia con la temperatura ambiente.": "Sem água = sem conservante. O amido de milho tira a sensação oleosa. A textura muda com a temperatura ambiente.",
+    "Barra hidratante sólida. La cera emulsionante ayuda a que se reparta con el agua. Sin agua en la fórmula = sin conservante.": "Barra hidratante sólida. A cera emulsionante ajuda a se espalhar com a água. Sem água na fórmula = sem conservante.",
+    "Más grasas = más nutrición para cabello seco. Usa mascarilla al manipular tensioactivos en polvo. Deja secar la barra 24–48h.": "Mais gorduras = mais nutrição para cabelo seco. Use máscara ao manipular tensoativos em pó. Deixe a barra secar por 24–48h.",
+    "Más tensioactivos limpian la grasa; la arcilla o el carbón ayudan a regular el sebo. Deja secar la barra 24–48h.": "Mais tensoativos limpam a gordura; a argila ou o carvão ajudam a regular o sebo. Deixe a barra secar por 24–48h.",
+    "Fórmula equilibrada de mantenimiento. Deja secar la barra 24–48h antes del primer uso.": "Fórmula equilibrada de manutenção. Deixe a barra secar por 24–48h antes do primeiro uso.",
+    "Más activos sólidos (keratina, biotina, niacinamida) para fortalecer. El romero y la cafeína estimulan el folículo. Deja secar 24–48h.": "Mais ativos sólidos (queratina, biotina, niacinamida) para fortalecer. O alecrim e a cafeína estimulam o folículo. Deixe secar por 24–48h.",
+    "El % puro es la materia activa; la calculadora lo convierte a gramos reales según el MAT de cada tensioactivo (editable — verifica la ficha técnica de tu proveedor).": "O % puro é a matéria ativa; a calculadora o converte em gramas reais conforme o MAT de cada tensoativo (editável — verifique a ficha técnica do seu fornecedor).",
+    "Si usas ácido hialurónico, prediluirlo en agua tibia la noche anterior. Nunca calentar.": "Se usar ácido hialurônico, pré-dilua em água morna na noite anterior. Nunca aqueça.",
+    "Sin agua = sin conservante necesario. La textura varía con la temperatura ambiente.": "Sem água = sem conservante necessário. A textura varia com a temperatura ambiente.",
+    "Muy duro → más aceite. Muy blando → más cera. Puedes añadir mica para dar color.": "Muito duro → mais óleo. Muito mole → mais cera. Você pode adicionar mica para dar cor.",
+    "Nunca calentar el ácido hialurónico. Usar envase opaco para proteger activos sensibles a la luz.": "Nunca aqueça o ácido hialurônico. Use embalagem opaca para proteger ativos sensíveis à luz.",
+    "Usar mascarilla al manipular polvos de SCI/SLSA. Necesita 48h de secado antes de usar.": "Use máscara ao manipular pós de SCI/SLSA. Precisa de 48h de secagem antes de usar.",
+    "Más agua = más ligera. Para pieles secas, agrega un poco de manteca de karité en fase oleosa.": "Mais água = mais leve. Para peles secas, adicione um pouco de manteiga de karité na fase oleosa.",
+    "Azúcar = piel sensible (se disuelve). Sal = exfoliación intensa. Café = anticelulítico.": "Açúcar = pele sensível (dissolve). Sal = esfoliação intensa. Café = anticelulite.",
+    "Para usar: tomar una cucharadita en la palma, agregar unas gotas de agua, frotar y aplicar en el rostro. Enjuagar con agua tibia.": "Para usar: pegue uma colher de chá na palma, adicione algumas gotas de água, esfregue e aplique no rosto. Enxágue com água morna.",
+    "La papaína es una enzima sensible al calor — nunca calentar. Al activarse con agua tibia, exfolia suavemente disolviendo células muertas. Usar 1-2 veces por semana. Para uso diario, elegir la versión sin enzima.": "A papaína é uma enzima sensível ao calor — nunca aqueça. Ao ser ativada com água morna, esfolia suavemente dissolvendo células mortas. Use 1-2 vezes por semana. Para uso diário, escolha a versão sem enzima.",
+    "OBLIGATORIO usar calculadora SAP para el NaOH. NUNCA improvisar cantidades. Usar EPP siempre.": "OBRIGATÓRIO usar calculadora SAP para o NaOH. NUNCA improvise quantidades. Use EPI sempre.",
+    "Fase Acuosa": "Fase Aquosa",
+    "Fase Acuosa (A)": "Fase Aquosa (A)",
+    "Fase Oleosa Ligera": "Fase Oleosa Leve",
+    "Fase Fría": "Fase Fria",
+    "Fase Fría (C)": "Fase Fria (C)",
+    "Aceites / Grasas": "Óleos / Gorduras",
+    "Solución de Lejía": "Solução de Soda",
+    "Aditivos (a la traza)": "Aditivos (no traço)",
+    "Calentar a 70-75°C": "Aquecer a 70-75°C",
+    "Calentar a 70-75°C por separado": "Aquecer a 70-75°C separadamente",
+    "Calentar a 40-45°C": "Aquecer a 40-45°C",
+    "Agregar bajo 40°C": "Adicionar abaixo de 40°C",
+    "Bajo 40°C": "Abaixo de 40°C",
+    "Derretir a baño maría (máx 60°C)": "Derreter em banho-maria (máx 60°C)",
+    "Agregar después de batir": "Adicionar após bater",
+    "Derretir todo a baño maría": "Derreter tudo em banho-maria",
+    "No calentar — mezclar a temperatura ambiente": "Não aquecer — misturar à temperatura ambiente",
+    "Mezclar por separado y añadir": "Misturar separadamente e adicionar",
+    "Agregar al final": "Adicionar no final",
+    "Derretir manteca primero, luego agregar polvos": "Derreter a manteiga primeiro, depois adicionar os pós",
+    "Mezclar todos los polvos en seco — tamizar para homogeneizar": "Misturar todos os pós a seco — peneirar para homogeneizar",
+    "Preparar en lugar ventilado — exotérmica": "Preparar em local ventilado — exotérmica",
+    "Agregar cuando alcance consistencia de pudín": "Adicionar quando atingir consistência de pudim",
+    "Base de la emulsión": "Base da emulsão",
+    "Humectante": "Hidratante",
+    "Absorción rápida": "Absorção rápida",
+    "Emoliente ligero": "Emoliente leve",
+    "Estructura": "Estrutura",
+    "Hidratación": "Hidratação",
+    "Suavidad": "Maciez",
+    "Frescura": "Frescor",
+    "Hidratación profunda": "Hidratação profunda",
+    "Preservante": "Conservante",
+    "Tensioactivo principal": "Tensoativo principal",
+    "Co-tensioactivo, espuma": "Co-tensoativo, espuma",
+    "Acondicionante": "Condicionador",
+    "Nutrición": "Nutrição",
+    "Fortalecimiento": "Fortalecimento",
+    "Aroma y estimulante": "Aroma e estimulante",
+    "Vehículo": "Veículo",
+    "Arcilla limpiadora suave": "Argila de limpeza suave",
+    "Tensioactivo suave, espuma": "Tensoativo suave, espuma",
+    "Calmante y aroma natural": "Calmante e aroma natural",
+    "Enzima exfoliante (de papaya)": "Enzima esfoliante (do mamão)",
+    "Dureza y espuma": "Dureza e espuma",
+    "Cremosidad": "Cremosidade",
+    "Espuma estable": "Espuma estável",
+    "Calcular con SAP calculator": "Calcular com a calculadora SAP",
+    "33% del peso de aceites": "33% do peso dos óleos",
+    "Aceite sin saponificar": "Óleo não saponificado",
+    "Aceite": "Óleo",
+    "Fragancia": "Fragrância",
+    "Manteca": "Manteiga",
+    "Espesante": "Espessante",
+    "Aceite vegetal": "Óleo vegetal",
+    "Fécula de maíz": "Amido de milho",
+    "Aceite esencial": "Óleo essencial",
+    "Alcohol cetílico": "Álcool cetílico",
+    "Tensioactivos": "Tensoativos",
+    "Grasas": "Gorduras",
+    "Activos acuosos": "Ativos aquosos",
+    "Activos sólidos": "Ativos sólidos",
+    "Activo": "Ativo",
+    "Agua": "Água",
+    "Agua destilada": "Água destilada",
+    "Propanediol": "Propanodiol",
+    "Lactato de sodio": "Lactato de sódio",
+    "Pepita de uva": "Semente de uva",
+    "Argán": "Argan",
+    "Miristato de isopropilo": "Miristato de isopropila",
+    "Mango": "Manga",
+    "Cacao": "Cacau",
+    "Babasú": "Babaçu",
+    "Algodón": "Algodão",
+    "Almendras": "Amêndoas",
+    "Almidón de maíz": "Amido de milho",
+    "Fragancia cosmética": "Fragrância cosmética",
+    "Coco betaína": "Cocobetaína",
+    "Coco glucósido": "Coco glucosídeo",
+    "Manteca de karité": "Manteiga de karité",
+    "Manteca de cacao": "Manteiga de cacau",
+    "Aceite de aguacate": "Óleo de abacate",
+    "Miel": "Mel",
+    "Avena coloidal": "Aveia coloidal",
+    "Keratina": "Queratina",
+    "Caolín": "Caulim",
+    "Aceite de jojoba": "Óleo de jojoba",
+    "Manteca de karité (poca)": "Manteiga de karité (pouca)",
+    "Hidrolato de romero": "Hidrolato de alecrim",
+    "Arcilla verde": "Argila verde",
+    "Carbón activado": "Carvão ativado",
+    "Aceite de coco": "Óleo de coco",
+    "Aceite de ricino": "Óleo de rícino",
+    "Proteína hidrolizada": "Proteína hidrolisada",
+    "Hidrolato de manzanilla": "Hidrolato de camomila",
+    "Ácido hialurónico": "Ácido hialurônico",
+    "Urea": "Ureia",
+    "Aceite de almendras": "Óleo de amêndoas",
+    "Aceite de argán": "Óleo de argan",
+    "Aceite de rosa mosqueta": "Óleo de rosa mosqueta",
+    "Aceite de coco fraccionado": "Óleo de coco fracionado",
+    "Escualano": "Esqualano",
+    "Aceite esencial de lavanda": "Óleo essencial de lavanda",
+    "Aceite esencial de rosa": "Óleo essencial de rosa",
+    "Aceite esencial de manzanilla": "Óleo essencial de camomila",
+    "Aceite esencial de árbol de té": "Óleo essencial de melaleuca",
+    "Extracto de centella": "Extrato de centella",
+    "Extracto de caléndula": "Extrato de calêndula",
+    "Manteca de mango": "Manteiga de manga",
+    "Cera de abejas": "Cera de abelha",
+    "Aceite esencial de vainilla": "Óleo essencial de baunilha",
+    "Aceite esencial de naranja": "Óleo essencial de laranja",
+    "Cera de candelilla": "Cera de candelila",
+    "Aceite esencial de menta": "Óleo essencial de menta",
+    "Saborizante labial": "Aromatizante labial",
+    "Hidrolato de hamamelis": "Hidrolato de hamamélis",
+    "Extracto de regaliz": "Extrato de alcaçuz",
+    "Vitamina C (oil-soluble)": "Vitamina C (lipossolúvel)",
+    "Aceite esencial de romero": "Óleo essencial de alecrim",
+    "Aceite esencial de cedro": "Óleo essencial de cedro",
+    "Arcilla blanca": "Argila branca",
+    "Aceite de girasol": "Óleo de girassol",
+    "Aceite esencial de ylang ylang": "Óleo essencial de ylang ylang",
+    "Azúcar morena": "Açúcar mascavo",
+    "Azúcar blanca": "Açúcar branco",
+    "Sal marina": "Sal marinho",
+    "Sal del Himalaya": "Sal do Himalaia",
+    "Café molido": "Café moído",
+    "Aceite de oliva": "Azeite de oliva",
+    "Aceite esencial de café": "Óleo essencial de café",
+    "Cúrcuma en polvo": "Açafrão-da-terra em pó",
+    "Polvo de rosas": "Pó de rosas",
+    "Arcilla rosa": "Argila rosa",
+    "Polvo de avena": "Pó de aveia",
+    "Polvo de manzanilla": "Pó de camomila",
+    "Leche en polvo": "Leite em pó",
+    "Almidón de arroz": "Amido de arroz",
+    "Aceite de palma": "Óleo de palma",
+    "Manteca de cerdo": "Banha",
+    "NaOH (Sosa cáustica)": "NaOH (Soda cáustica)",
+    "Leche de cabra (congelada)": "Leite de cabra (congelado)",
+    "Cerveza (desgasificada)": "Cerveja (desgaseificada)",
+    "Infusión herbal": "Infusão de ervas",
+    "Sobreengrasado extra": "Superengordurado extra",
+    "Avena molida": "Aveia moída",
+    "Cúrcuma": "Açafrão-da-terra",
+    "Óxido de hierro": "Óxido de ferro",
+    "Pesa la fase acuosa (agua + humectante) y caliéntala a 70–75°C.": "Pese a fase aquosa (água + hidratante) e aqueça a 70–75°C.",
+    "Pesa la fase oleosa (cera emulsionante + aceite + éster) y caliéntala aparte a 70–75°C.": "Pese a fase oleosa (cera emulsionante + óleo + éster) e aqueça à parte a 70–75°C.",
+    "Pesa la fase oleosa (cera emulsionante + manteca + aceite) y caliéntala aparte a 70–75°C.": "Pese a fase oleosa (cera emulsionante + manteiga + óleo) e aqueça à parte a 70–75°C.",
+    "Pesa la fase oleosa (cera emulsionante + aceite + espesante) y caliéntala aparte a 70–75°C.": "Pese a fase oleosa (cera emulsionante + óleo + espessante) e aqueça à parte a 70–75°C.",
+    "Vierte la fase acuosa sobre la oleosa batiendo con minipímer hasta emulsionar.": "Verta a fase aquosa sobre a oleosa batendo com mixer até emulsionar.",
+    "Sigue batiendo mientras enfría a 40°C.": "Continue batendo enquanto esfria a 40°C.",
+    "Bajo 40°C agrega la fragancia y el conservante elegido.": "Abaixo de 40°C, adicione a fragrância e o conservante escolhido.",
+    "Mide el pH (ideal 5.0–5.5) y envasa.": "Meça o pH (ideal 5.0–5.5) e envase.",
+    "Derrite las mantecas a baño maría (máx 60°C).": "Derreta as manteigas em banho-maria (máx 60°C).",
+    "Retira del fuego y agrega el aceite vegetal.": "Retire do fogo e adicione o óleo vegetal.",
+    "Refrigera 30–45 min hasta que esté semisólido.": "Refrigere por 30–45 min até ficar semissólido.",
+    "Agrega la fécula de maíz, la vitamina E y el aceite esencial.": "Adicione o amido de milho, a vitamina E e o óleo essencial.",
+    "Bate 5–8 min hasta textura cremosa.": "Bata por 5–8 min até obter textura cremosa.",
+    "Envasa.": "Envase.",
+    "Derrite manteca + cera emulsionante + alcohol cetílico a baño maría.": "Derreta manteiga + cera emulsionante + álcool cetílico em banho-maria.",
+    "Agrega el aceite vegetal y mezcla.": "Adicione o óleo vegetal e misture.",
+    "Retira del fuego y agrega la vitamina E y la fragancia.": "Retire do fogo e adicione a vitamina E e a fragrância.",
+    "Vierte en molde y deja solidificar.": "Verta no molde e deixe solidificar.",
+    "Desmolda cuando esté firme.": "Desenforme quando estiver firme.",
+    "Tritura/pesa los tensioactivos (usa mascarilla con los polvos).": "Triture/pese os tensoativos (use máscara com os pós).",
+    "Derrite las grasas a baño maría.": "Derreta as gorduras em banho-maria.",
+    "Mezcla los tensioactivos con las grasas derretidas.": "Misture os tensoativos com as gorduras derretidas.",
+    "Agrega los activos acuosos y los activos sólidos.": "Adicione os ativos aquosos e os ativos sólidos.",
+    "Amasa hasta una pasta homogénea.": "Sove até obter uma pasta homogênea.",
+    "Prensa en molde y deja secar 24–48h antes de usar.": "Prense no molde e deixe secar 24–48h antes de usar.",
+    "Pesa cada tensioactivo según los GRAMOS calculados (no el % puro).": "Pese cada tensoativo conforme os GRAMAS calculados (não o % puro).",
+    "Disuelve los tensioactivos en el agua tibia removiendo sin hacer espuma.": "Dissolva os tensoativos na água morna mexendo sem fazer espuma.",
+    "Agrega la glicerina y los activos (pantenol, etc.).": "Adicione a glicerina e os ativos (pantenol, etc.).",
+    "Espesa con la goma xantana previamente dispersada.": "Espesse com a goma xantana previamente dispersada.",
+    "Agrega la fragancia y el conservante elegido.": "Adicione a fragrância e o conservante escolhido.",
+    "Mide y ajusta el pH (ideal 4.5–5.5) y envasa.": "Meça e ajuste o pH (ideal 4.5–5.5) e envase.",
+    "Calentar fase A a 70-75°C.": "Aquecer a fase A a 70-75°C.",
+    "Calentar fase B a 70-75°C por separado.": "Aquecer a fase B a 70-75°C separadamente.",
+    "Calentar fase B a 70-75°C.": "Aquecer a fase B a 70-75°C.",
+    "Verter fase A sobre fase B lentamente, batiendo con minipimer.": "Verter a fase A sobre a fase B lentamente, batendo com mixer.",
+    "Batir 3-5 min hasta emulsión homogénea.": "Bater por 3-5 min até obter emulsão homogênea.",
+    "Enfriar a 40°C batiendo suavemente.": "Esfriar a 40°C batendo suavemente.",
+    "Agregar fase C y mezclar bien.": "Adicionar a fase C e misturar bem.",
+    "Medir pH (ideal 5.0-5.5). Envasar.": "Medir o pH (ideal 5.0-5.5). Envasar.",
+    "Derretir mantecas y aceite de coco a baño maría.": "Derreter manteigas e óleo de coco em banho-maria.",
+    "Retirar del calor y agregar aceites líquidos.": "Retirar do calor e adicionar os óleos líquidos.",
+    "Refrigerar 30-45 min hasta semi-sólido.": "Refrigerar 30-45 min até ficar semissólido.",
+    "Batir con batidora 5-8 min hasta textura cremosa.": "Bater na batedeira 5-8 min até textura cremosa.",
+    "Agregar fase fría, batir 1 min más.": "Adicionar a fase fria, bater mais 1 min.",
+    "Derretir ceras y mantecas a baño maría.": "Derreter ceras e manteigas em banho-maria.",
+    "Agregar aceites, mezclar bien.": "Adicionar os óleos, misturar bem.",
+    "Retirar del fuego, agregar vitamina E y esencia.": "Retirar do fogo, adicionar vitamina E e essência.",
+    "Verter rápidamente en tubos/tarros.": "Verter rapidamente em tubos/potes.",
+    "Dejar enfriar sin mover (1 hora).": "Deixar esfriar sem mexer (1 hora).",
+    "Disolver ácido hialurónico en agua tibia (dejar hidratar 2h o toda la noche).": "Dissolver o ácido hialurônico em água morna (deixar hidratar 2h ou a noite toda).",
+    "Agregar glicerina y activos acuosos.": "Adicionar glicerina e ativos aquosos.",
+    "Mezclar fase oleosa por separado.": "Misturar a fase oleosa separadamente.",
+    "Incorporar fase oleosa a la acuosa.": "Incorporar a fase oleosa na aquosa.",
+    "Agregar conservante, ajustar pH (5.0-5.5).": "Adicionar conservante, ajustar o pH (5.0-5.5).",
+    "Envasar en frasco con gotero.": "Envasar em frasco com conta-gotas.",
+    "Derretir manteca a baño maría (máx 50°C).": "Derreter a manteiga em banho-maria (máx 50°C).",
+    "Agregar SCI y mezclar (usar mascarilla).": "Adicionar SCI e misturar (usar máscara).",
+    "Incorporar SLSA y almidón.": "Incorporar SLSA e amido.",
+    "Retirar del calor, agregar aceite y pantenol.": "Retirar do calor, adicionar óleo e pantenol.",
+    "Bajo 40°C, agregar aceite esencial.": "Abaixo de 40°C, adicionar óleo essencial.",
+    "Prensar en molde. Secar 24-48h.": "Prensar no molde. Secar 24-48h.",
+    "Verter A sobre B batiendo con minipimer 3-4 min.": "Verter A sobre B batendo com mixer 3-4 min.",
+    "Enfriar batiendo suavemente hasta 40°C.": "Esfriar batendo suavemente até 40°C.",
+    "Agregar fase C.": "Adicionar a fase C.",
+    "Derretir aceite de coco si está sólido.": "Derreter o óleo de coco se estiver sólido.",
+    "Mezclar aceites y vitamina E.": "Misturar óleos e vitamina E.",
+    "Incorporar el exfoliante gradualmente.": "Incorporar o esfoliante gradualmente.",
+    "Agregar aceite esencial.": "Adicionar óleo essencial.",
+    "Envasar en tarro de boca ancha.": "Envasar em pote de boca larga.",
+    "Pesar cada ingrediente por separado.": "Pesar cada ingrediente separadamente.",
+    "Tamizar el caolín y la fécula para eliminar grumos.": "Peneirar o caulim e o amido para eliminar grumos.",
+    "Rallar o triturar el SCI en polvo fino (usar mascarilla).": "Ralar ou triturar o SCI em pó fino (usar máscara).",
+    "Mezclar todos los polvos en un bowl.": "Misturar todos os pós em uma tigela.",
+    "Tamizar la mezcla completa 2-3 veces para homogeneizar.": "Peneirar a mistura completa 2-3 vezes para homogeneizar.",
+    "Envasar en tarro con tapa.": "Envasar em pote com tampa.",
+    "Mezclar todos los polvos EXCEPTO la papaína.": "Misturar todos os pós EXCETO a papaína.",
+    "Tamizar la mezcla 2-3 veces para homogeneizar.": "Peneirar a mistura 2-3 vezes para homogeneizar.",
+    "Agregar la papaína al final y mezclar suavemente (no tamizar — es delicada).": "Adicionar a papaína no final e misturar suavemente (não peneirar — é delicada).",
+    "Envasar en tarro con tapa hermética.": "Envasar em pote com tampa hermética.",
+    "Pesar aceites y calentar a 40-45°C.": "Pesar os óleos e aquecer a 40-45°C.",
+    "Preparar solución NaOH+agua con EPP (guantes, gafas, manga larga).": "Preparar a solução NaOH+água com EPI (luvas, óculos, manga longa).",
+    "Cuando ambas estén a 35-45°C, verter lejía sobre aceites.": "Quando ambas estiverem a 35-45°C, verter a soda sobre os óleos.",
+    "Batir con minipimer hasta la traza.": "Bater com mixer até o traço.",
+    "Agregar aditivos.": "Adicionar os aditivos.",
+    "Verter en molde, tapar con film y toalla 24-48h.": "Verter no molde, cobrir com filme e toalha 24-48h.",
+    "Desmoldar, cortar, curar 4-6 semanas.": "Desenformar, cortar, curar 4-6 semanas.",
+    "Producto": "Produto",
+    "Tipo de cabello": "Tipo de cabelo",
+    "Emulsionado (con agua)": "Emulsionado (com água)",
+    "Crema ligera (rápida absorción)": "Creme leve (absorção rápida)",
+    "Crema ligeramente viscosa": "Creme levemente viscoso",
+    "Crema viscosa": "Creme viscoso",
+    "Body butter (manteca batida)": "Body butter (manteiga batida)",
+    "Humectante sólido": "Hidratante sólido",
+    "Seco / rizado / maltratado": "Seco / cacheado / danificado",
+    "Graso / caspa seborreica": "Oleoso / caspa seborreica",
+    "Caída de cabello": "Queda de cabelo",
+    "Seco (materia activa 7–11%)": "Seco (matéria ativa 7–11%)",
+    "Graso (16–20%)": "Oleoso (16–20%)",
+    "Coco betaína (anfótero)": "Cocobetaína (anfótero)",
+    "Lauril glucósido (no iónico)": "Lauril glucosídeo (não iônico)",
+    "Coco glucósido (no iónico)": "Coco glucosídeo (não iônico)",
+    "Decil glucósido (no iónico)": "Decil glucosídeo (não iônico)",
+    "SCS · Sodium Coco Sulfate (aniónico)": "SCS · Sodium Coco Sulfate (aniônico)",
+    "SAVIAS · HERRAMIENTAS DE COSMÉTICA ARTESANAL": "SAVIAS · FERRAMENTAS DE COSMÉTICA ARTESANAL",
+    "Herramientas Savias": "Ferramentas Savias",
+    "Tu laboratorio digital de": "Seu laboratório digital de",
+    "← Volver": "← Voltar",
+    "Simulador de rentabilidad artesanal. Calcula el precio ideal para tus productos.": "Simulador de rentabilidade artesanal. Calcule o preço ideal para seus produtos.",
+    "Diseñador de extractos botánicos. Encuentra la planta perfecta para tu fórmula.": "Designer de extratos botânicos. Encontre a planta perfeita para sua fórmula.",
+    "Selecciona un tipo de producto y obtén la fórmula base con porcentajes e ingredientes.": "Selecione um tipo de produto e obtenha a fórmula base com porcentagens e ingredientes.",
+    "Identifica un problema de piel y obtén una línea de productos recomendada.": "Identifique um problema de pele e obtenha uma linha de produtos recomendada.",
+    "Descubre tu ruta ideal de formación en cosmética artesanal.": "Descubra sua rota ideal de formação em cosmética artesanal.",
+    "CreaPrecio — Simulador de Rentabilidad": "CreaPrecio — Simulador de Rentabilidade",
+    "FitoMatch — Diseñador de Extractos Botánicos": "FitoMatch — Designer de Extratos Botânicos",
+    "Formulador — Crea tu Fórmula Paso a Paso": "Formulador — Crie sua Fórmula Passo a Passo",
+    "SkinSolver — Soluciones por Problema de Piel": "SkinSolver — Soluções por Problema de Pele",
+    "SaviasPath — Descubre tu Ruta Ideal": "SaviasPath — Descubra sua Rota Ideal",
+    "¿Qué quieres": "O que você quer",
+    "crear": "criar",
+    "Elige el tipo de producto y define el tamaño de tu lote. Te guiaremos fase por fase.": "Escolha o tipo de produto e defina o tamanho do seu lote. Vamos guiá-lo fase por fase.",
+    "¿Qué quieres crear?": "O que você quer criar?",
+    "Selecciona...": "Selecione...",
+    "Humectante corporal": "Hidratante corporal",
+    "Otro producto": "Outro produto",
+    "Opción": "Opção",
+    "Nombre de tu receta": "Nome da sua receita",
+    "Ej: Crema Hidratante Lavanda": "Ex: Creme Hidratante Lavanda",
+    "Tamaño del lote (gramos)": "Tamanho do lote (gramas)",
+    "Arma tu": "Monte sua",
+    "Ajusta los porcentajes de cada ingrediente. Los sugeridos son una guía — personaliza a tu gusto.": "Ajuste as porcentagens de cada ingrediente. Os sugeridos são um guia — personalize a seu gosto.",
+    "Total de la fórmula": "Total da fórmula",
+    "Gramos": "Gramas",
+    "+ Agregar ingrediente": "+ Adicionar ingrediente",
+    "+ Otro ingrediente...": "+ Outro ingrediente...",
+    "Descargar PDF": "Baixar PDF",
+    "Esta fórmula tiene porcentajes fijos probados por Lina. Solo eliges el conservante (si aplica) y el agua se ajusta para sumar 100%. Debajo verás ingredientes sugeridos para cada parte.": "Esta fórmula tem porcentagens fixas testadas por Lina. Você só escolhe o conservante (se aplicável) e a água se ajusta para somar 100%. Abaixo você verá ingredientes sugeridos para cada parte.",
+    "Elige tus tensioactivos y reparte el % puro (materia activa) hasta el objetivo. La calculadora los convierte a gramos según el MAT de cada uno; el resto de la fórmula tiene % fijos.": "Escolha seus tensoativos e distribua o % puro (matéria ativa) até o objetivo. A calculadora os converte em gramas conforme o MAT de cada um; o resto da fórmula tem % fixas.",
+    "Conservante (elige el tuyo — el agua se ajusta sola)": "Conservante (escolha o seu — a água se ajusta sozinha)",
+    "Materia activa total objetivo (% puro)": "Matéria ativa total objetivo (% puro)",
+    "Tensioactivo": "Tensoativo",
+    "+ Agregar tensioactivo": "+ Adicionar tensoativo",
+    "Parte de la fórmula": "Parte da fórmula",
+    "Composición": "Composição",
+    "Proceso Paso a Paso": "Processo Passo a Passo",
+    "Creado con Herramientas Savias · Formulador": "Criado com Ferramentas Savias · Formulador",
+    "MAT del proveedor (editable)": "MAT do fornecedor (editável)",
+    "Quitar": "Remover",
+    "Eliminar": "Excluir",
+    "Nombre del ingrediente:": "Nome do ingrediente:",
+    "Tensioactivo (elige uno)": "Tensoativo (escolha um)",
+    "Dificultad: ": "Dificuldade: ",
+    ". Dificultad: ": ". Dificuldade: ",
+    "Rango para ": "Faixa para ",
+    "cabello seco": "cabelo seco",
+    "cabello normal": "cabelo normal",
+    "cabello graso": "cabelo oleoso",
+    "La fórmula está balanceada.": "A fórmula está equilibrada.",
+    "Faltan ": "Faltam ",
+    "% — agrega más ingredientes o ajusta porcentajes.": "% — adicione mais ingredientes ou ajuste as porcentagens.",
+    "Excediste por ": "Excedeu em ",
+    "% — reduce algún ingrediente.": "% — reduza algum ingrediente.",
+    "✓ % puro asignado: ": "✓ % puro atribuído: ",
+    "% — coincide con el objetivo (": "% — coincide com o objetivo (",
+    "Te faltan ": "Faltam ",
+    "% puro para llegar al objetivo de ": "% puro para chegar ao objetivo de ",
+    "⚠ Te pasaste ": "⚠ Você passou em ",
+    "% del objetivo. No conviene superar ": "% do objetivo. Não convém ultrapassar ",
+    "% de materia activa.": "% de matéria ativa.",
+    " ⚠ Para este cabello se recomienda entre ": " ⚠ Para este cabelo recomenda-se entre ",
+    "% se recomienda.": "% é recomendado.",
+    "Los tensioactivos ocupan más del 100% del lote: baja el % puro o sube el MAT.": "Os tensoativos ocupam mais de 100% do lote: baixe o % puro ou aumente o MAT.",
+    "Dificultad:": "Dificuldade:",
+    ". Dificultad:": ". Dificuldade:",
+    "Rango para": "Faixa para",
+    "Faltan": "Faltam",
+    "Excediste por": "Excedeu em",
+    "✓ % puro asignado:": "✓ % puro atribuído:",
+    "Te faltan": "Faltam",
+    "% puro para llegar al objetivo de": "% puro para chegar ao objetivo de",
+    "⚠ Te pasaste": "⚠ Você passou em",
+    "% del objetivo. No conviene superar": "% do objetivo. Não convém ultrapassar",
+    "⚠ Para este cabello se recomienda entre": "⚠ Para este cabelo recomenda-se entre"
+    }
+  };
+  var STORE_KEY='savias_lang';
+  var LANG=localStorage.getItem(STORE_KEY)||'es';
+  var orig=new WeakMap(), mo=null, scheduled=false;
+  function tr(s){ if(LANG==='es'||s==null) return s; var d=DICT[LANG]; if(!d) return s; var k=String(s).trim(); var v=d[k]; return v==null?s:String(s).replace(k,v); }
+  window.__t=tr; window.__lang=function(){return LANG;};
+  function walkText(root){
+    var tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentNode;if(!p)return NodeFilter.FILTER_REJECT;var t=p.nodeName;if(t==='SCRIPT'||t==='STYLE'||t==='NOSCRIPT'||t==='OPTION'||t==='TEXTAREA')return NodeFilter.FILTER_REJECT;if(!n.nodeValue||!n.nodeValue.trim())return NodeFilter.FILTER_REJECT;return NodeFilter.FILTER_ACCEPT;}});
+    var n; while(n=tw.nextNode()){ if(!orig.has(n))orig.set(n,n.nodeValue); var o=orig.get(n); var nv=(LANG==='es')?o:tr(o); if(n.nodeValue!==nv)n.nodeValue=nv; }
+  }
+  function walkAttrs(root){ root.querySelectorAll('[placeholder]').forEach(function(el){ if(el.__ph==null)el.__ph=el.getAttribute('placeholder'); el.setAttribute('placeholder', LANG==='es'?el.__ph:tr(el.__ph)); }); }
+  function applyLang(){ if(mo)mo.disconnect(); walkText(document.body); walkAttrs(document.body); document.documentElement.setAttribute('lang',LANG); document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-lang')===LANG);}); if(mo)mo.observe(document.body,{childList:true,subtree:true,characterData:true}); }
+  function setLang(l){ LANG=l; localStorage.setItem(STORE_KEY,l); applyLang(); if(typeof window.__onLangChange==='function'){ try{ window.__onLangChange(l); }catch(e){} } }
+  function init(){ document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){b.addEventListener('click',function(){setLang(b.getAttribute('data-lang'));});}); mo=new MutationObserver(function(){ if(scheduled)return; scheduled=true; (window.requestAnimationFrame||setTimeout)(function(){scheduled=false;applyLang();},0); }); applyLang(); }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
 
 </body>
 

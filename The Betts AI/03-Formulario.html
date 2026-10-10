@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Formulario de aplicación · The Betts AI</title></head>
+<body>
+
+<!-- ============ ENLACES PENDIENTES DE CONFIRMAR ============
+     Sustituir en este bloque y en los href/action correspondientes.
+     WHATSAPP   https://wa.me/XXXXXXXXXXX
+     FORMULARIO 03-Formulario.html            (o la URL de GHL)
+     CALENDARIO embed del calendario de GHL
+     YOUTUBE    video "cómo montarlo tú mismo"
+     SKOOL      comunidad
+     WEBHOOK    Inbound Webhook de GHL para el submit del formulario
+     =========================================================
+
+     CONFIGURACIÓN DE ESTA PÁGINA (todo junto, en el script id="page-js"):
+       WEBHOOK       URL del Inbound Webhook de GHL. Mientras empiece por
+                     "TODO-" el formulario NO hace red: recorre el flujo
+                     completo y deja el payload en la consola, para poder
+                     probar la página antes de tener el webhook.
+       CONTENT_TYPE  'application/json'. Si el webhook rechaza el preflight
+                     de CORS, cambiar a 'text/plain;charset=UTF-8' (el cuerpo
+                     sigue siendo JSON).
+       SALIDA_A      destino de los descalificados duros.
+       SALIDA_B      destino del "puedo, pero no ahora".
+       PREFIJO_DEF   prefijo de país preseleccionado.
+
+     HUECOS QUE DEPENDEN DEL CLIENTE:
+       - El iframe del calendario de GHL (pantalla final, marcado abajo).
+       - El evento de conversión, que se dispara SOLO en la pantalla final
+         (marcado en el JS). Sin píxel inventado.
+-->
+
+<style id="tb-core">
+/* Fuentes variables con rango. Pedir pesos sueltos (600;700;800) hace que
+   Google sirva instancias estáticas y el eje óptico 'opsz' deja de existir,
+   con lo que font-variation-settings queda inerte. Con rangos sí llega la
+   variable font: un archivo por familia en vez de tres, y opsz operativo. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400..700&display=swap');
+
+:root{
+  /* superficies */
+  --bg:#0B1220;
+  --surface:#101A2E;
+  --surface-2:#16213C;
+  /* tinta */
+  --ink:#E8EEF9;
+  --muted:#9FB0CC;
+  /* acento (un solo hue, dos tonos) */
+  --accent:#19C37D;
+  --accent-deep:#12A468;
+  --mint:#7FF0D2;
+  /* hairlines */
+  --line:rgba(232,238,249,.10);
+  --line-strong:rgba(232,238,249,.20);
+  /* escala de espaciado 4px, usada con ritmo variado */
+  --s1:4px;  --s2:8px;   --s3:12px; --s4:16px; --s5:24px;
+  --s6:32px; --s7:48px;  --s8:64px; --s9:88px; --s10:120px;
+  /* radios: tope 14px en cards, pill solo en tags */
+  --r-sm:8px; --r:12px; --r-lg:14px; --r-pill:999px;
+  /* motion */
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-soft:cubic-bezier(.32,.72,0,1);
+  /* medidas, en px a propósito.
+     En ch no funcionan: 1ch escala con el tamaño de fuente del elemento, así
+     que el mismo "66ch" da 628px en un párrafo de 17px y 813px en un lead de
+     22px, y "20ch" en un h2 de 40px da 514px. Resultado: elementos de la misma
+     columna con anchos que no casan, y titulares más estrechos que el texto
+     que llevan debajo. En px todos comparten columna y el ojo la lee recta.
+     640px son unos 68 caracteres a 17px, dentro de la medida de lectura. */
+  --measure:640px;       /* cuerpo y entradillas */
+  --measure-head:760px;  /* titulares: nunca por debajo de --measure */
+  --wide:1180px;
+  --narrow:760px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+html,body{overflow-x:hidden}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  font-size:17px;
+  line-height:1.7;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+img,video{max-width:100%;height:auto;display:block}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- breakout de la columna de GHL ---------- */
+/* .band  -> secciones normales (relative/static) */
+.band{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw}
+/* .fullbleed -> sticky, overlays, cualquier cosa donde `left` no desplace */
+.fullbleed{width:100vw;margin-left:calc(50% - 50vw)}
+
+.wrap{width:min(100% - 40px,var(--wide));margin-inline:auto}
+.wrap-narrow{width:min(100% - 40px,var(--narrow));margin-inline:auto}
+@media (max-width:600px){ .wrap,.wrap-narrow{width:calc(100% - 32px)} }
+
+section{padding-block:clamp(56px,8.5vw,116px)}
+.sec-tight{padding-block:clamp(40px,6vw,72px)}
+
+/* ---------- tipografía ----------
+   escala modular ~1.30: 13 / 17 / 22 / 30 / 40 / display
+   display con techo 76px, tracking -0.03em (piso duro -0.04em)          */
+.display,h1{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:800;
+  font-size:clamp(38px,5.6vw,72px);
+  line-height:1.04;
+  letter-spacing:-.03em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 72;
+}
+/* El titular del hero tiene 28 palabras. A tamaño display serían 5 líneas y
+   un h1 largo inflado es un tell. Se trata como titular editorial: más
+   pequeño, con las tres acciones del Método RCA destacadas en color para
+   dar jerarquía dentro de la frase sin cambiar una sola palabra. */
+.h1-editorial{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(29px,4vw,46px);
+  line-height:1.14;
+  letter-spacing:-.025em;
+  margin:0;
+  /* El ancho lo pone --measure-head, más abajo. No volver a ponerlo en ch:
+     medido, 15ch parecen 690px y en realidad son 440px, que parten este
+     titular de 28 palabras en ocho líneas. */
+  text-wrap:balance;
+  font-variation-settings:'opsz' 46;
+}
+/* .hl pesa 600 y los titulares 700: sin esto, las palabras destacadas salen
+   MÁS ligeras que el resto de la frase, justo al revés de lo que se busca. */
+.h1-editorial .hl,h1 .hl,h2 .hl,h3 .hl{font-weight:inherit}
+
+h2{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(28px,3.6vw,40px);
+  line-height:1.12;
+  letter-spacing:-.025em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 40;
+}
+h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(21px,2.2vw,26px);
+  line-height:1.2;
+  letter-spacing:-.02em;
+  margin:0;
+  text-wrap:balance;
+}
+p{margin:0 0 var(--s5);max-width:var(--measure);text-wrap:pretty}
+p:last-child{margin-bottom:0}
+
+/* Los titulares comparten columna con el cuerpo y nunca quedan por debajo de
+   él: un titular más estrecho que su propio párrafo de apoyo se lee como un
+   fallo de composición, no como jerarquía. */
+h1,h2,.h1-editorial{max-width:var(--measure-head)}
+.lead{font-size:clamp(18px,2vw,22px);line-height:1.55;color:var(--muted);max-width:var(--measure)}
+.small{font-size:14px;line-height:1.6}
+.micro{font-size:13px;line-height:1.55;color:var(--muted)}
+
+.hl{color:var(--accent);font-weight:600}
+.ink-strong{color:var(--ink);font-weight:600}
+em.note{color:var(--muted);font-style:italic}
+
+/* eyebrow: presupuesto de 3 en toda la página, nunca sobre el h1 del hero */
+.eyebrow{
+  font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mint);margin:0 0 var(--s4);
+}
+
+/* ---------- botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 30px;border-radius:var(--r);border:0;
+  background:var(--accent);color:#0B1220;
+  font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:17px;
+  line-height:1.2;letter-spacing:-.01em;text-decoration:none;cursor:pointer;
+  transition:transform .18s var(--ease-out),background-color .18s var(--ease-out);
+}
+.btn:hover{background:var(--mint);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{
+  background:transparent;color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+}
+.btn-ghost:hover{background:var(--surface-2);color:var(--ink);transform:translateY(-1px)}
+.btn-lg{padding:20px 36px;font-size:18px}
+.btn-block{display:flex;width:100%}
+
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline:2px solid var(--mint);outline-offset:3px;border-radius:6px;
+}
+
+.cta-note{margin-top:var(--s4);font-size:14px;color:var(--muted);max-width:52ch}
+
+/* ---------- superficies y hairlines ---------- */
+.panel{background:var(--surface);border-radius:var(--r-lg);box-shadow:inset 0 0 0 1px var(--line);padding:clamp(20px,3vw,32px)}
+.panel-2{background:var(--surface-2)}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ---------- reproductor de video (hueco del VSL) ---------- */
+.video-slot{
+  position:relative;aspect-ratio:16/9;width:100%;
+  background:var(--surface-2);border-radius:var(--r-lg);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+  display:grid;place-content:center;gap:var(--s3);justify-items:center;
+  text-align:center;padding:var(--s5);overflow:hidden;
+}
+.video-slot iframe,.video-slot video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-slot .play{
+  width:64px;height:64px;border-radius:var(--r-pill);background:var(--accent);
+  display:grid;place-content:center;
+}
+.video-slot .play svg{width:22px;height:22px;fill:#0B1220;margin-left:3px}
+.video-cap{margin-top:var(--s3);font-size:13px;color:var(--muted);text-align:center}
+
+/* ---------- animación de entrada ----------
+   El contenido es visible por defecto. Solo se oculta si el JS corrió. */
+.js-anim .anim{opacity:0;transform:translateY(14px)}
+.js-anim .anim.in{opacity:1;transform:none;transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+@media (prefers-reduced-motion:reduce){
+  .js-anim .anim{opacity:1;transform:none}
+  .js-anim .anim.in{transition:opacity .01s linear}
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+/* ---------- pie legal ---------- */
+.legal{font-size:12.5px;line-height:1.6;color:var(--muted);opacity:.85;max-width:70ch}
+</style>
+
+<style id="page">
+/* ============================================================
+   03 · FORMULARIO DE APLICACIÓN
+   Solo lo propio de esta página. Todo con las variables del core.
+
+   Familias de layout, cada una una sola vez:
+     1. Pantalla de entrada .......... una columna centrada
+     2. Progreso ..................... barra sticky a ancho completo
+     3. Preguntas de toque ........... lista de opciones con hairline
+     4. Preguntas escritas ........... campos con contador de caracteres
+     5. Pantalla final ............... bloque de agenda
+     6. Fallo de red ................. panel de reintento
+   ============================================================ */
+
+/* Único color nuevo de la página: el aviso de campo incompleto. El verde es
+   la acción, no puede significar también "esto está mal". 9.9:1 sobre #0B1220. */
+.tbf{--warn:#FFC078}
+
+[hidden]{display:none !important}
+
+.tbf .screen{padding-block:clamp(30px,4.5vw,54px)}
+.tbf #s-intro{padding-block:clamp(56px,10vw,116px)}
+
+@keyframes tbf-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.tbf .screen.enter{animation:tbf-in .34s var(--ease-out) both}
+
+/* ---------- 1 · pantalla de entrada ---------- */
+.intro{text-align:center;display:grid;justify-items:center;gap:var(--s5)}
+.intro h1{max-width:23ch;margin-inline:auto}
+.intro p{margin:0;margin-inline:auto}
+.intro .lead{max-width:52ch}
+.intro .aviso{
+  max-width:50ch;font-size:15px;line-height:1.6;color:var(--muted);
+  background:var(--surface);border-radius:var(--r);
+  box-shadow:inset 0 0 0 1px var(--line);padding:var(--s4) var(--s5);
+}
+.intro .btn{margin-top:var(--s2)}
+
+/* ---------- 2 · progreso ---------- */
+.prog{
+  position:sticky;top:0;z-index:30;
+  background:rgba(11,18,32,.94);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:inset 0 -1px 0 var(--line);
+}
+.prog-inner{padding-block:13px}
+.prog-meta{
+  display:flex;justify-content:space-between;align-items:baseline;gap:var(--s4);
+  max-width:none;margin:0 0 9px;
+  font-size:13.5px;line-height:1.4;color:var(--muted);
+}
+.prog-meta .where{color:var(--ink);font-weight:600}
+.prog-meta .pct{flex:none;font-weight:600;color:var(--accent)}
+.prog-track{height:3px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+.prog-fill{height:100%;width:0;background:var(--accent);border-radius:var(--r-pill);transition:width .55s var(--ease-soft)}
+
+/* ---------- cabecera de paso ---------- */
+.step-head{display:grid;gap:var(--s3);margin-bottom:var(--s7)}
+.step-head h2{outline-offset:6px}
+.step-head .lead{margin:0;max-width:44ch}
+
+/* ---------- preguntas ---------- */
+.qs{list-style:none;margin:0;padding:0;display:grid;gap:var(--s7)}
+.q fieldset{border:0;margin:0;padding:0;min-width:0}
+.q-t{
+  display:block;width:100%;padding:0;margin:0 0 var(--s4);
+  font-family:'Bricolage Grotesque',sans-serif;font-weight:700;
+  font-size:clamp(19px,2vw,22px);line-height:1.3;letter-spacing:-.02em;
+  max-width:36ch;text-wrap:balance;
+}
+.q-t .tag{
+  display:inline-block;vertical-align:middle;margin-left:10px;
+  font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  padding:3px 10px;border-radius:var(--r-pill);box-shadow:inset 0 0 0 1px var(--line);
+}
+.q-note{margin:var(--s3) 0 0;font-size:14px;line-height:1.55;color:var(--muted);max-width:58ch}
+
+/* ---------- 3 · lista de opciones ---------- */
+.opts{display:grid;gap:10px}
+.opt{
+  position:relative;display:grid;grid-template-columns:auto minmax(0,1fr);
+  gap:var(--s4);align-items:start;padding:15px 18px;cursor:pointer;
+  background:var(--surface);border-radius:var(--r);
+  box-shadow:inset 0 0 0 1px var(--line);
+  transition:box-shadow .16s var(--ease-out),background-color .16s var(--ease-out);
+}
+.opt:hover{box-shadow:inset 0 0 0 1px var(--line-strong)}
+.opt input{position:absolute;left:18px;top:20px;width:1px;height:1px;opacity:0;margin:0;padding:0;pointer-events:none}
+.opt .dot{
+  width:20px;height:20px;border-radius:var(--r-pill);margin-top:3px;flex:none;
+  box-shadow:inset 0 0 0 1.5px var(--line-strong);
+  transition:box-shadow .16s var(--ease-out);
+}
+.opt .txt{line-height:1.45}
+.opt input:checked ~ .dot{box-shadow:inset 0 0 0 6px var(--accent)}
+.opt input:focus-visible ~ .dot{outline:2px solid var(--mint);outline-offset:3px}
+.opt.is-on{background:rgba(25,195,125,.09);box-shadow:inset 0 0 0 1px rgba(25,195,125,.45)}
+
+/* ---------- 4 · campos escritos ---------- */
+.field{
+  width:100%;display:block;background:var(--surface);color:var(--ink);
+  border:0;border-radius:var(--r);padding:15px 16px;
+  font-size:17px;line-height:1.5;
+  box-shadow:inset 0 0 0 1px var(--line);
+  transition:box-shadow .16s var(--ease-out);
+}
+.field::placeholder{color:var(--muted);opacity:.7}
+.field:hover{box-shadow:inset 0 0 0 1px var(--line-strong)}
+.field:focus{box-shadow:inset 0 0 0 1px var(--accent)}
+textarea.field{min-height:158px;resize:vertical}
+textarea.field.short{min-height:120px}
+
+.tel{display:grid;grid-template-columns:minmax(0,152px) minmax(0,1fr);gap:10px}
+@media (max-width:430px){ .tel{grid-template-columns:minmax(0,116px) minmax(0,1fr)} }
+.sel{position:relative}
+.sel select{-webkit-appearance:none;appearance:none;padding-right:34px;cursor:pointer}
+.sel::after{
+  content:'';position:absolute;right:15px;top:50%;width:7px;height:7px;
+  border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);
+  transform:translateY(-70%) rotate(45deg);pointer-events:none;
+}
+.sel select option{background:var(--surface-2);color:var(--ink)}
+
+.meter{display:flex;align-items:center;gap:10px;margin:10px 0 0;max-width:none;font-size:13px;color:var(--muted)}
+.meter .bar{flex:none;width:64px;height:3px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+.meter .bar i{display:block;height:100%;width:0;background:var(--muted);border-radius:var(--r-pill);transition:width .2s var(--ease-out)}
+.meter.ok{color:var(--accent)}
+.meter.ok .bar i{background:var(--accent)}
+
+/* ---------- avisos de validación ---------- */
+.err{margin:var(--s3) 0 0;font-size:14px;line-height:1.5;color:var(--warn);max-width:56ch}
+.q.has-err .field{box-shadow:inset 0 0 0 1px var(--warn)}
+/* el aviso no mueve nada de sitio: solo cambia el hairline de las opciones */
+.q.has-err .opt{box-shadow:inset 0 0 0 1px rgba(255,192,120,.45)}
+.q.has-err .opt.is-on{box-shadow:inset 0 0 0 1px rgba(25,195,125,.45)}
+
+/* ---------- navegación ---------- */
+.nav{display:flex;flex-direction:column-reverse;gap:var(--s3);margin-top:var(--s8)}
+.nav .btn{width:100%}
+@media (min-width:560px){
+  .nav{flex-direction:row;justify-content:space-between;align-items:center}
+  .nav .btn{width:auto;min-width:172px}
+}
+.btn[disabled]{opacity:.55;cursor:progress;transform:none}
+.btn[disabled]:hover{background:var(--accent);transform:none}
+
+/* ---------- 5 · pantalla final ---------- */
+.final .lead{margin:var(--s5) 0 0;max-width:56ch}
+.final .rec{
+  margin:var(--s5) 0 0;max-width:56ch;font-size:15px;line-height:1.6;color:var(--muted);
+  padding-left:16px;box-shadow:inset 2px 0 0 var(--accent);
+}
+.cal{
+  margin-top:var(--s7);background:var(--surface);border-radius:var(--r-lg);
+  box-shadow:inset 0 0 0 1px var(--line);min-height:540px;
+  display:grid;place-content:center;padding:var(--s6);text-align:center;
+}
+.cal iframe{width:100%;min-height:640px;border:0;display:block;border-radius:var(--r-lg)}
+
+/* ---------- 6 · fallo de red ---------- */
+.net{display:grid;gap:var(--s5);max-width:58ch}
+.net .acts{display:flex;flex-wrap:wrap;gap:var(--s3)}
+.net .st{font-size:14px;color:var(--muted)}
+.net .st.bad{color:var(--warn)}
+
+.legal-foot{margin-top:var(--s8);padding-top:var(--s5);box-shadow:inset 0 1px 0 var(--line)}
+</style>
+
+<main class="tbf" id="tbf">
+
+  <!-- 2 · PROGRESO. Sticky, por eso .fullbleed y no .band. -->
+  <div class="prog fullbleed" id="prog" hidden>
+    <div class="wrap-narrow prog-inner">
+      <p class="prog-meta">
+        <span><span class="where" id="progStep">Paso 1 de 4</span> · <span id="progName">Cómo está tu WhatsApp hoy</span></span>
+        <span class="pct" id="progPct">25%</span>
+      </p>
+      <div class="prog-track" role="progressbar" aria-label="Progreso del formulario" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progBar">
+        <div class="prog-fill" id="progFill"></div>
+      </div>
+    </div>
+  </div>
+
+  <form id="tbf-form" novalidate autocomplete="on">
+
+    <!-- ================= 1 · PANTALLA DE ENTRADA ================= -->
+    <section class="screen" id="s-intro" data-screen="intro">
+      <div class="wrap-narrow intro">
+        <h1 class="h1-editorial anim">Antes de darte una hora en la agenda, necesitamos entender tu caso</h1>
+        <p class="lead anim">Son 2 minutos. Las respuestas las leemos nosotros antes de la sesión, así no gastamos los primeros 15 minutos preguntándote lo básico.</p>
+        <p class="aviso anim">Solo tomamos 5 sesiones por semana. Si tu caso no encaja, te lo decimos al final y te dejamos por dónde seguir.</p>
+        <button type="button" class="btn btn-lg anim" id="btnStart">Empezar →</button>
+        <p class="micro anim" id="resumeNote" hidden>Guardamos lo que ya habías respondido en este navegador. Sigues donde lo dejaste.</p>
+      </div>
+    </section>
+
+    <!-- ================= PASO 1 ================= -->
+    <section class="screen" id="s-1" data-screen="1" data-idx="1" data-pct="25" data-name="Cómo está tu WhatsApp hoy" hidden>
+      <div class="wrap-narrow">
+        <header class="step-head">
+          <h2 tabindex="-1">Cómo está tu WhatsApp hoy</h2>
+          <p class="lead">Cinco toques. Nada de escribir todavía.</p>
+        </header>
+
+        <ol class="qs">
+          <li class="q" data-name="p01_ventas_por_whatsapp">
+            <fieldset>
+              <legend class="q-t">¿Qué parte de tus ventas empieza con un mensaje de WhatsApp?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p01_ventas_por_whatsapp" value="casi-todas" data-label="Casi todas" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Casi todas</span></label>
+                <label class="opt"><input type="radio" name="p01_ventas_por_whatsapp" value="la-mitad" data-label="Más o menos la mitad" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Más o menos la mitad</span></label>
+                <label class="opt"><input type="radio" name="p01_ventas_por_whatsapp" value="alguna-vez" data-label="Alguna vez, no es mi canal principal" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Alguna vez, no es mi canal principal</span></label>
+                <label class="opt"><input type="radio" name="p01_ventas_por_whatsapp" value="ninguna" data-label="Ninguna" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Ninguna</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+
+          <li class="q" data-name="p02_conversaciones_semana">
+            <fieldset>
+              <legend class="q-t">¿Cuántas conversaciones nuevas te entran por WhatsApp a la semana?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p02_conversaciones_semana" value="menos-de-10" data-label="Menos de 10" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Menos de 10</span></label>
+                <label class="opt"><input type="radio" name="p02_conversaciones_semana" value="10-a-30" data-label="Entre 10 y 30" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Entre 10 y 30</span></label>
+                <label class="opt"><input type="radio" name="p02_conversaciones_semana" value="30-a-100" data-label="Entre 30 y 100" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Entre 30 y 100</span></label>
+                <label class="opt"><input type="radio" name="p02_conversaciones_semana" value="mas-de-100" data-label="Más de 100" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Más de 100</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+
+          <li class="q" data-name="p03_quien_responde">
+            <fieldset>
+              <legend class="q-t">¿Quién responde hoy esos mensajes?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p03_quien_responde" value="yo" data-label="Yo, entre otras diez cosas" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Yo, entre otras diez cosas</span></label>
+                <label class="opt"><input type="radio" name="p03_quien_responde" value="equipo" data-label="Alguien de mi equipo" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Alguien de mi equipo</span></label>
+                <label class="opt"><input type="radio" name="p03_quien_responde" value="automatico-o-bot" data-label="Un mensaje automático o un bot con botones" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Un mensaje automático o un bot con botones</span></label>
+                <label class="opt"><input type="radio" name="p03_quien_responde" value="depende-del-dia" data-label="Depende del día, no hay nadie fijo" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Depende del día, no hay nadie fijo</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+
+          <li class="q" data-name="p04_tiempo_de_respuesta">
+            <fieldset>
+              <legend class="q-t">¿Cuánto suele pasar hasta que alguien recibe respuesta?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p04_tiempo_de_respuesta" value="minutos" data-label="Minutos, casi siempre" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Minutos, casi siempre</span></label>
+                <label class="opt"><input type="radio" name="p04_tiempo_de_respuesta" value="una-o-dos-horas" data-label="Una o dos horas" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Una o dos horas</span></label>
+                <label class="opt"><input type="radio" name="p04_tiempo_de_respuesta" value="mismo-dia" data-label="El mismo día, cuando puedo" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">El mismo día, cuando puedo</span></label>
+                <label class="opt"><input type="radio" name="p04_tiempo_de_respuesta" value="dia-siguiente-o-nunca" data-label="A veces al día siguiente. A veces nunca" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">A veces al día siguiente. A veces nunca</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+
+          <li class="q" data-name="p05_invierte_en_publicidad">
+            <fieldset>
+              <legend class="q-t">¿Inviertes en publicidad para traer esas conversaciones?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p05_invierte_en_publicidad" value="si-ahora" data-label="Sí, ahora mismo" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Sí, ahora mismo</span></label>
+                <label class="opt"><input type="radio" name="p05_invierte_en_publicidad" value="a-punto" data-label="Todavía no, pero está a punto" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Todavía no, pero está a punto</span></label>
+                <label class="opt"><input type="radio" name="p05_invierte_en_publicidad" value="no" data-label="No, y no está en los planes" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">No, y no está en los planes</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+        </ol>
+
+        <div class="nav">
+          <button type="button" class="btn btn-ghost" data-back>Atrás</button>
+          <button type="button" class="btn" data-next>Siguiente</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PASO 2 ================= -->
+    <section class="screen" id="s-2" data-screen="2" data-idx="2" data-pct="50" data-name="Dónde te escribimos" hidden>
+      <div class="wrap-narrow">
+        <header class="step-head">
+          <h2 tabindex="-1">Dónde te escribimos</h2>
+          <p class="lead">Para mandarte la confirmación y hacer el análisis previo.</p>
+        </header>
+
+        <ol class="qs">
+          <li class="q" data-name="nombre" data-msg="Escribe tu nombre y apellido.">
+            <label class="q-t" for="f-nombre">Nombre y apellido</label>
+            <input class="field" type="text" id="f-nombre" name="nombre" autocomplete="name" placeholder="Tu nombre y apellido">
+            <p class="err" role="alert" hidden></p>
+          </li>
+
+          <li class="q" data-name="email" data-kind="email" data-msg="Necesitamos tu correo para mandarte la confirmación.">
+            <label class="q-t" for="f-email">Correo electrónico</label>
+            <input class="field" type="email" id="f-email" name="email" autocomplete="email" inputmode="email" placeholder="tunombre@tunegocio.com">
+            <p class="err" role="alert" hidden></p>
+          </li>
+
+          <li class="q" data-name="whatsapp" data-kind="tel" data-msg="Escribe tu número de WhatsApp.">
+            <label class="q-t" for="f-tel">WhatsApp</label>
+            <div class="tel">
+              <span class="sel">
+                <select class="field" id="f-prefijo" name="prefijo_pais" aria-label="Prefijo de país">
+                  <option value="+52" data-pais="México">México +52</option>
+                  <option value="+57" data-pais="Colombia">Colombia +57</option>
+                  <option value="+34" data-pais="España">España +34</option>
+                  <option value="+54" data-pais="Argentina">Argentina +54</option>
+                  <option value="+51" data-pais="Perú">Perú +51</option>
+                  <option value="+56" data-pais="Chile">Chile +56</option>
+                  <option value="+593" data-pais="Ecuador">Ecuador +593</option>
+                  <option value="+58" data-pais="Venezuela">Venezuela +58</option>
+                  <option value="+1" data-pais="Estados Unidos">Estados Unidos +1</option>
+                  <option value="+502" data-pais="Guatemala">Guatemala +502</option>
+                  <option value="+591" data-pais="Bolivia">Bolivia +591</option>
+                  <option value="+504" data-pais="Honduras">Honduras +504</option>
+                  <option value="+503" data-pais="El Salvador">El Salvador +503</option>
+                  <option value="+505" data-pais="Nicaragua">Nicaragua +505</option>
+                  <option value="+506" data-pais="Costa Rica">Costa Rica +506</option>
+                  <option value="+507" data-pais="Panamá">Panamá +507</option>
+                  <option value="+595" data-pais="Paraguay">Paraguay +595</option>
+                  <option value="+598" data-pais="Uruguay">Uruguay +598</option>
+                  <option value="+1809" data-pais="República Dominicana">Rep. Dominicana +1809</option>
+                  <option value="+1787" data-pais="Puerto Rico">Puerto Rico +1787</option>
+                  <option value="+53" data-pais="Cuba">Cuba +53</option>
+                  <option value="+240" data-pais="Guinea Ecuatorial">Guinea Ecuatorial +240</option>
+                  <option value="+other" data-pais="Otro país">Otro país</option>
+                </select>
+              </span>
+              <input class="field" type="tel" id="f-tel" name="whatsapp" autocomplete="tel-national" inputmode="tel" placeholder="Número sin el prefijo">
+            </div>
+            <p class="q-note">Te escribimos por aquí para confirmar la sesión. Nada de spam, no es nuestro estilo.</p>
+            <p class="err" role="alert" hidden></p>
+          </li>
+
+          <li class="q" data-name="web_y_redes" data-msg="Pega al menos un enlace, o escribe «no tengo».">
+            <label class="q-t" for="f-web">Tu web y tus redes</label>
+            <textarea class="field short" id="f-web" name="web_y_redes" rows="3" autocomplete="url" placeholder="tunegocio.com&#10;instagram.com/tunegocio"></textarea>
+            <p class="q-note">Pega tu web, tu Instagram o lo que uses. Miramos por dónde te llegan hoy los mensajes antes de la llamada, así llegamos con deberes hechos.</p>
+            <p class="err" role="alert" hidden></p>
+          </li>
+        </ol>
+
+        <div class="nav">
+          <button type="button" class="btn btn-ghost" data-back>Atrás</button>
+          <button type="button" class="btn" data-next>Siguiente</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PASO 3 ================= -->
+    <section class="screen" id="s-3" data-screen="3" data-idx="3" data-pct="75" data-name="Tu proyecto, en tus palabras" hidden>
+      <div class="wrap-narrow">
+        <header class="step-head">
+          <h2 tabindex="-1">Tu proyecto, en tus palabras</h2>
+          <p class="lead">Aquí sí toca escribir. Es la parte que leemos de verdad: cuanto más concreto seas, más aprovechamos los 30 minutos.</p>
+        </header>
+
+        <ol class="qs">
+          <li class="q" data-name="p10_que_haces" data-min="150" data-msg="Cuéntanos a qué te dedicas para poder prepararte la sesión.">
+            <label class="q-t" for="f-p10">¿Qué haces exactamente? A quién ayudas, qué problema le resuelves y cómo.</label>
+            <textarea class="field" id="f-p10" name="p10_que_haces" rows="6" data-min="150" placeholder="Ejemplo: “Tengo una clínica dental en Bogotá. Ayudamos a personas de 30 a 55 que quieren ortodoncia invisible. Vendemos con una primera cita de valoración presencial, ticket medio 2.500 USD.”"></textarea>
+            <p class="err" role="alert" hidden></p>
+          </li>
+
+          <li class="q" data-name="p11_que_pasa_hoy" data-min="120" data-msg="Cuéntanos qué está pasando hoy en tu WhatsApp.">
+            <label class="q-t" for="f-p11">¿Qué está pasando hoy en tu WhatsApp que te cuesta dinero o tiempo? ¿Qué has probado ya?</label>
+            <textarea class="field" id="f-p11" name="p11_que_pasa_hoy" rows="6" data-min="120" placeholder="Sé concreto: cuántos mensajes se te quedan sin responder, a qué horas, qué has intentado (mensaje automático, alguien del equipo, un bot) y por qué no terminó de funcionar."></textarea>
+            <p class="err" role="alert" hidden></p>
+          </li>
+
+          <li class="q" data-name="p12_dentro_de_90_dias" data-min="80" data-msg="Cuéntanos qué querrías que estuviera pasando en 90 días.">
+            <label class="q-t" for="f-p12">Si esto funcionara, ¿qué querrías que estuviera pasando dentro de 90 días?</label>
+            <textarea class="field short" id="f-p12" name="p12_dentro_de_90_dias" rows="4" data-min="80" placeholder="Ejemplo: “Que se agenden 15 valoraciones a la semana sin que yo toque el móvil, y poder subir la inversión en anuncios sin miedo.”"></textarea>
+            <p class="err" role="alert" hidden></p>
+          </li>
+
+          <li class="q" data-name="p13_donde_necesitas_ayuda" data-min="80" data-msg="Cuéntanos dónde crees que necesitas ayuda.">
+            <label class="q-t" for="f-p13">¿En qué crees tú que necesitas ayuda? ¿Qué sientes que te está frenando?</label>
+            <textarea class="field short" id="f-p13" name="p13_donde_necesitas_ayuda" rows="4" data-min="80"></textarea>
+            <p class="err" role="alert" hidden></p>
+          </li>
+        </ol>
+
+        <div class="nav">
+          <button type="button" class="btn btn-ghost" data-back>Atrás</button>
+          <button type="button" class="btn" data-next>Siguiente</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PASO 4 ================= -->
+    <section class="screen" id="s-4" data-screen="4" data-idx="4" data-pct="95" data-name="Las dos últimas" hidden>
+      <div class="wrap-narrow">
+        <header class="step-head">
+          <h2 tabindex="-1">Las dos últimas</h2>
+          <p class="lead">Dos toques y listo. Te pedimos honestidad aquí, nos ahorra tiempo a los dos.</p>
+        </header>
+
+        <ol class="qs">
+          <li class="q" data-name="p14_cuando_podrias_empezar">
+            <fieldset>
+              <legend class="q-t">Si vemos que podemos ayudarte, ¿cuándo podrías empezar?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p14_cuando_podrias_empezar" value="ya-mismo" data-label="Ya mismo, es prioridad" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Ya mismo, es prioridad</span></label>
+                <label class="opt"><input type="radio" name="p14_cuando_podrias_empezar" value="30-dias" data-label="En los próximos 30 días" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">En los próximos 30 días</span></label>
+                <label class="opt"><input type="radio" name="p14_cuando_podrias_empezar" value="2-o-3-meses" data-label="En 2 o 3 meses" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">En 2 o 3 meses</span></label>
+                <label class="opt"><input type="radio" name="p14_cuando_podrias_empezar" value="no-valoro-contratar" data-label="No estoy valorando contratar ningún servicio" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">No estoy valorando contratar ningún servicio</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+
+          <li class="q" data-name="p15_capacidad_de_inversion">
+            <fieldset>
+              <legend class="q-t">¿Estás en posición de invertir en montar esto?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p15_capacidad_de_inversion" value="si-recursos" data-label="Sí, tengo los recursos para invertir en el crecimiento de mi negocio" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Sí, tengo los recursos para invertir en el crecimiento de mi negocio</span></label>
+                <label class="opt"><input type="radio" name="p15_capacidad_de_inversion" value="si-en-cuotas" data-label="Sí, si la propuesta encaja y hay forma de pagarlo en cuotas" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Sí, si la propuesta encaja y hay forma de pagarlo en cuotas</span></label>
+                <label class="opt"><input type="radio" name="p15_capacidad_de_inversion" value="no-en-este-momento" data-label="Puedo, pero no en este momento" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Puedo, pero no en este momento</span></label>
+                <label class="opt"><input type="radio" name="p15_capacidad_de_inversion" value="gratis-o-montarlo-yo" data-label="No. Busco algo gratis o aprender a montarlo yo" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">No. Busco algo gratis o aprender a montarlo yo</span></label>
+              </div>
+              <p class="q-note">No te vamos a decir el precio aquí porque depende de tu volumen y de las herramientas a conectar. Pero instalarlo cuesta dinero, y preferimos decírtelo ahora.</p>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+
+          <li class="q" data-name="p16_quien_decide">
+            <fieldset>
+              <legend class="q-t">¿La decisión de contratar depende solo de ti?</legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p16_quien_decide" value="solo-yo" data-label="Sí, decido yo" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Sí, decido yo</span></label>
+                <label class="opt"><input type="radio" name="p16_quien_decide" value="socio-o-pareja" data-label="La tomo con un socio o con mi pareja" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">La tomo con un socio o con mi pareja</span></label>
+                <label class="opt"><input type="radio" name="p16_quien_decide" value="otra-persona" data-label="Depende de otra persona" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Depende de otra persona</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+
+          <li class="q" data-name="p17_facturacion_mensual" data-optional="1">
+            <fieldset>
+              <legend class="q-t">Facturación media al mes de tu negocio <span class="tag">Opcional</span></legend>
+              <div class="opts">
+                <label class="opt"><input type="radio" name="p17_facturacion_mensual" value="menos-3000" data-label="Menos de 3.000" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Menos de 3.000</span></label>
+                <label class="opt"><input type="radio" name="p17_facturacion_mensual" value="3000-10000" data-label="Entre 3.000 y 10.000" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Entre 3.000 y 10.000</span></label>
+                <label class="opt"><input type="radio" name="p17_facturacion_mensual" value="10000-30000" data-label="Entre 10.000 y 30.000" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Entre 10.000 y 30.000</span></label>
+                <label class="opt"><input type="radio" name="p17_facturacion_mensual" value="mas-30000" data-label="Más de 30.000" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Más de 30.000</span></label>
+                <label class="opt"><input type="radio" name="p17_facturacion_mensual" value="en-la-llamada" data-label="Prefiero comentarlo en la llamada" tabindex="0"><span class="dot" aria-hidden="true"></span><span class="txt">Prefiero comentarlo en la llamada</span></label>
+              </div>
+              <p class="err" role="alert" hidden></p>
+            </fieldset>
+          </li>
+        </ol>
+
+        <div class="nav">
+          <button type="button" class="btn btn-ghost" data-back>Atrás</button>
+          <button type="button" class="btn" data-next data-send>Enviar respuestas</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 5 · PANTALLA FINAL (CALIFICA) ================= -->
+    <section class="screen final" id="s-ok" data-screen="ok" hidden>
+      <div class="wrap-narrow">
+        <h2 tabindex="-1">Encaja. Elige tu hora.</h2>
+        <p class="lead">Hemos leído lo que nos contaste. Antes de la sesión revisamos tu web y tus redes, así que los 30 minutos son de trabajo, no de presentaciones.</p>
+        <p class="rec">Reserva el hueco en un sitio donde puedas hablar tranquilo y con el móvil a mano: vamos a mirar tu WhatsApp por dentro.</p>
+
+        <div class="cal" id="cal">
+          <!-- ============================================================
+               CALENDARIO · HUECO PENDIENTE
+               Sustituir TODO el contenido de este div por el iframe del
+               calendario de GHL. Ejemplo:
+               <iframe src="https://api.leadconnectorhq.com/widget/booking/XXXX"
+                       title="Elige tu hora" scrolling="no"></iframe>
+               No se pinta un pantallazo falso de calendario.
+               ============================================================ -->
+          <p class="micro">Hueco del calendario de GoHighLevel. Pegar aquí el iframe de reserva.</p>
+        </div>
+
+        <p class="legal legal-foot">Este sitio no forma parte de Meta Platforms, Inc. ni está avalado por ella. WhatsApp es una marca registrada de Meta Platforms, Inc.</p>
+      </div>
+    </section>
+
+    <!-- ================= 6 · FALLO DE RED ================= -->
+    <section class="screen" id="s-net" data-screen="net" hidden>
+      <div class="wrap-narrow net">
+        <h2 tabindex="-1">Tus respuestas no salieron</h2>
+        <p class="lead">Se cortó el envío, pero no se perdió nada: lo que escribiste está guardado en este navegador. Vuelve a intentarlo.</p>
+        <div class="acts">
+          <button type="button" class="btn" id="btnRetry">Reintentar envío</button>
+          <button type="button" class="btn btn-ghost" id="btnSkip">Continuar de todos modos</button>
+        </div>
+        <p class="st" id="netState"></p>
+      </div>
+    </section>
+
+  </form>
+</main>
+
+<script id="page-js">
+(function(){
+  'use strict';
+
+  /* ===================== CONFIGURACIÓN ===================== */
+  /* Mientras WEBHOOK empiece por "TODO-" no se hace ninguna llamada de red:
+     el formulario recorre el flujo entero y deja el payload en la consola. */
+  var WEBHOOK      = 'TODO-WEBHOOK-GHL';
+  var CONTENT_TYPE = 'application/json';   /* si CORS bloquea: 'text/plain;charset=UTF-8' */
+  var SALIDA_A     = '05-Salida-A.html';
+  var SALIDA_B     = '06-Salida-B.html';
+  var PREFIJO_DEF  = '+52';
+  var K_BORRADOR   = 'tbai_form_borrador_v1';
+  var K_PENDIENTE  = 'tbai_form_pendiente_v1';
+  var TIMEOUT_MS   = 15000;
+
+  /* ===================== UTILIDADES ======================== */
+  var d = document;
+  function $(sel, ctx){ return (ctx || d).querySelector(sel); }
+  function all(sel, ctx){ return Array.prototype.slice.call((ctx || d).querySelectorAll(sel)); }
+
+  function guardar(clave, valor){
+    try { window.sessionStorage.setItem(clave, valor); } catch(e){ /* modo privado */ }
+  }
+  function leer(clave){
+    try { return window.sessionStorage.getItem(clave); } catch(e){ return null; }
+  }
+  function borrar(clave){
+    try { window.sessionStorage.removeItem(clave); } catch(e){ /* nada */ }
+  }
+
+  function paramsUrl(){
+    var out = {};
+    var q = (window.location.search || '').replace(/^\?/, '');
+    if(!q) return out;
+    var trozos = q.split('&');
+    for(var i = 0; i < trozos.length; i++){
+      var par = trozos[i];
+      if(!par) continue;
+      var j = par.indexOf('=');
+      var k = j < 0 ? par : par.slice(0, j);
+      var v = j < 0 ? '' : par.slice(j + 1);
+      try { out[decodeURIComponent(k)] = decodeURIComponent(v.replace(/\+/g, ' ')); }
+      catch(e){ out[k] = v; }
+    }
+    return out;
+  }
+
+  /* ===================== ELEMENTOS ========================= */
+  var raiz     = $('#tbf');
+  var form     = $('#tbf-form');
+  var pantallas = all('.screen', form);
+  var prog     = $('#prog');
+  var progStep = $('#progStep');
+  var progName = $('#progName');
+  var progPct  = $('#progPct');
+  var progFill = $('#progFill');
+  var progBar  = $('#progBar');
+  var preguntas = all('.q', form);
+  var orden    = ['intro', '1', '2', '3', '4'];
+  var actual   = 'intro';
+  var payloadActual = null;
+  var enviando = false;
+
+  function pantallaDe(nombre){
+    for(var i = 0; i < pantallas.length; i++){
+      if(pantallas[i].getAttribute('data-screen') === nombre) return pantallas[i];
+    }
+    return null;
+  }
+
+  /* ===================== NAVEGACIÓN ======================== */
+  function mostrar(nombre, foco){
+    var destino = pantallaDe(nombre);
+    if(!destino) return;
+    for(var i = 0; i < pantallas.length; i++){
+      pantallas[i].hidden = (pantallas[i] !== destino);
+      pantallas[i].classList.remove('enter');
+    }
+    actual = nombre;
+    /* fuerza el reflow para que la animación se repita en cada cambio */
+    void destino.offsetWidth;
+    destino.classList.add('enter');
+    pintarProgreso(destino);
+    if(foco !== false){
+      var titulo = destino.querySelector('h1,h2');
+      if(titulo && titulo.focus) { try { titulo.focus({ preventScroll: true }); } catch(e){ titulo.focus(); } }
+    }
+    var top = raiz.getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo(0, Math.max(0, top - 8));
+    guardarBorrador();
+  }
+
+  function pintarProgreso(destino){
+    var pct = destino.getAttribute('data-pct');
+    var idx = destino.getAttribute('data-idx');
+    if(!pct){
+      prog.hidden = true;
+      if(destino.getAttribute('data-screen') === 'ok'){
+        progFill.style.width = '100%';
+        progBar.setAttribute('aria-valuenow', '100');
+      }
+      return;
+    }
+    prog.hidden = false;
+    progStep.textContent = 'Paso ' + idx + ' de 4';
+    progName.textContent = destino.getAttribute('data-name');
+    progPct.textContent = pct + '%';
+    progFill.style.width = pct + '%';
+    progBar.setAttribute('aria-valuenow', pct);
+  }
+
+  function irA(delta){
+    var i = orden.indexOf(actual);
+    if(i < 0) return;
+    var siguiente = orden[i + delta];
+    if(!siguiente) return;
+    mostrar(siguiente);
+  }
+
+  /* ===================== VALIDACIÓN ======================== */
+  function controlDe(q){
+    return q.querySelector('input[type="text"],input[type="email"],input[type="tel"],textarea');
+  }
+
+  function revisar(q){
+    var opcional = q.getAttribute('data-optional') === '1';
+    var radios = q.querySelectorAll('input[type="radio"]');
+    if(radios.length){
+      if(opcional) return '';
+      return q.querySelector('input[type="radio"]:checked') ? '' : 'Elige una opción para continuar.';
+    }
+    var ctl = controlDe(q);
+    if(!ctl) return '';
+    var v = (ctl.value || '').trim();
+    if(!v) return opcional ? '' : (q.getAttribute('data-msg') || 'Completa este campo.');
+    var kind = q.getAttribute('data-kind');
+    if(kind === 'email' && !/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(v)){
+      return 'Revisa el correo, parece incompleto.';
+    }
+    if(kind === 'tel'){
+      var digitos = v.replace(/\D/g, '');
+      if(digitos.length < 6 || digitos.length > 15){
+        return 'Escribe tu número de WhatsApp completo, sin el prefijo del país.';
+      }
+    }
+    var min = parseInt(q.getAttribute('data-min') || '0', 10);
+    if(min && v.length < min){
+      var faltan = min - v.length;
+      return 'Nos faltan ' + faltan + (faltan === 1 ? ' caracter' : ' caracteres') + ' para poder leerlo bien.';
+    }
+    return '';
+  }
+
+  function pintarError(q, msg){
+    var caja = q.querySelector('.err');
+    if(msg){
+      q.classList.add('has-err');
+      if(caja){ caja.textContent = msg; caja.hidden = false; }
+    } else {
+      q.classList.remove('has-err');
+      if(caja){ caja.textContent = ''; caja.hidden = true; }
+    }
+  }
+
+  function validarPantalla(destino){
+    var qs = all('.q', destino);
+    var primerFallo = null;
+    for(var i = 0; i < qs.length; i++){
+      var msg = revisar(qs[i]);
+      pintarError(qs[i], msg);
+      if(msg && !primerFallo) primerFallo = qs[i];
+    }
+    if(primerFallo){
+      var margen = (prog && !prog.hidden ? prog.offsetHeight : 0) + 28;
+      var y = primerFallo.getBoundingClientRect().top + window.pageYOffset - margen;
+      window.scrollTo(0, Math.max(0, y));
+      var foco = primerFallo.querySelector('input,textarea,select');
+      if(foco && foco.focus){ try { foco.focus({ preventScroll: true }); } catch(e){ foco.focus(); } }
+      return false;
+    }
+    return true;
+  }
+
+  /* ===================== CONTADORES ======================== */
+  function pintarContador(ta){
+    var min = parseInt(ta.getAttribute('data-min') || '0', 10);
+    if(!min) return;
+    var medidor = ta.parentNode.querySelector('.meter');
+    if(!medidor) return;
+    var n = (ta.value || '').trim().length;
+    var pct = Math.min(100, Math.round((n / min) * 100));
+    medidor.querySelector('.n').textContent = String(n);
+    medidor.querySelector('.bar i').style.width = pct + '%';
+    if(n >= min) medidor.classList.add('ok');
+    else medidor.classList.remove('ok');
+  }
+
+  function montarContadores(){
+    var tas = all('textarea[data-min]', form);
+    for(var i = 0; i < tas.length; i++){
+      var ta = tas[i];
+      var min = ta.getAttribute('data-min');
+      var medidor = d.createElement('p');
+      medidor.className = 'meter';
+      medidor.innerHTML = '<span class="bar"><i></i></span><span><span class="n">0</span> / ' + min + ' caracteres</span>';
+      ta.parentNode.insertBefore(medidor, ta.nextSibling);
+      pintarContador(ta);
+    }
+  }
+
+  /* ===================== BORRADOR ========================== */
+  var tBorrador = null;
+  var pasoGuardado = null;   /* el paso más lejano alcanzado, para poder retomar */
+
+  function guardarBorrador(){
+    /* Volver a la pantalla de entrada no borra el punto al que había llegado. */
+    if(actual !== 'intro') pasoGuardado = actual;
+    var datos = { paso: pasoGuardado || actual, campos: {} };
+    for(var i = 0; i < preguntas.length; i++){
+      var q = preguntas[i];
+      var nombre = q.getAttribute('data-name');
+      var marcado = q.querySelector('input[type="radio"]:checked');
+      if(q.querySelector('input[type="radio"]')){
+        datos.campos[nombre] = marcado ? marcado.value : '';
+      } else {
+        var ctl = controlDe(q);
+        if(ctl) datos.campos[nombre] = ctl.value;
+        if(q.getAttribute('data-kind') === 'tel'){
+          var sel = q.querySelector('select');
+          if(sel) datos.campos['__prefijo'] = sel.value;
+        }
+      }
+    }
+    guardar(K_BORRADOR, JSON.stringify(datos));
+  }
+  function guardarBorradorDiferido(){
+    if(tBorrador) window.clearTimeout(tBorrador);
+    tBorrador = window.setTimeout(guardarBorrador, 400);
+  }
+
+  function restaurarBorrador(){
+    var crudo = leer(K_BORRADOR);
+    if(!crudo) return false;
+    var datos;
+    try { datos = JSON.parse(crudo); } catch(e){ return false; }
+    if(!datos || !datos.campos) return false;
+    var algo = false;
+    for(var i = 0; i < preguntas.length; i++){
+      var q = preguntas[i];
+      var nombre = q.getAttribute('data-name');
+      var valor = datos.campos[nombre];
+      if(valor === undefined || valor === null || valor === '') continue;
+      var radios = q.querySelectorAll('input[type="radio"]');
+      if(radios.length){
+        for(var r = 0; r < radios.length; r++){
+          if(radios[r].value === valor){ radios[r].checked = true; algo = true; }
+        }
+      } else {
+        var ctl = controlDe(q);
+        if(ctl){ ctl.value = valor; algo = true; }
+      }
+    }
+    var pref = datos.campos['__prefijo'];
+    var selPref = $('#f-prefijo');
+    if(pref && selPref) selPref.value = pref;
+    if(algo && datos.paso && orden.indexOf(datos.paso) > 0){
+      pasoGuardado = datos.paso;
+    }
+    return algo;
+  }
+
+  /* ===================== PAYLOAD =========================== */
+  function recoger(){
+    var out = {};
+    for(var i = 0; i < preguntas.length; i++){
+      var q = preguntas[i];
+      var nombre = q.getAttribute('data-name');
+      var radios = q.querySelectorAll('input[type="radio"]');
+      if(radios.length){
+        var marcado = q.querySelector('input[type="radio"]:checked');
+        out[nombre] = marcado ? marcado.getAttribute('data-label') : '';
+        out[nombre + '_valor'] = marcado ? marcado.value : '';
+        continue;
+      }
+      var ctl = controlDe(q);
+      var v = ctl ? (ctl.value || '').trim() : '';
+      if(q.getAttribute('data-kind') === 'tel'){
+        var sel = q.querySelector('select');
+        var pref = sel ? sel.value : '';
+        var opt = sel ? sel.options[sel.selectedIndex] : null;
+        out['pais'] = opt ? opt.getAttribute('data-pais') : '';
+        out['prefijo_pais'] = pref === '+other' ? '' : pref;
+        out[nombre] = ((pref === '+other' ? '' : pref) + ' ' + v).replace(/\s+/g, ' ').replace(/^\s/, '');
+        out['whatsapp_e164'] = ((pref === '+other' ? '+' : pref) + v).replace(/[^\d+]/g, '');
+        continue;
+      }
+      out[nombre] = v;
+    }
+    return out;
+  }
+
+  /* Lógica de salida. Se evalúa al enviar, en este orden:
+       P1  = Ninguna                                   -> descalifica -> SALIDA A
+       P2  = Menos de 10                               -> descalifica -> SALIDA A
+       P14 = No estoy valorando contratar              -> SALIDA A
+       P15 = Busco algo gratis o montarlo yo           -> SALIDA A
+       P15 = Puedo, pero no en este momento            -> SALIDA B
+       P14 = En 2 o 3 meses                            -> SÍ califica, con flag de zona gris
+       resto                                           -> pantalla final con calendario  */
+  function decidir(r){
+    var p1  = r.p01_ventas_por_whatsapp_valor;
+    var p2  = r.p02_conversaciones_semana_valor;
+    var p14 = r.p14_cuando_podrias_empezar_valor;
+    var p15 = r.p15_capacidad_de_inversion_valor;
+    if(p1 === 'ninguna')                  return { resultado: 'salida_a', motivo: 'p1-no-vende-por-whatsapp', gris: false };
+    if(p2 === 'menos-de-10')              return { resultado: 'salida_a', motivo: 'p2-volumen-insuficiente', gris: false };
+    if(p14 === 'no-valoro-contratar')     return { resultado: 'salida_a', motivo: 'p14-no-valora-contratar', gris: false };
+    if(p15 === 'gratis-o-montarlo-yo')    return { resultado: 'salida_a', motivo: 'p15-busca-gratis-o-hazlo-tu', gris: false };
+    if(p15 === 'no-en-este-momento')      return { resultado: 'salida_b', motivo: 'p15-no-es-el-momento', gris: false };
+    return { resultado: 'califica', motivo: '', gris: p14 === '2-o-3-meses' };
+  }
+
+  function construirPayload(){
+    var r = recoger();
+    var fallo = decidir(r);
+    var p = {};
+    p.formulario = 'aplicacion-agente-whatsapp';
+    p.pagina = '03-Formulario';
+    p.enviado_en = new Date().toISOString();
+    p.resultado = fallo.resultado;
+    p.motivo_salida = fallo.motivo;
+    p.zona_gris = fallo.gris;
+    p.zona_gris_nota = fallo.gris ? 'Califica, pero dijo que empezaría en 2 o 3 meses' : '';
+    for(var k in r){ if(Object.prototype.hasOwnProperty.call(r, k)) p[k] = r[k]; }
+    var qs = paramsUrl();
+    var utms = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','fbclid','gclid','ttclid'];
+    for(var i = 0; i < utms.length; i++){
+      if(qs[utms[i]]) p[utms[i]] = qs[utms[i]];
+    }
+    p.origen_url = window.location.href;
+    p.referrer = d.referrer || '';
+    p.user_agent = navigator.userAgent || '';
+    try { p.zona_horaria = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; }
+    catch(e){ p.zona_horaria = ''; }
+    return p;
+  }
+
+  /* ===================== ENVÍO ============================= */
+  function post(url, cuerpo, listo){
+    var xhr = new XMLHttpRequest();
+    try { xhr.open('POST', url, true); }
+    catch(e){ listo(false); return; }
+    try { xhr.setRequestHeader('Content-Type', CONTENT_TYPE); } catch(e){ /* nada */ }
+    xhr.timeout = TIMEOUT_MS;
+    xhr.onload = function(){ listo(xhr.status >= 200 && xhr.status < 400); };
+    xhr.onerror = function(){ listo(false); };
+    xhr.ontimeout = function(){ listo(false); };
+    try { xhr.send(cuerpo); } catch(e){ listo(false); }
+  }
+
+  function botonEnviar(){ return $('#s-4 [data-send]'); }
+
+  function marcarEnviando(on){
+    enviando = on;
+    var b = botonEnviar();
+    if(!b) return;
+    if(on){
+      if(!b.getAttribute('data-label-original')) b.setAttribute('data-label-original', b.textContent);
+      b.textContent = 'Enviando...';
+      b.disabled = true;
+    } else {
+      b.textContent = b.getAttribute('data-label-original') || 'Enviar respuestas';
+      b.disabled = false;
+    }
+  }
+
+  function enviar(){
+    if(enviando) return;
+    var paso4 = pantallaDe('4');
+    if(!validarPantalla(paso4)) return;
+    payloadActual = construirPayload();
+    guardar(K_PENDIENTE, JSON.stringify(payloadActual));
+    marcarEnviando(true);
+    despachar(payloadActual, function(ok){
+      marcarEnviando(false);
+      if(ok){
+        borrar(K_PENDIENTE);
+        borrar(K_BORRADOR);
+        rutear();
+      } else {
+        mostrar('net');
+      }
+    });
+  }
+
+  function despachar(payload, listo){
+    if(WEBHOOK.indexOf('TODO') === 0){
+      /* Sin webhook configurado: no se toca la red, se recorre el flujo igual. */
+      if(window.console && console.warn){
+        console.warn('[The Betts AI] WEBHOOK sin configurar. Payload que se enviaría:', payload);
+      }
+      listo(true);
+      return;
+    }
+    post(WEBHOOK, JSON.stringify(payload), listo);
+  }
+
+  function rutear(){
+    if(!payloadActual){ mostrar('ok'); return; }
+    if(payloadActual.resultado === 'salida_a'){ window.location.href = SALIDA_A; return; }
+    if(payloadActual.resultado === 'salida_b'){ window.location.href = SALIDA_B; return; }
+    pantallaFinal();
+  }
+
+  function pantallaFinal(){
+    mostrar('ok');
+    /* ============================================================
+       EVENTO DE CONVERSIÓN · AQUÍ Y SOLO AQUÍ
+       Se dispara únicamente en la pantalla final con calendario
+       (Schedule / Lead cualificado, vía Conversions API de GHL).
+       Pegar aquí el snippet real. No se inventa ningún píxel.
+       ============================================================ */
+  }
+
+  /* Reintento desde la pantalla de fallo de red */
+  function reintentar(){
+    var estado = $('#netState');
+    var b = $('#btnRetry');
+    if(!payloadActual){
+      var crudo = leer(K_PENDIENTE);
+      if(crudo){ try { payloadActual = JSON.parse(crudo); } catch(e){ payloadActual = null; } }
+    }
+    if(!payloadActual){ mostrar('4'); return; }
+    b.disabled = true;
+    b.textContent = 'Enviando...';
+    estado.className = 'st';
+    estado.textContent = 'Reintentando...';
+    despachar(payloadActual, function(ok){
+      b.disabled = false;
+      b.textContent = 'Reintentar envío';
+      if(ok){
+        borrar(K_PENDIENTE);
+        borrar(K_BORRADOR);
+        estado.textContent = '';
+        rutear();
+      } else {
+        estado.className = 'st bad';
+        estado.textContent = 'Sigue sin salir. Revisa tu conexión y vuelve a intentarlo, o continúa: tus respuestas se reenvían solas en cuanto haya red.';
+      }
+    });
+  }
+
+  /* Último recurso: si quedó algo pendiente al abandonar la página */
+  function beaconPendiente(){
+    var crudo = leer(K_PENDIENTE);
+    if(!crudo) return;
+    if(WEBHOOK.indexOf('TODO') === 0) return;
+    if(!navigator.sendBeacon) return;
+    try {
+      var blob = new Blob([crudo], { type: CONTENT_TYPE });
+      if(navigator.sendBeacon(WEBHOOK, blob)) borrar(K_PENDIENTE);
+    } catch(e){ /* nada que hacer */ }
+  }
+
+  /* Al cargar: si quedó un envío a medias de una sesión anterior, se reintenta
+     en silencio. Nadie se pierde por un corte de red de hace cinco minutos. */
+  function reenviarPendienteEnSilencio(){
+    var crudo = leer(K_PENDIENTE);
+    if(!crudo) return;
+    if(WEBHOOK.indexOf('TODO') === 0) return;
+    post(WEBHOOK, crudo, function(ok){ if(ok) borrar(K_PENDIENTE); });
+  }
+
+  /* ===================== EVENTOS =========================== */
+  form.addEventListener('submit', function(e){ e.preventDefault(); });
+
+  form.addEventListener('click', function(e){
+    var t = e.target;
+    var b = t.closest ? t.closest('button') : null;
+    if(!b) return;
+    if(b.id === 'btnStart'){ mostrar(pasoGuardado || '1'); return; }
+    if(b.hasAttribute('data-back')){ irA(-1); return; }
+    if(b.hasAttribute('data-send')){ enviar(); return; }
+    if(b.hasAttribute('data-next')){
+      var pantalla = pantallaDe(actual);
+      if(pantalla && validarPantalla(pantalla)) irA(1);
+      return;
+    }
+  });
+
+  $('#btnRetry').addEventListener('click', reintentar);
+  $('#btnSkip').addEventListener('click', function(){
+    beaconPendiente();
+    rutear();
+  });
+
+  /* Enter avanza. En un textarea, Enter escribe un salto de línea. */
+  form.addEventListener('keydown', function(e){
+    if(e.key !== 'Enter' || e.shiftKey || e.altKey || e.ctrlKey || e.metaKey) return;
+    var t = e.target;
+    var tag = t.tagName ? t.tagName.toLowerCase() : '';
+    if(tag === 'textarea' || tag === 'button' || tag === 'a' || tag === 'select') return;
+    e.preventDefault();
+    if(t.type === 'radio' && !t.checked){
+      t.checked = true;
+      sincronizarOpciones(t.name);
+      guardarBorradorDiferido();
+      return;
+    }
+    if(actual === 'intro'){ mostrar(pasoGuardado || '1'); return; }
+    var pantalla = pantallaDe(actual);
+    if(!pantalla) return;
+    if(pantalla.querySelector('[data-send]')){ enviar(); return; }
+    if(pantalla.querySelector('[data-next]') && validarPantalla(pantalla)) irA(1);
+  });
+
+  function sincronizarOpciones(nombre){
+    var radios = all('input[type="radio"][name="' + nombre + '"]', form);
+    for(var i = 0; i < radios.length; i++){
+      var etiqueta = radios[i].closest ? radios[i].closest('.opt') : radios[i].parentNode;
+      if(!etiqueta) continue;
+      if(radios[i].checked) etiqueta.classList.add('is-on');
+      else etiqueta.classList.remove('is-on');
+    }
+  }
+
+  form.addEventListener('change', function(e){
+    var t = e.target;
+    if(t.type === 'radio'){
+      sincronizarOpciones(t.name);
+      var q = t.closest ? t.closest('.q') : null;
+      if(q) pintarError(q, '');
+    }
+    guardarBorradorDiferido();
+  });
+
+  form.addEventListener('input', function(e){
+    var t = e.target;
+    if(t.tagName && t.tagName.toLowerCase() === 'textarea' && t.getAttribute('data-min')){
+      pintarContador(t);
+    }
+    var q = t.closest ? t.closest('.q') : null;
+    if(q && q.classList.contains('has-err')){
+      if(!revisar(q)) pintarError(q, '');
+    }
+    guardarBorradorDiferido();
+  });
+
+  window.addEventListener('pagehide', beaconPendiente);
+
+  /* ===================== ARRANQUE ========================== */
+  function arrancar(){
+    montarContadores();
+    var selPref = $('#f-prefijo');
+    if(selPref) selPref.value = PREFIJO_DEF;
+    var hayBorrador = restaurarBorrador();
+    if(hayBorrador){
+      var nota = $('#resumeNote');
+      if(nota) nota.hidden = false;
+      var tas = all('textarea[data-min]', form);
+      for(var i = 0; i < tas.length; i++) pintarContador(tas[i]);
+      var radios = all('input[type="radio"]:checked', form);
+      for(var j = 0; j < radios.length; j++) sincronizarOpciones(radios[j].name);
+    }
+    mostrar('intro', false);
+    reenviarPendienteEnSilencio();
+  }
+
+  arrancar();
+})();
+</script>
+
+<script id="tb-core-js">
+(function(){
+  document.documentElement.classList.add('js-anim');
+  var els = document.querySelectorAll('.anim');
+  if(!('IntersectionObserver' in window)){
+    els.forEach(function(e){e.classList.add('in')});
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  },{rootMargin:'0px 0px -8% 0px',threshold:.05});
+  els.forEach(function(e,i){ e.style.transitionDelay = Math.min(i%4,3)*60 + 'ms'; io.observe(e); });
+})();
+</script>
+
+</body>
+</html>

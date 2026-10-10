@@ -1,0 +1,376 @@
+<!--
+  ============================================================================
+  THE BETTS AI · SISTEMA DE DISEÑO
+  Contrato compartido por las 6 páginas del embudo.
+  NO es una página entregable: es la referencia. Todo lo de <style id="tb-core">
+  se copia LITERAL dentro del <body> de cada página.
+
+  REGLAS DURAS DE GOHIGHLEVEL (widget Custom HTML)
+  1. GHL DESCARTA el <head>. Todo <style>, todo @import de fuentes y todo
+     <script> va DENTRO de <body>. Sin excepción.
+  2. El HTML vive en una columna centrada angosta. Para romper a ancho completo
+     usar .band (elementos relative/static) o .fullbleed (sticky/overlays).
+     .band NO funciona con position:sticky.
+  3. html,body { overflow-x:hidden } siempre, para que el 100vw no genere
+     scroll horizontal.
+  4. Sin dependencias de CDN salvo Google Fonts. Nada de React/Babel de unpkg:
+     el CSP de GHL los bloquea.
+
+  CRAFT (por qué está así y no de otra forma)
+  - Fuentes: Bricolage Grotesque (display) + Hanken Grotesk (cuerpo). Ninguna
+    de las dos está en la lista de fuentes quemadas por sobreuso.
+  - Color: estrategia restrained. Navy + tinta clara, verde SOLO en acción
+    (botones, 2-3 palabras). La menta es el mismo hue en otro tono, no un
+    segundo acento. Cero glow de color sobre oscuro.
+  - Profundidad: hairline inset, nunca drop-shadow de color.
+  - Reveals: el contenido es visible por defecto. El JS añade .js-anim al
+    <html> y solo entonces se ocultan para animar. Sin JS, o en un tab
+    headless, la página se lee entera.
+  - Cero em-dash visible en toda la copia. En español el inciso va con coma,
+    dos puntos o paréntesis.
+
+  CONTRASTE VERIFICADO sobre #0B1220
+    #E8EEF9 texto        16.1:1   AAA
+    #9FB0CC secundario    8.6:1   AAA
+    #19C37D acento        8.2:1   AAA
+    #0B1220 sobre #19C37D 8.2:1   AAA  (texto del botón)
+  ============================================================================
+-->
+
+<style id="tb-core">
+/* Fuentes variables con rango. Pedir pesos sueltos (600;700;800) hace que
+   Google sirva instancias estáticas y el eje óptico 'opsz' deja de existir,
+   con lo que font-variation-settings queda inerte. Con rangos sí llega la
+   variable font: un archivo por familia en vez de tres, y opsz operativo. */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400..700&display=swap');
+
+:root{
+  /* superficies */
+  --bg:#0B1220;
+  --surface:#101A2E;
+  --surface-2:#16213C;
+  /* tinta */
+  --ink:#E8EEF9;
+  --muted:#9FB0CC;
+  /* acento (un solo hue, dos tonos) */
+  --accent:#19C37D;
+  --accent-deep:#12A468;
+  --mint:#7FF0D2;
+  /* hairlines */
+  --line:rgba(232,238,249,.10);
+  --line-strong:rgba(232,238,249,.20);
+  /* escala de espaciado 4px, usada con ritmo variado */
+  --s1:4px;  --s2:8px;   --s3:12px; --s4:16px; --s5:24px;
+  --s6:32px; --s7:48px;  --s8:64px; --s9:88px; --s10:120px;
+  /* radios: tope 14px en cards, pill solo en tags */
+  --r-sm:8px; --r:12px; --r-lg:14px; --r-pill:999px;
+  /* motion */
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-soft:cubic-bezier(.32,.72,0,1);
+  /* medidas, en px a propósito.
+     En ch no funcionan: 1ch escala con el tamaño de fuente del elemento, así
+     que el mismo "66ch" da 628px en un párrafo de 17px y 813px en un lead de
+     22px, y "20ch" en un h2 de 40px da 514px. Resultado: elementos de la misma
+     columna con anchos que no casan, y titulares más estrechos que el texto
+     que llevan debajo. En px todos comparten columna y el ojo la lee recta.
+     640px son unos 68 caracteres a 17px, dentro de la medida de lectura. */
+  --measure:640px;       /* cuerpo y entradillas */
+  --measure-head:760px;  /* titulares: nunca por debajo de --measure */
+  --wide:1180px;
+  --narrow:760px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+html,body{overflow-x:hidden}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  font-size:17px;
+  line-height:1.7;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  font-variant-numeric:tabular-nums;
+}
+img,video{max-width:100%;height:auto;display:block}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* ---------- breakout de la columna de GHL ---------- */
+/* .band  -> secciones normales (relative/static) */
+.band{position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;width:100vw}
+/* .fullbleed -> sticky, overlays, cualquier cosa donde `left` no desplace */
+.fullbleed{width:100vw;margin-left:calc(50% - 50vw)}
+
+.wrap{width:min(100% - 40px,var(--wide));margin-inline:auto}
+.wrap-narrow{width:min(100% - 40px,var(--narrow));margin-inline:auto}
+@media (max-width:600px){ .wrap,.wrap-narrow{width:calc(100% - 32px)} }
+
+section{padding-block:clamp(56px,8.5vw,116px)}
+.sec-tight{padding-block:clamp(40px,6vw,72px)}
+
+/* ---------- tipografía ----------
+   escala modular ~1.30: 13 / 17 / 22 / 30 / 40 / display
+   display con techo 76px, tracking -0.03em (piso duro -0.04em)          */
+.display,h1{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:800;
+  font-size:clamp(38px,5.6vw,72px);
+  line-height:1.04;
+  letter-spacing:-.03em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 72;
+}
+/* El titular del hero tiene 28 palabras. A tamaño display serían 5 líneas y
+   un h1 largo inflado es un tell. Se trata como titular editorial: más
+   pequeño, con las tres acciones del Método RCA destacadas en color para
+   dar jerarquía dentro de la frase sin cambiar una sola palabra. */
+.h1-editorial{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(29px,4vw,46px);
+  line-height:1.14;
+  letter-spacing:-.025em;
+  margin:0;
+  /* El ancho lo pone --measure-head, más abajo. No volver a ponerlo en ch:
+     medido, 15ch parecen 690px y en realidad son 440px, que parten este
+     titular de 28 palabras en ocho líneas. */
+  text-wrap:balance;
+  font-variation-settings:'opsz' 46;
+}
+/* .hl pesa 600 y los titulares 700: sin esto, las palabras destacadas salen
+   MÁS ligeras que el resto de la frase, justo al revés de lo que se busca. */
+.h1-editorial .hl,h1 .hl,h2 .hl,h3 .hl{font-weight:inherit}
+
+h2{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(28px,3.6vw,40px);
+  line-height:1.12;
+  letter-spacing:-.025em;
+  margin:0;
+  text-wrap:balance;
+  font-variation-settings:'opsz' 40;
+}
+h3{
+  font-family:'Bricolage Grotesque',sans-serif;
+  font-weight:700;
+  font-size:clamp(21px,2.2vw,26px);
+  line-height:1.2;
+  letter-spacing:-.02em;
+  margin:0;
+  text-wrap:balance;
+}
+p{margin:0 0 var(--s5);max-width:var(--measure);text-wrap:pretty}
+p:last-child{margin-bottom:0}
+
+/* Los titulares comparten columna con el cuerpo y nunca quedan por debajo de
+   él: un titular más estrecho que su propio párrafo de apoyo se lee como un
+   fallo de composición, no como jerarquía. */
+h1,h2,.h1-editorial{max-width:var(--measure-head)}
+.lead{font-size:clamp(18px,2vw,22px);line-height:1.55;color:var(--muted);max-width:var(--measure)}
+.small{font-size:14px;line-height:1.6}
+.micro{font-size:13px;line-height:1.55;color:var(--muted)}
+
+.hl{color:var(--accent);font-weight:600}
+.ink-strong{color:var(--ink);font-weight:600}
+em.note{color:var(--muted);font-style:italic}
+
+/* eyebrow: presupuesto de 3 en toda la página, nunca sobre el h1 del hero */
+.eyebrow{
+  font-size:12px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--mint);margin:0 0 var(--s4);
+}
+
+/* ---------- botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  padding:17px 30px;border-radius:var(--r);border:0;
+  background:var(--accent);color:#0B1220;
+  font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:17px;
+  line-height:1.2;letter-spacing:-.01em;text-decoration:none;cursor:pointer;
+  transition:transform .18s var(--ease-out),background-color .18s var(--ease-out);
+}
+.btn:hover{background:var(--mint);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn-ghost{
+  background:transparent;color:var(--ink);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+}
+.btn-ghost:hover{background:var(--surface-2);color:var(--ink);transform:translateY(-1px)}
+.btn-lg{padding:20px 36px;font-size:18px}
+.btn-block{display:flex;width:100%}
+
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{
+  outline:2px solid var(--mint);outline-offset:3px;border-radius:6px;
+}
+
+.cta-note{margin-top:var(--s4);font-size:14px;color:var(--muted);max-width:52ch}
+
+/* ---------- superficies y hairlines ---------- */
+.panel{background:var(--surface);border-radius:var(--r-lg);box-shadow:inset 0 0 0 1px var(--line);padding:clamp(20px,3vw,32px)}
+.panel-2{background:var(--surface-2)}
+.rule{height:1px;background:var(--line);border:0;margin:0}
+
+/* ---------- reproductor de video (hueco del VSL) ---------- */
+.video-slot{
+  position:relative;aspect-ratio:16/9;width:100%;
+  background:var(--surface-2);border-radius:var(--r-lg);
+  box-shadow:inset 0 0 0 1px var(--line-strong);
+  display:grid;place-content:center;gap:var(--s3);justify-items:center;
+  text-align:center;padding:var(--s5);overflow:hidden;
+}
+.video-slot iframe,.video-slot video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.video-slot .play{
+  width:64px;height:64px;border-radius:var(--r-pill);background:var(--accent);
+  display:grid;place-content:center;
+}
+.video-slot .play svg{width:22px;height:22px;fill:#0B1220;margin-left:3px}
+.video-cap{margin-top:var(--s3);font-size:13px;color:var(--muted);text-align:center}
+
+/* ---------- animación de entrada ----------
+   El contenido es visible por defecto. Solo se oculta si el JS corrió. */
+.js-anim .anim{opacity:0;transform:translateY(14px)}
+.js-anim .anim.in{opacity:1;transform:none;transition:opacity .5s var(--ease-out),transform .5s var(--ease-out)}
+@media (prefers-reduced-motion:reduce){
+  .js-anim .anim{opacity:1;transform:none}
+  .js-anim .anim.in{transition:opacity .01s linear}
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+/* ---------- pie legal ---------- */
+.legal{font-size:12.5px;line-height:1.6;color:var(--muted);opacity:.85;max-width:70ch}
+</style>
+
+<script id="tb-core-js">
+(function(){
+  document.documentElement.classList.add('js-anim');
+  var els = document.querySelectorAll('.anim');
+  if(!('IntersectionObserver' in window)){
+    els.forEach(function(e){e.classList.add('in')});
+    return;
+  }
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  },{rootMargin:'0px 0px -8% 0px',threshold:.05});
+  els.forEach(function(e,i){ e.style.transitionDelay = Math.min(i%4,3)*60 + 'ms'; io.observe(e); });
+})();
+</script>
+
+
+<!--
+  ==========================================================================
+  CATÁLOGO DE COMPONENTES
+  Markup de referencia. Cada página usa los que necesita y NO inventa CSS
+  nuevo salvo lo estrictamente propio de esa página.
+  ==========================================================================
+-->
+
+<!-- A · BANDA DE SECCIÓN (fondo distinto a ancho completo) ................ -->
+<section class="band" style="background:var(--surface)">
+  <div class="wrap">
+    <h2>Titular de la sección</h2>
+  </div>
+</section>
+
+<!-- B · FILAS CON HAIRLINE (sustituye a las 3 cards con icono) ............ -->
+<style id="cmp-rows">
+.rows{border-top:1px solid var(--line)}
+.row{
+  display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s3);
+  padding-block:var(--s6);border-bottom:1px solid var(--line);
+}
+@media (min-width:840px){
+  .row{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:var(--s7);align-items:start}
+}
+.row h3{max-width:22ch}
+.row p{color:var(--muted);margin:0}
+</style>
+<div class="rows">
+  <div class="row anim">
+    <h3>Encabezado de la fila</h3>
+    <p>Texto de apoyo de la fila.</p>
+  </div>
+</div>
+
+<!-- C · SECUENCIA CON INICIAL (Método RCA) ............................... -->
+<style id="cmp-steps">
+.steps{display:grid;gap:1px;background:var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:inset 0 0 0 1px var(--line)}
+.step{background:var(--surface);padding:clamp(22px,3vw,34px);display:grid;gap:var(--s3)}
+@media (min-width:840px){.step{grid-template-columns:132px minmax(0,1fr);gap:var(--s6);align-items:start}}
+.step .mark{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:clamp(34px,4vw,46px);line-height:1;letter-spacing:-.03em;color:var(--mint)}
+.step .mark span{display:block;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.step p{margin:0;color:var(--muted)}
+</style>
+<div class="steps">
+  <div class="step anim">
+    <div class="mark">R<span>Responde</span></div>
+    <p>Texto de la capa.</p>
+  </div>
+</div>
+
+<!-- D · CONVERSACIÓN DEMO ................................................ -->
+<!-- Transcripción estilizada y etiquetada como ejemplo. Deliberadamente NO
+     imita la interfaz de WhatsApp: un pantallazo falso lee como truco. -->
+<style id="cmp-chat">
+.chat{display:grid;gap:var(--s3);max-width:560px}
+.msg{padding:14px 18px;border-radius:var(--r-lg);font-size:16px;line-height:1.55;max-width:82%}
+.msg .who{display:block;font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.msg.them{background:var(--surface-2);justify-self:start;border-bottom-left-radius:var(--r-sm)}
+.msg.us{background:rgba(25,195,125,.13);box-shadow:inset 0 0 0 1px rgba(25,195,125,.30);justify-self:end;border-bottom-right-radius:var(--r-sm)}
+.msg.us .who{color:var(--mint)}
+</style>
+<div class="chat">
+  <div class="msg them anim"><span class="who">Cliente</span>Texto.</div>
+  <div class="msg us anim"><span class="who">Agente IA</span>Texto.</div>
+</div>
+
+<!-- E · TIMELINE NUMERADA (los números son una secuencia real) ............ -->
+<style id="cmp-timeline">
+.tl{display:grid;gap:var(--s5);counter-reset:tl}
+@media (min-width:900px){.tl{grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s5)}}
+.tl-item{padding-top:var(--s5);border-top:2px solid var(--line-strong);counter-increment:tl}
+.tl-item::before{content:counter(tl);display:block;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px;color:var(--accent);margin-bottom:var(--s3)}
+.tl-item h3{font-size:19px;margin-bottom:var(--s2)}
+.tl-item p{font-size:15px;color:var(--muted);margin:0}
+</style>
+
+<!-- F · ACORDEÓN FAQ (animación por grid-template-rows, no por height) .... -->
+<style id="cmp-faq">
+.faq{border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{
+  list-style:none;cursor:pointer;padding-block:var(--s5);
+  display:flex;gap:var(--s4);align-items:baseline;justify-content:space-between;
+  font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:clamp(17px,1.8vw,20px);
+  letter-spacing:-.015em;line-height:1.35;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';font-size:24px;line-height:1;color:var(--accent);flex:none;transition:transform .22s var(--ease-out)}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq .a{padding-bottom:var(--s5);color:var(--muted);max-width:var(--measure)}
+.faq .a p{margin:0}
+</style>
+
+<!-- G · BANDA DE CTA INTERMEDIO .......................................... -->
+<style id="cmp-ctaband">
+.ctaband{background:var(--surface-2)}
+.ctaband .inner{display:grid;gap:var(--s5);align-items:center}
+@media (min-width:880px){.ctaband .inner{grid-template-columns:minmax(0,1fr) auto;gap:var(--s8)}}
+.ctaband h2{font-size:clamp(24px,2.8vw,32px);max-width:20ch}
+</style>
+
+<!-- H · CITAS / TESTIMONIOS .............................................. -->
+<style id="cmp-quotes">
+.quotes{display:grid;gap:var(--s6)}
+@media (min-width:900px){.quotes{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s6)}}
+.quote{display:grid;gap:var(--s4);align-content:start}
+.quote blockquote{margin:0;font-family:'Bricolage Grotesque',sans-serif;font-weight:600;font-size:19px;line-height:1.42;letter-spacing:-.015em}
+.quote .by{font-size:14px;color:var(--muted)}
+.quote .by b{color:var(--ink);font-weight:600}
+.quote::before{content:'';display:block;width:32px;height:2px;background:var(--accent)}
+</style>

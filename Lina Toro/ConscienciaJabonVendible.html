@@ -306,7 +306,7 @@
         /* media box (video presentación + thumbs) */
         .svrc .media {
             width: 100%;
-            max-width: 720px;
+            max-width: 880px;
             margin: 0 auto;
             aspect-ratio: 16/9;
             border-radius: 18px;
@@ -370,6 +370,58 @@
             font-weight: 600;
             margin: 16px auto 0;
             max-width: 48ch
+        }
+
+        /* ===== VSL: el video corre en bucle silenciado como fondo;
+           al tocar Play reinicia desde el principio con sonido ===== */
+        .svrc .media.vsl {
+            padding: 0
+        }
+
+        .svrc .media.vsl .vsl-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+            z-index: 0;
+            pointer-events: none
+        }
+
+        .svrc .media.vsl .vsl-shade {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background: linear-gradient(180deg, rgba(31, 31, 27, .26), rgba(31, 31, 27, .58));
+            transition: opacity .35s ease
+        }
+
+        .svrc .media.vsl::after {
+            z-index: 2;
+            transition: opacity .35s ease
+        }
+
+        .svrc .media.vsl .play,
+        .svrc .media.vsl .vlabel {
+            z-index: 3;
+            transition: opacity .35s ease, transform .2s ease
+        }
+
+        .svrc .media.vsl.playing {
+            cursor: default
+        }
+
+        .svrc .media.vsl.playing .vsl-video {
+            pointer-events: auto
+        }
+
+        .svrc .media.vsl.playing .play,
+        .svrc .media.vsl.playing .vlabel,
+        .svrc .media.vsl.playing .vsl-shade,
+        .svrc .media.vsl.playing::after {
+            opacity: 0;
+            pointer-events: none
         }
 
         /* ============================================================== */
@@ -536,19 +588,49 @@
         }
 
         .svrc .step.locked .step-thumb {
-            background: linear-gradient(135deg, #d8cfbe, #e7decb);
-            cursor: not-allowed
+            background: #1f1f1b;
+            cursor: default
         }
 
+        /* video que corre muteado en bucle como teaser dentro de la miniatura */
+        .svrc .step-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+            z-index: 0;
+            pointer-events: none
+        }
+
+        /* overlay cubre todo el thumb y va encima del video */
         .svrc .thumb-ov {
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 8px;
             color: #fff;
             text-align: center;
-            position: relative;
-            z-index: 1
+            position: absolute;
+            inset: 0;
+            z-index: 2
+        }
+
+        /* bloqueado: overlay transparente (se ve el video detrás) + chip legible */
+        .svrc .ov-locked {
+            background: transparent
+        }
+
+        /* desbloqueado: leve velo para que resalte el botón de play */
+        .svrc .ov-play {
+            background: linear-gradient(180deg, rgba(31, 31, 27, .12), rgba(31, 31, 27, .42))
+        }
+
+        .svrc .ov-play .cap {
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, .6)
         }
 
         .svrc .thumb-ov .play {
@@ -577,12 +659,14 @@
             width: 54px;
             height: 54px;
             border-radius: 50%;
-            background: rgba(123, 143, 106, .18);
-            border: 1px solid var(--sage-deep);
+            background: rgba(31, 31, 27, .5);
+            border: 1px solid rgba(245, 239, 230, .7);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--sage-deep)
+            color: #fff
         }
 
         .svrc .thumb-ov .cap {
@@ -593,7 +677,12 @@
         }
 
         .svrc .step.locked .thumb-ov .cap {
-            color: var(--sage-deep)
+            color: #fff;
+            background: rgba(31, 31, 27, .55);
+            -webkit-backdrop-filter: blur(2px);
+            backdrop-filter: blur(2px);
+            padding: 5px 12px;
+            border-radius: 999px
         }
 
         .svrc .step-status {
@@ -668,7 +757,14 @@
             flex: none
         }
 
-        .svrc .step.locked .resource-link {
+        .svrc .resource-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .svrc .step.locked .resource-link,
+        .svrc .step.locked .resource-stack {
             display: none
         }
 
@@ -966,6 +1062,25 @@
             transform: scale(1.14)
         }
 
+        /* día del directo preparatorio en YouTube (clase propia para no chocar con la tarjeta .directo) */
+        .svrc .cal-day.cal-directo {
+            border-color: #d9694f;
+            color: #b04a3a;
+            font-weight: 800
+        }
+
+        .svrc .cal-day.cal-directo::after {
+            content: "";
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #d9694f
+        }
+
         /* tooltip del calendario */
         .svrc .cal-tip {
             position: absolute;
@@ -1001,10 +1116,17 @@
             border-top-color: var(--dark)
         }
 
-        .svrc .cal-day:hover .cal-tip {
+        .svrc .cal-day:hover .cal-tip,
+        .svrc .cal-day:focus .cal-tip,
+        .svrc .cal-day:focus-visible .cal-tip {
             opacity: 1;
             visibility: visible;
             transform: translateX(-50%) translateY(-3px)
+        }
+
+        .svrc .cal-day:focus-visible {
+            outline: 2px solid var(--sage-deep);
+            outline-offset: 2px
         }
 
         /* sched cards */
@@ -1339,7 +1461,322 @@
             cursor: pointer
         }
 
+        /* ===== PRIMER REGALO (PDF descargable, con desbloqueo por hora) ===== */
+        .svrc .gift {
+            position: relative;
+            max-width: 600px;
+            margin: 18px auto 0;
+            background: var(--paper);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 24px 26px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            text-align: left;
+            box-shadow: 0 18px 40px -28px rgba(42, 40, 35, .4)
+        }
+
+        /* resaltado mientras está por desbloquearse (darle relevancia) */
+        .svrc .gift.gift-locked {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(184, 148, 62, .18), 0 18px 42px -26px rgba(184, 148, 62, .55)
+        }
+
+        .svrc .gift .gift-status {
+            margin-top: 8px;
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--gold);
+            line-height: 1.35
+        }
+
+        .svrc .gift.gift-open .gift-status {
+            color: var(--sage-deep)
+        }
+
+        .svrc .gift .gift-cd {
+            font-variant-numeric: tabular-nums
+        }
+
+        /* botón bloqueado (antes de las 7:00 PM) */
+        .svrc .gift.gift-locked .resource-link {
+            background: var(--cream-deep);
+            color: var(--ink-mute);
+            cursor: default;
+            box-shadow: none
+        }
+
+        .svrc .gift.gift-locked .resource-link:hover {
+            background: var(--cream-deep);
+            color: var(--ink-mute);
+            transform: none
+        }
+
+        .svrc .gift .gift-ico {
+            flex: none;
+            width: 58px;
+            height: 58px;
+            border-radius: 16px;
+            background: var(--sage-light);
+            color: var(--sage-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .svrc .gift .gift-ico svg {
+            width: 28px;
+            height: 28px
+        }
+
+        .svrc .gift .gift-body {
+            flex: 1;
+            min-width: 0
+        }
+
+        .svrc .gift .gift-kicker {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 4px
+        }
+
+        .svrc .gift h3 {
+            font-family: var(--sans);
+            font-weight: 800;
+            font-size: 1.12rem;
+            line-height: 1.2;
+            margin-bottom: 4px
+        }
+
+        .svrc .gift p {
+            color: var(--ink-soft);
+            font-size: 14.5px;
+            line-height: 1.45
+        }
+
+        .svrc .gift .resource-link {
+            flex: none;
+            width: auto;
+            max-width: 230px
+        }
+
+        /* ===== DIRECTO PREPARATORIO (YouTube · viernes 19) ===== */
+        .svrc .directo {
+            position: relative;
+            max-width: 640px;
+            margin: 40px auto 0;
+            background: linear-gradient(135deg, var(--dark), #3a3730);
+            color: var(--cream);
+            border-radius: 22px;
+            padding: 32px 30px;
+            text-align: center;
+            overflow: hidden
+        }
+
+        .svrc .directo::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(184, 148, 62, .25), transparent 60%);
+            pointer-events: none
+        }
+
+        .svrc .directo>* {
+            position: relative;
+            z-index: 1
+        }
+
+        .svrc .directo .directo-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 90, 70, .16);
+            color: #ff8a7a;
+            border: 1px solid rgba(255, 120, 100, .4);
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-size: 11.5px;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase
+        }
+
+        .svrc .directo .directo-tag .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff5a46;
+            box-shadow: 0 0 0 0 rgba(255, 90, 70, .6);
+            animation: svrcGlow 1.6s ease-out infinite
+        }
+
+        .svrc .directo h3 {
+            font-family: var(--sans);
+            font-weight: 800;
+            font-size: clamp(1.3rem, 3.4vw, 1.6rem);
+            line-height: 1.15;
+            margin: 14px 0 8px;
+            color: var(--cream)
+        }
+
+        .svrc .directo p {
+            color: var(--sage-light);
+            font-size: 15px;
+            max-width: 50ch;
+            margin: 0 auto 18px
+        }
+
+        .svrc .directo .countdown {
+            margin: 0 auto 20px
+        }
+
+        .svrc .directo .cd-box {
+            background: rgba(245, 239, 230, .08);
+            border: 1px solid rgba(245, 239, 230, .14);
+            min-width: 70px
+        }
+
+        .svrc .directo .resource-link {
+            background: var(--wa);
+            color: #fff;
+            max-width: 380px;
+            margin: 0 auto
+        }
+
+        .svrc .directo .resource-link svg {
+            width: 20px;
+            height: 20px
+        }
+
+        .svrc .directo .resource-link:hover {
+            background: var(--wa-dark);
+            color: #fff
+        }
+
+        /* cuando el CTA apunta a YouTube (hay enlace), va en rojo YouTube */
+        .svrc .directo .resource-link.yt {
+            background: #ef0000
+        }
+
+        .svrc .directo .resource-link.yt:hover {
+            background: #c40000;
+            color: #fff
+        }
+
+        .svrc .directo .directo-note {
+            margin-top: 14px;
+            font-size: 12.5px;
+            color: rgba(220, 226, 203, .72)
+        }
+
+        .svrc .directo .directo-note a {
+            color: inherit;
+            text-decoration: underline
+        }
+
+        /* ===== MINIATURA DEL DIRECTO (YouTube) ===== */
+        .svrc .directo .directo-thumb {
+            display: block;
+            position: relative;
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto 22px;
+            aspect-ratio: 16/9;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+            border: 1px solid rgba(245, 239, 230, .18);
+            box-shadow: 0 18px 40px -22px rgba(0, 0, 0, .6);
+            cursor: pointer
+        }
+
+        .svrc .directo .directo-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0
+        }
+
+        .svrc .directo .directo-thumb-ov {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: linear-gradient(180deg, rgba(0, 0, 0, .12), rgba(0, 0, 0, .48))
+        }
+
+        .svrc .directo .yt-play {
+            width: 66px;
+            height: 46px;
+            border-radius: 13px;
+            background: #ff0000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px -4px rgba(255, 0, 0, .6);
+            transition: transform .2s
+        }
+
+        .svrc .directo .directo-thumb:hover .yt-play {
+            transform: scale(1.08)
+        }
+
+        .svrc .directo .yt-play svg {
+            width: 28px;
+            height: 28px
+        }
+
+        .svrc .directo .directo-thumb-cap {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-shadow: 0 1px 5px rgba(0, 0, 0, .65)
+        }
+
+        /* ===== PRÓXIMA CLASE EN ABRIR (resaltado dinámico) ===== */
+        .svrc .step.next-up .step-card {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(184, 148, 62, .22), 0 22px 44px -26px rgba(184, 148, 62, .5)
+        }
+
+        .svrc .step.next-up .step-status {
+            background: var(--gold);
+            color: #fff;
+            border-color: var(--gold)
+        }
+
+        .svrc .step .step-status .next-countdown {
+            font-variant-numeric: tabular-nums
+        }
+
         /* ===== RESPONSIVE ===== */
+        @media(max-width:560px) {
+            .svrc .gift {
+                flex-direction: column;
+                text-align: center;
+                align-items: stretch
+            }
+
+            .svrc .gift .gift-ico {
+                margin: 0 auto
+            }
+
+            .svrc .gift .resource-link {
+                max-width: none
+            }
+        }
+
         @media(max-width:820px) {
             .svrc .help-grid {
                 grid-template-columns: 1fr
@@ -1390,6 +1827,11 @@
 
             .svrc .cd-box {
                 min-width: 60px;
+                padding: 12px 4px 9px
+            }
+
+            .svrc .directo .cd-box {
+                min-width: 56px;
                 padding: 12px 4px 9px
             }
 
@@ -1469,7 +1911,7 @@
                         con tu
                         primer jabón hecho con tus manos.</p>
 
-                    <a href="https://go.wha.link/av90ne" target="_blank" rel="noopener" class="wa">
+                    <a href="https://devzapp.com.br/api-engennier/grupo.html?urlGrp=https://chat.whatsapp.com/GglRNATg1oz1IH75SiiMmT" target="_blank" rel="noopener" class="wa">
                         <svg viewBox="0 0 32 32" aria-hidden="true">
                             <path
                                 d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.6 6L4 29l8.2-1.6c1.8.9 3.8 1.4 5.8 1.4 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.8 0-3.6-.5-5.1-1.4l-.4-.2-4.9 1 1-4.8-.3-.4c-1-1.6-1.5-3.4-1.5-5.3C4.8 9.5 9.3 5 16 5c6 0 10.8 4.8 10.8 10.8S22 24.8 16 24.8zm6-8.1c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.4-.6.1-.2.1-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z" />
@@ -1496,113 +1938,33 @@
                     <h2 class="title">Antes de la clase, mira esto: así vas a aprovecharla <span class="em">de
                             verdad</span></h2>
                 </div>
-                <!-- Reemplaza el data-media por el enlace del Loom de Lina cuando esté listo -->
-                <div class="media reveal" role="button" data-media="[REEMPLAZAR_CON_LOOM_PRESENTACION]"
-                    aria-label="Reproducir video de presentación">
-                    <span class="play"><svg viewBox="0 0 24 24" fill="#2A2823">
+                <!-- VSL: el video corre en bucle silenciado como fondo; al tocar Play arranca desde el inicio con sonido -->
+                <div class="media vsl reveal" role="button" tabindex="0"
+                    aria-label="Reproducir el video de presentación desde el inicio con sonido">
+                    <video class="vsl-video" muted loop autoplay playsinline preload="auto"
+                        controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture
+                        oncontextmenu="return false;">
+                        <source
+                            src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/6a274141fc95b24549cc55fe.mp4"
+                            type="video/mp4">
+                    </video>
+                    <span class="vsl-shade"></span>
+                    <span class="play"><svg viewBox="0 0 24 24" fill="#2A2823" aria-hidden="true">
                             <path d="M8 5v14l11-7z" />
                         </svg></span>
-                    <span class="vlabel">[ VIDEO LOOM: presentación de Lina ]</span>
+                    <span class="vlabel">▶ Toca para ver la presentación</span>
                 </div>
-                <p class="media-note reveal">1 minuto conmigo para que sepas qué vas a encontrar en esta página y cómo
-                    usarla.</p>
+                <p class="media-note reveal">Tómate un momento para verla antes de la clase: te cambia la forma de
+                    aprovecharla.</p>
             </div>
         </section>
 
-        <!-- ===== C. CONTENIDO DE TU RUTA (timeline escalonada) ===== -->
-        <section class="ruta band">
+        <!-- ===== B2. ENCUESTA + PRIMER REGALO ===== -->
+        <section class="band">
             <div class="wrap">
                 <div class="sec-head reveal">
-                    <p class="sec-eyebrow upper">Tu preparación, paso a paso</p>
-                    <h2 class="title">Contenido de tu ruta</h2>
-                    <p class="sec-sub">Tres clases grabadas que se van abriendo aquí. Cada una con su recurso para
-                        descargar.
-                        Mírala, descárgalo, y llega lista al 23.</p>
-                </div>
-
-                <div class="timeline">
-                    <div class="ray" id="ray"></div>
-
-                    <!-- CLASE 1 — desbloquea 19 junio (tarjeta a la derecha) -->
-                    <article class="step reveal" id="clase-1" data-unlock-date="2026-06-19"
-                        data-video="[REEMPLAZAR_CON_VIDEO_CLASE_1]" data-label="19 de junio">
-                        <div class="step-numside"><span class="step-bignum">1</span></div>
-                        <span class="step-dot"></span>
-                        <div class="step-cardside">
-                            <div class="step-card">
-                                <div class="step-thumb"></div>
-                                <span class="step-status"></span>
-                                <h3>No vas tarde: aún puedes empezar algo propio desde casa</h3>
-                                <p class="step-teaser">Si alguna vez te dijiste "esto es para gente más estudiada" o "ya
-                                    se
-                                    me pasó el tiempo", empieza por aquí. Te muestro por qué tu cocina ya es suficiente
-                                    para
-                                    dar el primer paso.</p>
-                                <a class="resource-link" href="[REEMPLAZAR_CON_LINK_RECURSO_1]" target="_blank"
-                                    rel="noopener">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    Descargar: 5 cosas que no necesitas para empezar
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-
-                    <!-- CLASE 2 — desbloquea 20 junio (tarjeta a la izquierda) -->
-                    <article class="step reveal" id="clase-2" data-unlock-date="2026-06-20"
-                        data-video="[REEMPLAZAR_CON_VIDEO_CLASE_2]" data-label="20 de junio">
-                        <div class="step-numside"><span class="step-bignum">2</span></div>
-                        <span class="step-dot"></span>
-                        <div class="step-cardside">
-                            <div class="step-card">
-                                <div class="step-thumb"></div>
-                                <span class="step-status"></span>
-                                <h3>Antes de comprar materiales para hacer jabón, mira esto</h3>
-                                <p class="step-teaser">Antes de comprar nada, mira esto. Te muestro lo que ya tienes en
-                                    tu
-                                    cocina que sí te sirve y lo que la industria intenta venderte sin que lo necesites.
-                                    Así
-                                    llegas al 23 sin tirar un peso de más.</p>
-                                <a class="resource-link" href="[REEMPLAZAR_CON_LINK_RECURSO_2]" target="_blank"
-                                    rel="noopener">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    Descargar: Lista de insumos para tu primer jabón
-                                </a>
-                            </div>
-                        </div>
-                    </article>
-
-                    <!-- CLASE 3 — desbloquea 22 junio (tarjeta a la derecha) -->
-                    <article class="step reveal" id="clase-3" data-unlock-date="2026-06-22"
-                        data-video="[REEMPLAZAR_CON_VIDEO_CLASE_3]" data-label="22 de junio">
-                        <div class="step-numside"><span class="step-bignum">3</span></div>
-                        <span class="step-dot"></span>
-                        <div class="step-cardside">
-                            <div class="step-card">
-                                <div class="step-thumb"></div>
-                                <span class="step-status"></span>
-                                <h3>No todo jabón se vende: esto es lo que marca la diferencia</h3>
-                                <p class="step-teaser">La que sabe esto vende; la que no, termina regalando. Te muestro
-                                    qué
-                                    hace que un jabón se venda de verdad y por qué el de cúrcuma es por donde vas a
-                                    empezar el
-                                    23.</p>
-                                <a class="resource-link" href="[REEMPLAZAR_CON_LINK_RECURSO_3]" target="_blank"
-                                    rel="noopener">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    Descargar: Los jabones que más te van a pedir
-                                </a>
-                            </div>
-                        </div>
-                    </article>
+                    <p class="sec-eyebrow upper">Tu primer paso</p>
+                    <h2 class="title">Antes de empezar la ruta, haz <span class="em">estas dos cosas</span></h2>
                 </div>
 
                 <!-- ENCUESTA (tarjeta destacada) -->
@@ -1615,13 +1977,202 @@
                             <source src="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/6a20bb7296f578c4946b409c.mp4" type="video/mp4">
                         </video>
                     </div>
-                    <h3>Un paso importante: llena la encuesta</h3>
-                    <p>Cuéntame en 1 minuto por dónde vas. Con tus respuestas personalizo la clase para que te sirva de
-                        verdad.</p>
-                    <a class="resource-link" href="[REEMPLAZAR_CON_LINK_ENCUESTA]" target="_blank" rel="noopener">
-                        Ir a la encuesta →
+                    <h3>1. Llena la encuesta (1 minuto)</h3>
+                    <p>Cuéntame por dónde vas. Con tus respuestas personalizo la clase para que te sirva de verdad.
+                        Te la enviamos el jueves, pero ya puedes responderla aquí mismo.</p>
+                    <a class="resource-link" href="https://docs.google.com/forms/d/e/1FAIpQLSf739aAKFt4xFQEC5aLETEaZqsMZ-S_BQ_mD5tgAwjYJ-ywjw/viewform" target="_blank" rel="noopener">
+                        Llenar la encuesta →
                     </a>
                 </div>
+
+                <!-- PRIMER REGALO (PDF descargable) -->
+                <!-- REGALO: se desbloquea hoy (16 jun) a las 7:00 PM hora Colombia -->
+                <div class="gift reveal" id="regalo-1" data-unlock="2026-06-16T19:00:00-05:00">
+                    <span class="gift-ico">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </span>
+                    <div class="gift-body">
+                        <p class="gift-kicker">🎁 Tu primer regalo · gratis</p>
+                        <h3>2. Cómo cuidar tu jabón de glicerina</h3>
+                        <p>Una guía corta para que tu primer jabón te dure y se vea profesional desde el día uno.</p>
+                        <p class="gift-status" id="gift-status"></p>
+                    </div>
+                    <a class="resource-link" id="gift-dl"
+                        data-href="https://drive.google.com/file/d/1NWEThYjWrwsi40am10BI0Oyhe5uJiGdI/view?usp=sharing"
+                        target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <span id="gift-dl-tx">Descargar PDF</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== B3. DIRECTO PREPARATORIO EN YOUTUBE (movido arriba: es el 19, antes de las clases) ===== -->
+        <section class="band">
+            <div class="wrap">
+                <div class="directo reveal" id="directo" data-yt="https://www.youtube.com/watch?v=_uhehsWiLN8">
+                    <span class="directo-tag"><span class="live-dot"></span>En vivo · YouTube</span>
+                    <h3>Directo preparatorio · Viernes 19 de junio</h3>
+
+                    <!-- miniatura del directo (clic → YouTube para agendar) -->
+                    <a class="directo-thumb" id="directo-link" target="_blank" rel="noopener"
+                        aria-label="Abrir el directo del 19 de junio en YouTube y agendarlo">
+                        <img class="directo-img" id="directo-img"
+                            alt="Miniatura del directo del 19 de junio en YouTube" hidden>
+                        <span class="directo-thumb-ov">
+                            <span class="yt-play"><svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M8 5v14l11-7z" fill="#fff" />
+                                </svg></span>
+                            <span class="directo-thumb-cap" id="directo-cap">Miniatura disponible pronto</span>
+                        </span>
+                    </a>
+
+                    <!-- contador hacia el directo -->
+                    <div class="countdown" id="directo-countdown" aria-label="Cuenta regresiva para el directo en YouTube">
+                        <div class="cd-box"><span class="n" id="dcd-d">00</span><span class="l">Días</span></div>
+                        <div class="cd-box"><span class="n" id="dcd-h">00</span><span class="l">Horas</span></div>
+                        <div class="cd-box"><span class="n" id="dcd-m">00</span><span class="l">Min</span></div>
+                        <div class="cd-box"><span class="n" id="dcd-s">00</span><span class="l">Seg</span></div>
+                    </div>
+
+                    <a href="https://devzapp.com.br/api-engennier/grupo.html?urlGrp=https://chat.whatsapp.com/GglRNATg1oz1IH75SiiMmT" id="directo-cta" target="_blank" rel="noopener"
+                        class="resource-link">
+                        <span id="directo-cta-ic"><svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
+                                <path
+                                    d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.6 6L4 29l8.2-1.6c1.8.9 3.8 1.4 5.8 1.4 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.8 0-3.6-.5-5.1-1.4l-.4-.2-4.9 1 1-4.8-.3-.4c-1-1.6-1.5-3.4-1.5-5.3C4.8 9.5 9.3 5 16 5c6 0 10.8 4.8 10.8 10.8S22 24.8 16 24.8z" />
+                            </svg></span>
+                        <span id="directo-cta-tx">Avísame cuando empiece el directo</span>
+                    </a>
+                    <p class="directo-note">También te aviso por la comunidad de <a href="https://devzapp.com.br/api-engennier/grupo.html?urlGrp=https://chat.whatsapp.com/GglRNATg1oz1IH75SiiMmT"
+                            target="_blank" rel="noopener">WhatsApp</a>.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== C. CONTENIDO DE TU RUTA (timeline escalonada) ===== -->
+        <section class="ruta band">
+            <div class="wrap">
+                <div class="sec-head reveal">
+                    <p class="sec-eyebrow upper">Tu preparación, paso a paso</p>
+                    <h2 class="title">Contenido de tu ruta</h2>
+                    <p class="sec-sub">Tres clases grabadas que se abren del 19 al 21 de junio, una cada día, con su
+                        recurso. Míralas a tu ritmo y llega lista al evento en vivo del 23.</p>
+                </div>
+
+                <div class="timeline">
+                    <div class="ray" id="ray"></div>
+
+                    <!-- CLASE 1 — desbloquea 19 junio (tarjeta a la derecha) -->
+                    <article class="step reveal" id="clase-1" data-unlock-date="2026-06-19" data-unlock-time="20:00:00"
+                        data-video="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/6a2b855e0b818c92b35a57c0.mp4" data-label="19 de junio">
+                        <div class="step-numside"><span class="step-bignum">1</span></div>
+                        <span class="step-dot"></span>
+                        <div class="step-cardside">
+                            <div class="step-card">
+                                <div class="step-thumb"></div>
+                                <span class="step-status"></span>
+                                <h3>No vas tarde: aún puedes empezar algo propio desde casa</h3>
+                                <p class="step-teaser">Si alguna vez te dijiste "esto es para gente más estudiada" o "ya
+                                    se
+                                    me pasó el tiempo", empieza por aquí. Te muestro por qué tu cocina ya es suficiente
+                                    para
+                                    dar el primer paso.</p>
+                                <a class="resource-link"
+                                    href="https://drive.google.com/file/d/15O5BB9P6aKQFmVu6rqVB5-bgrY0A_aGY/view?usp=sharing"
+                                    target="_blank" rel="noopener">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    Descargar: 5 cosas que no necesitas para empezar
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- CLASE 2 — desbloquea 20 junio (tarjeta a la izquierda) -->
+                    <article class="step reveal" id="clase-2" data-unlock-date="2026-06-20"
+                        data-video="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/6a2b8560c53e51acc09a7af4.mp4" data-label="20 de junio">
+                        <div class="step-numside"><span class="step-bignum">2</span></div>
+                        <span class="step-dot"></span>
+                        <div class="step-cardside">
+                            <div class="step-card">
+                                <div class="step-thumb"></div>
+                                <span class="step-status"></span>
+                                <h3>Antes de comprar materiales para hacer jabón, mira esto</h3>
+                                <p class="step-teaser">Antes de comprar nada, mira esto. Te muestro lo que ya tienes en
+                                    tu
+                                    cocina que sí te sirve y lo que la industria intenta venderte sin que lo necesites.
+                                    Así
+                                    llegas al 23 sin tirar un peso de más.</p>
+                                <div class="resource-stack">
+                                    <a class="resource-link"
+                                        href="https://drive.google.com/file/d/1DGzU4kWMAQB2jmYU2lgIJ7g5xOvafRxD/view?usp=sharing"
+                                        target="_blank" rel="noopener">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        Descargar: Tus ingredientes y tu molde casero
+                                    </a>
+                                    <a class="resource-link"
+                                        href="https://drive.google.com/file/d/1vC-dz5oPZdJPY-Cw7bL71BXas7SjtOAC/view?usp=sharing"
+                                        target="_blank" rel="noopener">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        Descargar: Lista de proveedores
+                                    </a>
+                                    <a class="resource-link"
+                                        href="https://drive.google.com/file/d/1Nz1A5syaJvW5EIVRV1SGAxK66oK49Er1/view?usp=sharing"
+                                        target="_blank" rel="noopener">
+                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                            <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        Descargar: Checklist Glicerina
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- CLASE 3 — desbloquea 21 junio (tarjeta a la derecha) -->
+                    <article class="step reveal" id="clase-3" data-unlock-date="2026-06-21"
+                        data-video="https://assets.cdn.filesafe.space/T2XJxTIDXN0RQBRt6TNa/media/6a2b8562e5084c4b7199e2f0.mp4" data-label="21 de junio">
+                        <div class="step-numside"><span class="step-bignum">3</span></div>
+                        <span class="step-dot"></span>
+                        <div class="step-cardside">
+                            <div class="step-card">
+                                <div class="step-thumb"></div>
+                                <span class="step-status"></span>
+                                <h3>No todo jabón se vende: esto es lo que marca la diferencia</h3>
+                                <p class="step-teaser">La que sabe esto vende; la que no, termina regalando. Te muestro
+                                    qué
+                                    hace que un jabón se venda de verdad y por qué el de cúrcuma es por donde vas a
+                                    empezar el
+                                    23.</p>
+                                <a class="resource-link"
+                                    href="https://drive.google.com/file/d/1Ksv7ondUpnwFNiQeDcr3bq-4OF6EphpE/view?usp=sharing"
+                                    target="_blank" rel="noopener">
+                                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                    Descargar: Los jabones que más te van a pedir
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+
             </div>
         </section>
 
@@ -1736,7 +2287,7 @@
                     vivo, vas a entender cada paso, porque ya hiciste el trabajo de antes. Aquí no copiamos una receta y
                     ya.
                     Aquí entiendes lo que haces, y por eso te queda. Te veo dentro 💚</p>
-                <a href="https://go.wha.link/av90ne" target="_blank" rel="noopener" class="wa reveal">
+                <a href="https://devzapp.com.br/api-engennier/grupo.html?urlGrp=https://chat.whatsapp.com/GglRNATg1oz1IH75SiiMmT" target="_blank" rel="noopener" class="wa reveal">
                     <svg viewBox="0 0 32 32" aria-hidden="true">
                         <path
                             d="M16 3C9.4 3 4 8.4 4 15c0 2.1.6 4.2 1.6 6L4 29l8.2-1.6c1.8.9 3.8 1.4 5.8 1.4 6.6 0 12-5.4 12-12S22.6 3 16 3zm0 21.8c-1.8 0-3.6-.5-5.1-1.4l-.4-.2-4.9 1 1-4.8-.3-.4c-1-1.6-1.5-3.4-1.5-5.3C4.8 9.5 9.3 5 16 5c6 0 10.8 4.8 10.8 10.8S22 24.8 16 24.8zm6-8.1c-.3-.2-1.9-1-2.2-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.6-1.6-1-.9-1.6-1.9-1.8-2.2-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.3.4-.6.1-.2.1-.4 0-.6l-1-2.5c-.3-.7-.6-.6-.8-.6h-.7c-.2 0-.6.1-.9.4-.3.3-1.2 1.2-1.2 2.9s1.2 3.4 1.4 3.6c.2.2 2.4 3.7 5.9 5.1.8.4 1.5.6 2 .7.8.3 1.6.2 2.2.1.7-.1 1.9-.8 2.2-1.5.3-.8.3-1.4.2-1.5-.1-.2-.3-.3-.6-.4z" />
@@ -1752,7 +2303,7 @@
                 <div class="sec-head reveal">
                     <p class="sec-eyebrow">Cuéntame por dónde vas</p>
                     <h2 class="title">Déjame un comentario</h2>
-                    <p class="sec-sub">Déjame un comentario · acompaña a otra que empieza · crecemos juntas</p>
+                    <p class="sec-sub">Acompaña a otra que empieza · crecemos juntas</p>
                 </div>
 
                 <div class="cform reveal">
@@ -1786,7 +2337,7 @@
     </div>
 
     <!-- MODAL DE VIDEO -->
-    <div class="svrc-modal" id="svrc-modal">
+    <div class="svrc-modal" id="svrc-modal" role="dialog" aria-modal="true" aria-label="Reproductor de video">
         <div class="box">
             <button class="close" id="svrc-modal-close">Cerrar ✕</button>
             <div id="svrc-modal-body"></div>
@@ -1814,6 +2365,7 @@
             /* ---------- Modal de video (MP4 / Loom / YouTube) ---------- */
             var modal = document.getElementById('svrc-modal');
             var modalBody = document.getElementById('svrc-modal-body');
+            var modalLastFocus = null;
 
             function isPlaceholder(url) { return !url || url.indexOf('REEMPLAZAR') > -1; }
 
@@ -1832,61 +2384,226 @@
                 } else {
                     html = '<video controls autoplay controlsList="nodownload" oncontextmenu="return false;"><source src="' + url + '" type="video/mp4"></video>';
                 }
+                modalLastFocus = document.activeElement;
                 modalBody.innerHTML = html;
                 modal.classList.add('open');
                 document.body.style.overflow = 'hidden';
+                var cbtn = document.getElementById('svrc-modal-close');
+                if (cbtn) cbtn.focus();
             }
 
             function closeMedia() {
                 modal.classList.remove('open');
                 modalBody.innerHTML = '';
                 document.body.style.overflow = '';
+                if (modalLastFocus && modalLastFocus.focus) modalLastFocus.focus();
+                modalLastFocus = null;
             }
 
             document.getElementById('svrc-modal-close').addEventListener('click', closeMedia);
             modal.addEventListener('click', function (e) { if (e.target === modal) closeMedia(); });
-            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMedia(); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && modal.classList.contains('open')) closeMedia(); });
+            // Mantiene el foco dentro del modal mientras está abierto (trap simple de Tab)
+            modal.addEventListener('keydown', function (e) {
+                if (e.key !== 'Tab' || !modal.classList.contains('open')) return;
+                var f = modal.querySelectorAll('button, [href], video, iframe, [tabindex]:not([tabindex="-1"])');
+                if (!f.length) return;
+                var first = f[0], last = f[f.length - 1];
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            });
 
-            var presMedia = root.querySelector('.media[data-media]');
-            if (presMedia) {
-                presMedia.addEventListener('click', function () { openMedia(presMedia.dataset.media); });
+            /* ---------- VSL: fondo en bucle silenciado → Play reinicia con sonido ---------- */
+            var vsl = root.querySelector('.media.vsl');
+            if (vsl) {
+                var vslVideo = vsl.querySelector('.vsl-video');
+
+                function safePlay() {
+                    var p = vslVideo.play();
+                    if (p && p.catch) p.catch(function () { });
+                }
+
+                function startVsl() {
+                    vsl.classList.add('playing');
+                    vslVideo.loop = false;
+                    vslVideo.muted = false;
+                    vslVideo.controls = true;
+                    vslVideo.currentTime = 0;   // siempre desde el principio
+                    safePlay();
+                }
+
+                function resetVsl() {
+                    vsl.classList.remove('playing');
+                    vslVideo.controls = false;
+                    vslVideo.muted = true;
+                    vslVideo.loop = true;
+                    vslVideo.currentTime = 0;
+                    safePlay();
+                }
+
+                function isFullscreen() {
+                    return !!(document.fullscreenElement || document.webkitFullscreenElement
+                        || document.msFullscreenElement || vslVideo.webkitDisplayingFullscreen);
+                }
+
+                function exitFullscreen() {
+                    if (document.exitFullscreen) document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    else if (document.msExitFullscreen) document.msExitFullscreen();
+                    else if (vslVideo.webkitExitFullscreen) vslVideo.webkitExitFullscreen();
+                }
+
+                vsl.addEventListener('click', function () {
+                    if (!vsl.classList.contains('playing')) startVsl();
+                });
+                vsl.addEventListener('keydown', function (e) {
+                    if ((e.key === 'Enter' || e.key === ' ') && !vsl.classList.contains('playing')) {
+                        e.preventDefault();
+                        startVsl();
+                    }
+                });
+
+                // Al terminar: si está en pantalla completa, salimos primero para no
+                // dejar al usuario atrapado sin botón de minimizar; el reset al modo
+                // fondo se hace cuando la pantalla completa ya se cerró.
+                vslVideo.addEventListener('ended', function () {
+                    if (isFullscreen()) exitFullscreen();
+                    else resetVsl();
+                });
+
+                function onFsChange() {
+                    if (!isFullscreen() && vslVideo.ended) resetVsl();
+                }
+                document.addEventListener('fullscreenchange', onFsChange);
+                document.addEventListener('webkitfullscreenchange', onFsChange);
+                document.addEventListener('msfullscreenchange', onFsChange);
+                // iOS reproduce el video en su propio reproductor nativo a pantalla completa
+                vslVideo.addEventListener('webkitendfullscreen', function () {
+                    if (vslVideo.ended) resetVsl();
+                });
+
+                // Refuerza el arranque del fondo donde el autoplay se difiere
+                safePlay();
             }
 
             /* ---------- Desbloqueo progresivo de las clases ---------- */
-            var PLAY_SVG = '<span class="play"><svg viewBox="0 0 24 24" fill="#2A2823"><path d="M8 5v14l11-7z"/></svg></span>';
-            var LOCK_SVG = '<span class="lk"><svg viewBox="0 0 24 24" fill="none" width="22" height="22"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg></span>';
+            var PLAY_SVG = '<span class="play"><svg viewBox="0 0 24 24" fill="#2A2823" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>';
+            var LOCK_SVG = '<span class="lk"><svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/></svg></span>';
 
-            function nowBogota() {
-                return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+            // El video corre muteado en bucle como teaser. Bloqueado: overlay
+            // transparente (se ve el video detrás). Desbloqueado: botón Play que
+            // abre el modal con sonido.
+            function stepVideoEl(src) {
+                return '<video class="step-video" muted loop autoplay playsinline preload="metadata" '
+                    + 'controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture '
+                    + 'oncontextmenu="return false;"><source src="' + src + '" type="video/mp4"></video>';
+            }
+
+            // Pausa los teasers que no están en pantalla (ahorra batería/datos)
+            var stepVideoIO = ('IntersectionObserver' in window)
+                ? new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) {
+                        var v = en.target;
+                        if (en.isIntersecting) { v.muted = true; var p = v.play(); if (p && p.catch) p.catch(function () { }); }
+                        else { try { v.pause(); } catch (e) { } }
+                    });
+                }, { threshold: .25 })
+                : null;
+
+            function wireThumbVideo(thumb) {
+                var v = thumb.querySelector('.step-video');
+                if (!v) return;
+                v.muted = true;
+                var p = v.play(); if (p && p.catch) p.catch(function () { });
+                if (stepVideoIO) stepVideoIO.observe(v);
+            }
+
+            function isReal(url) { return url && url.indexOf('REEMPLAZAR') === -1; }
+
+            // desbloqueo hora Colombia: 7:00 PM por defecto; la Clase 1 (19, tras el directo) usa
+            // data-unlock-time="20:00:00". Instante absoluto, correcto en cualquier zona horaria.
+            function unlockTs(step) {
+                var time = step.dataset.unlockTime || '19:00:00';
+                return new Date(step.dataset.unlockDate + 'T' + time + '-05:00').getTime();
+            }
+
+            function fmtCountdown(ms) {
+                var s = Math.max(0, Math.floor(ms / 1000));
+                var d = Math.floor(s / 86400);
+                var h = Math.floor((s % 86400) / 3600);
+                var m = Math.floor((s % 3600) / 60);
+                var ss = s % 60;
+                return (d > 0 ? d + 'd ' : '') + pad(h) + 'h ' + pad(m) + 'm ' + pad(ss) + 's';
             }
 
             function updateSteps() {
-                var now = nowBogota();
-                root.querySelectorAll('.step[data-unlock-date]').forEach(function (step) {
-                    var unlock = new Date(step.dataset.unlockDate + 'T08:00:00-05:00');
-                    var unlocked = now >= unlock;
+                var now = Date.now();
+                var stepsNL = root.querySelectorAll('.step[data-unlock-date]');
+
+                // identifica la próxima clase en abrir (la bloqueada más cercana) para destacarla
+                var nextUp = null, nextTs = null;
+                stepsNL.forEach(function (step) {
+                    var ts = unlockTs(step);
+                    if (now < ts && (nextTs === null || ts < nextTs)) { nextTs = ts; nextUp = step; }
+                });
+
+                stepsNL.forEach(function (step) {
+                    var ts = unlockTs(step);
+                    var unlocked = now >= ts;
+                    var state = unlocked ? 'unlocked' : 'locked';
                     var thumb = step.querySelector('.step-thumb');
                     var status = step.querySelector('.step-status');
                     var video = step.dataset.video;
                     var label = step.dataset.label || '';
+                    var real = isReal(video);
+                    var isNext = (step === nextUp);
+
+                    // clases + estado de la píldora se actualizan siempre
+                    if (unlocked) {
+                        step.classList.add('unlocked'); step.classList.remove('locked', 'next-up');
+                        status.textContent = '✓ Disponible ahora';
+                    } else if (isNext) {
+                        // próxima en abrir: resaltada + contador decreciente
+                        step.classList.add('locked', 'next-up'); step.classList.remove('unlocked');
+                        status.innerHTML = '🔓 Abre en <span class="next-countdown">' + fmtCountdown(ts - now)
+                            + '</span> · ' + label;
+                    } else {
+                        // resto de clases bloqueadas: también con contador decreciente
+                        step.classList.add('locked'); step.classList.remove('unlocked', 'next-up');
+                        status.innerHTML = '🔒 Abre en <span class="next-countdown">' + fmtCountdown(ts - now)
+                            + '</span> · ' + label;
+                    }
+
+                    // reconstruye la miniatura SOLO cuando cambia el estado
+                    // (así el video del teaser no se reinicia en cada tick)
+                    if (step.dataset.state === state) return;
+                    step.dataset.state = state;
 
                     if (unlocked) {
-                        step.classList.add('unlocked');
-                        step.classList.remove('locked');
-                        thumb.innerHTML = '<div class="thumb-ov">' + PLAY_SVG + '<span class="cap">Ver la clase</span></div>';
+                        thumb.innerHTML = (real ? stepVideoEl(video) : '')
+                            + '<div class="thumb-ov ov-play">' + PLAY_SVG + '<span class="cap">Ver la clase</span></div>';
+                        var h3el = step.querySelector('h3');
+                        thumb.setAttribute('role', 'button');
+                        thumb.setAttribute('tabindex', '0');
+                        thumb.setAttribute('aria-label', 'Ver la clase' + (h3el ? ': ' + h3el.textContent.trim() : ''));
                         thumb.onclick = function () { openMedia(video); };
-                        status.textContent = '✓ Disponible ahora';
+                        thumb.onkeydown = function (e) {
+                            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMedia(video); }
+                        };
                     } else {
-                        step.classList.add('locked');
-                        step.classList.remove('unlocked');
-                        thumb.innerHTML = '<div class="thumb-ov">' + LOCK_SVG + '<span class="cap">Se desbloquea el ' + label + '</span></div>';
+                        thumb.innerHTML = (real ? stepVideoEl(video) : '')
+                            + '<div class="thumb-ov ov-locked">' + LOCK_SVG + '<span class="cap">Se desbloquea el ' + label + '</span></div>';
+                        thumb.removeAttribute('role');
+                        thumb.removeAttribute('tabindex');
+                        thumb.removeAttribute('aria-label');
                         thumb.onclick = null;
-                        status.textContent = '🔒 Se desbloquea el ' + label;
+                        thumb.onkeydown = null;
                     }
+                    if (real) wireThumbVideo(thumb);
                 });
             }
             updateSteps();
-            setInterval(updateSteps, 60000);
+            setInterval(updateSteps, 1000);
 
             /* ---------- Rayo de luz + puntos que se encienden con el scroll ---------- */
             var timeline = root.querySelector('.timeline');
@@ -1940,6 +2657,114 @@
             tick();
             var cdTimer = setInterval(tick, 1000);
 
+            /* ---------- Contador hacia el directo preparatorio (viernes 19 jun 2026, 7:00 PM Colombia) ---------- */
+            // Ajusta la hora aquí si el directo no es a las 7:00 PM hora Colombia.
+            (function () {
+                var dTarget = new Date('2026-06-19T19:00:00-05:00').getTime();
+                var dD = document.getElementById('dcd-d'), dH = document.getElementById('dcd-h'),
+                    dM = document.getElementById('dcd-m'), dS = document.getElementById('dcd-s');
+                var dBox = document.getElementById('directo-countdown');
+                if (!dD || !dBox) return;
+                var dTimer;
+                function dTick() {
+                    var diff = dTarget - Date.now();
+                    if (diff <= 0) {
+                        dBox.innerHTML = '<div class="cd-box" style="min-width:auto;padding:16px 26px">'
+                            + '<span class="n" style="font-size:1.3rem">¡En vivo ahora! 🔴</span></div>';
+                        clearInterval(dTimer);
+                        return;
+                    }
+                    var s = Math.floor(diff / 1000);
+                    dD.textContent = pad(Math.floor(s / 86400));
+                    dH.textContent = pad(Math.floor((s % 86400) / 3600));
+                    dM.textContent = pad(Math.floor((s % 3600) / 60));
+                    dS.textContent = pad(s % 60);
+                }
+                dTick();
+                dTimer = setInterval(dTick, 1000);
+            })();
+
+            /* ---------- Miniatura + enlace del directo (se arma desde data-yt) ---------- */
+            (function () {
+                var d = document.getElementById('directo');
+                if (!d) return;
+                var url = d.getAttribute('data-yt') || '';
+
+                function ytId(u) {
+                    if (!u || u.indexOf('REEMPLAZAR') > -1) return null;
+                    var m = u.match(/(?:youtube\.com\/(?:watch\?v=|live\/|embed\/|shorts\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+                    if (m) return m[1];
+                    m = u.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
+                    return m ? m[1] : null;
+                }
+
+                var id = ytId(url);
+                var link = document.getElementById('directo-link');
+                var img = document.getElementById('directo-img');
+                var cap = document.getElementById('directo-cap');
+
+                if (id && link && img) {
+                    img.src = 'https://i.ytimg.com/vi/' + id + '/maxresdefault.jpg';
+                    img.onerror = function () { img.onerror = null; img.src = 'https://i.ytimg.com/vi/' + id + '/hqdefault.jpg'; };
+                    img.hidden = false;
+                    if (cap) cap.textContent = 'Toca para agendar en YouTube';
+                    link.href = url;
+
+                    // CTA principal → YouTube (ícono YouTube + texto "Agéndalo")
+                    var cta = document.getElementById('directo-cta');
+                    var ctaIc = document.getElementById('directo-cta-ic');
+                    var ctaTx = document.getElementById('directo-cta-tx');
+                    if (cta) {
+                        cta.href = url;
+                        cta.classList.add('yt');
+                        if (ctaTx) ctaTx.textContent = 'Agéndalo en YouTube';
+                        if (ctaIc) ctaIc.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">'
+                            + '<path d="M21.6 7.2a2.7 2.7 0 0 0-1.9-1.9C18 4.8 12 4.8 12 4.8s-6 0-7.7.5A2.7 2.7 0 0 0 2.4 7.2 28 28 0 0 0 2 12a28 28 0 0 0 .4 4.8 2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.7.5 7.7.5s6 0 7.7-.5a2.7 2.7 0 0 0 1.9-1.9A28 28 0 0 0 22 12a28 28 0 0 0-.4-4.8zM10 15V9l5 3z"/></svg>';
+                    }
+                } else if (link) {
+                    // sin enlace todavía: la miniatura no navega
+                    link.removeAttribute('href');
+                    link.style.cursor = 'default';
+                }
+            })();
+
+            /* ---------- Regalo: se desbloquea hoy a las 7:00 PM Colombia ---------- */
+            (function () {
+                var g = document.getElementById('regalo-1');
+                if (!g) return;
+                var target = new Date(g.getAttribute('data-unlock')).getTime();
+                var status = document.getElementById('gift-status');
+                var dl = document.getElementById('gift-dl');
+                var dlTx = document.getElementById('gift-dl-tx');
+                var href = dl ? dl.getAttribute('data-href') : null;
+                function gPad(n) { return (n < 10 ? '0' : '') + n; }
+                function gFmt(ms) {
+                    var s = Math.max(0, Math.floor(ms / 1000));
+                    var d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600),
+                        m = Math.floor((s % 3600) / 60), ss = s % 60;
+                    return (d > 0 ? d + 'd ' : '') + gPad(h) + 'h ' + gPad(m) + 'm ' + gPad(ss) + 's';
+                }
+                var gTimer;
+                function gTick() {
+                    var diff = target - Date.now();
+                    if (diff <= 0) {
+                        g.classList.add('gift-open'); g.classList.remove('gift-locked');
+                        if (status) status.innerHTML = '✓ ¡Ya está disponible! Toca el botón para descargarlo.';
+                        if (dl && href) dl.setAttribute('href', href);
+                        if (dlTx) dlTx.textContent = 'Pincha aquí para descargar';
+                        clearInterval(gTimer);
+                        return;
+                    }
+                    g.classList.add('gift-locked'); g.classList.remove('gift-open');
+                    if (status) status.innerHTML = '🔒 Se desbloquea hoy a las 7:00 PM · <span class="gift-cd">'
+                        + gFmt(diff) + '</span>';
+                    if (dl) dl.removeAttribute('href');
+                    if (dlTx) dlTx.textContent = 'Disponible a las 7:00 PM';
+                }
+                gTick();
+                gTimer = setInterval(gTick, 1000);
+            })();
+
             /* ---------- Calendario de junio 2026 (tooltip + click) ---------- */
             // Evento para Google Calendar (23 jun 2026, 19:00 Colombia = 00:00 UTC del 24)
             var GCAL = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
@@ -1949,9 +2774,9 @@
                 + '&location=' + encodeURIComponent('Online (enlace por WhatsApp)');
 
             var EVENTS = {
-                19: { type: 'unlock', t: 'Se desbloquea la Clase 1', target: '#clase-1' },
+                19: { type: 'directo', t: 'Directo en YouTube · se abre la Clase 1', target: '#directo' },
                 20: { type: 'unlock', t: 'Se desbloquea la Clase 2', target: '#clase-2' },
-                22: { type: 'unlock', t: 'Se desbloquea la Clase 3', target: '#clase-3' },
+                21: { type: 'unlock', t: 'Se desbloquea la Clase 3', target: '#clase-3' },
                 23: { type: 'live', t: 'Clase en vivo · toca para agendar', gcal: GCAL }
             };
 
@@ -1966,9 +2791,11 @@
                 for (var d = 1; d <= days; d++) {
                     var ev = EVENTS[d];
                     if (ev) {
-                        var cls = ev.type === 'live' ? 'cal-day live' : 'cal-day unlock';
+                        var cls = ev.type === 'live' ? 'cal-day live'
+                            : (ev.type === 'directo' ? 'cal-day cal-directo' : 'cal-day unlock');
                         var data = ev.gcal ? ' data-gcal="1"' : (' data-target="' + ev.target + '"');
-                        html += '<div class="cal-cell"><div class="' + cls + '"' + data + '>' + d
+                        html += '<div class="cal-cell"><div class="' + cls + '"' + data
+                            + ' role="button" tabindex="0" aria-label="' + d + ' de junio: ' + ev.t + '">' + d
                             + '<span class="cal-tip">' + ev.t + '</span></div></div>';
                     } else {
                         html += '<div class="cal-cell">' + d + '</div>';
@@ -1976,8 +2803,7 @@
                 }
                 grid.innerHTML = html;
 
-                grid.addEventListener('click', function (e) {
-                    var day = e.target.closest ? e.target.closest('.cal-day') : null;
+                function activateDay(day) {
                     if (!day) return;
                     if (day.getAttribute('data-gcal')) {
                         window.open(GCAL, '_blank');
@@ -1985,6 +2811,14 @@
                         var t = root.querySelector(day.getAttribute('data-target'));
                         if (t) t.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
+                }
+                grid.addEventListener('click', function (e) {
+                    activateDay(e.target.closest ? e.target.closest('.cal-day') : null);
+                });
+                grid.addEventListener('keydown', function (e) {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    var day = e.target.closest ? e.target.closest('.cal-day') : null;
+                    if (day) { e.preventDefault(); activateDay(day); }
                 });
             }
 
@@ -2014,7 +2848,7 @@
 
             function emptyState() { list.innerHTML = '<div class="comment-empty">Sé la primera en comentar 🌿</div>'; }
 
-            var HEART = '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.35-9.5-8.5A5 5 0 0 1 12 6.5 5 5 0 0 1 21.5 12.5C19 16.65 12 21 12 21z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            var HEART = '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-4.35-9.5-8.5A5 5 0 0 1 12 6.5 5 5 0 0 1 21.5 12.5C19 16.65 12 21 12 21z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
             function renderComments() {
                 if (!allComments.length) { emptyState(); return; }

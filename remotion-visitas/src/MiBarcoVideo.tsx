@@ -6,6 +6,8 @@ import {
   useCurrentFrame,
   useVideoConfig,
   Easing,
+  staticFile,
+  Img,
 } from "remotion";
 import { loadFont as loadAsap } from "@remotion/google-fonts/Asap";
 
@@ -17,8 +19,9 @@ loadAsap("italic", { weights: ["500", "700", "800"], subsets: ["latin"] });
 
 export const MI_BARCO_DURATION = 300; // 10s @ 30fps
 
-const LOGO =
-  "https://assets.cdn.filesafe.space/3BzYvWc86annqh6ryPC9/media/6a1dfb221f28836ddfcc93b0.png";
+// Versión local recortada al círculo dorado exacto (872×872, cuadrada).
+// El PNG remoto original es 1080×1920 con mucho espacio transparente.
+const LOGO = staticFile("paulina-isotipo.png");
 
 const COLORS = {
   navy: "#08315C",
@@ -188,27 +191,24 @@ const ParticleField: React.FC = () => {
   );
 };
 
-// ───────── Logo badge ─────────
+// ───────── Logo badge (isotipo solo, sin fondo blanco) ─────────
+// Usamos la versión local recortada (872×872, cuadrada) → con contain encaja
+// perfectamente sin cortes ni espacio transparente.
 const LogoBadge: React.FC<{ size: number; radius: number; appear: number }> = ({
   size,
-  radius,
   appear,
 }) => (
   <div
     style={{
       width: size,
       height: size,
-      borderRadius: radius,
-      background: COLORS.white,
       display: "grid",
       placeItems: "center",
-      boxShadow: "0 30px 80px -20px rgba(0,0,0,0.45)",
-      overflow: "hidden",
-      padding: size * 0.16,
       opacity: appear,
+      filter: "drop-shadow(0 0 24px rgba(244, 201, 74, 0.35))",
     }}
   >
-    <img
+    <Img
       src={LOGO}
       alt="Paulina Valencia"
       style={{ width: "100%", height: "100%", objectFit: "contain" }}
@@ -257,7 +257,7 @@ const Scene1: React.FC = () => {
           transform: `translateY(${logoY}px) scale(${0.85 + logoSpring * 0.15})`,
         }}
       >
-        <LogoBadge size={168} radius={42} appear={logoSpring} />
+        <LogoBadge size={210} radius={42} appear={logoSpring} />
       </div>
 
       {/* "Mi Barco" */}
@@ -503,7 +503,7 @@ const Scene4: React.FC = () => {
       }}
     >
       <div style={{ marginBottom: 28 }}>
-        <LogoBadge size={132} radius={34} appear={1} />
+        <LogoBadge size={160} radius={34} appear={1} />
       </div>
       <div
         style={{

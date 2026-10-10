@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Empezamos en… · Clase 1 · La Huerta LAB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Fraunces:ital,opsz,wght@1,9..144,500;1,9..144,600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════════
+   LA HUERTA LAB · Sala de espera de la Clase 1
+   Cuenta atrás de cinco minutos para proyectar en el directo antes de
+   empezar. Con la marca, y con las fotos de la finca pasando de fondo.
+
+   POR QUÉ ES UNA PÁGINA Y NO UN VÍDEO
+     Aun a cinco minutos, un render a 1080p son 9.000 fotogramas, y el
+     motor los deja todos en disco antes de codificar: diez o quince gigas.
+     En esta máquina quedan tres. Además, una página se engancha al reloj
+     de verdad, así que llega a cero cuando empieza la clase y no cuando
+     alguien le dio al play.
+
+   CÓMO SE USA
+     1. Doble clic en el archivo.
+     2. Botón «Pantalla completa» abajo a la derecha, o la tecla F.
+     3. Se comparte esa ventana en el directo.
+     · Arranca en 5:00 en cuanto se abre.
+     · Para fijarlo a una hora exacta: añade ?hasta=18:00 a la dirección
+       y cuenta hasta las 6 de la tarde de hoy (hora del computador).
+     · Botones abajo a la derecha: Pausar, Reiniciar y Pantalla completa.
+       Se esconden solos; se mueve el ratón y vuelven.
+     · Atajos: F pantalla completa · espacio o P pausa · R reinicia.
+   ══════════════════════════════════════════════════════════════════════ */
+
+:root{
+  --bosque:#082E27;
+  --bosque-3:#061f1d;
+  --lima:#C9DE3F;
+  --coral:#E87B58;
+  --crema:#F6F4EA;
+  --suave:rgba(246,244,234,.62);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bosque-3);overflow:hidden}
+body{font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:var(--crema)}
+
+/* ── El escenario: 1920×1080 escalado al hueco disponible ────────────── */
+#escena{position:fixed;inset:0;overflow:hidden;background:var(--bosque-3)}
+#lienzo{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:center center;overflow:hidden}
+
+/* ── Fondo: las fotos se funden y respiran ───────────────────────────── */
+.foto{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+  opacity:0;transition:opacity 2.4s ease;
+  will-change:opacity,transform;
+}
+.foto.puesta{opacity:1}
+/* Un zoom lentísimo mientras está en pantalla: sin él la imagen se
+   congela y se nota que es una foto y no un plano. */
+@keyframes lh-respira{from{transform:scale(1.04)}to{transform:scale(1.13)}}
+.foto.puesta{animation:lh-respira 34s linear both}
+
+.velo{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(56% 56% at 50% 44%,rgba(6,31,29,.34),rgba(6,31,29,.82) 80%),
+    linear-gradient(180deg,rgba(6,31,29,.62),rgba(6,31,29,.16) 36%,rgba(6,31,29,.8));
+}
+
+/* ── Marca ────────────────────────────────────────────────────────────── */
+.marca{position:absolute;left:96px;top:74px;display:flex;align-items:center;gap:22px;z-index:4}
+.marca img{height:82px;width:auto;filter:brightness(0) invert(1)}
+
+.clase{
+  position:absolute;right:96px;top:84px;z-index:4;text-align:right;
+  font-size:22px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(246,244,234,.55);
+}
+.clase b{display:block;color:var(--lima);margin-bottom:8px}
+
+/* ── El reloj ─────────────────────────────────────────────────────────── */
+.centro{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+.anillo{position:relative;width:520px;height:520px;display:grid;place-items:center}
+.anillo svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.anillo .pista{fill:none;stroke:rgba(246,244,234,.16);stroke-width:9}
+/* Sin drop-shadow a propósito. Un `filter` obliga al navegador a rasterizar
+   el elemento en una capa aparte, y esa capa es RECTANGULAR: con el lienzo
+   escalado, su caja se veía como un recuadro alrededor del reloj. El anillo
+   sobre el velo se lee de sobra sin resplandor; se compensa con un punto más
+   de grosor. */
+.anillo .arco{fill:none;stroke:var(--lima);stroke-width:9;stroke-linecap:round}
+
+.rotulo{
+  font-size:24px;font-weight:800;letter-spacing:.26em;text-transform:uppercase;
+  color:rgba(246,244,234,.62);margin-bottom:6px;
+}
+#reloj{
+  font-size:188px;font-weight:800;line-height:1;letter-spacing:-.05em;
+  font-variant-numeric:tabular-nums;
+  /* Antes llevaba 0 10px 48px al 85 %: con cifras tan grandes, un desenfoque
+     así se apelmaza y dibuja un recuadro oscuro alrededor del reloj. Una
+     sombra corta basta para que aguante sobre las fotos más claras. */
+  text-shadow:0 2px 14px rgba(6,31,29,.5);
+}
+/* El último minuto avisa con el color de alarma de la marca, sin parpadeos
+   ni sustos: solo cambia de tono. */
+#reloj.ultimo{color:var(--coral)}
+.anillo.ultimo .arco{stroke:var(--coral)}
+
+.titulo{
+  margin-top:46px;max-width:30ch;text-align:center;text-wrap:balance;
+  font-size:64px;font-weight:800;line-height:1.04;letter-spacing:-.035em;
+}
+.titulo em{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:600;color:var(--lima)}
+
+/* ── El pie de foto, abajo ────────────────────────────────────────────── */
+.pie{
+  /* Sube lo justo para que los mandos, que van fijos a la ventana, no
+     queden pegados al aviso de la derecha. */
+  position:absolute;left:96px;right:96px;bottom:122px;z-index:4;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:40px;
+}
+#frase{
+  max-width:46ch;font-family:'Fraunces',Georgia,serif;font-style:italic;
+  font-size:38px;line-height:1.3;color:rgba(246,244,234,.82);
+  opacity:0;transition:opacity 1.2s ease;
+}
+#frase.puesta{opacity:1}
+.aviso{
+  flex:none;text-align:right;font-size:24px;line-height:1.45;color:var(--suave);
+}
+.aviso b{color:var(--lima)}
+
+/* ── El cierre ────────────────────────────────────────────────────────── */
+#cierre{
+  position:absolute;inset:0;z-index:6;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(60% 60% at 50% 50%,rgba(8,46,39,.9),rgba(6,31,29,.98));
+  opacity:0;pointer-events:none;transition:opacity 1.4s ease;
+}
+#cierre.puesto{opacity:1}
+#cierre h1{font-size:172px;font-weight:800;letter-spacing:-.05em;line-height:1}
+#cierre h1 em{font-family:'Fraunces',Georgia,serif;font-style:italic;font-weight:600;color:var(--lima)}
+#cierre p{margin-top:28px;font-size:34px;color:var(--suave)}
+.punto{
+  display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--coral);
+  margin-right:14px;vertical-align:middle;animation:lh-latido 2s ease-in-out infinite;
+}
+@keyframes lh-latido{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.5}}
+
+/* ── Mandos ──────────────────────────────────────────────────────────── */
+.mandos{
+  position:fixed;right:22px;bottom:22px;z-index:20;
+  display:flex;align-items:center;gap:10px;
+  transition:opacity .3s ease,transform .3s ease;
+}
+.mandos.dormido{opacity:0;transform:translateY(10px);pointer-events:none}
+.fs{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:11px 18px;border:1px solid rgba(201,222,63,.45);border-radius:999px;
+  background:rgba(6,31,29,.82);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  color:var(--lima);font:700 13px/1 'Archivo',system-ui,sans-serif;
+  letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+  transition:opacity .3s ease,transform .3s ease,background .2s ease;
+}
+.fs:hover{background:rgba(6,31,29,.96);border-color:var(--lima)}
+.fs:focus-visible{outline:2px solid var(--lima);outline-offset:3px}
+/* El de pausa se tiñe de coral cuando está detenido, para que se vea de un
+   vistazo que el reloj no está corriendo. */
+.fs.parado{background:rgba(232,123,88,.2);border-color:var(--coral);color:var(--coral)}
+
+@media(prefers-reduced-motion:reduce){
+  .foto.puesta{animation:none}
+  .punto{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div id="escena">
+  <div id="lienzo">
+    <div id="fondos"></div>
+    <div class="velo"></div>
+
+    <div class="marca">
+      <img src="https://assets.cdn.filesafe.space/IdRKxMkw62mZx47SMDaS/media/6aa46253f4e2fd8aa0ffbddd.png" alt="La Huerta LAB">
+    </div>
+
+    <div class="clase">
+      <b>Clase 1 de 3</b>
+      Un viaje a la regeneración
+    </div>
+
+    <div class="centro">
+      <div class="anillo" id="anillo">
+        <svg viewBox="0 0 520 520" aria-hidden="true">
+          <circle class="pista" cx="260" cy="260" r="244"/>
+          <circle class="arco" id="arco" cx="260" cy="260" r="244"/>
+        </svg>
+        <div style="text-align:center">
+          <p class="rotulo">Empezamos en</p>
+          <p id="reloj" role="timer" aria-live="off">5:00</p>
+        </div>
+      </div>
+
+      <h1 class="titulo">Ponte cómodo. <em>Ya vamos a empezar.</em></h1>
+    </div>
+
+    <div class="pie">
+      <p id="frase"></p>
+      <p class="aviso">
+        <b>Sube el volumen.</b><br>
+        Y deja el chat a mano: vamos a leerlo.
+      </p>
+    </div>
+
+    <div id="cierre">
+      <div>
+        <h1>Empezamos <em>ahora.</em></h1>
+        <p><span class="punto"></span>En vivo · con Iván Castrillón</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ── Las fotos y lo que se dice de cada una ───────────────────────────
+     Frases de sala de espera: cuentan la finca, no venden nada. El orden
+     alterna paisaje y detalle para que no se hagan dos planos iguales
+     seguidos. */
+  var GALERIA = [
+    { img:'img/cd-amanecer.jpg',    frase:'Amanece sobre la finca. Aquí empieza todo otra vez.' },
+    { img:'img/c2-terrazas.jpg',    frase:'Terrazas a curva de nivel: el agua deja de correr y empieza a entrar.' },
+    { img:'img/cd-rocio.jpg',       frase:'El rocío de la mañana. Agua que el suelo cubierto sí alcanza a guardar.' },
+    { img:'img/bosque.jpg',         frase:'El guadual. En plena temporada seca sigue verde, y nadie le echa nada.' },
+    { img:'img/cd-agua.jpg',        frase:'El suelo es el tanque de agua más grande y más barato que tienes.' },
+    { img:'img/c2-suelo-vivo.jpg',  frase:'Un puñado de suelo vivo tiene más habitantes que personas hay en la Tierra.', pos:'22% center' },
+    { img:'img/cd-biofabrica.jpg',  frase:'La biofábrica. Lo que antes se compraba, aquí se prepara.' },
+    { img:'img/c2-manos.jpg',       frase:'Cubrir el suelo. La primera decisión, y la más barata.', pos:'26% center' },
+    { img:'img/c2-mesa.jpg',        frase:'De aquí sale el setenta por ciento de lo que se sirve en la mesa.', pos:'16% center' },
+    { img:'img/c2-finca-aerea.jpg', frase:'Cinco hectáreas en el Lago Calima. Nos vemos en un momento.' }
+  ];
+
+  var TOTAL_S = 5 * 60;               // los cinco minutos
+  var R = 244;                        // radio del anillo, igual que en el SVG
+  var CIRC = 2 * Math.PI * R;
+
+  var $ = function(s){ return document.querySelector(s); };
+  var lienzo = $('#lienzo'), fondos = $('#fondos'), arco = $('#arco');
+  var reloj = $('#reloj'), anillo = $('#anillo'), frase = $('#frase'), cierre = $('#cierre');
+
+  /* ── Escalado: el lienzo es 1920×1080 y se encoge para caber entero.
+        Igual que las presentaciones, para que se vea idéntico en
+        cualquier pantalla y al compartirla en el directo. */
+  function encajar(){
+    var e = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    lienzo.style.transform = 'translate(-50%,-50%) scale(' + e + ')';
+  }
+  window.addEventListener('resize', encajar);
+  encajar();
+
+  /* ── Cuándo termina ──────────────────────────────────────────────────
+     Por defecto, diez minutos desde que se abre. Con ?hasta=18:00 cuenta
+     hasta esa hora de hoy, que es lo útil si se deja puesto un rato antes
+     y se quiere que llegue a cero justo al empezar. */
+  function calcularFinal(){
+    var m = (location.search.match(/[?&]hasta=(\d{1,2}):(\d{2})/) || null);
+    if (m) {
+      var d = new Date();
+      d.setHours(+m[1], +m[2], 0, 0);
+      if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+      return d.getTime();
+    }
+    return Date.now() + TOTAL_S * 1000;
+  }
+  var final = calcularFinal();
+  var corriendo = true;
+  var restante = final - Date.now();   // lo que quedaba al pararlo
+  var btnPausa = null, txtPausa = null;
+
+  /* ── Las fotos ───────────────────────────────────────────────────────
+     Se precargan todas al arrancar: un fundido que llega a medias porque
+     la imagen aún no está descargada se ve peor que no tener fundido. */
+  var capas = GALERIA.map(function(g){
+    var d = document.createElement('div');
+    d.className = 'foto';
+    d.style.backgroundImage = "url('" + g.img + "')";
+    if (g.pos) d.style.backgroundPosition = g.pos;
+    fondos.appendChild(d);
+    var pre = new Image(); pre.src = g.img;
+    return d;
+  });
+
+  var actual = -1;
+  function mostrar(i){
+    if (i === actual) return;
+    actual = i;
+    capas.forEach(function(c, j){
+      if (j === i) {
+        // Reiniciar la animación de zoom en cada entrada.
+        c.style.animation = 'none'; void c.offsetWidth; c.style.animation = '';
+        c.classList.add('puesta');
+      } else {
+        c.classList.remove('puesta');
+      }
+    });
+    frase.classList.remove('puesta');
+    window.setTimeout(function(){
+      frase.textContent = GALERIA[i].frase;
+      frase.classList.add('puesta');
+    }, 700);
+  }
+
+  /* ── El latido ───────────────────────────────────────────────────────── */
+  var terminado = false;
+  function dos(n){ return (n < 10 ? '0' : '') + n; }
+
+  function latir(){
+    var falta = Math.max(0, corriendo ? (final - Date.now()) : restante);
+    // Si se deja puesto mucho antes de la hora, se queda esperando en 5:00 y
+    // empieza a correr cuando entra en ventana. Sin esto salía «1439:09».
+    var seg = Math.min(TOTAL_S, Math.ceil(falta / 1000));
+    falta = Math.min(falta, TOTAL_S * 1000);
+
+    var texto = Math.floor(seg / 60) + ':' + dos(seg % 60);
+    if (reloj.textContent !== texto) reloj.textContent = texto;
+
+    // El arco se vacía; se calcula sobre el tiempo que se pidió, no sobre
+    // los diez minutos fijos, para que ?hasta= también dibuje bien.
+    var proporcion = Math.max(0, Math.min(1, falta / (TOTAL_S * 1000)));
+    arco.style.strokeDasharray = CIRC;
+    arco.style.strokeDashoffset = CIRC * (1 - proporcion);
+
+    var ultimo = seg <= 60 && seg > 0;
+    reloj.classList.toggle('ultimo', ultimo);
+    anillo.classList.toggle('ultimo', ultimo);
+
+    // Reparto de las fotos sobre el tiempo restante.
+    var transcurrido = TOTAL_S - seg;
+    var porFoto = TOTAL_S / GALERIA.length;
+    mostrar(Math.max(0, Math.min(GALERIA.length - 1, Math.floor(transcurrido / porFoto))));
+
+    if (seg <= 0 && !terminado) {
+      terminado = true;
+      cierre.classList.add('puesto');
+    }
+  }
+  latir();
+  window.setInterval(latir, 250);
+
+  /* ── Parar, seguir y reiniciar ─────────────────────────────────────────
+     Al parar se guarda lo que quedaba; al seguir se recalcula la hora de
+     final desde ahora. El zoom de las fotos se congela también: con el
+     reloj parado y la imagen moviéndose parece que algo se colgó. */
+  function pintarMandos(){
+    if (!btnPausa) return;
+    btnPausa.classList.toggle('parado', !corriendo);
+    txtPausa.textContent = corriendo ? 'Pausar' : 'Seguir';
+    btnPausa.setAttribute('aria-label', txtPausa.textContent);
+    capas.forEach(function(c){ c.style.animationPlayState = corriendo ? 'running' : 'paused'; });
+  }
+
+  function alternarPausa(){
+    if (corriendo) { restante = Math.max(0, final - Date.now()); corriendo = false; }
+    else { final = Date.now() + restante; corriendo = true; }
+    pintarMandos();
+    latir();
+  }
+
+  function reiniciar(){
+    final = Date.now() + TOTAL_S * 1000;
+    restante = TOTAL_S * 1000;
+    corriendo = true;
+    terminado = false;
+    cierre.classList.remove('puesto');
+    actual = -1;
+    pintarMandos();
+    latir();
+  }
+
+  window.addEventListener('keydown', function(e){
+    var t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); reiniciar(); }
+    if (e.key === ' ' || e.key === 'p' || e.key === 'P') { e.preventDefault(); alternarPausa(); }
+  });
+
+  /* ── Los mandos ──────────────────────────────────────────────────────
+     Se retiran solos tras unos segundos quieto: están encima de lo que se
+     comparte en el directo, así que no pueden quedarse fijos. */
+  var caja = document.createElement('div');
+  caja.className = 'mandos';
+
+  function boton(icono, etiqueta, alPulsar){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'fs';
+    var i = document.createElement('span');
+    i.setAttribute('aria-hidden', 'true');
+    i.textContent = icono;
+    var t = document.createElement('span');
+    t.className = 'txt';
+    t.textContent = etiqueta;
+    b.append(i, t);
+    b.setAttribute('aria-label', etiqueta);
+    b.addEventListener('click', alPulsar);
+    caja.appendChild(b);
+    return b;
+  }
+
+  btnPausa = boton('\u23F8', 'Pausar', alternarPausa);
+  txtPausa = btnPausa.querySelector('.txt');
+  boton('\u21BA', 'Reiniciar', reiniciar);
+
+  (function(){
+    var raiz = document.documentElement;
+    var pedir = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+    var salir = document.exitFullscreen || document.webkitExitFullscreen;
+    if (!pedir) return;
+
+    function completa(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+    function alternar(){ completa() ? salir.call(document) : pedir.call(raiz); }
+
+    var b = boton('\u26F6', 'Pantalla completa', alternar);
+    var txt = b.querySelector('.txt');
+    function pintar(){ txt.textContent = completa() ? 'Salir' : 'Pantalla completa'; }
+    document.addEventListener('fullscreenchange', pintar);
+    document.addEventListener('webkitfullscreenchange', pintar);
+    window.addEventListener('keydown', function(e){
+      var t = e.target;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+      if (e.key === 'f' || e.key === 'F') { e.preventDefault(); alternar(); }
+    });
+    pintar();
+  })();
+
+  document.body.appendChild(caja);
+  pintarMandos();
+
+  var relojMandos = null;
+  function despertarMandos(){
+    caja.classList.remove('dormido');
+    clearTimeout(relojMandos);
+    relojMandos = setTimeout(function(){ caja.classList.add('dormido'); }, 3200);
+  }
+  window.addEventListener('mousemove', despertarMandos, { passive:true });
+  window.addEventListener('touchstart', despertarMandos, { passive:true });
+  despertarMandos();
+})();
+</script>
+</body>
+</html>

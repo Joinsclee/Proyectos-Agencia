@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<!--
+  ANIMACIÓN #01: Receta de ingredientes
+  Cliente: SAVIAS · Video: Jabón Drop Swirl
+  Tipo: bullet-sequence + tag editorial
+  Duración total: 9.0s
+  Dimensiones: 1920x1080 (overlay sobre video horizontal de Lina)
+  Background: transparente (alpha) — banda cream translúcida solo en bloque texto
+  Posición: bloque centrado verticalmente, alineado a la derecha (Lina trabaja a la izquierda)
+  Captura: node capture-animation.js animation.html animation.mov 1920 1080 9.0
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Animación 01 · Receta · SAVIAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Cormorant+SC:wght@500;600&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage: #9CAF88;
+  --sage-deep: #7B8F6A;
+  --gold: #B8943E;
+  --cream: #F5EFE6;
+  --cream-deep: #EDE4D3;
+  --paper: #FAF7F2;
+  --ink: #1F1F1B;
+  --ink-soft: #4A4A45;
+
+  /* Banda translúcida sutil — permite ver el video debajo */
+  --bg-banda: rgba(245, 239, 230, 0.88);
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-display-sc: 'Cormorant SC', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+
+  --total-duration: 9.0s;
+
+  --text-shadow-ink: 0 2px 4px rgba(31,31,27,0.18);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: transparent;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ───────── BLOQUE PRINCIPAL ─────────
+   Posicionado a la derecha del frame, centrado verticalmente.
+   Lina trabaja generalmente a la izquierda — esto deja sus manos visibles. */
+.receta-card {
+  position: absolute;
+  top: 50%;
+  right: 110px;
+  transform: translateY(-50%) translateX(40px) scale(0.97);
+  padding: 56px 70px 60px 70px;
+  background: var(--bg-banda);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  min-width: 580px;
+  max-width: 720px;
+  opacity: 0;
+  animation:
+    card-enter 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards,
+    card-exit 0.6s cubic-bezier(0.4, 0, 1, 1) calc(var(--total-duration) - 0.6s) forwards;
+}
+
+/* Líneas gold superior e inferior — firma editorial SAVIAS */
+.receta-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--sage-deep);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: line-draw 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.5s forwards;
+}
+
+.receta-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: right center;
+  animation: line-draw 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.65s forwards;
+}
+
+/* ───────── TAG SUPERIOR: "RECETA" ───────── */
+.tag {
+  font-family: var(--font-display-sc);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--sage-deep);
+  margin-bottom: 32px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: tag-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.85s forwards;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tag::before {
+  content: '';
+  width: 22px; height: 1.5px;
+  background: var(--sage-deep);
+}
+
+/* ───────── LISTA DE INGREDIENTES ─────────
+   Cada item: entrada en stagger 0.2s (fade + slide-x).
+   Tipografía Lora regular + cifras en italic gold. */
+.ingredientes {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ingredientes li {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.4;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 40px;
+  opacity: 0;
+  transform: translateX(-18px);
+  animation: ing-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.ingredientes .name {
+  flex: 1;
+}
+
+.ingredientes .qty {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 36px;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+/* Stagger por item — 0.2s entre cada uno */
+.ingredientes li:nth-child(1) { animation-delay: 1.20s; }
+.ingredientes li:nth-child(2) { animation-delay: 1.40s; }
+.ingredientes li:nth-child(3) { animation-delay: 1.60s; }
+.ingredientes li:nth-child(4) { animation-delay: 1.80s; }
+.ingredientes li:nth-child(5) { animation-delay: 2.00s; }
+.ingredientes li:nth-child(6) { animation-delay: 2.20s; }
+
+/* Separador hairline gold entre items (decorativo) */
+.ingredientes li:not(:last-child) {
+  border-bottom: 1px solid rgba(123, 143, 106, 0.28);
+  padding-bottom: 14px;
+}
+
+/* ───────── ORNAMENTO INFERIOR ───────── */
+.ornament {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.45em;
+  color: var(--sage-deep);
+  text-align: center;
+  margin-top: 32px;
+  opacity: 0;
+  transform: scale(0.7);
+  animation: ornament-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 2.55s forwards;
+}
+
+/* ───────── KEYFRAMES ───────── */
+@keyframes card-enter {
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0) scale(1);
+  }
+}
+
+@keyframes card-exit {
+  to {
+    opacity: 0;
+    transform: translateY(-50%) translateX(0) scale(0.99);
+  }
+}
+
+@keyframes line-draw {
+  to { transform: scaleX(1); }
+}
+
+@keyframes tag-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ing-in {
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ornament-in {
+  to { opacity: 1; transform: scale(1); }
+}
+</style>
+</head>
+<body>
+
+<div class="receta-card">
+  <div class="tag">Receta</div>
+  <ul class="ingredientes">
+    <li><span class="name">Aceite de coco</span><span class="qty">87 g</span></li>
+    <li><span class="name">Aceite de ricino</span><span class="qty">24 g</span></li>
+    <li><span class="name">Aceite de canola</span><span class="qty">140 g</span></li>
+    <li><span class="name">Manteca de cacao</span><span class="qty">99 g</span></li>
+    <li><span class="name">Agua</span><span class="qty">112 g</span></li>
+    <li><span class="name">Soda cáustica</span><span class="qty">47 g</span></li>
+  </ul>
+  <div class="ornament">·  ✦  ·</div>
+</div>
+
+</body>
+</html>

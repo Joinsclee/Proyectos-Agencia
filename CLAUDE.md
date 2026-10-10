@@ -1,167 +1,100 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guía para Claude Code al trabajar en este repositorio.
 
-## Project Overview
+## Qué es este repositorio
 
-This is the **n8n-skills** repository - a collection of Claude Code skills designed to teach AI assistants how to build flawless n8n workflows using the n8n-mcp MCP server.
+Este es el **workspace de trabajo de una agencia/freelance** (Cristhian / JoinsClee) que aloja las
+entregas de **múltiples clientes independientes**: landing pages, embudos de venta, calculadoras,
+dashboards y una app de scraping/analítica inmobiliaria. No es un producto único — cada carpeta de
+primer nivel es una unidad de entrega casi autónoma para un cliente o marca distinta.
 
-**Repository**: https://github.com/czlonkowski/n8n-skills
+> Nota histórica: este archivo describía antes el repo open-source `n8n-skills`. Esa identidad ya
+> no aplica a este directorio — el contenido real es el descrito abajo.
 
-**Purpose**: 7 complementary skills that provide expert guidance on using n8n-mcp MCP tools effectively for building n8n workflows.
+## Estructura por cliente/marca
 
-**Architecture**:
-- **n8n-mcp MCP Server**: Provides data access (800+ nodes, validation, templates, workflow management)
-- **Claude Skills**: Provides expert guidance on HOW to use MCP tools
-- **Together**: Expert workflow builder with progressive disclosure
+| Carpeta | Cliente / marca | Contenido típico |
+|---|---|---|
+| `Andres Giraldo/` | Andrés Giraldo — Sistema CRECE | Landings, calculadoras/simuladores, embudo Hotmart |
+| `radar-mvp/` | Andrés Giraldo — Radar de Oportunidades | App TS en capas: scraping + analítica inmobiliaria (ver abajo) |
+| `Lina Toro/` | SAVIAS / Lina Toro | Embudo Ruta Jabonera, dashboard "Universo Lina", calculadoras, PDFs de clase |
+| `JoinsClee Embudo/`, `JoinsClee-Checklist/`, `JoinsClee-Portal/`, `JoisnClee/` | JoinsClee (la agencia) | Sitio de agencia, checklist app, landings inmobiliario, portal de cliente |
+| `Paulina/` | Paulina Valencia | App "Mi Barco" (Barco de Papel/Origami), build propio para GHL |
+| `Andy/` | Vuela / Andy | Presentaciones (`deck-stage`, motor de decks reutilizado por otros clientes) |
+| `Ivan/` | Iván Castrillón — La Huerta LAB | Universo de herramientas (login + 6 miniapps + agente IA), calculadoras de finca regenerativa |
+| `Liz Pinto/`, `Nico/` | Otros clientes | Landings, calculadoras, workflows n8n puntuales |
+| `Dashboard Financiero/` | Multi-cliente | Dashboards financieros (Lina, Paulina) sobre Supabase |
+| `remotion-visitas/` | Transversal | Motor de video compartido (ver abajo) |
+| `Playwright/` | Transversal | Arnés de automatización de navegador compartido |
+| `n8n-Workflows/` | Transversal | Workflows n8n sueltos (JSON) |
 
-## Repository Structure
+Cada carpeta de cliente es casi independiente: sus propias páginas HTML, sus propios assets, y —
+cuando necesita backend — su **propia** carpeta `supabase/migrations` (no se comparte esquema entre
+clientes). No hay build ni dependencias compartidas a nivel raíz.
 
-```
-n8n-skills/
-├── README.md              # Project overview with video
-├── LICENSE                # MIT License
-├── skills/                # Individual skill implementations
-│   ├── n8n-expression-syntax/
-│   ├── n8n-mcp-tools-expert/
-│   ├── n8n-workflow-patterns/
-│   ├── n8n-validation-expert/
-│   ├── n8n-node-configuration/
-│   ├── n8n-code-javascript/
-│   └── n8n-code-python/
-├── evaluations/           # Test scenarios for each skill
-├── docs/                  # Documentation
-├── dist/                  # Distribution packages
-└── .claude-plugin/        # Claude Code plugin configuration
-```
+## Piezas de infraestructura compartida
 
-## The 7 Skills
+Solo dos cosas son transversales de verdad y tienen sus propias reglas — **léelas antes de tocarlas**:
 
-### 1. n8n Expression Syntax
-- Teaches correct n8n expression syntax ({{}} patterns)
-- Covers common mistakes and fixes
-- Critical gotcha: Webhook data under `$json.body`
+- **`remotion-visitas/`** — motor de video (Remotion/React) usado por todos los clientes. Cada pieza
+  es una composición `.tsx` en `src/`, agrupada por cliente (`jc/` = JoinsClee, `crece/`, `radar/`,
+  `vsl/`...). Tiene su propio `remotion-visitas/CLAUDE.md` con convenciones obligatorias (determinismo,
+  formato de captions, `theme.ts`) y el skill `/video-editor-pro` para craft de edición de retención.
+- **`Playwright/`** — automatización de navegador reutilizable, con perfil de Chrome clonado (ver
+  `Playwright/README.md`).
+- **`radar-mvp/`** — la única carpeta con arquitectura en capas real: `engine/`+`lib/` son el núcleo
+  puro (stats, comparables, sin llamadas salientes), `scrapers/CO/<banco>/` extrae datos de portales
+  bancarios/remates vía Firecrawl, `server/` expone el dashboard sobre Supabase, y `cron/`+`scripts/`
+  son los entry points batch. Ver `radar-mvp/README.md` y `radar-mvp/docs/` para decisiones de stack
+  ya documentadas (p. ej. Firecrawl vs Octoparse).
 
-### 2. n8n MCP Tools Expert (HIGHEST PRIORITY)
-- Teaches how to use n8n-mcp MCP tools effectively
-- Covers unified tools: `get_node`, `validate_node`, `search_nodes`
-- Workflow management with `n8n_update_partial_workflow`
-- New: `n8n_deploy_template`, `n8n_workflow_versions`, `activateWorkflow`
+## Patrones a seguir
 
-### 3. n8n Workflow Patterns
-- Teaches proven workflow architectural patterns
-- 5 patterns: webhook, HTTP API, database, AI, scheduled
+- **HTML autocontenido por defecto**: las páginas de cliente embeben su propio CSS/JS (y a veces
+  datos) para poder abrirse con doble-click o deployarse copiando el archivo. No añadas un bundler
+  a menos que el cliente ya lo tenga (radar-mvp, remotion-visitas, Paulina/app).
+- **Un Supabase por cliente**: si un cliente necesita backend, crea su propia carpeta de migraciones
+  dentro de su carpeta — nunca reutilices el esquema/proyecto de otro cliente.
+- **Video → siempre por `remotion-visitas/`**, nunca edición manual ad-hoc, para mantener el motor
+  y las convenciones (determinismo, captions) consistentes entre clientes.
+- **Todo vídeo, con cualquier motor, pasa por la doctrina `edicion-humana-clee`** (no tapar ni encoger la
+  cara, quitar antes que añadir, estilo del cliente en su variante mínima) y por su `revisar.py` antes de
+  entregarse. Manda sobre las reglas de cada motor.
+- Antes de un cambio no trivial en `radar-mvp/`, revisa `radar-mvp/docs/` — ya hay decisiones de
+  stack documentadas ahí; sigue ese mismo formato si tomas una decisión nueva.
 
-### 4. n8n Validation Expert
-- Interprets validation errors and guides fixing
-- Handles false positives and validation loops
-- Auto-fix with `n8n_autofix_workflow`
+## Memoria de dominio (contexto de cliente, bugs ya resueltos, reglas de negocio)
 
-### 5. n8n Node Configuration
-- Operation-aware node configuration guidance
-- Property dependencies and common patterns
+El conocimiento específico de cada cliente (qué se rompió, qué decisión se tomó y por qué, reglas de
+marca, credenciales/entornos) **no vive en este archivo** — vive en el vault de memoria persistente
+del usuario (`/Users/cristhian/Vault`), indexado por el protocolo de recall configurado globalmente.
+Antes de trabajar en un cliente específico, recupera el contexto de esa entidad desde ahí en vez de
+asumir que este archivo lo tiene.
 
-### 6. n8n Code JavaScript
-- Write JavaScript in n8n Code nodes
-- Data access patterns, `$helpers`, DateTime
+## Un ADR vive en codebase-memory
 
-### 7. n8n Code Python
-- Write Python in n8n Code nodes
-- Limitations awareness (no external libraries)
+Este repo está indexado en el MCP `codebase-memory` como
+`Users-cristhian-Downloads-Paginas-Web`, y tiene un ADR con el detalle arquitectónico completo
+(stack, capas de radar-mvp, tradeoffs, filosofía de entrega). Consúltalo con
+`manage_adr(project="Users-cristhian-Downloads-Paginas-Web", mode="get")` antes de asumir estructura
+que no esté ya en este archivo.
 
-## Key MCP Tools
+## Skill routing
 
-The n8n-mcp server provides these unified tools:
+When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
 
-### Node Discovery
-- `search_nodes` - Find nodes by keyword
-- `get_node` - Unified node info with detail levels (minimal, standard, full) and modes (info, docs, search_properties, versions)
-
-### Validation
-- `validate_node` - Unified validation with modes (minimal, full) and profiles (runtime, ai-friendly, strict)
-- `validate_workflow` - Complete workflow validation
-
-### Workflow Management
-- `n8n_create_workflow` - Create new workflows
-- `n8n_update_partial_workflow` - Incremental updates (17 operation types including `activateWorkflow`)
-- `n8n_validate_workflow` - Validate by ID
-- `n8n_autofix_workflow` - Auto-fix common issues
-- `n8n_deploy_template` - Deploy template to n8n instance
-- `n8n_workflow_versions` - Version history and rollback
-- `n8n_test_workflow` - Test execution
-- `n8n_executions` - Manage executions
-
-### Templates
-- `search_templates` - Multiple modes (keyword, by_nodes, by_task, by_metadata)
-- `get_template` - Get template details
-
-### Guides
-- `tools_documentation` - Meta-documentation for all tools
-- `ai_agents_guide` - AI agent workflow guidance
-
-## Important Patterns
-
-### Most Common Tool Usage Pattern
-```
-search_nodes → get_node (18s avg between steps)
-```
-
-### Most Common Validation Pattern
-```
-n8n_update_partial_workflow → n8n_validate_workflow (7,841 occurrences)
-Avg 23s thinking, 58s fixing
-```
-
-### Most Used Tool
-```
-n8n_update_partial_workflow (38,287 uses, 99.0% success)
-Avg 56 seconds between edits
-```
-
-## Working with This Repository
-
-### When Adding New Skills
-1. Create skill directory under `skills/`
-2. Write SKILL.md with frontmatter
-3. Add reference files as needed
-4. Create 3+ evaluations in `evaluations/`
-5. Test thoroughly before committing
-
-### Skill Activation
-Skills activate automatically when queries match their description triggers:
-- "How do I write n8n expressions?" → n8n Expression Syntax
-- "Find me a Slack node" → n8n MCP Tools Expert
-- "Build a webhook workflow" → n8n Workflow Patterns
-
-### Cross-Skill Integration
-Skills are designed to work together:
-- Use n8n Workflow Patterns to identify structure
-- Use n8n MCP Tools Expert to find nodes
-- Use n8n Node Configuration for setup
-- Use n8n Expression Syntax for data mapping
-- Use n8n Code JavaScript/Python for custom logic
-- Use n8n Validation Expert to validate
-
-## Requirements
-
-- n8n-mcp MCP server installed and configured
-- Claude Code, Claude.ai, or Claude API access
-- Understanding of n8n workflow concepts
-
-## Distribution
-
-Available as:
-1. **GitHub Repository**: Full source code and documentation
-2. **Claude Code Plugin**: `npm install @anthropic/claude-code-plugin-n8n-skills`
-3. **Individual Skill Uploads**: For Claude.ai users
-
-## Credits
-
-Conceived by Romuald Członkowski - [www.aiadvisors.pl/en](https://www.aiadvisors.pl/en)
-
-Part of the n8n-mcp project.
-
-## License
-
-MIT License - See LICENSE file for details.
-- Add to every commit and PR: Conceived by Romuald Członkowski - and then link to www.aiadvisors.pl/en. Don't add it in conversations
+Key routing rules:
+- Product ideas/brainstorming → invoke /office-hours
+- Strategy/scope → invoke /plan-ceo-review
+- Architecture → invoke /plan-eng-review
+- Design system/plan review → invoke /design-consultation or /plan-design-review
+- Full review pipeline → invoke /autoplan
+- Bugs/errors → invoke /investigate
+- QA/testing site behavior → invoke /qa or /qa-only
+- Code review/diff check → invoke /review
+- Visual polish → invoke /design-review
+- Ship/deploy/PR → invoke /ship or /land-and-deploy
+- Save progress → invoke /context-save
+- Resume context → invoke /context-restore
+- Author a backlog-ready spec/issue → invoke /spec

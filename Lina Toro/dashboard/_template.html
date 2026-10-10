@@ -257,6 +257,13 @@
   }
   .switch-auth a{color:var(--sage-dark);font-weight:600;cursor:pointer}
 
+  .auth-notmember{
+    margin-top:1.6rem;padding-top:1.4rem;
+    border-top:1px solid var(--border);
+    display:grid;gap:.9rem;text-align:center;
+  }
+  .auth-notmember .sub{margin-bottom:0}
+
   .alert{
     padding:.85rem 1rem;border-radius:10px;
     font-size:.88rem;margin-bottom:1.2rem;
@@ -875,98 +882,28 @@
 
     <!-- LOGIN -->
     <div class="auth-card" id="card-login">
-      <div class="eyebrow">Bienvenida de vuelta</div>
-      <h2>Ingresa a tu espacio</h2>
-      <p class="sub">Accede a tus herramientas con el correo que usaste al registrarte.</p>
+      <div class="eyebrow">Tu Universo Savias</div>
+      <h2>Entra con tu correo</h2>
+      <p class="sub">Escribe el mismo correo con el que entras a la comunidad de Savias. No necesitas contraseña: si tu correo está en la comunidad, entras directo.</p>
       <div class="alert" id="alert-login"></div>
       <form id="form-login" novalidate>
         <div class="field">
           <label>Correo electrónico</label>
-          <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
-        </div>
-        <div class="field">
-          <label>Contraseña</label>
-          <input type="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
-        </div>
-        <div class="field-row">
-          <span></span>
-          <a data-nav="forgot">¿Olvidaste tu contraseña?</a>
+          <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" inputmode="email" required />
         </div>
         <button type="submit" class="btn btn-primary">
-          <span class="txt">Iniciar sesión</span>
+          <span class="txt">Entrar a mi Universo</span>
           <span class="spinner"></span>
         </button>
       </form>
-      <div class="switch-auth">¿Aún no tienes cuenta? <a data-nav="register">Crea la tuya</a></div>
+      <div class="auth-notmember" id="authNotMember" style="display:none">
+        <p class="sub" id="notMemberMsg">Este correo todavía no está en la comunidad de Savias.</p>
+        <button type="button" class="btn btn-ghost" onclick="goToSkool()">Unirme a la comunidad</button>
+      </div>
     </div>
 
-    <!-- REGISTER -->
-    <div class="auth-card" id="card-register" style="display:none">
-      <div class="eyebrow">Te damos la bienvenida</div>
-      <h2>Crea tu cuenta</h2>
-      <p class="sub">En un minuto tendrás acceso a todas las herramientas.</p>
-      <div class="alert" id="alert-register"></div>
-      <form id="form-register" novalidate>
-        <div class="field">
-          <label>Nombre</label>
-          <input type="text" name="name" placeholder="Tu nombre" autocomplete="name" required />
-        </div>
-        <div class="field">
-          <label>Correo electrónico</label>
-          <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
-        </div>
-        <div class="field">
-          <label>Contraseña</label>
-          <input type="password" name="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" minlength="8" required />
-        </div>
-        <button type="submit" class="btn btn-primary">
-          <span class="txt">Crear mi cuenta</span>
-          <span class="spinner"></span>
-        </button>
-      </form>
-      <div class="switch-auth">¿Ya tienes cuenta? <a data-nav="login">Inicia sesión</a></div>
-    </div>
-
-    <!-- FORGOT -->
-    <div class="auth-card" id="card-forgot" style="display:none">
-      <div class="eyebrow">Recuperar acceso</div>
-      <h2>¿Olvidaste tu contraseña?</h2>
-      <p class="sub">Ingresa tu correo y te enviaremos un enlace para restablecerla.</p>
-      <div class="alert" id="alert-forgot"></div>
-      <form id="form-forgot" novalidate>
-        <div class="field">
-          <label>Correo electrónico</label>
-          <input type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
-        </div>
-        <button type="submit" class="btn btn-primary">
-          <span class="txt">Enviar enlace</span>
-          <span class="spinner"></span>
-        </button>
-      </form>
-      <div class="switch-auth"><a data-nav="login">Volver al inicio de sesión</a></div>
-    </div>
-
-    <!-- RESET (cuando Supabase redirige con token en URL) -->
-    <div class="auth-card" id="card-reset" style="display:none">
-      <div class="eyebrow">Nueva contraseña</div>
-      <h2>Elige una contraseña</h2>
-      <p class="sub">Ingresa una nueva contraseña para tu cuenta.</p>
-      <div class="alert" id="alert-reset"></div>
-      <form id="form-reset" novalidate>
-        <div class="field">
-          <label>Nueva contraseña</label>
-          <input type="password" name="password" placeholder="Mínimo 8 caracteres" minlength="8" required />
-        </div>
-        <div class="field">
-          <label>Confirmar contraseña</label>
-          <input type="password" name="password2" minlength="8" required />
-        </div>
-        <button type="submit" class="btn btn-primary">
-          <span class="txt">Guardar contraseña</span>
-          <span class="spinner"></span>
-        </button>
-      </form>
-    </div>
+    <!-- Registro, recuperación y cambio de contraseña eliminados:
+         el acceso es solo por correo verificado contra la comunidad de Skool. -->
 
     </div><!-- /auth-form-inner -->
   </section>
@@ -983,11 +920,6 @@
           <span id="userName">Mi cuenta</span>
         </button>
         <div class="user-menu" id="userMenu">
-          <button onclick="openChangePass()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            Cambiar contraseña
-          </button>
-          <div class="sep"></div>
           <button onclick="doLogout()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Cerrar sesión
@@ -1279,6 +1211,7 @@ const SUPABASE_URL = 'https://cojwzekyeehqtxdvoldj.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvand6ZWt5ZWVocXR4ZHZvbGRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNTA2MjYsImV4cCI6MjA5MjYyNjYyNn0.qlTIaARvrrXHPGjPR6STbybmLA9Jn2r_R04xaZxnU4k';
 const WELCOME_FN_URL = `${SUPABASE_URL}/functions/v1/send-welcome-email`;
 const CHAT_FN_URL    = `${SUPABASE_URL}/functions/v1/chat-lina`;
+const SKOOL_LOGIN_FN_URL = `${SUPABASE_URL}/functions/v1/skool-login`;
 const SKOOL_URL       = 'https://www.skool.com/savias-8385';
 const SKOOL_ABOUT_URL = 'https://www.skool.com/savias-8385/about';
 function getSkoolUrl(){ return isSkoolMember ? SKOOL_URL : SKOOL_ABOUT_URL; }
@@ -1336,95 +1269,77 @@ function initials(name, email){
 async function handleLogin(e){
   e.preventDefault();
   clearAlert('alert-login');
+  hideNotMember();
   const f = e.target;
-  setLoading(f,true);
-  const { email, password } = Object.fromEntries(new FormData(f));
-  const { data, error } = await sb.auth.signInWithPassword({ email:email.trim().toLowerCase(), password });
-  setLoading(f,false);
-  if(error){ showAlert('alert-login', traducirError(error.message)); return; }
-  enterApp(data.session);
-}
-
-async function handleRegister(e){
-  e.preventDefault();
-  clearAlert('alert-register');
-  const f = e.target;
-  setLoading(f,true);
-  const { name, email, password } = Object.fromEntries(new FormData(f));
-  const cleanEmail = email.trim().toLowerCase();
-  const cleanName  = (name||'').trim();
-
-  const { data, error } = await sb.auth.signUp({
-    email: cleanEmail,
-    password,
-    options:{ data:{ full_name: cleanName } }
-  });
-
-  if(error){ setLoading(f,false); showAlert('alert-register', traducirError(error.message)); return; }
-
-  // Sin verificación: si Supabase devuelve sesión entramos directo; si no, intentamos login.
-  let session = data.session;
-  if(!session){
-    const login = await sb.auth.signInWithPassword({ email:cleanEmail, password });
-    if(login.error){
-      setLoading(f,false);
-      showAlert('alert-register', 'Cuenta creada. Inicia sesión para continuar.', 'success');
-      setTimeout(()=>showAuthCard('login'), 1200);
-      return;
-    }
-    session = login.data.session;
+  setLoading(f, true);
+  const { email } = Object.fromEntries(new FormData(f));
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if(!cleanEmail || !cleanEmail.includes('@')){
+    setLoading(f, false);
+    showAlert('alert-login', 'Escribe un correo válido para entrar.');
+    return;
   }
 
-  // Enviar welcome email (no bloqueante)
-  sendWelcomeEmail(cleanEmail, cleanName).catch(console.warn);
+  try{
+    const res = await fetch(SKOOL_LOGIN_FN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ email: cleanEmail })
+    });
+    const data = await res.json().catch(()=>({}));
 
-  setLoading(f,false);
-  enterApp(session, { showOnboarding:true });
+    // Correo que no pertenece a la comunidad de Skool
+    if(res.status === 403 || data.reason === 'not_member'){
+      setLoading(f, false);
+      showNotMember(cleanEmail);
+      return;
+    }
+    // No se pudo generar la sesión
+    if(!res.ok || !data.ok || !data.token_hash){
+      setLoading(f, false);
+      if(data.reason === 'verification_unavailable'){
+        showAlert('alert-login', 'No pudimos verificar tu correo en este momento. Intenta de nuevo en un minuto.');
+      }else if(data.reason === 'invalid_email'){
+        showAlert('alert-login', 'Escribe un correo válido para entrar.');
+      }else{
+        showAlert('alert-login', 'No pudimos iniciar tu sesión. Intenta de nuevo en un momento.');
+      }
+      return;
+    }
+
+    // Sesión sin contraseña: verificamos el token mágico generado en el servidor.
+    const { data: verifyData, error: verifyErr } = await sb.auth.verifyOtp({
+      type: 'magiclink',
+      token_hash: data.token_hash
+    });
+    setLoading(f, false);
+    if(verifyErr || !verifyData || !verifyData.session){
+      console.error('verifyOtp error', verifyErr);
+      showAlert('alert-login', 'No pudimos completar tu acceso. Intenta de nuevo.');
+      return;
+    }
+    isSkoolMember = true; // el login ya verificó la membresía en Skool
+    enterApp(verifyData.session);
+  }catch(err){
+    console.error('skool-login error', err);
+    setLoading(f, false);
+    showAlert('alert-login', 'Hubo un problema de conexión. Revisa tu internet e intenta de nuevo.');
+  }
 }
 
-async function handleForgot(e){
-  e.preventDefault();
-  clearAlert('alert-forgot');
-  const f = e.target;
-  setLoading(f,true);
-  const { email } = Object.fromEntries(new FormData(f));
-  const { error } = await sb.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-    redirectTo: window.location.origin + window.location.pathname
-  });
-  setLoading(f,false);
-  if(error){ showAlert('alert-forgot', traducirError(error.message)); return; }
-  showAlert('alert-forgot', 'Te enviamos un enlace. Revisa tu correo (y spam por si acaso).', 'success');
+function showNotMember(email){
+  const block = document.getElementById('authNotMember');
+  const msg = document.getElementById('notMemberMsg');
+  if(msg) msg.textContent = `El correo ${email} todavía no está en la comunidad de Savias. Únete con ese mismo correo y vuelve a entrar.`;
+  if(block) block.style.display = 'block';
 }
-
-async function handleReset(e){
-  e.preventDefault();
-  clearAlert('alert-reset');
-  const f = e.target;
-  const { password, password2 } = Object.fromEntries(new FormData(f));
-  if(password !== password2){ showAlert('alert-reset','Las contraseñas no coinciden.'); return; }
-  setLoading(f,true);
-  const { error } = await sb.auth.updateUser({ password });
-  setLoading(f,false);
-  if(error){ showAlert('alert-reset', traducirError(error.message)); return; }
-  showAlert('alert-reset','Contraseña actualizada. Iniciando sesión...', 'success');
-  setTimeout(async ()=>{
-    const { data:{ session } } = await sb.auth.getSession();
-    if(session) enterApp(session); else showAuthCard('login');
-  }, 900);
-}
-
-async function handleChange(e){
-  e.preventDefault();
-  clearAlert('alert-change');
-  const f = e.target;
-  const { password, password2 } = Object.fromEntries(new FormData(f));
-  if(password !== password2){ showAlert('alert-change','Las contraseñas no coinciden.'); return; }
-  setLoading(f,true);
-  const { error } = await sb.auth.updateUser({ password });
-  setLoading(f,false);
-  if(error){ showAlert('alert-change', traducirError(error.message)); return; }
-  showAlert('alert-change','Contraseña actualizada. Cerrando sesión...', 'success');
-  setTimeout(doLogout, 1200);
+function hideNotMember(){
+  const block = document.getElementById('authNotMember');
+  if(block) block.style.display = 'none';
 }
 
 async function doLogout(){
@@ -1565,11 +1480,10 @@ function enterApp(session, opts={}){
   setTimeout(applyFullBleed, 0);
   showFabs(firstName);
 
-  // Cargar estado de membresía Skool y bloquear las tarjetas correspondientes.
-  // Mostramos las cards bloqueadas por defecto (asumiendo no-miembro) y luego
-  // las desbloqueamos si el perfil dice lo contrario; evita el "flash" inverso.
+  // El login por correo ya verifica la membresía de Skool, así que toda
+  // persona que entra es miembro: desbloqueamos todas las herramientas.
+  isSkoolMember = true;
   applyMembershipLocks();
-  loadMembership().then(applyMembershipLocks);
 
   const onboarded = user.user_metadata?.onboarded === true;
   if(!onboarded){
@@ -1683,10 +1597,6 @@ document.addEventListener('DOMContentLoaded', async ()=>{
 
   // forms
   $('#form-login').addEventListener('submit', handleLogin);
-  $('#form-register').addEventListener('submit', handleRegister);
-  $('#form-forgot').addEventListener('submit', handleForgot);
-  $('#form-reset').addEventListener('submit', handleReset);
-  $('#form-change').addEventListener('submit', handleChange);
 
   // user menu
   $('#userChip').addEventListener('click', e=>{ e.stopPropagation(); toggleUserMenu(); });
@@ -1712,25 +1622,11 @@ document.addEventListener('DOMContentLoaded', async ()=>{
     }
   });
 
-  // Sesión existente o flujo de recuperación
-  const hash = window.location.hash || '';
-  const isRecovery = hash.includes('type=recovery') || new URL(window.location.href).searchParams.get('type')==='recovery';
-
-  sb.auth.onAuthStateChange((event, session)=>{
-    if(event === 'PASSWORD_RECOVERY'){
-      document.getElementById('view-auth').style.display = 'grid';
-      document.getElementById('view-app').classList.remove('active');
-      hideFabs();
-      showAuthCard('reset');
-      document.getElementById('boot').classList.add('hide');
-    }
-  });
-
+  // Sesión existente: si ya hay sesión válida entramos directo (el login por
+  // correo ya verificó la membresía de Skool en su momento).
   const { data:{ session } } = await sb.auth.getSession();
-
-  if(isRecovery){
-    showAuthCard('reset');
-  } else if(session){
+  if(session){
+    isSkoolMember = true;
     enterApp(session);
   } else {
     showAuthCard('login');

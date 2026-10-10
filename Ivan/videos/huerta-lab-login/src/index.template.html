@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1350" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* __FONT_FACES__ */
+
+      *{margin:0;padding:0;box-sizing:border-box}
+      html,body{
+        width:1080px;height:1350px;overflow:hidden;
+        background:#0d3320;
+        font-family:'Source Sans 3',-apple-system,Helvetica,Arial,sans-serif;
+        -webkit-font-smoothing:antialiased;
+      }
+
+      /* ---- Escenas ---- */
+      .scene{width:100%;height:100%}
+      .layer{
+        position:absolute;inset:0;width:100%;height:100%;
+        overflow:hidden;background:#0d3320;
+      }
+      .layer .ph{
+        position:absolute;inset:0;width:100%;height:100%;
+        object-fit:cover;transform-origin:center center;will-change:transform;
+      }
+      /* Velo de marca: hunde la foto en el verde bosque para que el texto
+         blanco tenga contraste sin depender de qué haya en la foto. */
+      .layer::after{
+        content:"";position:absolute;inset:0;
+        background:
+          linear-gradient(180deg, rgba(13,51,32,.62) 0%, rgba(13,51,32,.16) 34%, rgba(13,51,32,.55) 72%, rgba(13,51,32,.90) 100%),
+          radial-gradient(120% 78% at 50% 108%, rgba(13,51,32,.68), transparent 62%);
+      }
+      .layer .tint{
+        position:absolute;inset:0;
+        background:#12452c;mix-blend-mode:color;opacity:.24;
+      }
+
+      /* ---- Contenido ---- */
+      .copy{
+        position:absolute;inset:0;z-index:3;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        padding:0 96px;text-align:center;
+      }
+      .copy.bottom{justify-content:flex-end;padding-bottom:150px}
+
+      .rule{
+        width:76px;height:3px;border-radius:2px;background:#d9b458;
+        transform-origin:center;
+      }
+
+      .kicker{
+        font-size:25px;font-weight:600;letter-spacing:7px;text-transform:uppercase;
+        color:#d9b458;
+      }
+      .sub{
+        font-size:29px;font-weight:400;letter-spacing:5.5px;text-transform:uppercase;
+        color:#cfe3d6;
+      }
+
+      .wordmark{display:flex;flex-direction:column;align-items:center;gap:16px}
+      .wordmark .name{
+        font-family:'Zilla Slab',Georgia,serif;font-weight:700;
+        font-size:86px;line-height:1;color:#ffffff;letter-spacing:-1px;
+      }
+
+      .line{
+        font-family:'Zilla Slab',Georgia,serif;font-weight:700;
+        font-size:96px;line-height:1.12;color:#ffffff;letter-spacing:-1.5px;
+      }
+      .line em{font-style:italic;font-weight:500;color:#d9b458}
+      .line.sm{font-size:82px}
+
+      .mark-leaf{width:78px;height:78px;color:#d9b458}
+      .mark-leaf svg{width:100%;height:100%;display:block}
+
+      /* Grano fino: rompe el banding del degradado en el encode. */
+      .grain{
+        position:absolute;inset:0;z-index:4;pointer-events:none;opacity:.055;
+        background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='3' stitchTiles='stitch'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+      }
+      /* Viñeta y filo inferior: el vídeo vive detrás de un formulario. */
+      .vignette{
+        position:absolute;inset:0;z-index:5;pointer-events:none;
+        box-shadow:inset 0 0 200px 60px rgba(13,51,32,.55);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"
+         data-composition-id="main"
+         data-start="0" data-duration="14"
+         data-width="1080" data-height="1350">
+
+      <!-- 1 · Terrazas + marca -->
+      <div class="clip scene" id="scene-marca" data-start="0" data-duration="3.7" data-track-index="1">
+        <div class="layer" id="s1">
+          <img class="ph" data-layout-allow-overflow id="ph1" src="assets/hl-terrazas-v.jpg" alt="" style="object-position:50% 62%" />
+          <div class="tint"></div>
+        </div>
+        <div class="copy" data-layout-allow-overlap id="c1">
+          <div class="mark-leaf" id="c1leaf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 20c3.5-2.6 6-5.4 6-5.4"/>
+              <path d="M4 16.5c4.5.6 8-1.2 10-4.2 2-3 2.4-6.6 2-9.3-2.7-.4-6.3 0-9.3 2C3.7 7 1.9 10.5 2.5 15"/>
+              <path d="M8 14.6c1.6-2.6 4-5 7-6.6"/>
+            </svg>
+          </div>
+          <div class="wordmark" id="c1mark" style="margin-top:34px">
+            <div class="name">La Huerta LAB</div>
+            <div class="rule" id="c1rule"></div>
+            <div class="sub">Iván Castrillón</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 · Guadual + tesis -->
+      <div class="clip scene" id="scene-tesis" data-start="3.3" data-duration="3.5" data-track-index="1">
+        <div class="layer" id="s2">
+          <img class="ph" data-layout-allow-overflow id="ph2" src="assets/hl-guadual.jpg" alt="" style="object-position:50% 50%" />
+          <div class="tint"></div>
+        </div>
+        <div class="copy" data-layout-allow-overlap id="c2">
+          <div class="line" id="c2a">Decidir la tierra</div>
+          <div class="line" id="c2b" style="margin-top:6px"><em>con la cabeza</em></div>
+        </div>
+      </div>
+
+      <!-- 3 · Tierra + herramientas -->
+      <div class="clip scene" id="scene-herramientas" data-start="6.4" data-duration="3.2" data-track-index="1">
+        <div class="layer" id="s3">
+          <img class="ph" data-layout-allow-overflow id="ph3" src="assets/hl-tierra.jpg" alt="" style="object-position:50% 42%" />
+          <div class="tint"></div>
+        </div>
+        <div class="copy" data-layout-allow-overlap id="c3">
+          <div class="kicker" id="c3k">Seis herramientas</div>
+          <div class="line sm" id="c3a" style="margin-top:22px">para vivir</div>
+          <div class="line sm" id="c3b"><em>de ella</em></div>
+        </div>
+      </div>
+
+      <!-- 4 · Gallinas + lugar -->
+      <div class="clip scene" id="scene-lugar" data-start="9.2" data-duration="2.9" data-track-index="1">
+        <div class="layer" id="s4">
+          <img class="ph" data-layout-allow-overflow id="ph4" src="assets/hl-gallinas.jpg" alt="" style="object-position:63% 54%" />
+          <div class="tint"></div>
+        </div>
+        <div class="copy bottom" data-layout-allow-overlap id="c4">
+          <div class="sub" id="c4s">Yotoco · Lago Calima</div>
+        </div>
+      </div>
+
+      <!-- 5 · Cierre: vuelve a las terrazas para que el bucle no se note -->
+      <div class="clip scene" id="scene-cierre" data-start="11.7" data-duration="2.3" data-track-index="1">
+        <div class="layer" id="s5">
+          <img class="ph" data-layout-allow-overflow id="ph5" src="assets/hl-terrazas-cierre.jpg" alt="" style="object-position:50% 58%" />
+          <div class="tint"></div>
+        </div>
+        <div class="copy" data-layout-allow-overlap id="c5">
+          <div class="wordmark" id="c5mark">
+            <div class="name">La Huerta LAB</div>
+            <div class="rule" id="c5rule"></div>
+            <div class="sub">El Universo de Iván</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grain"></div>
+      <div class="vignette"></div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* Cada escena entra y sale con un fundido de 0.55 s sobre el solape que
+         dejan sus data-start. El movimiento es un Ken Burns lento y lineal:
+         a esta velocidad un ease se lee como un tirón. */
+      const SCENES = [
+        { id: 's1', copy: 'c1', at: 0.0,  dur: 3.7, from: 1.04, to: 1.13 },
+        { id: 's2', copy: 'c2', at: 3.3,  dur: 3.5, from: 1.12, to: 1.03 },
+        { id: 's3', copy: 'c3', at: 6.4,  dur: 3.2, from: 1.00, to: 1.07 },
+        { id: 's4', copy: 'c4', at: 9.2,  dur: 2.9, from: 1.08, to: 1.01 },
+        { id: 's5', copy: 'c5', at: 11.7, dur: 2.3, from: 1.13, to: 1.20 }
+      ];
+      const FADE = 0.55;
+
+      SCENES.forEach((s, i) => {
+        const img = `#${s.id} .ph`;
+
+        tl.fromTo(`#${s.id}`, { opacity: 0 }, { opacity: 1, duration: FADE, ease: 'power1.inOut' }, s.at);
+        tl.fromTo(`#${s.copy}`, { opacity: 0 }, { opacity: 1, duration: FADE, ease: 'power1.inOut' }, s.at);
+
+        // La última escena se apaga en negro verde para empalmar con el arranque.
+        const isLast = i === SCENES.length - 1;
+        const outAt  = s.at + s.dur - (isLast ? 0.8 : FADE);
+        const outDur = isLast ? 0.8 : FADE;
+        tl.to(`#${s.id}`,    { opacity: 0, duration: outDur, ease: 'power1.inOut' }, outAt);
+        tl.to(`#${s.copy}`,  { opacity: 0, duration: outDur, ease: 'power1.inOut' }, outAt);
+
+        tl.fromTo(img, { scale: s.from }, { scale: s.to, duration: s.dur, ease: 'none' }, s.at);
+      });
+
+      /* Detalles de entrada: la hoja y las reglas doradas se dibujan, el texto
+         sube un poco. Nada rebota. */
+      tl.fromTo('#c1leaf', { scale: 0.86, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.9, ease: 'power2.out' }, 0.15);
+      tl.fromTo('#c1mark', { y: 26 }, { y: 0, duration: 1.1, ease: 'power2.out' }, 0.35);
+      tl.fromTo('#c1rule', { scaleX: 0 }, { scaleX: 1, duration: 0.85, ease: 'power2.out' }, 0.8);
+
+      tl.fromTo('#c2a', { y: 30 }, { y: 0, duration: 0.95, ease: 'power2.out' }, 3.4);
+      tl.fromTo('#c2b', { y: 30 }, { y: 0, duration: 0.95, ease: 'power2.out' }, 3.62);
+
+      tl.fromTo('#c3k', { y: 18 }, { y: 0, duration: 0.8, ease: 'power2.out' }, 6.5);
+      tl.fromTo('#c3a', { y: 26 }, { y: 0, duration: 0.9, ease: 'power2.out' }, 6.66);
+      tl.fromTo('#c3b', { y: 26 }, { y: 0, duration: 0.9, ease: 'power2.out' }, 6.84);
+
+      tl.fromTo('#c4s', { y: 20 }, { y: 0, duration: 0.9, ease: 'power2.out' }, 9.35);
+
+      tl.fromTo('#c5mark', { y: 20 }, { y: 0, duration: 1.0, ease: 'power2.out' }, 11.85);
+      tl.fromTo('#c5rule', { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'power2.out' }, 12.1);
+
+      window.__timelines['main'] = tl;
+    </script>
+  </body>
+</html>

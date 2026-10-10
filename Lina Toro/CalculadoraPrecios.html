@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Precios - Lina Toro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #9caf88;
+            --secondary-color: #1a1a1a;
+            --accent-soft: #f4f6f2;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e5e7eb;
+            --radius: 12px;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html { overflow-x: hidden; width: 100%; }
+        body { width: 100% !important; max-width: 100% !important; overflow-x: hidden; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa;
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            width: 100vw;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fafafa;
+            padding: 2rem 1rem 0;
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--primary-color);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 1.2rem;
+            margin-top: -5px;
+            margin-bottom: 1.5rem;
+        }
+
+        .soap-name-container {
+            max-width: 500px;
+            margin: 0 auto 2.5rem;
+            text-align: center;
+        }
+
+        .soap-name-input {
+            width: 100%;
+            border: none;
+            border-bottom: 2px solid var(--border-color);
+            background: transparent;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--secondary-color);
+            padding: 10px;
+            transition: border-color 0.3s;
+        }
+
+        .soap-name-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .soap-name-input::placeholder {
+            color: #ccc;
+            font-style: italic;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--bg-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 2.2rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .section-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
+        .grid-config {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            align-items: end;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #888;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            background: #fafafa;
+            transition: all 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(156, 175, 136, 0.1);
+        }
+
+        /* TABLES */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+
+        th {
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #bbb;
+            text-transform: uppercase;
+            padding: 10px;
+        }
+
+        td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f8f8f8;
+        }
+
+        .row-name {
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .row-qty,
+        .row-price {
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-size: 0.9rem;
+        }
+
+        .row-total {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--secondary-color);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* UNIT SELECT */
+        select.row-unit {
+            width: 100%;
+            padding: 5px 4px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            background: #fafafa;
+            cursor: pointer;
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+        }
+
+        select.row-unit:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* TOOLTIPS */
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: #f0f0f0;
+            border-radius: 50%;
+            font-size: 9px;
+            color: #aaa;
+            cursor: help;
+            position: relative;
+        }
+
+        .help-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 150%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            background: #1a1a1a;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            line-height: 1.3;
+            text-align: center;
+            transition: all 0.2s;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+        }
+
+        .help-icon:hover .help-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* ADD/DEL BUTTONS */
+        .btn-add-row {
+            background: none;
+            border: 1.5px dashed #d1dbca;
+            color: var(--primary-color);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .btn-add-row:hover {
+            background: #f8faf7;
+            border-color: var(--primary-color);
+        }
+
+        .btn-del-row {
+            background: none;
+            border: none;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .btn-del-row:hover {
+            color: #ff6b6b;
+        }
+
+        /* RENTABILIDAD */
+        .results-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-box {
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #eee;
+            text-align: center;
+            background: #fff;
+        }
+
+        .result-box.highlight {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            box-shadow: 0 10px 20px rgba(156, 175, 136, 0.3);
+        }
+
+        .result-box.highlight .label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .result-box.highlight .value {
+            color: #fff;
+        }
+
+        .result-box .label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .result-box .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* PROFITABILITY INDICATOR */
+        .margin-indicator {
+            padding: 1.5rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .margin-empty {
+            color: #bbb;
+            font-size: 0.9rem;
+            padding: 0.5rem 0;
+            text-align: center;
+        }
+
+        .margin-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            min-width: 110px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .margin-text { flex: 1; }
+        .margin-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+        .margin-desc { font-size: 0.85rem; }
+
+        .margin-good { background: #f0f9f0; color: #2d7a2d; }
+        .margin-good .margin-desc { color: #4a9a4a; }
+        .margin-ok { background: #fff8ee; color: #b36b10; }
+        .margin-ok .margin-desc { color: #c47a1a; }
+        .margin-bad { background: #fff2f2; color: #b32d2d; }
+        .margin-bad .margin-desc { color: #c43a2d; }
+
+        /* PVP HERO */
+        .pvp-hero {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: var(--secondary-color);
+            border-radius: 14px;
+            color: white;
+        }
+        .pvp-hero-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.75;
+            margin-bottom: 8px;
+        }
+        .pvp-hero-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        .pvp-hero-badge {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.78rem;
+            letter-spacing: 0.02em;
+        }
+        .badge-excellent { background: rgba(255,255,255,0.25); color: #fff; }
+        .badge-good { background: rgba(255,255,255,0.2); color: #e8f5e9; }
+        .badge-fair { background: rgba(255,200,60,0.3); color: #fff8e1; }
+        .badge-low { background: rgba(255,100,100,0.3); color: #ffe0e0; }
+
+        /* ACTION */
+        .pdf-actions {
+            display: flex;
+            justify-content: center;
+            padding: 3rem 0;
+        }
+
+        .btn-pdf {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2.8rem;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-pdf:hover {
+            transform: translateY(-3px);
+            background: #333;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-pdf svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-pdf.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .btn-pdf .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        .btn-pdf.loading .spinner { display: block; }
+        .btn-pdf.loading .pdf-icon { display: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* CALCULADORAS DE PORCENTAJES */
+        .pct-calc-block {
+            padding: 0.8rem 0;
+        }
+
+        .pct-calc-desc {
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .pct-calc-row {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+
+        .pct-label {
+            font-size: 0.95rem;
+            color: #555;
+            white-space: nowrap;
+        }
+
+        .pct-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .pct-input-group input {
+            width: 90px;
+        }
+
+        .pct-unit {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .pct-answer {
+            margin-left: auto;
+            background: var(--accent-soft);
+            border: 1.5px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 0.7rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pct-answer-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .pct-answer-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .pct-divider {
+            border: none;
+            border-top: 1px solid #f0f0f0;
+            margin: 0.4rem 0;
+        }
+
+        /* TOGGLE TIPO PRODUCTO */
+        .product-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            margin-bottom: 2rem;
+            background: #f0f0f0;
+            border-radius: 50px;
+            padding: 4px;
+            max-width: 360px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 0.65rem 1.2rem;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+            color: #999;
+            text-align: center;
+        }
+
+        .toggle-btn.active {
+            background: var(--secondary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .toggle-btn:not(.active):hover {
+            color: #555;
+        }
+
+        /* SLIDER MARGEN PERSONALIZADO */
+        .margin-slider-container {
+            margin-top: 1.5rem;
+        }
+
+        .margin-slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .margin-slider-label span {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .margin-slider-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        .margin-slider {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            outline: none;
+            transition: background 0.3s;
+        }
+
+        .margin-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            border: 3px solid white;
+        }
+
+        .margin-slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            border: 3px solid white;
+        }
+
+        .margin-ranges {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+            font-size: 0.65rem;
+            color: #bbb;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .margin-ranges span {
+            text-align: center;
+        }
+
+        .margin-ranges .range-min { color: #e07c5a; }
+        .margin-ranges .range-ideal { color: #9caf88; }
+        .margin-ranges .range-max { color: #2d7a2d; }
+
+        /* COSTO POR UNIDAD HIGHLIGHT */
+        .unit-cost-result {
+            background: var(--accent-soft);
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .unit-cost-result .label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .unit-cost-result .value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+        }
+
+        /* ─── RESPONSIVE ─── */
+
+        /* Tablet */
+        @media (max-width: 768px) {
+            body {
+                padding: 1.5rem 0.75rem;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+            }
+
+            .subtitle {
+                font-size: 1.05rem;
+            }
+
+            .card {
+                padding: 1.6rem 1.2rem;
+            }
+
+            .results-container {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            }
+
+            .result-box {
+                padding: 1.2rem;
+            }
+
+            .result-box .value {
+                font-size: 1.35rem;
+            }
+
+            .pct-answer-value {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+                letter-spacing: -0.5px;
+            }
+
+            .subtitle {
+                font-size: 0.95rem;
+            }
+
+            /* Prevent iOS auto-zoom (font-size must be ≥ 16px) */
+            input,
+            select {
+                font-size: 16px !important;
+            }
+
+            .card {
+                padding: 1.2rem 1rem;
+                border-radius: 10px;
+                margin-bottom: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 0.85rem;
+            }
+
+            /* Tables: scroll horizontally */
+            #section-oils,
+            #section-actives {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Table inputs: keep usable minimum width */
+            .row-name {
+                min-width: 110px;
+            }
+
+            .row-qty,
+            .row-price {
+                min-width: 60px;
+            }
+
+            select.row-unit {
+                min-width: 52px;
+                font-size: 0.75rem !important;
+            }
+
+            /* Grid config: 1 column */
+            .grid-config {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            /* Results: 2 columns min */
+            .results-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+
+            .result-box {
+                padding: 1rem 0.8rem;
+            }
+
+            .result-box .value {
+                font-size: 1.2rem;
+            }
+
+            .pvp-hero-value {
+                font-size: 2.2rem;
+            }
+
+            /* Margin indicator: stack vertically */
+            .margin-indicator {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                padding: 1.2rem;
+            }
+
+            .margin-value {
+                font-size: 2.2rem;
+                min-width: unset;
+            }
+
+            /* Percentage calculator: stack rows */
+            .pct-calc-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .pct-answer {
+                margin-left: 0;
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .pct-answer-value {
+                font-size: 1.4rem;
+            }
+
+            .pct-input-group input {
+                width: 80px;
+            }
+
+            /* PDF button: full width */
+            .btn-pdf {
+                width: 100%;
+                justify-content: center;
+                padding: 1rem;
+                border-radius: 12px;
+            }
+
+            .pdf-actions {
+                padding: 1.5rem 0;
+            }
+
+            /* Add row button */
+            .btn-add-row {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .results-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            body { background: white; }
+            .container { padding: 0; width: 100%; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Calculadora de Precios</h1>
+            <div class="subtitle">Lina Toro | Recetas Cosméticas</div>
+            <div class="soap-name-container">
+                <input type="text" id="soap-name" class="soap-name-input" placeholder="Nombre de tu receta artesanal...">
+            </div>
+        </header>
+
+        <!-- TOGGLE TIPO PRODUCTO -->
+        <div class="product-toggle" id="product-toggle">
+            <button class="toggle-btn" onclick="setProductType('jaboneria')" id="toggle-jaboneria">Jabonería</button>
+            <button class="toggle-btn active" onclick="setProductType('cosmetica')" id="toggle-cosmetica">Cosmética</button>
+        </div>
+
+        <!-- CONFIGURACION GLOBAL -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Configuración del Lote</div>
+            </div>
+            <div class="grid-config">
+                <div class="input-group">
+                    <label>Gramos de la receta (Lote total)</label>
+                    <input type="number" id="lot-weight" value="1000" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Eficiencia de Proceso (%) <span class="help-icon">? <span class="help-tooltip">Considera mermas de curado y desperdicio en utensilios. Típico 80%.</span></span></label>
+                    <input type="number" id="efficiency" value="80" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Peso por Unidad (g)</label>
+                    <input type="number" id="unit-size" value="100" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Unidades producidas por lote <span class="help-icon">? <span class="help-tooltip">¿Cuántas unidades salieron de este lote? Si lo dejas en 0, se calculará automáticamente con el peso por unidad.</span></span></label>
+                    <input type="number" id="units-per-lot" value="0" min="0" oninput="calc()">
+                    <p style="font-size:0.72rem;color:#888;margin-top:6px;line-height:1.4;">Si dejas 0, se calcula automáticamente: (Lote × Eficiencia) ÷ Peso unidad</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- INGREDIENTES BASE -->
+        <div class="card" id="section-oils">
+            <div class="section-header">
+                <div class="section-title" id="title-oils"><span class="dot"></span> Ingredientes y Materias Primas</div>
+                <button class="btn-add-row" onclick="addRow('oils')" id="btn-add-oils">AÑADIR INGREDIENTE</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 28%;">Ingrediente</th>
+                        <th style="width: 9%;">Gramos receta</th>
+                        <th style="width: 100px;">Unidad comprada</th>
+                        <th style="width: 10%;">Cant. comprada <span class="help-icon">? <span class="help-tooltip">¿Cuántas unidades compraste? Ej: si compraste 1 kilo, pon 1. Si compraste 2 litros, pon 2.</span></span></th>
+                        <th style="width: 12%;">Precio total pagado</th>
+                        <th style="text-align: right; width: 10%;">Costo receta</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody class="row-container">
+                    <tr>
+                        <td><input type="text" class="row-name" value="Aceite de Oliva Orujo"></td>
+                        <td><input type="number" class="row-qty" value="278" oninput="calc()"></td>
+                        <td><select class="row-unit" onchange="calc()"><option value="kg" selected>Kg</option><option value="litro">Litro</option><option value="galon">Galón</option><option value="libra">Libra</option><option value="onza">Onzas</option><option value="g">Gramos</option><option value="ml">Mililitros</option></select></td>
+                        <td><input type="number" class="row-qty-purch" value="1" step="0.1" oninput="calc()"></td>
+                        <td><input type="number" class="row-price-total" value="1.60" oninput="calc()"></td>
+                        <td class="row-total">0,00</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" class="row-name" value="Aceite de Almendras"></td>
+                        <td><input type="number" class="row-qty" value="10" oninput="calc()"></td>
+                        <td><select class="row-unit" onchange="calc()"><option value="kg" selected>Kg</option><option value="litro">Litro</option><option value="galon">Galón</option><option value="libra">Libra</option><option value="onza">Onzas</option><option value="g">Gramos</option><option value="ml">Mililitros</option></select></td>
+                        <td><input type="number" class="row-qty-purch" value="1" step="0.1" oninput="calc()"></td>
+                        <td><input type="number" class="row-price-total" value="9.00" oninput="calc()"></td>
+                        <td class="row-total">0,00</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" class="row-name" value="Aceite de Coco"></td>
+                        <td><input type="number" class="row-qty" value="111" oninput="calc()"></td>
+                        <td><select class="row-unit" onchange="calc()"><option value="kg" selected>Kg</option><option value="litro">Litro</option><option value="galon">Galón</option><option value="libra">Libra</option><option value="onza">Onzas</option><option value="g">Gramos</option><option value="ml">Mililitros</option></select></td>
+                        <td><input type="number" class="row-qty-purch" value="1" step="0.1" oninput="calc()"></td>
+                        <td><input type="number" class="row-price-total" value="6.50" oninput="calc()"></td>
+                        <td class="row-total">0,00</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" class="row-name" value="NaOH (Sosa Cáustica)"></td>
+                        <td><input type="number" class="row-qty" value="93.4" oninput="calc()"></td>
+                        <td><select class="row-unit" onchange="calc()"><option value="kg" selected>Kg</option><option value="litro">Litro</option><option value="galon">Galón</option><option value="libra">Libra</option><option value="onza">Onzas</option><option value="g">Gramos</option><option value="ml">Mililitros</option></select></td>
+                        <td><input type="number" class="row-qty-purch" value="1" step="0.1" oninput="calc()"></td>
+                        <td><input type="number" class="row-price-total" value="2.50" oninput="calc()"></td>
+                        <td class="row-total">0,00</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                    <tr>
+                        <td><input type="text" class="row-name" value="Agua Destilada"></td>
+                        <td><input type="number" class="row-qty" value="240" oninput="calc()"></td>
+                        <td><select class="row-unit" onchange="calc()"><option value="kg" selected>Kg</option><option value="litro">Litro</option><option value="galon">Galón</option><option value="libra">Libra</option><option value="onza">Onzas</option><option value="g">Gramos</option><option value="ml">Mililitros</option></select></td>
+                        <td><input type="number" class="row-qty-purch" value="1" step="0.1" oninput="calc()"></td>
+                        <td><input type="number" class="row-price-total" value="0.70" oninput="calc()"></td>
+                        <td class="row-total">0,00</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight:700; background:#f4f8f1; border-top:2px solid #c5d6b8;">
+                        <td style="text-align:right; text-transform:uppercase; font-size:0.75rem; color:#6b7f5c; padding:10px 8px;">Totales</td>
+                        <td style="text-align:center; color:#6b7f5c;" id="total-oils-grams">0</td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align:center; color:#6b7f5c;" id="total-oils-paid">0,00</td>
+                        <td style="text-align:right; color:#6b7f5c;" id="total-oils-cost">0,00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- ACTIVOS COSMÉTICOS -->
+        <div class="card" id="section-actives">
+            <div class="section-header">
+                <div class="section-title" id="title-actives"><span class="dot"></span> Activos Cosméticos · Conservantes · Fragancias / AAEE</div>
+                <button class="btn-add-row" onclick="addRow('actives')" id="btn-add-actives">AÑADIR ACTIVO</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 28%;">Ingrediente</th>
+                        <th style="width: 9%;">Gramos receta</th>
+                        <th style="width: 100px;">Unidad comprada</th>
+                        <th style="width: 10%;">Cant. comprada <span class="help-icon">? <span class="help-tooltip">¿Cuántas unidades compraste? Ej: si compraste 1 kilo, pon 1. Si compraste 500 mL, pon 500.</span></span></th>
+                        <th style="width: 12%;">Precio total pagado</th>
+                        <th style="text-align: right; width: 10%;">Costo receta</th>
+                        <th style="width: 40px;"></th>
+                    </tr>
+                </thead>
+                <tbody class="row-container">
+                    <tr>
+                        <td><input type="text" class="row-name" value="AAEE Lavanda"></td>
+                        <td><input type="number" class="row-qty" value="5" oninput="calc()"></td>
+                        <td><select class="row-unit" onchange="calc()"><option value="kg" selected>Kg</option><option value="litro">Litro</option><option value="galon">Galón</option><option value="libra">Libra</option><option value="onza">Onzas</option><option value="g">Gramos</option><option value="ml">Mililitros</option></select></td>
+                        <td><input type="number" class="row-qty-purch" value="1" step="0.1" oninput="calc()"></td>
+                        <td><input type="number" class="row-price-total" value="91.80" oninput="calc()"></td>
+                        <td class="row-total">0,00</td>
+                        <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight:700; background:#f4f8f1; border-top:2px solid #c5d6b8;">
+                        <td style="text-align:right; text-transform:uppercase; font-size:0.75rem; color:#6b7f5c; padding:10px 8px;">Totales</td>
+                        <td style="text-align:center; color:#6b7f5c;" id="total-actives-grams">0</td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align:center; color:#6b7f5c;" id="total-actives-paid">0,00</td>
+                        <td style="text-align:right; color:#6b7f5c;" id="total-actives-cost">0,00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- MANO DE OBRA + OTROS GASTOS -->
+        <div class="grid-config" style="grid-template-columns: 1fr 1fr; align-items: stretch;">
+            <div class="card">
+                <div class="section-header">
+                    <div class="section-title"><span class="dot"></span> Mano de Obra</div>
+                </div>
+                <div class="input-group">
+                    <label>Valor Hora</label>
+                    <input type="number" id="labor-rate" value="6" oninput="calc()">
+                    <p style="font-size:0.72rem;color:#888;margin-top:6px;line-height:1.4;">💡 <strong>Recomendación:</strong> usa como mínimo el valor hora del salario mínimo de tu país para asegurarte de no trabajar por debajo del costo mínimo.</p>
+                </div>
+                <div class="input-group" style="margin-top: 1rem;">
+                    <label id="label-labor-time">Tiempo</label>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <input type="number" id="labor-time" value="1" oninput="calc()" style="flex:1;">
+                        <select id="labor-time-unit" onchange="onLaborTimeUnitChange()" style="padding:0.8rem 0.5rem; border:1px solid var(--border-color); border-radius:8px; font-family:'Inter',sans-serif; font-size:0.95rem; background:#fafafa; cursor:pointer;">
+                            <option value="horas">Horas</option>
+                            <option value="minutos">Minutos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="section-expenses">
+                <div class="section-header">
+                    <div class="section-title"><span class="dot"></span> Otros Gastos Directos</div>
+                    <button class="btn-add-row" onclick="addExpenseRow()">AÑADIR GASTO</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th style="text-align: right;">Valor</th>
+                            <th style="width: 40px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="row-container">
+                        <tr>
+                            <td><input type="text" class="row-name" value="Electricidad"></td>
+                            <td><input type="number" class="row-expense" value="0.50" oninput="calc()" style="text-align: right;"></td>
+                            <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- DETALLE POR UNIDAD -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Detalle por Unidad</div>
+            </div>
+            <div class="grid-config">
+                <div class="input-group">
+                    <label>Packaging Individual</label>
+                    <input type="number" id="unit-pkg" value="0.30" oninput="calc()">
+                </div>
+                <div class="input-group">
+                    <label>Otros Costos Unitarios</label>
+                    <input type="number" id="unit-extra" value="0" oninput="calc()">
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTADOS: COSTOS DEL LOTE -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Costos del Lote</div>
+            </div>
+            <div class="results-container">
+                <div class="result-box"><span class="label">Costo Total del Lote</span><span class="value" id="res-cost-lot">0,00</span></div>
+                <div class="result-box highlight"><span class="label">Costo por Unidad</span><span class="value" id="res-cost-unit">0,00</span></div>
+                <div class="result-box"><span class="label">Unidades del Lote</span><span class="value" id="res-units-lot">0</span></div>
+            </div>
+        </div>
+
+        <!-- MARGEN Y PRECIO DE VENTA -->
+        <div class="card">
+            <div class="section-header">
+                <div class="section-title"><span class="dot"></span> Margen y Precio de Venta</div>
+            </div>
+            <div class="margin-slider-container">
+                <div class="margin-slider-label">
+                    <span>Margen de ganancia</span>
+                    <span class="margin-slider-value" id="margin-slider-display">50%</span>
+                </div>
+                <input type="range" class="margin-slider" id="margin-slider" min="0" max="99" value="50" oninput="onMarginSlider()" style="background: linear-gradient(to right, #e07c5a 0%, #f0c040 25%, #9caf88 50%, #2d7a2d 100%);">
+            </div>
+
+            <!-- PVP GRANDE DESTACADO -->
+            <div class="pvp-hero" style="margin-top: 2rem;">
+                <div class="pvp-hero-label">Precio de Venta Sugerido por Unidad (PVP)</div>
+                <div class="pvp-hero-value" id="res-pvp-hero">0,00</div>
+                <div class="pvp-hero-badge" id="res-badge" style="display: none;"></div>
+            </div>
+
+            <div class="results-container" style="margin-top: 1.5rem;">
+                <div class="result-box"><span class="label">Precio Mín/Unidad (30%)</span><span class="value" id="res-min-unit">0,00</span></div>
+                <div class="result-box"><span class="label" id="label-pvp-secondary">PVP por Kg</span><span class="value" id="res-pvp">0,00</span></div>
+                <div class="result-box highlight"><span class="label">Ganancia Neta / Unidad</span><span class="value" id="res-ganancia-unit">0,00</span></div>
+                <div class="result-box" style="background:#f0f9f0; border-color:#c8ddc0;"><span class="label">Ganancia Total del Lote</span><span class="value" style="color:#2d7a2d;" id="res-ganancia-lote">0,00</span></div>
+            </div>
+        </div>
+
+        <div class="pdf-actions">
+            <button class="btn-pdf" id="btn-pdf-main" onclick="generateProfessionalPDF()">
+                <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <div class="spinner"></div>
+                DESCARGAR INFORME TÉCNICO PDF
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ── Formato sin decimales innecesarios (2 → "2", 2.1 → "2,1", 2.21 → "2,21")
+        function fmtSmart(v) {
+            const str = parseFloat(v).toFixed(2).replace(/\.?0+$/, '');
+            const [int, dec] = str.split('.');
+            const intFmt = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return dec ? `${intFmt},${dec}` : intFmt;
+        }
+
+        // ── Calculadoras de porcentajes
+        function calcPct1() {
+            const pct   = parseFloat(document.getElementById('c1-pct').value);
+            const total = parseFloat(document.getElementById('c1-total').value);
+            const el    = document.getElementById('c1-result');
+            el.textContent = (!isNaN(pct) && !isNaN(total) && total > 0)
+                ? fmtSmart((pct / 100) * total) : '—';
+        }
+
+        function calcPct2() {
+            const grams = parseFloat(document.getElementById('c2-grams').value);
+            const total = parseFloat(document.getElementById('c2-total').value);
+            const el    = document.getElementById('c2-result');
+            el.textContent = (!isNaN(grams) && !isNaN(total) && total > 0)
+                ? fmtSmart((grams / total) * 100) : '—';
+        }
+
+        // ── Formato numérico latinoamericano: punto para miles, coma para decimales
+        function fmtNum(v, d = 2) {
+            const n = parseFloat(v).toFixed(d);
+            const [int, dec] = n.split('.');
+            const intFmt = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return dec !== undefined ? `${intFmt},${dec}` : intFmt;
+        }
+
+        function addRow(sectionId) {
+            const container = document.querySelector(`#section-${sectionId} .row-container`);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="row-name" placeholder="Nuevo ingrediente..."></td>
+                <td><input type="number" class="row-qty" placeholder="Gramos" oninput="calc()"></td>
+                <td><select class="row-unit" onchange="calc()">
+                    <option value="kg">Kg</option>
+                    <option value="litro">Litro</option>
+                    <option value="galon">Galón</option>
+                    <option value="libra">Libra</option>
+                    <option value="onza">Onzas</option>
+                    <option value="g">Gramos</option>
+                    <option value="ml">Mililitros</option>
+                </select></td>
+                <td><input type="number" class="row-qty-purch" placeholder="Cant." step="0.1" oninput="calc()"></td>
+                <td><input type="number" class="row-price-total" placeholder="Precio" oninput="calc()"></td>
+                <td class="row-total">—</td>
+                <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+            `;
+            container.appendChild(tr);
+            calc();
+        }
+
+        function addExpenseRow() {
+            const container = document.querySelector(`#section-expenses .row-container`);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="row-name" placeholder="Concepto de gasto..."></td>
+                <td><input type="number" class="row-expense" placeholder="Valor" oninput="calc()" style="text-align: right;"></td>
+                <td><button class="btn-del-row" onclick="delRow(this)">&times;</button></td>
+            `;
+            container.appendChild(tr);
+            calc();
+        }
+
+        function delRow(btn) {
+            btn.closest('tr').remove();
+            calc();
+        }
+
+        function rowCost(q, unit, qtyPurch, pricePaid) {
+            const gramsPerUnit = { kg: 1000, litro: 1000, galon: 3785, libra: 500, onza: 28.35, g: 1, ml: 1 };
+            const grams = (qtyPurch || 1) * (gramsPerUnit[unit] || 1000);
+            const pricePerGram = grams > 0 ? (pricePaid || 0) / grams : 0;
+            return q * pricePerGram;
+        }
+
+        let currentProductType = 'cosmetica';
+        let currentMarginPct = 50;
+
+        function setProductType(type) {
+            currentProductType = type;
+            document.getElementById('toggle-jaboneria').classList.toggle('active', type === 'jaboneria');
+            document.getElementById('toggle-cosmetica').classList.toggle('active', type === 'cosmetica');
+
+            const oilsTitle = document.getElementById('title-oils');
+            const activesTitle = document.getElementById('title-actives');
+            const btnAddOils = document.getElementById('btn-add-oils');
+            const btnAddActives = document.getElementById('btn-add-actives');
+            const effHelp = document.getElementById('efficiency').parentElement.querySelector('.help-tooltip');
+
+            const labelPvpSec = document.getElementById('label-pvp-secondary');
+            const labelLaborTime = document.getElementById('label-labor-time');
+            if (type === 'jaboneria') {
+                oilsTitle.innerHTML = '<span class="dot"></span> Aceites y Grasas Base';
+                activesTitle.innerHTML = '<span class="dot"></span> Aditivos · Esencias · Colorantes';
+                btnAddOils.textContent = 'AÑADIR ACEITE';
+                btnAddActives.textContent = 'AÑADIR ADITIVO';
+                if (effHelp) effHelp.textContent = 'Considera mermas de curado y desperdicio en utensilios. Típico 80-85%.';
+                if (labelPvpSec) labelPvpSec.textContent = 'PVP por Kg';
+                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo';
+            } else {
+                oilsTitle.innerHTML = '<span class="dot"></span> Ingredientes y Materias Primas';
+                activesTitle.innerHTML = '<span class="dot"></span> Activos Cosméticos · Conservantes · Fragancias / AAEE';
+                btnAddOils.textContent = 'AÑADIR INGREDIENTE';
+                btnAddActives.textContent = 'AÑADIR ACTIVO';
+                if (effHelp) effHelp.textContent = 'Considera mermas por transferencia y desperdicio. Típico 90-95%.';
+                if (labelPvpSec) labelPvpSec.textContent = 'Costo Total/Unidad';
+                if (labelLaborTime) labelLaborTime.textContent = 'Tiempo';
+            }
+            calc();
+        }
+
+        function onLaborTimeUnitChange() {
+            calc();
+        }
+
+        function getLaborTimeInHours() {
+            const val = parseFloat(document.getElementById('labor-time').value) || 0;
+            const unit = document.getElementById('labor-time-unit').value;
+            return unit === 'minutos' ? val / 60 : val;
+        }
+
+        function onMarginSlider() {
+            currentMarginPct = parseFloat(document.getElementById('margin-slider').value);
+            document.getElementById('margin-slider-display').textContent = currentMarginPct + '%';
+            calc();
+        }
+
+        function calc() {
+            const lotWeight  = parseFloat(document.getElementById('lot-weight').value) || 0;
+            const efficiency = (parseFloat(document.getElementById('efficiency').value) || 100) / 100;
+            const laborRate  = parseFloat(document.getElementById('labor-rate').value) || 0;
+            const laborTime  = getLaborTimeInHours();
+            const unitSize   = parseFloat(document.getElementById('unit-size').value) || 100;
+            const unitPkg    = parseFloat(document.getElementById('unit-pkg').value) || 0;
+            const unitExtra  = parseFloat(document.getElementById('unit-extra').value) || 0;
+            const manualUnits = parseFloat(document.getElementById('units-per-lot').value) || 0;
+
+            let totalGrams = 0;
+            let totalCost  = 0;
+
+            const sections = ['oils', 'actives'];
+            sections.forEach(s => {
+                let secGrams = 0, secPaid = 0, secCost = 0;
+                document.querySelectorAll(`#section-${s} .row-container tr`).forEach(row => {
+                    const q        = parseFloat(row.querySelector('.row-qty')?.value) || 0;
+                    const unit     = row.querySelector('.row-unit')?.value || 'kg';
+                    const qtyPurch = parseFloat(row.querySelector('.row-qty-purch')?.value) || 1;
+                    const pricePaid= parseFloat(row.querySelector('.row-price-total')?.value) || 0;
+                    const sub      = rowCost(q, unit, qtyPurch, pricePaid);
+                    secGrams += q;
+                    secPaid  += pricePaid;
+                    secCost  += sub;
+                    totalGrams += q;
+                    totalCost  += sub;
+                    if (row.querySelector('.row-total')) {
+                        row.querySelector('.row-total').textContent = fmtNum(sub, 2);
+                    }
+                });
+                const elGrams = document.getElementById(`total-${s}-grams`);
+                const elPaid  = document.getElementById(`total-${s}-paid`);
+                const elCost  = document.getElementById(`total-${s}-cost`);
+                if (elGrams) elGrams.textContent = fmtNum(secGrams, 1);
+                if (elPaid)  elPaid.textContent  = fmtNum(secPaid, 2);
+                if (elCost)  elCost.textContent  = fmtNum(secCost, 2);
+            });
+
+            let totalOtherExpenses = 0;
+            document.querySelectorAll('#section-expenses .row-container tr').forEach(row => {
+                totalOtherExpenses += parseFloat(row.querySelector('.row-expense')?.value) || 0;
+            });
+
+            const matKiloRaw  = totalGrams > 0 ? (totalCost / totalGrams) * 1000 : 0;
+            const matKiloEff  = matKiloRaw / efficiency;
+            const laborKilo   = laborRate * laborTime;
+            const costFabKilo = matKiloEff + laborKilo + totalOtherExpenses;
+
+            // Costo total del lote
+            const costTotalLot = (totalCost / efficiency) + (laborRate * laborTime * (lotWeight / 1000)) + totalOtherExpenses;
+
+            // Unidades del lote: manual o automático
+            const unidades = manualUnits > 0 ? manualUnits : Math.floor((lotWeight * efficiency) / unitSize);
+            const costPerUnit = unidades > 0 ? (costTotalLot / unidades) + unitPkg + unitExtra : 0;
+
+            // Margen como markup sobre costo: PVP = Costo × (1 + margen/100)
+            const pvpPerUnit = costPerUnit * (1 + currentMarginPct / 100);
+            const pvpPerKg = unitSize > 0 ? (pvpPerUnit - unitPkg - unitExtra) / unitSize * 1000 : 0;
+            const minPerUnit = costPerUnit * (1 + 30 / 100); // mínimo con 30% de margen sobre costo
+            const margen = currentMarginPct;
+            const gananciaUnit = pvpPerUnit - costPerUnit;
+            const gananciaLote = gananciaUnit * unidades;
+
+            // Actualizar UI
+            document.getElementById('res-cost-lot').textContent     = fmtNum(costTotalLot);
+            document.getElementById('res-cost-unit').textContent    = fmtNum(costPerUnit);
+            document.getElementById('res-units-lot').textContent    = unidades;
+            document.getElementById('res-pvp-hero').textContent     = fmtNum(pvpPerUnit);
+            document.getElementById('res-min-unit').textContent     = fmtNum(minPerUnit);
+            document.getElementById('res-ganancia-unit').textContent = fmtNum(gananciaUnit);
+            document.getElementById('res-ganancia-lote').textContent = fmtNum(gananciaLote);
+
+            // Cosmética: todo por unidad · Jabonería: por Kg
+            const elPvpSecondary = document.getElementById('res-pvp');
+            if (elPvpSecondary) {
+                elPvpSecondary.textContent = currentProductType === 'cosmetica' ? fmtNum(costPerUnit) : fmtNum(pvpPerKg);
+            }
+
+            // Badge de rentabilidad
+            const badge = document.getElementById('res-badge');
+            if (unidades > 0 && costPerUnit > 0) {
+                badge.style.display = 'inline-block';
+                if (currentMarginPct >= 50) {
+                    badge.textContent = 'Excelente rentabilidad';
+                    badge.className = 'pvp-hero-badge badge-excellent';
+                } else if (currentMarginPct >= 30) {
+                    badge.textContent = 'Buena rentabilidad';
+                    badge.className = 'pvp-hero-badge badge-good';
+                } else if (currentMarginPct > 0) {
+                    badge.textContent = 'Rentabilidad ajustada';
+                    badge.className = 'pvp-hero-badge badge-fair';
+                } else {
+                    badge.textContent = 'Sin margen de ganancia';
+                    badge.className = 'pvp-hero-badge badge-low';
+                }
+            } else {
+                badge.style.display = 'none';
+            }
+
+            return { lotWeight, efficiency, unitSize, matKiloEff, laborKilo, totalOtherExpenses, costFabKilo, pvp: pvpPerKg, unitPvp: pvpPerUnit, margen, costPerUnit, unidades, costTotalLot, minPerUnit, gananciaUnit, gananciaLote };
+        }
+
+        async function generateProfessionalPDF() {
+            const btn = document.getElementById('btn-pdf-main');
+            btn.classList.add('loading');
+            await new Promise(r => setTimeout(r, 60));
+
+            try {
+                const d = calc();
+                const recipeName = document.getElementById('soap-name').value || 'Receta Artesanal';
+                const now      = new Date();
+                const dateStr  = now.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+
+                // ── Recolectar datos ─────────────────────────────────────────
+                const isJaboneria = currentProductType === 'jaboneria';
+                const productTypeLabel = isJaboneria ? 'Jaboneria' : 'Cosmetica';
+                const sectionDefs = [
+                    { id: 'oils',    label: isJaboneria ? 'Aceites y Grasas Base' : 'Ingredientes y Materias Primas' },
+                    { id: 'actives', label: isJaboneria ? 'Aditivos · Esencias · Colorantes' : 'Activos Cosmeticos · Conservantes · Fragancias / AAEE' }
+                ];
+                let totalGrams = 0;
+                const sectionData = sectionDefs.map(s => {
+                    const rows = document.querySelectorAll(`#section-${s.id} .row-container tr`);
+                    let items = [], sCost = 0, sGrams = 0;
+                    rows.forEach(r => {
+                        const name     = r.querySelector('.row-name')?.value  || '-';
+                        const qty      = parseFloat(r.querySelector('.row-qty')?.value)        || 0;
+                        const unit     = r.querySelector('.row-unit')?.value  || 'kg';
+                        const qtyPurch = parseFloat(r.querySelector('.row-qty-purch')?.value)  || 1;
+                        const pricePaid= parseFloat(r.querySelector('.row-price-total')?.value)|| 0;
+                        const cost     = rowCost(qty, unit, qtyPurch, pricePaid);
+                        const unitLabelMap = { kg: 'Kg', litro: 'Litro', galon: 'Galón', libra: 'Libra', onza: 'Onzas', g: 'Gramos', ml: 'Mililitros' };
+                        const unitLabel = unitLabelMap[unit] || unit;
+                        const price = pricePaid; // para mostrar en PDF
+                        sCost += cost; sGrams += qty; totalGrams += qty;
+                        items.push({ name, qty, price, cost, unitLabel });
+                    });
+                    return { ...s, items, sCost, sGrams };
+                });
+
+                let expensesData = [], totalOtherExp = 0;
+                document.querySelectorAll('#section-expenses .row-container tr').forEach(r => {
+                    const concept = r.querySelector('.row-name')?.value    || '-';
+                    const val     = parseFloat(r.querySelector('.row-expense')?.value) || 0;
+                    totalOtherExp += val;
+                    expensesData.push({ concept, val });
+                });
+
+                const laborRate  = parseFloat(document.getElementById('labor-rate').value) || 0;
+                const laborTime  = getLaborTimeInHours();
+                const laborKilo  = laborRate * laborTime;
+                const unitPkg    = parseFloat(document.getElementById('unit-pkg').value) || 0;
+                const unitExtra  = parseFloat(document.getElementById('unit-extra').value) || 0;
+                const unidades   = d.unidades;
+                const minVal     = d.minPerUnit;
+                const totalMatCost = sectionData.reduce((a, s) => a + s.sCost, 0);
+
+                // ── jsPDF setup ──────────────────────────────────────────────
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                // i18n del PDF: T() traduce fragmentos; el parche traduce textos exactos pasados a pdf.text().
+                const T = window.__t || function (s) { return s; };
+                { const _pt = pdf.text.bind(pdf); pdf.text = function (s) { const a = [].slice.call(arguments); if (typeof s === 'string') a[0] = T(s); return _pt.apply(pdf, a); }; }
+                const W  = 210;
+                const ML = 14;
+                const MR = 14;
+                const CW = W - ML - MR;
+                let Y = 0;
+
+                const GREEN  = [156, 175, 136];
+                const DARK   = [26, 26, 26];
+                const WHITE  = [255, 255, 255];
+                const LGRAY  = [245, 245, 245];
+                const MGRAY  = [200, 200, 200];
+                const DGRAY  = [100, 100, 100];
+                const FGRAY  = [170, 170, 170];
+                const LGREEN = [240, 245, 238];
+                const ORANGE = [192, 97, 74];
+
+                // Formato numérico en PDF (mismo que UI)
+                const f = (v, dec = 2) => {
+                    const n = parseFloat(v).toFixed(dec);
+                    const [int, d2] = n.split('.');
+                    const intFmt = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                    return d2 !== undefined ? `${intFmt},${d2}` : intFmt;
+                };
+
+                const PH   = 297;
+                const FOOT = 18;
+                const nameDisplay = recipeName.length > 35 ? recipeName.substring(0, 33) + '...' : recipeName;
+
+                function checkPage(needed = 12) {
+                    if (Y + needed > PH - FOOT) {
+                        pdf.addPage();
+                        Y = 14;
+                        pdf.setFillColor(...DARK);
+                        pdf.rect(0, 0, W, 10, 'F');
+                        pdf.setFillColor(...GREEN);
+                        pdf.rect(0, 0, 3, 10, 'F');
+                        pdf.setTextColor(...FGRAY);
+                        pdf.setFontSize(7);
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text(`${nameDisplay}  —  ${T('continuacion')}`, ML + 2, 6.5);
+                        pdf.setTextColor(...WHITE);
+                        pdf.setFontSize(6.5);
+                        pdf.text('Lina Toro | Calculadora de Precios', W - MR, 6.5, { align: 'right' });
+                        Y = 16;
+                    }
+                }
+
+                // ── CABECERA ─────────────────────────────────────────────────
+                pdf.setFillColor(...DARK);
+                pdf.rect(0, 0, W, 42, 'F');
+                pdf.setFillColor(...GREEN);
+                pdf.rect(0, 0, 3, 42, 'F');
+
+                pdf.setTextColor(...FGRAY);
+                pdf.setFontSize(6.5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.text('INFORME TECNICO DE COSTEO', ML, 11);
+
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(20);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(nameDisplay, ML, 23);
+
+                pdf.setFontSize(8.5);
+                pdf.setFont('helvetica', 'normal');
+                pdf.setTextColor(...FGRAY);
+                pdf.text(`Lina Toro  |  ${T('Recetas de')} ${T(productTypeLabel)}`, ML, 31);
+
+                pdf.setFontSize(7.5);
+                pdf.text(dateStr, W - MR, 11, { align: 'right' });
+
+                pdf.setFillColor(...GREEN);
+                pdf.roundedRect(W - MR - 26, 14, 26, 6, 1, 1, 'F');
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(6);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(T(productTypeLabel).toUpperCase(), W - MR - 13, 18.2, { align: 'center' });
+
+                Y = 42;
+
+                // ── KPIs ─────────────────────────────────────────────────────
+                pdf.setFillColor(...GREEN);
+                pdf.rect(0, Y, W, 18, 'F');
+                const kpiW = W / 4;
+                const kpis = [
+                    { label: 'LOTE TOTAL',    value: `${d.lotWeight} g` },
+                    { label: 'EFICIENCIA',    value: `${(d.efficiency * 100).toFixed(0)}%` },
+                    { label: 'PESO UNIDAD',   value: `${d.unitSize} g` },
+                    { label: 'UNIDADES LOTE', value: `${d.unidades}` }
+                ];
+                kpis.forEach((k, i) => {
+                    const x = i * kpiW;
+                    if (i > 0) {
+                        pdf.setDrawColor(...WHITE);
+                        pdf.setLineWidth(0.2);
+                        pdf.line(x, Y + 2, x, Y + 16);
+                    }
+                    pdf.setTextColor(220, 235, 220);
+                    pdf.setFontSize(6);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text(k.label, x + kpiW / 2, Y + 7, { align: 'center' });
+                    pdf.setTextColor(...WHITE);
+                    pdf.setFontSize(13);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(k.value, x + kpiW / 2, Y + 14.5, { align: 'center' });
+                });
+                Y += 22;
+
+                function sectionTitle(title, sub = '') {
+                    checkPage(sub ? 16 : 12);
+                    pdf.setFillColor(...GREEN);
+                    pdf.rect(ML, Y, 1.5, 5.5, 'F');
+                    pdf.setTextColor(...DARK);
+                    pdf.setFontSize(9);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(title.toUpperCase(), ML + 3, Y + 4.2);
+                    Y += 6.5;
+                    if (sub) {
+                        pdf.setTextColor(...FGRAY);
+                        pdf.setFontSize(7);
+                        pdf.setFont('helvetica', 'normal');
+                        pdf.text(sub, ML, Y);
+                        Y += 4;
+                    }
+                    Y += 1;
+                }
+
+                function tableRow(cols, widths, rowY, bg = null, textColor = DARK, fontSize = 8, bold = false) {
+                    if (rowY + 5.5 > PH - FOOT) {
+                        pdf.addPage();
+                        pdf.setFillColor(...DARK); pdf.rect(0, 0, W, 10, 'F');
+                        pdf.setFillColor(...GREEN); pdf.rect(0, 0, 3, 10, 'F');
+                        pdf.setTextColor(...FGRAY); pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
+                        pdf.text(`${nameDisplay}  —  ${T('continuacion')}`, ML + 2, 6.5);
+                        rowY = 16;
+                        Y = rowY;
+                    }
+                    if (bg) { pdf.setFillColor(...bg); pdf.rect(ML, rowY, CW, 5.5, 'F'); }
+                    pdf.setFontSize(fontSize);
+                    pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+                    pdf.setTextColor(...textColor);
+                    let x = ML;
+                    cols.forEach((t, i) => {
+                        const align  = widths[i] < 0 ? 'right' : 'left';
+                        const w      = Math.abs(widths[i]);
+                        const padX   = align === 'right' ? x + w - 1 : x + 1;
+                        let txt = String(t);
+                        const maxChars = Math.floor(w * 1.8);
+                        if (txt.length > maxChars) txt = txt.substring(0, maxChars - 2) + '...';
+                        pdf.text(txt, padX, rowY + 3.8, { align });
+                        x += w;
+                    });
+                    pdf.setDrawColor(230, 230, 230);
+                    pdf.setLineWidth(0.1);
+                    pdf.line(ML, rowY + 5.5, ML + CW, rowY + 5.5);
+                    Y = rowY + 5.5;
+                    return Y;
+                }
+
+                // ── MATERIAS PRIMAS ──────────────────────────────────────────
+                sectionTitle('Desglose de Ingredientes', 'Composicion del lote con porcentajes y costos individuales por ingrediente.');
+
+                let ry = Y;
+                pdf.setFillColor(...DARK);
+                pdf.rect(ML, ry, CW, 5.5, 'F');
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(6.5);
+                pdf.setFont('helvetica', 'bold');
+                const hW = [70, -18, -18, -28, -48];
+                const hT = ['INGREDIENTE', 'CANTIDAD', '% LOTE', 'PRECIO', 'COSTO'];
+                let hx = ML;
+                hT.forEach((t, i) => {
+                    const w = Math.abs(hW[i]);
+                    const align = hW[i] < 0 ? 'right' : 'left';
+                    pdf.text(t, align === 'right' ? hx + w - 1 : hx + 1, ry + 3.8, { align });
+                    hx += w;
+                });
+                ry += 5.5;
+
+                let rowAlt = false;
+                sectionData.forEach(sec => {
+                    if (!sec.items.length) return;
+                    const sPct = totalGrams > 0 ? ((sec.sGrams / totalGrams) * 100).toFixed(1) : '0.0';
+                    pdf.setFillColor(...LGREEN);
+                    pdf.rect(ML, ry, CW, 5.5, 'F');
+                    pdf.setTextColor(...GREEN);
+                    pdf.setFontSize(7);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(`${T(sec.label.toUpperCase())}  —  ${sPct}% ${T('del lote')}`, ML + 2, ry + 3.8);
+                    pdf.setDrawColor(200, 220, 190);
+                    pdf.setLineWidth(0.1);
+                    pdf.line(ML, ry + 5.5, ML + CW, ry + 5.5);
+                    ry += 5.5;
+
+                    sec.items.forEach(it => {
+                        const iPct = totalGrams > 0 ? ((it.qty / totalGrams) * 100).toFixed(1) : '0.0';
+                        ry = tableRow(
+                            [it.name, `${it.qty.toFixed(1)} g`, `${iPct}%`, `${f(it.price)}${it.unitLabel}`, f(it.cost, 3)],
+                            hW, ry,
+                            rowAlt ? LGRAY : null,
+                            DARK, 7.5
+                        );
+                        rowAlt = !rowAlt;
+                    });
+                    ry = tableRow(
+                        ['', '', '', 'Subtotal seccion', f(sec.sCost, 3)],
+                        hW, ry, [250, 250, 250], DGRAY, 7
+                    );
+                });
+
+                pdf.setFillColor(...DARK);
+                pdf.rect(ML, ry, CW, 6, 'F');
+                pdf.setTextColor(...WHITE);
+                pdf.setFontSize(8);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('TOTAL INGREDIENTES', ML + 2, ry + 4.2);
+                pdf.text(f(totalMatCost, 3), ML + CW - 1, ry + 4.2, { align: 'right' });
+                Y = ry + 10;
+
+                // ── MANO DE OBRA + GASTOS ─────────────────────────────────────
+                const half  = (CW - 4) / 2;
+                const midX  = ML + half + 4;
+                const startY2col = Y;
+
+                checkPage(30);
+                pdf.setFillColor(...GREEN);
+                pdf.rect(ML, Y, 1.5, 5.5, 'F');
+                pdf.setTextColor(...DARK);
+                pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                pdf.text('MANO DE OBRA', ML + 3, Y + 4.2);
+                Y += 7.5;
+                const moStartY = Y;
+
+                const laborTimeRaw = parseFloat(document.getElementById('labor-time').value) || 0;
+                const laborTimeUnitPDF = document.getElementById('labor-time-unit').value;
+                const laborTimeDisplay = laborTimeUnitPDF === 'minutos' ? `${laborTimeRaw} min` : `${laborTime.toFixed(1)} hr`;
+                const moRows = [
+                    { l: 'Valor por hora', v: `${f(laborRate)}/hr`, shade: true },
+                    { l: 'Tiempo',  v: laborTimeDisplay,  shade: false },
+                ];
+                let moY = moStartY;
+                moRows.forEach(r => {
+                    if (r.shade) { pdf.setFillColor(...LGRAY); pdf.rect(ML, moY, half, 5.5, 'F'); }
+                    pdf.setTextColor(...DARK); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'normal');
+                    pdf.text(r.l, ML + 1, moY + 3.8);
+                    pdf.text(r.v, ML + half - 1, moY + 3.8, { align: 'right' });
+                    pdf.setDrawColor(230, 230, 230); pdf.setLineWidth(0.1);
+                    pdf.line(ML, moY + 5.5, ML + half, moY + 5.5);
+                    moY += 5.5;
+                });
+                pdf.setFillColor(...LGREEN); pdf.rect(ML, moY, half, 5.5, 'F');
+                pdf.setTextColor(...DARK); pdf.setFontSize(8); pdf.setFont('helvetica', 'bold');
+                pdf.text(isJaboneria ? 'Total por Kilo' : 'Total Mano de Obra', ML + 1, moY + 3.8);
+                pdf.setTextColor(70, 110, 60);
+                const moTotal = isJaboneria ? laborKilo : (laborRate * laborTime * (d.lotWeight / 1000));
+                pdf.text(f(moTotal), ML + half - 1, moY + 3.8, { align: 'right' });
+                moY += 5.5;
+
+                let rightTitleY = startY2col;
+                pdf.setFillColor(...GREEN);
+                pdf.rect(midX, rightTitleY, 1.5, 5.5, 'F');
+                pdf.setTextColor(...DARK);
+                pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                pdf.text('GASTOS OPERATIVOS', midX + 3, rightTitleY + 4.2);
+
+                const expToShow = expensesData.length > 0 ? expensesData : [{ concept: 'Sin gastos adicionales', val: 0 }];
+                let gaY = moStartY;
+                expToShow.forEach((e, i) => {
+                    pdf.setFillColor(...(i % 2 === 0 ? LGRAY : WHITE));
+                    pdf.rect(midX, gaY, half, 5.5, 'F');
+                    pdf.setTextColor(...DARK); pdf.setFontSize(7.5); pdf.setFont('helvetica', 'normal');
+                    const maxChars = 28;
+                    const concept = e.concept.length > maxChars ? e.concept.substring(0, maxChars - 1) + '.' : e.concept;
+                    pdf.text(concept, midX + 1, gaY + 3.8);
+                    pdf.text(f(e.val), midX + half - 1, gaY + 3.8, { align: 'right' });
+                    pdf.setDrawColor(230, 230, 230); pdf.setLineWidth(0.1);
+                    pdf.line(midX, gaY + 5.5, midX + half, gaY + 5.5);
+                    gaY += 5.5;
+                });
+                pdf.setFillColor(...LGREEN); pdf.rect(midX, gaY, half, 5.5, 'F');
+                pdf.setTextColor(...DARK); pdf.setFontSize(8); pdf.setFont('helvetica', 'bold');
+                pdf.text('Total Gastos', midX + 1, gaY + 3.8);
+                pdf.setTextColor(70, 110, 60);
+                pdf.text(f(totalOtherExp), midX + half - 1, gaY + 3.8, { align: 'right' });
+                gaY += 5.5;
+
+                Y = Math.max(moY, gaY) + 8;
+
+                // ── COSTOS POR UNIDAD ────────────────────────────────────────
+                sectionTitle(`${T('Costos por Unidad')} (${d.unitSize} g)`);
+                Y = tableRow(['Packaging individual', f(unitPkg)], [half, -half], Y, LGRAY);
+                Y = tableRow(['Otros costos unitarios', f(unitExtra)], [half, -half], Y);
+                Y += 8;
+
+                // ── ESTRUCTURA DE COSTOS ──────────────────────────────────
+                const costRefLabel = isJaboneria ? 'Estructura de Costos por Kilo Producido' : 'Estructura de Costos por Unidad';
+                sectionTitle(costRefLabel);
+                const COL_VAL = ML + CW - 22;
+                const COL_PCT = ML + CW - 1;
+
+                pdf.setFillColor(...LGRAY);
+                pdf.rect(ML, Y, CW, 5.5, 'F');
+                pdf.setTextColor(...DGRAY);
+                pdf.setFontSize(6.5);
+                pdf.setFont('helvetica', 'bold');
+                pdf.text('CONCEPTO', ML + 2, Y + 3.8);
+                pdf.text('VALOR', COL_VAL, Y + 3.8, { align: 'right' });
+                pdf.text('% S/FAB.', COL_PCT, Y + 3.8, { align: 'right' });
+                pdf.setDrawColor(...MGRAY); pdf.setLineWidth(0.1);
+                pdf.line(ML, Y + 5.5, ML + CW, Y + 5.5);
+                Y += 5.5;
+
+                const cosRow = (label, val, pct, bg = null) => {
+                    checkPage(7);
+                    if (bg) { pdf.setFillColor(...bg); pdf.rect(ML, Y, CW, 5.5, 'F'); }
+                    pdf.setTextColor(...DARK); pdf.setFontSize(8); pdf.setFont('helvetica', 'normal');
+                    pdf.text(label, ML + 2, Y + 3.8);
+                    pdf.text(val, COL_VAL, Y + 3.8, { align: 'right' });
+                    pdf.setTextColor(...GREEN);
+                    pdf.text(pct, COL_PCT, Y + 3.8, { align: 'right' });
+                    pdf.setDrawColor(230, 230, 230); pdf.setLineWidth(0.1);
+                    pdf.line(ML, Y + 5.5, ML + CW, Y + 5.5);
+                    Y += 5.5;
+                };
+
+                if (isJaboneria) {
+                    // Jabonería: desglose por Kilo
+                    cosRow('Ingredientes (ajustado eficiencia)', f(d.matKiloEff),
+                        `${d.costFabKilo > 0 ? ((d.matKiloEff / d.costFabKilo) * 100).toFixed(1) : 0}%`);
+                    cosRow('Mano de Obra Directa', f(laborKilo),
+                        `${d.costFabKilo > 0 ? ((laborKilo / d.costFabKilo) * 100).toFixed(1) : 0}%`, LGRAY);
+                    cosRow('Gastos Operativos Directos', f(totalOtherExp),
+                        `${d.costFabKilo > 0 ? ((totalOtherExp / d.costFabKilo) * 100).toFixed(1) : 0}%`);
+                    checkPage(8);
+                    pdf.setFillColor(...DARK);
+                    pdf.rect(ML, Y, CW, 6.5, 'F');
+                    pdf.setTextColor(...WHITE);
+                    pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                    pdf.text('COSTE DE FABRICACION / KILO', ML + 2, Y + 4.5);
+                    pdf.setTextColor(200, 220, 185);
+                    pdf.setFontSize(11);
+                    pdf.text(f(d.costFabKilo), COL_VAL, Y + 4.5, { align: 'right' });
+                    pdf.setTextColor(180, 180, 180);
+                    pdf.setFontSize(7.5);
+                    pdf.text('100%', COL_PCT, Y + 4.5, { align: 'right' });
+                    Y += 12;
+                } else {
+                    // Cosmética: desglose por Unidad
+                    const costFabUnit = d.costPerUnit - unitPkg - unitExtra;
+                    const matUnit = unidades > 0 ? (totalMatCost / d.efficiency) / unidades : 0;
+                    const laborUnit = unidades > 0 ? (laborRate * laborTime * (d.lotWeight / 1000)) / unidades : 0;
+                    const expUnit = unidades > 0 ? totalOtherExp / unidades : 0;
+                    cosRow('Ingredientes por unidad', f(matUnit),
+                        `${costFabUnit > 0 ? ((matUnit / costFabUnit) * 100).toFixed(1) : 0}%`);
+                    cosRow('Mano de Obra por unidad', f(laborUnit),
+                        `${costFabUnit > 0 ? ((laborUnit / costFabUnit) * 100).toFixed(1) : 0}%`, LGRAY);
+                    cosRow('Gastos Operativos por unidad', f(expUnit),
+                        `${costFabUnit > 0 ? ((expUnit / costFabUnit) * 100).toFixed(1) : 0}%`);
+                    cosRow('Packaging + otros', f(unitPkg + unitExtra), '', LGRAY);
+                    checkPage(8);
+                    pdf.setFillColor(...DARK);
+                    pdf.rect(ML, Y, CW, 6.5, 'F');
+                    pdf.setTextColor(...WHITE);
+                    pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                    pdf.text('COSTO TOTAL POR UNIDAD', ML + 2, Y + 4.5);
+                    pdf.setTextColor(200, 220, 185);
+                    pdf.setFontSize(11);
+                    pdf.text(f(d.costPerUnit), COL_VAL, Y + 4.5, { align: 'right' });
+                    pdf.setTextColor(180, 180, 180);
+                    pdf.setFontSize(7.5);
+                    pdf.text('100%', COL_PCT, Y + 4.5, { align: 'right' });
+                    Y += 12;
+                }
+
+                // ── PRECIOS Y RENTABILIDAD ────────────────────────────────────
+                checkPage(55);
+                sectionTitle('Precios y Rentabilidad');
+
+                // PVP Hero en PDF
+                checkPage(28);
+                pdf.setFillColor(...DARK);
+                pdf.roundedRect(ML, Y, CW, 24, 2, 2, 'F');
+                pdf.setTextColor(...FGRAY);
+                pdf.setFontSize(7); pdf.setFont('helvetica', 'bold');
+                pdf.text('PRECIO DE VENTA SUGERIDO POR UNIDAD (PVP)', ML + CW / 2, Y + 6.5, { align: 'center' });
+                pdf.setTextColor(...GREEN);
+                pdf.setFontSize(18); pdf.setFont('helvetica', 'bold');
+                pdf.text(f(d.unitPvp), ML + CW / 2, Y + 16, { align: 'center' });
+                // Badge
+                const badgeText = currentMarginPct >= 50 ? 'Excelente rentabilidad' : currentMarginPct >= 30 ? 'Buena rentabilidad' : currentMarginPct > 0 ? 'Rentabilidad ajustada' : 'Sin margen';
+                pdf.setTextColor(180, 200, 170);
+                pdf.setFontSize(6.5); pdf.setFont('helvetica', 'normal');
+                pdf.text(`${T('margen')} ${currentMarginPct}%  ·  ${T(badgeText)}`, ML + CW / 2, Y + 21, { align: 'center' });
+                Y += 28;
+
+                const cardW = CW / 5 - 1.5;
+                const thirdCard = isJaboneria
+                    ? { label: 'PVP por Kg',           val: f(d.pvp),             sub: '',             bg: WHITE,  border: MGRAY,  valColor: DARK }
+                    : { label: 'Costo Total/Unidad',   val: f(d.costPerUnit),     sub: 'con packaging', bg: WHITE,  border: MGRAY,  valColor: DARK };
+                const cards = [
+                    { label: 'Costo/Unidad',        val: f(d.costPerUnit),     sub: '',             bg: LGREEN, border: GREEN,  valColor: DARK },
+                    { label: 'Precio Min/Unidad',    val: f(minVal),            sub: '30% margen',   bg: WHITE,  border: MGRAY,  valColor: ORANGE },
+                    thirdCard,
+                    { label: 'Ganancia / Unidad',    val: f(d.gananciaUnit),    sub: 'neta',         bg: LGREEN, border: GREEN,  valColor: [45, 122, 45] },
+                    { label: 'Ganancia del Lote',    val: f(d.gananciaLote),    sub: `${unidades} uds`, bg: DARK,   border: DARK,   valColor: GREEN }
+                ];
+                cards.forEach((c, i) => {
+                    const cx = ML + i * (cardW + 1.5);
+                    pdf.setFillColor(...c.bg);
+                    pdf.rect(cx, Y, cardW, 18, 'F');
+                    pdf.setDrawColor(...c.border);
+                    pdf.setLineWidth(i === 0 ? 0.6 : 0.3);
+                    pdf.rect(cx, Y, cardW, 18);
+                    pdf.setTextColor(...(c.bg[0] < 50 ? WHITE : DGRAY));
+                    pdf.setFontSize(5.5); pdf.setFont('helvetica', 'bold');
+                    pdf.text(c.label.toUpperCase(), cx + cardW / 2, Y + 5, { align: 'center' });
+                    pdf.setTextColor(...c.valColor);
+                    pdf.setFontSize(10); pdf.setFont('helvetica', 'bold');
+                    pdf.text(c.val, cx + cardW / 2, Y + 12, { align: 'center' });
+                    if (c.sub) {
+                        pdf.setTextColor(...(c.bg[0] < 50 ? [100, 100, 100] : FGRAY));
+                        pdf.setFontSize(5.5); pdf.setFont('helvetica', 'normal');
+                        pdf.text(c.sub, cx + cardW / 2, Y + 16, { align: 'center' });
+                    }
+                });
+                Y += 22;
+
+                // Panel de margen
+                checkPage(18);
+                const panelW = CW / 4;
+                const panelData = isJaboneria ? [
+                    { label: 'Margen Bruto /Kg',   val: f(d.pvp - d.costFabKilo) },
+                    { label: 'Margen (%)',           val: `${d.margen}%` },
+                    { label: 'Ganancia / Unidad',   val: f(d.gananciaUnit) },
+                    { label: 'Ganancia Total Lote', val: f(d.gananciaLote) }
+                ] : [
+                    { label: 'Ganancia / Unidad',   val: f(d.gananciaUnit) },
+                    { label: 'Margen (%)',           val: `${d.margen}%` },
+                    { label: 'Ganancia / Lote',     val: f(d.gananciaLote) },
+                    { label: 'Unidades del Lote',   val: `${d.unidades}` }
+                ];
+                pdf.setFillColor(...LGREEN);
+                pdf.rect(ML, Y, CW, 14, 'F');
+                pdf.setDrawColor(210, 228, 200);
+                pdf.setLineWidth(0.3);
+                pdf.rect(ML, Y, CW, 14);
+                panelData.forEach((p, i) => {
+                    const px = ML + i * panelW;
+                    if (i > 0) { pdf.setDrawColor(210, 228, 200); pdf.setLineWidth(0.3); pdf.line(px, Y + 1, px, Y + 13); }
+                    pdf.setTextColor(...GREEN);
+                    pdf.setFontSize(6); pdf.setFont('helvetica', 'bold');
+                    pdf.text(p.label.toUpperCase(), px + panelW / 2, Y + 4.5, { align: 'center' });
+                    pdf.setTextColor(...DARK);
+                    pdf.setFontSize(10); pdf.setFont('helvetica', 'bold');
+                    pdf.text(p.val, px + panelW / 2, Y + 11.5, { align: 'center' });
+                });
+                Y += 18;
+
+                // ── ANÁLISIS DE RENTABILIDAD ──────────────────────────────────
+                checkPage(20);
+                const profitCfg = d.margen >= 50
+                    ? { barColor: [60, 140, 60],   bgColor: [235, 250, 235], label: 'EXCELENTE RENTABILIDAD',         text: T('De cada unidad vendida, el ') + d.margen + T('% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.') }
+                    : d.margen >= 30
+                    ? { barColor: [180, 120, 20],  bgColor: [255, 248, 230], label: 'MARGEN ACEPTABLE - PUEDE MEJORAR', text: T('De cada unidad vendida, el ') + d.margen + T('% es ganancia. Evalua subir el precio o reducir costos.') }
+                    : { barColor: [180, 50, 50],   bgColor: [255, 240, 240], label: 'MARGEN BAJO',                    text: T('Solo el ') + d.margen + T('% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.') };
+
+                pdf.setFillColor(...profitCfg.bgColor);
+                pdf.rect(ML, Y, CW, 16, 'F');
+                pdf.setFillColor(...profitCfg.barColor);
+                pdf.rect(ML, Y, 3, 16, 'F');
+                pdf.setTextColor(...profitCfg.barColor);
+                pdf.setFontSize(8.5); pdf.setFont('helvetica', 'bold');
+                pdf.text(`${d.margen}%  —  ${T(profitCfg.label)}`, ML + 6, Y + 6.5);
+                pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
+                pdf.text(profitCfg.text, ML + 6, Y + 12);
+                Y += 20;
+
+                // ── PIE DE PÁGINA ─────────────────────────────────────────────
+                const footerY = PH - 15;
+                Y = Y + 15 > PH ? (pdf.addPage(), footerY) : footerY;
+
+                pdf.setDrawColor(...GREEN);
+                pdf.setLineWidth(0.6);
+                pdf.line(0, Y, W, Y);
+                Y += 1;
+                pdf.setFillColor(...LGRAY);
+                pdf.rect(0, Y, W, 14, 'F');
+                pdf.setTextColor(...DARK);
+                pdf.setFontSize(9); pdf.setFont('helvetica', 'bold');
+                pdf.text('Lina Toro', ML, Y + 5.5);
+                pdf.setTextColor(...DGRAY);
+                pdf.setFontSize(7); pdf.setFont('helvetica', 'normal');
+                pdf.text(`${T('Recetas de')} ${T(productTypeLabel)}`, ML, Y + 10);
+                pdf.setTextColor(...FGRAY);
+                pdf.setFontSize(6.5);
+                pdf.text(`${T('Informe generado el')} ${dateStr}`, W / 2, Y + 5.5, { align: 'center' });
+                pdf.text('Documento confidencial — uso interno', W / 2, Y + 10, { align: 'center' });
+                pdf.setTextColor(...GREEN);
+                pdf.setFontSize(7);
+                pdf.text('Calculadora de Precios', W - MR, Y + 5.5, { align: 'right' });
+                pdf.setTextColor(...FGRAY);
+                pdf.setFontSize(6.5);
+                pdf.text(`© ${now.getFullYear()} Lina Toro`, W - MR, Y + 10, { align: 'right' });
+
+                const filename = `${recipeName.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_') || 'Informe'}_Coste.pdf`;
+                pdf.save(filename);
+
+            } catch (e) {
+                console.error('Error PDF:', e);
+                alert('Error al generar el PDF: ' + e.message);
+            } finally {
+                btn.classList.remove('loading');
+            }
+        }
+
+        calc();
+
+        // ─── Full-Bleed Fixer ────────────────────────────────────────────────
+        (function () {
+            var FULL_BLEED = 'header';
+            function applyFullBleed() {
+                var vw = window.innerWidth || document.documentElement.clientWidth;
+                [].forEach.call(document.querySelectorAll(FULL_BLEED), function (el) {
+                    el.style.width = '';
+                    el.style.marginLeft = '';
+                    el.style.transform = '';
+                    el.style.left = '';
+                    var rect   = el.getBoundingClientRect();
+                    var offLeft  = rect.left;
+                    var offRight = vw - rect.right;
+                    if (Math.abs(offLeft) > 1 || Math.abs(offRight) > 1) {
+                        el.style.position   = 'relative';
+                        el.style.marginLeft = (-offLeft) + 'px';
+                        el.style.width      = vw + 'px';
+                        el.style.transform  = 'none';
+                        el.style.left       = '0';
+                    }
+                });
+            }
+            window.addEventListener('resize', applyFullBleed);
+            document.addEventListener('DOMContentLoaded', applyFullBleed);
+            if (document.readyState !== 'loading') applyFullBleed();
+        })();
+    </script>
+
+<!-- ════════ i18n · selector de idioma (ES / EN / PT) ════════ -->
+<style>
+  #lang-switch{position:fixed;top:10px;right:10px;z-index:99999;display:flex;gap:3px;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:3px;box-shadow:0 2px 12px rgba(0,0,0,.1);font-family:'Inter',system-ui,sans-serif;}
+  #lang-switch .lang-btn{border:none;background:transparent;color:#777;font-weight:700;font-size:12px;letter-spacing:.04em;padding:5px 10px;border-radius:999px;cursor:pointer;transition:all .15s;}
+  #lang-switch .lang-btn:hover{color:#333;}
+  #lang-switch .lang-btn.active{background:#9caf88;color:#fff;}
+  @media print{#lang-switch{display:none!important;}}
+</style>
+<div id="lang-switch" class="no-print" aria-label="Idioma / Language">
+  <button type="button" data-lang="es" class="lang-btn">ES</button>
+  <button type="button" data-lang="en" class="lang-btn">EN</button>
+  <button type="button" data-lang="pt" class="lang-btn">PT</button>
+</div>
+<script>
+(function(){
+  // Diccionario por idioma, indexado por el texto fuente en español.
+  // Español = original (no se traduce). Solo EN y PT.
+  var DICT = {
+    en: {
+      "Calculadora de Precios":"Pricing Calculator",
+      "Configuración del Lote":"Batch Setup",
+      "Jabonería":"Soapmaking","Cosmética":"Cosmetics",
+      "Ingredientes y Materias Primas":"Ingredients & Raw Materials",
+      "Activos Cosméticos · Conservantes · Fragancias / AAEE":"Cosmetic Actives · Preservatives · Fragrances / EOs",
+      "AÑADIR INGREDIENTE":"ADD INGREDIENT","AÑADIR ACTIVO":"ADD ACTIVE","AÑADIR ACEITE":"ADD OIL","AÑADIR ADITIVO":"ADD ADDITIVE","AÑADIR GASTO":"ADD EXPENSE",
+      "Ingrediente":"Ingredient","Cant. comprada":"Qty purchased","Unidad comprada":"Unit purchased","Precio total pagado":"Total price paid",
+      "Gramos de la receta (Lote total)":"Recipe grams (Total batch)","Costo receta":"Recipe cost","Gramos receta":"Recipe grams",
+      "Valor":"Value","Concepto":"Item","Totales":"Totals","Valor Hora":"Hourly Rate",
+      "Eficiencia de Proceso (%)":"Process Efficiency (%)",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80%.":"Account for curing loss and waste on tools. Typical 80%.",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80-85%.":"Account for curing loss and waste on tools. Typical 80-85%.",
+      "Considera mermas por transferencia y desperdicio. Típico 90-95%.":"Account for transfer loss and waste. Typical 90-95%.",
+      "Peso por Unidad (g)":"Weight per Unit (g)","Unidades producidas por lote":"Units produced per batch",
+      "¿Cuántas unidades salieron de este lote? Si lo dejas en 0, se calculará automáticamente con el peso por unidad.":"How many units came out of this batch? If you leave it at 0, it's auto-calculated from the weight per unit.",
+      "Si dejas 0, se calcula automáticamente: (Lote × Eficiencia) ÷ Peso unidad":"If you leave 0, it's auto-calculated: (Batch × Efficiency) ÷ Unit weight",
+      "Mano de Obra":"Labor","Recomendación:":"Recommendation:",
+      "usa como mínimo el valor hora del salario mínimo de tu país para asegurarte de no trabajar por debajo del costo mínimo.":"use at least your country's minimum hourly wage so you never work below the minimum cost.",
+      "Tiempo":"Time","Horas":"Hours","Minutos":"Minutes",
+      "Otros Gastos Directos":"Other Direct Expenses","Detalle por Unidad":"Per-Unit Detail",
+      "Packaging Individual":"Individual Packaging","Otros Costos Unitarios":"Other Unit Costs",
+      "Costos del Lote":"Batch Costs","Costo Total del Lote":"Total Batch Cost","Costo por Unidad":"Cost per Unit","Unidades del Lote":"Batch Units",
+      "Margen y Precio de Venta":"Margin & Selling Price","Margen de ganancia":"Profit margin",
+      "Precio de Venta Sugerido por Unidad (PVP)":"Suggested Selling Price per Unit (SRP)",
+      "Precio Mín/Unidad (30%)":"Min Price/Unit (30%)","PVP por Kg":"SRP per Kg","Costo Total/Unidad":"Total Cost/Unit",
+      "Ganancia Neta / Unidad":"Net Profit / Unit","Ganancia Total del Lote":"Total Batch Profit",
+      "DESCARGAR INFORME TÉCNICO PDF":"DOWNLOAD TECHNICAL REPORT PDF",
+      "Gramos":"Grams","Libra":"Pound","Onzas":"Ounces","Litro":"Liter","Mililitros":"Milliliters","Galón":"Gallon",
+      "Desglose de Ingredientes":"Ingredient Breakdown","Costo/Unidad":"Cost/Unit","Costo Total/Unidad":"Total Cost/Unit",
+      "Estructura de Costos por Kilo Producido":"Cost Structure per Kilo Produced","Estructura de Costos por Unidad":"Cost Structure per Unit",
+      "Ganancia / Lote":"Profit / Batch","Ganancia / Unidad":"Profit / Unit","Ganancia Total Lote":"Total Batch Profit","Ganancia del Lote":"Batch Profit",
+      "Gastos Operativos por unidad":"Operating Expenses per unit","Ingredientes por unidad":"Ingredients per unit",
+      "Mano de Obra Directa":"Direct Labor","Mano de Obra por unidad":"Labor per unit","Precio Min/Unidad":"Min Price/Unit",
+      "Sin margen de ganancia":"No profit margin","Total Mano de Obra":"Total Labor","Total por Kilo":"Total per Kilo","Valor por hora":"Hourly value",
+      "Composicion del lote con porcentajes y costos individuales por ingrediente.":"Batch composition with percentages and individual costs per ingredient.",
+      "del lote":"of the batch","Recetas de":"Recipes —","continuacion":"continued","Costos por Unidad":"Costs per Unit",
+      "Jaboneria":"Soapmaking","Cosmetica":"Cosmetics",
+      "INFORME TECNICO DE COSTEO":"TECHNICAL COSTING REPORT","COSTO TOTAL POR UNIDAD":"TOTAL COST PER UNIT",
+      "COSTE DE FABRICACION / KILO":"MANUFACTURING COST / KILO","GASTOS OPERATIVOS":"OPERATING EXPENSES","TOTAL INGREDIENTES":"TOTAL INGREDIENTS",
+      "CONCEPTO":"ITEM","VALOR":"VALUE","% S/FAB.":"% OF MFG.","% LOTE":"% BATCH","PESO UNIDAD":"UNIT WEIGHT","UNIDADES LOTE":"BATCH UNITS","LOTE TOTAL":"TOTAL BATCH",
+      "PRECIO":"PRICE","COSTO":"COST","MANO DE OBRA":"LABOR","PRECIO DE VENTA SUGERIDO POR UNIDAD (PVP)":"SUGGESTED SELLING PRICE PER UNIT (SRP)",
+      "Documento confidencial — uso interno":"Confidential document — internal use","Total Gastos":"Total Expenses",
+      "Informe generado el":"Report generated on","margen":"margin",
+      "Excelente rentabilidad":"Excellent profitability","Buena rentabilidad":"Good profitability","Rentabilidad ajustada":"Tight profitability","Sin margen":"No margin",
+      "EXCELENTE RENTABILIDAD":"EXCELLENT PROFITABILITY","MARGEN ACEPTABLE - PUEDE MEJORAR":"ACCEPTABLE MARGIN - CAN IMPROVE","MARGEN BAJO":"LOW MARGIN",
+      "De cada unidad vendida, el ":"Of each unit sold, ","% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.":"% is net profit. Your product has very healthy profitability.","% es ganancia. Evalua subir el precio o reducir costos.":"% is profit. Consider raising the price or cutting costs.","Solo el ":"Only ","% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.":"% of the selling price is profit. Review your cost structure or raise the price.",
+      "Cant.":"Qty","Concepto de gasto...":"Expense item...","Nombre de tu receta artesanal...":"Name your artisan recipe...","Nuevo ingrediente...":"New ingredient...","Precio":"Price"
+    },
+    pt: {
+      "Calculadora de Precios":"Calculadora de Preços",
+      "Configuración del Lote":"Configuração do Lote",
+      "Jabonería":"Saboaria","Cosmética":"Cosmética",
+      "Ingredientes y Materias Primas":"Ingredientes e Matérias-Primas",
+      "Activos Cosméticos · Conservantes · Fragancias / AAEE":"Ativos Cosméticos · Conservantes · Fragrâncias / OEs",
+      "AÑADIR INGREDIENTE":"ADICIONAR INGREDIENTE","AÑADIR ACTIVO":"ADICIONAR ATIVO","AÑADIR ACEITE":"ADICIONAR ÓLEO","AÑADIR ADITIVO":"ADICIONAR ADITIVO","AÑADIR GASTO":"ADICIONAR DESPESA",
+      "Ingrediente":"Ingrediente","Cant. comprada":"Qtd. comprada","Unidad comprada":"Unidade comprada","Precio total pagado":"Preço total pago",
+      "Gramos de la receta (Lote total)":"Gramas da receita (Lote total)","Costo receta":"Custo receita","Gramos receta":"Gramas receita",
+      "Valor":"Valor","Concepto":"Item","Totales":"Totais","Valor Hora":"Valor Hora",
+      "Eficiencia de Proceso (%)":"Eficiência do Processo (%)",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80%.":"Considere perdas de cura e desperdício nos utensílios. Típico 80%.",
+      "Considera mermas de curado y desperdicio en utensilios. Típico 80-85%.":"Considere perdas de cura e desperdício nos utensílios. Típico 80-85%.",
+      "Considera mermas por transferencia y desperdicio. Típico 90-95%.":"Considere perdas por transferência e desperdício. Típico 90-95%.",
+      "Peso por Unidad (g)":"Peso por Unidade (g)","Unidades producidas por lote":"Unidades produzidas por lote",
+      "¿Cuántas unidades salieron de este lote? Si lo dejas en 0, se calculará automáticamente con el peso por unidad.":"Quantas unidades saíram deste lote? Se deixar em 0, será calculado automaticamente pelo peso por unidade.",
+      "Si dejas 0, se calcula automáticamente: (Lote × Eficiencia) ÷ Peso unidad":"Se deixar 0, calcula-se automaticamente: (Lote × Eficiência) ÷ Peso unidade",
+      "Mano de Obra":"Mão de Obra","Recomendación:":"Recomendação:",
+      "usa como mínimo el valor hora del salario mínimo de tu país para asegurarte de no trabajar por debajo del costo mínimo.":"use no mínimo o valor-hora do salário mínimo do seu país para não trabalhar abaixo do custo mínimo.",
+      "Tiempo":"Tempo","Horas":"Horas","Minutos":"Minutos",
+      "Otros Gastos Directos":"Outras Despesas Diretas","Detalle por Unidad":"Detalhe por Unidade",
+      "Packaging Individual":"Embalagem Individual","Otros Costos Unitarios":"Outros Custos Unitários",
+      "Costos del Lote":"Custos do Lote","Costo Total del Lote":"Custo Total do Lote","Costo por Unidad":"Custo por Unidade","Unidades del Lote":"Unidades do Lote",
+      "Margen y Precio de Venta":"Margem e Preço de Venda","Margen de ganancia":"Margem de lucro",
+      "Precio de Venta Sugerido por Unidad (PVP)":"Preço de Venda Sugerido por Unidade (PVP)",
+      "Precio Mín/Unidad (30%)":"Preço Mín/Unidade (30%)","PVP por Kg":"PVP por Kg","Costo Total/Unidad":"Custo Total/Unidade",
+      "Ganancia Neta / Unidad":"Lucro Líquido / Unidade","Ganancia Total del Lote":"Lucro Total do Lote",
+      "DESCARGAR INFORME TÉCNICO PDF":"BAIXAR RELATÓRIO TÉCNICO PDF",
+      "Gramos":"Gramas","Libra":"Libra","Onzas":"Onças","Litro":"Litro","Mililitros":"Mililitros","Galón":"Galão",
+      "Desglose de Ingredientes":"Detalhamento de Ingredientes","Costo/Unidad":"Custo/Unidade",
+      "Estructura de Costos por Kilo Producido":"Estrutura de Custos por Quilo Produzido","Estructura de Costos por Unidad":"Estrutura de Custos por Unidade",
+      "Ganancia / Lote":"Lucro / Lote","Ganancia / Unidad":"Lucro / Unidade","Ganancia Total Lote":"Lucro Total Lote","Ganancia del Lote":"Lucro do Lote",
+      "Gastos Operativos por unidad":"Despesas Operacionais por unidade","Ingredientes por unidad":"Ingredientes por unidade",
+      "Mano de Obra Directa":"Mão de Obra Direta","Mano de Obra por unidad":"Mão de Obra por unidade","Precio Min/Unidad":"Preço Mín/Unidade",
+      "Sin margen de ganancia":"Sem margem de lucro","Total Mano de Obra":"Total Mão de Obra","Total por Kilo":"Total por Quilo","Valor por hora":"Valor por hora",
+      "Composicion del lote con porcentajes y costos individuales por ingrediente.":"Composição do lote com percentuais e custos individuais por ingrediente.",
+      "del lote":"do lote","Recetas de":"Receitas —","continuacion":"continuação","Costos por Unidad":"Custos por Unidade",
+      "Jaboneria":"Saboaria","Cosmetica":"Cosmética",
+      "INFORME TECNICO DE COSTEO":"RELATÓRIO TÉCNICO DE CUSTEIO","COSTO TOTAL POR UNIDAD":"CUSTO TOTAL POR UNIDADE",
+      "COSTE DE FABRICACION / KILO":"CUSTO DE FABRICAÇÃO / QUILO","GASTOS OPERATIVOS":"DESPESAS OPERACIONAIS","TOTAL INGREDIENTES":"TOTAL INGREDIENTES",
+      "CONCEPTO":"ITEM","VALOR":"VALOR","% S/FAB.":"% S/FAB.","% LOTE":"% LOTE","PESO UNIDAD":"PESO UNIDADE","UNIDADES LOTE":"UNIDADES LOTE","LOTE TOTAL":"LOTE TOTAL",
+      "PRECIO":"PREÇO","COSTO":"CUSTO","MANO DE OBRA":"MÃO DE OBRA","PRECIO DE VENTA SUGERIDO POR UNIDAD (PVP)":"PREÇO DE VENDA SUGERIDO POR UNIDADE (PVP)",
+      "Documento confidencial — uso interno":"Documento confidencial — uso interno","Total Gastos":"Total Despesas",
+      "Informe generado el":"Relatório gerado em","margen":"margem",
+      "Excelente rentabilidad":"Excelente rentabilidade","Buena rentabilidad":"Boa rentabilidade","Rentabilidad ajustada":"Rentabilidade ajustada","Sin margen":"Sem margem",
+      "EXCELENTE RENTABILIDAD":"EXCELENTE RENTABILIDADE","MARGEN ACEPTABLE - PUEDE MEJORAR":"MARGEM ACEITÁVEL - PODE MELHORAR","MARGEN BAJO":"MARGEM BAIXA",
+      "De cada unidad vendida, el ":"De cada unidade vendida, ","% es ganancia neta. Tu producto tiene una rentabilidad muy saludable.":"% é lucro líquido. Seu produto tem uma rentabilidade muito saudável.","% es ganancia. Evalua subir el precio o reducir costos.":"% é lucro. Avalie subir o preço ou reduzir custos.","Solo el ":"Apenas ","% del precio de venta es ganancia. Revisa tu estructura de costos o incrementa el precio.":"% do preço de venda é lucro. Revise sua estrutura de custos ou aumente o preço.",
+      "Cant.":"Qtd","Concepto de gasto...":"Item de despesa...","Nombre de tu receta artesanal...":"Nome da sua receita artesanal...","Nuevo ingrediente...":"Novo ingrediente...","Precio":"Preço"
+    }
+  };
+
+  var STORE_KEY = 'savias_lang';
+  var LANG = localStorage.getItem(STORE_KEY) || 'es';
+  var orig = new WeakMap();
+
+  function tr(s){
+    if(LANG === 'es' || s == null) return s;
+    var d = DICT[LANG]; if(!d) return s;
+    var k = String(s).trim();
+    var v = d[k];
+    return v == null ? s : String(s).replace(k, v);
+  }
+  // expuesto para JS/PDF
+  window.__t = tr;
+  window.__lang = function(){ return LANG; };
+
+  function walkText(root){
+    var tw = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode:function(n){
+        var p = n.parentNode; if(!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if(tag==='SCRIPT'||tag==='STYLE'||tag==='NOSCRIPT'||tag==='OPTION') return NodeFilter.FILTER_REJECT;
+        if(!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var n;
+    while(n = tw.nextNode()){
+      if(!orig.has(n)) orig.set(n, n.nodeValue);
+      var o = orig.get(n);
+      var nv = (LANG==='es') ? o : tr(o);
+      if(n.nodeValue !== nv) n.nodeValue = nv;
+    }
+  }
+  function walkAttrs(root){
+    var els = root.querySelectorAll('[placeholder]');
+    els.forEach(function(el){
+      if(el.__phOrig == null) el.__phOrig = el.getAttribute('placeholder');
+      var o = el.__phOrig;
+      el.setAttribute('placeholder', LANG==='es' ? o : tr(o));
+    });
+  }
+  function applyLang(){
+    walkText(document.body);
+    walkAttrs(document.body);
+    document.documentElement.setAttribute('lang', LANG);
+    var btns = document.querySelectorAll('#lang-switch .lang-btn');
+    btns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-lang')===LANG); });
+  }
+  function setLang(l){
+    LANG = l; localStorage.setItem(STORE_KEY, l);
+    applyLang();
+    if(typeof window.calc === 'function') window.calc();
+  }
+
+  function init(){
+    document.querySelectorAll('#lang-switch .lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ setLang(b.getAttribute('data-lang')); });
+    });
+    // re-traducir tras cada recálculo (los resultados se renderizan dinámicamente)
+    if(typeof window.calc === 'function'){
+      var _calc = window.calc;
+      window.calc = function(){ var r = _calc.apply(this, arguments); applyLang(); return r; };
+    }
+    applyLang();
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+
+</body>
+</html>

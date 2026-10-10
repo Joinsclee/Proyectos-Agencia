@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<!--
+  ANIMACIÓN #03: Colorante 1 (verde-azul)
+  Cliente: SAVIAS · Video: Jabón Drop Swirl
+  Tipo: bullet-sequence + swatch circular + tag editorial
+  Duración total: 5.5s
+  Dimensiones: 1920x1080 (overlay sobre video horizontal)
+  Background: transparente (alpha) — banda cream translúcida en bloque
+  Posición: bloque a la derecha, alineado vertical centro
+  Captura: node capture-animation.js animation.html animation.mov 1920 1080 5.5
+
+  IMPORTANTE: Misma plantilla que #04 y #05 — solo cambia tag, ingredientes y color del swatch.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Animación 03 · Colorante 1 · SAVIAS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Cormorant+SC:wght@500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sage-deep: #7B8F6A;
+  --gold: #B8943E;
+  --cream: #F5EFE6;
+  --paper: #FAF7F2;
+  --ink: #1F1F1B;
+  --ink-soft: #4A4A45;
+
+  /* Banda verde sage al 78% — verde medio, contraste AAA con ink */
+  --bg-banda: rgba(156, 175, 136, 0.78);
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-display-sc: 'Cormorant SC', Georgia, serif;
+  --font-body: 'Lora', Georgia, serif;
+
+  --total-duration: 5.5s;
+
+  /* Color del swatch — CAMBIA POR COLORANTE */
+  --swatch-color: #3C7A9E; /* verde-azul resultante: mica azul + pigmento amarillo */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: transparent;
+  width: 100%; height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.colorant-card {
+  position: absolute;
+  top: 50%;
+  right: 130px;
+  transform: translateY(-50%) translateX(30px) scale(0.98);
+  padding: 48px 64px 52px 64px;
+  background: var(--bg-banda);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  min-width: 560px;
+  max-width: 680px;
+  opacity: 0;
+  animation:
+    card-enter 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards,
+    card-exit 0.55s cubic-bezier(0.4, 0, 1, 1) calc(var(--total-duration) - 0.55s) forwards;
+}
+
+/* Líneas gold superior e inferior */
+.colorant-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--ink-soft);
+  transform: scaleX(0);
+  transform-origin: left center;
+  animation: line-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards;
+}
+
+.colorant-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--ink-soft);
+  transform: scaleX(0);
+  transform-origin: right center;
+  animation: line-draw 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.6s forwards;
+}
+
+/* ───────── HEADER: TAG + SWATCH ───────── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-bottom: 28px;
+}
+
+.swatch {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--swatch-color);
+  border: 1.5px solid var(--ink-soft);
+  box-shadow: 0 1px 4px rgba(31,31,27,0.12);
+  opacity: 0;
+  transform: scale(0.5);
+  animation: swatch-in 0.6s cubic-bezier(0.34, 1.3, 0.64, 1) 1.0s forwards;
+  flex-shrink: 0;
+}
+
+.tag-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  transform: translateX(-10px);
+  animation: tag-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.8s forwards;
+}
+
+.tag {
+  font-family: var(--font-display-sc);
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.tag-num {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 30px;
+  color: var(--ink);
+  line-height: 1;
+}
+
+/* ───────── INGREDIENTES ───────── */
+.ingredientes {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ingredientes li {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.35;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 40px;
+  opacity: 0;
+  transform: translateX(-15px);
+  animation: ing-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.ingredientes .name { flex: 1; }
+
+.ingredientes .qty {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 36px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.ingredientes li:nth-child(1) { animation-delay: 1.40s; }
+.ingredientes li:nth-child(2) { animation-delay: 1.65s; }
+
+.ingredientes li:not(:last-child) {
+  border-bottom: 1px solid rgba(74, 74, 69, 0.35);
+  padding-bottom: 14px;
+}
+
+/* ───────── ORNAMENTO INFERIOR ───────── */
+.ornament {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.45em;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-top: 28px;
+  opacity: 0;
+  transform: scale(0.7);
+  animation: ornament-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 2.05s forwards;
+}
+
+/* ───────── KEYFRAMES ───────── */
+@keyframes card-enter {
+  to { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
+}
+
+@keyframes card-exit {
+  to { opacity: 0; transform: translateY(-50%) translateX(0) scale(0.99); }
+}
+
+@keyframes line-draw { to { transform: scaleX(1); } }
+@keyframes tag-in { to { opacity: 1; transform: translateX(0); } }
+@keyframes swatch-in { to { opacity: 1; transform: scale(1); } }
+@keyframes ing-in { to { opacity: 1; transform: translateX(0); } }
+@keyframes ornament-in { to { opacity: 1; transform: scale(1); } }
+</style>
+</head>
+<body>
+
+<div class="colorant-card">
+  <div class="header">
+    <div class="swatch"></div>
+    <div class="tag-block">
+      <div class="tag">Colorante</div>
+      <div class="tag-num">nº 1</div>
+    </div>
+  </div>
+  <ul class="ingredientes">
+    <li><span class="name">Mica azul</span><span class="qty">0,8 g</span></li>
+    <li><span class="name">Pigmento amarillo</span><span class="qty">0,2 g</span></li>
+  </ul>
+  <div class="ornament">·  ✦  ·</div>
+</div>
+
+</body>
+</html>

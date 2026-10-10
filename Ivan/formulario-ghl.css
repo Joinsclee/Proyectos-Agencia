@@ -1,0 +1,131 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Form Evento · La Huerta Hotel — CSS de marca
+   ---------------------------------------------------------------------------
+   Dónde va: GHL → Sites → Forms → «Form Evento» → Styles → Custom CSS
+   (si el bloque no aparece, está en el engranaje del formulario, «Custom CSS»).
+
+   Por qué un CSS y no la API: GoHighLevel no expone los formularios para
+   escritura (GET /forms/{id} responde «This route is not yet supported by the
+   IAM Service»), así que el diseño solo se toca desde el editor o desde aquí.
+
+   Los selectores van duplicados a propósito: GHL ha cambiado de nomenclatura
+   entre versiones del constructor y no todas las cuentas sirven la misma.
+   Los que no existan simplemente no aplican.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  --hh-deep:#061f1d;      /* verde profundo, fondos oscuros */
+  --hh-forest:#082f2b;
+  --hh-green:#0f4640;     /* verde de marca */
+  --hh-leaf:#87a942;
+  --hh-lime:#c8db52;      /* acento claro */
+  --hh-coral:#ef7854;     /* la acción principal */
+  --hh-coral-dark:#e05f39;
+  --hh-ivory:#f8f5ed;
+  --hh-paper:#fffdf8;
+  --hh-ink:#14322f;
+  --hh-muted:#687c76;
+  --hh-line:rgba(20,50,47,.16);
+}
+
+/* ── Lienzo ──────────────────────────────────────────────────────────────── */
+.form-builder--wrapper,
+.hl_form-builder,
+form,
+body{
+  background:var(--hh-paper) !important;
+  color:var(--hh-ink) !important;
+  font-family:Inter,"Helvetica Neue",Arial,sans-serif !important;
+}
+
+/* ── Títulos y textos ────────────────────────────────────────────────────── */
+h1,h2,h3,.form-builder--heading,.heading{
+  color:var(--hh-ink) !important;
+  letter-spacing:-.03em !important;
+  font-weight:700 !important;
+}
+p,.form-builder--paragraph,.paragraph{
+  color:var(--hh-muted) !important;
+  line-height:1.6 !important;
+}
+
+/* ── Etiquetas ───────────────────────────────────────────────────────────── */
+label,.form-builder--label,.field-label{
+  color:var(--hh-green) !important;
+  font-size:11px !important;
+  font-weight:800 !important;
+  letter-spacing:.11em !important;
+  text-transform:uppercase !important;
+  margin-bottom:7px !important;
+}
+
+/* ── Campos ──────────────────────────────────────────────────────────────── */
+input[type="text"],input[type="email"],input[type="tel"],input[type="number"],
+select,textarea,.form-control,.n-input,.input-field{
+  background:#fff !important;
+  border:1.5px solid var(--hh-line) !important;
+  border-radius:12px !important;
+  color:var(--hh-ink) !important;
+  /* 16px: por debajo de eso iOS hace zoom al enfocar y descoloca la página. */
+  font-size:16px !important;
+  padding:14px 16px !important;
+  min-height:52px !important;
+  box-shadow:none !important;
+  transition:border-color .18s ease, box-shadow .18s ease !important;
+}
+input::placeholder,textarea::placeholder{color:#a4b0ac !important}
+input:focus,select:focus,textarea:focus,.form-control:focus{
+  border-color:var(--hh-leaf) !important;
+  box-shadow:0 0 0 4px rgba(135,169,66,.16) !important;
+  outline:none !important;
+}
+
+/* Prefijo de país del teléfono, para que no desentone con el campo */
+.iti__flag-container,.phone-prefix,.iti{border-radius:12px !important}
+
+/* ── Botón principal ─────────────────────────────────────────────────────── */
+button[type="submit"],.btn-submit,.form-btn,.submit-btn,button.btn{
+  background:var(--hh-coral) !important;
+  border:0 !important;
+  border-radius:14px !important;
+  color:#fff !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  letter-spacing:.05em !important;
+  text-transform:uppercase !important;
+  min-height:58px !important;
+  width:100% !important;
+  box-shadow:0 12px 28px rgba(239,120,84,.30) !important;
+  transition:transform .2s cubic-bezier(.2,.8,.2,1), box-shadow .2s ease, background .2s ease !important;
+}
+button[type="submit"]:hover,.btn-submit:hover,.form-btn:hover,.submit-btn:hover,button.btn:hover{
+  background:var(--hh-coral-dark) !important;
+  transform:translateY(-2px) !important;
+  box-shadow:0 18px 36px rgba(239,120,84,.38) !important;
+}
+button[type="submit"]:active,.form-btn:active{transform:translateY(0) !important}
+
+/* ── Casillas y opciones ─────────────────────────────────────────────────── */
+input[type="checkbox"],input[type="radio"]{
+  accent-color:var(--hh-leaf) !important;
+  width:20px !important;height:20px !important;
+}
+
+/* ── Errores ─────────────────────────────────────────────────────────────── */
+.error,.invalid-feedback,.form-error,[class*="error"]{color:#c0492e !important}
+input.error,input:invalid:not(:placeholder-shown){border-color:#c0492e !important}
+
+/* ── Aviso legal ─────────────────────────────────────────────────────────── */
+.form-builder--disclaimer,.disclaimer,small{
+  color:#8a9995 !important;
+  font-size:11px !important;
+  line-height:1.55 !important;
+}
+
+/* ── Táctil ──────────────────────────────────────────────────────────────── */
+@media (hover:none){
+  button[type="submit"]:hover,.form-btn:hover{transform:none !important}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
