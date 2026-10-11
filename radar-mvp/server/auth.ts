@@ -4,7 +4,8 @@
  * parcial → registrar email → suscripción). Login valida contra Supabase Auth.
  */
 import { z } from 'zod';
-import { supabase, authClient } from '../lib/supabase.js';
+import { supabase, authClient, MODO_DEMO } from '../lib/supabase.js';
+import { loginDeDemo } from './demo/sesion.js';
 import { createLogger } from '../lib/logger.js';
 
 const log = createLogger('auth');
@@ -91,6 +92,11 @@ export async function loginUser(input: unknown): Promise<AuthResult> {
   const parsed = LoginSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' };
   const { email, password } = parsed.data;
+
+  // Modo demo: cualquier correo entra como Pro y Supabase Auth no se toca.
+  // Va aquí, DESPUÉS de validar el formulario, para que la demo también
+  // enseñe los mensajes de «correo inválido» como los enseña el producto.
+  if (MODO_DEMO) return loginDeDemo(email);
 
   // authClient (NO el cliente de datos): signInWithPassword fija la sesión del
   // cliente; en el compartido contaminaría todas las consultas (RLS → 0 filas).

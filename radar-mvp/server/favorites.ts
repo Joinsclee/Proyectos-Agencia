@@ -10,6 +10,7 @@
  * contra Supabase Auth y devuelve el usuario.
  */
 import { supabase, authClient } from '../lib/supabase.js';
+import { usuarioDeDemo } from './demo/sesion.js';
 import { createLogger } from '../lib/logger.js';
 import { entitledPlanFromMetadata, subscriptionStatusFromMetadata, type SubscriptionStatus } from './commercial.js';
 import { leerCupo, type Cupo } from './cupo.js';
@@ -63,6 +64,11 @@ const MAX_FAVS = 500;
 /** Valida el access_token y devuelve el usuario (o null si inválido/expirado). */
 export async function getUserFromToken(token: string | null): Promise<AuthUser | null> {
   if (!token) return null;
+  // Modo demo: la sesión la resuelve `server/demo/sesion.ts` y Supabase Auth no
+  // se toca. Con el modo apagado esto devuelve `null` en la primera línea y el
+  // camino real sigue igual — no hay dos formas de autenticarse conviviendo.
+  const deDemo = usuarioDeDemo(token);
+  if (deDemo) return deDemo;
   const { data, error } = await authClient.auth.getUser(token); // cliente aislado (no contamina datos)
   if (error || !data.user) return null;
   // Vista con los permisos tomados de app_metadata: lo que el usuario escriba en

@@ -250,6 +250,18 @@ const escrituraSinEfecto = () => {
   return api;
 };
 
+/**
+ * Los metadatos del usuario de la demo. Viven aquí, en memoria, porque es donde
+ * el Radar guarda favoritos, cupo y preferencias: en `user_metadata`, no en una
+ * tabla. Se pierden al reiniciar, que para una demo es lo correcto.
+ */
+const metadatosDemo: Record<string, any> = {
+  name: 'Demo',
+  plan: 'pro',
+  subscription_status: 'active',
+  favorites: [],
+};
+
 export function crearClienteDemo(tablas: Tablas) {
   return {
     from(tabla: string) {
@@ -266,10 +278,32 @@ export function crearClienteDemo(tablas: Tablas) {
     // solo lectura no se llaman, y si se llamaran no deben hacer nada.
     rpc: async () => ({ data: null, error: null }),
     auth: {
-      // La sesión de la demo la fabrica `server/demo/sesion.ts`; aquí solo se
-      // responde lo justo para que nada reviente si alguien pregunta.
+      // La sesión de la demo la fabrica `server/demo/sesion.ts`. Aquí vive la
+      // parte `admin`, que es por donde el Radar guarda los favoritos, el cupo
+      // y las preferencias: no están en una tabla, están en los metadatos del
+      // usuario de Supabase Auth.
+      //
+      // En la demo esos metadatos son un objeto en memoria. Guardar un favorito
+      // funciona a la vista —el corazón se pinta, el contador sube— y se pierde
+      // al reiniciar. Para enseñar el producto sobra, y evita que `listFavorites`
+      // devuelva 500 y deje la barra diciendo «Ingresar» con la sesión puesta.
       getUser: async () => ({ data: { user: null }, error: null }),
-      admin: { createUser: async () => ({ data: { user: null }, error: { message: 'demo: sin registro' } }) },
+      admin: {
+        getUserById: async (id: string) => ({
+          data: { user: { id, email: 'demo@radarcrece.co', user_metadata: metadatosDemo, app_metadata: metadatosDemo } },
+          error: null,
+        }),
+        updateUserById: async (id: string, cambios: any) => {
+          Object.assign(metadatosDemo, cambios?.user_metadata ?? {}, cambios?.app_metadata ?? {});
+          return {
+            data: { user: { id, email: 'demo@radarcrece.co', user_metadata: metadatosDemo, app_metadata: metadatosDemo } },
+            error: null,
+          };
+        },
+        listUsers: async () => ({ data: { users: [] }, error: null }),
+        createUser: async () => ({ data: { user: null }, error: { message: 'demo: sin registro' } }),
+        generateLink: async () => ({ data: null, error: { message: 'demo: sin correo' } }),
+      },
     },
   } as any;
 }

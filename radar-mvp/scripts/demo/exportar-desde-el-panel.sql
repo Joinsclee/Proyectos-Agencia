@@ -42,13 +42,20 @@ select json_agg(t)::text as datos from (
                        where n <= 6),           -- seis fotos bastan para la ficha
       'market',       features->'market'
     )) as features
-  from public.inmuebles
-  where is_active = true
-    and source = 'fincaraiz'
-    and city in ('bogota', 'medellin', 'santa marta')
-    and price is not null and area_m2 is not null
-  order by city, discount_pct desc nulls last
-  limit 2400
+  from (
+    -- Cupo POR CIUDAD, no un tope global.
+    --
+    -- Con `order by city … limit 2400`, Bogotá —que tiene decenas de miles— se
+    -- comía las 2400 enteras y Medellín y Santa Marta salían con cero. Se vio
+    -- en la demo: filtrar por Medellín devolvía una pantalla vacía.
+    select *, row_number() over (partition by city order by discount_pct desc nulls last) as n
+    from public.inmuebles
+    where is_active = true
+      and source = 'fincaraiz'
+      and city in ('bogota', 'medellin', 'santa marta')
+      and price is not null and area_m2 is not null
+  ) q
+  where q.n <= 900
 ) t;
 
 -- ─── 2 · Activos de banco  →  guardar como  bancos.csv ──────────────────────
@@ -57,7 +64,13 @@ select json_agg(t)::text as datos from (
 select json_agg(t)::text as datos from (
   select
     id, country_code, city, zone, type, price, currency, area_m2, price_per_m2,
-    source, source_id, source_url, image_url, address,
+    source, source_id, source_url, address,
+    -- Las fotos de banco viven en Supabase Storage, que la restricción por
+    -- cuota también bloquea (402). Se dejan en null para que el Radar pinte su
+    -- marcador «ACTIVO DE BANCO» —un componente real del producto— en vez de
+    -- 379 iconos de imagen rota. Las de portal van por un CDN externo y sí
+    -- cargan, así que esas se conservan.
+    case when image_url like '%%supabase.co%%' then null else image_url end as image_url,
     is_opportunity, discount_pct, crece_tier, crece_index, is_high, estado,
     is_active, scraped_at, first_seen_at, last_seen_at,
     jsonb_strip_nulls(jsonb_build_object(
@@ -70,7 +83,7 @@ select json_agg(t)::text as datos from (
       'description', features->'description',
       'images', (select jsonb_agg(v) from jsonb_array_elements(
                    coalesce(features->'images', '[]'::jsonb)) with ordinality x(v, n)
-                 where n <= 6),
+                 where n <= 6 and v::text not like '%%supabase.co%%'),
       'market', features->'market'
     )) as features
   from public.inmuebles
@@ -118,12 +131,17 @@ select json_agg(t)::text as datos from (
       'bedrooms', features->'bedrooms', 'garages', features->'garages',
       'neighborhood', features->'neighborhood', 'is_project', features->'is_project'
     )) as features
-  from public.rental_listings
-  where is_active = true
-    and city in ('bogota', 'medellin', 'santa marta')
-    and monthly_rent is not null
-  order by city
-  limit 6000
+  from (
+    -- Cupo por ciudad, por lo mismo que arriba: sin arriendos de una ciudad, la
+    -- calculadora de sus fichas se queda sin la rentabilidad, que es el número
+    -- que más impresiona.
+    select *, row_number() over (partition by city order by id) as n
+    from public.rental_listings
+    where is_active = true
+      and city in ('bogota', 'medellin', 'santa marta')
+      and monthly_rent is not null
+  ) q
+  where q.n <= 2000
 ) t;
 
 -- ─── 5 · Las cifras del titular  →  guardar como  stats.csv ─────────────────
