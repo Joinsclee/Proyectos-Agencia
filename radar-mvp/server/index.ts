@@ -14,6 +14,11 @@ import { gzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Import normal, igual que en `lib/supabase.ts`: con `createRequire` por un
+// lado y `await import` por otro se cargaban dos instancias del módulo y el
+// relleno de las tablas no se veía desde la otra.
+import { filasCargadas as filasDemoCargadas } from './demo/cliente-falso.js';
+import { MODO_DEMO } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import {
   queryPortal, queryBancos, queryRemates, queryTodas, facets, facetsRemates, stats, getProperty, remateBankFacets,
@@ -489,6 +494,13 @@ const server = createServer(async (req, res) => {
         ok: true,
         status: shuttingDown ? 'stopping' : 'alive',
         uptime_s: Math.round(process.uptime()),
+        // Si el modo demo está puesto y con cuántas filas. Desde fuera no había
+        // forma de saberlo: el 10/10/2026 se desplegó con `RADAR_DEMO_DATOS=1`
+        // guardada en el panel pero sin aplicar al contenedor, y se tardó una
+        // ronda entera de pruebas en descubrir que la variable no llegaba al
+        // proceso. Dos campos lo dicen de un vistazo, y no filtran nada.
+        demo: MODO_DEMO,
+        demo_filas: MODO_DEMO ? filasDemoCargadas() : undefined,
       });
     }
     // Readiness separada de liveness: durante un despliegue EasyPanel deja de
@@ -1249,6 +1261,12 @@ const server = createServer(async (req, res) => {
         // Se publica a propósito: una puerta que regala el acceso completo no
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
+        // Modo demo: el navegador necesita saberlo para esconder los botones de
+        // Google y Microsoft. Esos van DIRECTOS a Supabase —nunca pasan por este
+        // servidor— así que con la API restringida fallan hagamos lo que hagamos
+        // aquí, y un botón que devuelve un error al pulsarlo es peor que no
+        // tenerlo. Más aún delante de un cliente.
+        modoDemo: MODO_DEMO,
         paymentDemoReady: wompiPaymentDemoReady(),
         // Sin URL no hay botón. Ver `RADAR_COMUNIDAD_URL` en lib/env.ts.
         comunidadUrl: env.RADAR_COMUNIDAD_URL ?? null,
@@ -1316,6 +1334,48 @@ const server = createServer(async (req, res) => {
 /** Ciudades con más inventario: se precargan sus comparables para que la primera
  *  ficha abra al instante en vez de esperar a que se cargue el baseline. */
 const WARM_CITIES = ['bogota', 'medellin', 'cali'];
+
+/**
+ * En modo demo, traer el volcado ANTES de escuchar.
+ *
+ * El orden importa: si el servidor abriera el puerto primero, la plataforma lo
+ * daría por sano y le mandaría tráfico mientras las tablas están vacías — una
+ * aplicación que carga y no enseña nada, que es peor que una que no arranca.
+ *
+ * Y se niega a arrancar sin datos. Arrancar vacío en una demo significa
+ * descubrirlo delante del cliente; que el contenedor no levante se ve en el
+ * panel antes de enseñar nada.
+ */
+async function prepararDemo(): Promise<void> {
+  if (env.RADAR_DEMO_DATOS !== '1') return;
+  const { rellenarTablas, filasCargadas } = await import('./demo/cliente-falso.js');
+
+  // Primero el disco: en local evita una ida a la base en cada reinicio, y
+  // permite trabajar sin credenciales. En el contenedor no habrá nada, porque
+  // el volcado son filas reales y no entra al repositorio.
+  try {
+    const { cargarVolcado } = await import('./demo/tablas.js');
+    const raiz = fileURLToPath(new URL('..', import.meta.url));
+    rellenarTablas(cargarVolcado(raiz).tablas);
+  } catch {
+    // Sin volcado en disco: se trae de Postgres. La restricción por cuota
+    // bloquea la API de Supabase, no la base.
+    const url = process.env.RADAR_DATABASE_URL;
+    if (!url) {
+      throw new Error(
+        'RADAR_DEMO_DATOS=1 y no hay volcado en disco, así que hace falta '
+        + 'RADAR_DATABASE_URL para traerlo de Postgres. Ver docs/demo-sin-supabase.md',
+      );
+    }
+    const { traerVolcado } = await import('./demo/traer-al-arrancar.js');
+    rellenarTablas((await traerVolcado(url)).tablas);
+  }
+  const n = filasCargadas();
+  if (n === 0) throw new Error('modo demo: la base respondió pero no devolvió ninguna fila');
+  log.info(`Modo demo listo: ${n} filas en memoria. Supabase no se va a tocar.`);
+}
+
+await prepararDemo();
 
 server.listen(PORT, () => {
   serviceReady = true;

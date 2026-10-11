@@ -1,4 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+// Import normal, NO dinámico: con `createRequire` por un lado y `await import`
+// por otro se cargaban dos instancias del módulo y el relleno no se veía.
+import { clienteDemo } from '../server/demo/cliente-falso.js';
 import { env } from './env.js';
 import { createLogger } from './logger.js';
 import {
@@ -14,11 +17,22 @@ import {
 
 const log = createLogger('supabase');
 
+/** ¿Estamos enseñando el Radar con un volcado local, sin tocar la base? */
+export const MODO_DEMO = env.RADAR_DEMO_DATOS === '1';
+
+/**
+ * El cliente de la demo se construye UNA vez y se comparte, igual que el real.
+ *
+ * El volcado se lee del disco al arrancar —no por petición— porque son unos
+ * megas y releerlos en cada consulta convertiría una demo fluida en una lenta.
+ * La carga va perezosa para que el import de este módulo no lea archivos en
+ * los procesos que no están en modo demo.
+ */
 /**
  * Cliente Supabase con service_role key.
  * NUNCA exponer al frontend; este código corre en backend (cron en Railway).
  */
-export const supabase: SupabaseClient = createClient(
+export const supabase: SupabaseClient = MODO_DEMO ? (clienteDemo as SupabaseClient) : createClient(
   env.SUPABASE_URL,
   env.SUPABASE_SERVICE_ROLE_KEY,
   {
@@ -34,7 +48,7 @@ export const supabase: SupabaseClient = createClient(
  * correrían como ese usuario (con RLS → 0 filas). Este cliente aislado absorbe
  * ese cambio de sesión sin contaminar el cliente de datos service_role.
  */
-export const authClient: SupabaseClient = createClient(
+export const authClient: SupabaseClient = MODO_DEMO ? (clienteDemo as SupabaseClient) : createClient(
   env.SUPABASE_URL,
   env.SUPABASE_SERVICE_ROLE_KEY,
   { auth: { persistSession: false, autoRefreshToken: false } }
@@ -146,6 +160,34 @@ export async function upsertInmuebles(items: unknown[]): Promise<{
  * validación son deliberadamente distintas de `inmuebles`: mezclar ambos
  * precios contaminaría tanto el precio/m² de venta como el índice CRECE.
  */
+/**
+ * Las ÚNICAS claves de `features` que alguien llega a leer en un arriendo.
+ *
+ * El parser de FincaRaíz construye un `features` de 28 claves y lo mismo sirve
+ * para un inmueble en venta —donde la ficha enseña la descripción, las fotos y
+ * las amenidades— que para un arriendo, donde NO se enseña nada: un arriendo
+ * solo existe para calcular la mediana del canon de la zona. El motor lee seis
+ * claves (`engine/rental-comparables.ts`, la proyección `COLS`) y nadie más
+ * toca esa columna.
+ *
+ * Las otras 22 —`description`, `images`, `amenities`, `title`, el bloque del
+ * portal— se guardaban igual, y el 10 de octubre de 2026 pasaron la factura:
+ * `rental_listings` ocupaba 362 MB, de los que 229 MB eran TOAST (el JSONB
+ * fuera de línea) de datos que nunca se leen. Con la base entera en 1,31 GB,
+ * eso era el 17 % del total tirado.
+ *
+ * Se recorta aquí, al escribir, y no al leer: el coste está en el disco.
+ */
+const CLAVES_DE_ARRIENDO = ['lat', 'lng', 'bedrooms', 'garages', 'neighborhood', 'is_project'] as const;
+
+function soloLoQueUsaElArriendo(features: Record<string, unknown>): Record<string, unknown> {
+  const recortado: Record<string, unknown> = {};
+  for (const clave of CLAVES_DE_ARRIENDO) {
+    if (features[clave] !== undefined && features[clave] !== null) recortado[clave] = features[clave];
+  }
+  return recortado;
+}
+
 export async function upsertRentalListings(items: unknown[]): Promise<{
   inserted: number;
   updated: number;
@@ -175,6 +217,7 @@ export async function upsertRentalListings(items: unknown[]): Promise<{
   const nowISO = new Date().toISOString();
   const enriched = [...deduped.values()].map((item) => ({
     ...item,
+    features: soloLoQueUsaElArriendo(item.features),
     last_seen_at: nowISO,
     times_missed: 0,
     is_active: true,
