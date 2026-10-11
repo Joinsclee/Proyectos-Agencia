@@ -44,6 +44,19 @@ const EnvSchema = z.object({
   // '0' es el único cambio necesario para cerrarlo, sin desplegar código nuevo.
   RADAR_DEMO_PLAN: z.enum(['0', '1']).default('0'),
 
+  /**
+   * Modo demo: el Radar lee de un volcado local y NO toca Supabase.
+   *
+   * Nació el 10/10/2026, con el proyecto de Supabase restringido por cuota
+   * (402 en todo, datos y login) y una demo a un cliente encima. Sirve también
+   * para enseñar el producto sin depender de que la base esté sana.
+   *
+   * Es solo para el contenedor WEB. Si se activa en el del cron, los scrapers
+   * escribirían al vacío en silencio: `cron/scheduler.ts` lo rechaza al
+   * arrancar en vez de fingir que corrió.
+   */
+  RADAR_DEMO_DATOS: z.enum(['0', '1']).default('0'),
+
   // ── Comunidad ──
   //
   // El botón de la barra superior existe solo si esto existe. Un icono que lleva

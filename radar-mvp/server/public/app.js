@@ -256,6 +256,37 @@ async function fetchConSesion(url, opciones = {}) {
   return res;
 }
 
+/**
+ * Lo mismo, pero devolviendo el JSON y cubriendo el caso que NO da 401.
+ *
+ * `fetchConSesion` solo sabe reaccionar al 401, y hay rutas que a un token
+ * caducado no le responden con error: `/api/property` y `/api/home` devuelven
+ * **200 con `plan: 'anonimo'`** y la ficha recortada. El efecto es el peor
+ * posible delante de alguien: un suscriptor que deja la pestaña abierta más de
+ * una hora pulsa una tarjeta y la ficha se abre TAPADA, pidiéndole que cree una
+ * cuenta gratis. Sin aviso, sin gastar cupo, y solo se arregla recargando.
+ *
+ * `load()` ya resolvía esto a mano para los listados. Al estar aquí, lo
+ * heredan todas las rutas que lo necesitan en vez de ir recordándolo una por
+ * una — que es exactamente como se quedaron fuera estas dos.
+ */
+async function pedirJSON(url, opciones = {}) {
+  const res = await fetchConSesion(url, opciones);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const datos = await res.json();
+  // El caso silencioso: llevamos token y aun así el servidor nos trata como
+  // anónimos. Eso solo pasa si caducó. Se renueva y se repite UNA vez.
+  if (datos?.plan === 'anonimo' && auth.token) {
+    if (await renovarSesion()) {
+      const segunda = await fetchConSesion(url, opciones);
+      if (segunda.ok) return segunda.json();
+    } else {
+      sesionCaducada();
+    }
+  }
+  return datos;
+}
+
 async function initAuth() {
   renderAuthBar();
   if (!auth.token) { paintFavs(); return; }
@@ -284,7 +315,7 @@ async function syncGuestFavorites() {
     const key = favKey(item.kind, item.id);
     if (favSet.has(key)) continue;
     try {
-      const response = await fetch('/api/favorites/toggle', {
+      const response = await fetchConSesion('/api/favorites/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ kind: item.kind, id: item.id }),
@@ -304,7 +335,7 @@ async function syncGuestFavorites() {
 }
 async function syncAccountContext() {
   if (!auth.token) return;
-  const response = await fetch('/api/account/sync', {
+  const response = await fetchConSesion('/api/account/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({
@@ -812,11 +843,15 @@ window.__toggleFav = async function (ev, kind, id) {
   if (wasOn) favSet.delete(k); else favSet.add(k); // optimista
   paintFavs(); updateFavCount();
   try {
-    const res = await fetch('/api/favorites/toggle', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    const res = await fetchConSesion('/api/favorites/toggle', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ kind, id }),
     });
-    if (res.status === 401) { auth.token = null; localStorage.removeItem('radar_token'); location.href = '/login'; return; }
+    // Un 401 que llega hasta aquí ya pasó por la renovación y por
+    // `sesionCaducada()`. Antes se echaba a la calle al PRIMER 401 sin
+    // intentarlo: a quien llevaba la pestaña abierta más de una hora, darle al
+    // corazón lo sacaba de la aplicación.
+    if (res.status === 401) { if (wasOn) favSet.add(k); else favSet.delete(k); paintFavs(); updateFavCount(); return; }
     const d = await res.json();
     if (d.ok) { if (d.favorited) favSet.add(k); else favSet.delete(k); }
     else { if (wasOn) favSet.add(k); else favSet.delete(k); } // revertir
@@ -2408,8 +2443,7 @@ async function loadHome() {
   try {
     // Misma regla que en los listados: la cabecera NO es opcional. Sin ella el
     // servidor da por anónimo a quien ya pagó y le devuelve todo bloqueado.
-    const res = await fetch('/api/home', { headers: authHeaders(), signal: AbortSignal.timeout(25000) })
-      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    const res = await pedirJSON('/api/home', { signal: AbortSignal.timeout(25000) });
     if (loadSeq !== state.loadSeq) return;
     renderHome(res);
   } catch (e) {
@@ -2677,7 +2711,7 @@ async function loadGuardados() {
   }
   let props = [];
   try {
-    const d = await fetch('/api/favorites?full=1', { headers: authHeaders() }).then((r) => r.json());
+    const d = await fetchConSesion('/api/favorites?full=1', { headers: authHeaders() }).then((r) => r.json());
     props = d.properties || [];
     favSet.clear();
     (d.favorites || []).forEach((f) => favSet.add(favKey(f.kind, f.id)));
@@ -3254,7 +3288,7 @@ async function abrirFichaDeSimulacion(kind, id) {
   if (!kind || !id) return;
   if (!auth.token) { showToast('Inicia sesión para volver a la ficha.'); return; }
   try {
-    const r = await fetch('/api/propiedades', {
+    const r = await fetchConSesion('/api/propiedades', {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ refs: [{ kind, id }] }),
@@ -3568,8 +3602,10 @@ function renderRecs(recs, tipoFicha = fichaEnPantalla?.tipo ?? null) {
 }
 window.__openRec = async function (kind, id) {
   try {
-    const res = await fetch(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, { headers: authHeaders() });
-    const data = await res.json();
+    // `pedirJSON` y no `fetch`: esta es LA acción del producto, y con el token
+    // caducado `/api/property` no da 401 sino 200 con plan anónimo, así que la
+    // ficha se abría tapada a quien ya había pagado.
+    const data = await pedirJSON(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`);
     if (!data.ok) return;
     // Cupo agotado. El servidor no rechaza la petición —devuelve la ficha
     // recortada, que es lo correcto— así que el caso se reconoce por sus tres
@@ -4252,9 +4288,7 @@ async function descargarReporte(boton) {
   boton.disabled = true;
   if (etiqueta) etiqueta.textContent = 'Generando reporte…';
   try {
-    const respuesta = await fetch(`/api/reporte?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, {
-      headers: authHeaders(),
-    });
+    const respuesta = await fetchConSesion(`/api/reporte?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`);
     if (!respuesta.ok) {
       const detalle = await respuesta.json().catch(() => ({}));
       if (detalle.cupo) pintarCupoReportes(detalle.cupo);
