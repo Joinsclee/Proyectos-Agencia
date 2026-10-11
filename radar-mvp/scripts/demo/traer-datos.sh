@@ -6,8 +6,11 @@
 #  a Postgres. Esto va por ahí.
 #
 #  USO:
-#    DEMO_PG_URL='postgresql://postgres.PROYECTO:CLAVE@aws-N-REGION.pooler.supabase.com:5432/postgres' \
+#    RADAR_DATABASE_URL='postgresql://postgres.PROYECTO:CLAVE@aws-N-REGION.pooler.supabase.com:5432/postgres' \
 #      bash scripts/demo/traer-datos.sh
+#
+#  Se reutiliza `RADAR_DATABASE_URL`, que el proyecto ya define para el script
+#  de respaldo (`lib/backup-manifest.ts`): un nombre para una cosa.
 #
 #  La cadena se pasa por el entorno A PROPÓSITO: así la contraseña no queda en
 #  ningún archivo, ni en el repositorio, ni en el historial de git. Sí queda en
@@ -20,8 +23,8 @@
 # ════════════════════════════════════════════════════════════════════════════
 set -euo pipefail
 
-if [ -z "${DEMO_PG_URL:-}" ]; then
-  echo "Falta DEMO_PG_URL. Ver la cabecera de este archivo." >&2
+if [ -z "${RADAR_DATABASE_URL:-}" ]; then
+  echo "Falta RADAR_DATABASE_URL. Ver la cabecera de este archivo." >&2
   exit 1
 fi
 
@@ -33,14 +36,14 @@ mkdir -p "$DESTINO"
 command -v psql >/dev/null || { echo "Hace falta psql (brew install libpq)" >&2; exit 1; }
 
 echo "Probando la conexión…"
-psql "$DEMO_PG_URL" -tAc 'select 1' >/dev/null 2>&1 \
+psql "$RADAR_DATABASE_URL" -tAc 'select 1' >/dev/null 2>&1 \
   || { echo "No se pudo conectar. ¿Es la cadena del session pooler y la contraseña correcta?" >&2; exit 1; }
 echo "  conectado."
 
 # Las cinco consultas salen del MISMO archivo que usarías a mano en el panel,
 # troceado por sus separadores. Así no hay dos versiones del export que se
 # puedan separar: si se corrige una consulta, se corrige para los dos caminos.
-python3 - "$SQL" "$DESTINO" "$DEMO_PG_URL" <<'PY'
+python3 - "$SQL" "$DESTINO" "$RADAR_DATABASE_URL" <<'PY'
 import re, subprocess, sys, pathlib
 
 sql_path, destino, url = sys.argv[1], pathlib.Path(sys.argv[2]), sys.argv[3]
