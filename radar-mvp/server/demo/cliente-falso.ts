@@ -262,10 +262,35 @@ const metadatosDemo: Record<string, any> = {
   favorites: [],
 };
 
-export function crearClienteDemo(tablas: Tablas) {
+/**
+ * Las tablas vivas de la demo.
+ *
+ * Es mutable a propósito. El cliente se construye al importar el módulo —antes
+ * de que nada sea asíncrono— pero en producción los datos llegan de Postgres
+ * al arrancar, que sí lo es. En vez de volver asíncrono el import de
+ * `lib/supabase.ts` (y con él medio proyecto), el cliente apunta a este objeto
+ * y `rellenarTablas` lo llena antes de que el servidor empiece a escuchar.
+ */
+const TABLAS: Tablas = {};
+
+/** Llena las tablas de la demo. Lo llama `server/index.ts` antes de escuchar. */
+export function rellenarTablas(nuevas: Tablas): void {
+  for (const k of Object.keys(TABLAS)) delete TABLAS[k];
+  Object.assign(TABLAS, nuevas);
+}
+
+/** Cuántas filas hay cargadas. Para que el arranque pueda negarse si es cero. */
+export function filasCargadas(): number {
+  return Object.values(TABLAS).reduce((n, f) => n + f.length, 0);
+}
+
+export function crearClienteDemo(tablas?: Tablas) {
+  if (tablas) rellenarTablas(tablas);
   return {
     from(tabla: string) {
-      const filas = tablas[tabla] ?? [];
+      // Se lee de TABLAS en cada consulta, no de una copia: así el relleno
+      // posterior al arranque se ve sin reconstruir el cliente.
+      const filas = TABLAS[tabla] ?? [];
       const consulta = new Consulta(filas, tabla);
       return Object.assign(consulta, {
         insert: escrituraSinEfecto,
@@ -307,3 +332,15 @@ export function crearClienteDemo(tablas: Tablas) {
     },
   } as any;
 }
+
+/**
+ * La instancia única del cliente de la demo.
+ *
+ * Se crea al cargar el módulo —es barato: no lee nada, solo apunta a `TABLAS`—
+ * y se exporta ya construida. Antes `lib/supabase.ts` lo creaba por su cuenta
+ * con `createRequire` mientras el arranque lo rellenaba con `await import`, y
+ * eso carga DOS instancias del módulo: se llenaba una tabla y se leía de la
+ * otra. Los datos entraban (8.260 filas en el log) y todas las consultas
+ * devolvían cero.
+ */
+export const clienteDemo = crearClienteDemo();

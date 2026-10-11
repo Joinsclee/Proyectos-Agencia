@@ -1317,6 +1317,48 @@ const server = createServer(async (req, res) => {
  *  ficha abra al instante en vez de esperar a que se cargue el baseline. */
 const WARM_CITIES = ['bogota', 'medellin', 'cali'];
 
+/**
+ * En modo demo, traer el volcado ANTES de escuchar.
+ *
+ * El orden importa: si el servidor abriera el puerto primero, la plataforma lo
+ * daría por sano y le mandaría tráfico mientras las tablas están vacías — una
+ * aplicación que carga y no enseña nada, que es peor que una que no arranca.
+ *
+ * Y se niega a arrancar sin datos. Arrancar vacío en una demo significa
+ * descubrirlo delante del cliente; que el contenedor no levante se ve en el
+ * panel antes de enseñar nada.
+ */
+async function prepararDemo(): Promise<void> {
+  if (env.RADAR_DEMO_DATOS !== '1') return;
+  const { rellenarTablas, filasCargadas } = await import('./demo/cliente-falso.js');
+
+  // Primero el disco: en local evita una ida a la base en cada reinicio, y
+  // permite trabajar sin credenciales. En el contenedor no habrá nada, porque
+  // el volcado son filas reales y no entra al repositorio.
+  try {
+    const { cargarVolcado } = await import('./demo/tablas.js');
+    const raiz = fileURLToPath(new URL('..', import.meta.url));
+    rellenarTablas(cargarVolcado(raiz).tablas);
+  } catch {
+    // Sin volcado en disco: se trae de Postgres. La restricción por cuota
+    // bloquea la API de Supabase, no la base.
+    const url = process.env.RADAR_DATABASE_URL;
+    if (!url) {
+      throw new Error(
+        'RADAR_DEMO_DATOS=1 y no hay volcado en disco, así que hace falta '
+        + 'RADAR_DATABASE_URL para traerlo de Postgres. Ver docs/demo-sin-supabase.md',
+      );
+    }
+    const { traerVolcado } = await import('./demo/traer-al-arrancar.js');
+    rellenarTablas((await traerVolcado(url)).tablas);
+  }
+  const n = filasCargadas();
+  if (n === 0) throw new Error('modo demo: la base respondió pero no devolvió ninguna fila');
+  log.info(`Modo demo listo: ${n} filas en memoria. Supabase no se va a tocar.`);
+}
+
+await prepararDemo();
+
 server.listen(PORT, () => {
   serviceReady = true;
   log.info(`Radar local en http://localhost:${PORT}`);

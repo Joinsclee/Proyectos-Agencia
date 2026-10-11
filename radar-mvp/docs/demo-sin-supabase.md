@@ -12,6 +12,53 @@ no valida nada y te deja como usuario Pro, con las fichas abiertas.
 
 ---
 
+## Desplegarlo en producción (EasyPanel)
+
+El contenedor **no lleva los datos dentro**: los trae de Postgres al arrancar.
+La restricción por cuota bloquea la API de Supabase, no la base.
+
+En EasyPanel, en el servicio **web** (no en el del cron), añadir dos variables:
+
+```
+RADAR_DEMO_DATOS=1
+RADAR_DATABASE_URL=postgresql://postgres.uqlfgnylvnefhyuvtncd:CLAVE@aws-1-eu-central-1.pooler.supabase.com:5432/postgres
+```
+
+La `@` de la contraseña va como `%40`. El puerto es **5432**, no el 6543 que
+enseña el panel por defecto.
+
+Y redesplegar. En el log tiene que salir:
+
+```
+[demo] Modo demo: traído de Postgres · portal: 2700 · bancos: 437 · remates: 169 · arriendos: 4954
+[server] Modo demo listo: 8260 filas en memoria. Supabase no se va a tocar.
+```
+
+Si falta `RADAR_DATABASE_URL`, **el contenedor no arranca** y lo dice. Es a
+propósito: arrancar vacío significa descubrirlo delante del cliente, y que no
+levante se ve en el panel antes de enseñar nada.
+
+### Para volver a lo normal
+
+Quitar `RADAR_DEMO_DATOS` (o ponerla a `0`) y redesplegar. Nada más: el modo
+demo no deja rastro en la base ni toca el camino real. En cuanto Supabase esté
+restaurado, el Radar vuelve solo.
+
+### Lo que hay que tener presente mientras esté puesto
+
+- **Cualquiera entra con cualquier contraseña**, como usuario Pro. No hay
+  registro ni usuarios reales: la sesión es de mentira.
+- **El catálogo es un subconjunto**: 3 ciudades de 162. Quien busque en Cali no
+  encuentra nada, aunque el titular diga 181.734 inmuebles (que es la cifra
+  real del catálogo completo).
+- Nada de lo que se guarde persiste.
+
+Si va a estar accesible al público y no solo en la reunión, conviene decidir si
+se pone un aviso de «datos de demostración». Es una decisión de negocio, no
+técnica.
+
+---
+
 ## Qué funciona y qué no
 
 | | |

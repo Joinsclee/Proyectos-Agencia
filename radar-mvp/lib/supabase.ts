@@ -1,6 +1,7 @@
-import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+// Import normal, NO dinámico: con `createRequire` por un lado y `await import`
+// por otro se cargaban dos instancias del módulo y el relleno no se veía.
+import { clienteDemo } from '../server/demo/cliente-falso.js';
 import { env } from './env.js';
 import { createLogger } from './logger.js';
 import {
@@ -27,29 +28,11 @@ export const MODO_DEMO = env.RADAR_DEMO_DATOS === '1';
  * La carga va perezosa para que el import de este módulo no lea archivos en
  * los procesos que no están en modo demo.
  */
-let clienteDemo: SupabaseClient | null = null;
-function demo(): SupabaseClient {
-  if (!clienteDemo) {
-    // Import diferido, y por `createRequire` y no por `require` a secas: este
-    // es un módulo ESM y ahí `require` no existe. Diferido para que, sin modo
-    // demo, ni el cliente falso ni el volcado lleguen a cargarse.
-    const req = createRequire(import.meta.url);
-    const { crearClienteDemo } = req('../server/demo/cliente-falso.js');
-    const { cargarVolcado } = req('../server/demo/tablas.js');
-    // `fileURLToPath` y no `.pathname`: la ruta real lleva un espacio
-    // («Paginas Web») y `pathname` lo deja como %20, así que el volcado
-    // no se encontraba y la demo arrancaba vacía.
-    const raiz = fileURLToPath(new URL('..', import.meta.url));
-    clienteDemo = crearClienteDemo(cargarVolcado(raiz).tablas) as SupabaseClient;
-  }
-  return clienteDemo;
-}
-
 /**
  * Cliente Supabase con service_role key.
  * NUNCA exponer al frontend; este código corre en backend (cron en Railway).
  */
-export const supabase: SupabaseClient = MODO_DEMO ? demo() : createClient(
+export const supabase: SupabaseClient = MODO_DEMO ? (clienteDemo as SupabaseClient) : createClient(
   env.SUPABASE_URL,
   env.SUPABASE_SERVICE_ROLE_KEY,
   {
@@ -65,7 +48,7 @@ export const supabase: SupabaseClient = MODO_DEMO ? demo() : createClient(
  * correrían como ese usuario (con RLS → 0 filas). Este cliente aislado absorbe
  * ese cambio de sesión sin contaminar el cliente de datos service_role.
  */
-export const authClient: SupabaseClient = MODO_DEMO ? demo() : createClient(
+export const authClient: SupabaseClient = MODO_DEMO ? (clienteDemo as SupabaseClient) : createClient(
   env.SUPABASE_URL,
   env.SUPABASE_SERVICE_ROLE_KEY,
   { auth: { persistSession: false, autoRefreshToken: false } }
