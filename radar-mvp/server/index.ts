@@ -14,6 +14,11 @@ import { gzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Import normal, igual que en `lib/supabase.ts`: con `createRequire` por un
+// lado y `await import` por otro se cargaban dos instancias del módulo y el
+// relleno de las tablas no se veía desde la otra.
+import { filasCargadas as filasDemoCargadas } from './demo/cliente-falso.js';
+import { MODO_DEMO } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import {
   queryPortal, queryBancos, queryRemates, queryTodas, facets, facetsRemates, stats, getProperty, remateBankFacets,
@@ -489,6 +494,13 @@ const server = createServer(async (req, res) => {
         ok: true,
         status: shuttingDown ? 'stopping' : 'alive',
         uptime_s: Math.round(process.uptime()),
+        // Si el modo demo está puesto y con cuántas filas. Desde fuera no había
+        // forma de saberlo: el 10/10/2026 se desplegó con `RADAR_DEMO_DATOS=1`
+        // guardada en el panel pero sin aplicar al contenedor, y se tardó una
+        // ronda entera de pruebas en descubrir que la variable no llegaba al
+        // proceso. Dos campos lo dicen de un vistazo, y no filtran nada.
+        demo: MODO_DEMO,
+        demo_filas: MODO_DEMO ? filasDemoCargadas() : undefined,
       });
     }
     // Readiness separada de liveness: durante un despliegue EasyPanel deja de
