@@ -254,6 +254,20 @@ $('google-btn').addEventListener('click', () => entrarCon('google', 'Google'));
     // nunca sale, y creyendo que va en camino.
     recuperacionDisponible = config.recuperacionDisponible === true;
     if (mode === 'login') $('olvide-fila').hidden = !recuperacionDisponible;
+
+    // En modo demo, Google y Microsoft NO pueden funcionar. Esos botones mandan
+    // el navegador directo al OAuth de Supabase y nunca pasan por este servidor,
+    // así que con la API restringida devuelven un error pase lo que pase aquí.
+    // Se esconden los dos —y su separador— y queda el camino que sí funciona:
+    // correo y contraseña, que en demo aceptan cualquier cosa.
+    if (config.modoDemo === true) {
+      for (const id of ['google-btn', 'microsoft-btn', 'oauth-sep']) {
+        const el = $(id);
+        if (el) el.hidden = true;
+      }
+      return;
+    }
+
     if (!boton || !config.microsoftLoginReady) return;
     boton.hidden = false;
     boton.addEventListener('click', () => entrarCon('azure', 'Microsoft'));

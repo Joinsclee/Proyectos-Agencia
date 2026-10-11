@@ -50,11 +50,15 @@ function usuarioDemo(): AuthUser {
  * Devuelve `null` —y no lanza— cuando el modo está apagado, para que el
  * llamador siga su camino normal sin tener que saber que esto existe.
  */
-export function usuarioDeDemo(token: string | null): AuthUser | null {
+export function usuarioDeDemo(_token: string | null): AuthUser | null {
   if (!MODO_DEMO) return null;
-  if (!token) return null;
-  // En la demo cualquier token sirve: el único que se reparte es el de abajo,
-  // y aceptar solo ese obligaría a limpiar el navegador entre sesiones.
+  // Ni token hace falta. En la demo NO hay inicio de sesión: quien entra ve la
+  // aplicación completa desde el primer clic. Pedir que alguien se registre
+  // —aunque la contraseña dé igual— es fricción en mitad de una presentación, y
+  // además deja a la vista un formulario que no hace lo que dice.
+  //
+  // El token se ignora a propósito: así tampoco importa lo que haya quedado en
+  // el navegador de una visita anterior.
   return usuarioDemo();
 }
 

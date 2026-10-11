@@ -289,7 +289,10 @@ async function pedirJSON(url, opciones = {}) {
 
 async function initAuth() {
   renderAuthBar();
-  if (!auth.token) { paintFavs(); return; }
+  // En demo se sigue aunque no haya token: el servidor responde como si fuera
+  // un suscriptor, y cortar aquí dejaría la aplicación pintada como anónima
+  // —todo con candado— que es justo lo contrario de lo que se va a enseñar.
+  if (!auth.token && !window.__radarModoDemo) { paintFavs(); return; }
   try {
     // `fetchConSesion` y no `fetch` a secas: esta es la PRIMERA petición de la
     // página, así que es aquí donde se descubre que el token caducó mientras la
@@ -618,13 +621,23 @@ function renderAuthBar() {
                fichas y el de preguntas al asistente. Lo que viene después vive
                dentro, con su «próximamente». -->
           <a class="menu-cuenta-op" href="/planes">${ic('chart')} Tu plan</a>
-          <button class="menu-cuenta-op" id="auth-logout">${ic('arrow')} Cerrar sesión</button>
+          ${window.__radarModoDemo ? '' : `<button class="menu-cuenta-op" id="auth-logout">${ic('arrow')} Cerrar sesión</button>`}
         </div>
       </div>`;
     conectarMenuDeCuenta();
-    $('auth-logout').addEventListener('click', () => {
+    // En demo no se pinta «Cerrar sesión»: no hay sesión que cerrar, y pulsarlo
+    // recargaría a la misma pantalla dejando al que enseña con cara de tonto.
+    $('auth-logout')?.addEventListener('click', () => {
       localStorage.removeItem('radar_token'); localStorage.removeItem('radar_refresh'); location.reload();
     });
+  } else if (window.__radarModoDemo) {
+    // Modo demo: no hay sesión que iniciar. El servidor ya trata a cualquiera
+    // como suscriptor, así que un botón de «Ingresar» llevaría a un formulario
+    // que no hace falta y que, con Supabase restringido, además no puede
+    // funcionar con Google ni Microsoft. Queda solo «Planes».
+    const hueco = $('consumo-slot');
+    if (hueco) hueco.innerHTML = '';
+    el.innerHTML = `<a class="auth-link" href="/planes">Planes</a>`;
   } else {
     // Sin sesión no hay menú que abrir, y «Planes» es aquí la mitad comercial de
     // la barra: quien no ha entrado todavía es justo a quien le interesa.
@@ -5686,7 +5699,24 @@ const estadoInicialDeLaUrl = window.__radarUrlEstado.leer(location.search);
 // vuelve /api/favorites no se sabe si el token sigue siendo válido, y reabrirla
 // con una sesión caducada la mostraría bloqueada justo a quien acaba de entrar.
 // Vale igual para el enlace directo del asistente, que abre el mismo diálogo.
-initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(() => {
+/**
+ * En modo demo no hay sesión que iniciar: el servidor trata a cualquiera como
+ * suscriptor. Se pregunta ANTES de `initAuth` porque es `renderAuthBar` quien
+ * decide si pinta «Ingresar», y pintarlo para quitarlo medio segundo después
+ * se ve como un parpadeo en mitad de una presentación.
+ *
+ * Si `/api/config` no responde, se sigue por el camino normal: un fallo de red
+ * no debe convertir la aplicación de verdad en una demo.
+ */
+async function detectarModoDemo() {
+  try {
+    const r = await fetch('/api/config');
+    if (!r.ok) return;
+    window.__radarModoDemo = (await r.json()).modoDemo === true;
+  } catch { /* sin config, camino normal */ }
+}
+
+detectarModoDemo().then(() => initAuth()).catch(() => { /* sin red se sigue como anónimo */ }).then(() => {
   // La ficha a medias manda sobre el enlace: es de hace minutos y de esta persona.
   if (reabrirFichaPendiente()) return;
   abrirFichaDeLaUrl(estadoInicialDeLaUrl.ficha);

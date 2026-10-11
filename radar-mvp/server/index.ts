@@ -1261,6 +1261,12 @@ const server = createServer(async (req, res) => {
         // Se publica a propósito: una puerta que regala el acceso completo no
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
+        // Modo demo: el navegador necesita saberlo para esconder los botones de
+        // Google y Microsoft. Esos van DIRECTOS a Supabase —nunca pasan por este
+        // servidor— así que con la API restringida fallan hagamos lo que hagamos
+        // aquí, y un botón que devuelve un error al pulsarlo es peor que no
+        // tenerlo. Más aún delante de un cliente.
+        modoDemo: MODO_DEMO,
         paymentDemoReady: wompiPaymentDemoReady(),
         // Sin URL no hay botón. Ver `RADAR_COMUNIDAD_URL` en lib/env.ts.
         comunidadUrl: env.RADAR_COMUNIDAD_URL ?? null,
