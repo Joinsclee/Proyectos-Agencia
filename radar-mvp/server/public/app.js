@@ -256,9 +256,43 @@ async function fetchConSesion(url, opciones = {}) {
   return res;
 }
 
+/**
+ * Lo mismo, pero devolviendo el JSON y cubriendo el caso que NO da 401.
+ *
+ * `fetchConSesion` solo sabe reaccionar al 401, y hay rutas que a un token
+ * caducado no le responden con error: `/api/property` y `/api/home` devuelven
+ * **200 con `plan: 'anonimo'`** y la ficha recortada. El efecto es el peor
+ * posible delante de alguien: un suscriptor que deja la pestaña abierta más de
+ * una hora pulsa una tarjeta y la ficha se abre TAPADA, pidiéndole que cree una
+ * cuenta gratis. Sin aviso, sin gastar cupo, y solo se arregla recargando.
+ *
+ * `load()` ya resolvía esto a mano para los listados. Al estar aquí, lo
+ * heredan todas las rutas que lo necesitan en vez de ir recordándolo una por
+ * una — que es exactamente como se quedaron fuera estas dos.
+ */
+async function pedirJSON(url, opciones = {}) {
+  const res = await fetchConSesion(url, opciones);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const datos = await res.json();
+  // El caso silencioso: llevamos token y aun así el servidor nos trata como
+  // anónimos. Eso solo pasa si caducó. Se renueva y se repite UNA vez.
+  if (datos?.plan === 'anonimo' && auth.token) {
+    if (await renovarSesion()) {
+      const segunda = await fetchConSesion(url, opciones);
+      if (segunda.ok) return segunda.json();
+    } else {
+      sesionCaducada();
+    }
+  }
+  return datos;
+}
+
 async function initAuth() {
   renderAuthBar();
-  if (!auth.token) { paintFavs(); return; }
+  // En demo se sigue aunque no haya token: el servidor responde como si fuera
+  // un suscriptor, y cortar aquí dejaría la aplicación pintada como anónima
+  // —todo con candado— que es justo lo contrario de lo que se va a enseñar.
+  if (!auth.token && !window.__radarModoDemo) { paintFavs(); return; }
   try {
     // `fetchConSesion` y no `fetch` a secas: esta es la PRIMERA petición de la
     // página, así que es aquí donde se descubre que el token caducó mientras la
@@ -284,7 +318,7 @@ async function syncGuestFavorites() {
     const key = favKey(item.kind, item.id);
     if (favSet.has(key)) continue;
     try {
-      const response = await fetch('/api/favorites/toggle', {
+      const response = await fetchConSesion('/api/favorites/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ kind: item.kind, id: item.id }),
@@ -304,7 +338,7 @@ async function syncGuestFavorites() {
 }
 async function syncAccountContext() {
   if (!auth.token) return;
-  const response = await fetch('/api/account/sync', {
+  const response = await fetchConSesion('/api/account/sync', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify({
@@ -587,13 +621,23 @@ function renderAuthBar() {
                fichas y el de preguntas al asistente. Lo que viene después vive
                dentro, con su «próximamente». -->
           <a class="menu-cuenta-op" href="/planes">${ic('chart')} Tu plan</a>
-          <button class="menu-cuenta-op" id="auth-logout">${ic('arrow')} Cerrar sesión</button>
+          ${window.__radarModoDemo ? '' : `<button class="menu-cuenta-op" id="auth-logout">${ic('arrow')} Cerrar sesión</button>`}
         </div>
       </div>`;
     conectarMenuDeCuenta();
-    $('auth-logout').addEventListener('click', () => {
+    // En demo no se pinta «Cerrar sesión»: no hay sesión que cerrar, y pulsarlo
+    // recargaría a la misma pantalla dejando al que enseña con cara de tonto.
+    $('auth-logout')?.addEventListener('click', () => {
       localStorage.removeItem('radar_token'); localStorage.removeItem('radar_refresh'); location.reload();
     });
+  } else if (window.__radarModoDemo) {
+    // Modo demo: no hay sesión que iniciar. El servidor ya trata a cualquiera
+    // como suscriptor, así que un botón de «Ingresar» llevaría a un formulario
+    // que no hace falta y que, con Supabase restringido, además no puede
+    // funcionar con Google ni Microsoft. Queda solo «Planes».
+    const hueco = $('consumo-slot');
+    if (hueco) hueco.innerHTML = '';
+    el.innerHTML = `<a class="auth-link" href="/planes">Planes</a>`;
   } else {
     // Sin sesión no hay menú que abrir, y «Planes» es aquí la mitad comercial de
     // la barra: quien no ha entrado todavía es justo a quien le interesa.
@@ -812,11 +856,15 @@ window.__toggleFav = async function (ev, kind, id) {
   if (wasOn) favSet.delete(k); else favSet.add(k); // optimista
   paintFavs(); updateFavCount();
   try {
-    const res = await fetch('/api/favorites/toggle', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    const res = await fetchConSesion('/api/favorites/toggle', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ kind, id }),
     });
-    if (res.status === 401) { auth.token = null; localStorage.removeItem('radar_token'); location.href = '/login'; return; }
+    // Un 401 que llega hasta aquí ya pasó por la renovación y por
+    // `sesionCaducada()`. Antes se echaba a la calle al PRIMER 401 sin
+    // intentarlo: a quien llevaba la pestaña abierta más de una hora, darle al
+    // corazón lo sacaba de la aplicación.
+    if (res.status === 401) { if (wasOn) favSet.add(k); else favSet.delete(k); paintFavs(); updateFavCount(); return; }
     const d = await res.json();
     if (d.ok) { if (d.favorited) favSet.add(k); else favSet.delete(k); }
     else { if (wasOn) favSet.add(k); else favSet.delete(k); } // revertir
@@ -2408,8 +2456,7 @@ async function loadHome() {
   try {
     // Misma regla que en los listados: la cabecera NO es opcional. Sin ella el
     // servidor da por anónimo a quien ya pagó y le devuelve todo bloqueado.
-    const res = await fetch('/api/home', { headers: authHeaders(), signal: AbortSignal.timeout(25000) })
-      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+    const res = await pedirJSON('/api/home', { signal: AbortSignal.timeout(25000) });
     if (loadSeq !== state.loadSeq) return;
     renderHome(res);
   } catch (e) {
@@ -2677,7 +2724,7 @@ async function loadGuardados() {
   }
   let props = [];
   try {
-    const d = await fetch('/api/favorites?full=1', { headers: authHeaders() }).then((r) => r.json());
+    const d = await fetchConSesion('/api/favorites?full=1', { headers: authHeaders() }).then((r) => r.json());
     props = d.properties || [];
     favSet.clear();
     (d.favorites || []).forEach((f) => favSet.add(favKey(f.kind, f.id)));
@@ -3254,7 +3301,7 @@ async function abrirFichaDeSimulacion(kind, id) {
   if (!kind || !id) return;
   if (!auth.token) { showToast('Inicia sesión para volver a la ficha.'); return; }
   try {
-    const r = await fetch('/api/propiedades', {
+    const r = await fetchConSesion('/api/propiedades', {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ refs: [{ kind, id }] }),
@@ -3568,8 +3615,10 @@ function renderRecs(recs, tipoFicha = fichaEnPantalla?.tipo ?? null) {
 }
 window.__openRec = async function (kind, id) {
   try {
-    const res = await fetch(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, { headers: authHeaders() });
-    const data = await res.json();
+    // `pedirJSON` y no `fetch`: esta es LA acción del producto, y con el token
+    // caducado `/api/property` no da 401 sino 200 con plan anónimo, así que la
+    // ficha se abría tapada a quien ya había pagado.
+    const data = await pedirJSON(`/api/property?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`);
     if (!data.ok) return;
     // Cupo agotado. El servidor no rechaza la petición —devuelve la ficha
     // recortada, que es lo correcto— así que el caso se reconoce por sus tres
@@ -4252,9 +4301,7 @@ async function descargarReporte(boton) {
   boton.disabled = true;
   if (etiqueta) etiqueta.textContent = 'Generando reporte…';
   try {
-    const respuesta = await fetch(`/api/reporte?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`, {
-      headers: authHeaders(),
-    });
+    const respuesta = await fetchConSesion(`/api/reporte?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`);
     if (!respuesta.ok) {
       const detalle = await respuesta.json().catch(() => ({}));
       if (detalle.cupo) pintarCupoReportes(detalle.cupo);
@@ -5652,7 +5699,24 @@ const estadoInicialDeLaUrl = window.__radarUrlEstado.leer(location.search);
 // vuelve /api/favorites no se sabe si el token sigue siendo válido, y reabrirla
 // con una sesión caducada la mostraría bloqueada justo a quien acaba de entrar.
 // Vale igual para el enlace directo del asistente, que abre el mismo diálogo.
-initAuth().catch(() => { /* sin red se sigue como anónimo */ }).then(() => {
+/**
+ * En modo demo no hay sesión que iniciar: el servidor trata a cualquiera como
+ * suscriptor. Se pregunta ANTES de `initAuth` porque es `renderAuthBar` quien
+ * decide si pinta «Ingresar», y pintarlo para quitarlo medio segundo después
+ * se ve como un parpadeo en mitad de una presentación.
+ *
+ * Si `/api/config` no responde, se sigue por el camino normal: un fallo de red
+ * no debe convertir la aplicación de verdad en una demo.
+ */
+async function detectarModoDemo() {
+  try {
+    const r = await fetch('/api/config');
+    if (!r.ok) return;
+    window.__radarModoDemo = (await r.json()).modoDemo === true;
+  } catch { /* sin config, camino normal */ }
+}
+
+detectarModoDemo().then(() => initAuth()).catch(() => { /* sin red se sigue como anónimo */ }).then(() => {
   // La ficha a medias manda sobre el enlace: es de hace minutos y de esta persona.
   if (reabrirFichaPendiente()) return;
   abrirFichaDeLaUrl(estadoInicialDeLaUrl.ficha);

@@ -14,6 +14,11 @@ import { gzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Import normal, igual que en `lib/supabase.ts`: con `createRequire` por un
+// lado y `await import` por otro se cargaban dos instancias del módulo y el
+// relleno de las tablas no se veía desde la otra.
+import { filasCargadas as filasDemoCargadas } from './demo/cliente-falso.js';
+import { MODO_DEMO } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import {
   queryPortal, queryBancos, queryRemates, queryTodas, facets, facetsRemates, stats, getProperty, remateBankFacets,
@@ -489,6 +494,18 @@ const server = createServer(async (req, res) => {
         ok: true,
         status: shuttingDown ? 'stopping' : 'alive',
         uptime_s: Math.round(process.uptime()),
+        // Si el modo demo está puesto y con cuántas filas. Desde fuera no había
+        // forma de saberlo: el 10/10/2026 se desplegó con `RADAR_DEMO_DATOS=1`
+        // guardada en el panel pero sin aplicar al contenedor, y se tardó una
+        // ronda entera de pruebas en descubrir que la variable no llegaba al
+        // proceso. Dos campos lo dicen de un vistazo, y no filtran nada.
+        demo: MODO_DEMO,
+        demo_filas: MODO_DEMO ? filasDemoCargadas() : undefined,
+        // De dónde salieron los datos y, si no salieron, por qué. Es lo único
+        // que se puede mirar desde fuera cuando el sitio no carga y no se tiene
+        // el panel delante. No filtra nada: ni credenciales ni el origen real.
+        demo_origen: MODO_DEMO ? estadoDemo.origen : undefined,
+        demo_error: MODO_DEMO && estadoDemo.error ? estadoDemo.error.slice(0, 180) : undefined,
       });
     }
     // Readiness separada de liveness: durante un despliegue EasyPanel deja de
@@ -1249,6 +1266,12 @@ const server = createServer(async (req, res) => {
         // Se publica a propósito: una puerta que regala el acceso completo no
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
+        // Modo demo: el navegador necesita saberlo para esconder los botones de
+        // Google y Microsoft. Esos van DIRECTOS a Supabase —nunca pasan por este
+        // servidor— así que con la API restringida fallan hagamos lo que hagamos
+        // aquí, y un botón que devuelve un error al pulsarlo es peor que no
+        // tenerlo. Más aún delante de un cliente.
+        modoDemo: MODO_DEMO,
         paymentDemoReady: wompiPaymentDemoReady(),
         // Sin URL no hay botón. Ver `RADAR_COMUNIDAD_URL` en lib/env.ts.
         comunidadUrl: env.RADAR_COMUNIDAD_URL ?? null,
@@ -1316,6 +1339,103 @@ const server = createServer(async (req, res) => {
 /** Ciudades con más inventario: se precargan sus comparables para que la primera
  *  ficha abra al instante en vez de esperar a que se cargue el baseline. */
 const WARM_CITIES = ['bogota', 'medellin', 'cali'];
+
+/**
+ * En modo demo, traer el volcado ANTES de escuchar.
+ *
+ * El orden importa: si el servidor abriera el puerto primero, la plataforma lo
+ * daría por sano y le mandaría tráfico mientras las tablas están vacías — una
+ * aplicación que carga y no enseña nada, que es peor que una que no arranca.
+ *
+ * Y se niega a arrancar sin datos. Arrancar vacío en una demo significa
+ * descubrirlo delante del cliente; que el contenedor no levante se ve en el
+ * panel antes de enseñar nada.
+ */
+/** Qué pasó al intentar cargar los datos de la demo. Lo publica `/health`. */
+let estadoDemo: { origen: string; filas: number; error?: string } = { origen: 'apagado', filas: 0 };
+
+/**
+ * Carga el volcado de la demo. NUNCA impide que el servidor arranque.
+ *
+ * La primera versión lanzaba si no conseguía datos, razonando que «arrancar
+ * vacío significa descubrirlo delante del cliente, y que no levante se ve en el
+ * panel antes de enseñar nada». Era un error de juicio y el 20/10/2026 pasó
+ * factura: el proyecto de Supabase desapareció —el dominio dejó de resolver y
+ * el pooler devolvía `tenant not found`—, el arranque lanzó, y como la
+ * plataforma reinicia el contenedor en bucle, el sitio entero pasó a 502. Ni la
+ * portada, ni `/health`, ni forma de diagnosticar nada desde fuera.
+ *
+ * O sea: convirtió «no hay datos» en «no hay nada». El razonamiento olvidaba
+ * que un contenedor que no arranca no se queda quieto, se reinicia para
+ * siempre.
+ *
+ * Ahora el servidor arranca pase lo que pase y el fallo se cuenta por dos
+ * canales: a voz en grito en el log, y en `/health`, que es lo que se puede
+ * mirar desde fuera cuando el panel no está a mano.
+ */
+async function prepararDemo(): Promise<void> {
+  if (env.RADAR_DEMO_DATOS !== '1') return;
+  const { rellenarTablas, filasCargadas } = await import('./demo/cliente-falso.js');
+
+  // Primero el disco: en local evita una ida a la base en cada reinicio y
+  // permite trabajar sin credenciales. En el contenedor no suele haber nada,
+  // porque el volcado son filas reales y no entra al repositorio.
+  try {
+    const { cargarVolcado } = await import('./demo/tablas.js');
+    rellenarTablas(cargarVolcado(fileURLToPath(new URL('..', import.meta.url))).tablas);
+    estadoDemo = { origen: 'disco', filas: filasCargadas() };
+    log.info(`Modo demo: ${estadoDemo.filas} filas desde el volcado en disco.`);
+    return;
+  } catch { /* no hay volcado: se intenta por Postgres */ }
+
+  const url = process.env.RADAR_DATABASE_URL;
+  if (!url) {
+    estadoDemo = { origen: 'ninguno', filas: 0, error: 'falta RADAR_DATABASE_URL y no hay volcado en disco' };
+    log.error(`MODO DEMO SIN DATOS: ${estadoDemo.error}. El Radar arranca, pero los listados saldrán vacíos.`);
+    return;
+  }
+
+  try {
+    rellenarTablas((await traerVolcadoConReintentos(url)).tablas);
+    estadoDemo = { origen: 'postgres', filas: filasCargadas() };
+    if (estadoDemo.filas === 0) {
+      estadoDemo.error = 'la base respondió pero no devolvió ninguna fila';
+      log.error(`MODO DEMO SIN DATOS: ${estadoDemo.error}`);
+    } else {
+      log.info(`Modo demo: ${estadoDemo.filas} filas traídas de Postgres. Supabase no se va a tocar.`);
+    }
+  } catch (e) {
+    estadoDemo = { origen: 'postgres', filas: 0, error: e instanceof Error ? e.message : String(e) };
+    log.error(`MODO DEMO SIN DATOS: no se pudo traer el volcado — ${estadoDemo.error}`);
+    log.error('El Radar arranca igualmente: un fallo de datos no debe dejar el sitio entero inaccesible.');
+  }
+}
+
+/**
+ * Tres intentos con espera creciente antes de rendirse.
+ *
+ * Al arrancar, el contenedor compite con todo lo demás que levanta a la vez, y
+ * un corte de red de dos segundos no debería dejar la demo sin datos hasta el
+ * siguiente despliegue. Si tras tres intentos no hay nada, se arranca igual.
+ */
+async function traerVolcadoConReintentos(url: string) {
+  const { traerVolcado } = await import('./demo/traer-al-arrancar.js');
+  let ultimo: unknown;
+  for (let intento = 1; intento <= 3; intento += 1) {
+    try { return await traerVolcado(url); }
+    catch (e) {
+      ultimo = e;
+      if (intento < 3) {
+        const espera = intento * 3_000;
+        log.warn(`Modo demo: intento ${intento} de 3 falló (${e instanceof Error ? e.message : String(e)}). Reintento en ${espera / 1000}s.`);
+        await new Promise((r) => setTimeout(r, espera));
+      }
+    }
+  }
+  throw ultimo instanceof Error ? ultimo : new Error(String(ultimo));
+}
+
+await prepararDemo();
 
 server.listen(PORT, () => {
   serviceReady = true;
