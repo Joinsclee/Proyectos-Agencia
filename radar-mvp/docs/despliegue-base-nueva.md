@@ -19,6 +19,8 @@ Cómo se restauró: [scripts/restaurar-base/](../scripts/restaurar-base/README.m
 | Storage | bucket `inmuebles-pdf` público, con los 10 marcadores en `placeholders/ai/` |
 | URLs | 3.473 remates reapuntados al host nuevo · 413 de banco puestos en null |
 | `statement_timeout` | `service_role` subido a 30 s (ver abajo) |
+| Correo | Resend operativo: envío real entregado desde `radar@joinsclee.com`, `alertEmailDeliveryReady` y `recuperacionDisponible` en `true` |
+| Recuperación | `admin.generateLink` funciona contra el proyecto nuevo · 39 usuarios con contraseña, 6 solo de Google · `proveedorExterno()` los distingue |
 | Pruebas | 475 en verde |
 | Rutas | `/health`, `/api/home`, `/portal`, `/bancos`, `/remates`, `/facets`, `/stats`, `/config`, y `/api/market` en las 12 ciudades mayores |
 
@@ -74,19 +76,41 @@ descubrirlo en la primera consulta de un usuario.
 
 ## Lo que falta, y solo se puede hacer desde los paneles
 
-### 1 · Google y Microsoft están apagados — 8 usuarios no pueden entrar
+### 1 · Google y Microsoft están apagados — 6 usuarios no pueden entrar
 
-Comprobado contra `/auth/v1/settings`: el único proveedor activo es `email`.
-De los 45 usuarios restaurados, **6 entran con Google y 2 con Microsoft**. Esos
-8 no pueden entrar hasta que se configure.
+Son **dos** cosas en dos sitios distintos, y hacen falta las dos:
 
-En Supabase → Authentication → Providers, activar Google y Azure con su client
-ID y secret. Y en la consola de Google Cloud / Azure hay que **añadir la URL de
-callback del proyecto nuevo**, que cambió:
+| | |
+|---|---|
+| Fuera (Google Cloud / Azure) | añadir la callback del proyecto nuevo — **hecho el 20/10/2026** |
+| Dentro (Supabase) | activar el proveedor y pegarle client ID + secret — **pendiente** |
+
+La callback nueva, para referencia:
 
 ```
 https://aspscrnvukrpuhsinswa.supabase.co/auth/v1/callback
 ```
+
+Y en Supabase → Authentication → Sign In / Providers → Google: encender el
+interruptor y pegar el client ID y el secret (los mismos de antes, no hay que
+crear credenciales nuevas). Igual con Azure, que además pide el Tenant URL.
+
+Se comprueba sin entrar al panel:
+
+```bash
+curl "https://aspscrnvukrpuhsinswa.supabase.co/auth/v1/authorize?provider=google&redirect_to=https://x" -H "apikey: <anon>"
+```
+
+Con el proveedor apagado responde `400 provider is not enabled`. Bien
+configurado, redirige a Google (302).
+
+De los 45 usuarios restaurados, **6 son solo de Google** y no pueden entrar de
+ninguna otra forma. Los 2 de Microsoft también tienen identidad de correo, así
+que entran con su contraseña mientras tanto; los 39 restantes igual.
+
+Cuando Azure quede activo, poner también `RADAR_OAUTH_MICROSOFT=1`: es lo único
+que pinta el botón de Microsoft (`server/index.ts:1289`), y va aparte a
+propósito para no enseñar un botón que lleva a un proveedor sin configurar.
 
 Mientras no esté, esos 8 pueden entrar pidiendo recuperar la contraseña: el
 código detecta que son cuentas externas y les manda un correo diciéndoles por
@@ -103,19 +127,32 @@ https://<el dominio de produccion>/auth/callback
 https://<el dominio de produccion>/**
 ```
 
-### 3 · Correo
+### 3 · Correo — hecho y comprobado
 
-`RESEND_API_KEY` y `ALERTS_FROM_EMAIL` no están en el `.env` local (en
-producción sí estaban: no dependen de Supabase, así que deberían seguir
-funcionando). Comprobar en `/api/config`:
+Remitente: **`radar@joinsclee.com`** (el documentado en
+`INFORME_AVANCE_FASE2_2026-07-24.md`). El dominio `joinsclee.com` está
+verificado en Resend, región `eu-west-1`.
+
+Comprobado con un envío real al buzón de pruebas de Resend
+(`delivered@resend.dev`, no es una persona): estado `delivered`. Y
+`/api/config` responde `alertEmailDeliveryReady: true` y
+`recuperacionDisponible: true`.
+
+En EasyPanel tienen que estar:
 
 ```
-alertEmailDeliveryReady: true
-recuperacionDisponible: true
+RESEND_API_KEY=<la clave de Resend>
+ALERTS_FROM_EMAIL=radar@joinsclee.com
+ALERTS_CRON_SECRET=<el que ya tenía produccion>
 ```
 
-Si salen `false`, falta una de las dos. El dominio de `ALERTS_FROM_EMAIL` tiene
-que estar verificado en Resend o los envíos se rechazan.
+`ALERTS_CRON_SECRET` protege `/api/internal/alerts/run`. En el `.env` local se
+generó uno nuevo; el de producción **no se toca** salvo que se rote también en
+quien llama al cron.
+
+Ojo con una cosa: esta cuenta de Resend se comparte con otro producto («Casa
+Club» envía desde `casaclub@joinsclee.com`). La clave puede enviar como
+cualquier dirección del dominio, así que rotarla afecta a los dos.
 
 ### 4 · Rotar credenciales
 
