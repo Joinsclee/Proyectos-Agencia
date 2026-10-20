@@ -28,7 +28,7 @@ esquemas. De ahí solo entran dos cosas.
 
 | | |
 |---|---|
-| **`public` completo** | 17 tablas, 52 índices, 25 constraints, 11 funciones, 2 vistas, 5 triggers, RLS y los 727 permisos |
+| **`public` completo** | 17 tablas, 52 índices, 25 constraints, 11 funciones, 2 vistas, 5 triggers, RLS y 95 permisos |
 | **Las filas de `auth`** | 45 usuarios con su contraseña cifrada y 47 identidades (39 correo, 6 Google, 2 Microsoft) |
 
 **El DDL de `auth`, `storage` y `realtime` NO se toca.** El proyecto nuevo trae
@@ -81,6 +81,41 @@ inventario de esa franja de área. No es de la muestra.)*
 
 **`price_history` no se restaura** (194.578 filas, 27 MB): es histórico
 derivado y los scrapers lo vuelven a construir.
+
+---
+
+## Sin la contraseña: el SQL Editor del panel
+
+El esquema (`01` y `03`) se puede pegar en el SQL Editor de Supabase, que no
+pide contraseña de Postgres. Los datos no: son 353 MB y van por `COPY`.
+
+Dos cosas del volcado hay que quitarle para que eso funcione, y las dos las
+quita ya `construir-esquema.py`:
+
+- **Las 24 `ALTER DEFAULT PRIVILEGES`**, ocho de ellas `FOR ROLE
+  supabase_admin`. En el SQL Editor no eres superusuario, así que dan
+  `42501: permission denied to change default privileges` — y como el editor
+  corre el fichero en una transacción, eso tumba las 52 índices de golpe. Solo
+  afectan a objetos **futuros** creados por esos roles: la aplicación no las
+  necesita.
+- **502 de los 573 `GRANT`**, que no son del Radar sino de las funciones
+  internas de `pgvector` (`vector_out`, `array_to_vector`, `halfvec_in`…).
+  `CREATE EXTENSION` ya pone sus propios permisos, y encima esos `GRANT`
+  nombran tipos que solo existen después de crearla. Quedan 95, tres por cada
+  uno de los 34 objetos del Radar (`anon`, `authenticated`, `service_role`).
+
+**`03` se puede reejecutar.** Los índices llevan `IF NOT EXISTS`, los triggers
+un `DROP ... IF EXISTS` delante, y cada constraint va envuelto en un bloque que
+ignora los tres códigos con los que Postgres rechaza uno ya puesto (`42710`,
+`42P07` y `42P16` «multiple primary keys»). Los constraints **no** se borran
+para volver a crearlos: `document_metadata_pkey` tiene colgando la FK
+`document_rows_dataset_id_fkey`, y el `DROP` solo pasaría con `CASCADE`, que se
+llevaría la FK por delante sin decir nada. Una violación de datos de verdad
+(una clave duplicada, `23505`) sigue dando error: ese código no está en la
+lista a propósito.
+
+Comprobado con tres pasadas seguidas en local: 0 errores, 17 tablas, 74
+índices, 5 triggers, 43 constraints, las 3 FK vivas y 12 tablas con RLS.
 
 ---
 
@@ -155,7 +190,9 @@ bash probar-local.sh           # ensayo en el Postgres local antes de producció
 `COPY` del volcado— y las 105.847 filas habrían fallado al cargar. Lo cazó el
 verificador comparando el ancho de las filas con la cabecera.
 
-`probar-local.sh` tampoco. Cazó el fallo de `confirmed_at`.
+`probar-local.sh` tampoco. Cazó el fallo de `confirmed_at`, y luego que
+«borrar y volver a crear» los constraints no funciona con una PK que tiene una
+FK colgando.
 
 ### Para qué sirve cada medidor
 
