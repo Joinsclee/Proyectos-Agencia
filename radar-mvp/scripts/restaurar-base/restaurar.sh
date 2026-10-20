@@ -36,11 +36,23 @@ echo "Conectando..."
 "${PSQL[@]}" -tAc "select 'servidor: ' || version()" || exit 1
 echo "tamano inicial: $(tam_mb) MB · tope: ${TOPE_MB} MB"
 
-paso 01-esquema-pre.sql      "Esquema: 17 tablas, 11 funciones, 2 vistas, extension vector"
+# El esquema puede venir ya aplicado desde el SQL Editor del panel (es la via
+# que no necesita contrasena). 01 NO es re-ejecutable —los CREATE TABLE no
+# llevan IF NOT EXISTS— asi que se mira antes si las tablas ya estan.
+YA=$("${PSQL[@]}" -tAc "select count(*) from pg_tables where schemaname='public' and tablename='inmuebles'" 2>/dev/null)
+if [ "${YA:-0}" = "1" ]; then
+  echo ""
+  echo "── Esquema: ya esta aplicado, se salta 01"
+else
+  paso 01-esquema-pre.sql    "Esquema: 17 tablas, 11 funciones, 2 vistas, extension vector"
+fi
+
 paso 02-datos-auth.sql       "45 usuarios y 47 identidades (lo irreemplazable)"
 paso 02-datos-publicas-chicas.sql "Remates, zonas, documentos y configuracion"
 paso 02-datos-arriendos.sql  "101.108 arriendos (features recortado a 6 claves)"
 paso 04-inmuebles-00.sql     "Nucleo: banco + is_high + 32.339 oportunidades"
+# 03 es re-ejecutable, asi que se lanza igual: crea lo que falte y no toca lo
+# que ya este. Si los indices ya existian, la carga de arriba fue mas lenta.
 paso 03-esquema-post.sql     "52 indices, 25 constraints, 5 triggers, RLS y permisos"
 
 # Relleno: cada lote da comparables a mas fichas. Se para al llegar al tope,
@@ -72,6 +84,7 @@ union all select 'remates',                count(*)::text from public.remates
 union all select 'documents',              count(*)::text from public.documents
 union all select 'radar_zonas_monitoreadas', count(*)::text from public.radar_zonas_monitoreadas
 union all select 'radar_cron_jobs',        count(*)::text from public.radar_cron_jobs
+union all select 'n8n_chat_histories',     count(*)::text from public.n8n_chat_histories
 union all select '— tamano total —',       pg_size_pretty(pg_database_size(current_database()));
 EOF
 echo ""
