@@ -55,6 +55,33 @@ export const authClient: SupabaseClient = MODO_DEMO ? (clienteDemo as SupabaseCl
 );
 
 /**
+ * Cuántas fotos de la galería se guardan.
+ *
+ * El parser de FincaRaíz y los de banco guardan hasta 20 URLs por inmueble. Esa
+ * columna es el 88 % de la tabla —653 MB de los 743 que ocupaba el catálogo
+ * completo, y `images` sola era 347— y la ficha enseña un carrusel, no las
+ * veinte de golpe. Con seis sigue siendo una galería.
+ *
+ * Va aquí, al escribir, y no al leer, por la misma razón que
+ * `soloLoQueUsaElArriendo`: el coste está en el disco. Y sobre todo para que
+ * no se deshaga solo: las 92.811 filas que se restauraron el 20/10/2026 se
+ * guardaron recortadas, y sin esto el siguiente pase del scraper las volvería a
+ * inflar a veinte una por una, en silencio, hasta reventar la cuota otra vez
+ * —que es exactamente lo que acababa de pasar—.
+ *
+ * `image_url` (la portada, que es lo único que usa el listado) no se toca.
+ */
+const FOTOS_QUE_SE_GUARDAN = 6;
+
+function recortarGaleria(features: Record<string, unknown> | null | undefined): Record<string, unknown> | null | undefined {
+  if (!features || !Array.isArray(features.images) || features.images.length <= FOTOS_QUE_SE_GUARDAN) {
+    return features;
+  }
+  const images = features.images.slice(0, FOTOS_QUE_SE_GUARDAN);
+  return { ...features, images, image_count: images.length };
+}
+
+/**
  * Upsert idempotente de inmuebles. Valida con zod antes de mandar a Supabase.
  *
  * Conflict key: (country_code, source, source_id) — definido en el schema.
@@ -118,6 +145,7 @@ export async function upsertInmuebles(items: unknown[]): Promise<{
   const nowISO = new Date().toISOString();
   const enriched = dedupedItems.map((it) => ({
     ...it,
+    features: recortarGaleria(it.features as Record<string, unknown> | null | undefined),
     last_seen_at: nowISO,
     times_missed: 0,
     is_active: true,
