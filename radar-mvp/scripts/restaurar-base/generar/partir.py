@@ -22,7 +22,7 @@ GUARDAR_DATOS = {
     'public.radar_sesiones_scraper', 'public.precios_mercado',
     'public.oportunidades_historial', 'public.scraping_logs',
     'public.documents', 'public.document_metadata', 'public.document_rows',
-    'public.memories', 'public.n',
+    'public.memories', 'public.n8n_chat_histories',
     'auth.users', 'auth.identities',
 }
 
@@ -58,7 +58,7 @@ with gzip.open(SRC, 'rt', encoding='utf-8', errors='replace') as f:
             continue
 
         if linea.startswith('COPY '):
-            mt = re.match(r'COPY ([a-z_]+)\.("?[a-zA-Z_]+"?)', linea)
+            mt = re.match(r'COPY ([a-z_0-9]+)\.("?[a-zA-Z_0-9]+"?)', linea)
             if mt:
                 tabla = '%s.%s' % (mt.group(1), mt.group(2).strip('"'))
                 en_copy = tabla

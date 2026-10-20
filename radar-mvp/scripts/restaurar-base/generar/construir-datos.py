@@ -30,7 +30,7 @@ LOTE = 20000
 CHICAS = ['public.remates', 'public.radar_zonas_monitoreadas', 'public.radar_cron_jobs',
           'public.radar_parametros_gastos', 'public.radar_sesiones_scraper',
           'public.scraping_logs', 'public.documents', 'public.document_metadata',
-          'public.document_rows', 'public.memories', 'public.n',
+          'public.document_rows', 'public.memories', 'public.n8n_chat_histories',
           'public.oportunidades_historial', 'public.precios_mercado', 'public.radar_payments']
 
 def desescapar(s):
@@ -81,7 +81,7 @@ with gzip.open(SRC, 'rt', encoding='utf-8', errors='replace') as f:
             if l.startswith('\\.'): en = None
             continue
         if l.startswith('COPY '):
-            m = re.match(r'COPY ([a-z_]+\.[a-zA-Z_"]+) \((.*?)\)', l)
+            m = re.match(r'COPY ([a-z_0-9]+\.[a-zA-Z_0-9"]+) \((.*?)\)', l)
             if m and m.group(1) == 'public.inmuebles':
                 en = 'si'; cols = [x.strip() for x in m.group(2).split(',')]
             elif m: en = 'no'
@@ -140,7 +140,7 @@ with gzip.open(SRC, 'rt', encoding='utf-8', errors='replace') as f:
                 stats['fuera'] += 1
             continue
         if l.startswith('COPY '):
-            m = re.match(r'COPY ([a-z_]+\.[a-zA-Z_"]+) \((.*?)\)', l)
+            m = re.match(r'COPY ([a-z_0-9]+\.[a-zA-Z_0-9"]+) \((.*?)\)', l)
             if not m: en = 'salta'; continue
             tabla = m.group(1).replace('"', '')
             cols = [x.strip() for x in m.group(2).split(',')]

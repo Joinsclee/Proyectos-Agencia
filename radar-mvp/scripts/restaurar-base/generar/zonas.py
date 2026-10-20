@@ -13,7 +13,7 @@ with gzip.open(SRC,'rt',encoding='utf-8',errors='replace') as f:
             if l.startswith('\\.'): en=None
             continue
         if l.startswith('COPY '):
-            m=re.match(r'COPY ([a-z_]+\.[a-zA-Z_"]+) \((.*?)\)', l)
+            m=re.match(r'COPY ([a-z_0-9]+\.[a-zA-Z_0-9"]+) \((.*?)\)', l)
             if m and m.group(1)=='public.inmuebles':
                 en='si'; cols=[x.strip() for x in m.group(2).split(',')]
             elif m: en='no'

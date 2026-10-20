@@ -29,7 +29,7 @@ with gzip.open(SRC, 'rt', encoding='utf-8', errors='replace') as f:
                 presente[en][k] += 1
             continue
         if linea.startswith('COPY '):
-            m = re.match(r'COPY ([a-z_]+\.[a-zA-Z_"]+) \((.*?)\)', linea)
+            m = re.match(r'COPY ([a-z_0-9]+\.[a-zA-Z_0-9"]+) \((.*?)\)', linea)
             t = m.group(1).replace('"','') if m else None
             if t in OBJETIVO:
                 en = t

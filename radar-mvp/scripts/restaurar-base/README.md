@@ -194,6 +194,17 @@ verificador comparando el ancho de las filas con la cabecera.
 «borrar y volver a crear» los constraints no funciona con una PK que tiene una
 FK colgando.
 
+Y lo que ninguno de los dos cazó: **los nombres de tabla pueden llevar
+dígitos.** Los regex usaban `[a-zA-Z_]+`, así que `n8n_chat_histories` se
+cortaba en la «n» — según el regex, la tabla salía contada como `public.n` o se
+saltaba entera, y sus 12 filas no llegaron al fichero de datos. El DDL no se
+enteró porque `01-esquema-pre.sql` es texto literal del volcado. Se vio
+preguntándole a PostgREST del proyecto nuevo por las 17 tablas una a una: 16
+daban 200 y `n` daba 404.
+
+Es la única tabla del esquema con dígitos en el nombre, pero el agujero era
+general.
+
 ### Para qué sirve cada medidor
 
 | | |
