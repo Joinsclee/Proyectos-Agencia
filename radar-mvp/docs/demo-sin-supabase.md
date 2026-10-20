@@ -1,5 +1,14 @@
 # Enseñar el Radar sin Supabase
 
+> **Ya no hace falta para el caso que lo motivó.** La base se recreó el
+> 20/10/2026 en el proyecto `aspscrnvukrpuhsinswa` y responde con normalidad:
+> `RADAR_DEMO_DATOS` debe estar en `0` o sin poner. Ver
+> [scripts/restaurar-base/](../scripts/restaurar-base/README.md).
+>
+> El modo sigue existiendo y sigue sirviendo para enseñar el producto sin
+> depender de que la base esté sana. Las cadenas de conexión de abajo son del
+> proyecto viejo, que ya no existe — sustituir por el actual.
+
 Con el proyecto de Supabase restringido por cuota (402 en todo), el Radar
 funciona igualmente leyendo un volcado local. Para enseñarlo a un cliente.
 

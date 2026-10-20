@@ -9,7 +9,9 @@ Stack según [Plan de Trabajo Técnico MVP v1.1](../Andres%20Giraldo/Radar_Inmob
 
 - **Runtime**: Node 20+ con TypeScript (ESM)
 - **Scraping**: [Firecrawl](https://www.firecrawl.dev/) (Cloud Free tier inicial; self-host OSS disponible)
-- **BD**: Supabase (PostgreSQL) — proyecto de Andrés Giraldo `uqlfgnylvnefhyuvtncd`
+- **BD**: Supabase (PostgreSQL) — proyecto de Andrés Giraldo `aspscrnvukrpuhsinswa`
+  (recreado el 20/10/2026; el anterior se borró tras quedar restringido por
+  cuota — ver [scripts/restaurar-base/](scripts/restaurar-base/README.md))
 - **Validación**: zod
 - **Skills Claude Code**: `.claude/skills/radar-scraper-pattern.md`
 
@@ -43,8 +45,13 @@ cp .env.example .env
 
 ## Aplicar schema en Supabase
 
-Pegar [supabase/migrations/20260531000001_inmuebles_multipais.sql](supabase/migrations/20260531000001_inmuebles_multipais.sql)
-en el SQL Editor del proyecto `uqlfgnylvnefhyuvtncd.supabase.co` (Andrés Giraldo).
+Para un proyecto NUEVO, no uses esta migración sola: el esquema completo —17
+tablas, 52 índices, RLS y permisos— está en
+[scripts/restaurar-base/](scripts/restaurar-base/README.md), listo para pegar
+en el SQL Editor.
+
+La migración histórica sigue aquí por referencia:
+[supabase/migrations/20260531000001_inmuebles_multipais.sql](supabase/migrations/20260531000001_inmuebles_multipais.sql).
 
 Verifica que aparezcan: tabla `inmuebles`, `precios_mercado`, `scraping_logs` + vistas `oportunidades_publicas` y `oportunidades_stats`.
 

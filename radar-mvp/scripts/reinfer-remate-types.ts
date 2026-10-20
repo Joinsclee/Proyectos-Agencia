@@ -12,7 +12,18 @@ import { inferPropertyType } from '../scrapers/CO/rematandobienes/parser.js';
 
 const log = createLogger('reinfer');
 
-const BASE = `${process.env.SUPABASE_URL ?? 'https://uqlfgnylvnefhyuvtncd.supabase.co'}/storage/v1/object/public/inmuebles-pdf/placeholders`;
+// El host NO lleva respaldo incrustado a proposito. Lo llevo durante meses
+// apuntando al proyecto de Supabase viejo, y cuando ese proyecto se borro el
+// respaldo dejo de ser un respaldo: pasaba a escribir en la base 3.473 URLs
+// muertas sin un solo error, y eso no se descubre hasta que alguien mira una
+// ficha. Si falta SUPABASE_URL, mejor no escribir nada.
+function hostDeSupabase(): string {
+  const url = process.env.SUPABASE_URL;
+  if (!url) throw new Error('Falta SUPABASE_URL: sin ella las portadas se guardarian apuntando a ninguna parte');
+  return url;
+}
+
+const BASE = `${hostDeSupabase()}/storage/v1/object/public/inmuebles-pdf/placeholders`;
 const VALID = new Set(['house', 'apartment', 'lot', 'farm', 'commercial', 'office', 'vehicle', 'parking', 'rights']);
 const imageFor = (t: string | null) => `${BASE}/${t && VALID.has(t) ? t : 'unknown'}.svg`;
 

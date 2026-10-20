@@ -106,8 +106,29 @@ const EnvSchema = z.object({
   RADAR_AUDITORIA_COMPARABLES: z.enum(['0', '1']).default('0'),
 });
 
+/**
+ * Una variable que existe pero está vacía cuenta como ausente.
+ *
+ * `.optional()` de Zod solo acepta `undefined`, nunca `''`. Y en un panel de
+ * despliegue lo normal es crear la variable y dejarla en blanco hasta tener el
+ * valor: en EasyPanel, `RESEND_API_KEY=` (vacía) hacía que el servidor ENTERO
+ * no arrancara —«Configuración .env incompleta»— cuando lo único que pasaba era
+ * que el correo todavía no estaba configurado, que es un caso contemplado y que
+ * el código ya sabe degradar (`emailDeliveryReady()` devuelve false).
+ *
+ * Se limpia antes de validar y no en cada campo para que no haya que acordarse
+ * de ponerlo en el siguiente campo opcional que alguien añada.
+ */
+function sinVacias(fuente: NodeJS.ProcessEnv): Record<string, string> {
+  const limpio: Record<string, string> = {};
+  for (const [clave, valor] of Object.entries(fuente)) {
+    if (typeof valor === 'string' && valor.trim() !== '') limpio[clave] = valor;
+  }
+  return limpio;
+}
+
 export const env = (() => {
-  const parsed = EnvSchema.safeParse(process.env);
+  const parsed = EnvSchema.safeParse(sinVacias(process.env));
   if (!parsed.success) {
     console.error('Variables de entorno inválidas:', parsed.error.format());
     throw new Error('Configuración .env incompleta. Revisa .env.example.');

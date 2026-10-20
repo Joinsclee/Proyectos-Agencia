@@ -111,6 +111,13 @@ function buildHTML(
   // tracking aún no maduró. Mostramos un mensaje limpio en vez de "+561/−0".
   const isFirstLoad = totalOut === 0 && totalNew >= totalActive * 0.9;
 
+  // Las portadas de los bancos en PDF y de los remates salen del Storage de
+  // Supabase. El host estuvo incrustado al proyecto viejo y, cuando ese
+  // proyecto se borro, quedaron todas en 404. Se calcula aqui porque dentro de
+  // la plantilla ya es JavaScript de navegador y no hay process.env.
+  const hostStorage = process.env.SUPABASE_URL;
+  if (!hostStorage) throw new Error('Falta SUPABASE_URL: el dashboard saldria sin portadas');
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -914,7 +921,7 @@ function buildHTML(
   // Bancos en PDF (BBVA/Aval): no tienen foto del inmueble, solo la página del PDF.
   // Mostramos tarjeta branded de referencia como portada y dejamos la ficha PDF
   // accesible dentro del modal.
-  const PLACEHOLDER_BASE = 'https://uqlfgnylvnefhyuvtncd.supabase.co/storage/v1/object/public/inmuebles-pdf/placeholders';
+  const PLACEHOLDER_BASE = '${hostStorage}/storage/v1/object/public/inmuebles-pdf/placeholders';
   const BANK_TYPES = ['house','apartment','lot','farm','commercial','office'];
   const isPdfBank = (p) => p.source === 'bbva' || p.source === 'aval';
   const bankCard = (type) => PLACEHOLDER_BASE + '/bank/' + (BANK_TYPES.includes(type) ? type : 'unknown') + '.svg';
