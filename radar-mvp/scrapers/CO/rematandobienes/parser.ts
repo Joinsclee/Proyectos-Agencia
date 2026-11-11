@@ -31,7 +31,18 @@ import { bankName, limpiarDemandante } from './bank-detect.js';
 // una representación gráfica del TIPO (no una foto que daría falsa expectativa).
 // Si se generan imágenes "persona IA con cartel", se suben al mismo path y se
 // muestran automáticamente sin tocar el código.
-const PLACEHOLDER_BASE = `${process.env.SUPABASE_URL ?? 'https://uqlfgnylvnefhyuvtncd.supabase.co'}/storage/v1/object/public/inmuebles-pdf/placeholders`;
+// El host NO lleva respaldo incrustado a proposito. Lo llevo durante meses
+// apuntando al proyecto de Supabase viejo, y cuando ese proyecto se borro el
+// respaldo dejo de ser un respaldo: pasaba a escribir en la base 3.473 URLs
+// muertas sin un solo error, y eso no se descubre hasta que alguien mira una
+// ficha. Si falta SUPABASE_URL, mejor no escribir nada.
+function hostDeSupabase(): string {
+  const url = process.env.SUPABASE_URL;
+  if (!url) throw new Error('Falta SUPABASE_URL: sin ella las portadas se guardarian apuntando a ninguna parte');
+  return url;
+}
+
+const PLACEHOLDER_BASE = `${hostDeSupabase()}/storage/v1/object/public/inmuebles-pdf/placeholders`;
 const PLACEHOLDER_TYPES = new Set<string>(['house', 'apartment', 'lot', 'farm', 'commercial', 'office', 'vehicle', 'parking', 'rights']);
 
 function placeholderFor(type: PropertyType | null, _sourceId: string): string {

@@ -9,11 +9,17 @@
  */
 import 'dotenv/config';
 import { createServer } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Import normal, igual que en `lib/supabase.ts`: con `createRequire` por un
+// lado y `await import` por otro se cargaban dos instancias del módulo y el
+// relleno de las tablas no se veía desde la otra.
+import { filasCargadas as filasDemoCargadas } from './demo/cliente-falso.js';
+import { MODO_DEMO } from '../lib/supabase.js';
 import { createLogger } from '../lib/logger.js';
 import {
   queryPortal, queryBancos, queryRemates, queryTodas, facets, facetsRemates, stats, getProperty, remateBankFacets,
@@ -96,7 +102,18 @@ const log = createLogger('server');
 const PORT = Number(process.env.PORT ?? 8787);
 const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), 'public');
 const SHUTDOWN_TIMEOUT_MS = 10_000;
-let serviceReady = false;
+/**
+ * Hay algo que esperar antes de aceptar trafico?
+ *
+ * Como servidor propio si: `/ready` devuelve 503 hasta que el puerto esta
+ * escuchando, para que la plataforma no mande peticiones a un proceso a medio
+ * arrancar. Se pone a true en el callback de `server.listen`.
+ *
+ * En Vercel NO hay nada que esperar: si la funcion se esta ejecutando, ya esta
+ * lista. Y como ese callback nunca corre alli, sin esto `/ready` responderia 503
+ * para siempre y cualquier monitor daria el servicio por caido.
+ */
+let serviceReady = Boolean(process.env.VERCEL);
 let shuttingDown = false;
 
 /**
@@ -476,7 +493,15 @@ async function serveStatic(
   }
 }
 
-const server = createServer(async (req, res) => {
+/**
+ * El manejador de TODAS las peticiones.
+ *
+ * Va suelto y exportado, en vez de dentro del `createServer`, porque en Vercel
+ * este modulo se IMPORTA para sacar el handler y alli no hay un proceso que
+ * escuche un puerto: cada peticion entra en una funcion. Como servidor propio
+ * (contenedor, local) se sigue usando igual, via el `createServer` de abajo.
+ */
+export async function manejarPeticion(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const requestId = createRequestId();
   applySecurityHeaders(res, requestId);
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
@@ -489,6 +514,18 @@ const server = createServer(async (req, res) => {
         ok: true,
         status: shuttingDown ? 'stopping' : 'alive',
         uptime_s: Math.round(process.uptime()),
+        // Si el modo demo está puesto y con cuántas filas. Desde fuera no había
+        // forma de saberlo: el 10/10/2026 se desplegó con `RADAR_DEMO_DATOS=1`
+        // guardada en el panel pero sin aplicar al contenedor, y se tardó una
+        // ronda entera de pruebas en descubrir que la variable no llegaba al
+        // proceso. Dos campos lo dicen de un vistazo, y no filtran nada.
+        demo: MODO_DEMO,
+        demo_filas: MODO_DEMO ? filasDemoCargadas() : undefined,
+        // De dónde salieron los datos y, si no salieron, por qué. Es lo único
+        // que se puede mirar desde fuera cuando el sitio no carga y no se tiene
+        // el panel delante. No filtra nada: ni credenciales ni el origen real.
+        demo_origen: MODO_DEMO ? estadoDemo.origen : undefined,
+        demo_error: MODO_DEMO && estadoDemo.error ? estadoDemo.error.slice(0, 180) : undefined,
       });
     }
     // Readiness separada de liveness: durante un despliegue EasyPanel deja de
@@ -1249,6 +1286,12 @@ const server = createServer(async (req, res) => {
         // Se publica a propósito: una puerta que regala el acceso completo no
         // debe poder estar abierta sin que se note desde fuera.
         demoPlanActivation: env.RADAR_DEMO_PLAN === '1',
+        // Modo demo: el navegador necesita saberlo para esconder los botones de
+        // Google y Microsoft. Esos van DIRECTOS a Supabase —nunca pasan por este
+        // servidor— así que con la API restringida fallan hagamos lo que hagamos
+        // aquí, y un botón que devuelve un error al pulsarlo es peor que no
+        // tenerlo. Más aún delante de un cliente.
+        modoDemo: MODO_DEMO,
         paymentDemoReady: wompiPaymentDemoReady(),
         // Sin URL no hay botón. Ver `RADAR_COMUNIDAD_URL` en lib/env.ts.
         comunidadUrl: env.RADAR_COMUNIDAD_URL ?? null,
@@ -1290,7 +1333,10 @@ const server = createServer(async (req, res) => {
         'Content-Type': esMapa ? 'application/xml; charset=utf-8' : 'text/plain; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',
       });
-      return res.end(esMapa ? await sitemapXml(base) : robotsTxt(base));
+      // `res.end` devuelve el propio ServerResponse; se corta aqui sin devolverlo
+      // para que la firma del handler siga siendo Promise<void>.
+      res.end(esMapa ? await sitemapXml(base) : robotsTxt(base));
+      return;
     }
     if (path === '/login') return await serveStatic(res, '/login.html');
     if (path === '/auth/callback') return await serveStatic(res, '/auth-callback.html');
@@ -1311,11 +1357,121 @@ const server = createServer(async (req, res) => {
     log.error(`${requestId} ${path}: ${msg}`);
     return sendJSON(res, 500, { error: 'Error interno del servidor', requestId });
   }
-});
+}
+
+const server = createServer(manejarPeticion);
 
 /** Ciudades con más inventario: se precargan sus comparables para que la primera
  *  ficha abra al instante en vez de esperar a que se cargue el baseline. */
 const WARM_CITIES = ['bogota', 'medellin', 'cali'];
+
+/**
+ * En modo demo, traer el volcado ANTES de escuchar.
+ *
+ * El orden importa: si el servidor abriera el puerto primero, la plataforma lo
+ * daría por sano y le mandaría tráfico mientras las tablas están vacías — una
+ * aplicación que carga y no enseña nada, que es peor que una que no arranca.
+ *
+ * Y se niega a arrancar sin datos. Arrancar vacío en una demo significa
+ * descubrirlo delante del cliente; que el contenedor no levante se ve en el
+ * panel antes de enseñar nada.
+ */
+/** Qué pasó al intentar cargar los datos de la demo. Lo publica `/health`. */
+let estadoDemo: { origen: string; filas: number; error?: string } = { origen: 'apagado', filas: 0 };
+
+/**
+ * Carga el volcado de la demo. NUNCA impide que el servidor arranque.
+ *
+ * La primera versión lanzaba si no conseguía datos, razonando que «arrancar
+ * vacío significa descubrirlo delante del cliente, y que no levante se ve en el
+ * panel antes de enseñar nada». Era un error de juicio y el 20/10/2026 pasó
+ * factura: el proyecto de Supabase desapareció —el dominio dejó de resolver y
+ * el pooler devolvía `tenant not found`—, el arranque lanzó, y como la
+ * plataforma reinicia el contenedor en bucle, el sitio entero pasó a 502. Ni la
+ * portada, ni `/health`, ni forma de diagnosticar nada desde fuera.
+ *
+ * O sea: convirtió «no hay datos» en «no hay nada». El razonamiento olvidaba
+ * que un contenedor que no arranca no se queda quieto, se reinicia para
+ * siempre.
+ *
+ * Ahora el servidor arranca pase lo que pase y el fallo se cuenta por dos
+ * canales: a voz en grito en el log, y en `/health`, que es lo que se puede
+ * mirar desde fuera cuando el panel no está a mano.
+ */
+async function prepararDemo(): Promise<void> {
+  if (env.RADAR_DEMO_DATOS !== '1') return;
+  const { rellenarTablas, filasCargadas } = await import('./demo/cliente-falso.js');
+
+  // Primero el disco: en local evita una ida a la base en cada reinicio y
+  // permite trabajar sin credenciales. En el contenedor no suele haber nada,
+  // porque el volcado son filas reales y no entra al repositorio.
+  try {
+    const { cargarVolcado } = await import('./demo/tablas.js');
+    rellenarTablas(cargarVolcado(fileURLToPath(new URL('..', import.meta.url))).tablas);
+    estadoDemo = { origen: 'disco', filas: filasCargadas() };
+    log.info(`Modo demo: ${estadoDemo.filas} filas desde el volcado en disco.`);
+    return;
+  } catch { /* no hay volcado: se intenta por Postgres */ }
+
+  const url = process.env.RADAR_DATABASE_URL;
+  if (!url) {
+    estadoDemo = { origen: 'ninguno', filas: 0, error: 'falta RADAR_DATABASE_URL y no hay volcado en disco' };
+    log.error(`MODO DEMO SIN DATOS: ${estadoDemo.error}. El Radar arranca, pero los listados saldrán vacíos.`);
+    return;
+  }
+
+  try {
+    rellenarTablas((await traerVolcadoConReintentos(url)).tablas);
+    estadoDemo = { origen: 'postgres', filas: filasCargadas() };
+    if (estadoDemo.filas === 0) {
+      estadoDemo.error = 'la base respondió pero no devolvió ninguna fila';
+      log.error(`MODO DEMO SIN DATOS: ${estadoDemo.error}`);
+    } else {
+      log.info(`Modo demo: ${estadoDemo.filas} filas traídas de Postgres. Supabase no se va a tocar.`);
+    }
+  } catch (e) {
+    estadoDemo = { origen: 'postgres', filas: 0, error: e instanceof Error ? e.message : String(e) };
+    log.error(`MODO DEMO SIN DATOS: no se pudo traer el volcado — ${estadoDemo.error}`);
+    log.error('El Radar arranca igualmente: un fallo de datos no debe dejar el sitio entero inaccesible.');
+  }
+}
+
+/**
+ * Tres intentos con espera creciente antes de rendirse.
+ *
+ * Al arrancar, el contenedor compite con todo lo demás que levanta a la vez, y
+ * un corte de red de dos segundos no debería dejar la demo sin datos hasta el
+ * siguiente despliegue. Si tras tres intentos no hay nada, se arranca igual.
+ */
+async function traerVolcadoConReintentos(url: string) {
+  const { traerVolcado } = await import('./demo/traer-al-arrancar.js');
+  let ultimo: unknown;
+  for (let intento = 1; intento <= 3; intento += 1) {
+    try { return await traerVolcado(url); }
+    catch (e) {
+      ultimo = e;
+      if (intento < 3) {
+        const espera = intento * 3_000;
+        log.warn(`Modo demo: intento ${intento} de 3 falló (${e instanceof Error ? e.message : String(e)}). Reintento en ${espera / 1000}s.`);
+        await new Promise((r) => setTimeout(r, espera));
+      }
+    }
+  }
+  throw ultimo instanceof Error ? ultimo : new Error(String(ultimo));
+}
+
+/**
+ * Es este proceso el que escucha?
+ *
+ * En Vercel no: el modulo se importa para exportar `manejarPeticion`, y abrir un
+ * puerto ahi no solo es inutil, es que el arranque entero —traer el volcado del
+ * modo demo, precalentar las ciudades— correria en CADA instancia fria y se
+ * llevaria por delante el tiempo de la primera peticion.
+ */
+const ESCUCHA_PROPIA = !process.env.VERCEL;
+
+if (ESCUCHA_PROPIA) {
+await prepararDemo();
 
 server.listen(PORT, () => {
   serviceReady = true;
@@ -1354,6 +1510,7 @@ server.listen(PORT, () => {
     .then(() => log.info('Métricas de operación precalculadas'))
     .catch(() => { /* el precalentamiento es best-effort */ });
 });
+}
 
 function shutdown(signal: NodeJS.Signals) {
   if (shuttingDown) return;
@@ -1380,5 +1537,7 @@ function shutdown(signal: NodeJS.Signals) {
   server.closeIdleConnections();
 }
 
-process.once('SIGTERM', () => shutdown('SIGTERM'));
-process.once('SIGINT', () => shutdown('SIGINT'));
+if (ESCUCHA_PROPIA) {
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+  process.once('SIGINT', () => shutdown('SIGINT'));
+}

@@ -54,7 +54,14 @@ test('muro: `fetchConSesion` sí pone la cabecera', async () => {
 
 test('muro: la ficha individual se pide identificándose', async () => {
   const linea = await lineaDePeticion('`/api/property?kind=');
-  assert.match(linea, /headers:\s*authHeaders\(\)/);
+  // Tres formas válidas, de menos a más: la cabecera a mano, `fetchConSesion`
+  // (que además renueva tras un 401) y `pedirJSON` (que además detecta el caso
+  // que NO da 401: 200 con plan anónimo). Lo que no vale es `fetch` pelado.
+  assert.match(
+    linea,
+    /headers:\s*authHeaders\(\)|fetchConSesion\(|pedirJSON\(/,
+    'la ficha se pide sin identificarse: a un suscriptor se le abriría bloqueada',
+  );
 });
 
 test('muro: /api/property aplica el plan antes de responder', async () => {
@@ -70,12 +77,30 @@ test('muro: /api/property aplica el plan antes de responder', async () => {
 });
 
 test('muro: la portada se pide identificándose', async () => {
-  const linea = await lineaDePeticion("fetch('/api/home'");
+  const linea = await lineaDePeticion("'/api/home'");
   assert.match(
     linea,
-    /headers:\s*authHeaders\(\)/,
-    'la portada se pide sin cabecera: un suscriptor vería sus propios destacados bloqueados',
+    /headers:\s*authHeaders\(\)|fetchConSesion\(|pedirJSON\(/,
+    'la portada se pide sin identificarse: un suscriptor vería sus propios destacados bloqueados',
   );
+});
+
+test('muro: `pedirJSON` identifica Y cubre el caso que no da 401', async () => {
+  // Las dos pruebas de arriba aceptan `pedirJSON` como forma de identificarse,
+  // así que hay que comprobar que de verdad lo hace. La cadena es
+  // `pedirJSON` → `fetchConSesion` → `...authHeaders()`, y el último eslabón ya
+  // lo vigila la prueba de `fetchConSesion`.
+  const app = await leer('server/public/app.js');
+  const cuerpo = app.slice(app.indexOf('async function pedirJSON'));
+  const hasta = cuerpo.slice(0, cuerpo.indexOf('\n}'));
+  assert.match(hasta, /fetchConSesion\(/, '`pedirJSON` dejó de pasar por la envoltura con sesión');
+
+  // Y lo que justifica que exista: `/api/property` y `/api/home` NO responden
+  // 401 a un token caducado, responden 200 con `plan: 'anonimo'` y la ficha
+  // recortada. Sin esta rama, un suscriptor con la pestaña abierta más de una
+  // hora ve la ficha tapada pidiéndole que cree una cuenta gratis.
+  assert.match(hasta, /plan === 'anonimo'/, '`pedirJSON` dejó de detectar el caso silencioso');
+  assert.match(hasta, /renovarSesion\(\)/, '`pedirJSON` detecta el caso pero ya no renueva');
 });
 
 test('muro: /api/home aplica el plan antes de responder', async () => {
