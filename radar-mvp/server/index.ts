@@ -9,6 +9,7 @@
  */
 import 'dotenv/config';
 import { createServer } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { gzipSync } from 'node:zlib';
 import { readFile } from 'node:fs/promises';
@@ -101,7 +102,18 @@ const log = createLogger('server');
 const PORT = Number(process.env.PORT ?? 8787);
 const PUBLIC = join(dirname(fileURLToPath(import.meta.url)), 'public');
 const SHUTDOWN_TIMEOUT_MS = 10_000;
-let serviceReady = false;
+/**
+ * Hay algo que esperar antes de aceptar trafico?
+ *
+ * Como servidor propio si: `/ready` devuelve 503 hasta que el puerto esta
+ * escuchando, para que la plataforma no mande peticiones a un proceso a medio
+ * arrancar. Se pone a true en el callback de `server.listen`.
+ *
+ * En Vercel NO hay nada que esperar: si la funcion se esta ejecutando, ya esta
+ * lista. Y como ese callback nunca corre alli, sin esto `/ready` responderia 503
+ * para siempre y cualquier monitor daria el servicio por caido.
+ */
+let serviceReady = Boolean(process.env.VERCEL);
 let shuttingDown = false;
 
 /**
@@ -481,7 +493,15 @@ async function serveStatic(
   }
 }
 
-const server = createServer(async (req, res) => {
+/**
+ * El manejador de TODAS las peticiones.
+ *
+ * Va suelto y exportado, en vez de dentro del `createServer`, porque en Vercel
+ * este modulo se IMPORTA para sacar el handler y alli no hay un proceso que
+ * escuche un puerto: cada peticion entra en una funcion. Como servidor propio
+ * (contenedor, local) se sigue usando igual, via el `createServer` de abajo.
+ */
+export async function manejarPeticion(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const requestId = createRequestId();
   applySecurityHeaders(res, requestId);
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
@@ -1313,7 +1333,10 @@ const server = createServer(async (req, res) => {
         'Content-Type': esMapa ? 'application/xml; charset=utf-8' : 'text/plain; charset=utf-8',
         'Cache-Control': 'public, max-age=3600',
       });
-      return res.end(esMapa ? await sitemapXml(base) : robotsTxt(base));
+      // `res.end` devuelve el propio ServerResponse; se corta aqui sin devolverlo
+      // para que la firma del handler siga siendo Promise<void>.
+      res.end(esMapa ? await sitemapXml(base) : robotsTxt(base));
+      return;
     }
     if (path === '/login') return await serveStatic(res, '/login.html');
     if (path === '/auth/callback') return await serveStatic(res, '/auth-callback.html');
@@ -1334,7 +1357,9 @@ const server = createServer(async (req, res) => {
     log.error(`${requestId} ${path}: ${msg}`);
     return sendJSON(res, 500, { error: 'Error interno del servidor', requestId });
   }
-});
+}
+
+const server = createServer(manejarPeticion);
 
 /** Ciudades con más inventario: se precargan sus comparables para que la primera
  *  ficha abra al instante en vez de esperar a que se cargue el baseline. */
@@ -1435,6 +1460,17 @@ async function traerVolcadoConReintentos(url: string) {
   throw ultimo instanceof Error ? ultimo : new Error(String(ultimo));
 }
 
+/**
+ * Es este proceso el que escucha?
+ *
+ * En Vercel no: el modulo se importa para exportar `manejarPeticion`, y abrir un
+ * puerto ahi no solo es inutil, es que el arranque entero —traer el volcado del
+ * modo demo, precalentar las ciudades— correria en CADA instancia fria y se
+ * llevaria por delante el tiempo de la primera peticion.
+ */
+const ESCUCHA_PROPIA = !process.env.VERCEL;
+
+if (ESCUCHA_PROPIA) {
 await prepararDemo();
 
 server.listen(PORT, () => {
@@ -1474,6 +1510,7 @@ server.listen(PORT, () => {
     .then(() => log.info('Métricas de operación precalculadas'))
     .catch(() => { /* el precalentamiento es best-effort */ });
 });
+}
 
 function shutdown(signal: NodeJS.Signals) {
   if (shuttingDown) return;
@@ -1500,5 +1537,7 @@ function shutdown(signal: NodeJS.Signals) {
   server.closeIdleConnections();
 }
 
-process.once('SIGTERM', () => shutdown('SIGTERM'));
-process.once('SIGINT', () => shutdown('SIGINT'));
+if (ESCUCHA_PROPIA) {
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+  process.once('SIGINT', () => shutdown('SIGINT'));
+}
