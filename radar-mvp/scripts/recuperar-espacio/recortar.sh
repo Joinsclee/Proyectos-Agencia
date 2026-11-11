@@ -4,54 +4,83 @@
 #
 # Por que hace falta: los recortes (soloLoQueUsaElArriendo y recortarGaleria)
 # entraron en el codigo el 20/10/2026 pero NO se desplegaron. El cron siguio un
-# mes escribiendo sin ellos, y la base paso de 402 MB a 1.033 — con el limite del
-# plan gratuito en 500. El conteo grande de la portada paso de 1,6 s a 10,1 s y
-# la precarga del servidor dejo de terminar.
-#
-# Va por lotes a proposito: un solo UPDATE de 152.000 filas en una instancia
-# gratuita genera un WAL enorme y bloquea la tabla demasiado tiempo.
+# mes escribiendo sin ellos, la base paso de 402 MB a 1.033 —con el limite del
+# plan gratuito en 500— y Supabase acabo poniendola en solo-lectura.
 #
 #   export RADAR_DATABASE_URL='postgresql://...pooler.supabase.com:5432/postgres'
 #   bash scripts/recuperar-espacio/recortar.sh
+#
+# Es REANUDABLE: cada lote busca solo lo que todavia le falta, asi que si se corta
+# se vuelve a lanzar y sigue.
 set -uo pipefail
 
+LOTE=${LOTE:-2000}          # filas por UPDATE
+CADA=${CADA:-5}             # cada cuantos lotes se hace un VACUUM normal
 [ -n "${RADAR_DATABASE_URL:-}" ] || { echo "Falta RADAR_DATABASE_URL"; exit 1; }
 
-# Supabase pone el proyecto en SOLO-LECTURA al pasarse de cuota, y entonces no se
-# puede borrar nada para reducirlo: es un bloqueo circular. La salida prevista es
-# anular el ajuste por sesion, que Supabase impone desde su fichero de
-# configuracion y no a nivel de base, asi que un `set` de sesion basta.
+# ─────────────────── los tres ajustes que hay que anular ───────────────────
 #
-# NO sirve por PGOPTIONS: el pooler de Supabase no pasa las opciones de arranque.
-# Tiene que ir como sentencia dentro de cada sesion, y `psql -c` ignora stdin, asi
-# que los bloques con heredoc lo llevan como primera linea y los de -c lo llevan
-# en un -c propio delante (el ajuste persiste entre varios -c de la misma sesion).
+# 1. SOLO-LECTURA. Supabase lo pone al pasarse de cuota, y entonces no se puede
+#    borrar nada para reducir: un bloqueo circular. Anularlo por sesion es la
+#    salida prevista. NO sirve por PGOPTIONS —el pooler no pasa las opciones de
+#    arranque—, asi que va como sentencia dentro de cada bloque.
 #
-# Esto solo sirve para encoger la base. No es una forma de seguir escribiendo por
-# encima de la cuota: en cuanto el tamano baje, Supabase levanta el solo-lectura.
-SOLO_LECTURA_OFF='set default_transaction_read_only = off'
-echo "Modo solo-lectura de Supabase: se anula por sesion (para poder liberar)"
+# 2. STATEMENT_TIMEOUT. Supabase fija 2 min en
+#    /etc/postgresql-custom/platform-defaults.conf. Un UPDATE de miles de filas
+#    con TOAST de por medio se lo come, y el VACUUM FULL de una tabla de 700 MB
+#    mucho mas.
+#
+# `psql -c` ignora stdin, asi que los bloques con heredoc los llevan como
+# primeras lineas y los de -c en un -c propio delante (el ajuste persiste entre
+# varios -c de la misma sesion).
+PREPARA='set default_transaction_read_only = off; set statement_timeout = 0'
+SQL_PREPARA="set default_transaction_read_only = off;
+set statement_timeout = 0;"
 
 P=(psql "$RADAR_DATABASE_URL" -v ON_ERROR_STOP=1 -tA --no-psqlrc)
 
-tam() { "${P[@]}" -c "select pg_size_pretty(pg_database_size(current_database()))"; }
-echo "Base al empezar: $(tam)"
+tam()  { "${P[@]}" -c "select pg_size_pretty(pg_database_size(current_database()))"; }
+# VACUUM normal: NO reduce el fichero, pero libera las versiones muertas para que
+# los UPDATE siguientes las reutilicen. Sin esto la tabla crece mientras se
+# recorta —medido: de 941 a 965 MB en nueve lotes— y se acerca al limite justo
+# cuando se intenta bajar de el.
+limpia() { "${P[@]}" -c "$PREPARA" -c "vacuum (analyze) $1" >/dev/null 2>&1; }
 
-# ─────────── 1. arriendos: features a las 6 claves que lee el motor ───────────
-# engine/rental-comparables.ts lee lat, lng, bedrooms, garages, neighborhood e
-# is_project. Las otras 22 —description, images, amenities, el bloque del
-# portal— nadie las lee en un arriendo: un arriendo no se ensena, solo cuenta
-# para la mediana del canon de su zona.
-echo ""
-echo "── 1/5 arriendos: features de 28 claves a 6"
-while :; do
-  N=$("${P[@]}" <<'SQL'
-set default_transaction_read_only = off;
+echo "Base al empezar: $(tam)"
+echo "(solo-lectura y statement_timeout de Supabase: anulados por sesion)"
+
+# ───────────── recorta una tabla por lotes hasta que no quede nada ─────────────
+recortar() {  # recortar <rotulo> <sql-del-lote> <tabla>
+  echo ""
+  echo "── $1"
+  local n=0 vuelta=0 total=0
+  while :; do
+    n=$("${P[@]}" <<SQL
+$SQL_PREPARA
+$2
+SQL
+) || { echo "   FALLO en el lote $((vuelta+1)) · base $(tam)"; return 1; }
+    n=$(printf '%s' "$n" | grep -c . || true)
+    [ "${n:-0}" -eq 0 ] && break
+    total=$((total+n)); vuelta=$((vuelta+1))
+    if [ $((vuelta % CADA)) -eq 0 ]; then
+      limpia "$3"
+      printf "   %6d filas · base %s (limpiada)\n" "$total" "$(tam)"
+    else
+      printf "   %6d filas\n" "$total"
+    fi
+  done
+  limpia "$3"
+  echo "   $total filas en total · base $(tam)"
+}
+
+# ── 1. arriendos: features a las 6 claves que lee engine/rental-comparables.ts ──
+recortar "arriendos: features a 6 claves" "
 with pendientes as (
   select id from rental_listings
    where features is not null
      and (select count(*) from jsonb_object_keys(features)) > 6
-   limit 4000
+   limit $LOTE
 )
 update rental_listings r
    set features = (
@@ -59,28 +88,16 @@ update rental_listings r
            from unnest(array['lat','lng','bedrooms','garages','neighborhood','is_project']) k
           where r.features ? k and r.features->k <> 'null'::jsonb)
   from pendientes p where p.id = r.id
-returning 1;
-SQL
-) || exit 1
-  N=$(echo "$N" | grep -c 1 || true)
-  [ "${N:-0}" -eq 0 ] && break
-  printf "   %s filas · base %s\n" "$N" "$(tam)"
-done
+returning 1;" rental_listings
 
-# ─────────── 2. inmuebles: la galeria a 6 fotos ───────────
-# Los parsers guardan hasta 30 URLs. La ficha ensena un carrusel, no las treinta
-# de golpe, y image_url (la portada, lo unico que usa el listado) no se toca.
-echo ""
-echo "── 2/5 inmuebles: galeria a 6 fotos"
-while :; do
-  N=$("${P[@]}" <<'SQL'
-set default_transaction_read_only = off;
+# ── 2. inmuebles: la galeria a 6 fotos. image_url (la portada) no se toca ──
+recortar "inmuebles: galeria a 6 fotos" "
 with pendientes as (
   select id from inmuebles
    where features ? 'images'
      and jsonb_typeof(features->'images') = 'array'
      and jsonb_array_length(features->'images') > 6
-   limit 4000
+   limit $LOTE
 )
 update inmuebles i
    set features = jsonb_set(
@@ -89,30 +106,20 @@ update inmuebles i
               from (select value v from jsonb_array_elements(i.features->'images') limit 6) t)),
          '{image_count}', '6'::jsonb)
   from pendientes p where p.id = i.id
-returning 1;
-SQL
-) || exit 1
-  N=$(echo "$N" | grep -c 1 || true)
-  [ "${N:-0}" -eq 0 ] && break
-  printf "   %s filas · base %s\n" "$N" "$(tam)"
-done
+returning 1;" inmuebles
 
-# ─────────── 3. price_history: nadie la lee ───────────
-# Comprobado con grep sobre todo el repositorio: cero ficheros la consultan. Es
-# historico derivado que el trigger log_price_history escribe y nada lee.
+# ── 3. price_history: cero ficheros del repo la consultan ──
 echo ""
-echo "── 3/5 price_history: se vacia (0 lectores en el codigo)"
-"${P[@]}" -c "$SOLO_LECTURA_OFF" -c "truncate price_history" && echo "   hecho · base $(tam)"
+echo "── price_history: se vacia (0 lectores en el codigo)"
+"${P[@]}" -c "$PREPARA" -c "truncate price_history" && echo "   hecho · base $(tam)"
 
-# ─────────── 4. inmuebles inactivas, respetando los favoritos ───────────
-# Son 575 y pesan 2,7 MB, asi que el ahorro es menor. Se hace igual porque el
-# ciclo de vida desactiva y nunca borra, y la tabla solo crece.
-# El guardia de favoritos es cinturon y tirantes: hoy ninguno apunta a una
+# ── 4. inactivas, respetando los favoritos ──
+# 19 de los 45 usuarios tienen favoritos en su metadata. Hoy ninguno apunta a una
 # inactiva, pero borrar el favorito de alguien no se nota hasta que lo abre.
 echo ""
-echo "── 4/5 inmuebles inactivas (protegiendo favoritos)"
-"${P[@]}" <<'SQL'
-set default_transaction_read_only = off;
+echo "── inmuebles inactivas (protegiendo favoritos)"
+"${P[@]}" <<SQL
+$SQL_PREPARA
 with favs as (
   select distinct (jsonb_array_elements(raw_user_meta_data->'favorites')->>'id') as id
     from auth.users
@@ -124,16 +131,15 @@ delete from inmuebles
 SQL
 echo "   hecho · base $(tam)"
 
-# ─────────── 5. devolver el espacio al disco ───────────
-# Un UPDATE deja la version vieja de la fila muerta: el espacio sigue ocupado
-# hasta que se compacta. VACUUM normal solo lo marca reutilizable y NO reduce
-# pg_database_size; FULL reescribe la tabla y si lo devuelve. Toma bloqueo
-# exclusivo, que ahora da igual porque la web esta caida.
+# ── 5. devolver el espacio al disco ──
+# VACUUM normal solo marca reutilizable y NO reduce pg_database_size. FULL
+# reescribe la tabla y si lo devuelve, a cambio de un bloqueo exclusivo (que
+# ahora da igual: la web esta caida) y de necesitar espacio para la copia.
 echo ""
-echo "── 5/5 VACUUM FULL (reescribe las tablas, devuelve el espacio)"
-for t in rental_listings inmuebles price_history; do
-  printf "   %s ... " "$t"
-  "${P[@]}" -c "$SOLO_LECTURA_OFF" -c "vacuum full analyze $t" >/dev/null && echo "ok · base $(tam)"
+echo "── VACUUM FULL (reescribe las tablas y devuelve el espacio)"
+for t in price_history rental_listings inmuebles; do
+  printf "   %-16s ... " "$t"
+  "${P[@]}" -c "$PREPARA" -c "vacuum full analyze $t" >/dev/null && echo "ok · base $(tam)"
 done
 
 echo ""
