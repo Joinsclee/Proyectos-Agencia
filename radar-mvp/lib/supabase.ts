@@ -352,6 +352,34 @@ export async function markStaleRentalListings(
 }
 
 /**
+ * Borra los inmuebles que ningun portal muestra desde hace `dias`, respetando
+ * los favoritos de los usuarios. Devuelve cuantos borro.
+ *
+ * Hace falta porque desactivar no libera espacio: `markStaleInmuebles` pone
+ * `is_active=false` y la fila se queda para siempre. Con el cron escribiendo a
+ * diario la base paso de 402 MB a 1.033 en un mes —el tope del plan gratuito
+ * son 500— y Supabase puso el proyecto en solo-lectura: la web dejo de
+ * arrancar y no se podia borrar nada para reducir.
+ *
+ * La funcion de la base rechaza menos de 15 dias, asi que un valor mal puesto
+ * no puede vaciar la tabla.
+ */
+export async function purgarInmueblesCaducados(dias = 45): Promise<number> {
+  const { data, error } = await supabase.rpc('purgar_inmuebles_caducados', { p_days: dias });
+
+  if (error) {
+    log.error(`purgarInmueblesCaducados(${dias}): ${error.message}`);
+    return 0;
+  }
+
+  const borrados = Number(Array.isArray(data) ? data[0] : data) || 0;
+  if (borrados > 0) {
+    log.info(`Retencion: ${borrados} inmuebles borrados (sin ver en ${dias} dias)`);
+  }
+  return borrados;
+}
+
+/**
  * Registra un run de scraper. Devuelve el id del log para cerrarlo al final.
  */
 export async function startScrapingLog(source: string, countryCode = env.DEFAULT_COUNTRY_CODE): Promise<number | null> {

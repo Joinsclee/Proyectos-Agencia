@@ -17,7 +17,7 @@ import { run as runDavivienda } from '../scrapers/CO/davivienda/index.js';
 import { run as runBancolombia } from '../scrapers/CO/bancolombia/index.js';
 import { run as runBbva } from '../scrapers/CO/bbva/index-v2.js';
 import { run as runAval } from '../scrapers/CO/aval/index-v2.js';
-import { markStaleInmuebles } from '../lib/supabase.js';
+import { markStaleInmuebles, purgarInmueblesCaducados } from '../lib/supabase.js';
 import { env } from '../lib/env.js';
 import type { ScrapingRunResult } from '../lib/types.js';
 
@@ -45,6 +45,24 @@ interface PortalSummary {
   // Lifecycle: tras un scrape exitoso, marcamos los inmuebles que no se vieron.
   bumped?: number;        // pasaron a times_missed+1
   deactivated?: number;   // alcanzaron threshold y quedaron is_active=false
+}
+
+/**
+ * Dias que se guarda un inmueble que ya no aparece en ningun portal.
+ *
+ * No es una variable de entorno a proposito: una env vacia nos tumbo la web
+ * una vez ya, y este numero es una decision de producto (se pierden ~259 de
+ * las 2.473 zonas que pueden calcular comparables) que debe verse en el codigo.
+ */
+const RETENCION_DIAS = 45;
+
+/**
+ * Si NINGUN portal vio inmuebles, nadie refresco `last_seen_at` y purgar
+ * borraria fichas vivas. No es teorico: el servidor estuvo caido una semana y
+ * con el cron parado un mes entero la retencion habria barrido el catalogo.
+ */
+export function debePurgar(resumen: { found: number }[]): boolean {
+  return resumen.some((s) => s.found > 0);
 }
 
 /**
@@ -94,6 +112,19 @@ export async function runAll(): Promise<PortalSummary[]> {
       summary.push({ portal: portal.name, status: 'error', found: 0, inserted: 0, errors: 1 });
       log.error(`✗ ${portal.name} falló: ${(err as Error).message}`);
     }
+  }
+
+  // Retencion: desactivar no libera espacio, hay que borrar. Va aqui y no por
+  // portal porque el catalogo es compartido: un inmueble que Davivienda ya no
+  // publica puede seguir vivo en otro portal.
+  if (debePurgar(summary)) {
+    try {
+      await purgarInmueblesCaducados(RETENCION_DIAS);
+    } catch (e) {
+      log.warn(`Retencion fallo: ${(e as Error).message}`);
+    }
+  } else {
+    log.warn('Ningun portal devolvio inmuebles — saltando la retencion');
   }
 
   const secs = ((Date.now() - startedAt) / 1000).toFixed(0);
