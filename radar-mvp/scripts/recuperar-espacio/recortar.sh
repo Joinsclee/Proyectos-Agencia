@@ -39,12 +39,19 @@ set statement_timeout = 0;"
 
 P=(psql "$RADAR_DATABASE_URL" -v ON_ERROR_STOP=1 -tA --no-psqlrc)
 
-tam()  { "${P[@]}" -c "select pg_size_pretty(pg_database_size(current_database()))"; }
+tam()  { "${P[@]}" -c "select pg_size_pretty(pg_database_size(current_database()))" | tail -n1; }
 # VACUUM normal: NO reduce el fichero, pero libera las versiones muertas para que
 # los UPDATE siguientes las reutilicen. Sin esto la tabla crece mientras se
 # recorta —medido: de 941 a 965 MB en nueve lotes— y se acerca al limite justo
 # cuando se intenta bajar de el.
 limpia() { "${P[@]}" -c "$PREPARA" -c "vacuum (analyze) $1" >/dev/null 2>&1; }
+
+# Cuenta las filas de un lote. Ojo: `psql -tA` imprime tambien el tag de cada
+# sentencia (`SET`, `UPDATE 0`), asi que contar lineas de un `returning 1` da
+# 3 para un lote vacio y el bucle NUNCA termina —ya paso: 78 minutos girando en
+# vano—. Por eso cada lote acaba en `select count(*)` y aqui se coge el ultimo
+# renglon que sea solo digitos.
+filas() { printf '%s\n' "$1" | grep -Eo '^[0-9]+$' | tail -n1; }
 
 echo "Base al empezar: $(tam)"
 echo "(solo-lectura y statement_timeout de Supabase: anulados por sesion)"
@@ -53,15 +60,16 @@ echo "(solo-lectura y statement_timeout de Supabase: anulados por sesion)"
 recortar() {  # recortar <rotulo> <sql-del-lote> <tabla>
   echo ""
   echo "── $1"
-  local n=0 vuelta=0 total=0
+  local n salida vuelta=0 total=0
   while :; do
-    n=$("${P[@]}" <<SQL
+    salida=$("${P[@]}" <<SQL
 $SQL_PREPARA
 $2
 SQL
 ) || { echo "   FALLO en el lote $((vuelta+1)) · base $(tam)"; return 1; }
-    n=$(printf '%s' "$n" | grep -c . || true)
-    [ "${n:-0}" -eq 0 ] && break
+    n=$(filas "$salida")
+    [ -n "$n" ] || { echo "   FALLO: el lote no devolvio un numero de filas"; return 1; }
+    [ "$n" -eq 0 ] && break
     total=$((total+n)); vuelta=$((vuelta+1))
     if [ $((vuelta % CADA)) -eq 0 ]; then
       limpia "$3"
@@ -81,14 +89,16 @@ with pendientes as (
    where features is not null
      and (select count(*) from jsonb_object_keys(features)) > 6
    limit $LOTE
+), hecho as (
+  update rental_listings r
+     set features = (
+           select coalesce(jsonb_object_agg(k, r.features->k), '{}'::jsonb)
+             from unnest(array['lat','lng','bedrooms','garages','neighborhood','is_project']) k
+            where r.features ? k and r.features->k <> 'null'::jsonb)
+    from pendientes p where p.id = r.id
+  returning 1
 )
-update rental_listings r
-   set features = (
-         select coalesce(jsonb_object_agg(k, r.features->k), '{}'::jsonb)
-           from unnest(array['lat','lng','bedrooms','garages','neighborhood','is_project']) k
-          where r.features ? k and r.features->k <> 'null'::jsonb)
-  from pendientes p where p.id = r.id
-returning 1;" rental_listings
+select count(*) from hecho;" rental_listings
 
 # ── 2. inmuebles: la galeria a 6 fotos. image_url (la portada) no se toca ──
 recortar "inmuebles: galeria a 6 fotos" "
@@ -98,20 +108,22 @@ with pendientes as (
      and jsonb_typeof(features->'images') = 'array'
      and jsonb_array_length(features->'images') > 6
    limit $LOTE
+), hecho as (
+  update inmuebles i
+     set features = jsonb_set(
+           jsonb_set(i.features, '{images}',
+             (select coalesce(jsonb_agg(v), '[]'::jsonb)
+                from (select value v from jsonb_array_elements(i.features->'images') limit 6) t)),
+           '{image_count}', '6'::jsonb)
+    from pendientes p where p.id = i.id
+  returning 1
 )
-update inmuebles i
-   set features = jsonb_set(
-         jsonb_set(i.features, '{images}',
-           (select coalesce(jsonb_agg(v), '[]'::jsonb)
-              from (select value v from jsonb_array_elements(i.features->'images') limit 6) t)),
-         '{image_count}', '6'::jsonb)
-  from pendientes p where p.id = i.id
-returning 1;" inmuebles
+select count(*) from hecho;" inmuebles
 
 # ── 3. price_history: cero ficheros del repo la consultan ──
 echo ""
 echo "── price_history: se vacia (0 lectores en el codigo)"
-"${P[@]}" -c "$PREPARA" -c "truncate price_history" && echo "   hecho · base $(tam)"
+"${P[@]}" -c "$PREPARA" -c "truncate price_history" >/dev/null && echo "   hecho · base $(tam)"
 
 # ── 4. inactivas, respetando los favoritos ──
 # 19 de los 45 usuarios tienen favoritos en su metadata. Hoy ninguno apunta a una
@@ -124,10 +136,13 @@ with favs as (
   select distinct (jsonb_array_elements(raw_user_meta_data->'favorites')->>'id') as id
     from auth.users
    where jsonb_typeof(raw_user_meta_data->'favorites') = 'array'
+), hecho as (
+  delete from inmuebles
+   where not is_active
+     and id::text not in (select id from favs where id is not null)
+  returning 1
 )
-delete from inmuebles
- where not is_active
-   and id::text not in (select id from favs where id is not null);
+select count(*) from hecho;
 SQL
 echo "   hecho · base $(tam)"
 
