@@ -114,6 +114,37 @@ psql "$RADAR_DATABASE_URL" -c "select pg_size_pretty(pg_database_size(current_da
 Si se acerca a los 500 MB del plan gratuito:
 `bash scripts/recuperar-espacio/recortar.sh`.
 
+### La retención corre sola, pero solo si el scrape vio algo
+
+Desde `5b41672`, cada pasada de `npm run scrape:all` borra al final los
+inmuebles que ningún portal muestra desde hace 45 días. Eso es lo que impide que
+la base vuelva a llenarse: el lifecycle anterior solo marcaba `is_active=false`
+y la fila se quedaba para siempre.
+
+Dos cosas que conviene saber antes de tocarlo:
+
+- **Si ningún portal devolvió inmuebles, la purga se salta.** A propósito: con el
+  cron parado nadie refresca `last_seen_at`, así que purgar borraría fichas
+  vivas. En el log aparece `Ningún portal devolvió inmuebles — saltando la
+  retención`; si sale eso, el problema es el scrape, no la retención.
+- **Los favoritos de los usuarios no se borran nunca**, aunque lleven un año sin
+  verse. Hoy 8 de los 19 favoritos existentes son fichas caducadas que siguen
+  ahí por esta regla.
+
+A mano, si hace falta:
+
+```bash
+psql "$RADAR_DATABASE_URL" -c "select purgar_inmuebles_caducados(45)"
+```
+
+Rechaza menos de 15 días, así que un número mal escrito no vacía la tabla.
+Después hace falta `vacuum full analyze inmuebles` para que el espacio vuelva al
+disco: borrar no reduce el fichero, solo deja huecos reutilizables.
+
+**Lo que todavía no tiene retención: `rental_listings`** (82 MB, 45.910 de sus
+118.407 filas sin verse en 45 días). Si el tamaño vuelve a subir, esa es la
+siguiente palanca y son unos 30 MB.
+
 ---
 
 ## Lo que de verdad tumbó el Radar en noviembre
